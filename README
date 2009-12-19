@@ -1,6 +1,1 @@
-Private github project to keep all personal work.
-
-Contents:
- - Alterslash: Java app for SOLR and Alterslash site
- - webtail: tail follow a log over HTTP
- - try-jsoup: a Play Framework app to parse HTML using jsoup
+jsoup -- the easy Java HTML parser that makes sense of real-world HTML soup.
