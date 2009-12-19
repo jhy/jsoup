@@ -1,5 +1,3 @@
-workspace.xml
-.idea
-*.tmproj
-*/out/
-*/tmp/
+.idea/
+jsoup.iml
+target/
