@@ -10,7 +10,7 @@ import java.util.Map;
  but it should capture most of what we need to know to intelligently parse a doc.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-class Tag {
+public class Tag {
     private static final Map<String, Tag> tags = new HashMap<String, Tag>();
 
     private String tagName;
@@ -27,6 +27,10 @@ class Tag {
         this.canContainInline = canContainInline;
         this.optionalClosing = optionalClosing;
         this.empty = empty;
+    }
+
+    public String getName() {
+        return tagName;
     }
 
     /**
