@@ -60,7 +60,7 @@ public class Parser {
 
     private Element popStackToSuitableContainer(Tag tag) {
         while (stack.size() > 0) {
-            if (stack.peek().getTag().canContain(tag))
+            if (stack.getLast().getTag().canContain(tag))
                 return stack.getLast();
             else
                 stack.removeLast();
