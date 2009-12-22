@@ -36,6 +36,9 @@ public class Parser {
                 Tag tag = Tag.valueOf(token.getTagName());
                 StartTag startTag = new StartTag(tag, attributes);
 
+                // if tag is "html", we already have it, so OK to ignore skip. todo: abstract this. and can there be attributes to set?
+                if (doc.getTag().equals(tag)) continue;
+
                 Element parent = popStackToSuitableContainer(tag);
                 Validate.notNull(parent, "Should always have a viable container");
                 Element node = new Element(parent, startTag);
