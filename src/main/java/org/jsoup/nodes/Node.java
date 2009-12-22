@@ -37,4 +37,8 @@ public abstract class Node {
         // TODO: implement
         return null;
     }
+
+    public String toString() {
+        return getNodeName();
+    }
 }
