@@ -13,7 +13,7 @@ import java.util.List;
 public class TokenStreamTest {
     @Test
     public void createTokenStreamFromString() {
-        List<Token> tokens = TokenStream.create("<html><body><p>Hello world!</p></body></html>").asList();
+        List<Token> tokens = TokenStream.create("<html><body title='x > y'><p>Hello world!</p></body></html>").asList();
         assertEquals("Correct num tokens", 7, tokens.size());
     }
 
