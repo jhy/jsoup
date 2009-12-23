@@ -14,9 +14,11 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 class TokenStream implements Iterator<Token> {
     private static final int BUFFER_SIZE = 5 * 1024;
-    private static final char LT = "<".charAt(0);
-    private static final char GT = ">".charAt(0);
-    private static final char NL = "\n".charAt(0);
+    private static final char LT = '<';
+    private static final char GT = '>';
+    private static final char NL = '\n';
+    private static final char SQ = '\'';
+    private static final char DQ = '"';
 
     private final Reader in;
     private final CharBuffer buffer;
@@ -89,23 +91,41 @@ class TokenStream implements Iterator<Token> {
     }
 
     private String accumulate() {
+        boolean inTag = false;
+        boolean inQuotedAttribute = false;
+        Character quote = null;
+
         while (hasNext()) {
             buffer.mark();
             char c = buffer.get();
 
-            if (c == LT && accum.length() > 0) {
+            if (c == LT && accum.length() > 0 && !inQuotedAttribute) {
+                // detected start of new tag:
                 // leave on stack for next accumulate
                 buffer.reset();
-                return captureAccum();
+                break;
             } else {
                 accum.append(c);
                 pos.incOffset();
                 pos.incColNum();
 
-                if (c == GT) {
-                    return captureAccum();
-                } else if (c == NL) {
-                    pos.incLineNum();
+                if (!inQuotedAttribute) {
+                    if (c == LT) {
+                        inTag = true;
+                    }
+                    else if (c == GT) { // >, end of tag
+                        break;
+                    } else if (c == NL) {
+                        pos.incLineNum();
+                    } else if (inTag && (c == SQ || c == DQ)) {
+                        inQuotedAttribute = true;
+                        quote = c;
+                    }
+                } else if (inQuotedAttribute && c == quote) {
+                    // close quote. note that if there is no closing quote, this will gobble up a lot. might be an idea
+                    // to forward search and backtrack (to drop opening quote) if not found in x chars, (or y <|>)
+                    // (the quoted attrib allows <p title="x > y">Hello</p>. Issue here is with <p title="x > y>Hello</p>
+                    inQuotedAttribute = false;
                 }
             }
         }

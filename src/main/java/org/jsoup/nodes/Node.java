@@ -38,6 +38,11 @@ public abstract class Node {
         return null;
     }
 
+    public Attributes getAttributes() {
+        return attributes;
+        // TODO: probably not have this accessor
+    }
+
     public String toString() {
         return getNodeName();
     }
