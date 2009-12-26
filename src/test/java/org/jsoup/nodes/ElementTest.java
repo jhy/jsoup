@@ -28,6 +28,9 @@ public class ElementTest {
 
         List<Element> imgs = doc.getElementsByTag("img");
         assertEquals("foo.png", imgs.get(0).attr("src"));
+
+        List<Element> empty = doc.getElementsByTag("wtf");
+        assertEquals(0, empty.size());
     }
 
 }
