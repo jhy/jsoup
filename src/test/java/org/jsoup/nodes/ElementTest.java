@@ -1,6 +1,6 @@
 package org.jsoup.nodes;
 
-import org.jsoup.JSoup;
+import org.jsoup.Jsoup;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -16,7 +16,7 @@ public class ElementTest {
     private String reference = "<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>";
 
     @Test public void getElementsByTagName() {
-        Document doc = JSoup.parse(reference);
+        Document doc = Jsoup.parse(reference);
         List<Element> divs = doc.getElementsByTag("div");
         assertEquals(2, divs.size());
         assertEquals("div1", divs.get(0).id());
@@ -37,12 +37,12 @@ public class ElementTest {
     }
 
     @Test public void testGetElementById() {
-        Document doc = JSoup.parse(reference);
+        Document doc = Jsoup.parse(reference);
         Element div = doc.getElementById("div1");
         assertEquals("div1", div.id());
         assertNull(doc.getElementById("none"));
 
-        Document doc2 = JSoup.parse("<div id=1><div id=2><p>Hello <span id=2>world!</span></p></div></div>");
+        Document doc2 = Jsoup.parse("<div id=1><div id=2><p>Hello <span id=2>world!</span></p></div></div>");
         Element div2 = doc2.getElementById("2");
         assertEquals("div", div2.tagName()); // not the span
         Element span = div2.child(0).getElementById("2"); // called from <p> context should be span
@@ -50,13 +50,13 @@ public class ElementTest {
     }
 
     @Test public void testGetText() {
-        Document doc = JSoup.parse(reference);
+        Document doc = Jsoup.parse(reference);
         assertEquals("Hello Another element", doc.text());
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
     @Test public void testGetSiblings() {
-        Document doc = JSoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
+        Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
         Element p = doc.getElementById("1");
         assertEquals("there", p.text());
         assertEquals("Hello", p.previousElementSibling().text());
