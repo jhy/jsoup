@@ -13,7 +13,7 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class ElementTest {
-    private String reference = "<div id=div1><p>Hello</p><p>Another</p><div id=div2><img src=foo.png></div></div>";
+    private String reference = "<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>";
 
     @Test public void getElementsByTagName() {
         Document doc = JSoup.parse(reference);
@@ -25,7 +25,7 @@ public class ElementTest {
         List<Element> ps = doc.getElementsByTag("p");
         assertEquals(2, ps.size());
         assertEquals("Hello", ((TextNode) ps.get(0).childNode(0)).getWholeText());
-        assertEquals("Another", ((TextNode) ps.get(1).childNode(0)).getWholeText());
+        assertEquals("Another ", ((TextNode) ps.get(1).childNode(0)).getWholeText());
         List<Element> ps2 = doc.getElementsByTag("P");
         assertEquals(ps, ps2);
 
@@ -47,6 +47,12 @@ public class ElementTest {
         assertEquals("div", div2.tagName()); // not the span
         Element span = div2.child(0).getElementById("2"); // called from <p> context should be span
         assertEquals("span", span.tagName());
+    }
+
+    @Test public void testGetText() {
+        Document doc = JSoup.parse(reference);
+        assertEquals("Hello Another element", doc.text());
+        assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
 }

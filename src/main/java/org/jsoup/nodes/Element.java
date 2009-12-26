@@ -35,6 +35,10 @@ public class Element extends Node {
         return tag;
     }
 
+    public boolean isBlock() {
+        return tag.isBlock();
+    }
+
     public String id() {
         String id = attr("id");
         return id == null ? "" : id;
@@ -117,6 +121,24 @@ public class Element extends Node {
                 return byId;
         }
         return null;
+    }
+
+    public String text() {
+        StringBuilder sb = new StringBuilder();
+
+        for (Node childNode : childNodes) {
+            if (childNode instanceof TextNode) {
+                TextNode textNode = (TextNode) childNode;
+                sb.append(textNode.getWholeText());
+            } else if (childNode instanceof Element) {
+                Element element = (Element) childNode;
+                String elementText = element.text();
+                if (element.isBlock() && sb.length() > 0 && elementText.length() > 0)
+                    sb.append(" ");
+                sb.append(elementText);
+            }
+        }
+        return sb.toString();
     }
 
 

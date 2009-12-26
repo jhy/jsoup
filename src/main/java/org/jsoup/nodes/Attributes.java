@@ -19,7 +19,7 @@ public class Attributes {
     public void put(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        attributes.put(key.toLowerCase().trim(), value.trim());
+        attributes.put(key.toLowerCase().trim(), value);
     }
 
     public void put(Attribute attribute) {
