@@ -13,6 +13,6 @@ public class Document extends Element {
     private String title;
 
     public Document() {
-        super(new StartTag(Tag.valueOf("html"), null));
+        super(new StartTag(Tag.valueOf("html")));
     }
 }
