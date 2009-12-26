@@ -7,8 +7,8 @@ package org.jsoup.nodes;
 public class Comment extends Node {
     private static final String COMMENT_KEY = "comment";
 
-    public Comment(Node parentNode, String data) {
-        super(parentNode);
+    public Comment(String data) {
+        super();
         attributes.put(COMMENT_KEY, data);
     }
 

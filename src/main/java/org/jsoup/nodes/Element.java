@@ -16,8 +16,8 @@ public class Element extends Node {
     private final Tag tag;
     private final List<Element> elementChildren; // subset of Node.children, only holds Elements
 
-    public Element(Node parentNode, StartTag startTag) {
-        super(parentNode, startTag.getAttributes());
+    public Element(StartTag startTag) {
+        super(startTag.getAttributes());
         this.tag = startTag.getTag();
         elementChildren = new ArrayList<Element>();
     }
@@ -52,11 +52,13 @@ public class Element extends Node {
         Validate.notNull(child);
         elementChildren.add(child);
         childNodes.add(child);
+        child.setParentNode(this);
     }
 
     public void addChild(Node child) {
         Validate.notNull(child);
         childNodes.add(child);
+        child.setParentNode(this);
     }
 
     public Element nextElementSibling() {
