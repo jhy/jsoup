@@ -8,14 +8,24 @@ import java.util.regex.Pattern;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 class Token {
+    // match tags: <, opt space, opt closer, tagname, opt attribs, opt empty closer, >
     private static final Pattern tagPattern = Pattern.compile("^<\\s*(/?)\\s*(\\w+)\\b\\s*(.*?)\\s*(/?)\\s*>$");
-    // pattern: <, opt space, opt closer, tagname, opt attribs, opt empty closer, >
+    // match comments
+    private static final Pattern commentFullPattern = Pattern.compile("^<!--\\s*(.*?)\\s*-?->$");
+    private static final Pattern commentStartPattern = Pattern.compile("^<!--\\s*(.*?)\\s*(-?->)?$");
+    private static final Pattern commentEndPattern = Pattern.compile("^(<!--)?\\s*(.*?)\\s*-?->$");
+
 
     private String data;
     private Position pos;
 
     private boolean startTag;
     private boolean endTag;
+
+    private boolean startComment;
+    private boolean endComment;
+    private String commentData;
+
     private boolean textNode;
     private String tagName;
     private String attributes;
@@ -25,13 +35,29 @@ class Token {
         this.pos = pos;
 
         Matcher tagMatch = tagPattern.matcher(data);
-        if (tagMatch.matches()) {
+        Matcher commentFullMatch = commentFullPattern.matcher(data);
+        Matcher commentStartMatch = commentStartPattern.matcher(data);
+        Matcher commentEndMatch = commentEndPattern.matcher(data);
+
+        if (commentFullMatch.matches()) {
+            startComment = true;
+            endComment = true;
+            commentData = commentFullMatch.group(1);
+        }
+        else if (commentStartMatch.matches()) {
+            startComment = true;
+            commentData = commentStartMatch.group(1);
+        }
+        else if (commentEndMatch.matches()) {
+            endComment = true;
+            commentData = commentEndMatch.group(2);
+        } else if (!startComment && tagMatch.matches()) {
             startTag = (tagMatch.group(1).isEmpty()); // 1: closer
             endTag = (!tagMatch.group(1).isEmpty()) || (!tagMatch.group(4).isEmpty()); // 4: empty tag
             tagName = tagMatch.group(2);
             attributes = (tagMatch.group(3).isEmpty() ? null : tagMatch.group(3));
         } else {
-            // TODO: comments
+            // TODO: xml decls, cdata
             textNode = true;
         }
     }
@@ -59,6 +85,22 @@ class Token {
 
     public boolean isEndTag() {
         return endTag;
+    }
+
+    public boolean isStartComment() {
+        return startComment;
+    }
+
+    public boolean isEndComment() {
+        return endComment;
+    }
+
+    public boolean isFullComment() {
+        return startComment && endComment;
+    }
+
+    public String getCommentData() {
+        return commentData;
     }
 
     public boolean isTextNode() {
