@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,7 +23,15 @@ public abstract class Node {
         this.attributes = attributes;
     }
 
+    protected Node(Node parentNode) {
+        this(parentNode, new Attributes());
+    }
+
     public abstract String getNodeName();
+
+    public List<Node> getChildNodes() {
+        return Collections.unmodifiableList(childNodes);
+    }
 
     public Node getParentNode() {
         return parentNode;

@@ -5,11 +5,10 @@ package org.jsoup.nodes;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends Node {
-    private String text;
-
+    private static final String TEXT_KEY = "text";
     public TextNode(Node parentNode, String text) {
-        super(parentNode, null);
-        this.text = text;
+        super(parentNode);
+        attributes.put(TEXT_KEY, text);
     }
 
     public String getNodeName() {
@@ -17,6 +16,6 @@ public class TextNode extends Node {
     }
 
     public String getWholeText() {
-        return text;
+        return attributes.get(TEXT_KEY);
     }
 }
