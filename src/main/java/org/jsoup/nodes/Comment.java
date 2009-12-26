@@ -12,7 +12,7 @@ public class Comment extends Node {
         attributes.put(COMMENT_KEY, data);
     }
 
-    public String getNodeName() {
+    public String nodeName() {
         return "#comment";
     }
 
