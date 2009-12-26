@@ -4,7 +4,6 @@ import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.*;
 
 import java.util.LinkedList;
-import java.util.Queue;
 
 /**
  Parses a {@link TokenStream} into a {@link Document}
@@ -21,6 +20,12 @@ public class Parser {
         this.tokenStream = tokenStream;
         this.stack = new LinkedList<Element>();
         this.attributeParser = new AttributeParser();
+    }
+
+    public static Document parse(String html) {
+        TokenStream ts = TokenStream.create(html);
+        Parser parser = new Parser(ts);
+        return parser.parse();
     }
 
     public Document parse() {
