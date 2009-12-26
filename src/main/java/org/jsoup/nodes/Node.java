@@ -27,22 +27,35 @@ public abstract class Node {
         this(parentNode, new Attributes());
     }
 
-    public abstract String getNodeName();
+    public abstract String nodeName();
 
-    public List<Node> getChildNodes() {
+    public String attr(String attributeKey) {
+        return attributes.get(attributeKey);
+    }
+
+    public Node attr(String attributeKey, String attributeValue) {
+        attributes.put(attributeKey, attributeValue);
+        return this;
+    }
+
+    public Node childNode(int index) {
+        return childNodes.get(index);
+    }
+
+    public List<Node> childNodes() {
         return Collections.unmodifiableList(childNodes);
     }
 
-    public Node getParentNode() {
+    public Node parentNode() {
         return parentNode;
     }
 
-    public Node getNextSibling() {
+    public Node nextSibling() {
         // TODO: implement
         return null;
     }
 
-    public Node getPreviousSibling() {
+    public Node previousSibling() {
         // TODO: implement
         return null;
     }
@@ -53,6 +66,6 @@ public abstract class Node {
     }
 
     public String toString() {
-        return getNodeName();
+        return nodeName();
     }
 }

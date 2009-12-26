@@ -22,11 +22,11 @@ public class Element extends Node {
         elementChildren = new ArrayList<Element>();
     }
 
-    public String getNodeName() {
+    public String nodeName() {
         return tag.getName();
     }
 
-    public String getTagName() {
+    public String tagName() {
         return tag.getName();
     }
 
@@ -34,7 +34,17 @@ public class Element extends Node {
         return tag;
     }
 
-    public List<Element> getChildren() {
+    @Override
+    public Element attr(String attributeKey, String attributeValue) {
+        super.attr(attributeKey, attributeValue);
+        return this;
+    }
+
+    public Element child(int index) {
+        return elementChildren.get(index);
+    }
+
+    public List<Element> children() {
         return Collections.unmodifiableList(elementChildren);
     }
 
@@ -49,12 +59,12 @@ public class Element extends Node {
         childNodes.add(child);
     }
 
-    public Element getNextElementSibling() {
+    public Element nextElementSibling() {
         // TODO: implement
         return null;
     }
 
-    public Element getPreviousElementSibling() {
+    public Element previousElementSibling() {
         // TODO: implement
         return null;
     }
