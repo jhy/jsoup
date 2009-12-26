@@ -6,8 +6,8 @@ package org.jsoup.nodes;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends Node {
     private static final String TEXT_KEY = "text";
-    public TextNode(Node parentNode, String text) {
-        super(parentNode);
+    public TextNode(String text) {
+        super();
         attributes.put(TEXT_KEY, text);
     }
 
