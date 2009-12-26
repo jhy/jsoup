@@ -11,7 +11,7 @@ public class TextNode extends Node {
         attributes.put(TEXT_KEY, text);
     }
 
-    public String getNodeName() {
+    public String nodeName() {
         return "#text";
     }
 

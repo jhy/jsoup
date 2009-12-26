@@ -19,9 +19,11 @@ public class ParserTest {
         Parser parser = new Parser(tokenStream);
         Document doc = parser.parse();
         // need a better way to verify these:
-        Element p = doc.getChildren().get(1).getChildren().get(0);
-        assertEquals("p", p.getTagName());
-        assertEquals("foo.png", p.getChildren().get(0).getAttributes().get("src"));
+        Element p = doc.child(1).child(0);
+        assertEquals("p", p.tagName());
+        Element img = p.child(0);
+        assertEquals("foo.png", img.attr("src"));
+        assertEquals("img", img.tagName());
     }
 
     @Test public void testParsesRoughAttributes() {
@@ -29,20 +31,19 @@ public class ParserTest {
         Parser parser = new Parser(tokenStream);
         Document doc = parser.parse();
         // need a better way to verify these:
-        Element p = doc.getChildren().get(1).getChildren().get(0);
-        assertEquals("p", p.getTagName());
-        assertEquals("foo > bar", p.getAttributes().get("class"));
-        assertEquals("foo.png", p.getChildren().get(0).getAttributes().get("src"));
+        Element p = doc.child(1).child(0);
+        assertEquals("p", p.tagName());
+        assertEquals("foo > bar", p.attr("class"));
     }
 
     @Test public void testParsesComments() {
         TokenStream ts = TokenStream.create("<html><head></head><body><!-- <table><tr><td></table> --><p>Hello</p></body></html>");
         Document doc = new Parser(ts).parse();
-        Element body = doc.getChildren().get(1);
-        Comment comment = (Comment) body.getChildNodes().get(0);
+        Element body = doc.child(1);
+        Comment comment = (Comment) body.childNode(0);
         assertEquals("<table><tr><td></table>", comment.getData());
-        Element p = body.getChildren().get(0);
-        TextNode text = (TextNode) p.getChildNodes().get(0);
+        Element p = body.child(0);
+        TextNode text = (TextNode) p.childNode(0);
         assertEquals("Hello", text.getWholeText());
     }
 }
