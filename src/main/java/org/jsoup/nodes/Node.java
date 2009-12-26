@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.Validate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,12 +58,34 @@ public abstract class Node {
     }
 
     public Node nextSibling() {
-        // TODO: implement
-        return null;
+        List<Node> siblings = parentNode.childNodes;
+        Integer index = indexInList(this, siblings);
+        Validate.notNull(index);
+        if (siblings.size() > index+1)
+            return siblings.get(index+1);
+        else
+            return null;
     }
 
     public Node previousSibling() {
-        // TODO: implement
+        List<Node> siblings = parentNode.childNodes;
+        Integer index = indexInList(this, siblings);
+        Validate.notNull(index);
+        if (index > 0)
+            return siblings.get(index-1);
+        else
+            return null;
+    }
+
+    protected static <N extends Node> Integer indexInList(N search, List<N> nodes) {
+        Validate.notNull(search);
+        Validate.notNull(nodes);
+
+        for (int i = 0; i < nodes.size(); i++) {
+            N node = nodes.get(i);
+            if (node.equals(search))
+                return i;
+        }
         return null;
     }
 

@@ -50,6 +50,11 @@ public class Element extends Node {
         return this;
     }
 
+    @Override
+    public Element parent() {
+        return (Element) super.parent();
+    }
+
     public Element child(int index) {
         return elementChildren.get(index);
     }
@@ -72,13 +77,34 @@ public class Element extends Node {
     }
 
     public Element nextElementSibling() {
-        // TODO: implement
-        return null;
+        List<Element> siblings = parent().elementChildren;
+        Integer index = indexInList(this, siblings);
+        Validate.notNull(index);
+        if (siblings.size() > index+1)
+            return siblings.get(index+1);
+        else
+            return null;
     }
 
     public Element previousElementSibling() {
-        // TODO: implement
-        return null;
+        List<Element> siblings = parent().elementChildren;
+        Integer index = indexInList(this, siblings);
+        Validate.notNull(index);
+        if (index > 0)
+            return siblings.get(index-1);
+        else
+            return null;
+    }
+
+    public Element firstElementSibling() {
+        // todo: should firstSibling() exclude this?
+        List<Element> siblings = parent().elementChildren;
+        return siblings.size() > 1 ? siblings.get(0) : null;
+    }
+
+    public Element lastElementSibling() {
+        List<Element> siblings = parent().elementChildren;
+        return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
     }
 
     // DOM type methods
