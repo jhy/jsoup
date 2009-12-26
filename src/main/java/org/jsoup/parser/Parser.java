@@ -34,13 +34,13 @@ public class Parser {
             Token token = tokenStream.next();
 
             if (token.isFullComment()) { // <!-- comment -->
-                Comment comment = new Comment(stack.peek(), token.getCommentData());
+                Comment comment = new Comment(token.getCommentData());
                 stack.getLast().addChild(comment);
             } else if (token.isStartComment()) { // <!-- comment
                 commentAccum = new StringBuilder(token.getCommentData());
             } else if (token.isEndComment() && commentAccum != null) { // comment -->
                 commentAccum.append(token.getCommentData());
-                Comment comment = new Comment(stack.peek(), commentAccum.toString());
+                Comment comment = new Comment(commentAccum.toString());
                 stack.getLast().addChild(comment);
                 commentAccum = null;
             } else if (commentAccum != null) { // within a comment
@@ -57,7 +57,7 @@ public class Parser {
 
                 Element parent = popStackToSuitableContainer(tag);
                 Validate.notNull(parent, "Should always have a viable container");
-                Element node = new Element(parent, startTag);
+                Element node = new Element(startTag);
                 parent.addChild(node);
                 stack.add(node);
             }
@@ -72,7 +72,7 @@ public class Parser {
 
             else if (token.isTextNode()) {
                 String text = token.getData();
-                TextNode textNode = new TextNode(stack.peek(), text);
+                TextNode textNode = new TextNode(text);
                 stack.getLast().addChild(textNode);
             }
         }
