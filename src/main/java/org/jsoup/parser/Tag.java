@@ -81,6 +81,14 @@ public class Tag {
         return true;
     }
 
+    public boolean isBlock() {
+        return isBlock;
+    }
+
+    public boolean isInline() {
+        return !isBlock;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
