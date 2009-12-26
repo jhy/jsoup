@@ -5,10 +5,11 @@ package org.jsoup.nodes;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Comment extends Node {
-    private String data;
+    private static final String COMMENT_KEY = "comment";
 
-    protected Comment(Node parentNode) {
-        super(parentNode, null);
+    public Comment(Node parentNode, String data) {
+        super(parentNode);
+        attributes.put(COMMENT_KEY, data);
     }
 
     public String getNodeName() {
@@ -16,6 +17,6 @@ public class Comment extends Node {
     }
 
     public String getData() {
-        return data;
+        return attributes.get(COMMENT_KEY);
     }
 }

@@ -28,10 +28,26 @@ public class Parser {
         Document doc = new Document();
         stack.add(doc);
 
+        StringBuilder commentAccum = null;
+
         while (tokenStream.hasNext()) {
             Token token = tokenStream.next();
 
-            if (token.isStartTag()) {
+            if (token.isFullComment()) { // <!-- comment -->
+                Comment comment = new Comment(stack.peek(), token.getCommentData());
+                stack.getLast().addChild(comment);
+            } else if (token.isStartComment()) { // <!-- comment
+                commentAccum = new StringBuilder(token.getCommentData());
+            } else if (token.isEndComment() && commentAccum != null) { // comment -->
+                commentAccum.append(token.getCommentData());
+                Comment comment = new Comment(stack.peek(), commentAccum.toString());
+                stack.getLast().addChild(comment);
+                commentAccum = null;
+            } else if (commentAccum != null) { // within a comment
+                commentAccum.append(token.getData());
+            }
+
+            else if (token.isStartTag()) {
                 Attributes attributes = attributeParser.parse(token.getAttributeString());
                 Tag tag = Tag.valueOf(token.getTagName());
                 StartTag startTag = new StartTag(tag, attributes);
@@ -46,9 +62,11 @@ public class Parser {
                 stack.add(node);
             }
 
-            if (token.isEndTag()) { // empty tags are both start and end tags
+            if (token.isEndTag() && commentAccum == null) { // empty tags are both start and end tags
                 stack.removeLast();
             }
+
+
 
             // TODO[must] handle comments
 
