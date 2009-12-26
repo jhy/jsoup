@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.apache.commons.lang.NotImplementedException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,11 +46,13 @@ public abstract class Node {
         return Collections.unmodifiableList(childNodes);
     }
 
-    public Node parentNode() {
+    public Node parent() {
         return parentNode;
     }
 
     protected void setParentNode(Node parentNode) {
+        if (this.parentNode != null)
+            throw new NotImplementedException("Cannot (yet) move nodes in tree"); // TODO: remove from prev node children
         this.parentNode = parentNode;
     }
 
