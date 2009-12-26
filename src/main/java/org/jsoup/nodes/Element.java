@@ -6,6 +6,7 @@ import org.jsoup.parser.Tag;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -32,6 +33,10 @@ public class Element extends Node {
 
     public Tag getTag() {
         return tag;
+    }
+
+    public String id() {
+        return attr("id");
     }
 
     @Override
@@ -69,6 +74,19 @@ public class Element extends Node {
     public Element previousElementSibling() {
         // TODO: implement
         return null;
+    }
+
+    public List<Element> getElementsByTag(String tagName) {
+        Validate.notEmpty(tagName);
+        tagName = tagName.toLowerCase().trim();
+
+        List<Element> elements = new ArrayList<Element>();
+        if (tag.getName().equals(tagName))
+            elements.add(this);
+        for (Element child : elementChildren) {
+            elements.addAll(child.getElementsByTag(tagName));
+        }
+        return elements;
     }
 
 
