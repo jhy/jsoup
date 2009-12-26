@@ -55,4 +55,14 @@ public class ElementTest {
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
+    @Test public void testGetSiblings() {
+        Document doc = JSoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
+        Element p = doc.getElementById("1");
+        assertEquals("there", p.text());
+        assertEquals("Hello", p.previousElementSibling().text());
+        assertEquals("this", p.nextElementSibling().text());
+        assertEquals("Hello", p.firstElementSibling().text());
+        assertEquals("element", p.lastElementSibling().text());
+    }
+
 }
