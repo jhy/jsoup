@@ -78,6 +78,17 @@ public class Tag {
         if (this.empty)
             return false;
 
+        // head can only contain a few. if more than head in here, modify to have a list of valids
+        // TODO[must] - lookup what head can contain
+        // from memory: base, script, link, meta, title
+        if (this.tagName.equals("head")) {
+            if (child.tagName.equals("base") || child.tagName.equals("script") || child.tagName.equals("link") ||
+                    child.tagName.equals("meta") || child.tagName.equals("title")) {
+                return true;
+            }
+            return false;
+        }
+
         return true;
     }
 
