@@ -1,6 +1,8 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Element;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -9,14 +11,14 @@ import static org.junit.Assert.*;
  Test suite for attribute parser.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class AttributeParserTest {
+public class AttributeParseTest {
 
     @Test public void parsesRoughAttributeString() {
-        String a = "id=\"123\" class=\"baz = 'bar'\" style = 'border: 2px'qux zim foo = 12 mux.=18 ";
+        String html = "<a id=\"123\" class=\"baz = 'bar'\" style = 'border: 2px'qux zim foo = 12 mux.=18 />";
         // should be: <id=123>, <class=baz = 'bar'>, <qux=>, <zim=>, <foo=12>, <mux.=18>
 
-        AttributeParser ap = new AttributeParser();
-        Attributes attr = ap.parse(a);
+        Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
+        Attributes attr = el.getAttributes();
         assertEquals(7, attr.size());
         assertEquals("123", attr.get("id"));
         assertEquals("baz = 'bar'", attr.get("class"));
@@ -28,25 +30,16 @@ public class AttributeParserTest {
     }
 
     @Test public void parsesEmptyString() {
-        AttributeParser ap = new AttributeParser();
-        Attributes attr = ap.parse("");
+        String html = "<a />";
+        Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
+        Attributes attr = el.getAttributes();
         assertEquals(0, attr.size());
     }
 
     @Test public void emptyOnNoKey() {
-        AttributeParser ap = new AttributeParser();
-        Attributes attr = ap.parse("=empty");
+        String html = "<a =empty />";
+        Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
+        Attributes attr = el.getAttributes();
         assertEquals(0, attr.size());
-    }
-
-    @Test public void parserIsReusable() {
-        AttributeParser ap = new AttributeParser();
-        Attributes attr = ap.parse("id=bar");
-        assertEquals(1, attr.size());
-        assertEquals("bar", attr.get("id"));
-
-        attr = ap.parse("id=qux");
-        assertEquals(1, attr.size());
-        assertEquals("qux", attr.get("id"));
     }
 }

@@ -14,5 +14,19 @@ public class Document extends Element {
 
     public Document() {
         super(new StartTag(Tag.valueOf("html")));
+        head = new Element (new StartTag(Tag.valueOf("head")));
+        body = new Element (new StartTag(Tag.valueOf("body")));
+
+        this.addChild(head);
+        this.addChild(body);
+    }
+
+    public Element getHead() {
+        return head;
+    }
+
+    public Element getBody() {
+        return body;
     }
 }
+
