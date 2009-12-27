@@ -2,13 +2,13 @@ package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
 
-import java.util.LinkedHashMap;
+import java.util.*;
 
 /**
  Element attribute list.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Attributes {
+public class Attributes implements Iterable<Attribute> {
     private LinkedHashMap<String, String> attributes = new LinkedHashMap<String, String>(); // linked hash map to preserve insertion order.
 
     public String get(String key) {
@@ -36,7 +36,26 @@ public class Attributes {
         return attributes.size();
     }
 
-    // todo: toString, list (as List<Attribute>)
+    public void mergeAttributes(Attributes incoming) {
+        for (Attribute attribute : incoming) {
+            this.put(attribute);
+        }
+    }
+
+    public Iterator<Attribute> iterator() {
+        return asList().iterator();
+    }
+
+    public List<Attribute> asList() {
+        List<Attribute> list = new ArrayList<Attribute>(attributes.size());
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            Attribute attribute = new Attribute(entry.getKey(), entry.getValue());
+            list.add(attribute);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    // todo: toString
 
 
 }
