@@ -28,5 +28,13 @@ public class Document extends Element {
     public Element getBody() {
         return body;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }
 

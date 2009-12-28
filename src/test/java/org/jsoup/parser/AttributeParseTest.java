@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class AttributeParseTest {
 
     @Test public void parsesRoughAttributeString() {
-        String html = "<a id=\"123\" class=\"baz = 'bar'\" style = 'border: 2px'qux zim foo = 12 mux.=18 />";
+        String html = "<a id=\"123\" class=\"baz = 'bar'\" style = 'border: 2px'qux zim foo = 12 mux=18 />";
         // should be: <id=123>, <class=baz = 'bar'>, <qux=>, <zim=>, <foo=12>, <mux.=18>
 
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
@@ -26,7 +26,7 @@ public class AttributeParseTest {
         assertEquals("", attr.get("qux"));
         assertEquals("", attr.get("zim"));
         assertEquals("12", attr.get("foo"));
-        assertEquals("18", attr.get("mux."));
+        assertEquals("18", attr.get("mux"));
     }
 
     @Test public void parsesEmptyString() {

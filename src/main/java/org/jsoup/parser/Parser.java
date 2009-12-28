@@ -14,23 +14,21 @@ import java.util.regex.Pattern;
 public class Parser {
     private static String SQ = "'";
     private static String DQ = "\"";
+
     private static Tag htmlTag = Tag.valueOf("html");
     private static Tag headTag = Tag.valueOf("head");
     private static Tag bodyTag = Tag.valueOf("body");
+    private static Tag titleTag = Tag.valueOf("title");
 
     private LinkedList<Element> stack;
-    private LinkedList<Character> queue;
+    private TokenQueue tq;
     private Document doc;
 
     public Parser(String html) {
         Validate.notNull(html);
 
-        this.stack = new LinkedList<Element>();
-        this.queue = new LinkedList<Character>();
-        char[] chars = html.toCharArray();
-        for (char c : chars) {
-            queue.add(c);
-        }
+        stack = new LinkedList<Element>();
+        tq = new TokenQueue(html);
 
         doc = new Document();
         stack.add(doc);
@@ -43,25 +41,25 @@ public class Parser {
     }
 
     public Document parse() {
-        while (!queue.isEmpty()) {
-            if (matches("<!--")) {
+        while (!tq.isEmpty()) {
+            if (tq.matches("<!--")) {
                 parseComment();
-            } else if (matches("<?") || matches("<!")) {
+            } else if (tq.matches("<?") || tq.matches("<!")) {
                 parseXmlDecl();
-            } else if (matches("</")) {
+            } else if (tq.matches("</")) {
                 parseEndTag();
-            } else if (matches("<")) {
+            } else if (tq.matches("<")) {
                 parseStartTag();
             } else {
-                parseText();
+                parseTextNode();
             }
         }
         return doc;
     }
 
     private void parseComment() {
-        consume("<!--");
-        String data = chompTo("->");
+        tq.consume("<!--");
+        String data = tq.chompTo("->");
 
         if (data.endsWith("-")) // i.e. was -->
             data = data.substring(0, data.length()-1);
@@ -70,30 +68,33 @@ public class Parser {
     }
 
     private void parseXmlDecl() {
-        consume("<"); consume(); // <? or <!, from initial match.
-        String data = chompTo(">");
+        tq.consume("<"); tq.consume(); // <? or <!, from initial match.
+        String data = tq.chompTo(">");
 
         XmlDeclaration decl = new XmlDeclaration(data);
         last().addChild(decl);
     }
 
     private void parseEndTag() {
-        consume("</");
-        String tagName = consumeWord();
-        chompTo(">");
+        tq.consume("</");
+        String tagName = tq.consumeWord();
+        tq.chompTo(">");
 
         if (!tagName.isEmpty()) {
             Tag tag = Tag.valueOf(tagName);
-            popStackToClose(tag);
+            Element closed = popStackToClose(tag);
+
+            if (closed != null && closed.getTag().equals(titleTag))
+                doc.setTitle(closed.text());
         }
     }
 
     private void parseStartTag() {
-        consume("<");
+        tq.consume("<");
         Attributes attributes = new Attributes();
 
-        String tagName = consumeWord();
-        while (!matches("/>") && !matches(">")) {
+        String tagName = tq.consumeWord();
+        while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !tq.isEmpty()) {
             Attribute attribute = parseAttribute();
             if (attribute != null)
                 attributes.put(attribute);
@@ -104,11 +105,10 @@ public class Parser {
         Element child = new Element(startTag);
 
         boolean emptyTag;
-        if (matches("/>")) { // empty tag, don't add to stack
-            consume("/>");
+        if (tq.matchChomp("/>")) { // empty tag, don't add to stack
             emptyTag = true;
         } else {
-            consume(">");
+            tq.matchChomp(">"); // safe because checked above (or ran out of data)
             emptyTag = false;
         }
 
@@ -138,116 +138,43 @@ public class Parser {
     }
 
     private Attribute parseAttribute() {
-        consumeWhitespace();
-        String key = consumeWord();
+        tq.consumeWhitespace();
+        String key = tq.consumeWord();
         String value = "";
-        consumeWhitespace();
-        if (matches("=")) {
-            consume("=");
-            consumeWhitespace();
+        tq.consumeWhitespace();
+        if (tq.matchChomp("=")) {
+            tq.consumeWhitespace();
 
-            if (matches(SQ)) {
-                consume(SQ);
-                value = chompTo(SQ);
-            } else if (matches(DQ)) {
-                consume(DQ);
-                value = chompTo(DQ);
+            if (tq.matchChomp(SQ)) {
+                value = tq.chompTo(SQ);
+            } else if (tq.matchChomp(DQ)) {
+                value = tq.chompTo(DQ);
             } else {
                 StringBuilder valueAccum = new StringBuilder();
-                while (!matches("/>") && !matches(">") && !Character.isWhitespace(queue.peekFirst())) {
-                    valueAccum.append(consume());
+                // no ' or " to look for, so scan to end tag or space (or end of stream)
+                while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !Character.isWhitespace(tq.peek()) && !tq.isEmpty()) {
+                    valueAccum.append(tq.consume());
                 }
                 value = valueAccum.toString();
             }
-            consumeWhitespace();
+            tq.consumeWhitespace();
         }
         if (!key.isEmpty())
             return new Attribute(key, value);
         else {
-            consume(); // unknown char, keep popping so not get stuck
+            tq.consume(); // unknown char, keep popping so not get stuck
             return null;
         }
     }
 
-    private void parseText() {
+    private void parseTextNode() {
         // TODO: work out whitespace requirements (between blocks, between inlines)
         StringBuilder textAccum = new StringBuilder();
-        while (!matches("<")) {
-            textAccum.append(consume());
+        while (!tq.matches("<") && !tq.isEmpty()) { // scan to next tag
+            textAccum.append(tq.consume());
         }
         TextNode textNode = new TextNode(textAccum.toString());
         last().addChild(textNode);
-    }
-
-    /**
-     * Pulls a string off the queue, up to but exclusive of the match sequence, or to the queue running out.
-     * @param seq String to end on (and not include in return, but leave on queue)
-     * @return The matched data consumed from queue.
-     */
-    private String consumeTo(String seq) {
-        StringBuilder accum = new StringBuilder();
-        while (!queue.isEmpty() && !matches(seq))
-            accum.append(consume());
-
-        return accum.toString();
-    }
-
-    /**
-     * Pulls a string off the queue (like consumeTo), and then pulls off the matched string (but does not return it).
-     * @param seq String to match up to, and not include in return, and to pull off queue
-     * @return Data matched from queue.
-     */
-    private String chompTo(String seq) {
-        String data = consumeTo(seq);
-        consume(seq);
-        return data;
-    }
-
-    /**
-     * Consume one character off queue.
-     * @return first character on queue.
-     */
-    private Character consume() {
-        return queue.removeFirst();
-    }
-
-    private void consume(String seq) {
-        int len = seq.length();
-        if (len > queue.size())
-            throw new IllegalStateException("Queue not long enough to consume sequence");
-        char[] seqChars = seq.toCharArray();
-        for (int i = 0; i < len; i++) {
-            Character qChar = consume();
-            if (!qChar.equals(seqChars[i]))
-                throw new IllegalStateException("Queue did not match expected sequence");
-        }
-    }
-
-    private void consumeWhitespace() {
-        while (Character.isWhitespace(queue.peekFirst())) {
-            consume();
-        }
-    }
-
-    private String consumeWord() {
-        StringBuilder wordAccum = new StringBuilder();
-        while (Character.isLetterOrDigit(queue.peekFirst())) {
-            wordAccum.append(queue.removeFirst());
-        }
-        return wordAccum.toString();
-    }
-
-    private boolean matches(String seq) {
-        int len = seq.length();
-        if (len > queue.size())
-            return false;
-        List<Character> chars = queue.subList(0, len);
-        char[] seqChars = seq.toCharArray();
-        for (int i = 0; i < len; i++) {
-            if (!chars.get(i).equals(seqChars[i]))
-                return false;
-        }
-        return true;
     }
 
     private Element popStackToSuitableContainer(Tag tag) {
