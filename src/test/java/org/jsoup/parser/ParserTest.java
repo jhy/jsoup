@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class ParserTest {
 
-    @Test public void testParsesSimpleDocument() {
+    @Test public void parsesSimpleDocument() {
         String html = "<html><head><title>First!</title></head><body><p>First post! <img src=\"foo.png\" /></p></body></html>";
         Document doc = Jsoup.parse(html);
         // need a better way to verify these:
@@ -26,7 +26,7 @@ public class ParserTest {
         assertEquals("img", img.tagName());
     }
 
-    @Test public void testParsesRoughAttributes() {
+    @Test public void parsesRoughAttributes() {
         String html = "<html><head><title>First!</title></head><body><p class=\"foo > bar\">First post! <img src=\"foo.png\" /></p></body></html>";
         Document doc = Jsoup.parse(html);
 
@@ -36,7 +36,7 @@ public class ParserTest {
         assertEquals("foo > bar", p.attr("class"));
     }
 
-    @Test public void testParsesComments() {
+    @Test public void parsesComments() {
         String html = "<html><head></head><body><!-- <table><tr><td></table> --><p>Hello</p></body></html>";
         Document doc = Jsoup.parse(html);
         
@@ -47,4 +47,55 @@ public class ParserTest {
         TextNode text = (TextNode) p.childNode(0);
         assertEquals("Hello", text.getWholeText());
     }
+
+    @Test public void parsesUnterminatedComments() {
+        String html = "<p>Hello<!-- <tr><td>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.getElementsByTag("p").get(0);
+        assertEquals("Hello", p.text());
+        TextNode text = (TextNode) p.childNode(0);
+        assertEquals("Hello", text.getWholeText());
+        Comment comment = (Comment) p.childNode(1);
+        assertEquals(" <tr><td>", comment.getData());
+    }
+
+    @Test public void parsesUnterminatedTag() {
+        String h1 = "<p";
+        Document doc = Jsoup.parse(h1);
+        assertEquals(1, doc.getElementsByTag("p").size());
+
+        String h2 = "<div id=1<p id='2'";
+        doc = Jsoup.parse(h2);
+        Element d = doc.getElementById("1");
+        assertEquals(1, d.children().size());
+        Element p = doc.getElementById("2");
+        assertNotNull(p);
+    }
+
+    @Test public void parsesUnterminatedAttribute() {
+        String h1 = "<p id=\"foo";
+        Document doc = Jsoup.parse(h1);
+        Element p = doc.getElementById("foo");
+        assertNotNull(p);
+        assertEquals("p", p.tagName());
+    }
+
+    @Test public void createsDocumentStructure() {
+        String html = "<meta name=keywords /><link rel=stylesheet /><title>jsoup</title><p>Hello world</p>";
+        Document doc = Jsoup.parse(html);
+        Element head = doc.getHead();
+        Element body = doc.getBody();
+
+        assertEquals(2, doc.children().size());
+        assertEquals(3, head.children().size());
+        assertEquals(1, body.children().size());
+
+        assertEquals("keywords", head.getElementsByTag("meta").get(0).attr("name"));
+        assertEquals(0, body.getElementsByTag("meta").size());
+        assertEquals("jsoup", doc.getTitle());
+        assertEquals("Hello world", body.text());
+        assertEquals("Hello world", body.children().get(0).text());
+    }
+
+
 }
