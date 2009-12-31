@@ -32,6 +32,10 @@ public class Attributes implements Iterable<Attribute> {
         attributes.remove(key.toLowerCase());
     }
 
+    public boolean hasKey(String key) {
+        return attributes.containsKey(key.toLowerCase());
+    }
+
     public int size() {
         return attributes.size();
     }

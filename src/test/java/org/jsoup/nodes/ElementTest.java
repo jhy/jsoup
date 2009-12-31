@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -64,5 +65,60 @@ public class ElementTest {
         assertEquals("Hello", p.firstElementSibling().text());
         assertEquals("element", p.lastElementSibling().text());
     }
+
+    @Test public void testGetElementsWithClass() {
+        Document doc = Jsoup.parse("<div class='mellow yellow'><span class=mellow>Hello <b class='yellow'>Yellow!</b></span><p>Empty</p></div>");
+
+        List<Element> els = doc.getElementsWithClass("mellow");
+        assertEquals(2, els.size());
+        assertEquals("div", els.get(0).tagName());
+        assertEquals("span", els.get(1).tagName());
+
+        List<Element> els2 = doc.getElementsWithClass("yellow");
+        assertEquals(2, els2.size());
+        assertEquals("div", els2.get(0).tagName());
+        assertEquals("b", els2.get(1).tagName());
+
+        List<Element> none = doc.getElementsWithClass("solo");
+        assertEquals(0, none.size());
+    }
+
+    @Test public void testGetElementsWithAttribute() {
+        Document doc = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>");
+        List<Element> els = doc.getElementsWithAttribute("style");
+        assertEquals(2, els.size());
+        assertEquals("div", els.get(0).tagName());
+        assertEquals("b", els.get(1).tagName());
+
+        List<Element> none = doc.getElementsWithAttribute("class");
+        assertEquals(0, none.size());
+    }
+
+    @Test public void testGetElementsWithAttributeValue() {
+        Document doc = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>");
+        List<Element> els = doc.getElementsWithAttributeValue("style", "bold");
+        assertEquals(1, els.size());
+        assertEquals("div", els.get(0).tagName());
+
+        List<Element> none = doc.getElementsWithAttributeValue("style", "none");
+        assertEquals(0, none.size());
+    }
+
+    @Test public void testClassDomMethods() {
+        Document doc = Jsoup.parse("<div><span class='mellow yellow'>Hello <b>Yellow</b></span></div>");
+        List<Element> els = doc.getElementsWithAttribute("class");
+        Element span = els.get(0);
+        assertEquals("mellow yellow", span.className());
+        assertTrue(span.hasClass("mellow"));
+        assertTrue(span.hasClass("yellow"));
+        Set<String> classes = span.classNames();
+        assertEquals(2, classes.size());
+        assertTrue(classes.contains("mellow"));
+        assertTrue(classes.contains("yellow"));
+
+        assertEquals("", doc.className());
+        assertFalse(doc.hasClass("mellow"));
+    }
+
 
 }
