@@ -3,11 +3,10 @@ package org.jsoup.nodes;
 import org.apache.commons.lang.Validate;
 import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
+import org.jsoup.select.Collector;
+import org.jsoup.select.Evaluator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  A HTML element: tag + data, e.g. <code>&lt;div id="foo"&gt;content&lt;/div&gt;</code>
@@ -16,6 +15,7 @@ import java.util.List;
 public class Element extends Node {
     private final Tag tag;
     private final List<Element> elementChildren; // subset of Node.children, only holds Elements
+    private Set<String> classNames;
 
     public Element(StartTag startTag) {
         super(startTag.getAttributes());
@@ -118,13 +118,7 @@ public class Element extends Node {
         Validate.notEmpty(tagName);
         tagName = tagName.toLowerCase().trim();
 
-        List<Element> elements = new ArrayList<Element>();
-        if (this.tag.getName().equals(tagName))
-            elements.add(this);
-        for (Element child : elementChildren) {
-            elements.addAll(child.getElementsByTag(tagName));
-        }
-        return Collections.unmodifiableList(elements);
+        return Collector.collect(new Evaluator.Tag(tagName), this);
     }
 
     /**
@@ -139,14 +133,33 @@ public class Element extends Node {
     public Element getElementById(String id) {
         Validate.notEmpty(id);
         
-        if (this.id().equals(id))
-            return this;
-        for (Element child : elementChildren) {
-            Element byId = child.getElementById(id);
-            if (byId != null)
-                return byId;
-        }
-        return null;
+        List<Element> elements = Collector.collect(new Evaluator.Id(id), this);
+        if (elements.size() > 0)
+            return elements.get(0);
+        else
+            return null;
+    }
+
+    public List<Element> getElementsWithClass(String className) {
+        Validate.notEmpty(className);
+
+        return Collector.collect(new Evaluator.Class(className), this);
+    }
+
+    public List<Element> getElementsWithAttribute(String attributeKey) {
+        Validate.notEmpty(attributeKey);
+        attributeKey = attributeKey.trim().toLowerCase();
+
+        return Collector.collect(new Evaluator.Attribute(attributeKey), this);
+    }
+
+    public List<Element> getElementsWithAttributeValue(String key, String value) {
+        Validate.notEmpty(key);
+        key = key.trim().toLowerCase();
+        Validate.notEmpty(value);
+        value = value.trim().toLowerCase();
+
+        return Collector.collect(new Evaluator.AttributeWithValue(key, value), this);
     }
 
     public String text() {
@@ -165,6 +178,27 @@ public class Element extends Node {
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
+     * separated (e.g. <code>&lt;div class="header gray"></code> returns "<code>header gray</code>")
+     * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
+     */
+    public String className() {
+        return attributes.hasKey("class") ? attributes.get("class") : "";
+    }
+
+    public Set<String> classNames() {
+        if (classNames == null) {
+            String[] names = className().split("\\s+");
+            classNames = new HashSet<String>(Arrays.asList(names));
+        }
+        return classNames;
+    }
+
+    public boolean hasClass(String className) {
+        return classNames().contains(className);
     }
 
 
