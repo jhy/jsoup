@@ -27,12 +27,12 @@ public class TextNode extends Node {
         return attributes.get(TEXT_KEY);
     }
 
-    public String html() {
+    public String outerHtml() {
         return StringEscapeUtils.escapeHtml(getWholeText());
     }
 
     public String toString() {
-        return html();
+        return outerHtml();
     }
 
     /**

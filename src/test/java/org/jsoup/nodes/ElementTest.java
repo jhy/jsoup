@@ -120,9 +120,14 @@ public class ElementTest {
         assertFalse(doc.hasClass("mellow"));
     }
 
-    @Test public void testToHtml() {
+    @Test public void testOuterHtml() {
         Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
-        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>", doc.html());
+        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>", doc.outerHtml());
+    }
+
+    @Test public void testInnerHtml() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
+        assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
 

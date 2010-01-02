@@ -20,11 +20,11 @@ public class Comment extends Node {
         return attributes.get(COMMENT_KEY);
     }
 
-    public String html() {
+    public String outerHtml() {
         return String.format("<!--%s-->", getData());
     }
 
     public String toString() {
-        return html();
+        return outerHtml();
     }
 }
