@@ -153,7 +153,7 @@ public class Parser {
             } else {
                 StringBuilder valueAccum = new StringBuilder();
                 // no ' or " to look for, so scan to end tag or space (or end of stream)
-                while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !Character.isWhitespace(tq.peek()) && !tq.isEmpty()) {
+                while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
                     valueAccum.append(tq.consume());
                 }
                 value = valueAccum.toString();
