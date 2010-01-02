@@ -10,10 +10,10 @@ import java.util.List;
  *
  * @author Jonathan Hedley
  */
-class TokenQueue {
+public class TokenQueue {
     private LinkedList<Character> queue;
 
-    TokenQueue(String data) {
+    public TokenQueue(String data) {
         Validate.notNull(data);
 
         queue = new LinkedList<Character>();
@@ -27,7 +27,7 @@ class TokenQueue {
      * Is the queue empty?
      * @return true if no data left in queue.
      */
-    boolean isEmpty() {
+    public boolean isEmpty() {
         return queue.isEmpty();
     }
 
@@ -35,7 +35,7 @@ class TokenQueue {
      * Retrieves but does not remove the first characater from the queue.
      * @return First character, or null if empty.
      */
-    Character peek() {
+    public Character peek() {
         return queue.peek();
     }
 
@@ -44,7 +44,7 @@ class TokenQueue {
      * @param seq String to check queue for.
      * @return true if the next characters match.
      */
-    boolean matches(String seq) {
+    public boolean matches(String seq) {
         int len = seq.length();
         if (len > queue.size())
             return false;
@@ -58,12 +58,25 @@ class TokenQueue {
     }
 
     /**
+     Tests if the next characters match any of the sequences.
+     @param seq
+     @return
+     */
+    public boolean matchesAny(String... seq) {
+        for (String s : seq) {
+            if (matches(s))
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * Tests if the queue matches the sequence (as with match), and if they do, removes the matched string from the
      * queue.
      * @param seq String to search for, and if found, remove from queue.
      * @return true if found and removed, false if not found.
      */
-    boolean matchChomp(String seq) {
+    public boolean matchChomp(String seq) {
         if (matches(seq)) {
             consume(seq);
             return true;
@@ -72,11 +85,19 @@ class TokenQueue {
         }
     }
 
+    public boolean matchesWhitespace() {
+        return !queue.isEmpty() && Character.isWhitespace(queue.peek());
+    }
+
+    public boolean matchesWord() {
+        return !queue.isEmpty() && Character.isLetterOrDigit(queue.peek());
+    }
+
     /**
      * Consume one character off queue.
      * @return first character on queue.
      */
-    Character consume() {
+    public Character consume() {
         return queue.removeFirst();
     }
 
@@ -85,7 +106,7 @@ class TokenQueue {
      * throw an illegal state exception -- but you should be running match() against that condition.
      * @param seq sequence to remove from head of queue.
      */
-    void consume(String seq) {
+    public void consume(String seq) {
         int len = seq.length();
         if (len > queue.size())
             throw new IllegalStateException("Queue not long enough to consume sequence");
@@ -102,9 +123,13 @@ class TokenQueue {
      * @param seq String to end on (and not include in return, but leave on queue)
      * @return The matched data consumed from queue.
      */
-    String consumeTo(String seq) {
+    public String consumeTo(String seq) {
+        return consumeToAny(seq);
+    }
+
+    public String consumeToAny(String... seq) {
         StringBuilder accum = new StringBuilder();
-        while (!queue.isEmpty() && !matches(seq))
+        while (!queue.isEmpty() && !matchesAny(seq))
             accum.append(consume());
 
         return accum.toString();
@@ -118,7 +143,7 @@ class TokenQueue {
      * @param seq String to match up to, and not include in return, and to pull off queue
      * @return Data matched from queue.
      */
-    String chompTo(String seq) {
+    public String chompTo(String seq) {
         String data = consumeTo(seq);
         matchChomp(seq);
         return data;
@@ -127,7 +152,7 @@ class TokenQueue {
     /**
      * Pulls the next run of whitespace characters of the queue.
      */
-    void consumeWhitespace() {
+    public void consumeWhitespace() {
         while (!queue.isEmpty() && Character.isWhitespace(queue.peekFirst())) {
             consume();
         }
@@ -137,11 +162,20 @@ class TokenQueue {
      * Retrieves the next run of word type (letter or digit) off the queue.
      * @return String of word characters from queue, or empty string if none.
      */
-    String consumeWord() {
+    public String consumeWord() {
         StringBuilder wordAccum = new StringBuilder();
         while (!queue.isEmpty() && Character.isLetterOrDigit(queue.peekFirst())) {
             wordAccum.append(queue.removeFirst());
         }
         return wordAccum.toString();
+    }
+
+    public String consumeClassName() {
+        StringBuilder accum = new StringBuilder();
+        Character c = queue.peek();
+        while (!queue.isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
+            accum.append(queue.removeFirst());
+        }
+        return accum.toString();
     }
 }
