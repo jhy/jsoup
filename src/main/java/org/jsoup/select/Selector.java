@@ -28,11 +28,11 @@ public class Selector {
         this.tq = new TokenQueue(query);
     }
 
-    public static ElementList select(String query, Element root) {
+    public static Elements select(String query, Element root) {
         return new Selector(query, root).select();
     }
 
-    public static ElementList select(String query, Iterable<Element> roots) {
+    public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         LinkedHashSet<Element> elements = new LinkedHashSet<Element>();
@@ -40,10 +40,10 @@ public class Selector {
         for (Element root : roots) {
             elements.addAll(select(query, root));
         }
-        return new ElementList(elements);
+        return new Elements(elements);
     }
 
-    private ElementList select() {
+    private Elements select() {
         tq.consumeWhitespace();
         while (!tq.isEmpty()) {
             if (tq.matchChomp("#")) {
@@ -60,7 +60,7 @@ public class Selector {
                 throw new SelectorParseException("Could not parse query " + query);
             }
         }
-        return new ElementList(elements);
+        return new Elements(elements);
     }
 
     private void byId() {
