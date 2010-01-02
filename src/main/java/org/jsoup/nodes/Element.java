@@ -201,7 +201,7 @@ public class Element extends Node {
         return classNames().contains(className);
     }
 
-    public String html() {
+    public String outerHtml() {
         StringBuilder accum = new StringBuilder();
         accum
                 .append("<")
@@ -212,16 +212,27 @@ public class Element extends Node {
             accum.append(" />");
         } else {
             accum.append(">");
-            for (Node node : childNodes)
-                accum.append(node.html());
+            accum.append(html());
             accum.append("</").append(tagName()).append(">");
         }
 
         return accum.toString();
     }
 
+    /**
+     * Retrieves the element's inner HTML.
+     * @return String of HTML.
+     */
+    public String html() {
+        StringBuilder accum = new StringBuilder();
+        for (Node node : childNodes)
+            accum.append(node.outerHtml());
+
+        return accum.toString();
+    }
+
     public String toString() {
-        return html();
+        return outerHtml();
     }
 
 

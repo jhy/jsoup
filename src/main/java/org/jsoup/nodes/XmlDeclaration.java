@@ -21,11 +21,11 @@ public class XmlDeclaration extends Node {
     }
 
     // TODO: this munged <! and <? -- not really correct or useful
-    public String html() {
+    public String outerHtml() {
         return String.format("<? %s >", getWholeDeclaration());
     }
 
     public String toString() {
-        return html();
+        return outerHtml();
     }
 }
