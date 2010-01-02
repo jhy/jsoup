@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
  Tests for ElementList.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class ElementListTest {
+public class ElementsTest {
     @Test public void chainedSelects() {
         String h = "<p>Excl</p><div class=headline><p>Hello</p><p>There</p></div><div class=headline><h1>Headline</h1></div>";
         Document doc = Jsoup.parse(h);
