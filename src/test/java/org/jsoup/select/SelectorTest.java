@@ -52,4 +52,20 @@ public class SelectorTest {
         assertEquals(2, withTitle.size());
         assertEquals(1, foo.size());
     }
+
+    @Test public void testGroupOr() {
+        String h = "<div title=foo /><div title=bar /><div /><p></p><img /><span title=qux>";
+        ElementList els = Jsoup.parse(h).select("p,div,[title]");
+
+        assertEquals(5, els.size());
+        assertEquals("p", els.get(0).tagName());
+        assertEquals("div", els.get(1).tagName());
+        assertEquals("foo", els.get(1).attr("title"));
+        assertEquals("div", els.get(2).tagName());
+        assertEquals("bar", els.get(2).attr("title"));
+        assertEquals("div", els.get(3).tagName());
+        assertNull(els.get(3).attr("title"));
+        assertEquals("span", els.get(4).tagName());
+
+    }
 }
