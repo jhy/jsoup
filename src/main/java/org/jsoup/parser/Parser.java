@@ -160,7 +160,7 @@ public class Parser {
             tq.consumeWhitespace();
         }
         if (!key.isEmpty())
-            return new Attribute(key, value);
+            return Attribute.createFromEncoded(key, value);
         else {
             tq.consume(); // unknown char, keep popping so not get stuck
             return null;
@@ -173,7 +173,7 @@ public class Parser {
         while (!tq.matches("<") && !tq.isEmpty()) { // scan to next tag
             textAccum.append(tq.consume());
         }
-        TextNode textNode = new TextNode(textAccum.toString());
+        TextNode textNode = TextNode.createFromEncoded(textAccum.toString());
         last().addChild(textNode);
     }
 
