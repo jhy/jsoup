@@ -8,18 +8,18 @@ import java.util.*;
  A list of {@link Element Elements}, with methods that act on every element in the list
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class ElementList implements List<Element>{
+public class Elements implements List<Element>{
     private List<Element> contents;
 
-    public ElementList() {
+    public Elements() {
         contents = new ArrayList<Element>();
     }
 
-    public ElementList(Collection<Element> elements) {
+    public Elements(Collection<Element> elements) {
         contents = new ArrayList<Element>(elements);
     }
 
-    public ElementList select(String query) {
+    public Elements select(String query) {
         return Selector.select(query, this);
     }
 

@@ -4,7 +4,7 @@ import org.apache.commons.lang.Validate;
 import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
-import org.jsoup.select.ElementList;
+import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
 
@@ -65,7 +65,7 @@ public class Element extends Node {
         return Collections.unmodifiableList(elementChildren);
     }
 
-    public ElementList select(String query) {
+    public Elements select(String query) {
         return Selector.select(query, this);
     }
 
