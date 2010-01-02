@@ -32,6 +32,17 @@ public class Selector {
         return new Selector(query, root).select();
     }
 
+    public static ElementList select(String query, Iterable<Element> roots) {
+        Validate.notEmpty(query);
+        Validate.notNull(roots);
+        LinkedHashSet<Element> elements = new LinkedHashSet<Element>();
+
+        for (Element root : roots) {
+            elements.addAll(select(query, root));
+        }
+        return new ElementList(elements);
+    }
+
     private ElementList select() {
         tq.consumeWhitespace();
         while (!tq.isEmpty()) {

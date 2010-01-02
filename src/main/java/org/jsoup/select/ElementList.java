@@ -19,6 +19,10 @@ public class ElementList implements List<Element>{
         contents = new ArrayList<Element>(elements);
     }
 
+    public ElementList select(String query) {
+        return Selector.select(query, this);
+    }
+
     // implements List<Element> delegates:
     public int size() {return contents.size();}
 
