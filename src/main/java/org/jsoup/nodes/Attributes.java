@@ -59,7 +59,17 @@ public class Attributes implements Iterable<Attribute> {
         return Collections.unmodifiableList(list);
     }
 
-    // todo: toString
+    public String html() {
+        StringBuilder accum = new StringBuilder();
+        for (Attribute attribute : this) {
+            accum.append(" ");
+            accum.append(attribute.html());
+        }
+        return accum.toString();
+    }
+    public String toString() {
+        return html();
+    }
 
 
 }

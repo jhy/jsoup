@@ -58,6 +58,7 @@ public class Parser {
     }
 
     private void parseComment() {
+        // TODO: this puts comments into nodes that should not hold the (e.g. img).
         tq.consume("<!--");
         String data = tq.chompTo("->");
 

@@ -201,5 +201,28 @@ public class Element extends Node {
         return classNames().contains(className);
     }
 
+    public String html() {
+        StringBuilder accum = new StringBuilder();
+        accum
+                .append("<")
+                .append(tagName())
+                .append(attributes.html());
+
+        if (childNodes.isEmpty() && tag.isEmpty()) {
+            accum.append(" />");
+        } else {
+            accum.append(">");
+            for (Node node : childNodes)
+                accum.append(node.html());
+            accum.append("</").append(tagName()).append(">");
+        }
+
+        return accum.toString();
+    }
+
+    public String toString() {
+        return html();
+    }
+
 
 }

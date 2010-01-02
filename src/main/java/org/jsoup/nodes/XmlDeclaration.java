@@ -19,4 +19,13 @@ public class XmlDeclaration extends Node {
     public String getWholeDeclaration() {
         return attributes.get(DECL_KEY);
     }
+
+    // TODO: this munged <! and <? -- not really correct or useful
+    public String html() {
+        return String.format("<? %s >", getWholeDeclaration());
+    }
+
+    public String toString() {
+        return html();
+    }
 }

@@ -100,6 +100,10 @@ public class Tag {
         return !isBlock;
     }
 
+    public boolean isEmpty() {
+        return empty;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

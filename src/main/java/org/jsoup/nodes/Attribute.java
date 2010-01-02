@@ -42,6 +42,14 @@ public class Attribute {
         this.value = value;
     }
 
+    public String html() {
+        return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
+    }
+
+    public String toString() {
+        return html();
+    }
+
     /**
      * Create a new Attribute from an unencoded key and a HMTL attribute encoded value.
      * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
