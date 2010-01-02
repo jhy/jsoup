@@ -175,6 +175,15 @@ public class TokenQueue {
         Character c = queue.peek();
         while (!queue.isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
             accum.append(queue.removeFirst());
+            c = queue.peek();
+        }
+        return accum.toString();
+    }
+
+    public String remainder() {
+        StringBuilder accum = new StringBuilder();
+        for (Character character : queue) {
+            accum.append(character);
         }
         return accum.toString();
     }
