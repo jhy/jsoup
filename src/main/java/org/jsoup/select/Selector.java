@@ -4,6 +4,7 @@ import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.TokenQueue;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 
@@ -13,7 +14,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Selector {
     private final Element root;
-    private final ElementList elements;
+    private final LinkedHashSet<Element> elements; // LHS for unique and ordered elements
     private final String query;
     private final TokenQueue tq;
 
@@ -21,7 +22,7 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(root);
 
-        this.elements = new ElementList();
+        this.elements = new LinkedHashSet<Element>();
         this.query = query.trim();
         this.root = root;
         this.tq = new TokenQueue(query);
@@ -42,11 +43,13 @@ public class Selector {
                 byTag();
             } else if (tq.matchChomp("[")) {
                 byAttribute();
+            } else if (tq.matchChomp(",")) {
+                groupOr();
             } else { // unhandled
                 throw new SelectorParseException("Could not parse query " + query);
             }
         }
-        return elements;
+        return new ElementList(elements);
     }
 
     private void byId() {
@@ -87,7 +90,10 @@ public class Selector {
         else {
             elements.addAll(root.getElementsWithAttribute(key));
         }
+    }
 
+    private void groupOr() {
+        // no-op; just append uniques
     }
 
     public static class SelectorParseException extends IllegalStateException {

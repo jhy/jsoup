@@ -15,6 +15,10 @@ public class ElementList implements List<Element>{
         contents = new ArrayList<Element>();
     }
 
+    public ElementList(Collection<Element> elements) {
+        contents = new ArrayList<Element>(elements);
+    }
+
     // implements List<Element> delegates:
     public int size() {return contents.size();}
 

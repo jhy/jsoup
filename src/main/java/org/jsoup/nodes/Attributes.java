@@ -67,9 +67,25 @@ public class Attributes implements Iterable<Attribute> {
         }
         return accum.toString();
     }
+
     public String toString() {
         return html();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Attributes)) return false;
 
+        Attributes that = (Attributes) o;
+
+        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return attributes != null ? attributes.hashCode() : 0;
+    }
 }
