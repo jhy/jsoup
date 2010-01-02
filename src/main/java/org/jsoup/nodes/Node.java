@@ -94,6 +94,8 @@ public abstract class Node {
         // TODO: probably not have this accessor
     }
 
+    public abstract String html();
+
     public String toString() {
         return nodeName();
     }

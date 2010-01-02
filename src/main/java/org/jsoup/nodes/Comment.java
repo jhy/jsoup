@@ -19,4 +19,12 @@ public class Comment extends Node {
     public String getData() {
         return attributes.get(COMMENT_KEY);
     }
+
+    public String html() {
+        return String.format("<!--%s-->", getData());
+    }
+
+    public String toString() {
+        return html();
+    }
 }

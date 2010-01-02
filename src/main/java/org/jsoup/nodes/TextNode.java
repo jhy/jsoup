@@ -27,6 +27,14 @@ public class TextNode extends Node {
         return attributes.get(TEXT_KEY);
     }
 
+    public String html() {
+        return StringEscapeUtils.escapeHtml(getWholeText());
+    }
+
+    public String toString() {
+        return html();
+    }
+
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)

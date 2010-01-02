@@ -120,5 +120,10 @@ public class ElementTest {
         assertFalse(doc.hasClass("mellow"));
     }
 
+    @Test public void testToHtml() {
+        Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
+        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>", doc.html());
+    }
+
 
 }
