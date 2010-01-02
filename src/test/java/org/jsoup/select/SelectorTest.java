@@ -91,4 +91,11 @@ public class SelectorTest {
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
     }
+
+    @Test public void deeperDescendant() {
+        String h = "<div class=head><p class=first>Hello</div><div class=head><h1 class=first>Another</h1><p>Again</div>";
+        Elements els = Jsoup.parse(h).select("div p .first");
+        assertEquals(1, els.size());
+        assertEquals("Hello", els.get(0).text());
+    }
 }
