@@ -19,11 +19,13 @@ public class Selector {
     private final TokenQueue tq;
 
     private Selector(String query, Element root) {
+        Validate.notNull(query);
+        query = query.trim();
         Validate.notEmpty(query);
         Validate.notNull(root);
 
         this.elements = new LinkedHashSet<Element>();
-        this.query = query.trim();
+        this.query = query;
         this.root = root;
         this.tq = new TokenQueue(query);
     }
@@ -45,22 +47,34 @@ public class Selector {
 
     private Elements select() {
         tq.consumeWhitespace();
-        while (!tq.isEmpty()) {
-            if (tq.matchChomp("#")) {
-                byId();
-            } else if (tq.matchChomp(".")) {
-                byClass();
-            } else if (tq.matchesWord()) {
-                byTag();
-            } else if (tq.matchChomp("[")) {
-                byAttribute();
-            } else if (tq.matchChomp(",")) {
-                groupOr();
-            } else { // unhandled
-                throw new SelectorParseException("Could not parse query " + query);
-            }
+
+        if (tq.matchChomp("#")) {
+            byId();
+        } else if (tq.matchChomp(".")) {
+            byClass();
+        } else if (tq.matchesWord()) {
+            byTag();
+        } else if (tq.matchChomp("[")) {
+            byAttribute();
+        } else { // unhandled
+            throw new SelectorParseException("Could not parse query " + query);
         }
-        return new Elements(elements);
+        tq.consumeWhitespace();
+
+        // hierarchy (todo: implement >, +, ~)
+        if (!tq.isEmpty()) {
+            if (tq.matchChomp(",")) { // group or
+                while (!tq.isEmpty()) {
+                    String subQuery = tq.chompTo(",");
+                    elements.addAll(select(subQuery, root));
+                }
+                return new Elements(elements);
+            } else { // ancestor descendant (AND, really)
+                return new Elements(select(tq.remainder(), elements));
+            }
+        } else {
+            return new Elements(elements);
+        }
     }
 
     private void byId() {

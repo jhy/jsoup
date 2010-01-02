@@ -55,7 +55,8 @@ public class SelectorTest {
 
     @Test public void testGroupOr() {
         String h = "<div title=foo /><div title=bar /><div /><p></p><img /><span title=qux>";
-        Elements els = Jsoup.parse(h).select("p,div,[title]");
+        Document doc = Jsoup.parse(h);
+        Elements els = doc.select("p,div,[title]");
 
         assertEquals(5, els.size());
         assertEquals("p", els.get(0).tagName());
@@ -66,6 +67,28 @@ public class SelectorTest {
         assertEquals("div", els.get(3).tagName());
         assertNull(els.get(3).attr("title"));
         assertEquals("span", els.get(4).tagName());
+    }
 
+    @Test public void testGroupOrAttribute() {
+        String h = "<div id=1 /><div id=2 /><div title=foo /><div title=bar />";
+        Elements els = Jsoup.parse(h).select("[id],[title=foo]");
+
+        assertEquals(3, els.size());
+        assertEquals("1", els.get(0).id());
+        assertEquals("2", els.get(1).id());
+        assertEquals("foo", els.get(2).attr("title"));
+    }
+
+    @Test public void descendant() {
+        String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
+        Document doc = Jsoup.parse(h);
+        Elements els = doc.select(".head p");
+        assertEquals(2, els.size());
+        assertEquals("Hello", els.get(0).text());
+        assertEquals("There", els.get(1).text());
+
+        Elements p = doc.select("p.first");
+        assertEquals(1, p.size());
+        assertEquals("Hello", p.get(0).text());
     }
 }
