@@ -97,5 +97,14 @@ public class ParserTest {
         assertEquals("Hello world", body.children().get(0).text());
     }
 
+    @Test public void handlesEscapedData() {
+        String html = "<div title='Surf &amp; Turf'>Reef &amp; Beef</div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.getElementsByTag("div").get(0);
+
+        assertEquals("Surf & Turf", div.attr("title"));
+        assertEquals("Reef & Beef", div.text());
+    }
+
 
 }
