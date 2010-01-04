@@ -5,7 +5,10 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -104,6 +107,12 @@ public class ParserTest {
 
         assertEquals("Surf & Turf", div.attr("title"));
         assertEquals("Reef & Beef", div.text());
+    }
+
+    @Test public void handlesDataOnlyTags() {
+        String t = "<textarea><p>Foo</p>\n<p>Bar</p></TEXTAREA>";
+        List<Element> tels = Jsoup.parse(t).getElementsByTag("textarea");
+        assertEquals("<p>Foo</p>\n<p>Bar</p>", tels.get(0).text());
     }
 
 

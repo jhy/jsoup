@@ -84,9 +84,6 @@ public class Parser {
         if (!tagName.isEmpty()) {
             Tag tag = Tag.valueOf(tagName);
             Element closed = popStackToClose(tag);
-
-            if (closed != null && closed.getTag().equals(titleTag))
-                doc.setTitle(closed.text());
         }
     }
 
@@ -113,6 +110,17 @@ public class Parser {
             emptyTag = false;
         }
 
+        // pc data only tags (textarea, script): chomp to end tag, add content as text node
+        if (tag.isData()) {
+            String data = tq.chompTo("</" + tagName);
+            tq.chompTo(">");
+            TextNode textNode = TextNode.createFromEncoded(data);
+            child.addChild(textNode);
+
+            if (tag.equals(titleTag))
+                doc.setTitle(child.text());
+        }
+
         // switch between html, head, body, to preserve doc structure
         if (tag.equals(htmlTag)) {
             doc.getAttributes().mergeAttributes(attributes);
@@ -133,7 +141,7 @@ public class Parser {
         } else {
             Element parent = popStackToSuitableContainer(tag);
             parent.addChild(child);
-            if (!emptyTag)
+            if (!emptyTag && !tag.isData()) // TODO: only check for data here because last() == head is wrong; should be ancestor is head
                 stack.addLast(child);
         }
     }

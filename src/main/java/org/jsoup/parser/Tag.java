@@ -100,6 +100,10 @@ public class Tag {
         return !isBlock;
     }
 
+    public boolean isData() {
+        return !canContainInline && !isEmpty();
+    }
+
     public boolean isEmpty() {
         return empty;
     }
@@ -204,9 +208,12 @@ public class Tag {
         // formctrl
         createInline("INPUT").setEmpty();
         createInline("SELECT"); // just optgroup or option
-        createInline("TEXTAREA");
+        createInline("TEXTAREA").setContainDataOnly();
         createInline("LABEL").setOptionalClosing(); // not self
         createInline("BUTTON"); // bunch of excludes not defined
+        createInline("OPTGROUP"); // only in select, only contain option
+        createInline("OPTION").setContainDataOnly();
+        createInline("LEGEND"); // only within fieldset (implicit?)
 
         // document
         createBlock("HTML"); // specific includes not impl
@@ -225,10 +232,7 @@ public class Tag {
 
         createBlock("LI").setOptionalClosing(); // only within OL or UL. Implicit?
 
-        createInline("OPTGROUP"); // only in select, only contain option
-        createInline("OPTION").setContainDataOnly();
-        createInline("TEXTAREA").setContainDataOnly();
-        createInline("LEGEND"); // only within fieldset (implicit?)
+
 
         // tables
         createInline("CAPTION");
