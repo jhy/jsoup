@@ -8,25 +8,18 @@ import org.jsoup.parser.Tag;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
-    private Element head;
-    private Element body;
     private String title;
 
     public Document() {
-        super(new StartTag(Tag.valueOf("html")));
-        head = new Element (new StartTag(Tag.valueOf("head")));
-        body = new Element (new StartTag(Tag.valueOf("body")));
-
-        this.addChild(head);
-        this.addChild(body);
+        super(new StartTag(Tag.valueOf("#root")));
     }
 
     public Element getHead() {
-        return head;
+        return getElementsByTag("head").get(0);
     }
 
     public Element getBody() {
-        return body;
+        return getElementsByTag("body").get(0);
     }
 
     public String getTitle() {
@@ -35,6 +28,11 @@ public class Document extends Element {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Override
+    public String outerHtml() {
+        return super.html(); // no outer wrapper tag
     }
 }
 
