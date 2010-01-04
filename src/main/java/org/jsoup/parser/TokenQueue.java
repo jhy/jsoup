@@ -40,7 +40,7 @@ public class TokenQueue {
     }
 
     /**
-     * Tests if the next characters on the queue match the sequence.
+     * Tests if the next characters on the queue match the sequence. Case insensitive.
      * @param seq String to check queue for.
      * @return true if the next characters match.
      */
@@ -51,7 +51,9 @@ public class TokenQueue {
         List<Character> chars = queue.subList(0, len);
         char[] seqChars = seq.toCharArray();
         for (int i = 0; i < len; i++) {
-            if (!chars.get(i).equals(seqChars[i]))
+            Character found = Character.toLowerCase(chars.get(i));
+            Character check = Character.toLowerCase(seqChars[i]);
+            if (!found.equals(check))
                 return false;
         }
         return true;
@@ -104,17 +106,18 @@ public class TokenQueue {
     /**
      * Consumes the supplied sequence of the queue. If the queue does not start with the supplied sequence, will
      * throw an illegal state exception -- but you should be running match() against that condition.
+     <p>
+     Case insensitive.
      * @param seq sequence to remove from head of queue.
      */
     public void consume(String seq) {
+        if (!matches(seq))
+            throw new IllegalStateException("Queue did not match expected sequence");
         int len = seq.length();
         if (len > queue.size())
             throw new IllegalStateException("Queue not long enough to consume sequence");
-        char[] seqChars = seq.toCharArray();
         for (int i = 0; i < len; i++) {
-            Character qChar = consume();
-            if (!qChar.equals(seqChars[i]))
-                throw new IllegalStateException("Queue did not match expected sequence");
+            consume();
         }
     }
 
