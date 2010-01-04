@@ -2,8 +2,7 @@ package org.jsoup.parser;
 
 import org.apache.commons.lang.Validate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  HTML Tag specifications. This is a very simplistic model without the full expressiveness as the DTD,
@@ -12,6 +11,11 @@ import java.util.Map;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Tag {
     private static final Map<String, Tag> tags = new HashMap<String, Tag>();
+    private static final Tag defaultAncestor;
+    static {
+        defaultAncestor = new Tag("BODY", true, true, true, false, false);
+        tags.put(defaultAncestor.tagName, defaultAncestor);
+    }
 
     private String tagName;
     private boolean isBlock; // block or inline
@@ -19,6 +23,7 @@ public class Tag {
     private boolean canContainInline; // only pcdata if not
     private boolean optionalClosing; // If tag is open, and another seen, close previous tag
     private boolean empty; // can hold nothing; e.g. img
+    private List<Tag> ancestors;
 
     private Tag(String tagName, boolean block, boolean canContainBlock, boolean canContainInline, boolean optionalClosing, boolean empty) {
         this.tagName = tagName.toLowerCase();
@@ -73,9 +78,8 @@ public class Tag {
 
         if (this.optionalClosing && this.equals(child))
             return false;
-        // TODO: the optional closing may need more context to decide?
 
-        if (this.empty)
+        if (this.empty || this.isData())
             return false;
 
         // head can only contain a few. if more than head in here, modify to have a list of valids
@@ -106,6 +110,21 @@ public class Tag {
 
     public boolean isEmpty() {
         return empty;
+    }
+
+    public Tag getImplicitParent() {
+        return (!ancestors.isEmpty()) ? ancestors.get(0) : null;
+    }
+
+    public boolean isValidParent(Tag child) {
+        if (child.ancestors.isEmpty())
+            return true; // HTML tag
+
+        for (Tag tag : child.ancestors) {
+            if (this.equals(tag))
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -147,6 +166,23 @@ public class Tag {
         // tags are set here in uppercase for legibility, but internally held as lowercase.
         // TODO[must]: incorporate html 5 as appropriate
 
+        // document
+        createBlock("HTML").setAncestor(null); // specific includes not impl
+        createBlock("HEAD").setAncestor("HTML"); // specific includes not impl: SCRIPT, STYLE, META, LINK, OBJECT
+        createBlock("BODY").setAncestor("HTML"); // specific includes not impl
+
+        // head
+        // all ancestors set to (head, body): so implicitly create head, but allow in body
+        createInline("SCRIPT").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createInline("STYLE").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createInline("META").setAncestor("HEAD", "BODY").setEmpty();
+        createBlock("LINK").setAncestor("HEAD", "BODY").setEmpty(); // only within head
+        createInline("OBJECT").setAncestor("HEAD", "BODY"); // flow (block/inline) or param
+        createInline("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createInline("BASE").setAncestor("HEAD", "BODY").setEmpty();
+
+
+
         // fontstyle
         createInline("TT");
         createInline("I");
@@ -169,9 +205,7 @@ public class Tag {
         // special
         createInline("A").setOptionalClosing(); // cannot contain self
         createInline("IMG").setEmpty();
-        createInline("OBJECT"); // flow (block/inline) or param
         createInline("BR").setEmpty();
-        createInline("SCRIPT").setContainDataOnly();
         createInline("MAP"); // map is defined as inline, but can hold block (what?) or area. Seldom used so NBD.
         createInline("Q");
         createInline("SUB");
@@ -194,61 +228,48 @@ public class Tag {
         createBlock("UL");
         createBlock("OL");
         createBlock("PRE").setContainInlineOnly();
-        createBlock("DL");
         createBlock("DIV");
         createBlock("NOSCRIPT");
         createBlock("BLOCKQUOTE");
-        createBlock("FORM").setOptionalClosing(); // can't contian self
         createBlock("HR").setEmpty();
-        createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
-        createBlock("FIELDSET");
         createBlock("ADDRESS").setContainInlineOnly();
 
 
         // formctrl
-        createInline("INPUT").setEmpty();
-        createInline("SELECT"); // just optgroup or option
-        createInline("TEXTAREA").setContainDataOnly();
-        createInline("LABEL").setOptionalClosing(); // not self
-        createInline("BUTTON"); // bunch of excludes not defined
-        createInline("OPTGROUP"); // only in select, only contain option
-        createInline("OPTION").setContainDataOnly();
-        createInline("LEGEND"); // only within fieldset (implicit?)
-
-        // document
-        createBlock("HTML"); // specific includes not impl
-        createBlock("HEAD"); // specific includes not impl: SCRIPT, STYLE, META, LINK, OBJECT
-        createBlock("BODY"); // specific includes not impl
+        createBlock("FORM").setOptionalClosing(); // can't contian self
+        createInline("INPUT").setAncestor("FORM").setEmpty();
+        createInline("SELECT").setAncestor("FORM"); // just contain optgroup or option
+        createInline("TEXTAREA").setAncestor("FORM").setContainDataOnly();
+        createInline("LABEL").setAncestor("FORM").setOptionalClosing(); // not self
+        createInline("BUTTON").setAncestor("FORM"); // bunch of excludes not defined
+        createInline("OPTGROUP").setAncestor("SELECT"); //  only contain option
+        createInline("OPTION").setAncestor("SELECT").setContainDataOnly();
+        createBlock("FIELDSET").setAncestor("FORM");
+        createInline("LEGEND").setAncestor("FIELDSET");
 
         // other
         createInline("AREA").setEmpty(); // not an inline per-se
-        createBlock("LINK").setEmpty(); // only within head
-        createInline("PARAM").setEmpty(); // only within object
+        createInline("PARAM").setAncestor("OBJECT").setEmpty();
         createBlock("INS"); // only within body
         createBlock("DEL"); // only within body
 
-        createInline("DT").setOptionalClosing(); // only within DL. Prolly should create implicit DL?
-        createInline("DD").setOptionalClosing(); // only within DL. Prolly should create implicit DL?
+        createBlock("DL");
+        createInline("DT").setAncestor("DL").setOptionalClosing(); // only within DL.
+        createInline("DD").setAncestor("DL").setOptionalClosing(); // only within DL.
 
-        createBlock("LI").setOptionalClosing(); // only within OL or UL. Implicit?
-
-
+        createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
 
         // tables
-        createInline("CAPTION");
-        createInline("THEAD").setOptionalClosing(); // just TR
-        createInline("TFOOT").setOptionalClosing(); // just TR
-        createInline("TBODY").setOptionalClosing(); // optional / implicit open too. just TR
-        createInline("COLGROUP").setOptionalClosing(); // just COL
-        createInline("COL").setEmpty();
-        createInline("TR").setOptionalClosing(); // just TH, TD
-        createBlock("TD").setOptionalClosing();
-        
-        // head
-        createInline("TITLE").setContainDataOnly();
-        createInline("BASE").setEmpty();
-        createInline("META").setEmpty();
-        createInline("STYLE").setContainDataOnly();
+        createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
+        createBlock("CAPTION").setAncestor("TABLE");
+        createBlock("THEAD").setAncestor("TABLE").setOptionalClosing(); // just TR
+        createBlock("TFOOT").setAncestor("TABLE").setOptionalClosing(); // just TR
+        createBlock("TBODY").setAncestor("TABLE").setOptionalClosing(); // optional / implicit open too. just TR
+        createBlock("COLGROUP").setAncestor("TABLE").setOptionalClosing(); // just COL
+        createBlock("COL").setAncestor("COLGROUP").setEmpty();
+        createBlock("TR").setAncestor("TABLE").setOptionalClosing(); // just TH, TD
+        createBlock("TH").setAncestor("TR").setOptionalClosing();
+        createBlock("TD").setAncestor("TR").setOptionalClosing();
     }
 
     private static Tag createBlock(String tagName) {
@@ -260,6 +281,7 @@ public class Tag {
     }
 
     private static Tag register(Tag tag) {
+        tag.setAncestor(defaultAncestor.tagName);
         synchronized (tags) {
             tags.put(tag.tagName, tag);
         }
@@ -287,6 +309,18 @@ public class Tag {
 
     private Tag setOptionalClosing() {
         optionalClosing = true;
+        return this;
+    }
+
+    private Tag setAncestor(String... tagNames) {
+        if (tagNames == null) {
+            ancestors = Collections.emptyList();
+        } else {
+            ancestors = new ArrayList<Tag>(tagNames.length);
+            for (String name : tagNames) {
+                ancestors.add(Tag.valueOf(name));
+            }
+        }
         return this;
     }
 }

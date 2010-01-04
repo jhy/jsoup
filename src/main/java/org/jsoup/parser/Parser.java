@@ -4,8 +4,6 @@ import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.*;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  Parses HTML into a {@link Document}
@@ -32,7 +30,6 @@ public class Parser {
 
         doc = new Document();
         stack.add(doc);
-        stack.add(doc.getHead());
     }
 
     public static Document parse(String html) {
@@ -58,7 +55,7 @@ public class Parser {
     }
 
     private void parseComment() {
-        // TODO: this puts comments into nodes that should not hold the (e.g. img).
+        // TODO: this puts comments into nodes that should not hold them (e.g. img).
         tq.consume("<!--");
         String data = tq.chompTo("->");
 
@@ -83,7 +80,7 @@ public class Parser {
 
         if (!tagName.isEmpty()) {
             Tag tag = Tag.valueOf(tagName);
-            Element closed = popStackToClose(tag);
+            popStackToClose(tag);
         }
     }
 
@@ -102,12 +99,8 @@ public class Parser {
         StartTag startTag = new StartTag(tag, attributes);
         Element child = new Element(startTag);
 
-        boolean emptyTag;
-        if (tq.matchChomp("/>")) { // empty tag, don't add to stack
-            emptyTag = true;
-        } else {
-            tq.matchChomp(">"); // safe because checked above (or ran out of data)
-            emptyTag = false;
+        if (!tq.matchChomp("/>")) { // close empty element or tag
+            tq.matchChomp(">");
         }
 
         // pc data only tags (textarea, script): chomp to end tag, add content as text node
@@ -120,30 +113,7 @@ public class Parser {
             if (tag.equals(titleTag))
                 doc.setTitle(child.text());
         }
-
-        // switch between html, head, body, to preserve doc structure
-        if (tag.equals(htmlTag)) {
-            doc.getAttributes().mergeAttributes(attributes);
-        } else if (tag.equals(headTag)) {
-            doc.getHead().getAttributes().mergeAttributes(attributes);
-            // head is on stack from start, no action required
-        } else if (last().getTag().equals(headTag) && !headTag.canContain(tag)) {
-            // switch to body
-            stack.removeLast();
-            stack.addLast(doc.getBody());
-            last().addChild(child);
-            if (!emptyTag)
-                stack.addLast(child);
-        } else if (tag.equals(bodyTag) && last().getTag().equals(htmlTag)) {
-            doc.getBody().getAttributes().mergeAttributes(attributes);
-            stack.removeLast();
-            stack.addLast(doc.getBody());
-        } else {
-            Element parent = popStackToSuitableContainer(tag);
-            parent.addChild(child);
-            if (!emptyTag && !tag.isData()) // TODO: only check for data here because last() == head is wrong; should be ancestor is head
-                stack.addLast(child);
-        }
+        addChildToParent(child);
     }
 
     private Attribute parseAttribute() {
@@ -181,6 +151,48 @@ public class Parser {
         String text = tq.consumeTo("<");
         TextNode textNode = TextNode.createFromEncoded(text);
         last().addChild(textNode);
+    }
+
+    private Element addChildToParent(Element child) {
+        Element parent = popStackToSuitableContainer(child.getTag());
+        Tag childTag = child.getTag();
+        boolean validAncestor = stackHasValidParent(childTag);
+
+        if (!validAncestor) {
+            // create implicit parent around this child
+            Tag parentTag = childTag.getImplicitParent();
+            StartTag parentStart = new StartTag(parentTag);
+            Element implicit = new Element(parentStart);
+            // special case: make sure there's a head before putting in body
+            if (child.getTag().equals(bodyTag)) {
+                Element head = new Element(new StartTag(headTag));
+                implicit.addChild(head);
+            }
+            implicit.addChild(child);
+
+            // recurse to ensure somewhere to put parent
+            Element root = addChildToParent(implicit);
+            stack.addLast(child);
+            return root;
+        }
+
+        parent.addChild(child);
+        stack.addLast(child);
+        return parent;
+    }
+
+    private boolean stackHasValidParent(Tag childTag) {
+        if (stack.size() == 1 && childTag.equals(htmlTag))
+            return true; // root is valid for html node
+        
+        for (int i = stack.size() -1; i > 0; i--) { // not all the way to end
+            Element el = stack.get(i);
+            Tag parent2 = el.getTag();
+            if (parent2.isValidParent(childTag)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Element popStackToSuitableContainer(Tag tag) {
