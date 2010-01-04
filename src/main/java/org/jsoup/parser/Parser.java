@@ -92,7 +92,7 @@ public class Parser {
         Attributes attributes = new Attributes();
 
         String tagName = tq.consumeWord();
-        while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !tq.isEmpty()) {
+        while (!tq.matchesAny("<", "/>", ">") && !tq.isEmpty()) {
             Attribute attribute = parseAttribute();
             if (attribute != null)
                 attributes.put(attribute);
@@ -114,7 +114,7 @@ public class Parser {
         if (tag.isData()) {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
-            TextNode textNode = TextNode.createFromEncoded(data);
+            TextNode textNode = TextNode.createFromEncoded(data); // TODO: maybe have this be another data type? So doesn't come back in text()?
             child.addChild(textNode);
 
             if (tag.equals(titleTag))
@@ -161,7 +161,7 @@ public class Parser {
             } else {
                 StringBuilder valueAccum = new StringBuilder();
                 // no ' or " to look for, so scan to end tag or space (or end of stream)
-                while (!tq.matches("<") && !tq.matches("/>") && !tq.matches(">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
+                while (!tq.matchesAny("<", "/>", ">") && !tq.matchesWhitespace() && !tq.isEmpty()) {
                     valueAccum.append(tq.consume());
                 }
                 value = valueAccum.toString();
@@ -178,11 +178,8 @@ public class Parser {
 
     private void parseTextNode() {
         // TODO: work out whitespace requirements (between blocks, between inlines)
-        StringBuilder textAccum = new StringBuilder();
-        while (!tq.matches("<") && !tq.isEmpty()) { // scan to next tag
-            textAccum.append(tq.consume());
-        }
-        TextNode textNode = TextNode.createFromEncoded(textAccum.toString());
+        String text = tq.consumeTo("<");
+        TextNode textNode = TextNode.createFromEncoded(text);
         last().addChild(textNode);
     }
 
