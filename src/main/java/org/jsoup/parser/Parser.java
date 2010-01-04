@@ -107,11 +107,11 @@ public class Parser {
         if (tag.isData()) {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
-            TextNode textNode = TextNode.createFromEncoded(data); // TODO: maybe have this be another data type? So doesn't come back in text()?
-            child.addChild(textNode);
+            DataNode dataNode = DataNode.createFromEncoded(data);
+            child.addChild(dataNode);
 
             if (tag.equals(titleTag))
-                doc.setTitle(child.text());
+                doc.setTitle(child.data());
         }
         addChildToParent(child);
     }

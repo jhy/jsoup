@@ -186,6 +186,22 @@ public class Element extends Node {
         return sb.toString();
     }
 
+    public String data() {
+        StringBuilder sb = new StringBuilder();
+
+        for (Node childNode : childNodes) {
+            if (childNode instanceof DataNode) {
+                DataNode data = (DataNode) childNode;
+                sb.append(data.getWholeData());
+            } else if (childNode instanceof Element) {
+                Element element = (Element) childNode;
+                String elementData = element.data();
+                sb.append(elementData);
+            }
+        }
+        return sb.toString();
+    }
+
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
      * separated (e.g. <code>&lt;div class="header gray"></code> returns "<code>header gray</code>")

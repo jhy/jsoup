@@ -113,7 +113,12 @@ public class ParserTest {
     @Test public void handlesDataOnlyTags() {
         String t = "<textarea><p>Foo</p>\n<p>Bar</p></TEXTAREA>";
         List<Element> tels = Jsoup.parse(t).getElementsByTag("textarea");
-        assertEquals("<p>Foo</p>\n<p>Bar</p>", tels.get(0).text());
+        assertEquals("<p>Foo</p>\n<p>Bar</p>", tels.get(0).data());
+
+        String s = "<p>Hello</p><script>Nope</script><p>There</p>";
+        Document doc = Jsoup.parse(s);
+        assertEquals("Hello There", doc.text());
+        assertEquals("Nope", doc.data());
     }
 
     @Test public void createsImplicitLists() {
