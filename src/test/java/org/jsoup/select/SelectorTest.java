@@ -53,6 +53,16 @@ public class SelectorTest {
         assertEquals(1, foo.size());
     }
 
+    @Test public void testAllElements() {
+        String h = "<div><p>Hello</p><p><b>there</b></p></div>";
+        Document doc = Jsoup.parse(h);
+        Elements allDoc = doc.select("*");
+        Elements allDiv = doc.select("div *");
+        assertEquals(8, allDoc.size());
+        assertEquals(4, allDiv.size());
+        assertEquals("div", allDiv.get(0).tagName());
+    }
+
     @Test public void testGroupOr() {
         String h = "<div title=foo /><div title=bar /><div /><p></p><img /><span title=qux>";
         Document doc = Jsoup.parse(h);
@@ -97,5 +107,29 @@ public class SelectorTest {
         Elements els = Jsoup.parse(h).select("div p .first");
         assertEquals(1, els.size());
         assertEquals("Hello", els.get(0).text());
+    }
+
+    @Test public void parentChildElement() {
+        String h = "<div id=1><div id=2><div id = 3></div></div></div><div id=4></div>";
+        Document doc = Jsoup.parse(h);
+
+        Elements divs = doc.select("div > div");
+        assertEquals(2, divs.size());
+        assertEquals("2", divs.get(0).id()); // 2 is child of 1
+        assertEquals("3", divs.get(1).id()); // 3 is child of 2
+
+        Elements div2 = doc.select("div#1 > div");
+        assertEquals(1, div2.size());
+        assertEquals("2", div2.get(0).id());
+    }
+
+    @Test public void parentChildStar() {
+        String h = "<div id=1><p>Hello<p><b>there</b></p></div><div id=2><span>Hi</span></div>";
+        Document doc = Jsoup.parse(h);
+        Elements divChilds = doc.select("div > *");
+        assertEquals(3, divChilds.size());
+        assertEquals("p", divChilds.get(0).tagName());
+        assertEquals("p", divChilds.get(1).tagName());
+        assertEquals("span", divChilds.get(2).tagName());
     }
 }

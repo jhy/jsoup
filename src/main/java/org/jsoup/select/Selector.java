@@ -4,6 +4,7 @@ import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.TokenQueue;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -56,6 +57,8 @@ public class Selector {
             byTag();
         } else if (tq.matchChomp("[")) {
             byAttribute();
+        } else if (tq.matchChomp("*")) {
+            allElements();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query " + query);
         }
@@ -69,6 +72,9 @@ public class Selector {
                     elements.addAll(select(subQuery, root));
                 }
                 return new Elements(elements);
+            } else if (tq.matchChomp(">")) { // parent > child
+                Elements candidateChildren = new Elements(select(tq.remainder(), elements));
+                return filterForChildren(elements, candidateChildren);
             } else { // ancestor descendant (AND, really)
                 return new Elements(select(tq.remainder(), elements));
             }
@@ -117,8 +123,25 @@ public class Selector {
         }
     }
 
+    private void allElements() {
+        elements.addAll(Collector.collect(new Evaluator.AllElements(), root));
+    }
+
     private void groupOr() {
         // no-op; just append uniques
+    }
+
+    private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidateChildren) {
+        Elements children = new Elements();
+        CHILDREN: for (Element c : candidateChildren) {
+            for (Element p : parents) {
+                if (c.parent().equals(p)) {
+                    children.add(c);
+                    continue CHILDREN;
+                }
+            }
+        }
+        return children;
     }
 
     public static class SelectorParseException extends IllegalStateException {
