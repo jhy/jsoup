@@ -120,7 +120,7 @@ public class Element extends Node {
      * @param tagName The tag name to search for (case insensitively).
      * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
      */
-    public List<Element> getElementsByTag(String tagName) {
+    public Elements getElementsByTag(String tagName) {
         Validate.notEmpty(tagName);
         tagName = tagName.toLowerCase().trim();
 
@@ -139,27 +139,27 @@ public class Element extends Node {
     public Element getElementById(String id) {
         Validate.notEmpty(id);
         
-        List<Element> elements = Collector.collect(new Evaluator.Id(id), this);
+        Elements elements = Collector.collect(new Evaluator.Id(id), this);
         if (elements.size() > 0)
             return elements.get(0);
         else
             return null;
     }
 
-    public List<Element> getElementsWithClass(String className) {
+    public Elements getElementsWithClass(String className) {
         Validate.notEmpty(className);
 
         return Collector.collect(new Evaluator.Class(className), this);
     }
 
-    public List<Element> getElementsWithAttribute(String attributeKey) {
+    public Elements getElementsWithAttribute(String attributeKey) {
         Validate.notEmpty(attributeKey);
         attributeKey = attributeKey.trim().toLowerCase();
 
         return Collector.collect(new Evaluator.Attribute(attributeKey), this);
     }
 
-    public List<Element> getElementsWithAttributeValue(String key, String value) {
+    public Elements getElementsWithAttributeValue(String key, String value) {
         Validate.notEmpty(key);
         key = key.trim().toLowerCase();
         Validate.notEmpty(value);
