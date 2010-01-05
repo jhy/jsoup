@@ -34,5 +34,11 @@ public class Document extends Element {
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
     }
+
+    @Override
+    public Element text(String text) {
+        getBody().text(text); // overridden to not nuke doc structure
+        return this;
+    }
 }
 
