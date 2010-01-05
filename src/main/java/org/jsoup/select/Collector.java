@@ -12,10 +12,10 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class Collector {
-    public static List<Element> collect (Evaluator eval, Element root) {
-        List<Element> elements = new ArrayList<Element>();
+    public static Elements collect (Evaluator eval, Element root) {
+        Elements elements = new Elements();
         accumulateMatches(eval, elements, root);
-        return Collections.unmodifiableList(elements);
+        return elements;
     }
 
     private static void accumulateMatches(Evaluator eval, List<Element> elements, Element element) {
