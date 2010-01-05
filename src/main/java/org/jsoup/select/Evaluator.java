@@ -69,5 +69,11 @@ public abstract class Evaluator {
         }
     }
 
+    public static class AllElements extends Evaluator {
+        boolean matches(Element element) {
+            return true;
+        }
+    }
+
 
 }
