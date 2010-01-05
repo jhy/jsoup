@@ -186,6 +186,17 @@ public class Element extends Node {
         return sb.toString();
     }
 
+    public Element text(String text) {
+        Validate.notNull(text);
+
+        childNodes.clear();
+        elementChildren.clear();
+        TextNode textNode = new TextNode(text);
+        addChild(textNode);
+
+        return this;
+    }
+
     public String data() {
         StringBuilder sb = new StringBuilder();
 

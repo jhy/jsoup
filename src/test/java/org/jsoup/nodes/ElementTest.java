@@ -130,5 +130,16 @@ public class ElementTest {
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
+    @Test public void testSetText() {
+        String h = "<div id=1>Hello <p>there <b>now</b></p></div>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("Hello  there now", doc.text()); // need to sort out node whitespace
+        assertEquals("there now", doc.select("p").get(0).text());
+
+        Element div = doc.getElementById("1").text("Gone");
+        assertEquals("Gone", div.text());
+        assertEquals(0, doc.select("p").size());
+    }
+
 
 }
