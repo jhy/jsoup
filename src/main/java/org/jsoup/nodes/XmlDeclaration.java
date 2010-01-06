@@ -7,8 +7,8 @@ package org.jsoup.nodes;
 public class XmlDeclaration extends Node {
     private static final String DECL_KEY = "declaration";
 
-    public XmlDeclaration(String data) {
-        super();
+    public XmlDeclaration(String data, String baseUri) {
+        super(baseUri);
         attributes.put(DECL_KEY, data);
     }
 

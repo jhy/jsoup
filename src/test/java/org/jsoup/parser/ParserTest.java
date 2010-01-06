@@ -145,5 +145,22 @@ public class ParserTest {
         assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", doc.getBody().html());
     }
 
+    @Test public void handlesBaseTags() {
+        String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
+        Document doc = Jsoup.parse(h, "http://foo/");
+        assertEquals("http://foo/", doc.baseUri());
+
+        Elements anchors = doc.getElementsByTag("a");
+        assertEquals(3, anchors.size());
+
+        assertEquals("http://foo/", anchors.get(0).baseUri());
+        assertEquals("http://foo/2/", anchors.get(1).baseUri());
+        assertEquals("http://bar", anchors.get(2).baseUri());
+
+        assertEquals("http://foo/1", anchors.get(0).absUrl("href"));
+        assertEquals("http://foo/2/3", anchors.get(1).absUrl("href"));
+        assertEquals("http://bar/4", anchors.get(2).absUrl("href"));
+    }
+
 
 }

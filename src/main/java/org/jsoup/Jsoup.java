@@ -9,7 +9,10 @@ import org.jsoup.parser.Parser;
  * @author Jonathan Hedley
  */
 public class Jsoup {
+    public static Document parse(String html, String baseUri) {
+        return Parser.parse(html, baseUri);
+    }
     public static Document parse(String html) {
-        return Parser.parse(html);
+        return Parser.parse(html, "");
     }
 }

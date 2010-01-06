@@ -8,17 +8,21 @@ import org.jsoup.nodes.Attributes;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class StartTag {
-    Tag tag;
-    Attributes attributes;
+    final Tag tag;
+    final Attributes attributes;
+    final String baseUri;
 
-    public StartTag(Tag tag, Attributes attributes) {
+    public StartTag(Tag tag, String baseUri, Attributes attributes) {
         Validate.notNull(attributes);
+        Validate.notNull(baseUri);
+
         this.tag = tag;
+        this.baseUri = baseUri;
         this.attributes = attributes;
     }
 
-    public StartTag(Tag tag) {
-        this(tag, new Attributes());
+    public StartTag(Tag tag, String baseUri) {
+        this(tag, baseUri, new Attributes());
     }
 
     public Tag getTag() {
@@ -27,5 +31,9 @@ public class StartTag {
 
     public Attributes getAttributes() {
         return attributes;
+    }
+
+    public String getBaseUri() {
+        return baseUri;
     }
 }

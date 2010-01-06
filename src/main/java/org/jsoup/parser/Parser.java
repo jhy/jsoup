@@ -21,19 +21,22 @@ public class Parser {
     private LinkedList<Element> stack;
     private TokenQueue tq;
     private Document doc;
+    private String baseUri;
 
-    public Parser(String html) {
+    public Parser(String html, String baseUri) {
         Validate.notNull(html);
+        Validate.notNull(baseUri);
 
         stack = new LinkedList<Element>();
         tq = new TokenQueue(html);
+        this.baseUri = baseUri;
 
-        doc = new Document();
+        doc = new Document(baseUri);
         stack.add(doc);
     }
 
-    public static Document parse(String html) {
-        Parser parser = new Parser(html);
+    public static Document parse(String html, String baseUri) {
+        Parser parser = new Parser(html, baseUri);
         return parser.parse();
     }
 
@@ -61,7 +64,7 @@ public class Parser {
 
         if (data.endsWith("-")) // i.e. was -->
             data = data.substring(0, data.length()-1);
-        Comment comment = new Comment(data);
+        Comment comment = new Comment(data, baseUri);
         last().addChild(comment);
     }
 
@@ -69,7 +72,7 @@ public class Parser {
         tq.consume("<"); tq.consume(); // <? or <!, from initial match.
         String data = tq.chompTo(">");
 
-        XmlDeclaration decl = new XmlDeclaration(data);
+        XmlDeclaration decl = new XmlDeclaration(data, baseUri);
         last().addChild(decl);
     }
 
@@ -96,7 +99,7 @@ public class Parser {
         }
 
         Tag tag = Tag.valueOf(tagName);
-        StartTag startTag = new StartTag(tag, attributes);
+        StartTag startTag = new StartTag(tag, baseUri, attributes);
         Element child = new Element(startTag);
 
         if (!tq.matchChomp("/>")) { // close empty element or tag
@@ -107,12 +110,18 @@ public class Parser {
         if (tag.isData()) {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
-            DataNode dataNode = DataNode.createFromEncoded(data);
+            DataNode dataNode = DataNode.createFromEncoded(data, baseUri);
             child.addChild(dataNode);
 
             if (tag.equals(titleTag))
                 doc.setTitle(child.data());
         }
+
+        // <base href>: update the base uri
+        if (child.tagName().equals("base")) {
+            baseUri = child.absUrl("href");
+        }
+
         addChildToParent(child);
     }
 
@@ -149,7 +158,7 @@ public class Parser {
     private void parseTextNode() {
         // TODO: work out whitespace requirements (between blocks, between inlines)
         String text = tq.consumeTo("<");
-        TextNode textNode = TextNode.createFromEncoded(text);
+        TextNode textNode = TextNode.createFromEncoded(text, baseUri);
         last().addChild(textNode);
     }
 
@@ -161,11 +170,11 @@ public class Parser {
         if (!validAncestor) {
             // create implicit parent around this child
             Tag parentTag = childTag.getImplicitParent();
-            StartTag parentStart = new StartTag(parentTag);
+            StartTag parentStart = new StartTag(parentTag, baseUri);
             Element implicit = new Element(parentStart);
             // special case: make sure there's a head before putting in body
             if (child.getTag().equals(bodyTag)) {
-                Element head = new Element(new StartTag(headTag));
+                Element head = new Element(new StartTag(headTag, baseUri));
                 implicit.addChild(head);
             }
             implicit.addChild(child);

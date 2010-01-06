@@ -20,7 +20,7 @@ public class Element extends Node {
     private Set<String> classNames;
 
     public Element(StartTag startTag) {
-        super(startTag.getAttributes());
+        super(startTag.getBaseUri(), startTag.getAttributes());
         this.tag = startTag.getTag();
         elementChildren = new ArrayList<Element>();
     }
@@ -191,7 +191,7 @@ public class Element extends Node {
 
         childNodes.clear();
         elementChildren.clear();
-        TextNode textNode = new TextNode(text);
+        TextNode textNode = new TextNode(text, baseUri);
         addChild(textNode);
 
         return this;

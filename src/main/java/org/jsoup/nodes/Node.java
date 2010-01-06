@@ -3,6 +3,8 @@ package org.jsoup.nodes;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.Validate;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,28 +17,67 @@ public abstract class Node {
     Node parentNode;
     final List<Node> childNodes;
     final Attributes attributes;
+    final String baseUri;
 
     /**
      Create a new node.
      */
-    protected Node(Attributes attributes) {
+    protected Node(String baseUri, Attributes attributes) {
+        Validate.notNull(baseUri);
+        Validate.notNull(attributes);
+        
         childNodes = new ArrayList<Node>();
+        this.baseUri = baseUri.trim();
         this.attributes = attributes;
     }
 
-    protected Node() {
-        this(new Attributes());
+    protected Node(String baseUri) {
+        this(baseUri, new Attributes());
     }
 
     public abstract String nodeName();
 
     public String attr(String attributeKey) {
-        return attributes.get(attributeKey);
+        String value = attributes.get(attributeKey);
+        return value == null ? "" : value;
     }
 
     public Node attr(String attributeKey, String attributeValue) {
         attributes.put(attributeKey, attributeValue);
         return this;
+    }
+
+    public boolean hasAttr(String attributeKey) {
+        Validate.notNull(attributeKey);
+        return attributes.hasKey(attributeKey);
+    }
+
+    public String baseUri() {
+        return baseUri;
+    }
+
+    public String absUrl(String attribute) {
+        Validate.notEmpty(attribute);
+
+        String relUrl = attr(attribute);
+        if (baseUri.isEmpty()) {
+            return relUrl; // nothing to make absolute with
+        } else {
+            URL base;
+            try {
+                try {
+                    base = new URL(baseUri);
+                } catch (MalformedURLException e) {
+                    // the base is unsuitable, but the attribute may be abs, so try that
+                    URL abs = new URL(relUrl);
+                    return abs.toExternalForm();
+                }
+                URL abs = new URL(base, relUrl);
+                return abs.toExternalForm();
+            } catch (MalformedURLException e) {
+                return "";
+            }
+        }
     }
 
     public Node childNode(int index) {

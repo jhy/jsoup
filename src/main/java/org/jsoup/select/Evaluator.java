@@ -51,7 +51,7 @@ public abstract class Evaluator {
         }
 
         boolean matches(Element element) {
-            return (element.attr(key) != null);
+            return (element.hasAttr(key));
         }
     }
 

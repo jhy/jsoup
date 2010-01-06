@@ -44,7 +44,7 @@ public class SelectorTest {
     }
 
     @Test public void testByAttribute() {
-        String h = "<div title=foo /><div title=bar /><div />";
+        String h = "<div title=foo /><div title=bar /><div style=qux />";
         Document doc = Jsoup.parse(h);
         Elements withTitle = doc.select("[title]");
         Elements foo = doc.select("[title=foo]");
@@ -75,7 +75,8 @@ public class SelectorTest {
         assertEquals("div", els.get(2).tagName());
         assertEquals("bar", els.get(2).attr("title"));
         assertEquals("div", els.get(3).tagName());
-        assertNull(els.get(3).attr("title"));
+        assertTrue(els.get(3).attr("title").isEmpty()); // missing attributes come back as empty string
+        assertFalse(els.get(3).hasAttr("title"));
         assertEquals("span", els.get(4).tagName());
     }
 
