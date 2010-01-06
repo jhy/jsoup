@@ -1,0 +1,15 @@
+Note
+====
+
+The HTML files in this directory (htmltests) are intended to be used for testing the Jsoup parser and improving its
+interoperability with real world published HTML. These files are not distributed in the core Jsoup library.
+
+These files remain the copyright of the original owner.
+
+If you are the copyright holder and do not wish your works to be used in this manner, please contact Jonathan Hedley
+(jonathan@hedley.net) and your works will be removed from this test-suite.
+
+Sources
+========
+
+* smh-biz-article-1.html  http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html
