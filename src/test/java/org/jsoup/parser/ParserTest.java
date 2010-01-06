@@ -40,13 +40,13 @@ public class ParserTest {
     }
 
     @Test public void parsesComments() {
-        String html = "<html><head></head><body><!-- <table><tr><td></table> --><p>Hello</p></body></html>";
+        String html = "<html><head></head><body><img src=foo><!-- <table><tr><td></table> --><p>Hello</p></body></html>";
         Document doc = Jsoup.parse(html);
         
         Element body = doc.getBody();
-        Comment comment = (Comment) body.childNode(0);
+        Comment comment = (Comment) body.childNode(1); // comment should not be sub of img, as it's an empty tag
         assertEquals(" <table><tr><td></table> ", comment.getData());
-        Element p = body.child(0);
+        Element p = body.child(1);
         TextNode text = (TextNode) p.childNode(0);
         assertEquals("Hello", text.getWholeText());
     }

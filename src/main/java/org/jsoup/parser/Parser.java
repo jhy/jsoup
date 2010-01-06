@@ -127,7 +127,7 @@ public class Parser {
 
     private Attribute parseAttribute() {
         tq.consumeWhitespace();
-        String key = tq.consumeWord(); // todo (Must): allow ":" in key for namespaced attr (e.g. xml:lang)
+        String key = tq.consumeAttributeKey();
         String value = "";
         tq.consumeWhitespace();
         if (tq.matchChomp("=")) {
@@ -186,7 +186,9 @@ public class Parser {
         }
 
         parent.addChild(child);
-        stack.addLast(child);
+
+        if (!childTag.isEmpty())
+            stack.addLast(child);
         return parent;
     }
 

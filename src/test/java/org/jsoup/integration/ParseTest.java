@@ -22,6 +22,8 @@ public class ParseTest {
         String h = loadFile("/htmltests/smh-biz-article-1.html");
         Document doc = Jsoup.parse(h, "http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html");
         assertEquals("The board’s next fear: the female quota", doc.getTitle()); // note that the apos in the source is a literal ’ (8217), not escaped or '
+        assertEquals("en", doc.select("html").attr("xml:lang"));
+
         Elements articleBody = doc.select(".articleBody > *");
         assertEquals(17, articleBody.size());
         // todo: more tests!
