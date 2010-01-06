@@ -23,6 +23,42 @@ public class Elements implements List<Element>{
         return Selector.select(query, this);
     }
 
+    /**
+     Get the attribute value of the first matched element.
+     @param attributeKey The attribute key.
+     @return The attribute value from the first matched element. If no elements were matched (isEmpty() == true),
+     or if the first element does not have the attribute, returns empty string.
+     @see #hasAttr(String)
+     */
+    public String attr(String attributeKey) {
+        return !contents.isEmpty() ? first().attr(attributeKey) : "";
+    }
+
+    /**
+     Checks if the first matched value has this attribute set.
+     @param attributeKey attribute key
+     @return true if the first element has the attribute; false if it doesn't, or if no elements were matched.
+     */
+    public boolean hasAttr(String attributeKey) {
+        return !contents.isEmpty() && first().hasAttr(attributeKey);
+    }
+
+    /**
+     Get the first matched element.
+     @return The first matched element, or <code>null</code> if contents is empty;
+     */
+    public Element first() {
+        return !contents.isEmpty() ? contents.get(0) : null;
+    }
+
+    /**
+     Get the last matched element.
+     @return The last matched element, or <code>null</code> if contents is empty.
+     */
+    public Element last() {
+        return !contents.isEmpty() ? contents.get(contents.size() - 1) : null;
+    }
+
     // implements List<Element> delegates:
     public int size() {return contents.size();}
 

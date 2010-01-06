@@ -183,6 +183,14 @@ public class TokenQueue {
         return accum.toString();
     }
 
+    public String consumeAttributeKey() {
+        StringBuilder accum = new StringBuilder();
+        while (!queue.isEmpty() && (Character.isLetterOrDigit(queue.peek()) || matchesAny("-", "_", ":"))) {
+            accum.append(queue.removeFirst());
+        }
+        return accum.toString();
+    }
+
     public String remainder() {
         StringBuilder accum = new StringBuilder();
         for (Character character : queue) {
