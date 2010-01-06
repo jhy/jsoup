@@ -127,7 +127,7 @@ public class Parser {
 
     private Attribute parseAttribute() {
         tq.consumeWhitespace();
-        String key = tq.consumeWord();
+        String key = tq.consumeWord(); // todo (Must): allow ":" in key for namespaced attr (e.g. xml:lang)
         String value = "";
         tq.consumeWhitespace();
         if (tq.matchChomp("=")) {
