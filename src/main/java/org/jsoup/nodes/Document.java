@@ -10,8 +10,8 @@ import org.jsoup.parser.Tag;
 public class Document extends Element {
     private String title;
 
-    public Document() {
-        super(new StartTag(Tag.valueOf("#root")));
+    public Document(String baseUri) {
+        super(new StartTag(Tag.valueOf("#root"), baseUri));
     }
 
     public Element getHead() {

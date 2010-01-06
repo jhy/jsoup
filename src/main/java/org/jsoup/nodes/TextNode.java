@@ -12,10 +12,10 @@ public class TextNode extends Node {
     /**
      * Create a new TextNode representing the supplied (unencoded) text).
      * @param text raw text
-     * @see #createFromEncoded(String)
+     * @see #createFromEncoded(String, String)
      */
-    public TextNode(String text) {
-        super();
+    public TextNode(String text, String baseUri) {
+        super(baseUri);
         attributes.put(TEXT_KEY, text);
     }
 
@@ -40,8 +40,8 @@ public class TextNode extends Node {
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
      * @return TextNode containing unencoded data (e.g. &lt;)
      */
-    public static TextNode createFromEncoded(String encodedText) {
+    public static TextNode createFromEncoded(String encodedText, String baseUri) {
         String text = StringEscapeUtils.unescapeHtml(encodedText);
-        return new TextNode(text);
+        return new TextNode(text, baseUri);
     }
 }

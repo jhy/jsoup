@@ -9,8 +9,8 @@ import org.apache.commons.lang.StringEscapeUtils;
 public class DataNode extends Node{
     private static final String DATA_KEY = "data";
 
-    public DataNode(String data) {
-        super();
+    public DataNode(String data, String baseUri) {
+        super(baseUri);
         attributes.put(DATA_KEY, data);
     }
 
@@ -30,8 +30,8 @@ public class DataNode extends Node{
         return outerHtml();
     }
 
-    public static DataNode createFromEncoded(String encodedData) {
+    public static DataNode createFromEncoded(String encodedData, String baseUri) {
         String data = StringEscapeUtils.unescapeHtml(encodedData);
-        return new DataNode(data);
+        return new DataNode(data, baseUri);
     }
 }

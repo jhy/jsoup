@@ -84,7 +84,7 @@ public class ElementTest {
     }
 
     @Test public void testGetElementsWithAttribute() {
-        Document doc = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>");
+        Document doc = Jsoup.parse("<div style='bold'><p title=qux><p><b style></b></p></div>");
         List<Element> els = doc.getElementsWithAttribute("style");
         assertEquals(2, els.size());
         assertEquals("div", els.get(0).tagName());
