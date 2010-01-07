@@ -131,7 +131,7 @@ public class SelectorTest {
     }
     
     @Test public void and() {
-        String h = "<div id=1 class=foo title=bar><p class=foo title=bar>Hello</p></div";
+        String h = "<div id=1 class='foo bar' title=bar name=qux><p class=foo title=bar>Hello</p></div";
         Document doc = Jsoup.parse(h);
         
         Elements div = doc.select("div.foo");
@@ -142,7 +142,7 @@ public class SelectorTest {
         assertEquals(1, p.size());
         assertEquals("p", p.first().tagName());
         
-        Elements div2 = doc.select("div#1.foo[title=bar]"); // very specific!
+        Elements div2 = doc.select("div#1.foo.bar[title=bar][name=qux]"); // very specific!
         assertEquals(1, div2.size());
         assertEquals("div", div2.first().tagName());
         
