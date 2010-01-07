@@ -166,7 +166,7 @@ public class Tag {
         // TODO[must]: incorporate html 5 as appropriate
 
         // document
-        createBlock("HTML").setAncestor(null); // specific includes not impl
+        createBlock("HTML").setAncestor(new String[0]); // specific includes not impl
         createBlock("HEAD").setAncestor("HTML"); // specific includes not impl: SCRIPT, STYLE, META, LINK, OBJECT
         createBlock("BODY").setAncestor("HTML"); // specific includes not impl
 
