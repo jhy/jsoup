@@ -1,3 +1,7 @@
 .idea/
 jsoup.iml
 target/
+.classpath
+.project
+.settings/
+
