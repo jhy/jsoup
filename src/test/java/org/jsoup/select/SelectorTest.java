@@ -162,4 +162,14 @@ public class SelectorTest {
         assertEquals("p", divChilds.get(1).tagName());
         assertEquals("span", divChilds.get(2).tagName());
     }
+
+    @Test public void caseInsensitive() {
+        String h = "<div title=bar><div>";
+        Document doc = Jsoup.parse(h);
+
+        assertEquals(2, doc.select("DIV").size());
+        assertEquals(1, doc.select("DIV[TITLE]").size());
+        assertEquals(1, doc.select("DIV[TITLE=BAR]").size());
+        assertEquals(0, doc.select("DIV[TITLE=BARBARELLA").size());
+    }
 }
