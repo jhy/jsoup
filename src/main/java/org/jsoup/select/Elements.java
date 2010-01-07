@@ -44,6 +44,31 @@ public class Elements implements List<Element>{
     }
 
     /**
+     * Set an attribute on all matched elements.
+     * @param attributeKey attribute key
+     * @param attributeValue attribute value
+     * @return this
+     */
+    public Elements attr(String attributeKey, String attributeValue) {
+        for (Element element : contents) {
+            element.attr(attributeKey, attributeValue);
+        }
+        return this;
+    }
+
+    /**
+     * Remove an attribute from every matched element.
+     * @param attributeKey The attribute to remove.
+     * @return this (for chaining)
+     */
+    public Elements removeAttr(String attributeKey) {
+        for (Element element : contents) {
+            element.removeAttr(attributeKey);
+        }
+        return this;
+    }
+
+    /**
      Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty;
      */

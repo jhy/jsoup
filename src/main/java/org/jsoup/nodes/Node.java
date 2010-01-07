@@ -37,19 +37,56 @@ public abstract class Node {
 
     public abstract String nodeName();
 
+    /**
+     * Get an attribute.
+     * @param attributeKey The attribute key.
+     * @return The attribute, or empty string if not present (to avoid nulls).
+     * @see #getAttributes()
+     * @see #hasAttr(String)
+     */
     public String attr(String attributeKey) {
         String value = attributes.get(attributeKey);
         return value == null ? "" : value;
     }
 
+    /**
+     * Get all of the element's attributes.
+     * @return attributes (which implements iterable, in same order as presented in original HTML).
+     */
+    public Attributes getAttributes() {
+        return attributes;
+    }
+
+    /**
+     * Set an attribute (key=value). If the attribute already exists, it is replaced.
+     * @param attributeKey The attribute key.
+     * @param attributeValue The attribute value.
+     * @return this (for chaining)
+     */
     public Node attr(String attributeKey, String attributeValue) {
         attributes.put(attributeKey, attributeValue);
         return this;
     }
 
+    /**
+     * Test if this element has an attribute.
+     * @param attributeKey The attribute key to check.
+     * @return true if the attribute exists, false if not.
+     */
     public boolean hasAttr(String attributeKey) {
         Validate.notNull(attributeKey);
         return attributes.hasKey(attributeKey);
+    }
+
+    /**
+     * Remove an attribute from this element.
+     * @param attributeKey The attribute to remove.
+     * @return this (for chaining)
+     */
+    public Node removeAttr(String attributeKey) {
+        Validate.notNull(attributeKey);
+        attributes.remove(attributeKey);
+        return this;
     }
 
     public String baseUri() {
@@ -128,11 +165,6 @@ public abstract class Node {
                 return i;
         }
         return null;
-    }
-
-    public Attributes getAttributes() {
-        return attributes;
-        // TODO: probably not have this accessor
     }
 
     public abstract String outerHtml();
