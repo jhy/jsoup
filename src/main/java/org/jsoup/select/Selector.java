@@ -62,10 +62,10 @@ public class Selector {
         } else { // unhandled
             throw new SelectorParseException("Could not parse query " + query);
         }
-        tq.consumeWhitespace();
 
-        // hierarchy (todo: implement >, +, ~)
-        if (!tq.isEmpty()) {
+        // hierarchy (todo: implement +, ~)
+        boolean seenWhite = tq.consumeWhitespace();
+        if (!tq.isEmpty()) { 
             if (tq.matchChomp(",")) { // group or
                 while (!tq.isEmpty()) {
                     String subQuery = tq.chompTo(",");
@@ -73,10 +73,14 @@ public class Selector {
                 }
                 return new Elements(elements);
             } else if (tq.matchChomp(">")) { // parent > child
-                Elements candidateChildren = new Elements(select(tq.remainder(), elements));
-                return filterForChildren(elements, candidateChildren);
-            } else { // ancestor descendant (AND, really)
-                return new Elements(select(tq.remainder(), elements));
+                Elements candidates = new Elements(select(tq.remainder(), elements));
+                return filterForChildren(elements, candidates);
+            } else if (seenWhite) { // ancestor descendant
+                Elements candidates = new Elements(select(tq.remainder(), elements));
+                return filterForDescendants(elements, candidates);
+            } else { // E.class, E#id, E[attr] etc. AND
+                Elements candidates = new Elements(select(tq.remainder(), elements));
+                return filterForSelf(elements, candidates);
             }
         } else {
             return new Elements(elements);
@@ -131,15 +135,48 @@ public class Selector {
         // no-op; just append uniques
     }
 
-    private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidateChildren) {
+    // direct child descendants
+    private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidates) {
         Elements children = new Elements();
-        CHILDREN: for (Element c : candidateChildren) {
+        CHILD: for (Element c : candidates) {
             for (Element p : parents) {
                 if (c.parent().equals(p)) {
                     children.add(c);
-                    continue CHILDREN;
+                    continue CHILD;
                 }
             }
+        }
+        return children;
+    }
+    
+    // children or lower descendants. input candidates stemmed from found elements, so are either a descendant 
+    // or the original element; so check that parent is not child
+    private static Elements filterForDescendants(Collection<Element> parents, Collection<Element> candidates) {
+        Elements children = new Elements();
+        CHILD: for (Element c : candidates) {
+            boolean found = false;
+            for (Element p : parents) {
+                if (c.equals(p)) {
+                    found = true;
+                    continue CHILD;
+                }
+            }
+            if (!found)
+                children.add(c);
+        }
+        return children;
+    }
+    
+    // union of both sets, for e.class type selectors
+    private static Elements filterForSelf(Collection<Element> parents, Collection<Element> candidates) {
+        Elements children = new Elements();
+        CHILD: for (Element c : candidates) {
+            for (Element p : parents) {
+                if (c.equals(p)) {
+                    children.add(c);
+                    continue CHILD;
+                }
+            }   
         }
         return children;
     }

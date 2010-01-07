@@ -57,10 +57,17 @@ public class SelectorTest {
         String h = "<div><p>Hello</p><p><b>there</b></p></div>";
         Document doc = Jsoup.parse(h);
         Elements allDoc = doc.select("*");
-        Elements allDiv = doc.select("div *");
+        Elements allUnderDiv = doc.select("div *");
         assertEquals(8, allDoc.size());
-        assertEquals(4, allDiv.size());
-        assertEquals("div", allDiv.get(0).tagName());
+        assertEquals(3, allUnderDiv.size());
+        assertEquals("p", allUnderDiv.first().tagName());
+    }
+    
+    @Test public void testAllWithClass() {
+        String h = "<p class=first>One<p class=first>Two<p>Three";
+        Document doc = Jsoup.parse(h);
+        Elements ps = doc.select("*.first");
+        assertEquals(2, ps.size());
     }
 
     @Test public void testGroupOr() {
@@ -102,12 +109,34 @@ public class SelectorTest {
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
     }
+    
+    @Test public void and() {
+        String h = "<div id=1 class=foo title=bar><p class=foo title=bar>Hello</p></div";
+        Document doc = Jsoup.parse(h);
+        
+        Elements div = doc.select("div.foo");
+        assertEquals(1, div.size());
+        assertEquals("div", div.first().tagName());
+        
+        Elements p = doc.select("div .foo"); // space indicates like "div *.foo"
+        assertEquals(1, p.size());
+        assertEquals("p", p.first().tagName());
+        
+        Elements div2 = doc.select("div#1.foo[title=bar]"); // very specific!
+        assertEquals(1, div2.size());
+        assertEquals("div", div2.first().tagName());
+        
+        Elements p2 = doc.select("div *.foo"); // space indicates like "div *.foo"
+        assertEquals(1, p2.size());
+        assertEquals("p", p2.first().tagName());
+    }
 
     @Test public void deeperDescendant() {
-        String h = "<div class=head><p class=first>Hello</div><div class=head><h1 class=first>Another</h1><p>Again</div>";
+        String h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>";
         Elements els = Jsoup.parse(h).select("div p .first");
         assertEquals(1, els.size());
-        assertEquals("Hello", els.get(0).text());
+        assertEquals("Hello", els.first().text());
+        assertEquals("span", els.first().tagName());
     }
 
     @Test public void parentChildElement() {

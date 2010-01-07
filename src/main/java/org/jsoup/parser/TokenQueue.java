@@ -155,10 +155,13 @@ public class TokenQueue {
     /**
      * Pulls the next run of whitespace characters of the queue.
      */
-    public void consumeWhitespace() {
+    public boolean consumeWhitespace() {
+        boolean seen = false;
         while (!queue.isEmpty() && Character.isWhitespace(queue.peekFirst())) {
             consume();
+            seen = true;
         }
+        return seen;
     }
 
     /**
@@ -193,8 +196,8 @@ public class TokenQueue {
 
     public String remainder() {
         StringBuilder accum = new StringBuilder();
-        for (Character character : queue) {
-            accum.append(character);
+        while (!queue.isEmpty()) {
+            accum.append(consume());
         }
         return accum.toString();
     }
