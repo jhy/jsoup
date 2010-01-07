@@ -44,6 +44,8 @@ public class Parser {
         while (!tq.isEmpty()) {
             if (tq.matches("<!--")) {
                 parseComment();
+            } else if (tq.matches("<![CDATA[")) {
+                parseCdata();
             } else if (tq.matches("<?") || tq.matches("<!")) {
                 parseXmlDecl();
             } else if (tq.matches("</")) {
@@ -58,7 +60,6 @@ public class Parser {
     }
 
     private void parseComment() {
-        // TODO: this puts comments into nodes that should not hold them (e.g. img).
         tq.consume("<!--");
         String data = tq.chompTo("->");
 
@@ -89,9 +90,18 @@ public class Parser {
 
     private void parseStartTag() {
         tq.consume("<");
+        String tagName = tq.consumeWord();
+
+        if (tagName.isEmpty()) { // doesn't look like a start tag after all; put < back on stack and handle as text
+            tq.addFirst("&lt;");
+            parseTextNode();
+            return;
+        }
+
+
         Attributes attributes = new Attributes();
 
-        String tagName = tq.consumeWord();
+
         while (!tq.matchesAny("<", "/>", ">") && !tq.isEmpty()) {
             Attribute attribute = parseAttribute();
             if (attribute != null)
@@ -156,9 +166,15 @@ public class Parser {
     }
 
     private void parseTextNode() {
-        // TODO: work out whitespace requirements (between blocks, between inlines)
         String text = tq.consumeTo("<");
         TextNode textNode = TextNode.createFromEncoded(text, baseUri);
+        last().addChild(textNode);
+    }
+
+    private void parseCdata() {
+        tq.consume("<![CDATA[");
+        String rawText = tq.chompTo("]]>");
+        TextNode textNode = new TextNode(rawText, baseUri); // constructor does not escape
         last().addChild(textNode);
     }
 
