@@ -70,10 +70,12 @@ public class Parser {
     }
 
     private void parseXmlDecl() {
-        tq.consume("<"); tq.consume(); // <? or <!, from initial match.
+        tq.consume("<");
+        Character firstChar = tq.consume(); // <? or <!, from initial match.
+        boolean procInstr = firstChar.toString().equals("!");
         String data = tq.chompTo(">");
 
-        XmlDeclaration decl = new XmlDeclaration(data, baseUri);
+        XmlDeclaration decl = new XmlDeclaration(data, baseUri, procInstr);
         last().addChild(decl);
     }
 
@@ -98,10 +100,7 @@ public class Parser {
             return;
         }
 
-
         Attributes attributes = new Attributes();
-
-
         while (!tq.matchesAny("<", "/>", ">") && !tq.isEmpty()) {
             Attribute attribute = parseAttribute();
             if (attribute != null)
