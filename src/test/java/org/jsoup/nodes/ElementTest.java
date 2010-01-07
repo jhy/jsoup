@@ -69,44 +69,44 @@ public class ElementTest {
     @Test public void testGetElementsWithClass() {
         Document doc = Jsoup.parse("<div class='mellow yellow'><span class=mellow>Hello <b class='yellow'>Yellow!</b></span><p>Empty</p></div>");
 
-        List<Element> els = doc.getElementsWithClass("mellow");
+        List<Element> els = doc.getElementsByClass("mellow");
         assertEquals(2, els.size());
         assertEquals("div", els.get(0).tagName());
         assertEquals("span", els.get(1).tagName());
 
-        List<Element> els2 = doc.getElementsWithClass("yellow");
+        List<Element> els2 = doc.getElementsByClass("yellow");
         assertEquals(2, els2.size());
         assertEquals("div", els2.get(0).tagName());
         assertEquals("b", els2.get(1).tagName());
 
-        List<Element> none = doc.getElementsWithClass("solo");
+        List<Element> none = doc.getElementsByClass("solo");
         assertEquals(0, none.size());
     }
 
     @Test public void testGetElementsWithAttribute() {
         Document doc = Jsoup.parse("<div style='bold'><p title=qux><p><b style></b></p></div>");
-        List<Element> els = doc.getElementsWithAttribute("style");
+        List<Element> els = doc.getElementsByAttribute("style");
         assertEquals(2, els.size());
         assertEquals("div", els.get(0).tagName());
         assertEquals("b", els.get(1).tagName());
 
-        List<Element> none = doc.getElementsWithAttribute("class");
+        List<Element> none = doc.getElementsByAttribute("class");
         assertEquals(0, none.size());
     }
 
     @Test public void testGetElementsWithAttributeValue() {
         Document doc = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>");
-        List<Element> els = doc.getElementsWithAttributeValue("style", "bold");
+        List<Element> els = doc.getElementsByAttributeValue("style", "bold");
         assertEquals(1, els.size());
         assertEquals("div", els.get(0).tagName());
 
-        List<Element> none = doc.getElementsWithAttributeValue("style", "none");
+        List<Element> none = doc.getElementsByAttributeValue("style", "none");
         assertEquals(0, none.size());
     }
 
     @Test public void testClassDomMethods() {
         Document doc = Jsoup.parse("<div><span class='mellow yellow'>Hello <b>Yellow</b></span></div>");
-        List<Element> els = doc.getElementsWithAttribute("class");
+        List<Element> els = doc.getElementsByAttribute("class");
         Element span = els.get(0);
         assertEquals("mellow yellow", span.className());
         assertTrue(span.hasClass("mellow"));

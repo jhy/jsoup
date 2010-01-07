@@ -2,8 +2,6 @@ package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**

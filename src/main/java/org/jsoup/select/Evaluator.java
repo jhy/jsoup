@@ -55,17 +55,63 @@ public abstract class Evaluator {
         }
     }
 
-    public static class AttributeWithValue extends Evaluator {
-        private String key;
-        private String value;
-
+    public static class AttributeWithValue extends AttributeKeyPair {
         public AttributeWithValue(String key, String value) {
-            this.key = key;
-            this.value = value;
+            super(key, value);
         }
 
         boolean matches(Element element) {
-            return (value.equals(element.attr(key)));
+            return (value.equalsIgnoreCase(element.attr(key)));
+        }
+    }
+
+    public static class AttributeWithValueNot extends AttributeKeyPair {
+        public AttributeWithValueNot(String key, String value) {
+            super(key, value);
+        }
+
+        boolean matches(Element element) {
+            return (!value.equalsIgnoreCase(element.attr(key)));
+        }
+    }
+
+    public static class AttributeWithValueStarting extends AttributeKeyPair {
+        public AttributeWithValueStarting(String key, String value) {
+            super(key, value);
+        }
+
+        boolean matches(Element element) {
+            return element.attr(key).toLowerCase().startsWith(value); // value is lower case already
+        }
+    }
+
+    public static class AttributeWithValueEnding extends AttributeKeyPair {
+        public AttributeWithValueEnding(String key, String value) {
+            super(key, value);
+        }
+
+        boolean matches(Element element) {
+            return element.attr(key).toLowerCase().endsWith(value); // value is lower case
+        }
+    }
+
+    public static class AttributeWithValueContaining extends AttributeKeyPair {
+        public AttributeWithValueContaining(String key, String value) {
+            super(key, value);
+        }
+
+        boolean matches(Element element) {
+            return element.attr(key).toLowerCase().contains(value); // value is lower case
+        }
+    }
+
+    public abstract static class AttributeKeyPair extends Evaluator {
+        protected String key;
+        protected String value;
+
+        public AttributeKeyPair(String key, String value) {
+            this.key = key;
+            this.value = value;
         }
     }
 
