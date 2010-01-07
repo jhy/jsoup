@@ -44,13 +44,33 @@ public class SelectorTest {
     }
 
     @Test public void testByAttribute() {
-        String h = "<div title=foo /><div title=bar /><div style=qux />";
+        String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM /><div />";
         Document doc = Jsoup.parse(h);
-        Elements withTitle = doc.select("[title]");
-        Elements foo = doc.select("[title=foo]");
 
-        assertEquals(2, withTitle.size());
+        Elements withTitle = doc.select("[title]");
+        assertEquals(4, withTitle.size());
+
+        Elements foo = doc.select("[title=foo]");
         assertEquals(1, foo.size());
+
+        Elements not = doc.select("div[title!=bar]");
+        assertEquals(5, not.size());
+        assertEquals("Foo", not.first().attr("title"));
+
+        Elements starts = doc.select("[title^=ba]");
+        assertEquals(2, starts.size());
+        assertEquals("Bar", starts.first().attr("title"));
+        assertEquals("Bam", starts.last().attr("title"));
+
+        Elements ends = doc.select("[title$=am]");
+        assertEquals(2, ends.size());
+        assertEquals("Bam", ends.first().attr("title"));
+        assertEquals("SLAM", ends.last().attr("title"));
+
+        Elements contains = doc.select("[title*=a]");
+        assertEquals(3, contains.size());
+        assertEquals("Bar", contains.first().attr("title"));
+        assertEquals("SLAM", contains.last().attr("title"));
     }
 
     @Test public void testAllElements() {
@@ -164,7 +184,7 @@ public class SelectorTest {
     }
 
     @Test public void caseInsensitive() {
-        String h = "<div title=bar><div>";
+        String h = "<dIv tItle=bAr><div>"; // mixed case so a simple toLowerCase() on value doesn't catch
         Document doc = Jsoup.parse(h);
 
         assertEquals(2, doc.select("DIV").size());

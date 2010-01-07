@@ -100,7 +100,7 @@ public class Selector {
         String className = tq.consumeClassName();
         Validate.notEmpty(className);
 
-        List<Element> found = root.getElementsWithClass(className);
+        List<Element> found = root.getElementsByClass(className);
         elements.addAll(found);
     }
 
@@ -112,18 +112,26 @@ public class Selector {
     }
 
     private void byAttribute() {
-        String key = tq.consumeToAny("=", "]");
+        String key = tq.consumeToAny("=", "!=", "^=", "$=", "*=", "]"); // eq, not, start, end, contain, (no val)
         Validate.notEmpty(key);
-        String value = null;
-        if (tq.matchChomp("="))
-            value = tq.chompTo("]");
-        else
-            tq.consume("]");
 
-        if (value != null)
-            elements.addAll(root.getElementsWithAttributeValue(key, value));
-        else {
-            elements.addAll(root.getElementsWithAttribute(key));
+        if (tq.matchChomp("]")) {
+            elements.addAll(root.getElementsByAttribute(key));
+        } else {
+            if (tq.matchChomp("="))
+                elements.addAll(root.getElementsByAttributeValue(key, tq.chompTo("]")));
+
+            else if (tq.matchChomp("!="))
+                elements.addAll(root.getElementsByAttributeValueNot(key, tq.chompTo("]")));
+
+            else if (tq.matchChomp("^="))
+                elements.addAll(root.getElementsByAttributeValueStarting(key, tq.chompTo("]")));
+
+            else if (tq.matchChomp("$="))
+                elements.addAll(root.getElementsByAttributeValueEnding(key, tq.chompTo("]")));
+
+            else if (tq.matchChomp("*="))
+                elements.addAll(root.getElementsByAttributeValueContaining(key, tq.chompTo("]")));
         }
     }
 

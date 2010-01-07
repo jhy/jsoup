@@ -146,26 +146,50 @@ public class Element extends Node {
             return null;
     }
 
-    public Elements getElementsWithClass(String className) {
+    public Elements getElementsByClass(String className) {
         Validate.notEmpty(className);
 
         return Collector.collect(new Evaluator.Class(className), this);
     }
 
-    public Elements getElementsWithAttribute(String attributeKey) {
-        Validate.notEmpty(attributeKey);
-        attributeKey = attributeKey.trim().toLowerCase();
+    public Elements getElementsByAttribute(String key) {
+        Validate.notEmpty(key);
+        key = key.trim().toLowerCase();
 
-        return Collector.collect(new Evaluator.Attribute(attributeKey), this);
+        return Collector.collect(new Evaluator.Attribute(key), this);
     }
 
-    public Elements getElementsWithAttributeValue(String key, String value) {
+    public Elements getElementsByAttributeValue(String key, String value) {
+        String[] kp = normaliseAttrKeyPair(key, value);
+        return Collector.collect(new Evaluator.AttributeWithValue(kp[0], kp[1]), this);
+    }
+
+    public Elements getElementsByAttributeValueNot(String key, String value) {
+        String[] kp = normaliseAttrKeyPair(key, value);
+        return Collector.collect(new Evaluator.AttributeWithValueNot(kp[0], kp[1]), this);
+    }
+
+    public Elements getElementsByAttributeValueStarting(String key, String value) {
+        String[] kp = normaliseAttrKeyPair(key, value);
+        return Collector.collect(new Evaluator.AttributeWithValueStarting(kp[0], kp[1]), this);
+    }
+
+    public Elements getElementsByAttributeValueEnding(String key, String value) {
+        String[] kp = normaliseAttrKeyPair(key, value);
+        return Collector.collect(new Evaluator.AttributeWithValueEnding(kp[0], kp[1]), this);
+    }
+
+    public Elements getElementsByAttributeValueContaining(String key, String value) {
+        String[] kp = normaliseAttrKeyPair(key, value);
+        return Collector.collect(new Evaluator.AttributeWithValueContaining(kp[0], kp[1]), this);
+    }
+
+    private String[] normaliseAttrKeyPair(String key, String value) {
         Validate.notEmpty(key);
         key = key.trim().toLowerCase();
         Validate.notEmpty(value);
         value = value.trim().toLowerCase();
-
-        return Collector.collect(new Evaluator.AttributeWithValue(key, value), this);
+        return new String[] {key, value};
     }
 
     public String text() {
