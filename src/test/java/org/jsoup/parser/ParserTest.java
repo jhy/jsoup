@@ -162,5 +162,20 @@ public class ParserTest {
         assertEquals("http://bar/4", anchors.get(2).absUrl("href"));
     }
 
+    @Test public void handlesCdata() {
+        String h = "<div id=1><![CData[<html>\n<foo><&amp;]]></div>"; // "cdata" insensitive. the &amp; in there should remain literal
+        Document doc = Jsoup.parse(h);
+        Element div = doc.getElementById("1");
+        assertEquals("<html>\n<foo><&amp;", div.text());
+        assertEquals(0, div.children().size());
+        assertEquals(1, div.childNodes().size()); // no elements, one text node
+    }
+
+    @Test public void handlesInvalidStartTags() {
+        String h = "<div>Hello < There <&amp;></div>"; // parse to <div {#text=Hello < There <&>}>
+        Document doc = Jsoup.parse(h);
+        assertEquals("Hello < There <&>", doc.select("div").first().text());
+    }
+
 
 }

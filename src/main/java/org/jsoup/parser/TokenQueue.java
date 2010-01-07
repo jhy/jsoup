@@ -39,6 +39,17 @@ public class TokenQueue {
         return queue.peek();
     }
 
+    public void addFirst(Character c) {
+        queue.addFirst(c);
+    }
+
+    public void addFirst(String seq) {
+        char[] chars = seq.toCharArray();
+        for (int i = chars.length - 1; i >= 0; i--) {
+            addFirst(chars[i]);
+        }
+    }
+
     /**
      * Tests if the next characters on the queue match the sequence. Case insensitive.
      * @param seq String to check queue for.
