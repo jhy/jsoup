@@ -186,6 +186,13 @@ public class ParserTest {
         assertEquals("qux", foos.last().attr("title"));
         assertEquals("there", foos.last().text());
     }
+    
+    @Test public void handlesEmptyBlocks() {
+        String h = "<div id=1/><div id=2><img /></div>";
+        Document doc = Jsoup.parse(h);
+        Element div1 = doc.getElementById("1");
+        assertTrue(div1.children().isEmpty());
+    }
 
 
 }
