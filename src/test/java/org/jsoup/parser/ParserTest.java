@@ -176,6 +176,16 @@ public class ParserTest {
         Document doc = Jsoup.parse(h);
         assertEquals("Hello < There <&>", doc.select("div").first().text());
     }
+    
+    @Test public void handlesUnknownTags() {
+        String h = "<div><foo title=bar>Hello<foo title=qux>there</foo></div>";
+        Document doc = Jsoup.parse(h);
+        Elements foos = doc.select("foo");
+        assertEquals(2, foos.size());
+        assertEquals("bar", foos.first().attr("title"));
+        assertEquals("qux", foos.last().attr("title"));
+        assertEquals("there", foos.last().text());
+    }
 
 
 }
