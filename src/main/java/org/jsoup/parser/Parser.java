@@ -111,7 +111,10 @@ public class Parser {
         StartTag startTag = new StartTag(tag, baseUri, attributes);
         Element child = new Element(startTag);
 
-        if (!tq.matchChomp("/>")) { // close empty element or tag
+        boolean isEmptyElement = tag.isEmpty(); // empty element if empty tag (e.g. img) or self-closed el (<div/>
+        if (tq.matchChomp("/>")) { // close empty element or tag
+            isEmptyElement = true;
+        } else {
             tq.matchChomp(">");
         }
 
@@ -131,7 +134,7 @@ public class Parser {
             baseUri = child.absUrl("href");
         }
 
-        addChildToParent(child);
+        addChildToParent(child, isEmptyElement);
     }
 
     private Attribute parseAttribute() {
@@ -177,7 +180,7 @@ public class Parser {
         last().addChild(textNode);
     }
 
-    private Element addChildToParent(Element child) {
+    private Element addChildToParent(Element child, boolean isEmptyElement) {
         Element parent = popStackToSuitableContainer(child.getTag());
         Tag childTag = child.getTag();
         boolean validAncestor = stackHasValidParent(childTag);
@@ -195,14 +198,15 @@ public class Parser {
             implicit.addChild(child);
 
             // recurse to ensure somewhere to put parent
-            Element root = addChildToParent(implicit);
-            stack.addLast(child);
+            Element root = addChildToParent(implicit, false);
+            if (!isEmptyElement)
+                stack.addLast(child);
             return root;
         }
 
         parent.addChild(child);
 
-        if (!childTag.isEmpty())
+        if (!isEmptyElement)
             stack.addLast(child);
         return parent;
     }
