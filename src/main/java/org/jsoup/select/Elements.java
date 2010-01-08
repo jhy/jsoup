@@ -22,10 +22,6 @@ public class Elements implements List<Element>{
     public Elements(Element... elements) {
         this(Arrays.asList(elements));
     }
-
-    public Elements select(String query) {
-        return Selector.select(query, this);
-    }
     
     // attribute methods
     /**
@@ -92,6 +88,16 @@ public class Elements implements List<Element>{
     }
     
     // filters
+    
+    /**
+     * Reduce the matched elements down to those that also match this query.
+     * @param query A selector query
+     * @return the filtered list of elements, or an empty list if none match.
+     */
+    public Elements filter(String query) {
+        return Selector.select(query, this);
+    }
+    
     /**
      * Reduce the matched elements to one element
      * @param index the (zero-based) index of the element in the list to retain
@@ -110,7 +116,7 @@ public class Elements implements List<Element>{
      * @return true if at least one element in the list matches the query.
      */
     public boolean is(String query) {
-        Elements children = this.select(query);
+        Elements children = this.filter(query);
         return !children.isEmpty();
     }
 
