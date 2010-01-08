@@ -18,11 +18,16 @@ public class Elements implements List<Element>{
     public Elements(Collection<Element> elements) {
         contents = new ArrayList<Element>(elements);
     }
+    
+    public Elements(Element... elements) {
+        this(Arrays.asList(elements));
+    }
 
     public Elements select(String query) {
         return Selector.select(query, this);
     }
-
+    
+    // attribute methods
     /**
      Get the attribute value of the first matched element.
      @param attributeKey The attribute key.
@@ -67,7 +72,49 @@ public class Elements implements List<Element>{
         }
         return this;
     }
+    
+    /**
+     * Get the combined text of all the matched elements.
+     * <p>
+     * Note that it is possible to get repeats if the matched elements contain both parent elements and their own
+     * children, as the Element.text() method returns the combined text of a parent and all its children.
+     * @return string of all text: unescaped and no HTML.
+     * @see Element#text()
+     */
+    public String text() {
+        StringBuilder sb = new StringBuilder();
+        for (Element element : contents) {
+            if (sb.length() != 0)
+                sb.append(" ");
+            sb.append(element.text());
+        }
+        return sb.toString();
+    }
+    
+    // filters
+    /**
+     * Reduce the matched elements to one element
+     * @param index the (zero-based) index of the element in the list to retain
+     * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
+     */
+    public Elements eq(int index) {
+        if (contents.size() > index)
+            return new Elements(get(index));
+        else
+            return new Elements();
+    }
+    
+    /**
+     * Test if any of the matched elements match the supplied query.
+     * @param query A selector
+     * @return true if at least one element in the list matches the query.
+     */
+    public boolean is(String query) {
+        Elements children = this.select(query);
+        return !children.isEmpty();
+    }
 
+    // list-like methods
     /**
      Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty;
