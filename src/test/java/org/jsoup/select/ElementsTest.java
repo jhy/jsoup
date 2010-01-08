@@ -37,4 +37,24 @@ public class ElementsTest {
         assertEquals("classy", ps.last().attr("style"));
         assertEquals("bar", ps.last().attr("class"));
     }
+    
+    @Test public void text() {
+        String h = "<div><p>Hello<p>there<p>world</div>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("Hello there world", doc.select("div > *").text());
+    }
+    
+    @Test public void eq() {
+        String h = "<p>Hello<p>there<p>world";
+        Document doc = Jsoup.parse(h);
+        assertEquals("there", doc.select("p").eq(1).text());
+    }
+    
+    @Test public void is() {
+        String h = "<p>Hello<p title=foo>there<p>world";
+        Document doc = Jsoup.parse(h);
+        Elements ps = doc.select("p");
+        assertTrue(ps.is("[title=foo]"));
+        assertFalse(ps.is("[title=bar]"));
+    }
 }
