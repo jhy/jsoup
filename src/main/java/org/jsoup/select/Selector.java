@@ -139,10 +139,6 @@ public class Selector {
         elements.addAll(Collector.collect(new Evaluator.AllElements(), root));
     }
 
-    private void groupOr() {
-        // no-op; just append uniques
-    }
-
     // direct child descendants
     private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidates) {
         Elements children = new Elements();
