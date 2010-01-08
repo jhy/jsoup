@@ -39,9 +39,9 @@ public class Tag {
     }
 
     /**
-     Get a Tag by name. If not previously defined (unknown), registers and returns a new generic tag, that can do anything.
+     Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
      <p>
-     Two unknown tags with the same name will compare ==.
+     Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
      @param tagName Name of tag, e.g. "p". Case insensitive.
      @return The tag, either defined or new generic.
      */
@@ -54,9 +54,8 @@ public class Tag {
             Tag tag = tags.get(tagName);
             if (tag == null) {
                 // not defined: create default
-                // TODO: log, generate warning?
                 tag = new Tag(tagName, true, true, true, false, false);
-                register(tag);
+                tag.setAncestor(defaultAncestor.tagName);
             }
             return tag;
         }
