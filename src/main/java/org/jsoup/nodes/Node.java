@@ -17,7 +17,7 @@ public abstract class Node {
     Node parentNode;
     final List<Node> childNodes;
     final Attributes attributes;
-    final String baseUri;
+    String baseUri;
 
     /**
      Create a new node.
@@ -91,6 +91,11 @@ public abstract class Node {
 
     public String baseUri() {
         return baseUri;
+    }
+
+    public void setBaseUri(String baseUri) {
+        Validate.notNull(baseUri);
+        this.baseUri = baseUri;
     }
 
     public String absUrl(String attribute) {

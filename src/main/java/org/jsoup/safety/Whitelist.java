@@ -6,6 +6,8 @@ package org.jsoup.safety;
  */
 
 import org.apache.commons.lang.Validate;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -270,6 +272,54 @@ public class Whitelist {
         return this;
     }
 
+    boolean isSafeTag(String tag) {
+        return tagNames.contains(TagName.valueOf(tag));
+    }
+
+    boolean isSafeAttribute(String tagName, Attribute attr) {
+        TagName tag = TagName.valueOf(tagName);
+        AttributeKey key = AttributeKey.valueOf(attr.getKey());
+        AttributeValue value = AttributeValue.valueOf(attr.getValue());
+
+        if (attributes.containsKey(tag)) {
+            if (attributes.get(tag).contains(key)) {
+                if (protocols.containsKey(tag)) {
+                    Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
+                    // ok if not defined protocol; otherwise test
+                    return !attrProts.containsKey(key) || testValidProtocol(value, attrProts.get(key));
+                } else { // attribute found, no protocols defined, so OK
+                    return true;
+                }
+            }
+        } else { // no attributes defined for tag, try :all tag
+            return !tagName.equals(":all") && isSafeAttribute(":all", attr);
+        }
+        return false;
+    }
+
+    private boolean testValidProtocol(AttributeValue value, Set<Protocol> protocols) {
+        // todo: use the absUrl method and test this is a good URL
+        for (Protocol protocol : protocols) {
+            String prot = protocol.toString() + ":";
+            if (value.toString().toLowerCase().startsWith(prot)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Attributes getEnforcedAttributes(String tagName) {
+        Attributes attrs = new Attributes();
+        TagName tag = TagName.valueOf(tagName);
+        if (enforcedAttributes.containsKey(tag)) {
+            Map<AttributeKey, AttributeValue> keyVals = enforcedAttributes.get(tag);
+            for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
+                attrs.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+        return attrs;
+    }
+    
     // named types for config. All just hold strings, but here for my sanity.
 
     static class TagName extends TypedValue {

@@ -148,7 +148,7 @@ public class ParserTest {
     @Test public void handlesBaseTags() {
         String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
         Document doc = Jsoup.parse(h, "http://foo/");
-        assertEquals("http://foo/", doc.baseUri());
+        assertEquals("http://bar", doc.baseUri()); // gets updated as base changes, so doc.createElement has latest.
 
         Elements anchors = doc.getElementsByTag("a");
         assertEquals(3, anchors.size());

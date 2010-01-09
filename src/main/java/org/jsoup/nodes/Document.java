@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.apache.commons.lang.Validate;
 import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 
@@ -12,6 +13,26 @@ public class Document extends Element {
 
     public Document(String baseUri) {
         super(new StartTag(Tag.valueOf("#root"), baseUri));
+    }
+
+    /**
+     Create a valid, empty shell of a document, suitable for adding more elements to (without parsing).
+     @param baseUri baseUri of document
+     @return document with html, head, and body elements.
+     */
+    static public Document createShell(String baseUri) {
+        Validate.notNull(baseUri);
+
+        Document doc = new Document(baseUri);
+        Element html = doc.createElement(Tag.valueOf("html"));
+        Element head = doc.createElement(Tag.valueOf("head"));
+        Element body = doc.createElement(Tag.valueOf("body"));
+
+        doc.addChild(html);
+        html.addChild(head);
+        html.addChild(body);
+
+        return doc;
     }
 
     public Element getHead() {
@@ -28,6 +49,10 @@ public class Document extends Element {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Element createElement(Tag tag) {
+        return new Element(tag, baseUri());
     }
 
     @Override

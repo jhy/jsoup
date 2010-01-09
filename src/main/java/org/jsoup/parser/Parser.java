@@ -132,6 +132,7 @@ public class Parser {
         // <base href>: update the base uri
         if (child.tagName().equals("base")) {
             baseUri = child.absUrl("href");
+            doc.setBaseUri(baseUri); // set on the doc so doc.createElement(Tag) will get updated base
         }
 
         addChildToParent(child, isEmptyElement);

@@ -25,6 +25,10 @@ public class Element extends Node {
         elementChildren = new ArrayList<Element>();
     }
 
+    public Element(Tag tag, String baseUri) {
+        this(new StartTag(tag, baseUri));
+    }
+
     public String nodeName() {
         return tag.getName();
     }
