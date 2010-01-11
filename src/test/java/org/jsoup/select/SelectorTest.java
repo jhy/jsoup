@@ -198,6 +198,14 @@ public class SelectorTest {
         assertEquals("p", divChilds.get(1).tagName());
         assertEquals("span", divChilds.get(2).tagName());
     }
+    
+    @Test public void multiChildDescent() {
+        String h = "<div id=foo><h1 class=bar><a href=http://example.com/>One</a></h1></div>";
+        Document doc = Jsoup.parse(h);
+        Elements els = doc.select("div#foo > h1.bar > a[href*=example]");
+        assertEquals(1, els.size());
+        assertEquals("a", els.first().tagName());
+    }
 
     @Test public void caseInsensitive() {
         String h = "<dIv tItle=bAr><div>"; // mixed case so a simple toLowerCase() on value doesn't catch

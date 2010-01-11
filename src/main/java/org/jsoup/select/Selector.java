@@ -57,8 +57,10 @@ public class Selector {
                     elements.addAll(select(subQuery, root));
                 }
             } else if (tq.matchChomp(">")) { // parent > child
-                Elements candidates = select(tq.remainder(), elements);
-                return filterForChildren(elements, candidates);
+                String subQuery = tq.chompTo(">"); // support multi > childs
+                Elements candidates = select(subQuery, elements);
+                Elements children = filterForChildren(elements, candidates);
+                elements.clear(); elements.addAll(children);
             } else if (seenWhite) { // ancestor descendant
                 Elements candidates = select(tq.remainder(), elements);
                 return filterForDescendants(elements, candidates);
