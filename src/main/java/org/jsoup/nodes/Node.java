@@ -108,19 +108,36 @@ public abstract class Node {
         this.baseUri = baseUri;
     }
 
-    public String absUrl(String attribute) {
-        Validate.notEmpty(attribute);
+    /**
+     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href></code> or
+     * <code>&lt;img src></code>.
+     * <p/>
+     * If the attribute value is already absolute (i.e. it starts with a protocol, like
+     * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
+     * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
+     * absolute using that.
+     * <p/>
+     * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix.
+     *
+     * @param attributeKey The attribute key
+     * @return An absolute URL if one could be made, or an empty string (not null) if the attribute was missing or
+     * could not be made successfully into a URL.
+     * @see #attr
+     * @see java.net.URL#URL(java.net.URL, String)
+     */
+    public String absUrl(String attributeKey) {
+        Validate.notEmpty(attributeKey);
 
-        String relUrl = attr(attribute);
-        if (baseUri.isEmpty()) {
-            return relUrl; // nothing to make absolute with
+        String relUrl = attr(attributeKey);
+        if (!hasAttr(attributeKey)) {
+            return ""; // nothing to make absolute with
         } else {
             URL base;
             try {
                 try {
                     base = new URL(baseUri);
                 } catch (MalformedURLException e) {
-                    // the base is unsuitable, but the attribute may be abs, so try that
+                    // the base is unsuitable, but the attribute may be abs on its own, so try that
                     URL abs = new URL(relUrl);
                     return abs.toExternalForm();
                 }
