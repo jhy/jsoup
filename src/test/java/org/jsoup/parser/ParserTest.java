@@ -193,6 +193,13 @@ public class ParserTest {
         Element div1 = doc.getElementById("1");
         assertTrue(div1.children().isEmpty());
     }
+    
+    @Test public void handlesMultiClosingBody() {
+        String h = "<body><p>Hello</body><p>there</p></body></body></html><p>now";
+        Document doc = Jsoup.parse(h);
+        assertEquals(3, doc.select("p").size());
+        assertEquals(3, doc.getBody().children().size());
+    }
 
 
 }

@@ -243,7 +243,10 @@ public class Parser {
         for (int i = stack.size() -1; i > 0; i--) {
             counter++;
             Element el = stack.get(i);
-            if (el.getTag().equals(tag)) {
+            Tag elTag = el.getTag();
+            if (elTag.equals(bodyTag) || elTag.equals(htmlTag)) { // once in body, don't close past body
+                break;
+            } else if (elTag.equals(tag)) {
                 elToClose = el;
                 break;
             }
