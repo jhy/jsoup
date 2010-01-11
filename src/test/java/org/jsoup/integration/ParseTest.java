@@ -39,11 +39,11 @@ public class ParseTest {
         
         Element a = doc.select("a[href=/entertainment/horoscopes]").first();
         assertEquals("/entertainment/horoscopes", a.attr("href"));
-        assertEquals("http://www.news.com.au/entertainment/horoscopes", a.absUrl("href"));
+        assertEquals("http://www.news.com.au/entertainment/horoscopes", a.attr("abs:href"));
         
         Element hs = doc.select("a[href*=naughty-corners-are-a-bad-idea]").first();
         assertEquals("http://www.heraldsun.com.au/news/naughty-corners-are-a-bad-idea-for-kids/story-e6frf7jo-1225817899003", hs.attr("href"));
-        assertEquals(hs.attr("href"), hs.absUrl("href"));
+        assertEquals(hs.attr("href"), hs.attr("abs:href"));
     }
     
     @Test public void testGoogleSearchIpod() {

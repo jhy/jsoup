@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 import org.junit.Test;
@@ -27,5 +28,13 @@ public class NodeTest {
         Element dodgyBase = new Element(new StartTag(tag, "wtf://no-such-protocol/", attribs));
         assertEquals("http://bar/qux", dodgyBase.absUrl("absHref")); // base fails, but href good, so get that
         assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
+    }
+
+    @Test public void handlesAbsPrefix() {
+        Document doc = Jsoup.parse("<a href=/foo>Hello</a>", "http://jsoup.org/");
+        Element a = doc.select("a").first();
+        assertEquals("/foo", a.attr("href"));
+        assertEquals("http://jsoup.org/foo", a.attr("abs:href"));
+        assertFalse(a.hasAttr("abs:href")); // only realised on the get method, not in has or iterator
     }
 }

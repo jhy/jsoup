@@ -38,15 +38,25 @@ public abstract class Node {
     public abstract String nodeName();
 
     /**
-     * Get an attribute.
+     * Get an attribute's value by its key.
+     * <p/>
+     * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
+     * which is a shortcut to the {@link #absUrl} method.
+     * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
      * @param attributeKey The attribute key.
      * @return The attribute, or empty string if not present (to avoid nulls).
      * @see #getAttributes()
      * @see #hasAttr(String)
+     * @see #absUrl(String)
      */
     public String attr(String attributeKey) {
-        String value = attributes.get(attributeKey);
-        return value == null ? "" : value;
+        Validate.notNull(attributeKey);
+
+        if (hasAttr(attributeKey))
+            return attributes.get(attributeKey);
+        else if (attributeKey.toLowerCase().startsWith("abs:"))
+            return absUrl(attributeKey.substring("abs:".length()));
+        else return "";
     }
 
     /**
