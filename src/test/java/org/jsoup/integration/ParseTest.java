@@ -2,6 +2,7 @@ package org.jsoup.integration;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -25,6 +26,22 @@ public class ParseTest {
         Elements articleBody = doc.select(".articleBody > *");
         assertEquals(17, articleBody.size());
         // todo: more tests!
+        
+    }
+    
+    @Test public void testNewsHomepage() {
+        String h = loadFile("/htmltests/news-com-au-home.html");
+        Document doc = Jsoup.parse(h, "http://www.news.com.au/");
+        assertEquals("News.com.au | News from Australia and around the world online | NewsComAu", doc.getTitle());
+        assertEquals("Brace yourself for Metro meltdown", doc.select(".id1225817868581 h4").text().trim());
+        
+        Element a = doc.select("a[href=/entertainment/horoscopes]").first();
+        assertEquals("/entertainment/horoscopes", a.attr("href"));
+        assertEquals("http://www.news.com.au/entertainment/horoscopes", a.absUrl("href"));
+        
+        Element hs = doc.select("a[href*=naughty-corners-are-a-bad-idea]").first();
+        assertEquals("http://www.heraldsun.com.au/news/naughty-corners-are-a-bad-idea-for-kids/story-e6frf7jo-1225817899003", hs.attr("href"));
+        assertEquals(hs.attr("href"), hs.absUrl("href"));
         
     }
 
