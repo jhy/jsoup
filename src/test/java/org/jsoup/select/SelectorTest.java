@@ -31,7 +31,7 @@ public class SelectorTest {
     }
 
     @Test public void testByClass() {
-        Elements els = Jsoup.parse("<p id=0 class='one two'><p id=1 class='one'><p id=2 class='two'>").select(".one");
+        Elements els = Jsoup.parse("<p id=0 class='one two'><p id=1 class='one'><p id=2 class='two'>").select("p.one");
         assertEquals(2, els.size());
         assertEquals("0", els.get(0).id());
         assertEquals("1", els.get(1).id());
@@ -171,6 +171,22 @@ public class SelectorTest {
         Elements div2 = doc.select("div#1 > div");
         assertEquals(1, div2.size());
         assertEquals("2", div2.get(0).id());
+    }
+    
+    @Test public void parentWithClassChild() {
+        String h = "<h1 class=foo><a href=1 /></h1><h1 class=foo><a href=2 class=bar /></h1><h1><a href=3 /></h1>";
+        Document doc = Jsoup.parse(h);
+        
+        Elements allAs = doc.select("h1 > a");
+        assertEquals(3, allAs.size());
+        assertEquals("a", allAs.first().tagName());
+        
+        Elements fooAs = doc.select("h1.foo > a");
+        assertEquals(2, fooAs.size());
+        assertEquals("a", fooAs.first().tagName());
+        
+        Elements barAs = doc.select("h1.foo > a.bar");
+        assertEquals(1, barAs.size());
     }
 
     @Test public void parentChildStar() {

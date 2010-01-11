@@ -48,30 +48,16 @@ public class Selector {
 
     private Elements select() {
         tq.consumeWhitespace();
-
-        if (tq.matchChomp("#")) {
-            byId();
-        } else if (tq.matchChomp(".")) {
-            byClass();
-        } else if (tq.matchesWord()) {
-            byTag();
-        } else if (tq.matchChomp("[")) {
-            byAttribute();
-        } else if (tq.matchChomp("*")) {
-            allElements();
-        } else { // unhandled
-            throw new SelectorParseException("Could not parse query " + query);
-        }
-
-        // hierarchy (todo: implement +, ~)
-        boolean seenWhite = tq.consumeWhitespace();
-        if (!tq.isEmpty()) { 
+        addElements(findElements()); // chomp first matcher off queue        
+        while (!tq.isEmpty()) {
+            // hierarchy and extras (todo: implement +, ~)
+            boolean seenWhite = tq.consumeWhitespace();
+            
             if (tq.matchChomp(",")) { // group or
                 while (!tq.isEmpty()) {
                     String subQuery = tq.chompTo(",");
                     elements.addAll(select(subQuery, root));
                 }
-                return new Elements(elements);
             } else if (tq.matchChomp(">")) { // parent > child
                 Elements candidates = new Elements(select(tq.remainder(), elements));
                 return filterForChildren(elements, candidates);
@@ -79,64 +65,91 @@ public class Selector {
                 Elements candidates = new Elements(select(tq.remainder(), elements));
                 return filterForDescendants(elements, candidates);
             } else { // E.class, E#id, E[attr] etc. AND
-                Elements candidates = new Elements(select(tq.remainder(), elements));
-                return filterForSelf(elements, candidates);
+                Elements candidates = findElements(); // take next el, #. etc off queue
+                intersectElements(filterForSelf(elements, candidates));
             }
-        } else {
-            return new Elements(elements);
+        }
+        return new Elements(elements);
+    }
+    
+    private Elements findElements() {
+        if (tq.matchChomp("#")) {
+            return byId();
+        } else if (tq.matchChomp(".")) {
+            return byClass();
+        } else if (tq.matchesWord()) {
+            return byTag();
+        } else if (tq.matchChomp("[")) {
+            return byAttribute();
+        } else if (tq.matchChomp("*")) {
+            return allElements();
+        } else { // unhandled
+            throw new SelectorParseException("Could not parse query " + query);
         }
     }
+    
+    private void addElements(Collection<Element> add) {
+        elements.addAll(add);
+    }
+    
+    private void intersectElements(Collection<Element> intersect) {
+        elements.retainAll(intersect);
+    }
 
-    private void byId() {
+    private Elements byId() {
         String id = tq.consumeWord();
         Validate.notEmpty(id);
 
         Element found = root.getElementById(id);
+        Elements byId = new Elements();
         if(found != null)
-            elements.add(found);
+            byId.add(found);
+        return byId;
     }
 
-    private void byClass() {
+    private Elements byClass() {
         String className = tq.consumeClassName();
         Validate.notEmpty(className);
 
-        List<Element> found = root.getElementsByClass(className);
-        elements.addAll(found);
+        return root.getElementsByClass(className);
     }
 
-    private void byTag() {
+    private Elements byTag() {
         String tagName = tq.consumeWord();
         Validate.notEmpty(tagName);
 
-        elements.addAll(root.getElementsByTag(tagName));
+        return root.getElementsByTag(tagName);
     }
 
-    private void byAttribute() {
+    private Elements byAttribute() {
         String key = tq.consumeToAny("=", "!=", "^=", "$=", "*=", "]"); // eq, not, start, end, contain, (no val)
         Validate.notEmpty(key);
 
         if (tq.matchChomp("]")) {
-            elements.addAll(root.getElementsByAttribute(key));
+            return root.getElementsByAttribute(key);
         } else {
             if (tq.matchChomp("="))
-                elements.addAll(root.getElementsByAttributeValue(key, tq.chompTo("]")));
+                return root.getElementsByAttributeValue(key, tq.chompTo("]"));
 
             else if (tq.matchChomp("!="))
-                elements.addAll(root.getElementsByAttributeValueNot(key, tq.chompTo("]")));
+                return root.getElementsByAttributeValueNot(key, tq.chompTo("]"));
 
             else if (tq.matchChomp("^="))
-                elements.addAll(root.getElementsByAttributeValueStarting(key, tq.chompTo("]")));
+                return root.getElementsByAttributeValueStarting(key, tq.chompTo("]"));
 
             else if (tq.matchChomp("$="))
-                elements.addAll(root.getElementsByAttributeValueEnding(key, tq.chompTo("]")));
+                return root.getElementsByAttributeValueEnding(key, tq.chompTo("]"));
 
             else if (tq.matchChomp("*="))
-                elements.addAll(root.getElementsByAttributeValueContaining(key, tq.chompTo("]")));
+                return root.getElementsByAttributeValueContaining(key, tq.chompTo("]"));
+            
+            else
+                throw new SelectorParseException("Could not parse attribute query " + query);
         }
     }
 
-    private void allElements() {
-        elements.addAll(Collector.collect(new Evaluator.AllElements(), root));
+    private Elements allElements() {
+        return Collector.collect(new Evaluator.AllElements(), root);
     }
 
     // direct child descendants
