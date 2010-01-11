@@ -44,7 +44,18 @@ public class ParseTest {
         Element hs = doc.select("a[href*=naughty-corners-are-a-bad-idea]").first();
         assertEquals("http://www.heraldsun.com.au/news/naughty-corners-are-a-bad-idea-for-kids/story-e6frf7jo-1225817899003", hs.attr("href"));
         assertEquals(hs.attr("href"), hs.absUrl("href"));
-        
+    }
+    
+    @Test public void testGoogleSearchIpod() {
+        String h = loadFile("/htmltests/google-ipod.html");
+        Document doc = Jsoup.parse(h, "http://www.google.com/search?hl=en&q=ipod&aq=f&oq=&aqi=g10");
+        assertEquals("ipod - Google Search", doc.getTitle());
+        Elements results = doc.select("h3.r > a");
+        assertEquals(12, results.size());
+        assertEquals("http://news.google.com/news?hl=en&q=ipod&um=1&ie=UTF-8&ei=uYlKS4SbBoGg6gPf-5XXCw&sa=X&oi=news_group&ct=title&resnum=1&ved=0CCIQsQQwAA", 
+                results.get(0).attr("href"));
+        assertEquals("http://www.apple.com/itunes/",
+                results.get(1).attr("href"));
     }
 
     private String loadFile(String filename) {
