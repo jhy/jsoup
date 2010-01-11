@@ -6,8 +6,6 @@ import org.jsoup.parser.TokenQueue;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
-
 
 /**
  TODO: Document
@@ -59,10 +57,10 @@ public class Selector {
                     elements.addAll(select(subQuery, root));
                 }
             } else if (tq.matchChomp(">")) { // parent > child
-                Elements candidates = new Elements(select(tq.remainder(), elements));
+                Elements candidates = select(tq.remainder(), elements);
                 return filterForChildren(elements, candidates);
             } else if (seenWhite) { // ancestor descendant
-                Elements candidates = new Elements(select(tq.remainder(), elements));
+                Elements candidates = select(tq.remainder(), elements);
                 return filterForDescendants(elements, candidates);
             } else { // E.class, E#id, E[attr] etc. AND
                 Elements candidates = findElements(); // take next el, #. etc off queue
