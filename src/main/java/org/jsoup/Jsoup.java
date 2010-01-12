@@ -20,7 +20,7 @@ public class Jsoup {
     }
 
     public static String clean(String html, Whitelist whitelist) {
-        Document dirty = Jsoup.parse(html);
+        Document dirty = Jsoup.parse("<body>" + html); // TODO: modify parser to El = Parser.parseBodyFragment
         Cleaner cleaner = new Cleaner(whitelist);
         Document clean = cleaner.clean(dirty);
         return clean.getBody().html();
