@@ -57,6 +57,14 @@ public class ParseTest {
         assertEquals("http://www.apple.com/itunes/",
                 results.get(1).attr("href"));
     }
+    
+    @Test public void testBinary() {
+        String h = loadFile("/htmltests/thumb.jpg");
+        Document doc = Jsoup.parse(h);
+        // nothing useful, but did not blow up
+        assertTrue(doc.text().contains("gd-jpeg"));
+        
+    }
 
     private String loadFile(String filename) {
         InputStream is = ParseTest.class.getResourceAsStream(filename);
