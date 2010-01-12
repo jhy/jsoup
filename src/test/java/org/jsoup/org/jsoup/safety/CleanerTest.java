@@ -16,11 +16,60 @@ public class CleanerTest {
 
         assertEquals("Hello <b>there</b>!", cleanHtml);
     }
+    
+    @Test public void simpleBehaviourTest2() {
+        String h = "Hello <b>there</b>!";
+        String cleanHtml = Jsoup.clean(h, Whitelist.simpleText());
+
+        assertEquals("Hello <b>there</b>!", cleanHtml);
+    }
 
     @Test public void basicBehaviourTest() {
         String h = "<div><p><a href='javascript:sendAllMoney()'>Dodgy</a> <A HREF='HTTP://nice.com'>Nice</p><blockquote>Hello</blockquote>";
         String cleanHtml = Jsoup.clean(h, Whitelist.basic());
 
         assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"HTTP://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>", cleanHtml);
+    }
+    
+    @Test public void basicWithImagesTest() {
+        String h = "<div><p><img src='http://example.com/' alt=Image></p><p><img src='ftp://ftp.example.com'></p></div>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basicWithImages());
+        assertEquals("<p><img src=\"http://example.com/\" alt=\"Image\" /></p><p><img /></p>", cleanHtml);
+    }
+    
+    @Test public void testRelaxed() {
+        String h = "<h1>Head</h1><td>One<td>Two</td>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<h1>Head</h1><table><tr><td>One</td><td>Two</td></tr></table>", cleanHtml);
+    }
+    
+    @Test public void testDropComments() {
+        String h = "<p>Hello<!-- no --></p>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<p>Hello</p>", cleanHtml);
+    }
+    
+    @Test public void testDropXmlProc() {
+        String h = "<?import namespace=\"xss\"><p>Hello</p>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<p>Hello</p>", cleanHtml);
+    }
+    
+    @Test public void testDropScript() {
+        String h = "<SCRIPT SRC=//ha.ckers.org/.j><SCRIPT>alert(/XSS/.source)</SCRIPT>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("", cleanHtml);
+    }
+    
+    @Test public void testDropImageScript() {
+        String h = "<IMG SRC=\"javascript:alert('XSS')\">";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<img />", cleanHtml);
+    }
+    
+    @Test public void testCleanJavascriptHref() {
+        String h = "<A HREF=\"javascript:document.location='http://www.google.com/'\">XSS</A>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<a>XSS</a>", cleanHtml);
     }
 }
