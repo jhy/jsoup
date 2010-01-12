@@ -63,7 +63,16 @@ public class ParseTest {
         Document doc = Jsoup.parse(h);
         // nothing useful, but did not blow up
         assertTrue(doc.text().contains("gd-jpeg"));
-        
+    }
+    
+    @Test public void testYahooJp() {
+        String h = loadFile("/htmltests/yahoo-jp.html");
+        Document doc = Jsoup.parse(h, "http://www.yahoo.co.jp/index.html"); // http charset is utf-8.
+        assertEquals("Yahoo! JAPAN", doc.getTitle());
+        Element a = doc.select("a[href=t/2322m2]").first();
+        assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/t/2322m2", 
+                a.attr("abs:href")); // session put into <base>
+        assertEquals("全国、人気の駅ランキング", a.text());
     }
 
     private String loadFile(String filename) {
