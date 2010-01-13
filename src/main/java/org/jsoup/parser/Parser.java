@@ -76,7 +76,7 @@ public class Parser {
         if (data.endsWith("-")) // i.e. was -->
             data = data.substring(0, data.length()-1);
         Comment comment = new Comment(data, baseUri);
-        last().addChild(comment);
+        last().appendChild(comment);
     }
 
     private void parseXmlDecl() {
@@ -86,7 +86,7 @@ public class Parser {
         String data = tq.chompTo(">");
 
         XmlDeclaration decl = new XmlDeclaration(data, baseUri, procInstr);
-        last().addChild(decl);
+        last().appendChild(decl);
     }
 
     private void parseEndTag() {
@@ -133,7 +133,7 @@ public class Parser {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
             DataNode dataNode = DataNode.createFromEncoded(data, baseUri);
-            child.addChild(dataNode);
+            child.appendChild(dataNode);
 
             if (tag.equals(titleTag))
                 doc.setTitle(child.data());
@@ -181,14 +181,14 @@ public class Parser {
     private void parseTextNode() {
         String text = tq.consumeTo("<");
         TextNode textNode = TextNode.createFromEncoded(text, baseUri);
-        last().addChild(textNode);
+        last().appendChild(textNode);
     }
 
     private void parseCdata() {
         tq.consume("<![CDATA[");
         String rawText = tq.chompTo("]]>");
         TextNode textNode = new TextNode(rawText, baseUri); // constructor does not escape
-        last().addChild(textNode);
+        last().appendChild(textNode);
     }
 
     private Element addChildToParent(Element child, boolean isEmptyElement) {
@@ -204,9 +204,9 @@ public class Parser {
             // special case: make sure there's a head before putting in body
             if (child.getTag().equals(bodyTag)) {
                 Element head = new Element(new StartTag(headTag, baseUri));
-                implicit.addChild(head);
+                implicit.appendChild(head);
             }
-            implicit.addChild(child);
+            implicit.appendChild(child);
 
             // recurse to ensure somewhere to put parent
             Element root = addChildToParent(implicit, false);
@@ -215,7 +215,7 @@ public class Parser {
             return root;
         }
 
-        parent.addChild(child);
+        parent.appendChild(child);
 
         if (!isEmptyElement)
             stack.addLast(child);

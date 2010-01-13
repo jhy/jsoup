@@ -73,17 +73,25 @@ public class Element extends Node {
         return Selector.select(query, this);
     }
 
-    public void addChild(Element child) {
+    public Element appendChild(Element child) {
         Validate.notNull(child);
         elementChildren.add(child);
         childNodes.add(child);
         child.setParentNode(this);
+        return child;
     }
 
-    public void addChild(Node child) {
+    public Node appendChild(Node child) {
         Validate.notNull(child);
         childNodes.add(child);
         child.setParentNode(this);
+        return child;
+    }
+    
+    public Element appendElement(String tagName) {
+        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        appendChild(child);
+        return child;
     }
 
     public Element nextElementSibling() {
@@ -220,7 +228,7 @@ public class Element extends Node {
         childNodes.clear();
         elementChildren.clear();
         TextNode textNode = new TextNode(text, baseUri);
-        addChild(textNode);
+        appendChild(textNode);
 
         return this;
     }

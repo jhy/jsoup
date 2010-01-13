@@ -140,6 +140,15 @@ public class ElementTest {
         assertEquals("Gone", div.text());
         assertEquals(0, doc.select("p").size());
     }
+    
+    @Test public void testAddNewElement() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.appendElement("p").text("there");
+        div.appendElement("P").attr("class", "second").text("now");
+        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
+                doc.html());
+    }
 
 
 }
