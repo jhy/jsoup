@@ -26,6 +26,10 @@ import java.util.Set;
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
  document HTML around the cleaned body HTML, or create a whitelist that allows <code>html</code> and <code>head</code>
  elements as appropriate.
+ <p/>
+ If you are going to extend a whitelist, please be very careful. Make sure you understand what attributes may lead to
+ XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See 
+ http://ha.ckers.org/xss.html for some XSS attack examples.
 
  @author Jonathan Hedley
  */

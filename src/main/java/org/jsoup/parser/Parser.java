@@ -23,7 +23,7 @@ public class Parser {
     private Document doc;
     private String baseUri;
 
-    public Parser(String html, String baseUri) {
+    private Parser(String html, String baseUri, boolean isBodyFragment) {
         Validate.notNull(html);
         Validate.notNull(baseUri);
 
@@ -31,16 +31,26 @@ public class Parser {
         tq = new TokenQueue(html);
         this.baseUri = baseUri;
 
-        doc = new Document(baseUri);
-        stack.add(doc);
+        if (isBodyFragment) {
+            doc = Document.createShell(baseUri);
+            stack.add(doc.getBody());
+        } else {
+            doc = new Document(baseUri);
+            stack.add(doc);
+        }
     }
 
     public static Document parse(String html, String baseUri) {
-        Parser parser = new Parser(html, baseUri);
+        Parser parser = new Parser(html, baseUri, false);
+        return parser.parse();
+    }
+    
+    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+        Parser parser = new Parser(bodyHtml, baseUri, true);
         return parser.parse();
     }
 
-    public Document parse() {
+    private Document parse() {
         while (!tq.isEmpty()) {
             if (tq.matches("<!--")) {
                 parseComment();
