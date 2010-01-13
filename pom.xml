@@ -5,9 +5,30 @@
   <modelVersion>4.0.0</modelVersion>
   <name>jsoup</name>
 
-  <groupId>jsoup.org</groupId>
+  <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>0.1</version>
+  <version>1.0-SNAPSHOT</version>
+  <description>Jsoup HTML parser</description>
+  <url>http://jsoup.org/</url>
+  <inceptionYear>2009</inceptionYear>
+  <issueManagement>
+  	<system>GitHub</system>
+  	<url>http://github.com/jhy/jsoup/issues</url>
+  </issueManagement>
+  <licenses>
+  	<license>
+  		<name>The MIT License</name>
+  		<url>http://jsoup.com/license</url><!-- TODO -->
+  		<distribution>repo</distribution>
+  	</license>  
+  </licenses>
+  <scm>
+  	<url>http://github.com/jhy/jsoup</url>
+  </scm>
+  <organization>
+  	<name>Jonathan Hedley</name>
+  	<url>http://jonathanhedley.com/</url>
+  </organization>
 
   <build>
     <plugins>
@@ -40,5 +61,9 @@
       <version>2.4</version>
     </dependency>
   </dependencies>
+  <dependencyManagement>
+  	<dependencies>
+  	</dependencies>
+  </dependencyManagement>
 
 </project>
