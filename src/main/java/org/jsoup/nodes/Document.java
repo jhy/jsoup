@@ -28,9 +28,9 @@ public class Document extends Element {
         Element head = doc.createElement(Tag.valueOf("head"));
         Element body = doc.createElement(Tag.valueOf("body"));
 
-        doc.addChild(html);
-        html.addChild(head);
-        html.addChild(body);
+        doc.appendChild(html);
+        html.appendChild(head);
+        html.appendChild(body);
 
         return doc;
     }
@@ -65,5 +65,12 @@ public class Document extends Element {
         getBody().text(text); // overridden to not nuke doc structure
         return this;
     }
+
+    @Override
+    public String nodeName() {
+        return "#document";
+    }
+    
+    
 }
 

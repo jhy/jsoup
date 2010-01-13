@@ -39,7 +39,7 @@ public class Cleaner {
 
                 if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
                     Element destChild = createSafeElement(sourceEl);
-                    dest.addChild(destChild);
+                    dest.appendChild(destChild);
                     copySafeNodes(sourceEl, destChild); // recurs
                 } else { // not a safe tag, but it may have children (els or text) that are, so recurse
                     copySafeNodes(sourceEl, dest);
@@ -47,7 +47,7 @@ public class Cleaner {
             } else if (sourceChild instanceof TextNode) {
                 TextNode sourceText = (TextNode) sourceChild;
                 TextNode destText = new TextNode(sourceText.getWholeText(), sourceChild.baseUri());
-                dest.addChild(destText);
+                dest.appendChild(destText);
             } // else, we don't care about comments, xml proc instructions, etc
         }
     }
