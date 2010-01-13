@@ -10,17 +10,17 @@ import java.util.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Parser {
-    private static String SQ = "'";
-    private static String DQ = "\"";
+    private static final String SQ = "'";
+    private static final String DQ = "\"";
 
-    private static Tag htmlTag = Tag.valueOf("html");
-    private static Tag headTag = Tag.valueOf("head");
-    private static Tag bodyTag = Tag.valueOf("body");
-    private static Tag titleTag = Tag.valueOf("title");
+    private static final Tag htmlTag = Tag.valueOf("html");
+    private static final Tag headTag = Tag.valueOf("head");
+    private static final Tag bodyTag = Tag.valueOf("body");
+    private static final Tag titleTag = Tag.valueOf("title");
 
-    private LinkedList<Element> stack;
-    private TokenQueue tq;
-    private Document doc;
+    private final LinkedList<Element> stack;
+    private final TokenQueue tq;
+    private final Document doc;
     private String baseUri;
 
     private Parser(String html, String baseUri, boolean isBodyFragment) {
