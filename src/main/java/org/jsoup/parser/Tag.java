@@ -66,7 +66,7 @@ public class Tag {
      @param child potential child tag.
      @return true if this can contain child.
      */
-    public boolean canContain(Tag child) {
+    boolean canContain(Tag child) {
         Validate.notNull(child);
 
         if (child.isBlock && !this.canContainBlock)
@@ -110,11 +110,11 @@ public class Tag {
         return empty;
     }
 
-    public Tag getImplicitParent() {
+    Tag getImplicitParent() {
         return (!ancestors.isEmpty()) ? ancestors.get(0) : null;
     }
 
-    public boolean isValidParent(Tag child) {
+    boolean isValidParent(Tag child) {
         if (child.ancestors.isEmpty())
             return true; // HTML tag
 
