@@ -2,7 +2,6 @@ package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
 import org.jsoup.parser.Parser;
-import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -27,13 +26,17 @@ public class Element extends Node {
     /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
-     * @param startTag provides tag, base URI, and initial attributes
+     * @param tag tag of this element
+     * @param baseUri the base URI
+     * @param attributes initial attributes
      * @see #appendChild(Element)
      * @see #appendElement(String)
      */
-    public Element(StartTag startTag) {
-        super(startTag.getBaseUri(), startTag.getAttributes());
-        this.tag = startTag.getTag();
+    public Element(Tag tag, String baseUri, Attributes attributes) {
+        super(baseUri, attributes);
+        
+        Validate.notNull(tag);    
+        this.tag = tag;
         elementChildren = new ArrayList<Element>();
     }
     
@@ -46,7 +49,7 @@ public class Element extends Node {
      * @see Tag#valueOf(String)
      */
     public Element(Tag tag, String baseUri) {
-        this(new StartTag(tag, baseUri));
+        this(tag, baseUri, new Attributes());
     }
 
     @Override

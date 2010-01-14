@@ -118,8 +118,7 @@ public class Parser {
         }
 
         Tag tag = Tag.valueOf(tagName);
-        StartTag startTag = new StartTag(tag, baseUri, attributes);
-        Element child = new Element(startTag);
+        Element child = new Element(tag, baseUri, attributes);
 
         boolean isEmptyElement = tag.isEmpty(); // empty element if empty tag (e.g. img) or self-closed el (<div/>
         if (tq.matchChomp("/>")) { // close empty element or tag
@@ -199,11 +198,10 @@ public class Parser {
         if (!validAncestor) {
             // create implicit parent around this child
             Tag parentTag = childTag.getImplicitParent();
-            StartTag parentStart = new StartTag(parentTag, baseUri);
-            Element implicit = new Element(parentStart);
+            Element implicit = new Element(parentTag, baseUri);
             // special case: make sure there's a head before putting in body
             if (child.getTag().equals(bodyTag)) {
-                Element head = new Element(new StartTag(headTag, baseUri));
+                Element head = new Element(headTag, baseUri);
                 implicit.appendChild(head);
             }
             implicit.appendChild(child);

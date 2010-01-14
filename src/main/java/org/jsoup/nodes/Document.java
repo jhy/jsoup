@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
-import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 
 /**
@@ -12,7 +11,7 @@ public class Document extends Element {
     private String title;
 
     public Document(String baseUri) {
-        super(new StartTag(Tag.valueOf("#root"), baseUri));
+        super(Tag.valueOf("#root"), baseUri);
     }
 
     /**

@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 import org.junit.Test;
 
@@ -17,16 +16,16 @@ public class NodeTest {
         attribs.put("relHref", "/foo");
         attribs.put("absHref", "http://bar/qux");
 
-        Element noBase = new Element(new StartTag(tag, "", attribs));
+        Element noBase = new Element(tag, "", attribs);
         assertEquals("", noBase.absUrl("relHref")); // with no base, should NOT fallback to href attrib, whatever it is
         assertEquals("http://bar/qux", noBase.absUrl("absHref")); // no base but valid attrib, return attrib
 
-        Element withBase = new Element(new StartTag(tag, "http://foo/", attribs));
+        Element withBase = new Element(tag, "http://foo/", attribs);
         assertEquals("http://foo/foo", withBase.absUrl("relHref")); // construct abs from base + rel
         assertEquals("http://bar/qux", withBase.absUrl("absHref")); // href is abs, so returns that
         assertEquals("", withBase.absUrl("noval"));
 
-        Element dodgyBase = new Element(new StartTag(tag, "wtf://no-such-protocol/", attribs));
+        Element dodgyBase = new Element(tag, "wtf://no-such-protocol/", attribs);
         assertEquals("http://bar/qux", dodgyBase.absUrl("absHref")); // base fails, but href good, so get that
         assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
     }
