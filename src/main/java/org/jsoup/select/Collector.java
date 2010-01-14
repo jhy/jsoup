@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Evaluator;
 
 import java.util.List;
 
