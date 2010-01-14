@@ -2,7 +2,6 @@ package org.jsoup.safety;
 
 import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.*;
-import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 
 import java.util.List;
@@ -55,7 +54,7 @@ public class Cleaner {
     private Element createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
-        Element dest = new Element(new StartTag(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs));
+        Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
 
         Attributes sourceAttrs = sourceEl.getAttributes();
         for (Attribute sourceAttr : sourceAttrs) {
