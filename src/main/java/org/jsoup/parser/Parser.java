@@ -226,7 +226,7 @@ public class Parser {
         if (stack.size() == 1 && childTag.equals(htmlTag))
             return true; // root is valid for html node
         
-        for (int i = stack.size() -1; i > 0; i--) { // not all the way to end
+        for (int i = stack.size() -1; i >= 0; i--) {
             Element el = stack.get(i);
             Tag parent2 = el.getTag();
             if (parent2.isValidParent(childTag)) {

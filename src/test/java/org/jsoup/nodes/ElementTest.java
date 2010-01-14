@@ -149,6 +149,27 @@ public class ElementTest {
         assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
                 doc.html());
     }
+    
+    @Test public void testAddNewText() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.appendText(" there & now >");
+        assertEquals("<p>Hello</p> there &amp; now &gt;", div.html());
+    }
+    
+    @Test public void testAddNewHtml() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.append("<p>there</p><p>now</p>");
+        assertEquals("<p>Hello</p><p>there</p><p>now</p>", div.html());
+    }
+    
+    @Test public void testSetHtml() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.html("<p>there</p><p>now</p>");
+        assertEquals("<p>there</p><p>now</p>", div.html());
+    }
 
 
 }
