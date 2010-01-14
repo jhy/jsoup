@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Evaluator;
 import org.jsoup.parser.TokenQueue;
 
 import java.util.Collection;
@@ -149,7 +150,7 @@ public class Selector {
     }
 
     private Elements allElements() {
-        return Collector.collect(new Evaluator.AllElements(), root);
+        return root.getAllElements();
     }
 
     // direct child descendants

@@ -5,7 +5,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
 
 import java.util.*;
@@ -360,8 +359,7 @@ public class Element extends Node {
      * @return elements that have this attribute with this value, empty if none
      */
     public Elements getElementsByAttributeValue(String key, String value) {
-        String[] kp = normaliseAttrKeyPair(key, value);
-        return Collector.collect(new Evaluator.AttributeWithValue(kp[0], kp[1]), this);
+        return Collector.collect(new Evaluator.AttributeWithValue(key, value), this);
     }
 
     /**
@@ -372,8 +370,7 @@ public class Element extends Node {
      * @return elements that do not have a matching attribute
      */
     public Elements getElementsByAttributeValueNot(String key, String value) {
-        String[] kp = normaliseAttrKeyPair(key, value);
-        return Collector.collect(new Evaluator.AttributeWithValueNot(kp[0], kp[1]), this);
+        return Collector.collect(new Evaluator.AttributeWithValueNot(key, value), this);
     }
 
     /**
@@ -384,8 +381,7 @@ public class Element extends Node {
      * @return elements that have attributes that start with the value prefix
      */
     public Elements getElementsByAttributeValueStarting(String key, String valuePrefix) {
-        String[] kp = normaliseAttrKeyPair(key, valuePrefix);
-        return Collector.collect(new Evaluator.AttributeWithValueStarting(kp[0], kp[1]), this);
+        return Collector.collect(new Evaluator.AttributeWithValueStarting(key, valuePrefix), this);
     }
 
     /**
@@ -396,8 +392,7 @@ public class Element extends Node {
      * @return elements that have attributes that end with the value suffix
      */
     public Elements getElementsByAttributeValueEnding(String key, String valueSuffix) {
-        String[] kp = normaliseAttrKeyPair(key, valueSuffix);
-        return Collector.collect(new Evaluator.AttributeWithValueEnding(kp[0], kp[1]), this);
+        return Collector.collect(new Evaluator.AttributeWithValueEnding(key, valueSuffix), this);
     }
 
     /**
@@ -408,16 +403,16 @@ public class Element extends Node {
      * @return elements that have attributes containing this text
      */
     public Elements getElementsByAttributeValueContaining(String key, String match) {
-        String[] kp = normaliseAttrKeyPair(key, match);
-        return Collector.collect(new Evaluator.AttributeWithValueContaining(kp[0], kp[1]), this);
+        return Collector.collect(new Evaluator.AttributeWithValueContaining(key, match), this);
     }
-
-    private String[] normaliseAttrKeyPair(String key, String value) {
-        Validate.notEmpty(key);
-        key = key.trim().toLowerCase();
-        Validate.notEmpty(value);
-        value = value.trim().toLowerCase();
-        return new String[] {key, value};
+    
+    /**
+     * Find all elements under this element (including self, and children of children).
+     * 
+     * @return all elements
+     */
+    public Elements getAllElements() {
+        return Collector.collect(new Evaluator.AllElements(), this);
     }
 
     /**
