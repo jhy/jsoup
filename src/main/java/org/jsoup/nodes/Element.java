@@ -12,46 +12,92 @@ import org.jsoup.select.Selector;
 import java.util.*;
 
 /**
- A HTML element: tag + data, e.g. <code>&lt;div id="foo"&gt;content&lt;/div&gt;</code>
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
+ * other elements).
+ * 
+ * From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
+ * 
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class Element extends Node {
     private final Tag tag;
     private final List<Element> elementChildren; // subset of Node.children, only holds Elements
     private Set<String> classNames;
-
+    
+    /**
+     * Create a new, standalone Element. (Standalone in that is has no parent.)
+     * 
+     * @param startTag provides tag, base URI, and initial attributes
+     * @see #appendChild(Element)
+     * @see #appendElement(String)
+     */
     public Element(StartTag startTag) {
         super(startTag.getBaseUri(), startTag.getAttributes());
         this.tag = startTag.getTag();
         elementChildren = new ArrayList<Element>();
     }
-
+    
+    /**
+     * Create a new Element from a tag and a base URI.
+     * 
+     * @param tag element tag
+     * @param baseUri the base URI of this element. It is acceptable for the base URI to be an empty
+     *            string, but not null.
+     * @see Tag#valueOf(String)
+     */
     public Element(Tag tag, String baseUri) {
         this(new StartTag(tag, baseUri));
     }
 
+    @Override
     public String nodeName() {
         return tag.getName();
     }
 
+    /**
+     * Get the name of the tag for this element. E.g. {@code div}
+     * 
+     * @return the tag name
+     */
     public String tagName() {
         return tag.getName();
     }
 
+    /**
+     * Get the Tag for this element.
+     * 
+     * @return the tag object
+     */
     public Tag getTag() {
         return tag;
     }
-
+    
+    /**
+     * Test if this element is a block-level element (e.g. {@code <div>} or an inline element (e.g.
+     * {@code <p>}).
+     * 
+     * @return true if block, false if not (and thus inline)
+     */
     public boolean isBlock() {
         return tag.isBlock();
     }
 
+    /**
+     * Get the {@code id} attribute of this element.
+     * 
+     * @return The id attribute, if present, or an empty string if not.
+     */
     public String id() {
         String id = attr("id");
         return id == null ? "" : id;
     }
 
-    @Override
+    /**
+     * Set an attribute value on this element. If this element already has an attribute with the
+     * key, its value is updated; otherwise, a new attribute is added.
+     * 
+     * @return this element
+     */
     public Element attr(String attributeKey, String attributeValue) {
         super.attr(attributeKey, attributeValue);
         return this;
@@ -62,19 +108,56 @@ public class Element extends Node {
         return (Element) super.parent();
     }
 
+    /**
+     * Get a child element of this element, by its 0-based index number.
+     * <p/>
+     * Note that an element can have both mixed Nodes and Elements as children. This method inspects
+     * a filtered list of children that are elements, and the index is based on that filtered list.
+     * 
+     * @param index the index number of the element to retrieve
+     * @return the child element, if it exists, or {@code null} if absent.
+     * @see #childNode(int)
+     */
     public Element child(int index) {
         return elementChildren.get(index);
     }
 
+    /**
+     * Get this element's child elements.
+     * <p/>
+     * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+     * @return an unmodifiable list of children elements. If this element has no children, returns an
+     * empty list.
+     * @see #childNodes()
+     */
     public List<Element> children() {
         return Collections.unmodifiableList(elementChildren);
     }
 
+    /**
+     * Find elements that match the selector query, with this element as the starting context. Matched elements
+     * may include this element, or any of its children.
+     * <p/>
+     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined, e.g.:
+     * <ul>
+     * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
+     * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
+     * </ul>
+     * 
+     * @param query a {@link Selector} query
+     * @return elements that match the query (empty if none match)
+     */
     public Elements select(String query) {
         return Selector.select(query, this);
     }
 
-    public Element appendChild(Element child) {
+    /**
+     * Adds the supplied Element to this element's children.
+     * @param child the Element to add. It should be a new element, without an existing parent.
+     * @return this element, so that you can add more children.
+     */
+    public Element appendChild(Element child) { // TODO remove, and dynamically filter for children()
         Validate.notNull(child);
         
         elementChildren.add(child);
@@ -83,6 +166,11 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     * Adds the Node to this element. 
+     * @param child the Node to add. Must not already have a parent.
+     * @return this element, so that you can add more child nodes or elements.
+     */
     public Element appendChild(Node child) {
         Validate.notNull(child);
         
@@ -91,6 +179,13 @@ public class Element extends Node {
         return this;
     }
     
+    /**
+     * Create a new Element by tag name, and add it to this element.
+     * 
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @return the new element, to allow you to add content to it, e.g.:
+     *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
+     */
     public Element appendElement(String tagName) {
         Validate.notEmpty(tagName);
         
@@ -99,16 +194,29 @@ public class Element extends Node {
         return child;
     }
     
+    /**
+     * Create and append a new TextNode to this element.
+     * 
+     * @param text the unencoded text to add
+     * @return this element
+     */
     public Element appendText(String text) {
         TextNode node = new TextNode(text, baseUri());
         appendChild(node);
         return this;
     }
     
+    /**
+     * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended.
+     * @param html HTML to add inside this element, after the existing HTML
+     * @return this element
+     * @see #html(String)
+     */
     public Element append(String html) {
         Validate.notNull(html);
         
         Element fragment = Parser.parseBodyFragment(html, baseUri).getBody();
+        // TODO: must parse without implicit elements, so you can e.g. add <td> to a <tr> (without creating a whole new table)
         for (Node node : fragment.childNodes()) {
             node.parentNode = null;
             appendChild(node);
@@ -116,12 +224,24 @@ public class Element extends Node {
         return this;
     }
     
+    /**
+     * Remove all of the element's child nodes. Any attributes are left as-is.
+     * @return this element
+     */
     public Element empty() {
         childNodes.clear();
         elementChildren.clear();
         return this;
     }
 
+    /**
+     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s, 
+     * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+     * <p/>
+     * This is similar to {@link #nextSibling()}, but specifically finds only Elements
+     * @return the next element, or null if there is no next element
+     * @see #previousElementSibling()
+     */
     public Element nextElementSibling() {
         List<Element> siblings = parent().elementChildren;
         Integer index = indexInList(this, siblings);
@@ -132,6 +252,11 @@ public class Element extends Node {
             return null;
     }
 
+    /**
+     * Gets the previous element sibling of this element.
+     * @return the previous element, or null if there is no previous element
+     * @see #nextElementSibling()
+     */
     public Element previousElementSibling() {
         List<Element> siblings = parent().elementChildren;
         Integer index = indexInList(this, siblings);
@@ -142,12 +267,20 @@ public class Element extends Node {
             return null;
     }
 
+    /**
+     * Gets the first element sibling of this element.
+     * @return the first sibling that is an element (aka the parent's first element child) 
+     */
     public Element firstElementSibling() {
         // todo: should firstSibling() exclude this?
         List<Element> siblings = parent().elementChildren;
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
 
+    /**
+     * Gets the last element sibling of this element
+     * @return the last sibling that is an element (aka the parent's last element child) 
+     */
     public Element lastElementSibling() {
         List<Element> siblings = parent().elementChildren;
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
@@ -171,8 +304,8 @@ public class Element extends Node {
      * Find an element by ID, including or under this element.
      * <p>
      * Note that this finds the first matching ID, starting with this element. If you search down from a different
-     * starting point, it is possible to find a different element by ID. For unique element by ID withing a Document,
-     * use Document.getElementById.
+     * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
+     * use {@link Document#getElementById(String)}
      * @param id The ID to search for.
      * @return The first matching element by ID, starting with this element, or null if none found.
      */
@@ -186,12 +319,29 @@ public class Element extends Node {
             return null;
     }
 
+    /**
+     * Find elements that have this class, including or under this element. Case insensitive.
+     * <p>
+     * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
+     * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
+     * 
+     * @param className the name of the class to search for.
+     * @return elements with the supplied class name, empty if none
+     * @see #hasClass(String)
+     * @see #classNames()
+     */
     public Elements getElementsByClass(String className) {
         Validate.notEmpty(className);
 
         return Collector.collect(new Evaluator.Class(className), this);
     }
 
+    /**
+     * Find elements that have a named attribute set. Case insensitive.
+     *
+     * @param key name of the attribute
+     * @return elements that have this attribute, empty if none
+     */
     public Elements getElementsByAttribute(String key) {
         Validate.notEmpty(key);
         key = key.trim().toLowerCase();
@@ -199,28 +349,63 @@ public class Element extends Node {
         return Collector.collect(new Evaluator.Attribute(key), this);
     }
 
+    /**
+     * Find elements that have an attribute with the specific value. Case insensitive.
+     * 
+     * @param key name of the attribute
+     * @param value value of the attribute
+     * @return elements that have this attribute with this value, empty if none
+     */
     public Elements getElementsByAttributeValue(String key, String value) {
         String[] kp = normaliseAttrKeyPair(key, value);
         return Collector.collect(new Evaluator.AttributeWithValue(kp[0], kp[1]), this);
     }
 
+    /**
+     * Find elements that either do not have this attribute, or have it with a different value. Case insensitive.
+     * 
+     * @param key name of the attribute
+     * @param value value of the attribute
+     * @return elements that do not have a matching attribute
+     */
     public Elements getElementsByAttributeValueNot(String key, String value) {
         String[] kp = normaliseAttrKeyPair(key, value);
         return Collector.collect(new Evaluator.AttributeWithValueNot(kp[0], kp[1]), this);
     }
 
-    public Elements getElementsByAttributeValueStarting(String key, String value) {
-        String[] kp = normaliseAttrKeyPair(key, value);
+    /**
+     * Find elements that have attributes that start with the value prefix. Case insensitive.
+     * 
+     * @param key name of the attribute
+     * @param valuePrefix start of attribute value
+     * @return elements that have attributes that start with the value prefix
+     */
+    public Elements getElementsByAttributeValueStarting(String key, String valuePrefix) {
+        String[] kp = normaliseAttrKeyPair(key, valuePrefix);
         return Collector.collect(new Evaluator.AttributeWithValueStarting(kp[0], kp[1]), this);
     }
 
-    public Elements getElementsByAttributeValueEnding(String key, String value) {
-        String[] kp = normaliseAttrKeyPair(key, value);
+    /**
+     * Find elements that have attributes that end with the value suffix. Case insensitive.
+     * 
+     * @param key name of the attribute
+     * @param valueSuffix end of the attribute value
+     * @return elements that have attributes that end with the value suffix
+     */
+    public Elements getElementsByAttributeValueEnding(String key, String valueSuffix) {
+        String[] kp = normaliseAttrKeyPair(key, valueSuffix);
         return Collector.collect(new Evaluator.AttributeWithValueEnding(kp[0], kp[1]), this);
     }
 
-    public Elements getElementsByAttributeValueContaining(String key, String value) {
-        String[] kp = normaliseAttrKeyPair(key, value);
+    /**
+     * Find elements that have attributes whose value contains the match string. Case insensitive.
+     * 
+     * @param key name of the attribute
+     * @param match substring of value to search for
+     * @return elements that have attributes containing this text
+     */
+    public Elements getElementsByAttributeValueContaining(String key, String match) {
+        String[] kp = normaliseAttrKeyPair(key, match);
         return Collector.collect(new Evaluator.AttributeWithValueContaining(kp[0], kp[1]), this);
     }
 
@@ -232,6 +417,11 @@ public class Element extends Node {
         return new String[] {key, value};
     }
 
+    /**
+     * Gets the combined text of this element and all its children.
+     * 
+     * @return unencoded text, or empty string if none.
+     */
     public String text() {
         StringBuilder sb = new StringBuilder();
 
@@ -250,6 +440,11 @@ public class Element extends Node {
         return sb.toString();
     }
 
+    /**
+     * Set the text of this element. Any existing contents (text or elements) will be cleared
+     * @param text unencoded text
+     * @return this element
+     */
     public Element text(String text) {
         Validate.notNull(text);
 
@@ -260,6 +455,10 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
+     * @return the data, or empty string if none
+     */
     public String data() {
         StringBuilder sb = new StringBuilder();
 
@@ -285,6 +484,11 @@ public class Element extends Node {
         return attributes.hasKey("class") ? attributes.get("class") : "";
     }
 
+    /**
+     * Get the set of the element's class names. E.g. on element {@code <div class="header gray"}>},
+     * returns a set of two elements {@code "header", "gray"}.
+     * @return set of classnames, empty if no class attribute
+     */
     public Set<String> classNames() {
         if (classNames == null) {
             String[] names = className().split("\\s+");
@@ -293,10 +497,22 @@ public class Element extends Node {
         return classNames;
     }
 
+    /**
+     * Tests if this element has a class.
+     * @param className name of class to check for
+     * @return true if it does, false if not
+     */
     public boolean hasClass(String className) {
         return classNames().contains(className);
     }
 
+    /**
+     * Get the outer HTML for this element. E.g. on a {@code div} with one empty {@code p}, would return
+     * {@code <div><p></p></div>}.
+     * 
+     * @return the outer HTML
+     * @see #html()
+     */
     public String outerHtml() {
         StringBuilder accum = new StringBuilder();
         accum
@@ -316,8 +532,11 @@ public class Element extends Node {
     }
 
     /**
-     * Retrieves the element's inner HTML.
+     * Retrieves the element's inner HTML. E.g. on a {@code div} with one empty {@code p}, would return
+     * {@code <p></p>}.
+     * 
      * @return String of HTML.
+     * @see #outerHtml()
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
@@ -327,6 +546,12 @@ public class Element extends Node {
         return accum.toString();
     }
     
+    /**
+     * Set this element's inner HTML. Clears the existing HTML first.
+     * @param html HTML to parse and set into this element
+     * @return this element
+     * @see #append(String)
+     */
     public Element html(String html) {
         empty();
         append(html);
