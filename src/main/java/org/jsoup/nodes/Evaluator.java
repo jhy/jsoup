@@ -11,6 +11,9 @@ import org.apache.commons.lang.Validate;
 public abstract class Evaluator {
     private Evaluator() {}
     
+    /**
+     * Test if the element meets the evaluator's requirements.
+     */
     public abstract boolean matches(Element element);
 
     static final class Tag extends Evaluator {
@@ -19,9 +22,6 @@ public abstract class Evaluator {
             this.tagName = tagName;
         }
 
-        /**
-         * Test if this element matches.
-         */
         public boolean matches(Element element) {
             return (element.tagName().equals(tagName));
         }
