@@ -19,6 +19,9 @@ public abstract class Evaluator {
             this.tagName = tagName;
         }
 
+        /**
+         * Test if this element matches.
+         */
         public boolean matches(Element element) {
             return (element.tagName().equals(tagName));
         }
@@ -116,8 +119,8 @@ public abstract class Evaluator {
             Validate.notEmpty(key);
             Validate.notEmpty(value);
             
-            this.key = key.trim().toLowerCase();;
-            this.value = value.trim().toLowerCase();;
+            this.key = key.trim().toLowerCase();
+            this.value = value.trim().toLowerCase();
         }
     }
 
