@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.StartTag;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -75,23 +76,50 @@ public class Element extends Node {
 
     public Element appendChild(Element child) {
         Validate.notNull(child);
+        
         elementChildren.add(child);
         childNodes.add(child);
         child.setParentNode(this);
-        return child;
+        return this;
     }
 
-    public Node appendChild(Node child) {
+    public Element appendChild(Node child) {
         Validate.notNull(child);
+        
         childNodes.add(child);
         child.setParentNode(this);
-        return child;
+        return this;
     }
     
     public Element appendElement(String tagName) {
+        Validate.notEmpty(tagName);
+        
         Element child = new Element(Tag.valueOf(tagName), baseUri());
         appendChild(child);
         return child;
+    }
+    
+    public Element appendText(String text) {
+        TextNode node = new TextNode(text, baseUri());
+        appendChild(node);
+        return this;
+    }
+    
+    public Element append(String html) {
+        Validate.notNull(html);
+        
+        Element fragment = Parser.parseBodyFragment(html, baseUri).getBody();
+        for (Node node : fragment.childNodes()) {
+            node.parentNode = null;
+            appendChild(node);
+        }
+        return this;
+    }
+    
+    public Element empty() {
+        childNodes.clear();
+        elementChildren.clear();
+        return this;
     }
 
     public Element nextElementSibling() {
@@ -225,8 +253,7 @@ public class Element extends Node {
     public Element text(String text) {
         Validate.notNull(text);
 
-        childNodes.clear();
-        elementChildren.clear();
+        empty();
         TextNode textNode = new TextNode(text, baseUri);
         appendChild(textNode);
 
@@ -298,6 +325,12 @@ public class Element extends Node {
             accum.append(node.outerHtml());
 
         return accum.toString();
+    }
+    
+    public Element html(String html) {
+        empty();
+        append(html);
+        return this;
     }
 
     public String toString() {
