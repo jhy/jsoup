@@ -73,8 +73,8 @@ public class Element extends Node {
     }
     
     /**
-     * Test if this element is a block-level element (e.g. {@code <div>} or an inline element (e.g.
-     * {@code <p>}).
+     * Test if this element is a block-level element. (E.g. {@code <div> == true} or an inline element
+     * {@code <p> == false}).
      * 
      * @return true if block, false if not (and thus inline)
      */
@@ -153,7 +153,7 @@ public class Element extends Node {
     }
 
     /**
-     * Adds the supplied Element to this element's children.
+     * Adds an element to this element's children.
      * @param child the Element to add. It should be a new element, without an existing parent.
      * @return this element, so that you can add more children.
      */
@@ -167,8 +167,8 @@ public class Element extends Node {
     }
 
     /**
-     * Adds the Node to this element. 
-     * @param child the Node to add. Must not already have a parent.
+     * Adds a node to this element. 
+     * @param child the node to add. Must not already have a parent.
      * @return this element, so that you can add more child nodes or elements.
      */
     public Element appendChild(Node child) {
@@ -180,7 +180,7 @@ public class Element extends Node {
     }
     
     /**
-     * Create a new Element by tag name, and add it to this element.
+     * Create a new element by tag name, and add it to this element.
      * 
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
@@ -477,7 +477,7 @@ public class Element extends Node {
 
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
-     * separated (e.g. <code>&lt;div class="header gray"></code> returns "<code>header gray</code>")
+     * separated. (E.g. on <code>&lt;div class="header gray"></code> returns, "<code>header gray</code>")
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
@@ -485,7 +485,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get the set of the element's class names. E.g. on element {@code <div class="header gray"}>},
+     * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
      * returns a set of two elements {@code "header", "gray"}.
      * @return set of classnames, empty if no class attribute
      */
