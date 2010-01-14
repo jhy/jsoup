@@ -4,4 +4,5 @@ target/
 .classpath
 .project
 .settings/
+*Thrash*
 
