@@ -166,6 +166,10 @@ public abstract class Node {
             throw new NotImplementedException("Cannot (yet) move nodes in tree"); // TODO: remove from prev node children
         this.parentNode = parentNode;
     }
+    
+    public List<Node> siblingNodes() {
+        return parent().childNodes();
+    }
 
     public Node nextSibling() {
         List<Node> siblings = parentNode.childNodes;
