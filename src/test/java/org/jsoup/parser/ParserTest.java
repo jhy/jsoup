@@ -22,7 +22,7 @@ public class ParserTest {
         String html = "<html><head><title>First!</title></head><body><p>First post! <img src=\"foo.png\" /></p></body></html>";
         Document doc = Jsoup.parse(html);
         // need a better way to verify these:
-        Element p = doc.getBody().child(0);
+        Element p = doc.body().child(0);
         assertEquals("p", p.tagName());
         Element img = p.child(0);
         assertEquals("foo.png", img.attr("src"));
@@ -34,7 +34,7 @@ public class ParserTest {
         Document doc = Jsoup.parse(html);
 
         // need a better way to verify these:
-        Element p = doc.getBody().child(0);
+        Element p = doc.body().child(0);
         assertEquals("p", p.tagName());
         assertEquals("foo > bar", p.attr("class"));
     }
@@ -43,7 +43,7 @@ public class ParserTest {
         String html = "<html><head></head><body><img src=foo><!-- <table><tr><td></table> --><p>Hello</p></body></html>";
         Document doc = Jsoup.parse(html);
         
-        Element body = doc.getBody();
+        Element body = doc.body();
         Comment comment = (Comment) body.childNode(1); // comment should not be sub of img, as it's an empty tag
         assertEquals(" <table><tr><td></table> ", comment.getData());
         Element p = body.child(1);
@@ -86,8 +86,8 @@ public class ParserTest {
     @Test public void createsDocumentStructure() {
         String html = "<meta name=keywords /><link rel=stylesheet /><title>jsoup</title><p>Hello world</p>";
         Document doc = Jsoup.parse(html);
-        Element head = doc.getHead();
-        Element body = doc.getBody();
+        Element head = doc.head();
+        Element body = doc.body();
 
         assertEquals(1, doc.children().size()); // root node: contains html node
         assertEquals(2, doc.child(0).children().size()); // html node: head and body
@@ -96,7 +96,7 @@ public class ParserTest {
 
         assertEquals("keywords", head.getElementsByTag("meta").get(0).attr("name"));
         assertEquals(0, body.getElementsByTag("meta").size());
-        assertEquals("jsoup", doc.getTitle());
+        assertEquals("jsoup", doc.title());
         assertEquals("Hello world", body.text());
         assertEquals("Hello world", body.children().get(0).text());
     }
@@ -142,7 +142,7 @@ public class ParserTest {
     @Test public void createsImplicitTable() {
         String h = "<td>Hello<td><p>There<p>now";
         Document doc = Jsoup.parse(h);
-        assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", doc.getBody().html());
+        assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", doc.body().html());
     }
 
     @Test public void handlesBaseTags() {
@@ -198,7 +198,7 @@ public class ParserTest {
         String h = "<body><p>Hello</body><p>there</p></body></body></html><p>now";
         Document doc = Jsoup.parse(h);
         assertEquals(3, doc.select("p").size());
-        assertEquals(3, doc.getBody().children().size());
+        assertEquals(3, doc.body().children().size());
     }
 
 

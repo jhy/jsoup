@@ -33,7 +33,7 @@ public class Parser {
 
         if (isBodyFragment) {
             doc = Document.createShell(baseUri);
-            stack.add(doc.getBody());
+            stack.add(doc.body());
         } else {
             doc = new Document(baseUri);
             stack.add(doc);
@@ -135,7 +135,7 @@ public class Parser {
             child.appendChild(dataNode);
 
             if (tag.equals(titleTag))
-                doc.setTitle(child.data());
+                doc.title(child.data());
         }
 
         // <base href>: update the base uri
