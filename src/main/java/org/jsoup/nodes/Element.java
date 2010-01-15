@@ -19,7 +19,6 @@ import java.util.*;
  */
 public class Element extends Node {
     private final Tag tag;
-    private final List<Element> elementChildren; // subset of Node.children, only holds Elements
     private Set<String> classNames;
     
     /**
@@ -36,7 +35,6 @@ public class Element extends Node {
         
         Validate.notNull(tag);    
         this.tag = tag;
-        elementChildren = new ArrayList<Element>();
     }
     
     /**
@@ -121,19 +119,25 @@ public class Element extends Node {
      * @see #childNode(int)
      */
     public Element child(int index) {
-        return elementChildren.get(index);
+        return children().get(index);
     }
 
     /**
      * Get this element's child elements.
      * <p/>
      * This is effectively a filter on {@link #childNodes()} to get Element nodes.
-     * @return an unmodifiable list of children elements. If this element has no children, returns an
+     * @return child elements. If this element has no children, returns an
      * empty list.
      * @see #childNodes()
      */
-    public List<Element> children() {
-        return Collections.unmodifiableList(elementChildren);
+    public Elements children() {
+        // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
+        List<Element> elements = new ArrayList<Element>();
+        for (Node node : childNodes) {
+            if (node instanceof Element)
+                elements.add((Element) node);
+        }
+        return new Elements(elements);
     }
 
     /**
@@ -162,7 +166,6 @@ public class Element extends Node {
     public Element appendChild(Element child) { // TODO remove, and dynamically filter for children()
         Validate.notNull(child);
         
-        elementChildren.add(child);
         childNodes.add(child);
         child.setParentNode(this);
         return this;
@@ -232,8 +235,15 @@ public class Element extends Node {
      */
     public Element empty() {
         childNodes.clear();
-        elementChildren.clear();
         return this;
+    }
+    
+    /**
+     * Get sibling elements.
+     * @return sibling elements
+     */
+    public Elements siblingElements() {
+        return parent().children();
     }
 
     /**
@@ -245,7 +255,7 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public Element nextElementSibling() {
-        List<Element> siblings = parent().elementChildren;
+        List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
         if (siblings.size() > index+1)
@@ -260,7 +270,7 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public Element previousElementSibling() {
-        List<Element> siblings = parent().elementChildren;
+        List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
         if (index > 0)
@@ -275,7 +285,7 @@ public class Element extends Node {
      */
     public Element firstElementSibling() {
         // todo: should firstSibling() exclude this?
-        List<Element> siblings = parent().elementChildren;
+        List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
 
@@ -284,7 +294,7 @@ public class Element extends Node {
      * @return the last sibling that is an element (aka the parent's last element child) 
      */
     public Element lastElementSibling() {
-        List<Element> siblings = parent().elementChildren;
+        List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
     }
 

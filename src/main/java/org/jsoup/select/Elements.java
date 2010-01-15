@@ -8,7 +8,7 @@ import java.util.*;
  A list of {@link Element Elements}, with methods that act on every element in the list
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Elements implements List<Element>{
+public class Elements implements List<Element> {
     private List<Element> contents;
 
     public Elements() {
@@ -17,6 +17,10 @@ public class Elements implements List<Element>{
 
     public Elements(Collection<Element> elements) {
         contents = new ArrayList<Element>(elements);
+    }
+    
+    public Elements(List<Element> elements) {
+        contents = elements;
     }
     
     public Elements(Element... elements) {
