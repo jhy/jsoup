@@ -14,7 +14,7 @@ public class DocumentTest {
         Document doc = Jsoup.parse("<p>Hello</p>");
         doc.text("Replaced");
         assertEquals("Replaced", doc.text());
-        assertEquals("Replaced", doc.getBody().text());
+        assertEquals("Replaced", doc.body().text());
         assertEquals(1, doc.select("head").size());
     }
 }

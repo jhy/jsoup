@@ -24,7 +24,7 @@ public class Cleaner {
         Validate.notNull(dirtyDocument);
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
-        copySafeNodes(dirtyDocument.getBody(), clean.getBody());
+        copySafeNodes(dirtyDocument.body(), clean.body());
 
         return clean;
     }

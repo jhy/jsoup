@@ -22,7 +22,7 @@ public class ParseTest {
     @Test public void testSmhBizArticle() {
         String h = loadFile("/htmltests/smh-biz-article-1.html");
         Document doc = Jsoup.parse(h, "http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html");
-        assertEquals("The board’s next fear: the female quota", doc.getTitle()); // note that the apos in the source is a literal ’ (8217), not escaped or '
+        assertEquals("The board’s next fear: the female quota", doc.title()); // note that the apos in the source is a literal ’ (8217), not escaped or '
         assertEquals("en", doc.select("html").attr("xml:lang"));
 
         Elements articleBody = doc.select(".articleBody > *");
@@ -34,7 +34,7 @@ public class ParseTest {
     @Test public void testNewsHomepage() {
         String h = loadFile("/htmltests/news-com-au-home.html");
         Document doc = Jsoup.parse(h, "http://www.news.com.au/");
-        assertEquals("News.com.au | News from Australia and around the world online | NewsComAu", doc.getTitle());
+        assertEquals("News.com.au | News from Australia and around the world online | NewsComAu", doc.title());
         assertEquals("Brace yourself for Metro meltdown", doc.select(".id1225817868581 h4").text().trim());
         
         Element a = doc.select("a[href=/entertainment/horoscopes]").first();
@@ -49,7 +49,7 @@ public class ParseTest {
     @Test public void testGoogleSearchIpod() {
         String h = loadFile("/htmltests/google-ipod.html");
         Document doc = Jsoup.parse(h, "http://www.google.com/search?hl=en&q=ipod&aq=f&oq=&aqi=g10");
-        assertEquals("ipod - Google Search", doc.getTitle());
+        assertEquals("ipod - Google Search", doc.title());
         Elements results = doc.select("h3.r > a");
         assertEquals(12, results.size());
         assertEquals("http://news.google.com/news?hl=en&q=ipod&um=1&ie=UTF-8&ei=uYlKS4SbBoGg6gPf-5XXCw&sa=X&oi=news_group&ct=title&resnum=1&ved=0CCIQsQQwAA", 
@@ -68,7 +68,7 @@ public class ParseTest {
     @Test public void testYahooJp() {
         String h = loadFile("/htmltests/yahoo-jp.html");
         Document doc = Jsoup.parse(h, "http://www.yahoo.co.jp/index.html"); // http charset is utf-8.
-        assertEquals("Yahoo! JAPAN", doc.getTitle());
+        assertEquals("Yahoo! JAPAN", doc.title());
         Element a = doc.select("a[href=t/2322m2]").first();
         assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/t/2322m2", 
                 a.attr("abs:href")); // session put into <base>

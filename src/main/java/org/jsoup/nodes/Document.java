@@ -34,19 +34,19 @@ public class Document extends Element {
         return doc;
     }
 
-    public Element getHead() {
+    public Element head() {
         return getElementsByTag("head").get(0);
     }
 
-    public Element getBody() {
+    public Element body() {
         return getElementsByTag("body").get(0);
     }
 
-    public String getTitle() {
+    public String title() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void title(String title) {
         this.title = title;
     }
 
@@ -61,7 +61,7 @@ public class Document extends Element {
 
     @Override
     public Element text(String text) {
-        getBody().text(text); // overridden to not nuke doc structure
+        body().text(text); // overridden to not nuke doc structure
         return this;
     }
 

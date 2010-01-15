@@ -31,7 +31,7 @@ public class Jsoup {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
         Cleaner cleaner = new Cleaner(whitelist);
         Document clean = cleaner.clean(dirty);
-        return clean.getBody().html();
+        return clean.body().html();
     }
     
     public static String clean(String bodyHtml, Whitelist whitelist) {
