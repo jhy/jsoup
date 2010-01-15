@@ -8,7 +8,6 @@ import org.jsoup.parser.Tag;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
-    private String title;
 
     public Document(String baseUri) {
         super(Tag.valueOf("#root"), baseUri);
@@ -35,19 +34,25 @@ public class Document extends Element {
     }
 
     public Element head() {
-        return getElementsByTag("head").get(0);
+        return getElementsByTag("head").first();
     }
 
     public Element body() {
-        return getElementsByTag("body").get(0);
+        return getElementsByTag("body").first();
     }
 
     public String title() {
-        return title;
+        Element titleEl = getElementsByTag("title").first();
+        return titleEl != null ? titleEl.text().trim() : "";
     }
 
     public void title(String title) {
-        this.title = title;
+        Element titleEl = getElementsByTag("title").first();
+        if (titleEl == null) { // add to head
+            head().appendElement("title").text(title);
+        } else {
+            titleEl.text(title);
+        }
     }
 
     public Element createElement(Tag tag) {

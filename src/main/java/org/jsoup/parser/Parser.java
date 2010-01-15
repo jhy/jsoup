@@ -131,11 +131,13 @@ public class Parser {
         if (tag.isData()) {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
-            DataNode dataNode = DataNode.createFromEncoded(data, baseUri);
-            child.appendChild(dataNode);
-
-            if (tag.equals(titleTag))
-                doc.title(child.data());
+            
+            Node dataNode;
+            if (tag.equals(titleTag)) // want to show as text, but not contain inside tags
+                dataNode = TextNode.createFromEncoded(data, baseUri);
+            else
+                dataNode = DataNode.createFromEncoded(data, baseUri);
+            child.appendChild(dataNode);   
         }
 
         // <base href>: update the base uri
