@@ -4,7 +4,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.Validate;
 
 /**
- A single key + value attribute.
+ A single key + value attribute. Keys are trimmed and normalised to lower-case.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Attribute {
@@ -20,7 +20,7 @@ public class Attribute {
     public Attribute(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        this.key = key;
+        this.key = key.trim().toLowerCase();
         this.value = value;
     }
 
