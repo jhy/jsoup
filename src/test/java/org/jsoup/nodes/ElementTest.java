@@ -150,6 +150,14 @@ public class ElementTest {
                 doc.html());
     }
     
+    @Test public void testPrependElement() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.prependElement("p").text("Before");
+        assertEquals("Before", div.child(0).text());
+        assertEquals("Hello", div.child(1).text());
+    }
+    
     @Test public void testAddNewText() {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
@@ -157,11 +165,25 @@ public class ElementTest {
         assertEquals("<p>Hello</p> there &amp; now &gt;", div.html());
     }
     
+    @Test public void testPrependText() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.prependText("there & now > ");
+        assertEquals("there &amp; now &gt; <p>Hello</p>", div.html());
+    }
+    
     @Test public void testAddNewHtml() {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.append("<p>there</p><p>now</p>");
         assertEquals("<p>Hello</p><p>there</p><p>now</p>", div.html());
+    }
+    
+    @Test public void testPrependNewHtml() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.prepend("<p>there</p><p>now</p>");
+        assertEquals("<p>there</p><p>now</p><p>Hello</p>", div.html());
     }
     
     @Test public void testSetHtml() {

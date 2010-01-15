@@ -157,45 +157,58 @@ public class Element extends Node {
     public Elements select(String query) {
         return Selector.select(query, this);
     }
-
+    
     /**
-     * Adds an element to this element's children.
-     * @param child the Element to add. It should be a new element, without an existing parent.
-     * @return this element, so that you can add more children.
-     */
-    public Element appendChild(Element child) { // TODO remove, and dynamically filter for children()
-        Validate.notNull(child);
-        
-        childNodes.add(child);
-        child.setParentNode(this);
-        return this;
-    }
-
-    /**
-     * Adds a node to this element. 
-     * @param child the node to add. Must not already have a parent.
+     * Add a node to the last child of this element.
+     * 
+     * @param child node to add. Must not already have a parent.
      * @return this element, so that you can add more child nodes or elements.
      */
     public Element appendChild(Node child) {
         Validate.notNull(child);
         
-        childNodes.add(child);
         child.setParentNode(this);
+        childNodes.add(child);
         return this;
     }
     
     /**
-     * Create a new element by tag name, and add it to this element.
+     * Add a node to the start of this element's children.
+     * 
+     * @param child node to add. Must not already have a parent.
+     * @return this element, so that you can add more child nodes or elements.
+     */
+    public Element prependChild(Node child) {
+        Validate.notNull(child);
+        
+        child.setParentNode(this);
+        childNodes.add(0, child);
+        return this;
+    }
+    
+    /**
+     * Create a new element by tag name, and add it as the last child.
      * 
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Validate.notEmpty(tagName);
-        
         Element child = new Element(Tag.valueOf(tagName), baseUri());
         appendChild(child);
+        return child;
+    }
+    
+    /**
+     * Create a new element by tag name, and add it as the first child.
+     * 
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @return the new element, to allow you to add content to it, e.g.:
+     *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
+     */
+    public Element prependElement(String tagName) {
+        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        prependChild(child);
         return child;
     }
     
@@ -212,7 +225,19 @@ public class Element extends Node {
     }
     
     /**
-     * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended.
+     * Create and prepend a new TextNode to this element.
+     * 
+     * @param text the unencoded text to add
+     * @return this element
+     */
+    public Element prependText(String text) {
+        TextNode node = new TextNode(text, baseUri());
+        prependChild(node);
+        return this;
+    }
+    
+    /**
+     * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended to the end of the children.
      * @param html HTML to add inside this element, after the existing HTML
      * @return this element
      * @see #html(String)
@@ -225,6 +250,26 @@ public class Element extends Node {
         for (Node node : fragment.childNodes()) {
             node.parentNode = null;
             appendChild(node);
+        }
+        return this;
+    }
+    
+    /**
+     * Add inner HTML to this element. The supplied HTML will be parsed, and each node prepended to the start of the children.
+     * @param html HTML to add inside this element, before the existing HTML
+     * @return this element
+     * @see #html(String)
+     */
+    public Element prepend(String html) {
+        Validate.notNull(html);
+        
+        Element fragment = Parser.parseBodyFragment(html, baseUri).getBody();
+        // TODO: must parse without implicit elements, so you can e.g. add <td> to a <tr> (without creating a whole new table)
+        List<Node> nodes = fragment.childNodes();
+        for (int i = nodes.size() - 1; i >= 0; i--) {
+            Node node = nodes.get(i);
+            node.parentNode = null;
+            prependChild(node);
         }
         return this;
     }
