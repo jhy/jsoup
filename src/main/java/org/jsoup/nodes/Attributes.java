@@ -5,26 +5,31 @@ import org.apache.commons.lang.Validate;
 import java.util.*;
 
 /**
- Element attribute list.
+ The attributes of an Element.
+ <p/>
+ Attributes are treated as a map: there can be only one value associated with an attribute key.
+ <p/>
+ Attribute key and value comparisons are done case insensitively, and keys are normalised to lower-case.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Attributes implements Iterable<Attribute> {
-    private LinkedHashMap<String, String> attributes = new LinkedHashMap<String, String>(); // linked hash map to preserve insertion order.
+    private LinkedHashMap<String, Attribute> attributes = new LinkedHashMap<String, Attribute>(); // linked hash map to preserve insertion order.
 
     public String get(String key) {
         Validate.notEmpty(key);
-        return attributes.get(key.toLowerCase());
+        
+        Attribute attr = attributes.get(key.toLowerCase());
+        return attr != null ? attr.getValue() : "";
     }
 
     public void put(String key, String value) {
-        Validate.notEmpty(key);
-        Validate.notNull(value);
-        attributes.put(key.toLowerCase().trim(), value);
+        Attribute attr = new Attribute(key, value);
+        put(attr);
     }
 
     public void put(Attribute attribute) {
         Validate.notNull(attribute);
-        put(attribute.getKey(), attribute.getValue());
+        attributes.put(attribute.getKey(), attribute);
     }
 
     public void remove(String key) {
@@ -48,9 +53,8 @@ public class Attributes implements Iterable<Attribute> {
 
     public List<Attribute> asList() {
         List<Attribute> list = new ArrayList<Attribute>(attributes.size());
-        for (Map.Entry<String, String> entry : attributes.entrySet()) {
-            Attribute attribute = new Attribute(entry.getKey(), entry.getValue());
-            list.add(attribute);
+        for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
+            list.add(entry.getValue());
         }
         return Collections.unmodifiableList(list);
     }
