@@ -200,6 +200,15 @@ public class ParserTest {
         assertEquals(3, doc.select("p").size());
         assertEquals(3, doc.body().children().size());
     }
+    
+    @Test public void handlesUnclosedDefinitionLists() {
+        String h = "<dt>Foo<dd>Bar<dt>Qux<dd>Zug";
+        Document doc = Jsoup.parse(h);
+        assertEquals(4, doc.body().getElementsByTag("dl").first().children().size());
+        Elements dts = doc.select("dt");
+        assertEquals(2, dts.size());
+        assertEquals("Zug", dts.get(1).nextElementSibling().text());
+    }
 
 
 }
