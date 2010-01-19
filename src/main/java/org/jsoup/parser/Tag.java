@@ -90,6 +90,12 @@ public class Tag {
             }
             return false;
         }
+        
+        // dt and dd (in dl)
+        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+            return false;
+        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+            return false;
 
         return true;
     }
