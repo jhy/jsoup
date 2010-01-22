@@ -94,11 +94,11 @@ public class Elements implements List<Element> {
     // filters
     
     /**
-     * Reduce the matched elements down to those that also match this query.
+     * Find matching elements within this element list.
      * @param query A selector query
      * @return the filtered list of elements, or an empty list if none match.
      */
-    public Elements filter(String query) {
+    public Elements select(String query) {
         return Selector.select(query, this);
     }
     
@@ -120,7 +120,7 @@ public class Elements implements List<Element> {
      * @return true if at least one element in the list matches the query.
      */
     public boolean is(String query) {
-        Elements children = this.filter(query);
+        Elements children = this.select(query);
         return !children.isEmpty();
     }
 
