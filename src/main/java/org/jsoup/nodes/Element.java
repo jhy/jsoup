@@ -68,7 +68,7 @@ public class Element extends Node {
      * 
      * @return the tag object
      */
-    public Tag getTag() {
+    public Tag tag() {
         return tag;
     }
     
