@@ -14,6 +14,7 @@ import org.jsoup.safety.Whitelist;
  * @author Jonathan Hedley
  */
 public class Jsoup {
+    private Jsoup() {}
     
     /**
      * Parse HTML into a Document. The parser will make a sensible, balanced document tree out of any HTML.
