@@ -18,7 +18,7 @@ public class AttributeParseTest {
         // should be: <id=123>, <class=baz = 'bar'>, <qux=>, <zim=>, <foo=12>, <mux.=18>
 
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
-        Attributes attr = el.getAttributes();
+        Attributes attr = el.attributes();
         assertEquals(7, attr.size());
         assertEquals("123", attr.get("id"));
         assertEquals("baz = 'bar'", attr.get("class"));
@@ -32,14 +32,14 @@ public class AttributeParseTest {
     @Test public void parsesEmptyString() {
         String html = "<a />";
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
-        Attributes attr = el.getAttributes();
+        Attributes attr = el.attributes();
         assertEquals(0, attr.size());
     }
 
     @Test public void emptyOnNoKey() {
         String html = "<a =empty />";
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
-        Attributes attr = el.getAttributes();
+        Attributes attr = el.attributes();
         assertEquals(0, attr.size());
     }
 }

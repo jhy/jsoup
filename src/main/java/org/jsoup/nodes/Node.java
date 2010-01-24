@@ -45,7 +45,7 @@ public abstract class Node {
      * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
      * @param attributeKey The attribute key.
      * @return The attribute, or empty string if not present (to avoid nulls).
-     * @see #getAttributes()
+     * @see #attributes()
      * @see #hasAttr(String)
      * @see #absUrl(String)
      */
@@ -63,7 +63,7 @@ public abstract class Node {
      * Get all of the element's attributes.
      * @return attributes (which implements iterable, in same order as presented in original HTML).
      */
-    public Attributes getAttributes() {
+    public Attributes attributes() {
         return attributes;
     }
 

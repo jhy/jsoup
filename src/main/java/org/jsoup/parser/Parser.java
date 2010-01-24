@@ -193,8 +193,8 @@ public class Parser {
     }
 
     private Element addChildToParent(Element child, boolean isEmptyElement) {
-        Element parent = popStackToSuitableContainer(child.getTag());
-        Tag childTag = child.getTag();
+        Element parent = popStackToSuitableContainer(child.tag());
+        Tag childTag = child.tag();
         boolean validAncestor = stackHasValidParent(childTag);
 
         if (!validAncestor) {
@@ -202,7 +202,7 @@ public class Parser {
             Tag parentTag = childTag.getImplicitParent();
             Element implicit = new Element(parentTag, baseUri);
             // special case: make sure there's a head before putting in body
-            if (child.getTag().equals(bodyTag)) {
+            if (child.tag().equals(bodyTag)) {
                 Element head = new Element(headTag, baseUri);
                 implicit.appendChild(head);
             }
@@ -228,7 +228,7 @@ public class Parser {
         
         for (int i = stack.size() -1; i >= 0; i--) {
             Element el = stack.get(i);
-            Tag parent2 = el.getTag();
+            Tag parent2 = el.tag();
             if (parent2.isValidParent(childTag)) {
                 return true;
             }
@@ -238,7 +238,7 @@ public class Parser {
 
     private Element popStackToSuitableContainer(Tag tag) {
         while (!stack.isEmpty()) {
-            if (last().getTag().canContain(tag))
+            if (last().tag().canContain(tag))
                 return last();
             else
                 stack.removeLast();
@@ -253,7 +253,7 @@ public class Parser {
         for (int i = stack.size() -1; i > 0; i--) {
             counter++;
             Element el = stack.get(i);
-            Tag elTag = el.getTag();
+            Tag elTag = el.tag();
             if (elTag.equals(bodyTag) || elTag.equals(htmlTag)) { // once in body, don't close past body
                 break;
             } else if (elTag.equals(tag)) {

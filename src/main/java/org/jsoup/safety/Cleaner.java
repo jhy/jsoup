@@ -56,7 +56,7 @@ public class Cleaner {
         Attributes destAttrs = new Attributes();
         Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
 
-        Attributes sourceAttrs = sourceEl.getAttributes();
+        Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
             if (whitelist.isSafeAttribute(sourceTag, sourceAttr))
                 destAttrs.put(sourceAttr);
