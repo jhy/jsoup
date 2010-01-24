@@ -133,10 +133,10 @@ public class Parser {
             tq.chompTo(">");
             
             Node dataNode;
-            if (tag.equals(titleTag)) // want to show as text, but not contain inside tags
+            if (tag.equals(titleTag)) // want to show as text, but not contain inside tags (so not a data tag?)
                 dataNode = TextNode.createFromEncoded(data, baseUri);
             else
-                dataNode = DataNode.createFromEncoded(data, baseUri);
+                dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)
             child.appendChild(dataNode);   
         }
 
