@@ -23,7 +23,7 @@ public class DataNode extends Node{
     }
 
     public String outerHtml() {
-        return StringEscapeUtils.escapeHtml(getWholeData());
+        return getWholeData(); // data is not escaped in return from data nodes, so " in script, style is plain
     }
 
     public String toString() {
