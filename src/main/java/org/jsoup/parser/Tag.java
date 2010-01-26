@@ -13,25 +13,20 @@ public class Tag {
     private static final Map<String, Tag> tags = new HashMap<String, Tag>();
     private static final Tag defaultAncestor;
     static {
-        defaultAncestor = new Tag("BODY", true, true, true, false, false);
+        defaultAncestor = new Tag("BODY");
         tags.put(defaultAncestor.tagName, defaultAncestor);
     }
 
     private String tagName;
-    private boolean isBlock; // block or inline
-    private boolean canContainBlock; // Can this tag hold block level tags?
-    private boolean canContainInline; // only pcdata if not
-    private boolean optionalClosing; // If tag is open, and another seen, close previous tag
-    private boolean empty; // can hold nothing; e.g. img
+    private boolean isBlock = true; // block or inline
+    private boolean canContainBlock = true; // Can this tag hold block level tags?
+    private boolean canContainInline = true; // only pcdata if not
+    private boolean optionalClosing = false; // If tag is open, and another seen, close previous tag
+    private boolean empty = false; // can hold nothing; e.g. img
     private List<Tag> ancestors;
 
-    private Tag(String tagName, boolean block, boolean canContainBlock, boolean canContainInline, boolean optionalClosing, boolean empty) {
+    private Tag(String tagName) {
         this.tagName = tagName.toLowerCase();
-        isBlock = block;
-        this.canContainBlock = canContainBlock;
-        this.canContainInline = canContainInline;
-        this.optionalClosing = optionalClosing;
-        this.empty = empty;
     }
 
     public String getName() {
@@ -54,7 +49,7 @@ public class Tag {
             Tag tag = tags.get(tagName);
             if (tag == null) {
                 // not defined: create default
-                tag = new Tag(tagName, true, true, true, false, false);
+                tag = new Tag(tagName);
                 tag.setAncestor(defaultAncestor.tagName);
             }
             return tag;
@@ -277,11 +272,14 @@ public class Tag {
     }
 
     private static Tag createBlock(String tagName) {
-        return register(new Tag(tagName, true, true, true, false, false));
+        return register(new Tag(tagName));
     }
 
     private static Tag createInline(String tagName) {
-        return register(new Tag(tagName, false, false, true, false, false));
+        Tag inline = new Tag(tagName);
+        inline.isBlock = false;
+        inline.canContainBlock = false;
+        return register(inline);
     }
 
     private static Tag register(Tag tag) {
