@@ -572,15 +572,7 @@ public class Element extends Node {
         return classNames().contains(className);
     }
 
-    /**
-     * Get the outer HTML for this element. E.g. on a {@code div} with one empty {@code p}, would return
-     * {@code <div><p></p></div>}.
-     * 
-     * @return the outer HTML
-     * @see #html()
-     */
-    public String outerHtml() {
-        StringBuilder accum = new StringBuilder();
+    void outerHtml(StringBuilder accum) {
         accum
                 .append("<")
                 .append(tagName())
@@ -590,26 +582,27 @@ public class Element extends Node {
             accum.append(" />");
         } else {
             accum.append(">");
-            accum.append(html());
+            html(accum);
             accum.append("</").append(tagName()).append(">");
         }
-
-        return accum.toString();
     }
 
     /**
-     * Retrieves the element's inner HTML. E.g. on a {@code div} with one empty {@code p}, would return
-     * {@code <p></p>}.
+     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
+     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
      * 
      * @return String of HTML.
      * @see #outerHtml()
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
-        for (Node node : childNodes)
-            accum.append(node.outerHtml());
-
+        html(accum); 
         return accum.toString();
+    }
+
+    private void html(StringBuilder accum) {
+        for (Node node : childNodes)
+            node.outerHtml(accum);
     }
     
     /**

@@ -28,8 +28,12 @@ public class TextNode extends Node {
         return attributes.get(TEXT_KEY);
     }
 
-    public String outerHtml() {
-        return StringEscapeUtils.escapeHtml(getWholeText());
+    void outerHtml(StringBuilder accum) {
+        String html = StringEscapeUtils.escapeHtml(getWholeText());
+        if (parent() instanceof Element && !((Element) parent()).tag().preserveWhitespace())
+            html = normaliseWhitespace(html).trim();
+
+        accum.append(html);
     }
 
     public String toString() {
