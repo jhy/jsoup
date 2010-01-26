@@ -56,6 +56,18 @@ public class ElementTest {
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
+    @Test public void testNormalisesText() {
+        String h = "<p>Hello<p>There.</p> \n <p>Here <b>is</b> \n s<b>om</b>e text.";
+        Document doc = Jsoup.parse(h);
+        assertEquals("Hello There. Here is some text.", doc.text());
+    }
+
+    @Test public void testKeepsPreTexT() {
+        String h = "<p>Hello \n \n there.</p> <div><pre>  What's \n\n  that?</pre>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("Hello there.  What's \n\n  that?", doc.text());
+    }
+
     @Test public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
         Element p = doc.getElementById("1");
