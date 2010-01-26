@@ -30,7 +30,7 @@ public class TextNode extends Node {
 
     void outerHtml(StringBuilder accum) {
         String html = StringEscapeUtils.escapeHtml(getWholeText());
-        if (parent() instanceof Element && !((Element) parent()).tag().preserveWhitespace()) {
+        if (parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
             html = normaliseWhitespace(html);
         }
 

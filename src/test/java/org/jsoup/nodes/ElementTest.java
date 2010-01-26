@@ -70,6 +70,13 @@ public class ElementTest {
         assertEquals("Hello there.   What's \n\n  that?", doc.text());
     }
 
+    @Test public void testKeepsPreTextInCode() {
+        String h = "<pre><code>code\n\ncode</code></pre>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("code\n\ncode", doc.text());
+        assertEquals("<pre><code>code\n\ncode</code></pre>", doc.body().html());
+    }
+
     @Test public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
         Element p = doc.getElementById("1");

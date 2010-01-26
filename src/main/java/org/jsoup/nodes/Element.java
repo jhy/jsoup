@@ -487,7 +487,7 @@ public class Element extends Node {
                 TextNode textNode = (TextNode) child;
                 String text = textNode.getWholeText();
 
-                if (!tag.preserveWhitespace()) {
+                if (!preserveWhitespace()) {
                     text = TextNode.normaliseWhitespace(text);
                     if (TextNode.lastCharIsWhitespace(accum))
                         text = TextNode.stripLeadingWhitespace(text);
@@ -501,6 +501,10 @@ public class Element extends Node {
                 element.text(accum);
             }
         }
+    }
+
+    boolean preserveWhitespace() {
+        return tag.preserveWhitespace() || parent() != null && parent().preserveWhitespace();
     }
 
     /**
