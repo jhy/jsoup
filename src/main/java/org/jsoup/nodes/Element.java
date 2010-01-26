@@ -27,7 +27,7 @@ public class Element extends Node {
      * @param tag tag of this element
      * @param baseUri the base URI
      * @param attributes initial attributes
-     * @see #appendChild(Element)
+     * @see #appendChild(Node)
      * @see #appendElement(String)
      */
     public Element(Tag tag, String baseUri, Attributes attributes) {
@@ -477,20 +477,33 @@ public class Element extends Node {
      */
     public String text() {
         StringBuilder sb = new StringBuilder();
+        text(sb);
+        return sb.toString();
+    }
 
-        for (Node childNode : childNodes) {
-            if (childNode instanceof TextNode) {
-                TextNode textNode = (TextNode) childNode;
-                sb.append(textNode.getWholeText());
-            } else if (childNode instanceof Element) {
-                Element element = (Element) childNode;
-                String elementText = element.text();
-                if (element.isBlock() && sb.length() > 0 && elementText.length() > 0)
-                    sb.append(" ");
-                sb.append(elementText);
+    private void text(StringBuilder accum) {
+        int numNodes = childNodes.size();
+        for (int i = 0; i <= numNodes; i++) {
+            Node child = childNodes.get(i);
+
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                String text = textNode.getWholeText();
+
+                if (!tag.preserveWhitespace()) {
+                    text = TextNode.normaliseWhitespace(text);
+                    if (TextNode.lastCharIsWhitespace(accum))
+                        text = TextNode.stripLeadingWhitespace(text);
+                }
+                accum.append(text);
+
+            } else if (child instanceof Element) {
+                Element element = (Element) child;
+                if (element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
+                    accum.append(" ");
+                element.text(accum);
             }
         }
-        return sb.toString();
     }
 
     /**

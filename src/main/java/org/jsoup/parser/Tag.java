@@ -23,6 +23,7 @@ public class Tag {
     private boolean canContainInline = true; // only pcdata if not
     private boolean optionalClosing = false; // If tag is open, and another seen, close previous tag
     private boolean empty = false; // can hold nothing; e.g. img
+    private boolean preserveWhitespace = false; // for pre, textarea, script etc
     private List<Tag> ancestors;
 
     private Tag(String tagName) {
@@ -109,6 +110,10 @@ public class Tag {
 
     public boolean isEmpty() {
         return empty;
+    }
+
+    public boolean preserveWhitespace() {
+        return preserveWhitespace;
     }
 
     Tag getImplicitParent() {
@@ -226,7 +231,7 @@ public class Tag {
         createBlock("H6").setContainInlineOnly();
         createBlock("UL");
         createBlock("OL");
-        createBlock("PRE").setContainInlineOnly();
+        createBlock("PRE").setContainInlineOnly().setPreserveWhitespace();
         createBlock("DIV");
         createBlock("NOSCRIPT");
         createBlock("BLOCKQUOTE");
@@ -299,6 +304,7 @@ public class Tag {
     private Tag setContainDataOnly() {
         canContainBlock = false;
         canContainInline = false;
+        preserveWhitespace = true;
         return this;
     }
 
@@ -311,6 +317,11 @@ public class Tag {
 
     private Tag setOptionalClosing() {
         optionalClosing = true;
+        return this;
+    }
+
+    private Tag setPreserveWhitespace() {
+        preserveWhitespace = true;
         return this;
     }
 

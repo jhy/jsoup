@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.Validate;
 
 /**
  A text node.
@@ -43,5 +44,22 @@ public class TextNode extends Node {
     public static TextNode createFromEncoded(String encodedText, String baseUri) {
         String text = StringEscapeUtils.unescapeHtml(encodedText);
         return new TextNode(text, baseUri);
+    }
+
+    static String normaliseWhitespace(String text) {
+        text = text.replaceAll("\\s{2,}|(\\r\\n|\\r|\\n)", " "); // more than one space, and newlines to " "
+        return text;
+    }
+
+    static String stripLeadingWhitespace(String text) {
+        return text.replaceFirst("\\s+", "");
+    }
+
+    static boolean lastCharIsWhitespace(StringBuilder sb) {
+        if (sb.length() == 0)
+            return false;
+        String lastChar = sb.substring(sb.length()-1, sb.length());
+        Validate.isTrue(lastChar.length() == 1); // todo: remove check
+        return lastChar.equals(" ");
     }
 }
