@@ -22,8 +22,8 @@ public class XmlDeclaration extends Node {
         return attributes.get(DECL_KEY);
     }
 
-    public String outerHtml() {
-        return String.format("<%s%s>", isProcessingInstruction ? "!" : "?", getWholeDeclaration());
+    void outerHtml(StringBuilder accum) {
+        accum.append(String.format("<%s%s>", isProcessingInstruction ? "!" : "?", getWholeDeclaration()));
     }
 
     public String toString() {

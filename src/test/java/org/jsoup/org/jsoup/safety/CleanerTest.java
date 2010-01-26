@@ -1,6 +1,7 @@
 package org.jsoup.org.jsoup.safety;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.safety.Whitelist;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -28,19 +29,20 @@ public class CleanerTest {
         String h = "<div><p><a href='javascript:sendAllMoney()'>Dodgy</a> <A HREF='HTTP://nice.com'>Nice</p><blockquote>Hello</blockquote>";
         String cleanHtml = Jsoup.clean(h, Whitelist.basic());
 
-        assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"HTTP://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>", cleanHtml);
+        assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"HTTP://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>",
+                TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void basicWithImagesTest() {
         String h = "<div><p><img src='http://example.com/' alt=Image></p><p><img src='ftp://ftp.example.com'></p></div>";
         String cleanHtml = Jsoup.clean(h, Whitelist.basicWithImages());
-        assertEquals("<p><img src=\"http://example.com/\" alt=\"Image\" /></p><p><img /></p>", cleanHtml);
+        assertEquals("<p><img src=\"http://example.com/\" alt=\"Image\" /></p><p><img /></p>", TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void testRelaxed() {
         String h = "<h1>Head</h1><td>One<td>Two</td>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
-        assertEquals("<h1>Head</h1><table><tr><td>One</td><td>Two</td></tr></table>", cleanHtml);
+        assertEquals("<h1>Head</h1><table><tr><td>One</td><td>Two</td></tr></table>", TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void testDropComments() {

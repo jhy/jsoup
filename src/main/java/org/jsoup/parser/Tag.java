@@ -100,6 +100,10 @@ public class Tag {
         return isBlock;
     }
 
+    public boolean canContainBlock() {
+        return canContainBlock;
+    }
+
     public boolean isInline() {
         return !isBlock;
     }

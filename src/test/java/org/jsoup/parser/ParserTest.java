@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -142,7 +143,7 @@ public class ParserTest {
     @Test public void createsImplicitTable() {
         String h = "<td>Hello<td><p>There<p>now";
         Document doc = Jsoup.parse(h);
-        assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", doc.body().html());
+        assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesBaseTags() {
@@ -166,7 +167,7 @@ public class ParserTest {
         String h = "<div id=1><![CData[<html>\n<foo><&amp;]]></div>"; // "cdata" insensitive. the &amp; in there should remain literal
         Document doc = Jsoup.parse(h);
         Element div = doc.getElementById("1");
-        assertEquals("<html>\n<foo><&amp;", div.text());
+        assertEquals("<html> <foo><&amp;", div.text());
         assertEquals(0, div.children().size());
         assertEquals(1, div.childNodes().size()); // no elements, one text node
     }

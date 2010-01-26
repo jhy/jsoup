@@ -478,14 +478,11 @@ public class Element extends Node {
     public String text() {
         StringBuilder sb = new StringBuilder();
         text(sb);
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     private void text(StringBuilder accum) {
-        int numNodes = childNodes.size();
-        for (int i = 0; i <= numNodes; i++) {
-            Node child = childNodes.get(i);
-
+        for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 String text = textNode.getWholeText();
@@ -499,7 +496,7 @@ public class Element extends Node {
 
             } else if (child instanceof Element) {
                 Element element = (Element) child;
-                if (element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
+                if (accum.length() > 0 && element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
                     accum.append(" ");
                 element.text(accum);
             }
@@ -573,6 +570,7 @@ public class Element extends Node {
     }
 
     void outerHtml(StringBuilder accum) {
+ 
         accum
                 .append("<")
                 .append(tagName())
@@ -582,8 +580,12 @@ public class Element extends Node {
             accum.append(" />");
         } else {
             accum.append(">");
+            if (tag.canContainBlock())
+                accum.append("\n");
             html(accum);
             accum.append("</").append(tagName()).append(">");
+            if (tag.isBlock())
+                accum.append("\n");
         }
     }
 
@@ -597,7 +599,7 @@ public class Element extends Node {
     public String html() {
         StringBuilder accum = new StringBuilder();
         html(accum); 
-        return accum.toString();
+        return accum.toString().trim();
     }
 
     private void html(StringBuilder accum) {
