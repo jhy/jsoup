@@ -30,8 +30,9 @@ public class TextNode extends Node {
 
     void outerHtml(StringBuilder accum) {
         String html = StringEscapeUtils.escapeHtml(getWholeText());
-        if (parent() instanceof Element && !((Element) parent()).tag().preserveWhitespace())
-            html = normaliseWhitespace(html).trim();
+        if (parent() instanceof Element && !((Element) parent()).tag().preserveWhitespace()) {
+            html = normaliseWhitespace(html);
+        }
 
         accum.append(html);
     }
@@ -56,7 +57,7 @@ public class TextNode extends Node {
     }
 
     static String stripLeadingWhitespace(String text) {
-        return text.replaceFirst("\\s+", "");
+        return text.replaceFirst("^\\s+", "");
     }
 
     static boolean lastCharIsWhitespace(StringBuilder sb) {

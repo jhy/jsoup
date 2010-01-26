@@ -20,7 +20,7 @@ public class Comment extends Node {
         return attributes.get(COMMENT_KEY);
     }
 
-    public void outerHtml(StringBuilder accum) {
+    void outerHtml(StringBuilder accum) {
         accum.append(String.format("<!--%s-->", getData()));
     }
 
