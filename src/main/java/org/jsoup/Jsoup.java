@@ -2,6 +2,7 @@ package org.jsoup;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -36,6 +37,19 @@ public class Jsoup {
      */
     public static Document parse(String html) {
         return Parser.parse(html, "");
+    }
+
+    /**
+     Fetch a URL, and parse it as HTML.
+     @param url URL to fetch (with a GET). The protocol muse be {@code http} or {@code https}.
+     @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
+     @return The parsed HTML.
+     @throws IOException If the final server response != 200 (redirects are followed), or if there's an error reading
+        the response stream.
+     */
+    public static Document parse(URL url, int timeoutMillis) throws IOException {
+        String html = DataUtil.load(url, timeoutMillis);
+        return parse(html, url.toExternalForm());
     }
     
     /**
