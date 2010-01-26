@@ -41,7 +41,7 @@ public class Jsoup {
 
     /**
      Fetch a URL, and parse it as HTML.
-     @param url URL to fetch (with a GET). The protocol muse be {@code http} or {@code https}.
+     @param url URL to fetch (with a GET). The protocol must be {@code http} or {@code https}.
      @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
      @return The parsed HTML.
      @throws IOException If the final server response != 200 (redirects are followed), or if there's an error reading
