@@ -203,7 +203,13 @@ public abstract class Node {
         return null;
     }
 
-    public abstract String outerHtml();
+    public String outerHtml() {
+        StringBuilder accum = new StringBuilder();
+        outerHtml(accum);
+        return accum.toString();
+    }
+
+    abstract void outerHtml(StringBuilder accum);
 
     public String toString() {
         return outerHtml();

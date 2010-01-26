@@ -22,8 +22,8 @@ public class DataNode extends Node{
         return attributes.get(DATA_KEY);
     }
 
-    public String outerHtml() {
-        return getWholeData(); // data is not escaped in return from data nodes, so " in script, style is plain
+    public void outerHtml(StringBuilder accum) {
+        accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
 
     public String toString() {
