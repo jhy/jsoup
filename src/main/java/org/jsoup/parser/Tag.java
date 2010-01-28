@@ -80,7 +80,7 @@ public class Tag {
         // head can only contain a few. if more than head in here, modify to have a list of valids
         // TODO: (could solve this with walk for ancestor)
         if (this.tagName.equals("head")) {
-            if (child.tagName.equals("base") || child.tagName.equals("script") || child.tagName.equals("link") ||
+            if (child.tagName.equals("base") || child.tagName.equals("script") || child.tagName.equals("noscript") || child.tagName.equals("link") ||
                     child.tagName.equals("meta") || child.tagName.equals("title") || child.tagName.equals("style") || child.tagName.equals("object")) {
                 return true;
             }
@@ -178,16 +178,21 @@ public class Tag {
         createBlock("HTML").setAncestor(new String[0]); // specific includes not impl
         createBlock("HEAD").setAncestor("HTML"); // specific includes not impl: SCRIPT, STYLE, META, LINK, OBJECT
         createBlock("BODY").setAncestor("HTML"); // specific includes not impl
+        createBlock("FRAMESET").setAncestor("HTML");
 
         // head
         // all ancestors set to (head, body): so implicitly create head, but allow in body
         createInline("SCRIPT").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createInline("NOSCRIPT").setAncestor("HEAD", "BODY");
         createInline("STYLE").setAncestor("HEAD", "BODY").setContainDataOnly();
         createInline("META").setAncestor("HEAD", "BODY").setEmpty();
         createBlock("LINK").setAncestor("HEAD", "BODY").setEmpty(); // only within head
         createInline("OBJECT").setAncestor("HEAD", "BODY"); // flow (block/inline) or param
         createInline("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
         createInline("BASE").setAncestor("HEAD", "BODY").setEmpty();
+
+        createBlock("FRAME").setAncestor("FRAMESET").setEmpty();
+        createBlock("NOFRAMES").setAncestor("FRAMESET").setContainDataOnly();
 
 
 
@@ -237,7 +242,6 @@ public class Tag {
         createBlock("OL");
         createBlock("PRE").setContainInlineOnly().setPreserveWhitespace();
         createBlock("DIV");
-        createBlock("NOSCRIPT");
         createBlock("BLOCKQUOTE");
         createBlock("HR").setEmpty();
         createBlock("ADDRESS").setContainInlineOnly();
