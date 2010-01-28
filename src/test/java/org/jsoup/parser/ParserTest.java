@@ -211,5 +211,12 @@ public class ParserTest {
         assertEquals("Zug", dts.get(1).nextElementSibling().text());
     }
 
+    @Test public void handlesFrames() {
+        String h = "<html><head><script></script><noscript></noscript></head><frameset><frame src=foo></frame><frame src=foo></frameset></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><script></script><noscript></noscript></head><frameset><frame src=\"foo\" /><frame src=\"foo\" /></frameset></html>",
+                TextUtil.stripNewlines(doc.html()));
+    }
+
 
 }
