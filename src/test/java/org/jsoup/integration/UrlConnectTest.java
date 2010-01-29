@@ -14,9 +14,11 @@ import java.io.IOException;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class UrlConnectTest {
     // @Test // uncomment to enable test
-    public void testFetchURl() throws IOException {
+    public void fetchURl() throws IOException {
         String url = "http://www.google.com"; // no trailing / to force redir
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("Google"));
-    }
+    } 
+
+    @Test public void noop() {}
 }
