@@ -6,9 +6,25 @@ import org.jsoup.parser.Tag;
 
 import java.util.List;
 
+/**
+ The whitelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
+ that you are expecting; no junk, and no cross-site scripting attacks!
+ <p/>
+ The HTML cleaner parses the input as HTML and then runs it through a white-list, so the output HTML can only contain
+ HTML that is allowed by the whitelist.
+ <p/>
+ It is assumed that the input HTML is a body fragment; the clean methods only pull from the source's body, and the
+ canned white-lists only allow body contained tags.
+ <p/>
+ Rather than interacting directly with a Cleaner object, generally see the {@code clean} methods in {@link org.jsoup.Jsoup}.
+ */
 public class Cleaner {
     private Whitelist whitelist;
 
+    /**
+     Create a new cleaner, that sanitizes documents using the supplied whitelist.
+     @param whitelist white-list to clean with
+     */
     public Cleaner(Whitelist whitelist) {
         Validate.notNull(whitelist);
         this.whitelist = whitelist;
