@@ -13,6 +13,10 @@ import java.util.List;
 public class TokenQueue {
     private LinkedList<Character> queue;
 
+    /**
+     Create a new TokenQueue.
+     @param data string of data to back queue.
+     */
     public TokenQueue(String data) {
         Validate.notNull(data);
 
@@ -39,10 +43,18 @@ public class TokenQueue {
         return queue.peek();
     }
 
+    /**
+     Add a character to the start of the queue (will be the next character retrieved).
+     @param c character to add
+     */
     public void addFirst(Character c) {
         queue.addFirst(c);
     }
 
+    /**
+     Add a string to the start of the queue.
+     @param seq string to add.
+     */
     public void addFirst(String seq) {
         char[] chars = seq.toCharArray();
         for (int i = chars.length - 1; i >= 0; i--) {
@@ -98,10 +110,18 @@ public class TokenQueue {
         }
     }
 
+    /**
+     Tests if queue starts with a whitespace character.
+     @return if starts with whitespace
+     */
     public boolean matchesWhitespace() {
         return !queue.isEmpty() && Character.isWhitespace(queue.peek());
     }
 
+    /**
+     Test if the queue matches a word character (letter or digit).
+     @return if matches a word character
+     */
     public boolean matchesWord() {
         return !queue.isEmpty() && Character.isLetterOrDigit(queue.peek());
     }
@@ -141,6 +161,11 @@ public class TokenQueue {
         return consumeToAny(seq);
     }
 
+    /**
+     Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
+     @param seq any number of terminators to consume to
+     @return consumed string
+     */
     public String consumeToAny(String... seq) {
         StringBuilder accum = new StringBuilder();
         while (!queue.isEmpty() && !matchesAny(seq))
@@ -187,6 +212,10 @@ public class TokenQueue {
         return wordAccum.toString();
     }
 
+    /**
+     Consume a HTML class name off the queue (letter, digit, -, _)
+     @return classname
+     */
     public String consumeClassName() {
         StringBuilder accum = new StringBuilder();
         Character c = queue.peek();
@@ -197,6 +226,10 @@ public class TokenQueue {
         return accum.toString();
     }
 
+    /**
+     Consume an attribute key off the queue (letter, digit, -, _, :")
+     @return attribute key
+     */
     public String consumeAttributeKey() {
         StringBuilder accum = new StringBuilder();
         while (!queue.isEmpty() && (Character.isLetterOrDigit(queue.peek()) || matchesAny("-", "_", ":"))) {
@@ -205,6 +238,10 @@ public class TokenQueue {
         return accum.toString();
     }
 
+    /**
+     Consume and return whatever is left on the queue.
+     @return remained of queue.
+     */
     public String remainder() {
         StringBuilder accum = new StringBuilder();
         while (!queue.isEmpty()) {

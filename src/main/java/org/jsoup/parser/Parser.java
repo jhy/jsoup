@@ -6,7 +6,7 @@ import org.jsoup.nodes.*;
 import java.util.*;
 
 /**
- Parses HTML into a {@link Document}
+ Parses HTML into a {@link Document}. Generally best to use one of the  more convenient parse methods in {@link org.jsoup.Jsoup}.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Parser {
@@ -40,11 +40,23 @@ public class Parser {
         }
     }
 
+    /**
+     Parse HTML into a Document.
+     @param html HTML to parse
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return parsed Document
+     */
     public static Document parse(String html, String baseUri) {
         Parser parser = new Parser(html, baseUri, false);
         return parser.parse();
     }
-    
+
+    /**
+     Parse a fragment of HTML into the {@code body} of a Document.
+     @param bodyHtml fragment of HTML
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return Document, with empty head, and HTML parsed into body
+     */
     public static Document parseBodyFragment(String bodyHtml, String baseUri) {
         Parser parser = new Parser(bodyHtml, baseUri, true);
         return parser.parse();
