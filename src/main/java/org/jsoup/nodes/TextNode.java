@@ -11,9 +11,11 @@ public class TextNode extends Node {
     private static final String TEXT_KEY = "text";
 
     /**
-     * Create a new TextNode representing the supplied (unencoded) text).
-     * @param text raw text
-     * @see #createFromEncoded(String, String)
+     Create a new TextNode representing the supplied (unencoded) text).
+
+     @param text raw text
+     @param baseUri base uri
+     @see #createFromEncoded(String, String)
      */
     public TextNode(String text, String baseUri) {
         super(baseUri);
@@ -24,6 +26,10 @@ public class TextNode extends Node {
         return "#text";
     }
 
+    /**
+     Get the (unencoded) text of this text node, including any newlines and spaces present in the original.
+     @return text
+     */
     public String getWholeText() {
         return attributes.get(TEXT_KEY);
     }

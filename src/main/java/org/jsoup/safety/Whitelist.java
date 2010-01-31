@@ -18,9 +18,22 @@ import java.util.Set;
 /**
  Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
  <p/>
- Pick one of the defaults ({@link #none}, {@link #simpleText}, {@link #basic}, {@link #basicWithImages}, or {@link
-#relaxed}), and either use as-is, or use the {@link #addTags}, {@link #addAttributes}, {@link #addEnforcedAttribute},
- and {@link #addProtocols} methods to tweak the whitelist as necessary.
+ Start with one of the defaults:
+ <ul>
+ <li>{@link #none}
+ <li>{@link #simpleText}
+ <li>{@link #basic}
+ <li>{@link #basicWithImages}
+ <li>{@link #relaxed}
+ </ul>
+ <p/>
+ If you need to allow more through (please be careful!), tweak a base whitelist with:
+ <ul>
+ <li>{@link #addTags}
+ <li>{@link #addAttributes}
+ <li>{@link #addEnforcedAttribute}
+ <li>{@link #addProtocols}
+ </ul>
  <p/>
  The cleaner and these whitelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the

@@ -96,26 +96,50 @@ public class Tag {
         return true;
     }
 
+    /**
+     Gets if this is a block tag.
+     @return if block tag
+     */
     public boolean isBlock() {
         return isBlock;
     }
 
+    /**
+     Gets if this tag can contain block tags.
+     @return if tag can contain block tags
+     */
     public boolean canContainBlock() {
         return canContainBlock;
     }
 
+    /**
+     Gets if this tag is an inline tag.
+     @return if this tag is an inline tag.
+     */
     public boolean isInline() {
         return !isBlock;
     }
 
+    /**
+     Gets if this tag is a data only tag.
+     @return if this tag is a data only tag
+     */
     public boolean isData() {
         return !canContainInline && !isEmpty();
     }
 
+    /**
+     Get if this is an empty tag
+     @return if this is an emtpy tag
+     */
     public boolean isEmpty() {
         return empty;
     }
 
+    /**
+     Get if this tag should preserve whitespace within child text nodes.
+     @return if preserve whitepace
+     */
     public boolean preserveWhitespace() {
         return preserveWhitespace;
     }
@@ -197,6 +221,7 @@ public class Tag {
 
 
         // fontstyle
+        createInline("FONT");
         createInline("TT");
         createInline("I");
         createInline("B");

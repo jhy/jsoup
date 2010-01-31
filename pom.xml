@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <name>jsoup</name>
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1.2-SNAPSHOT</version>
   <description>jsoup HTML parser</description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -18,12 +16,14 @@
   <licenses>
   	<license>
   		<name>The MIT License</name>
-  		<url>http://jsoup.com/license</url><!-- TODO -->
+  		<url>http://jsoup.com/license</url>
   		<distribution>repo</distribution>
   	</license>  
   </licenses>
   <scm>
   	<url>http://github.com/jhy/jsoup</url>
+    <connection>scm:git:git://github.com/jhy/jsoup.git</connection>
+    <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
   </scm>
   <organization>
   	<name>Jonathan Hedley</name>

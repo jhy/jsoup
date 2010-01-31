@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- Base Node model.
+ The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node {
@@ -20,7 +20,9 @@ public abstract class Node {
     String baseUri;
 
     /**
-     Create a new node.
+     Create a new Node.
+     @param baseUri base URI
+     @param attributes attributes (not null, but may be empty)
      */
     protected Node(String baseUri, Attributes attributes) {
         Validate.notNull(baseUri);
@@ -35,6 +37,10 @@ public abstract class Node {
         this(baseUri, new Attributes());
     }
 
+    /**
+     Get the node name of this node. Use for debugging purposes and not logic switching (for that, use instanceof).
+     @return node name
+     */
     public abstract String nodeName();
 
     /**
@@ -99,10 +105,18 @@ public abstract class Node {
         return this;
     }
 
+    /**
+     Get the base URI of this node.
+     @return base URI
+     */
     public String baseUri() {
         return baseUri;
     }
 
+    /**
+     Update the base URI of this node.
+     @param baseUri base URI to set
+     */
     public void setBaseUri(String baseUri) {
         Validate.notNull(baseUri);
         this.baseUri = baseUri;
@@ -149,14 +163,28 @@ public abstract class Node {
         }
     }
 
+    /**
+     Get a child node by index
+     @param index index of child node
+     @return the child node at this index.
+     */
     public Node childNode(int index) {
         return childNodes.get(index);
     }
 
+    /**
+     Get this node's children. Presented as an unmodifiable list: new children can not be added, but the child nodes
+     themselves can be manipulated.
+     @return list of children. If no children, returns an empty list.
+     */
     public List<Node> childNodes() {
         return Collections.unmodifiableList(childNodes);
     }
 
+    /**
+     Gets this node's parent node.
+     @return parent node; or null if no parent.
+     */
     public Node parent() {
         return parentNode;
     }
@@ -166,11 +194,19 @@ public abstract class Node {
             throw new NotImplementedException("Cannot (yet) move nodes in tree"); // TODO: remove from prev node children
         this.parentNode = parentNode;
     }
-    
+
+    /**
+     Retrieves this node's sibling nodes. Effectively, {@link #childNodes()  node.parent.childNodes()}.
+     @return node siblings, including this node
+     */
     public List<Node> siblingNodes() {
-        return parent().childNodes();
+        return parent().childNodes(); // TODO: should this strip out this node? i.e. not a sibling of self?
     }
 
+    /**
+     Get this node's next sibling.
+     @return next sibling, or null if this is the last sibling
+     */
     public Node nextSibling() {
         List<Node> siblings = parentNode.childNodes;
         Integer index = indexInList(this, siblings);
@@ -181,6 +217,10 @@ public abstract class Node {
             return null;
     }
 
+    /**
+     Get this node's previous sibling.
+     @return the previous sibling, or null if this is the first sibling
+     */
     public Node previousSibling() {
         List<Node> siblings = parentNode.childNodes;
         Integer index = indexInList(this, siblings);
@@ -203,12 +243,20 @@ public abstract class Node {
         return null;
     }
 
+    /**
+     Get the outer HTML of this node.
+     @return HTML
+     */
     public String outerHtml() {
         StringBuilder accum = new StringBuilder();
         outerHtml(accum);
         return accum.toString();
     }
 
+    /**
+     Get the outer HTML of this node.
+     @param accum accumulator to place HTML into
+     */
     abstract void outerHtml(StringBuilder accum);
 
     public String toString() {
