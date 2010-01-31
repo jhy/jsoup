@@ -75,6 +75,15 @@ public class Document extends Element {
         }
     }
 
+    /**
+     Create a new Element, with this document's base uri. Does not make the new element a child of this document.
+     @param tagName element tag name (e.g. {@code a})
+     @return new element
+     */
+    public Element createElement(String tagName) {
+        return new Element(Tag.valueOf(tagName), this.baseUri());
+    }
+
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
