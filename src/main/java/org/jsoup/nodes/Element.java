@@ -150,9 +150,12 @@ public class Element extends Node {
      * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
      * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
      * </ul>
-     * 
+     * <p/>
+     * See the query syntax documentation in {@link org.jsoup.select.Selector}.
+     *
      * @param query a {@link Selector} query
      * @return elements that match the query (empty if none match)
+     * @see org.jsoup.select.Selector
      */
     public Elements select(String query) {
         return Selector.select(query, this);
