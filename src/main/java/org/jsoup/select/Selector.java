@@ -2,15 +2,40 @@ package org.jsoup.select;
 
 import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Evaluator;
 import org.jsoup.parser.TokenQueue;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
 /**
- TODO: Document
+ CSS-like element selector, that finds elements matching a query.
 
+ <h2>Selector syntax</h2>
+ A selector is a chain of simple selectors, seperated by combinators. Selectors are case insensitive (including against
+ elements, attributes, and attribute values).
+ <p/>
+ The universal selector (*) is implicit when no element selector is supplied (i.e. {@code *.header} and {@code .header}
+ is equivalent).
+
+ <table>
+ <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
+ <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
+ <tr><td><code>E</code></td><td>an element of type E</td><td><code>h1</code></td></tr>
+ <tr><td><code>E#id</code></td><td>an Element with attribute ID of "id"</td><td><code>div#wrap</code>, <code>#logo</code></td></tr>
+ <tr><td><code>E.class</code></td><td>an Element with a class name of "class"</td><td><code>div.left</code>, <code>.result</code></td></tr>
+ <tr><td><code>E[attr]</code></td><td>an Element with the attribute named "attr"</td><td><code>a[href]</code>, <code>[title]</code></td></tr>
+ <tr><td><code>E[attr=val]</code></td><td>an Element with the attribute named "attr" and value equal to "val"</td><td><code>img[width=500]</code>, <code>a[rel=nofollow]</code></td></tr>
+ <tr><td><code>E[attr^=val]</code></td><td>an Element with the attribute named "attr" and value starting with "val"</td><td><code>a[href^=http:]</code></code></td></tr>
+ <tr><td><code>E[attr$=val]</code></td><td>an Element with the attribute named "attr" and value ending with "val"</td><td><code>img[src$=.png]</code></td></tr>
+ <tr><td><code>E[attr*=val]</code></td><td>an Element with the attribute named "attr" and value containing "val"</td><td><code>a[href*=/search/]</code></td></tr>
+ <tr><td></td><td>The above may be combined in any order</td><td><code>div.header[title]</code></td></tr>
+ <tr><td><td colspan="3"><h3>Combinators</h3></td></tr>
+ <tr><td><code>E F</code></td><td>an F element descended from an E element</td><td><code>div a</code>, <code>.logo h1</code></td></tr>
+ <tr><td><code>E > F</code></td><td>an F child of E</td><td><code> ol > li</code></td></tr>
+ <tr><td><code>E, F, G</code></td><td>any matching element E, F, or G</td><td><code>a[href], div, h3</code></td></tr>
+ </table>
+
+ @see Element#select(String)
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Selector {
     private final Element root;
@@ -30,10 +55,22 @@ public class Selector {
         this.tq = new TokenQueue(query);
     }
 
+    /**
+     Find elements matching selector.
+     @param query CSS selector
+     @param root root element to descend into
+     @return matching elements, empty if not
+     */
     public static Elements select(String query, Element root) {
         return new Selector(query, root).select();
     }
 
+    /**
+     Find elements matching selector.
+     @param query CSS selector
+     @param roots root elements to descend into
+     @return matching elements, empty if not
+     */
     public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
         Validate.notNull(roots);
