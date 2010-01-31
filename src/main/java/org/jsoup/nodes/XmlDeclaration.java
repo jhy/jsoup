@@ -8,6 +8,12 @@ public class XmlDeclaration extends Node {
     private static final String DECL_KEY = "declaration";
     private final boolean isProcessingInstruction; // <! if true, <? if false, declaration (and last data char should be ?)
 
+    /**
+     Create a new XML declaration
+     @param data data
+     @param baseUri base uri
+     @param isProcessingInstruction is processing instruction
+     */
     public XmlDeclaration(String data, String baseUri, boolean isProcessingInstruction) {
         super(baseUri);
         attributes.put(DECL_KEY, data);
@@ -18,6 +24,10 @@ public class XmlDeclaration extends Node {
         return "#declaration";
     }
 
+    /**
+     Get the unencoded XML declaration.
+     @return XML declaration
+     */
     public String getWholeDeclaration() {
         return attributes.get(DECL_KEY);
     }

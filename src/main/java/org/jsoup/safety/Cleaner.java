@@ -62,7 +62,7 @@ public class Cleaner {
                 destAttrs.put(sourceAttr);
         }
         Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
-        destAttrs.mergeAttributes(enforcedAttrs);
+        destAttrs.addAll(enforcedAttrs);
         return dest;
     }
 
