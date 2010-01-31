@@ -1,7 +1,5 @@
-jsoup -- the easy Java HTML parser that makes sense of real-world HTML soup.
+jsoup: Java HTML parser that makes sense of real-world HTML soup.
 
-Status: early initiation. There is nothing here to use yet.
+Status: beta release.
 
-Feedback: jonathan@hedley.net -- all comments and ideas welcome.
-
-http://jsoup.org/
+See http://jsoup.org/ for downloads and documentation.
