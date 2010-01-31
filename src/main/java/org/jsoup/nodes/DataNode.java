@@ -9,6 +9,11 @@ import org.apache.commons.lang.StringEscapeUtils;
 public class DataNode extends Node{
     private static final String DATA_KEY = "data";
 
+    /**
+     Create a new DataNode.
+     @param data data contents
+     @param baseUri base URI
+     */
     public DataNode(String data, String baseUri) {
         super(baseUri);
         attributes.put(DATA_KEY, data);
@@ -18,6 +23,10 @@ public class DataNode extends Node{
         return "#data";
     }
 
+    /**
+     Get the data contents of this node. Will be unescaped and with original new lines, space etc.
+     @return data
+     */
     public String getWholeData() {
         return attributes.get(DATA_KEY);
     }
@@ -30,6 +39,12 @@ public class DataNode extends Node{
         return outerHtml();
     }
 
+    /**
+     Create a new DataNode from HTML encoded data.
+     @param encodedData encoded data
+     @param baseUri bass URI
+     @return new DataNode
+     */
     public static DataNode createFromEncoded(String encodedData, String baseUri) {
         String data = StringEscapeUtils.unescapeHtml(encodedData);
         return new DataNode(data, baseUri);

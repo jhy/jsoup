@@ -19,4 +19,6 @@ public class UrlConnectTest {
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("Google"));
     }
+
+    @Test public void noop() {}
 }

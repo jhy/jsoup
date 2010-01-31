@@ -24,28 +24,52 @@ public class Attribute {
         this.value = value;
     }
 
+    /**
+     Get the attribute key.
+     @return the attribute key
+     */
     public String getKey() {
         return key;
     }
 
+    /**
+     Set the attribute key. Gets normalised as per the constructor method.
+     @param key the new key; must not be null
+     */
     public void setKey(String key) {
         Validate.notEmpty(key);
-        this.key = key;
+        this.key = key.trim().toLowerCase();
     }
 
+    /**
+     Get the attribute value.
+     @return the attribute value
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     Set the attribute value.
+     @param value the new attribute value; must not be null
+     */
     public void setValue(String value) {
         Validate.notNull(value);
         this.value = value;
     }
 
+    /**
+     Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+     @return HTML
+     */
     public String html() {
         return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
     }
 
+    /**
+     Get the string representation of this attribute, implemented as {@link #html()}.
+     @return string
+     */
     public String toString() {
         return html();
     }
