@@ -221,6 +221,7 @@ public class Tag {
 
 
         // fontstyle
+        createInline("FONT");
         createInline("TT");
         createInline("I");
         createInline("B");

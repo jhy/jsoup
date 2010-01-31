@@ -218,5 +218,14 @@ public class ParserTest {
                 TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test public void handlesJavadocFont() {
+        String h = "<TD BGCOLOR=\"#EEEEFF\" CLASS=\"NavBarCell1\">    <A HREF=\"deprecated-list.html\"><FONT CLASS=\"NavBarFont1\"><B>Deprecated</B></FONT></A>&nbsp;</TD>";
+        Document doc = Jsoup.parse(h);
+        Element a = doc.select("a").first();
+        assertEquals("Deprecated", a.text());
+        assertEquals("font", a.child(0).tagName());
+        assertEquals("b", a.child(0).child(0).tagName());
+    }
+
 
 }
