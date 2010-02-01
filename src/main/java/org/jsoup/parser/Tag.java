@@ -49,9 +49,11 @@ public class Tag {
         synchronized (tags) {
             Tag tag = tags.get(tagName);
             if (tag == null) {
-                // not defined: create default
+                // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.setAncestor(defaultAncestor.tagName);
+                tag.isBlock = false;
+                tag.canContainBlock = true;
             }
             return tag;
         }

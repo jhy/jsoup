@@ -74,4 +74,10 @@ public class CleanerTest {
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<a>XSS</a>", cleanHtml);
     }
+
+    @Test public void testDropsUnknownTags() {
+        String h = "<p><custom foo=true>Test</custom></p>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<p>Test</p>", cleanHtml);
+    }
 }
