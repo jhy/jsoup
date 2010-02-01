@@ -187,6 +187,13 @@ public class ParserTest {
         assertEquals("qux", foos.last().attr("title"));
         assertEquals("there", foos.last().text());
     }
+
+    @Test public void handlesUnknownInlineTags() {
+        String h = "<p><cust>Test</cust></p><p><cust><cust>Test</cust></cust></p>";
+        Document doc = Jsoup.parseBodyFragment(h);
+        String out = doc.body().html();
+        assertEquals(h, TextUtil.stripNewlines(out));
+    }
     
     @Test public void handlesEmptyBlocks() {
         String h = "<div id=1/><div id=2><img /></div>";
