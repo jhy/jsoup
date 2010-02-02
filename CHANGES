@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 0.1.2 (pending)
+*** Release 0.1.2 (2010-Jan-02)
  * Fixed unrecognised tag handler to be more permissive
     <http://github.com/jhy/jsoup/issues/issue/1>
 
