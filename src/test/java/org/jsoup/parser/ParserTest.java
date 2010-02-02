@@ -234,5 +234,13 @@ public class ParserTest {
         assertEquals("b", a.child(0).child(0).tagName());
     }
 
+    @Test public void handlesBaseWithoutHref() {
+        String h = "<head><base target='_blank'></head><body><a href=/foo>Test</a></body>";
+        Document doc = Jsoup.parse(h, "http://example.com/");
+        Element a = doc.select("a").first();
+        assertEquals("/foo", a.attr("href"));
+        assertEquals("http://example.com/foo", a.attr("abs:href"));
+    }
+
 
 }
