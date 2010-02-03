@@ -1,6 +1,8 @@
 jsoup changelog
 
-*** Release 0.1.3 (pending)
+*** Release 0.2.0 (pending)
+ * New feature: supports Element#wrap(html) and Elements#wrap(html).
+ 
  * Fixed absolute URL resolution issue when a base tag has no href.
 
 *** Release 0.1.2 (2010-Jan-02)

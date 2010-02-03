@@ -195,6 +195,34 @@ public abstract class Node {
         this.parentNode = parentNode;
     }
 
+    protected void replaceChild(Node out, Node in) {
+        Validate.isTrue(out.parentNode == this);
+        Validate.notNull(in);
+        if (in.parentNode != null)
+            in.parentNode.removeChild(in);
+        
+        Integer index = indexInList(out, childNodes);
+        childNodes.set(index, in);
+        in.parentNode = this;
+        out.parentNode = null;
+    }
+
+    protected void removeChild(Node out) {
+        Validate.isTrue(out.parentNode == this);
+        int index = indexInList(out, childNodes);
+        childNodes.remove(index);
+        out.parentNode = null;
+    }
+
+    protected void addChild(Node in) {
+        Validate.notNull(in);
+        if (in.parentNode != null)
+            in.parentNode.removeChild(in);
+        
+        childNodes.add(in);
+        in.parentNode = this;
+    }
+    
     /**
      Retrieves this node's sibling nodes. Effectively, {@link #childNodes()  node.parent.childNodes()}.
      @return node siblings, including this node

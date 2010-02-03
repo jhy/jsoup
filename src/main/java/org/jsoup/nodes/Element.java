@@ -285,6 +285,43 @@ public class Element extends Node {
         childNodes.clear();
         return this;
     }
+
+    /**
+     Wrap the supplied HTML around this element.
+     @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitralily deep.
+     @return this element, for chaining.
+     */
+    public Element wrap(String html) {
+        Validate.notEmpty(html);
+
+        Element wrapBody = Parser.parseBodyFragment(html, baseUri).body();
+        Elements wrapChildren = wrapBody.children();
+        Element wrap = wrapChildren.first();
+        if (wrap == null) // nothing to wrap with; noop
+            return null;
+
+        Element deepest = getDeepChild(wrap);
+        parentNode.replaceChild(this, wrap);
+        deepest.addChild(this);
+
+        // remainder (unbalananced wrap, like <div></div><p></p> -- The <p> is remainder
+        if (wrapChildren.size() > 1) {
+            for (int i = 1; i < wrapChildren.size(); i++) { // skip first
+                Element remainder = wrapChildren.get(i);
+                remainder.parentNode.removeChild(remainder);
+                wrap.appendChild(remainder);
+            }
+        }
+        return this;
+    }
+
+    private Element getDeepChild(Element el) {
+        List<Element> children = el.children();
+        if (children.size() > 0)
+            return getDeepChild(children.get(0));
+        else
+            return el;
+    }
     
     /**
      * Get sibling elements.
