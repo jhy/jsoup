@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
+import org.apache.commons.lang.Validate;
 
 import java.util.*;
 
@@ -89,6 +90,23 @@ public class Elements implements List<Element> {
             sb.append(element.text());
         }
         return sb.toString();
+    }
+
+    /**
+     Wrap the supplied HTML around each matched elements. For example, with HTML
+     {@code <p><b>This</b> is <b>Jsoup</b></p>},
+     <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
+     becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
+     @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitralily deep.
+     @return this (for chaining)
+     @see Element#wrap
+     */
+    public Elements wrap(String html) {
+        Validate.notEmpty(html);
+        for (Element element : contents) {
+            element.wrap(html);
+        }
+        return this;
     }
     
     // filters

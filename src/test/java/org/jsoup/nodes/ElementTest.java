@@ -221,5 +221,25 @@ public class ElementTest {
         assertEquals("<p>there</p><p>now</p>", TextUtil.stripNewlines(div.html()));
     }
 
+    @Test public void testWrap() {
+        Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
+        Element p = doc.select("p").first();
+        p.wrap("<div class='head'></div>");
+        assertEquals("<div><div class=\"head\"><p>Hello</p></div><p>There</p></div>", TextUtil.stripNewlines(doc.body().html()));
+
+        Element ret = p.wrap("<div><div class=foo></div><p>What?</p></div>");
+        assertEquals("<div><div class=\"head\"><div><div class=\"foo\"><p>Hello</p></div><p>What?</p></div></div><p>There</p></div>", 
+                TextUtil.stripNewlines(doc.body().html()));
+
+        assertEquals(ret, p);
+    }
+
+    @Test public void testWrapWithRemainder() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
+        Element p = doc.select("p").first();
+        p.wrap("<div class='head'></div><p>There!</p>");
+        assertEquals("<div><div class=\"head\"><p>Hello</p><p>There!</p></div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
 
 }
