@@ -31,13 +31,16 @@ import java.util.LinkedHashSet;
  <tr><td></td><td>The above may be combined in any order</td><td><code>div.header[title]</code></td></tr>
  <tr><td><td colspan="3"><h3>Combinators</h3></td></tr>
  <tr><td><code>E F</code></td><td>an F element descended from an E element</td><td><code>div a</code>, <code>.logo h1</code></td></tr>
- <tr><td><code>E > F</code></td><td>an F child of E</td><td><code> ol > li</code></td></tr>
+ <tr><td><code>E > F</code></td><td>an F child of E</td><td><code>ol > li</code></td></tr>
+ <tr><td><code>E + F</code></td><td>an F element immediately preceded by sibling E</td><td><code>li + li</code>, <code>div.head + div</code></td></tr>
+ <tr><td><code>E ~ F</code></td><td>an F element preceded by sibling E</td><td><code>h1 ~ p</code></td></tr>
  <tr><td><code>E, F, G</code></td><td>any matching element E, F, or G</td><td><code>a[href], div, h3</code></td></tr>
  </table>
 
  @see Element#select(String)
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Selector {
+    private final static String[] combinators = {",", ">", "+", "~", " "};
     private final Element root;
     private final LinkedHashSet<Element> elements; // LHS for unique and ordered elements
     private final String query;
@@ -94,20 +97,35 @@ public class Selector {
                     String subQuery = tq.chompTo(",");
                     elements.addAll(select(subQuery, root));
                 }
-            } else if (tq.matchChomp(">")) { // parent > child
-                String subQuery = tq.chompTo(">"); // support multi > childs
-                Elements candidates = select(subQuery, elements);
-                Elements children = filterForChildren(elements, candidates);
-                elements.clear(); elements.addAll(children);
-            } else if (seenWhite) { // ancestor descendant
-                Elements candidates = select(tq.remainder(), elements);
-                return filterForDescendants(elements, candidates);
+            } else if (tq.matchesAny(combinators)) {
+                combinator(tq.consume().toString());
+            } else if (seenWhite) {
+                combinator(" ");
             } else { // E.class, E#id, E[attr] etc. AND
                 Elements candidates = findElements(); // take next el, #. etc off queue
                 intersectElements(filterForSelf(elements, candidates));
             }
         }
         return new Elements(elements);
+    }
+    
+    private void combinator(String combinator) {
+        tq.consumeWhitespace();
+        String subQuery = tq.consumeToAny(combinators); // support multi > childs
+        
+        Elements output;
+        if (combinator.equals(">"))
+            output = filterForChildren(elements, select(subQuery, elements));
+        else if (combinator.equals(" "))
+            output = filterForDescendants(elements, select(subQuery, elements));
+        else if (combinator.equals("+"))
+            output = filterForAdjacentSiblings(elements, select(subQuery, root));
+        else if (combinator.equals("~"))
+            output = filterForGeneralSiblings(elements, select(subQuery, root));
+        else
+            throw new IllegalStateException("Unknown combinator: " + combinator);
+        
+        elements.clear(); elements.addAll(output);
     }
     
     private Elements findElements() {
@@ -195,7 +213,7 @@ public class Selector {
         Elements children = new Elements();
         CHILD: for (Element c : candidates) {
             for (Element p : parents) {
-                if (c.parent().equals(p)) {
+                if (c.parent() != null && c.parent().equals(p)) {
                     children.add(c);
                     continue CHILD;
                 }
@@ -220,6 +238,41 @@ public class Selector {
                 children.add(c);
         }
         return children;
+    }
+    
+    // adjacent siblings
+    private static Elements filterForAdjacentSiblings(Collection<Element> elements, Collection<Element> candidates) {
+        Elements siblings = new Elements();
+        SIBLING: for (Element c: candidates) {
+            for (Element e: elements) {
+                if (!e.parent().equals(c.parent()))
+                    continue;
+                Element previousSib = c.previousElementSibling();
+                if (previousSib != null && previousSib.equals(e)) {
+                    siblings.add(c);
+                    continue SIBLING;
+                }
+            }
+        }
+        return siblings;
+    }
+    
+    // preceeding siblings
+    private static Elements filterForGeneralSiblings(Collection<Element> elements, Collection<Element> candidates) {
+        Elements output = new Elements();
+        SIBLING: for (Element c: candidates) {
+            for (Element e: elements) {
+                if (!e.parent().equals(c.parent()))
+                    continue;
+                int ePos = e.elementSiblingIndex();
+                int cPos = c.elementSiblingIndex();
+                if (cPos > ePos) {
+                    output.add(c);
+                    continue SIBLING;
+                }
+            }
+        }
+        return output;
     }
     
     // union of both sets, for e.class type selectors

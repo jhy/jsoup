@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -85,6 +86,14 @@ public class ElementTest {
         assertEquals("this", p.nextElementSibling().text());
         assertEquals("Hello", p.firstElementSibling().text());
         assertEquals("element", p.lastElementSibling().text());
+    }
+    
+    @Test public void testElementSiblingIndex() {
+        Document doc = Jsoup.parse("<div><p>One</p>...<p>Two</p>...<p>Three</p>");
+        Elements ps = doc.select("p");
+        assertTrue(0 == ps.get(0).elementSiblingIndex());
+        assertTrue(1 == ps.get(1).elementSiblingIndex());
+        assertTrue(2 == ps.get(2).elementSiblingIndex());
     }
 
     @Test public void testGetElementsWithClass() {
