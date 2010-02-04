@@ -249,4 +249,8 @@ public class TokenQueue {
         }
         return accum.toString();
     }
+    
+    public String toString() {
+        return queue.toString();
+    }
 }

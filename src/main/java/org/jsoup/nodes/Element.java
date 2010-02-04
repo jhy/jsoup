@@ -373,6 +373,15 @@ public class Element extends Node {
         List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
+    
+    /**
+     * Get the list index of this element in its element sibling list. I.e. if this is the first element
+     * sibling, returns 0.
+     * @return position in element sibling list
+     */
+    public Integer elementSiblingIndex() {
+       return indexInList(this, parent().children()); 
+    }
 
     /**
      * Gets the last element sibling of this element
