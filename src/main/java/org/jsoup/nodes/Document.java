@@ -3,6 +3,9 @@ package org.jsoup.nodes;
 import org.apache.commons.lang.Validate;
 import org.jsoup.parser.Tag;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  A HTML Document.
 
@@ -82,6 +85,44 @@ public class Document extends Element {
      */
     public Element createElement(String tagName) {
         return new Element(Tag.valueOf(tagName), this.baseUri());
+    }
+
+    /**
+     Normalise the document. This happens after the parse phase so generally does not need to be called.
+     Moves any text content that is not in the body element into the body.
+     @return this document after normalisation
+     */
+    public Document normalise() {
+        if (select("html").isEmpty())
+            appendElement("html");
+        if (head() == null)
+            select("html").first().appendElement("head");
+        if (body() == null)
+            select("html").first().appendElement("body");
+
+        normalise(this);
+        normalise(select("html").first());
+        normalise(head());
+
+        return this;
+    }
+
+    // does not recurse. the result order isn't great here (not intuitive); they are in the body though.
+    private void normalise(Element element) {
+        List<Node> toMove = new ArrayList<Node>();
+        for (Node node: element.childNodes) {
+            if (node instanceof TextNode) {
+                TextNode tn = (TextNode) node;
+                if (!tn.isBlank())
+                    toMove.add(tn);
+            }
+        }
+
+        for (Node node: toMove) {
+            element.removeChild(node);
+            body().appendChild(new TextNode(" ", ""));
+            body().appendChild(node);
+        }
     }
 
     @Override

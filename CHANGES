@@ -1,10 +1,16 @@
 jsoup changelog
 
 *** Release 0.2.0 (pending)
+ * jsoup packages are now available in the Maven central repository.
+ 
+ * New feature: supports Element#addClass, removeClass, toggleClass;
+    also collection class methods on Elements.
  * New feature: supports Element#wrap(html) and Elements#wrap(html).
  * New selector syntax: supports E > F adjacent sibling selector
  * New selector systax: supports E ~ F preceding sibling selector
  * New: supports Element#elementSiblingIndex()
+
+ * Improved document normalisation.
  
  * Fixed absolute URL resolution issue when a base tag has no href.
 
