@@ -49,6 +49,8 @@ public class TextNode extends Node {
             html = normaliseWhitespace(html);
         }
 
+        if (!isBlank() && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock()  && siblingIndex() == 0)
+            indent(accum);
         accum.append(html);
     }
 

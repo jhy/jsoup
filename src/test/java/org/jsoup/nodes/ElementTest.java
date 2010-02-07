@@ -176,7 +176,7 @@ public class ElementTest {
 
     @Test public void testFormatHtml() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
-        assertEquals("<html>\n<head>\n</head>\n<body>\n<div>\n<p>Hello</p>\n</div>\n</body>\n</html>", doc.html());
+        assertEquals("<html>\n<head>\n</head>\n<body>\n <div>\n  <p>Hello</p>\n </div>\n</body>\n</html>", doc.html());
     }
 
     @Test public void testSetText() {
@@ -211,7 +211,7 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.appendText(" there & now >");
-        assertEquals("<p>Hello</p>\n there &amp; now &gt;", div.html());
+        assertEquals("<p>Hello</p> there &amp; now &gt;", TextUtil.stripNewlines(div.html()));
     }
     
     @Test public void testPrependText() {
@@ -219,7 +219,7 @@ public class ElementTest {
         Element div = doc.getElementById("1");
         div.prependText("there & now > ");
         assertEquals("there & now > Hello", div.text());
-        assertEquals("there &amp; now &gt; <p>Hello</p>", div.html());
+        assertEquals("there &amp; now &gt; <p>Hello</p>", TextUtil.stripNewlines(div.html()));
     }
     
     @Test public void testAddNewHtml() {

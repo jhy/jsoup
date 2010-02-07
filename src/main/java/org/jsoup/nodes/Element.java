@@ -703,7 +703,8 @@ public class Element extends Node {
     }
 
     void outerHtml(StringBuilder accum) {
- 
+        if (isBlock() || (parent() != null && parent().tag().canContainBlock() && siblingIndex() == 0))
+            indent(accum);
         accum
                 .append("<")
                 .append(tagName())
@@ -713,12 +714,9 @@ public class Element extends Node {
             accum.append(" />");
         } else {
             accum.append(">");
-            if (tag.canContainBlock())
-                accum.append("\n");
             html(accum);
+            if (tag.canContainBlock()) indent(accum);
             accum.append("</").append(tagName()).append(">");
-            if (tag.isBlock())
-                accum.append("\n");
         }
     }
 
