@@ -246,7 +246,7 @@ public class ParserTest {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
         assertEquals("<!doctype html><html><head><link /></head><body>Five Six Seven  One Two Four Three</body></html>",
-                TextUtil.stripNewlines(doc.html()));
+                TextUtil.stripNewlines(doc.html())); // is spaced OK if not newline & space stripped
     }
 
     @Test public void normlisesEmptyDocument() {

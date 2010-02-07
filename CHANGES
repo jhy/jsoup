@@ -11,6 +11,7 @@ jsoup changelog
  * New: supports Element#elementSiblingIndex()
 
  * Improved document normalisation.
+ * Improved HTML string output format (pretty-print)
  
  * Fixed absolute URL resolution issue when a base tag has no href.
 

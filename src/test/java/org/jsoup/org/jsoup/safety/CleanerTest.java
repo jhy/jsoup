@@ -15,14 +15,14 @@ public class CleanerTest {
         String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
         String cleanHtml = Jsoup.clean(h, Whitelist.simpleText());
 
-        assertEquals("Hello <b>there</b>!", cleanHtml);
+        assertEquals("Hello <b>there</b>!", TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void simpleBehaviourTest2() {
         String h = "Hello <b>there</b>!";
         String cleanHtml = Jsoup.clean(h, Whitelist.simpleText());
 
-        assertEquals("Hello <b>there</b>!", cleanHtml);
+        assertEquals("Hello <b>there</b>!", TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void basicBehaviourTest() {

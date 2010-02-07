@@ -30,6 +30,7 @@ public class Comment extends Node {
     }
 
     void outerHtml(StringBuilder accum) {
+        indent(accum);
         accum.append(String.format("<!--%s-->", getData()));
     }
 
