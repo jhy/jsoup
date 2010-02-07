@@ -2,7 +2,7 @@ jsoup changelog
 
 *** Release 0.2.0 (pending)
  * New feature: supports Element#wrap(html) and Elements#wrap(html).
- * New selector syntax: supports E > F adjacent sibling selector
+ * New selector syntax: supports E + F adjacent sibling selector
  * New selector systax: supports E ~ F preceding sibling selector
  * New: supports Element#elementSiblingIndex()
  
