@@ -145,6 +145,14 @@ public class Elements implements List<Element> {
         return sb.toString();
     }
 
+    public boolean hasText() {
+        for (Element element: contents) {
+            if (element.hasText())
+                return true;
+        }
+        return false;
+    }
+
     /**
      Wrap the supplied HTML around each matched elements. For example, with HTML
      {@code <p><b>This</b> is <b>Jsoup</b></p>},

@@ -263,5 +263,15 @@ public class ElementTest {
         assertEquals("<div><div class=\"head\"><p>Hello</p><p>There!</p></div></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void testHasText() {
+        Document doc = Jsoup.parse("<div><p>Hello</p><p></p></div>");
+        Element div = doc.select("div").first();
+        Elements ps = doc.select("p");
+
+        assertTrue(div.hasText());
+        assertTrue(ps.first().hasText());
+        assertFalse(ps.last().hasText());
+    }
+
 
 }

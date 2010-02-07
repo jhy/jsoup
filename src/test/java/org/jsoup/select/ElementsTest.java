@@ -58,6 +58,13 @@ public class ElementsTest {
         assertEquals("Hello there world", doc.select("div > *").text());
     }
 
+    @Test public void hasText() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div><p></p></div>");
+        Elements divs = doc.select("div");
+        assertTrue(divs.hasText());
+        assertFalse(doc.select("div + div").hasText());
+    }
+
     @Test public void wrap() {
         String h = "<p><b>This</b> is <b>jsoup</b></p>";
         Document doc = Jsoup.parse(h);
