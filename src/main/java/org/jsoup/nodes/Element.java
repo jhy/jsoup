@@ -582,6 +582,10 @@ public class Element extends Node {
                 TextNode textNode = (TextNode) child;
                 if (!textNode.isBlank())
                     return true;
+            } else if (child instanceof Element) {
+                Element el = (Element) child;
+                if (el.hasText())
+                    return true;
             }
         }
         return false;
