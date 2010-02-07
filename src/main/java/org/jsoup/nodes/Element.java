@@ -573,6 +573,21 @@ public class Element extends Node {
     }
 
     /**
+     Test if this element has any text content (that is not just whitespace).
+     @return true if element has non-blank text content.
+     */
+    public boolean hasText() {
+        for (Node child: childNodes) {
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                if (!textNode.isBlank())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
      * @return the data, or empty string if none
      */
