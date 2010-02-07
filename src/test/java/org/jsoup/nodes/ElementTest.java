@@ -150,6 +150,19 @@ public class ElementTest {
         assertFalse(doc.hasClass("mellow"));
     }
 
+    @Test public void testClassUpdates() {
+        Document doc = Jsoup.parse("<div class='mellow yellow'></div>");
+        Element div = doc.select("div").first();
+
+        div.addClass("green");
+        assertEquals("mellow yellow green", div.className());
+        div.removeClass("red"); // noop
+        div.removeClass("yellow");
+        assertEquals("mellow green", div.className());
+        div.toggleClass("green").toggleClass("red");
+        assertEquals("mellow red", div.className());
+    }
+
     @Test public void testOuterHtml() {
         Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
         assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
