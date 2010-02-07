@@ -150,6 +150,19 @@ public class ElementTest {
         assertFalse(doc.hasClass("mellow"));
     }
 
+    @Test public void testClassUpdates() {
+        Document doc = Jsoup.parse("<div class='mellow yellow'></div>");
+        Element div = doc.select("div").first();
+
+        div.addClass("green");
+        assertEquals("mellow yellow green", div.className());
+        div.removeClass("red"); // noop
+        div.removeClass("yellow");
+        assertEquals("mellow green", div.className());
+        div.toggleClass("green").toggleClass("red");
+        assertEquals("mellow red", div.className());
+    }
+
     @Test public void testOuterHtml() {
         Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
         assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
@@ -163,7 +176,7 @@ public class ElementTest {
 
     @Test public void testFormatHtml() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
-        assertEquals("<html>\n<head>\n</head>\n<body>\n<div>\n<p>Hello</p>\n</div>\n</body>\n</html>", doc.html());
+        assertEquals("<html>\n<head>\n</head>\n<body>\n <div>\n  <p>Hello</p>\n </div>\n</body>\n</html>", doc.html());
     }
 
     @Test public void testSetText() {
@@ -198,7 +211,7 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.appendText(" there & now >");
-        assertEquals("<p>Hello</p>\n there &amp; now &gt;", div.html());
+        assertEquals("<p>Hello</p> there &amp; now &gt;", TextUtil.stripNewlines(div.html()));
     }
     
     @Test public void testPrependText() {
@@ -206,7 +219,7 @@ public class ElementTest {
         Element div = doc.getElementById("1");
         div.prependText("there & now > ");
         assertEquals("there & now > Hello", div.text());
-        assertEquals("there &amp; now &gt; <p>Hello</p>", div.html());
+        assertEquals("there &amp; now &gt; <p>Hello</p>", TextUtil.stripNewlines(div.html()));
     }
     
     @Test public void testAddNewHtml() {
@@ -248,6 +261,16 @@ public class ElementTest {
         Element p = doc.select("p").first();
         p.wrap("<div class='head'></div><p>There!</p>");
         assertEquals("<div><div class=\"head\"><p>Hello</p><p>There!</p></div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void testHasText() {
+        Document doc = Jsoup.parse("<div><p>Hello</p><p></p></div>");
+        Element div = doc.select("div").first();
+        Elements ps = doc.select("p");
+
+        assertTrue(div.hasText());
+        assertTrue(ps.first().hasText());
+        assertFalse(ps.last().hasText());
     }
 
 

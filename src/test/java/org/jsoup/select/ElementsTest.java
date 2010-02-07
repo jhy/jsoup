@@ -37,11 +37,32 @@ public class ElementsTest {
         assertEquals("classy", ps.last().attr("style"));
         assertEquals("bar", ps.last().attr("class"));
     }
+
+    @Test public void classes() {
+        Document doc = Jsoup.parse("<div><p class='mellow yellow'></p><p class='red green'></p>");
+
+        Elements els = doc.select("p");
+        assertTrue(els.hasClass("red"));
+        assertFalse(els.hasClass("blue"));
+        els.addClass("blue");
+        els.removeClass("yellow");
+        els.toggleClass("mellow");
+
+        assertEquals("blue", els.get(0).className());
+        assertEquals("red green blue mellow", els.get(1).className());
+    }
     
     @Test public void text() {
         String h = "<div><p>Hello<p>there<p>world</div>";
         Document doc = Jsoup.parse(h);
         assertEquals("Hello there world", doc.select("div > *").text());
+    }
+
+    @Test public void hasText() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div><p></p></div>");
+        Elements divs = doc.select("div");
+        assertTrue(divs.hasText());
+        assertFalse(doc.select("div + div").hasText());
     }
 
     @Test public void wrap() {

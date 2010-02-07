@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang.StringUtils;
 
 /**
  A text node.
@@ -34,12 +35,22 @@ public class TextNode extends Node {
         return attributes.get(TEXT_KEY);
     }
 
+    /**
+     Test if this text node is blank -- that is, empty or only whitespace (including newlines).
+     @return true if this document is empty or only whitespace, false if it contains any text content.
+     */
+    public boolean isBlank() {
+        return StringUtils.isBlank(normaliseWhitespace(getWholeText()));
+    }
+
     void outerHtml(StringBuilder accum) {
         String html = StringEscapeUtils.escapeHtml(getWholeText());
         if (parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
             html = normaliseWhitespace(html);
         }
 
+        if (!isBlank() && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock()  && siblingIndex() == 0)
+            indent(accum);
         accum.append(html);
     }
 

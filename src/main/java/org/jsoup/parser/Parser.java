@@ -78,7 +78,7 @@ public class Parser {
                 parseTextNode();
             }
         }
-        return doc;
+        return doc.normalise();
     }
 
     private void parseComment() {

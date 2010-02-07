@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -222,6 +223,13 @@ public abstract class Node {
         childNodes.add(in);
         in.parentNode = this;
     }
+
+    protected int nodeDepth() {
+        if (parentNode == null)
+            return 0;
+        else
+            return parentNode.nodeDepth() + 1;
+    }
     
     /**
      Retrieves this node's sibling nodes. Effectively, {@link #childNodes()  node.parent.childNodes()}.
@@ -259,6 +267,16 @@ public abstract class Node {
             return null;
     }
 
+    /**
+     * Get the list index of this node in its node sibling list. I.e. if this is the first node
+     * sibling, returns 0.
+     * @return position in node sibling list
+     * @see org.jsoup.nodes.Element#elementSiblingIndex()
+     */
+    public Integer siblingIndex() {
+        return indexInList(this, parent().childNodes);
+    }
+
     protected static <N extends Node> Integer indexInList(N search, List<N> nodes) {
         Validate.notNull(search);
         Validate.notNull(nodes);
@@ -289,6 +307,10 @@ public abstract class Node {
 
     public String toString() {
         return outerHtml();
+    }
+
+    protected void indent(StringBuilder accum) {
+        accum.append("\n").append(StringUtils.leftPad("", nodeDepth() -1 * 2));
     }
 
     @Override

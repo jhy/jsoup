@@ -208,13 +208,13 @@ public class Tag {
 
         // head
         // all ancestors set to (head, body): so implicitly create head, but allow in body
-        createInline("SCRIPT").setAncestor("HEAD", "BODY").setContainDataOnly();
-        createInline("NOSCRIPT").setAncestor("HEAD", "BODY");
-        createInline("STYLE").setAncestor("HEAD", "BODY").setContainDataOnly();
-        createInline("META").setAncestor("HEAD", "BODY").setEmpty();
+        createBlock("SCRIPT").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createBlock("NOSCRIPT").setAncestor("HEAD", "BODY");
+        createBlock("STYLE").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createBlock("META").setAncestor("HEAD", "BODY").setEmpty();
         createBlock("LINK").setAncestor("HEAD", "BODY").setEmpty(); // only within head
         createInline("OBJECT").setAncestor("HEAD", "BODY"); // flow (block/inline) or param
-        createInline("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createBlock("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
         createInline("BASE").setAncestor("HEAD", "BODY").setEmpty();
 
         createBlock("FRAME").setAncestor("FRAMESET").setEmpty();

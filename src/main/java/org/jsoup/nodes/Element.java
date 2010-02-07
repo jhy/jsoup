@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang.StringUtils;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -572,6 +573,25 @@ public class Element extends Node {
     }
 
     /**
+     Test if this element has any text content (that is not just whitespace).
+     @return true if element has non-blank text content.
+     */
+    public boolean hasText() {
+        for (Node child: childNodes) {
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                if (!textNode.isBlank())
+                    return true;
+            } else if (child instanceof Element) {
+                Element el = (Element) child;
+                if (el.hasText())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
      * @return the data, or empty string if none
      */
@@ -602,15 +622,27 @@ public class Element extends Node {
 
     /**
      * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
-     * returns a set of two elements {@code "header", "gray"}.
+     * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
+     * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
         if (classNames == null) {
             String[] names = className().split("\\s+");
-            classNames = new HashSet<String>(Arrays.asList(names));
+            classNames = new LinkedHashSet<String>(Arrays.asList(names));
         }
         return classNames;
+    }
+
+    /**
+     Set the element's {@code class} attribute to the supplied class names.
+     @param classNames set of classes
+     @return this element, for chaining
+     */
+    public Element classNames(Set<String> classNames) {
+        Validate.notNull(classNames);
+        attributes.put("class", StringUtils.join(classNames, " "));
+        return this;
     }
 
     /**
@@ -622,8 +654,57 @@ public class Element extends Node {
         return classNames().contains(className);
     }
 
+    /**
+     Add a class name to this element's {@code class} attribute.
+     @param className class name to add
+     @return this element
+     */
+    public Element addClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        classes.add(className);
+        classNames(classes);
+
+        return this;
+    }
+
+    /**
+     Remove a class name from this element's {@code class} attribute.
+     @param className class name to remove
+     @return this element
+     */
+    public Element removeClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        classes.remove(className);
+        classNames(classes);
+
+        return this;
+    }
+
+    /**
+     Toggle a class name on this element's {@code class} attribute: if present, remove it; otherwise add it.
+     @param className class name to toggle
+     @return this element
+     */
+    public Element toggleClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        if (classes.contains(className))
+            classes.remove(className);
+        else
+            classes.add(className);
+        classNames(classes);
+
+        return this;
+    }
+
     void outerHtml(StringBuilder accum) {
- 
+        if (isBlock() || (parent() != null && parent().tag().canContainBlock() && siblingIndex() == 0))
+            indent(accum);
         accum
                 .append("<")
                 .append(tagName())
@@ -633,12 +714,9 @@ public class Element extends Node {
             accum.append(" />");
         } else {
             accum.append(">");
-            if (tag.canContainBlock())
-                accum.append("\n");
             html(accum);
+            if (tag.canContainBlock()) indent(accum);
             accum.append("</").append(tagName()).append(">");
-            if (tag.isBlock())
-                accum.append("\n");
         }
     }
 
