@@ -41,12 +41,16 @@ public class Elements implements List<Element> {
     }
 
     /**
-     Checks if the first matched value has this attribute set.
+     Checks if any of the matched elements have this attribute set.
      @param attributeKey attribute key
-     @return true if the first element has the attribute; false if it doesn't, or if no elements were matched.
+     @return true if any of the elements have the attribute; false if none do.
      */
     public boolean hasAttr(String attributeKey) {
-        return !contents.isEmpty() && first().hasAttr(attributeKey);
+        for (Element element : contents) {
+            if (element.hasAttr(attributeKey))
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -72,6 +76,55 @@ public class Elements implements List<Element> {
             element.removeAttr(attributeKey);
         }
         return this;
+    }
+
+    /**
+     Add the class name to every matched element's {@code class} attribute.
+     @param className class name to add
+     @return this
+     */
+    public Elements addClass(String className) {
+        for (Element element : contents) {
+            element.addClass(className);
+        }
+        return this;
+    }
+
+    /**
+     Remove the class name from every matched element's {@code class} attribute, if present.
+     @param className class name to remove
+     @return this
+     */
+    public Elements removeClass(String className) {
+        for (Element element : contents) {
+            element.removeClass(className);
+        }
+        return this;
+    }
+
+    /**
+     Toggle the class name on every matched element's {@code class} attribute.
+     @param className class name to add if missing, or remove if present, from every element.
+     @return this
+     */
+    public Elements toggleClass(String className) {
+        for (Element element : contents) {
+            element.toggleClass(className);
+        }
+        return this;
+    }
+
+    /**
+     Determine if any of the matched elements have this class name set in their {@code class} attribute.
+     @param className class name to check for
+     @return true if any do, false if none do
+     */
+    public boolean hasClass(String className) {
+        for (Element element : contents) {
+            if (element.hasClass(className))
+                return true;
+        }
+        return false;
     }
     
     /**

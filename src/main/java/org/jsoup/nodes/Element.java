@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
+import org.apache.commons.lang.StringUtils;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -602,15 +603,27 @@ public class Element extends Node {
 
     /**
      * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
-     * returns a set of two elements {@code "header", "gray"}.
+     * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
+     * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
         if (classNames == null) {
             String[] names = className().split("\\s+");
-            classNames = new HashSet<String>(Arrays.asList(names));
+            classNames = new LinkedHashSet<String>(Arrays.asList(names));
         }
         return classNames;
+    }
+
+    /**
+     Set the element's {@code class} attribute to the supplied class names.
+     @param classNames set of classes
+     @return this element, for chaining
+     */
+    public Element classNames(Set<String> classNames) {
+        Validate.notNull(classNames);
+        attributes.put("class", StringUtils.join(classNames, " "));
+        return this;
     }
 
     /**
@@ -620,6 +633,54 @@ public class Element extends Node {
      */
     public boolean hasClass(String className) {
         return classNames().contains(className);
+    }
+
+    /**
+     Add a class name to this element's {@code class} attribute.
+     @param className class name to add
+     @return this element
+     */
+    public Element addClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        classes.add(className);
+        classNames(classes);
+
+        return this;
+    }
+
+    /**
+     Remove a class name from this element's {@code class} attribute.
+     @param className class name to remove
+     @return this element
+     */
+    public Element removeClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        classes.remove(className);
+        classNames(classes);
+
+        return this;
+    }
+
+    /**
+     Toggle a class name on this element's {@code class} attribute: if present, remove it; otherwise add it.
+     @param className class name to toggle
+     @return this element
+     */
+    public Element toggleClass(String className) {
+        Validate.notNull(className);
+
+        Set<String> classes = classNames();
+        if (classes.contains(className))
+            classes.remove(className);
+        else
+            classes.add(className);
+        classNames(classes);
+
+        return this;
     }
 
     void outerHtml(StringBuilder accum) {
