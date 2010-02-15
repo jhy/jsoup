@@ -80,4 +80,10 @@ public class CleanerTest {
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<p>Test</p>", cleanHtml);
     }
+    
+    @Test public void testHandlesEmptyAttributes() {
+        String h = "<img alt=\"\" src= unknown=''>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basicWithImages());
+        assertEquals("<img alt=\"\" />", cleanHtml);
+    }
 }
