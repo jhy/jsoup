@@ -37,6 +37,19 @@ public class ElementsTest {
         assertEquals("classy", ps.last().attr("style"));
         assertEquals("bar", ps.last().attr("class"));
     }
+    
+    @Test public void hasAttr() {
+        Document doc = Jsoup.parse("<p title=foo><p title=bar><p class=foo><p class=bar>");
+        Elements ps = doc.select("p");
+        assertTrue(ps.hasAttr("class"));
+        assertFalse(ps.hasAttr("style"));
+    }
+    
+    @Test public void attr() {
+        Document doc = Jsoup.parse("<p title=foo><p title=bar><p class=foo><p class=bar>");
+        String classVal = doc.select("p").attr("class");
+        assertEquals("foo", classVal);
+    }
 
     @Test public void classes() {
         Document doc = Jsoup.parse("<div><p class='mellow yellow'></p><p class='red green'></p>");
