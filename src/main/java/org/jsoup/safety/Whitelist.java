@@ -383,7 +383,7 @@ public class Whitelist {
         private String value;
 
         TypedValue(String value) {
-            Validate.notEmpty(value);
+            Validate.notNull(value);
             this.value = value;
         }
 
