@@ -156,6 +156,77 @@ public class Elements implements List<Element> {
         }
         return false;
     }
+    
+    /**
+     * Get the combined inner HTML of all matched elements.
+     * @return string of all element's inner HTML.
+     * @see #text()
+     * @see #outerHtml()
+     */
+    public String html() {
+        StringBuilder sb = new StringBuilder();
+        for (Element element : contents) {
+            if (sb.length() != 0)
+                sb.append("\n");
+            sb.append(element.html());
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Get the combined inner HTML of all matched elements.
+     * @return string of all element's inner HTML.
+     * @see #text()
+     * @see #hmtl()
+     */
+    public String outerHtml() {
+        StringBuilder sb = new StringBuilder();
+        for (Element element : contents) {
+            if (sb.length() != 0)
+                sb.append("\n");
+            sb.append(element.outerHtml());
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Set each matched element's inner HTML.
+     * @param html HTML to parse and set into each matched element.
+     * @return this, for chaining
+     * @see Element#html(String)
+     */
+    public Elements html(String html) {
+        for (Element element : contents) {
+            element.html(html);
+        }
+        return this;
+    }
+    
+    /**
+     * Add the supplied HTML to the start of each matched element's inner HTML.
+     * @param html HTML to add inside each element, before the existing HTML
+     * @return this, for chaining
+     * @see Element#prepend(String)
+     */
+    public Elements prepend(String html) {
+        for (Element element : contents) {
+            element.prepend(html);
+        }
+        return this;
+    }
+    
+    /**
+     * Add the supplied HTML to the end of each matched element's inner HTML.
+     * @param html HTML to add inside each element, after the existing HTML
+     * @return this, for chaining
+     * @see Element#append(String)
+     */
+    public Elements append(String html) {
+        for (Element element : contents) {
+            element.append(html);
+        }
+        return this;
+    }
 
     /**
      Wrap the supplied HTML around each matched elements. For example, with HTML
