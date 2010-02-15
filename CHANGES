@@ -1,5 +1,16 @@
 jsoup changelog
 
+*** Release 0.2.3 (pending)
+ * New features: supports Elements#html(), html(String),
+    prepend(String), append(String); bulk methods for corresponding
+    methods in Element.
+ 
+ * Improved Elements.attr(String) to find first matching element
+    with attribute.
+
+ * Fixed assertion error when cleaning HTML with empty attribute
+ 	<http://github.com/jhy/jsoup/issues/issue/7>
+
 *** Release 0.2.2 (2010-Feb-07)
  * jsoup packages are now available in the Maven central repository.
  
