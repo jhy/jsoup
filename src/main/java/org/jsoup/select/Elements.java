@@ -30,14 +30,18 @@ public class Elements implements List<Element> {
     
     // attribute methods
     /**
-     Get the attribute value of the first matched element.
+     Get an attribute value from the first matched element that has the attribute.
      @param attributeKey The attribute key.
-     @return The attribute value from the first matched element. If no elements were matched (isEmpty() == true),
-     or if the first element does not have the attribute, returns empty string.
+     @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
+     or if the no elements have the attribute, returns empty string.
      @see #hasAttr(String)
      */
     public String attr(String attributeKey) {
-        return !contents.isEmpty() ? first().attr(attributeKey) : "";
+        for (Element element : contents) {
+            if (element.hasAttr(attributeKey))
+                return element.attr(attributeKey);
+        }
+        return "";
     }
 
     /**
