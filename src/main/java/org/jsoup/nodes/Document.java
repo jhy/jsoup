@@ -96,7 +96,7 @@ public class Document extends Element {
         if (select("html").isEmpty())
             appendElement("html");
         if (head() == null)
-            select("html").first().appendElement("head");
+            select("html").first().prependElement("head");
         if (body() == null)
             select("html").first().appendElement("body");
 
