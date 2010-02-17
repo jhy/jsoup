@@ -249,9 +249,15 @@ public class ParserTest {
                 TextUtil.stripNewlines(doc.html())); // is spaced OK if not newline & space stripped
     }
 
-    @Test public void normlisesEmptyDocument() {
+    @Test public void normalisesEmptyDocument() {
         Document doc = Jsoup.parse("");
         assertEquals("<html><head></head><body></body></html>",TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void normalisesHeadlessBody() {
+        Document doc = Jsoup.parse("<html><body><span class=\"foo\">bar</span>");
+        assertEquals("<html><head></head><body><span class=\"foo\">bar</span></body></html>",
+                TextUtil.stripNewlines(doc.html()));
     }
 
 
