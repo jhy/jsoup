@@ -128,6 +128,9 @@ public class SelectorTest {
         Elements p = doc.select("p.first");
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
+
+        Elements empty = doc.select("p .first"); // self, not descend, should not match
+        assertEquals(0, empty.size());
     }
     
     @Test public void and() {
