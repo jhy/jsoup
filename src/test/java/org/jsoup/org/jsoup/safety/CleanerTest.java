@@ -88,9 +88,9 @@ public class CleanerTest {
     }
 
     @Test public void testIsValid() {
-        String ok = "<p>Test <b>OK</b></p>";
+        String ok = "<p>Test <b><a href='http://example.com/'>OK</a></b></p>";
         String nok1 = "<p><script></script>Not <b>OK</b></p>";
-        String nok2 = "<p align=right>Test <b>OK</b></p>";
+        String nok2 = "<p align=right>Test Not <b>OK</b></p>";
         assertTrue(Jsoup.isValid(ok, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok1, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok2, Whitelist.basic()));
