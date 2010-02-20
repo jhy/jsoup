@@ -4,6 +4,9 @@ jsoup changelog
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
     methods in Element.
+
+ * New feature: Jsoup.isValid(html, whitelist) method for user input
+    form validation.
  
  * Improved Elements.attr(String) to find first matching element
     with attribute.
