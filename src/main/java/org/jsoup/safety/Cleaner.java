@@ -45,19 +45,48 @@ public class Cleaner {
         return clean;
     }
 
-    private void copySafeNodes(Element source, Element dest) {
+    /**
+     Dertmines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
+     in the input HTML are allowed by the whitelist.
+     <p/>
+     This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
+     using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
+     to ensure enforced attributes are set correctly, and that the output is tidied.
+     @param dirtyDocument document to test
+     @return true if no tags or attributes need to be removed; false if they do
+     */
+    public boolean isValid(Document dirtyDocument) {
+        Validate.notNull(dirtyDocument);
+
+        Document clean = Document.createShell(dirtyDocument.baseUri());
+        int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());
+        return numDiscarded == 0;
+    }
+
+    /**
+     Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
+     @param source source of HTML
+     @param dest destination element to copy into
+     @return number of discarded elements (that were considered unsafe)
+     */
+    private int copySafeNodes(Element source, Element dest) {
         List<Node> sourceChildren = source.childNodes();
+        int numDiscarded = 0;
 
         for (Node sourceChild : sourceChildren) {
             if (sourceChild instanceof Element) {
                 Element sourceEl = (Element) sourceChild;
 
                 if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
-                    Element destChild = createSafeElement(sourceEl);
+                    ElementMeta meta = createSafeElement(sourceEl);
+                    Element destChild = meta.el;
                     dest.appendChild(destChild);
-                    copySafeNodes(sourceEl, destChild); // recurs
+
+                    numDiscarded += meta.numAttribsDiscarded;
+                    numDiscarded += copySafeNodes(sourceEl, destChild); // recurs
                 } else { // not a safe tag, but it may have children (els or text) that are, so recurse
-                    copySafeNodes(sourceEl, dest);
+                    numDiscarded++;
+                    numDiscarded += copySafeNodes(sourceEl, dest);
                 }
             } else if (sourceChild instanceof TextNode) {
                 TextNode sourceText = (TextNode) sourceChild;
@@ -65,21 +94,36 @@ public class Cleaner {
                 dest.appendChild(destText);
             } // else, we don't care about comments, xml proc instructions, etc
         }
+        return numDiscarded;
     }
 
-    private Element createSafeElement(Element sourceEl) {
+    private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
         Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
+        int numDiscarded = 0;
 
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
             if (whitelist.isSafeAttribute(sourceTag, sourceAttr))
                 destAttrs.put(sourceAttr);
+            else
+                numDiscarded++;
         }
         Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
-        return dest;
+
+        return new ElementMeta(dest, numDiscarded);
+    }
+
+    private static class ElementMeta {
+        Element el;
+        int numAttribsDiscarded;
+
+        ElementMeta(Element el, int numAttribsDiscarded) {
+            this.el = el;
+            this.numAttribsDiscarded = numAttribsDiscarded;
+        }
     }
 
 }
