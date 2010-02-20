@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 0.2.3 (pending)
+*** Release 0.2.3 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
     methods in Element.
@@ -12,7 +12,7 @@ jsoup changelog
     with attribute.
 
  * Fixed assertion error when cleaning HTML with empty attribute
- 	<http://github.com/jhy/jsoup/issues/issue/7>
+ 	  <http://github.com/jhy/jsoup/issues/issue/7>
 
 *** Release 0.2.2 (2010-Feb-07)
  * jsoup packages are now available in the Maven central repository.
