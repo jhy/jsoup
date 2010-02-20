@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 0.2.3 (2010-Feb-20)
+*** Release 0.3.1 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
     methods in Element.
