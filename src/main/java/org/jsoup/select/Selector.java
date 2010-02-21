@@ -153,7 +153,7 @@ public class Selector {
     }
 
     private Elements byId() {
-        String id = tq.consumeWord();
+        String id = tq.consumeCssIdentifier();
         Validate.notEmpty(id);
 
         Element found = root.getElementById(id);
@@ -164,7 +164,7 @@ public class Selector {
     }
 
     private Elements byClass() {
-        String className = tq.consumeClassName();
+        String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
 
         return root.getElementsByClass(className);

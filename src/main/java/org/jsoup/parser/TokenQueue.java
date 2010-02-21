@@ -213,10 +213,11 @@ public class TokenQueue {
     }
 
     /**
-     Consume a HTML class name off the queue (letter, digit, -, _)
-     @return classname
+     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
+     http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
+     @return identifier
      */
-    public String consumeClassName() {
+    public String consumeCssIdentifier() {
         StringBuilder accum = new StringBuilder();
         Character c = queue.peek();
         while (!queue.isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
