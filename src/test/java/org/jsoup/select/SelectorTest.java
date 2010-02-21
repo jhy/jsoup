@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -271,5 +272,22 @@ public class SelectorTest {
         Elements els = doc.select("#1 ~ #3");
         assertEquals(1, els.size());
         assertEquals("Three", els.first().text());
+    }
+    
+    // for http://github.com/jhy/jsoup/issues#issue/10
+    @Test public void testCharactersInIdAndClass() {
+        // using CSS spec for identifiers (id and class): a-z0-9, -, _. NOT . (which is OK in html spec, but not css)
+        String h = "<div><p id='a1-foo_bar'>One</p><p class='b2-qux_bif'>Two</p></div>";
+        Document doc = Jsoup.parse(h);
+        
+        Element el1 = doc.getElementById("a1-foo_bar");
+        assertEquals("One", el1.text());
+        Element el2 = doc.getElementsByClass("b2-qux_bif").first();
+        assertEquals("Two", el2.text());
+        
+        Element el3 = doc.select("#a1-foo_bar").first();
+        assertEquals("One", el3.text());
+        Element el4 = doc.select(".b2-qux_bif").first();
+        assertEquals("Two", el4.text());
     }
 }
