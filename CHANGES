@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 0.3.1 (pending)
+*** Release 0.3.2 (pending)
  * Allow _ and - in CSS ID selectors (per CSS spec).
  	<http://github.com/jhy/jsoup/issues/issue/10>
 
