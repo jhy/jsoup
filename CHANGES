@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 0.3.1 (pending)
+ * Allow _ and - in CSS ID selectors (per CSS spec).
+ 	<http://github.com/jhy/jsoup/issues/issue/10>
+
 *** Release 0.3.1 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
