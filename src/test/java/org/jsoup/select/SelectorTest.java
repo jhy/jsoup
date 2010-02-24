@@ -290,4 +290,21 @@ public class SelectorTest {
         Element el4 = doc.select(".b2-qux_bif").first();
         assertEquals("Two", el4.text());
     }
+    
+    // for http://github.com/jhy/jsoup/issues#issue/13
+    @Test public void testSupportsLeadingCombinator() {
+        String h = "<div><p><span>One</span><span>Two</span></p></div>";
+        Document doc = Jsoup.parse(h);
+        
+        Element p = doc.select("div > p").first();
+        Elements spans = p.select("> span");
+        assertEquals(2, spans.size());
+        assertEquals("One", spans.first().text());
+        
+        // make sure doesn't get nested
+        h = "<div id=1><div id=2><div id=3></div></div></div>";
+        doc = Jsoup.parse(h);
+        Element div = doc.select("div").select(" > div").first();
+        assertEquals("2", div.id());
+    }
 }

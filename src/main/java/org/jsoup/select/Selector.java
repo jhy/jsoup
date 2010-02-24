@@ -87,9 +87,16 @@ public class Selector {
 
     private Elements select() {
         tq.consumeWhitespace();
-        addElements(findElements()); // chomp first matcher off queue        
+        
+        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+            elements.add(root);
+            combinator(tq.consume().toString());
+        } else {
+            addElements(findElements()); // chomp first element matcher off queue 
+        }            
+               
         while (!tq.isEmpty()) {
-            // hierarchy and extras (todo: implement +, ~)
+            // hierarchy and extras
             boolean seenWhite = tq.consumeWhitespace();
             
             if (tq.matchChomp(",")) { // group or
