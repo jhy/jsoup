@@ -7,6 +7,9 @@ jsoup changelog
  * Relative links are resolved to absolute when cleaning, to normalize
     output and to verify safe protocol. (Were previously discarded.)
       <http://github.com/jhy/jsoup/issues/issue/12>
+ 
+ * Allow combinators at start of selector query, for query refinements
+ 	  <http://github.com/jhy/jsoup/issues/issue/13>
 
 *** Release 0.3.1 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
