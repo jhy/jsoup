@@ -17,6 +17,7 @@ public class Parser {
     private static final Tag headTag = Tag.valueOf("head");
     private static final Tag bodyTag = Tag.valueOf("body");
     private static final Tag titleTag = Tag.valueOf("title");
+    private static final Tag textareaTag = Tag.valueOf("textarea");
 
     private final LinkedList<Element> stack;
     private final TokenQueue tq;
@@ -145,7 +146,7 @@ public class Parser {
             tq.chompTo(">");
             
             Node dataNode;
-            if (tag.equals(titleTag)) // want to show as text, but not contain inside tags (so not a data tag?)
+            if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
                 dataNode = TextNode.createFromEncoded(data, baseUri);
             else
                 dataNode = new DataNode(data, baseUri); // data not encoded but raw (for " in script)

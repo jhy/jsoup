@@ -609,7 +609,7 @@ public class Element extends Node {
             }
         }
         return sb.toString();
-    }
+    }   
 
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
@@ -699,6 +699,30 @@ public class Element extends Node {
             classes.add(className);
         classNames(classes);
 
+        return this;
+    }
+    
+    /**
+     * Get the value of a form element (input, textarea, etc).
+     * @return the value of the form element, or empty string if not set.
+     */
+    public String val() {
+        if (tagName().equals("textarea"))
+            return text();
+        else
+            return attr("value");
+    }
+    
+    /**
+     * Set the value of a form element (input, textarea, etc).
+     * @param value value to set
+     * @return this element (for chaining)
+     */
+    public Element val(String value) {
+        if (tagName().equals("textarea"))
+            text(value);
+        else
+            attr("value", value);
         return this;
     }
 
