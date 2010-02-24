@@ -132,6 +132,29 @@ public class Elements implements List<Element> {
     }
     
     /**
+     * Get the form element's value of the first matched element.
+     * @return The form element's value, or empty if not set.
+     * @see Element#val()
+     */
+    public String val() {
+        if (size() > 0)
+            return first().val();
+        else
+            return "";
+    }
+    
+    /**
+     * Set the form element's value in each of the matched elements.
+     * @param value The value to set into each matched element
+     * @return this (for chaining)
+     */
+    public Elements val(String value) {
+        for (Element element : contents)
+            element.val(value);
+        return this;
+    }
+    
+    /**
      * Get the combined text of all the matched elements.
      * <p>
      * Note that it is possible to get repeats if the matched elements contain both parent elements and their own

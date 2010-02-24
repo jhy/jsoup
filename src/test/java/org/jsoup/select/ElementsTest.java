@@ -101,6 +101,19 @@ public class ElementsTest {
         ps.html("<span>Gone</span>");
         assertEquals("<p><span>Gone</span></p>", TextUtil.stripNewlines(ps.get(1).outerHtml()));
     }
+    
+    @Test public void val() {
+        Document doc = Jsoup.parse("<input value='one' /><textarea>two</textarea>");
+        Elements els = doc.select("form > *");
+        assertEquals(2, els.size());
+        assertEquals("one", els.val());
+        assertEquals("two", els.last().val());
+        
+        els.val("three");
+        assertEquals("three", els.first().val());
+        assertEquals("three", els.last().val());
+        assertEquals("<textarea>three</textarea>", els.last().outerHtml());
+    }
 
     @Test public void wrap() {
         String h = "<p><b>This</b> is <b>jsoup</b></p>";

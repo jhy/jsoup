@@ -11,6 +11,12 @@ jsoup changelog
  * Allow combinators at start of selector query, for query refinements
  	  <http://github.com/jhy/jsoup/issues/issue/13>
 
+ * Added Element#val() and #val(String) methods, for form values
+ 	  <http://github.com/jhy/jsoup/issues/issue/14>
+
+ * Changed textarea contents to parse as TextNodes, not DataNodes,
+    so contents visible to text() (and val(), as treated as form input)
+
 *** Release 0.3.1 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
