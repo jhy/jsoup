@@ -29,7 +29,7 @@ public class CleanerTest {
         String h = "<div><p><a href='javascript:sendAllMoney()'>Dodgy</a> <A HREF='HTTP://nice.com'>Nice</p><blockquote>Hello</blockquote>";
         String cleanHtml = Jsoup.clean(h, Whitelist.basic());
 
-        assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"HTTP://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>",
+        assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"http://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>",
                 TextUtil.stripNewlines(cleanHtml));
     }
     
@@ -94,5 +94,17 @@ public class CleanerTest {
         assertTrue(Jsoup.isValid(ok, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok1, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok2, Whitelist.basic()));
+    }
+    
+    @Test public void resolvesRelativeLinks() {
+        String html = "<a href='/foo'>Link</a>";
+        String clean = Jsoup.clean(html, "http://example.com/", Whitelist.basic());
+        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a>", clean);
+    }
+    
+    @Test public void dropsUnresolvableRelativeLinks() {
+        String html = "<a href='/foo'>Link</a>";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("<a rel=\"nofollow\">Link</a>", clean);
     }
 }

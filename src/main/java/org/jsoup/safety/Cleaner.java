@@ -105,7 +105,7 @@ public class Cleaner {
 
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
-            if (whitelist.isSafeAttribute(sourceTag, sourceAttr))
+            if (whitelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
             else
                 numDiscarded++;

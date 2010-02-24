@@ -8,6 +8,7 @@ package org.jsoup.safety;
 import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Element;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -293,29 +294,32 @@ public class Whitelist {
         return tagNames.contains(TagName.valueOf(tag));
     }
 
-    boolean isSafeAttribute(String tagName, Attribute attr) {
+    boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
-        AttributeValue value = AttributeValue.valueOf(attr.getValue());
 
         if (attributes.containsKey(tag)) {
             if (attributes.get(tag).contains(key)) {
                 if (protocols.containsKey(tag)) {
                     Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
                     // ok if not defined protocol; otherwise test
-                    return !attrProts.containsKey(key) || testValidProtocol(value, attrProts.get(key));
+                    return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
                 } else { // attribute found, no protocols defined, so OK
                     return true;
                 }
             }
         } else { // no attributes defined for tag, try :all tag
-            return !tagName.equals(":all") && isSafeAttribute(":all", attr);
+            return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
         }
         return false;
     }
 
-    private boolean testValidProtocol(AttributeValue value, Set<Protocol> protocols) {
-        // todo: use the absUrl method and test this is a good URL
+    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
+        // resolve relative urls to abs, and update the attribute so output html has abs.
+        // rels without a baseuri get removed
+        String value = el.absUrl(attr.getKey());
+        attr.setValue(value);
+        
         for (Protocol protocol : protocols) {
             String prot = protocol.toString() + ":";
             if (value.toString().toLowerCase().startsWith(prot)) {
