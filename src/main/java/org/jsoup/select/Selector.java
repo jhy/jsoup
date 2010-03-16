@@ -1,5 +1,6 @@
 package org.jsoup.select;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.TokenQueue;
@@ -35,6 +36,10 @@ import java.util.LinkedHashSet;
  <tr><td><code>E + F</code></td><td>an F element immediately preceded by sibling E</td><td><code>li + li</code>, <code>div.head + div</code></td></tr>
  <tr><td><code>E ~ F</code></td><td>an F element preceded by sibling E</td><td><code>h1 ~ p</code></td></tr>
  <tr><td><code>E, F, G</code></td><td>any matching element E, F, or G</td><td><code>a[href], div, h3</code></td></tr>
+ <tr><td><td colspan="3"><h3>Pseudo selectors</h3></td></tr>
+ <tr><td><code>E:lt(<em>n</em>)</code></td><td>an Element whose sibling index is less than <em>n</em></td><td><code>td:lt(3)</code> finds the first 2 cells of each row</td></tr>
+ <tr><td><code>E:gt(<em>n</em>)</code></td><td>an Element whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
+ <tr><td><code>E:eq(<em>n</em>)</code></td><td>an Element whose sibling index is equal to <em>n</em></td><td><code>td:eq(1)</code> finds the first cell of each row</td></tr>
  </table>
 
  @see Element#select(String)
@@ -146,6 +151,12 @@ public class Selector {
             return byAttribute();
         } else if (tq.matchChomp("*")) {
             return allElements();
+        } else if (tq.matchChomp(":lt(")) {
+            return indexLessThan();
+        } else if (tq.matchChomp(":gt(")) {
+            return indexGreaterThan();
+        } else if (tq.matchChomp(":eq(")) {
+            return indexEquals();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query " + query);
         }
@@ -213,6 +224,27 @@ public class Selector {
 
     private Elements allElements() {
         return root.getAllElements();
+    }
+    
+    // pseudo selectors :lt, :gt, :eq
+    private Elements indexLessThan() {
+        return root.getElementsByIndexLessThan(consumeIndex());
+    }
+    
+    private Elements indexGreaterThan() {
+        return root.getElementsByIndexGreaterThan(consumeIndex());
+    }
+    
+    private Elements indexEquals() {
+        return root.getElementsByIndexEquals(consumeIndex());
+    }
+
+    private int consumeIndex() {
+        String indexS = tq.chompTo(")").trim();
+        Validate.isTrue(StringUtils.isNumeric(indexS), "Index must be numeric");
+        int index = Integer.parseInt(indexS);
+
+        return index;
     }
 
     // direct child descendants

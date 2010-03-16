@@ -129,6 +129,44 @@ public abstract class Evaluator {
             return true;
         }
     }
+    
+    static final class IndexLessThan extends IndexEvaluator {
+        IndexLessThan(int index) {
+            super(index);
+        }
+
+        public boolean matches(Element element) {
+            return element.elementSiblingIndex() < index;
+        }
+    }
+    
+    static final class IndexGreaterThan extends IndexEvaluator {
+        IndexGreaterThan(int index) {
+            super(index);
+        }
+
+        public boolean matches(Element element) {
+            return element.elementSiblingIndex() > index;
+        }
+    }
+    
+    static final class IndexEquals extends IndexEvaluator {
+        IndexEquals(int index) {
+            super(index);
+        }
+
+        public boolean matches(Element element) {
+            return element.elementSiblingIndex() == index;
+        }
+    }    
+    
+    abstract static class IndexEvaluator extends Evaluator {
+        protected int index;
+        
+        IndexEvaluator(int index) {
+            this.index = index;
+        }
+    }
 
 
 }

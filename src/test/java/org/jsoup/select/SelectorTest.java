@@ -307,4 +307,48 @@ public class SelectorTest {
         Element div = doc.select("div").select(" > div").first();
         assertEquals("2", div.id());
     }
+    
+    @Test public void testPseudoLessThan() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</>p></div><div><p>Four</p>");
+        Elements ps = doc.select("div p:lt(2)");
+        assertEquals(3, ps.size());
+        assertEquals("One", ps.get(0).text());
+        assertEquals("Two", ps.get(1).text());
+        assertEquals("Four", ps.get(2).text());
+    }
+    
+    @Test public void testPseudoGreaterThan() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</p></div><div><p>Four</p>");
+        Elements ps = doc.select("div p:gt(0)");
+        assertEquals(2, ps.size());
+        assertEquals("Two", ps.get(0).text());
+        assertEquals("Three", ps.get(1).text());
+    }
+    
+    @Test public void testPseudoEquals() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</>p></div><div><p>Four</p>");
+        Elements ps = doc.select("div p:eq(0)");
+        assertEquals(2, ps.size());
+        assertEquals("One", ps.get(0).text());
+        assertEquals("Four", ps.get(1).text());
+        
+        Elements ps2 = doc.select("div:eq(0) p:eq(0)");
+        assertEquals(1, ps2.size());
+        assertEquals("One", ps2.get(0).text());
+        assertEquals("p", ps2.get(0).tagName());
+    }
+    
+    @Test public void testPseudoBetween() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</>p></div><div><p>Four</p>");
+        Elements ps = doc.select("div p:gt(0):lt(2)");
+        assertEquals(1, ps.size());
+        assertEquals("Two", ps.get(0).text());
+    }
+    
+    @Test public void testPseudoCombined() {
+        Document doc = Jsoup.parse("<div class='foo'><p>One</p><p>Two</p></div><div><p>Three</p><p>Four</p></div>");
+        Elements ps = doc.select("div.foo p:gt(0)");
+        assertEquals(1, ps.size());
+        assertEquals("Two", ps.get(0).text());
+    }
 }
