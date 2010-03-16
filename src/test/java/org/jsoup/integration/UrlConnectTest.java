@@ -19,6 +19,18 @@ public class UrlConnectTest {
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("Google"));
     } 
+    
+    // @Test // uncomment to enable
+    public void exceptOnUnknownContentType() {
+        String url = "http://jsoup.org/rez/osi_logo.png"; // not text/* but image/png, should throw
+        boolean threw = false;
+        try {
+            Document doc = Jsoup.parse(new URL(url), 3000);
+        } catch (IOException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+    }
 
     @Test public void noop() {}
 }
