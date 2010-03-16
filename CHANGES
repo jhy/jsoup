@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 0.3.2 (pending)
+ * Added Node#remove and Node#replaceWith
+ 	<http://github.com/jhy/jsoup/issues/issue/19>
+
  * Allow _ and - in CSS ID selectors (per CSS spec).
  	<http://github.com/jhy/jsoup/issues/issue/10>
  

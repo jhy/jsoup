@@ -37,4 +37,22 @@ public class NodeTest {
         assertEquals("http://jsoup.org/foo", a.attr("abs:href"));
         assertFalse(a.hasAttr("abs:href")); // only realised on the get method, not in has or iterator
     }
+    
+    @Test public void testRemove() {
+        Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
+        Element p = doc.select("p").first();
+        p.childNode(0).remove();
+        
+        assertEquals("two three", p.text());
+        assertEquals("<span>two</span> three", p.html());
+    }
+    
+    @Test public void testReplace() {
+        Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
+        Element p = doc.select("p").first();
+        Element insert = doc.createElement("em").text("foo");
+        p.childNode(1).replaceWith(insert);
+        
+        assertEquals("One <em>foo</em> three", p.html());
+    }
 }
