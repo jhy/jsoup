@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 0.3.2 (pending)
+ * Added TextNode#text and TextNode#text(String)
+ 	<http://github.com/jhy/jsoup/issues/issue/18>
+
  * Throw exception if trying to parse non-text content
  	<http://github.com/jhy/jsoup/issues/issue/17>
 

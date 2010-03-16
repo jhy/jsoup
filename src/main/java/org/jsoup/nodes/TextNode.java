@@ -26,6 +26,25 @@ public class TextNode extends Node {
     public String nodeName() {
         return "#text";
     }
+    
+    /**
+     * Get the text content of this text node.
+     * @return Unencoded, normalised text.
+     * @see TextNode#getWholeText()
+     */
+    public String text() {
+        return outerHtml();
+    }
+    
+    /**
+     * Set the text content of this text node.
+     * @param text unencoded text
+     * @return this, for chaining
+     */
+    public TextNode text(String text) {
+        attributes.put(TEXT_KEY, text);
+        return this;
+    }
 
     /**
      Get the (unencoded) text of this text node, including any newlines and spaces present in the original.
