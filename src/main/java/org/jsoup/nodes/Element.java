@@ -381,6 +381,7 @@ public class Element extends Node {
      * @return position in element sibling list
      */
     public Integer elementSiblingIndex() {
+       if (parent() == null) return 0;
        return indexInList(this, parent().children()); 
     }
 
@@ -509,6 +510,33 @@ public class Element extends Node {
      */
     public Elements getElementsByAttributeValueContaining(String key, String match) {
         return Collector.collect(new Evaluator.AttributeWithValueContaining(key, match), this);
+    }
+    
+    /**
+     * Find elements whose sibling index is less than the supplied index.
+     * @param index 0-based index
+     * @return elements less than index
+     */
+    public Elements getElementsByIndexLessThan(int index) {
+        return Collector.collect(new Evaluator.IndexLessThan(index), this);
+    }
+    
+    /**
+     * Find elements whose sibling index is greater than the supplied index.
+     * @param index 0-based index
+     * @return elements greater than index
+     */
+    public Elements getElementsByIndexGreaterThan(int index) {
+        return Collector.collect(new Evaluator.IndexGreaterThan(index), this);
+    }
+    
+    /**
+     * Find elements whose sibling index is equal to the supplied index.
+     * @param index 0-based index
+     * @return elements equal to index
+     */
+    public Elements getElementsByIndexEquals(int index) {
+        return Collector.collect(new Evaluator.IndexEquals(index), this);
     }
     
     /**
