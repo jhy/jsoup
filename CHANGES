@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 0.3.2 (pending)
+ * Throw exception if trying to parse non-text content
+ 	<http://github.com/jhy/jsoup/issues/issue/17>
+
  * Added Node#remove and Node#replaceWith
  	<http://github.com/jhy/jsoup/issues/issue/19>
 

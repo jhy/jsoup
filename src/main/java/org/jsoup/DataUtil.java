@@ -46,6 +46,12 @@ class DataUtil {
         int res = conn.getResponseCode();
         if (res != HttpURLConnection.HTTP_OK)
             throw new IOException(res + " error loading URL " + url.toString());
+        
+        String contentType = conn.getContentType();
+        if (contentType == null || !contentType.startsWith("text/"))
+            throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*", 
+                    contentType, url.toString()));
+        
         InputStream inStream = new BufferedInputStream(conn.getInputStream());
         String charSet = "UTF-8"; // todo[must]: get from content-encoding, or http-equiv (two-pass?)
 
