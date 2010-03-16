@@ -189,6 +189,24 @@ public abstract class Node {
     public Node parent() {
         return parentNode;
     }
+    
+    /**
+     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
+     */
+    public void remove() {
+        Validate.notNull(parentNode);
+        parentNode.removeChild(this);
+    }
+    
+    /**
+     * Replace this node in the DOM with the supplied node.
+     * @param in the node that will will replace the existing node.
+     */
+    public void replaceWith(Node in) {
+        Validate.notNull(in);
+        Validate.notNull(parentNode);
+        parentNode.replaceChild(this, in);
+    }
 
     protected void setParentNode(Node parentNode) {
         if (this.parentNode != null)
