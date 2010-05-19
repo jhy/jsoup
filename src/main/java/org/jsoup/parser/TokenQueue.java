@@ -193,7 +193,7 @@ public class TokenQueue {
      */
     public boolean consumeWhitespace() {
         boolean seen = false;
-        while (!queue.isEmpty() && Character.isWhitespace(queue.peekFirst())) {
+        while (!queue.isEmpty() && Character.isWhitespace(queue.peek())) {
             consume();
             seen = true;
         }
@@ -206,7 +206,7 @@ public class TokenQueue {
      */
     public String consumeWord() {
         StringBuilder wordAccum = new StringBuilder();
-        while (!queue.isEmpty() && Character.isLetterOrDigit(queue.peekFirst())) {
+        while (!queue.isEmpty() && Character.isLetterOrDigit(queue.peek())) {
             wordAccum.append(queue.removeFirst());
         }
         return wordAccum.toString();
