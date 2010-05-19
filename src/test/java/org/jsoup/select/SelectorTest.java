@@ -103,7 +103,7 @@ public class SelectorTest {
         assertEquals("div", els.get(2).tagName());
         assertEquals("bar", els.get(2).attr("title"));
         assertEquals("div", els.get(3).tagName());
-        assertTrue(els.get(3).attr("title").isEmpty()); // missing attributes come back as empty string
+        assertTrue(els.get(3).attr("title").length() == 0); // missing attributes come back as empty string
         assertFalse(els.get(3).hasAttr("title"));
         assertEquals("span", els.get(4).tagName());
     }
