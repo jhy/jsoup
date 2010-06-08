@@ -1,5 +1,7 @@
 .idea/
 jsoup.iml
+jsoup.ipr
+jsoup.iws
 target/
 .classpath
 .project
