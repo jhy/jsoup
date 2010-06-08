@@ -29,6 +29,8 @@ jsoup changelog
  * Changed textarea contents to parse as TextNodes, not DataNodes,
     so contents visible to text() (and val(), as treated as form input)
 
+ * Fixed support for Java 1.5
+
 *** Release 0.3.1 (2010-Feb-20)
  * New features: supports Elements#html(), html(String),
     prepend(String), append(String); bulk methods for corresponding
