@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 0.3.2 (pending)
+*** Release 1.1.1
  * Added selector support for :eq, :lt, and :gt
  	<http://github.com/jhy/jsoup/issues/issue/16>
 
