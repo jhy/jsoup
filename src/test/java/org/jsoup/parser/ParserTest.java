@@ -131,6 +131,12 @@ public class ParserTest {
         assertEquals("Hello There", doc.text());
         assertEquals("Nope", doc.data());
     }
+
+    @Test public void handlesTextAfterData() {
+        String h = "<html><body>pre <script>inner</script> aft</body></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head></head><body>pre <script>inner</script> aft</body></html>", TextUtil.stripNewlines(doc.html()));
+    }
     
     @Test public void handlesTextArea() {
         Document doc = Jsoup.parse("<textarea>Hello</textarea>");
