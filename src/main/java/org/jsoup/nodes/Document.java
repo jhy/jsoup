@@ -100,14 +100,16 @@ public class Document extends Element {
         if (body() == null)
             select("html").first().appendElement("body");
 
-        normalise(this);
-        normalise(select("html").first());
+        // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
+        // of. do in inverse order to maintain text order.
         normalise(head());
+        normalise(select("html").first());
+        normalise(this);        
 
         return this;
     }
 
-    // does not recurse. the result order isn't great here (not intuitive); they are in the body though.
+    // does not recurse.
     private void normalise(Element element) {
         List<Node> toMove = new ArrayList<Node>();
         for (Node node: element.childNodes) {
@@ -120,8 +122,8 @@ public class Document extends Element {
 
         for (Node node: toMove) {
             element.removeChild(node);
-            body().appendChild(new TextNode(" ", ""));
-            body().appendChild(node);
+            body().prependChild(node);
+            body().prependChild(new TextNode(" ", ""));
         }
     }
 

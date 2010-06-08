@@ -1,5 +1,10 @@
 jsoup changelog
 
+*** Release 1.1.2 (pending)
+ * Fix an issue where text order was incorrect when parsing pre-document
+    HTML.
+      <http://github.com/jhy/jsoup/issues/issue/23>
+
 *** Release 1.1.1
  * Added selector support for :eq, :lt, and :gt
  	<http://github.com/jhy/jsoup/issues/issue/16>
