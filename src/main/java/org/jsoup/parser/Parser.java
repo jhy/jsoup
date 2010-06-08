@@ -139,11 +139,13 @@ public class Parser {
         } else {
             tq.matchChomp(">");
         }
+        addChildToParent(child, isEmptyElement);
 
         // pc data only tags (textarea, script): chomp to end tag, add content as text node
         if (tag.isData()) {
             String data = tq.chompTo("</" + tagName);
             tq.chompTo(">");
+            popStackToClose(tag);
             
             Node dataNode;
             if (tag.equals(titleTag) || tag.equals(textareaTag)) // want to show as text, but not contain inside tags (so not a data tag?)
@@ -161,8 +163,6 @@ public class Parser {
                 doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
             }
         }
-
-        addChildToParent(child, isEmptyElement);
     }
 
     private Attribute parseAttribute() {

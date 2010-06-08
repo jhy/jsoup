@@ -1,7 +1,11 @@
 jsoup changelog
 
 *** Release 1.1.2 (pending)
- * Fix an issue where text order was incorrect when parsing pre-document
+ * Fixes an issue where text content after a script (or other data-node) was
+     incorrectly added to the data node.
+       <http://github.com/jhy/jsoup/issues/issue/22>
+
+ * Fixes an issue where text order was incorrect when parsing pre-document
     HTML.
       <http://github.com/jhy/jsoup/issues/issue/23>
 
