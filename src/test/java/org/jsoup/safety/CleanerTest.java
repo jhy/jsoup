@@ -1,4 +1,4 @@
-package org.jsoup.org.jsoup.safety;
+package org.jsoup.safety;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
