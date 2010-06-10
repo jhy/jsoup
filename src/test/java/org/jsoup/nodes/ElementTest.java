@@ -87,6 +87,18 @@ public class ElementTest {
         assertEquals("Hello", p.firstElementSibling().text());
         assertEquals("element", p.lastElementSibling().text());
     }
+
+    @Test public void testGetParents() {
+        Document doc = Jsoup.parse("<div><p>Hello <span>there</span></div>");
+        Element span = doc.select("span").first();
+        Elements parents = span.parents();
+
+        assertEquals(4, parents.size());
+        assertEquals("p", parents.get(0).tagName());
+        assertEquals("div", parents.get(1).tagName());
+        assertEquals("body", parents.get(2).tagName());
+        assertEquals("html", parents.get(3).tagName());
+    }
     
     @Test public void testElementSiblingIndex() {
         Document doc = Jsoup.parse("<div><p>One</p>...<p>Two</p>...<p>Three</p>");

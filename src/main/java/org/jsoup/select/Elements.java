@@ -301,6 +301,18 @@ public class Elements implements List<Element> {
         return !children.isEmpty();
     }
 
+    /**
+     * Get all of the parents and ancestor elements of the matched elements.
+     * @return
+     */
+    public Elements parents() {
+        HashSet<Element> combo = new LinkedHashSet<Element>();
+        for (Element e: contents) {
+            combo.addAll(e.parents());
+        }
+        return new Elements(combo);
+    }
+
     // list-like methods
     /**
      Get the first matched element.

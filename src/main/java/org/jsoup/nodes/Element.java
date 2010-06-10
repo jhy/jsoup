@@ -110,6 +110,24 @@ public class Element extends Node {
     }
 
     /**
+     * Get this element's parent and ancestors, up to the document root.
+     * @return this element's stack of parents, closest first.
+     */
+    public Elements parents() {
+        Elements parents = new Elements();
+        accumulateParents(this, parents);
+        return parents;
+    }
+
+    private static void accumulateParents(Element el, Elements parents) {
+        Element parent = el.parent();
+        if (parent != null && !parent.tagName().equals("#root")) {
+            parents.add(parent);
+            accumulateParents(parent, parents);
+        }
+    }
+
+    /**
      * Get a child element of this element, by its 0-based index number.
      * <p/>
      * Note that an element can have both mixed Nodes and Elements as children. This method inspects
