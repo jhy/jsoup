@@ -200,7 +200,7 @@ public class Elements implements List<Element> {
      * Get the combined inner HTML of all matched elements.
      * @return string of all element's inner HTML.
      * @see #text()
-     * @see #hmtl()
+     * @see #html()
      */
     public String outerHtml() {
         StringBuilder sb = new StringBuilder();
