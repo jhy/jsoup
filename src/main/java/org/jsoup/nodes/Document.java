@@ -120,10 +120,11 @@ public class Document extends Element {
             }
         }
 
-        for (Node node: toMove) {
+        for (int i = toMove.size()-1; i >= 0; i--) {
+            Node node = toMove.get(i);
             element.removeChild(node);
-            body().prependChild(node);
             body().prependChild(new TextNode(" ", ""));
+            body().prependChild(node);
         }
     }
 

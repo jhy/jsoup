@@ -1,6 +1,12 @@
 jsoup changelog
 
 *** Release 1.1.2 (pending)
+ * Added :has(selector) pseudo-selector
+     <http://github.com/jhy/jsoup/issues/issue/20>
+
+ * Added Element#parents and Elements#parents to retrieve an element's ancestor chain
+     <http://github.com/jhy/jsoup/issues/issue/20>
+
  * Fixes an issue where text content after a script (or other data-node) was
      incorrectly added to the data node.
        <http://github.com/jhy/jsoup/issues/issue/22>

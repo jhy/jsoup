@@ -135,4 +135,14 @@ public class ElementsTest {
         assertTrue(ps.is("[title=foo]"));
         assertFalse(ps.is("[title=bar]"));
     }
+
+    @Test public void parents() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><p>There</p>");
+        Elements parents = doc.select("p").parents();
+
+        assertEquals(3, parents.size());
+        assertEquals("div", parents.get(0).tagName());
+        assertEquals("body", parents.get(1).tagName());
+        assertEquals("html", parents.get(2).tagName());
+    }
 }

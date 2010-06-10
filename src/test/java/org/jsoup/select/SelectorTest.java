@@ -351,4 +351,23 @@ public class SelectorTest {
         assertEquals(1, ps.size());
         assertEquals("Two", ps.get(0).text());
     }
+
+    @Test public void testPseudoHas() {
+        Document doc = Jsoup.parse("<div id=0><p><span>Hello</span></p></div> <div id=1><span class=foo>There</span></div> <div id=2><p>Not</p></div>");
+
+        Elements divs1 = doc.select("div:has(span)");
+        assertEquals(2, divs1.size());
+        assertEquals("0", divs1.get(0).id());
+        assertEquals("1", divs1.get(1).id());
+
+        Elements divs2 = doc.select("div:has([class]");
+        assertEquals(1, divs2.size());
+        assertEquals("1", divs2.get(0).id());
+
+        Elements divs3 = doc.select("div:has(span, p)");
+        assertEquals(3, divs3.size());
+        assertEquals("0", divs3.get(0).id());
+        assertEquals("1", divs3.get(1).id());
+        assertEquals("2", divs3.get(2).id());
+    }
 }

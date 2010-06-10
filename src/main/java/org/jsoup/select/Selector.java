@@ -40,6 +40,7 @@ import java.util.LinkedHashSet;
  <tr><td><code>E:lt(<em>n</em>)</code></td><td>an Element whose sibling index is less than <em>n</em></td><td><code>td:lt(3)</code> finds the first 2 cells of each row</td></tr>
  <tr><td><code>E:gt(<em>n</em>)</code></td><td>an Element whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
  <tr><td><code>E:eq(<em>n</em>)</code></td><td>an Element whose sibling index is equal to <em>n</em></td><td><code>td:eq(1)</code> finds the first cell of each row</td></tr>
+ <tr><td><code>E:has(<em>selector</em>)</code></td><td>an Element that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
  </table>
 
  @see Element#select(String)
@@ -157,6 +158,8 @@ public class Selector {
             return indexGreaterThan();
         } else if (tq.matchChomp(":eq(")) {
             return indexEquals();
+        } else if (tq.matchChomp(":has(")) {
+            return has();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query " + query);
         }
@@ -242,9 +245,15 @@ public class Selector {
     private int consumeIndex() {
         String indexS = tq.chompTo(")").trim();
         Validate.isTrue(StringUtils.isNumeric(indexS), "Index must be numeric");
-        int index = Integer.parseInt(indexS);
+        return Integer.parseInt(indexS);
+    }
 
-        return index;
+    // pseudo selector :has(el)
+    private Elements has() {
+        String subQuery = tq.chompTo(")");
+        Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+
+        return filterForParentsOfDescendants(elements, select(subQuery, elements));
     }
 
     // direct child descendants
@@ -266,17 +275,27 @@ public class Selector {
     private static Elements filterForDescendants(Collection<Element> parents, Collection<Element> candidates) {
         Elements children = new Elements();
         CHILD: for (Element c : candidates) {
-            boolean found = false;
             for (Element p : parents) {
                 if (c.equals(p)) {
-                    found = true;
                     continue CHILD;
                 }
             }
-            if (!found)
-                children.add(c);
+            children.add(c);
         }
         return children;
+    }
+
+    // implements :has(el). Finds elements that contain the matched elements
+    private static Elements filterForParentsOfDescendants(Collection<Element> parents, Collection<Element> children) {
+        Elements filteredParents = new Elements();
+        for (Element p : parents) {
+            for (Element c : children) {
+                if (c.parents().contains(p)) {
+                    filteredParents.add(p);
+                }
+            }
+        }
+        return filteredParents;
     }
     
     // adjacent siblings
