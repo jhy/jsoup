@@ -267,8 +267,7 @@ public class Element extends Node {
     public Element append(String html) {
         Validate.notNull(html);
         
-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
-        // TODO: must parse without implicit elements, so you can e.g. add <td> to a <tr> (without creating a whole new table)
+        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
         for (Node node : fragment.childNodes()) {
             node.parentNode = null;
             appendChild(node);
@@ -285,8 +284,7 @@ public class Element extends Node {
     public Element prepend(String html) {
         Validate.notNull(html);
         
-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
-        // TODO: must parse without implicit elements, so you can e.g. add <td> to a <tr> (without creating a whole new table)
+        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
         List<Node> nodes = fragment.childNodes();
         for (int i = nodes.size() - 1; i >= 0; i--) {
             Node node = nodes.get(i);
@@ -313,7 +311,7 @@ public class Element extends Node {
     public Element wrap(String html) {
         Validate.notEmpty(html);
 
-        Element wrapBody = Parser.parseBodyFragment(html, baseUri).body();
+        Element wrapBody = Parser.parseBodyFragmentRelaxed(html, baseUri).body();
         Elements wrapChildren = wrapBody.children();
         Element wrap = wrapChildren.first();
         if (wrap == null) // nothing to wrap with; noop

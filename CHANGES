@@ -7,6 +7,12 @@ jsoup changelog
  * Added Element#parents and Elements#parents to retrieve an element's ancestor chain
      <http://github.com/jhy/jsoup/issues/issue/20>
 
+ * Fixes an issue where appending / prepending rows to a table (or  to similar implicit
+    element structures) would create a redundant wrapping elements
+       <http://github.com/jhy/jsoup/issues/issue/21>
+
+ * Improved implicit close tag heuristic detection when parsing malformed HTML
+
  * Fixes an issue where text content after a script (or other data-node) was
      incorrectly added to the data node.
        <http://github.com/jhy/jsoup/issues/issue/22>

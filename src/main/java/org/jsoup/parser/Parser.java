@@ -23,6 +23,7 @@ public class Parser {
     private final TokenQueue tq;
     private final Document doc;
     private String baseUri;
+    private boolean relaxed = false;
 
     private Parser(String html, String baseUri, boolean isBodyFragment) {
         Validate.notNull(html);
@@ -60,6 +61,19 @@ public class Parser {
      */
     public static Document parseBodyFragment(String bodyHtml, String baseUri) {
         Parser parser = new Parser(bodyHtml, baseUri, true);
+        return parser.parse();
+    }
+
+    /**
+     Parse a fragment of HTML into the {@code body} of a Document, with relaxed parsing enabled. Relaxed, in this
+     context, means that implicit tags are not automatically created when missing.
+     @param bodyHtml fragment of HTML
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return Document, with empty head, and HTML parsed into body
+     */
+    public static Document parseBodyFragmentRelaxed(String bodyHtml, String baseUri) {
+        Parser parser = new Parser(bodyHtml, baseUri, true);
+        parser.relaxed = true;
         return parser.parse();
     }
 
@@ -213,7 +227,7 @@ public class Parser {
         Tag childTag = child.tag();
         boolean validAncestor = stackHasValidParent(childTag);
 
-        if (!validAncestor) {
+        if (!validAncestor && !relaxed) {
             // create implicit parent around this child
             Tag parentTag = childTag.getImplicitParent();
             Element implicit = new Element(parentTag, baseUri);
@@ -241,11 +255,15 @@ public class Parser {
     private boolean stackHasValidParent(Tag childTag) {
         if (stack.size() == 1 && childTag.equals(htmlTag))
             return true; // root is valid for html node
-        
+
+        if (childTag.requiresSpecificParent())
+            return stack.getLast().tag().isValidParent(childTag);
+
+        // otherwise, look up the stack for valid ancestors
         for (int i = stack.size() -1; i >= 0; i--) {
             Element el = stack.get(i);
             Tag parent2 = el.tag();
-            if (parent2.isValidParent(childTag)) {
+            if (parent2.isValidAncestor(childTag)) {
                 return true;
             }
         }

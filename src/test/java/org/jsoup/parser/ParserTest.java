@@ -169,6 +169,11 @@ public class ParserTest {
         assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void handlesNestedImplicitTable() {
+        Document doc = Jsoup.parse("<table><td>1</td></tr> <td>2</td></tr> <td> <table><td>3</td> <td>4</td></table> <tr><td>5</table>");
+        assertEquals("<table><tr><td>1</td></tr> <tr><td>2</td></tr> <tr><td> <table><tr><td>3</td> <td>4</td></tr></table> </td></tr><tr><td>5</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void handlesBaseTags() {
         String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
         Document doc = Jsoup.parse(h, "http://foo/");
