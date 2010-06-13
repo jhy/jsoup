@@ -24,7 +24,8 @@ public class Tag {
     private boolean optionalClosing = false; // If tag is open, and another seen, close previous tag
     private boolean empty = false; // can hold nothing; e.g. img
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
-    private List<Tag> ancestors;
+    private List<Tag> ancestors; // elements must be a descendant of one of these ancestors
+    private Tag parent; // if not null, elements must be a direct child of parent
 
     private Tag(String tagName) {
         this.tagName = tagName.toLowerCase();
@@ -95,6 +96,10 @@ public class Tag {
         if (this.tagName.equals("dd") && child.tagName.equals("dt"))
             return false;
 
+        // don't allow children to contain their parent (directly)
+        if (this.requiresSpecificParent() && this.getImplicitParent().equals(child))
+            return false;
+        
         return true;
     }
 
@@ -150,7 +155,15 @@ public class Tag {
         return (!ancestors.isEmpty()) ? ancestors.get(0) : null;
     }
 
+    boolean requiresSpecificParent() {
+        return this.parent != null;
+    }
+
     boolean isValidParent(Tag child) {
+        return this.equals(child.parent);
+    }
+
+    boolean isValidAncestor(Tag child) {
         if (child.ancestors.isEmpty())
             return true; // HTML tag
 
@@ -217,8 +230,8 @@ public class Tag {
         createBlock("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
         createInline("BASE").setAncestor("HEAD", "BODY").setEmpty();
 
-        createBlock("FRAME").setAncestor("FRAMESET").setEmpty();
-        createBlock("NOFRAMES").setAncestor("FRAMESET").setContainDataOnly();
+        createBlock("FRAME").setParent("FRAMESET").setEmpty();
+        createBlock("NOFRAMES").setParent("FRAMESET").setContainDataOnly();
 
 
 
@@ -281,34 +294,34 @@ public class Tag {
         createInline("TEXTAREA").setAncestor("FORM").setContainDataOnly();
         createInline("LABEL").setAncestor("FORM").setOptionalClosing(); // not self
         createInline("BUTTON").setAncestor("FORM"); // bunch of excludes not defined
-        createInline("OPTGROUP").setAncestor("SELECT"); //  only contain option
-        createInline("OPTION").setAncestor("SELECT").setContainDataOnly();
+        createInline("OPTGROUP").setParent("SELECT"); //  only contain option
+        createInline("OPTION").setParent("SELECT").setContainDataOnly();
         createBlock("FIELDSET").setAncestor("FORM");
         createInline("LEGEND").setAncestor("FIELDSET");
 
         // other
         createInline("AREA").setEmpty(); // not an inline per-se
-        createInline("PARAM").setAncestor("OBJECT").setEmpty();
+        createInline("PARAM").setParent("OBJECT").setEmpty();
         createBlock("INS"); // only within body
         createBlock("DEL"); // only within body
 
         createBlock("DL");
-        createInline("DT").setAncestor("DL").setOptionalClosing(); // only within DL.
-        createInline("DD").setAncestor("DL").setOptionalClosing(); // only within DL.
+        createInline("DT").setParent("DL").setOptionalClosing(); // only within DL.
+        createInline("DD").setParent("DL").setOptionalClosing(); // only within DL.
 
         createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
 
         // tables
         createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
-        createBlock("CAPTION").setAncestor("TABLE");
-        createBlock("THEAD").setAncestor("TABLE").setOptionalClosing(); // just TR
-        createBlock("TFOOT").setAncestor("TABLE").setOptionalClosing(); // just TR
-        createBlock("TBODY").setAncestor("TABLE").setOptionalClosing(); // optional / implicit open too. just TR
-        createBlock("COLGROUP").setAncestor("TABLE").setOptionalClosing(); // just COL
-        createBlock("COL").setAncestor("COLGROUP").setEmpty();
-        createBlock("TR").setAncestor("TABLE").setOptionalClosing(); // just TH, TD
-        createBlock("TH").setAncestor("TR").setOptionalClosing();
-        createBlock("TD").setAncestor("TR").setOptionalClosing();
+        createBlock("CAPTION").setParent("TABLE");
+        createBlock("THEAD").setParent("TABLE").setOptionalClosing(); // just TR
+        createBlock("TFOOT").setParent("TABLE").setOptionalClosing(); // just TR
+        createBlock("TBODY").setParent("TABLE").setOptionalClosing(); // optional / implicit open too. just TR
+        createBlock("COLGROUP").setParent("TABLE").setOptionalClosing(); // just COL
+        createBlock("COL").setParent("COLGROUP").setEmpty();
+        createBlock("TR").setParent("TABLE").setOptionalClosing(); // just TH, TD
+        createBlock("TH").setParent("TR").setOptionalClosing();
+        createBlock("TD").setParent("TR").setOptionalClosing();
     }
 
     private static Tag createBlock(String tagName) {
@@ -369,6 +382,12 @@ public class Tag {
                 ancestors.add(Tag.valueOf(name));
             }
         }
+        return this;
+    }
+
+    private Tag setParent(String tagName) {
+        parent = Tag.valueOf(tagName);
+        setAncestor(tagName);
         return this;
     }
 }

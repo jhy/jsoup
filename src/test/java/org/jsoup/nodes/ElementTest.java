@@ -210,6 +210,22 @@ public class ElementTest {
         assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
                 TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test public void testAppendRowToTable() {
+        Document doc = Jsoup.parse("<table><tr><td>1</td></tr></table>");
+        Element table = doc.select("table").first();
+        table.append("<tr><td>2</td></tr>");
+
+        assertEquals("<table><tr><td>1</td></tr><tr><td>2</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+        @Test public void testPrependRowToTable() {
+        Document doc = Jsoup.parse("<table><tr><td>1</td></tr></table>");
+        Element table = doc.select("table").first();
+        table.prepend("<tr><td>2</td></tr>");
+
+        assertEquals("<table><tr><td>2</td></tr><tr><td>1</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
     
     @Test public void testPrependElement() {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
