@@ -283,6 +283,26 @@ public class ElementTest {
 
         assertEquals(ret, p);
     }
+    
+    @Test public void before() {
+        Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
+        Element p1 = doc.select("p").first();
+        p1.before("<div>one</div><div>two</div>");
+        assertEquals("<div><div>one</div><div>two</div><p>Hello</p><p>There</p></div>", TextUtil.stripNewlines(doc.body().html()));
+        
+        doc.select("p").last().before("<p>Three</p><!-- four -->");
+        assertEquals("<div><div>one</div><div>two</div><p>Hello</p><p>Three</p><!-- four --><p>There</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+    
+    @Test public void after() {
+        Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
+        Element p1 = doc.select("p").first();
+        p1.after("<div>one</div><div>two</div>");
+        assertEquals("<div><p>Hello</p><div>one</div><div>two</div><p>There</p></div>", TextUtil.stripNewlines(doc.body().html()));
+        
+        doc.select("p").last().after("<p>Three</p><!-- four -->");
+        assertEquals("<div><p>Hello</p><div>one</div><div>two</div><p>There</p><p>Three</p><!-- four --></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
 
     @Test public void testWrapWithRemainder() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");

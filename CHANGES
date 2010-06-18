@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.1.2 (pending)
+ * Added .before(html) and .after(html) methods to Element and Elements, to insert sibling HTML
+
  * Added :has(selector) pseudo-selector
      <http://github.com/jhy/jsoup/issues/issue/20>
 
