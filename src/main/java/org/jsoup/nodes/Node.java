@@ -181,6 +181,10 @@ public abstract class Node {
     public List<Node> childNodes() {
         return Collections.unmodifiableList(childNodes);
     }
+    
+    protected Node[] childNodesAsArray() {
+        return childNodes.toArray(new Node[childNodes().size()]);
+    }
 
     /**
      Gets this node's parent node.
@@ -210,7 +214,7 @@ public abstract class Node {
 
     protected void setParentNode(Node parentNode) {
         if (this.parentNode != null)
-            throw new NotImplementedException("Cannot (yet) move nodes in tree"); // TODO: remove from prev node children
+            this.parentNode.removeChild(this);
         this.parentNode = parentNode;
     }
 
@@ -233,13 +237,20 @@ public abstract class Node {
         out.parentNode = null;
     }
 
-    protected void addChild(Node in) {
-        Validate.notNull(in);
-        if (in.parentNode != null)
-            in.parentNode.removeChild(in);
-        
-        childNodes.add(in);
-        in.parentNode = this;
+    protected void addChildren(Node... children) {
+        addChildren(childNodes.size(), children);
+    }
+    
+    protected void addChildren(int index, Node... children) {
+        Validate.noNullElements(children);
+        for (int i = children.length - 1; i >= 0; i--) {
+            Node in = children[i];
+            if (in.parentNode != null)
+                in.parentNode.removeChild(in);
+            
+            childNodes.add(index, in);
+            in.setParentNode(this);
+        }
     }
 
     protected int nodeDepth() {

@@ -189,8 +189,7 @@ public class Element extends Node {
     public Element appendChild(Node child) {
         Validate.notNull(child);
         
-        child.setParentNode(this);
-        childNodes.add(child);
+        addChildren(child);
         return this;
     }
     
@@ -203,8 +202,7 @@ public class Element extends Node {
     public Element prependChild(Node child) {
         Validate.notNull(child);
         
-        child.setParentNode(this);
-        childNodes.add(0, child);
+        addChildren(0, child);
         return this;
     }
     
@@ -268,10 +266,7 @@ public class Element extends Node {
         Validate.notNull(html);
         
         Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        for (Node node : fragment.childNodes()) {
-            node.parentNode = null;
-            appendChild(node);
-        }
+        addChildren(fragment.childNodesAsArray());
         return this;
     }
     
@@ -285,15 +280,10 @@ public class Element extends Node {
         Validate.notNull(html);
         
         Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        List<Node> nodes = fragment.childNodes();
-        for (int i = nodes.size() - 1; i >= 0; i--) {
-            Node node = nodes.get(i);
-            node.parentNode = null;
-            prependChild(node);
-        }
+        addChildren(0, fragment.childNodesAsArray());
         return this;
     }
-    
+       
     /**
      * Remove all of the element's child nodes. Any attributes are left as-is.
      * @return this element
@@ -319,7 +309,7 @@ public class Element extends Node {
 
         Element deepest = getDeepChild(wrap);
         parentNode.replaceChild(this, wrap);
-        deepest.addChild(this);
+        deepest.addChildren(this);
 
         // remainder (unbalananced wrap, like <div></div><p></p> -- The <p> is remainder
         if (wrapChildren.size() > 1) {
