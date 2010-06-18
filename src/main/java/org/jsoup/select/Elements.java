@@ -250,13 +250,39 @@ public class Elements implements List<Element> {
         }
         return this;
     }
+    
+    /**
+     * Insert the supplied HTML before each matched element's outer HTML.
+     * @param html HTML to insert before each element
+     * @return this, for chaining
+     * @see Element#before(String)
+     */
+    public Elements before(String html) {
+        for (Element element : contents) {
+            element.before(html);
+        }
+        return this;
+    }
+    
+    /**
+     * Insert the supplied HTML after each matched element's outer HTML.
+     * @param html HTML to insert after each element
+     * @return this, for chaining
+     * @see Element#after(String)
+     */
+    public Elements after(String html) {
+        for (Element element : contents) {
+            element.after(html);
+        }
+        return this;
+    }
 
     /**
      Wrap the supplied HTML around each matched elements. For example, with HTML
      {@code <p><b>This</b> is <b>Jsoup</b></p>},
      <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
      becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
-     @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitralily deep.
+     @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
      @return this (for chaining)
      @see Element#wrap
      */

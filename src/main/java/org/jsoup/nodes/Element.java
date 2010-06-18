@@ -271,7 +271,7 @@ public class Element extends Node {
     }
     
     /**
-     * Add inner HTML to this element. The supplied HTML will be parsed, and each node prepended to the start of the children.
+     * Add inner HTML into this element. The supplied HTML will be parsed, and each node prepended to the start of the element's children.
      * @param html HTML to add inside this element, before the existing HTML
      * @return this element
      * @see #html(String)
@@ -282,6 +282,36 @@ public class Element extends Node {
         Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
         addChildren(0, fragment.childNodesAsArray());
         return this;
+    }
+    
+    /**
+     * Insert the specified HTML into the DOM before this element (i.e. as a preceeding sibling).
+     * @param html HTML to add before this element
+     * @return this element, for chaining
+     * @see #after(String)
+     */
+    public Element before(String html) {
+        addSiblingHtml(siblingIndex(), html);
+        return this;
+    }
+    
+    /**
+     * Insert the specified HTML into the DOM after this element (i.e. as a following sibling).
+     * @param html HTML to add after this element
+     * @return this element, for chaining
+     * @see #before(String)
+     */
+    public Element after(String html) {
+        addSiblingHtml(siblingIndex()+1, html);
+        return this;
+    }
+    
+    private void addSiblingHtml(int index, String html) {
+        Validate.notNull(html);
+        Validate.notNull(parentNode);
+        
+        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
+        parentNode.addChildren(index, fragment.childNodesAsArray());
     }
        
     /**
