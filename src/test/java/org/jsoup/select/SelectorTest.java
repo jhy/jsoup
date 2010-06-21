@@ -370,4 +370,20 @@ public class SelectorTest {
         assertEquals("1", divs3.get(1).id());
         assertEquals("2", divs3.get(2).id());
     }
+    
+    @Test public void testPseudoContains() {
+        Document doc = Jsoup.parse("<div><p>The Rain.</p> <p class=light>The <i>rain</i>.</p> <p>Rain, the.</p></div>");
+        
+        Elements ps1 = doc.select("p:contains(Rain)");
+        assertEquals(3, ps1.size());
+        
+        Elements ps2 = doc.select("p:contains(the rain)");
+        assertEquals(2, ps2.size());
+        assertEquals("The Rain.", ps2.first().html());
+        assertEquals("The <i>rain</i>.", ps2.last().html());
+        
+        Elements ps3 = doc.select("p:contains(the Rain):has(i)");
+        assertEquals(1, ps3.size());
+        assertEquals("light", ps3.first().className());
+    }
 }

@@ -41,6 +41,7 @@ import java.util.LinkedHashSet;
  <tr><td><code>E:gt(<em>n</em>)</code></td><td>an Element whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
  <tr><td><code>E:eq(<em>n</em>)</code></td><td>an Element whose sibling index is equal to <em>n</em></td><td><code>td:eq(1)</code> finds the first cell of each row</td></tr>
  <tr><td><code>E:has(<em>selector</em>)</code></td><td>an Element that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
+ <tr><td><code>E:contains(<em>text</em>)</code></td><td>an Element that contains the specified text. The search is case insensitive. The text may appear in the found Element, or any of its descendants.</td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".</td></tr>
  </table>
 
  @see Element#select(String)
@@ -160,6 +161,8 @@ public class Selector {
             return indexEquals();
         } else if (tq.matchChomp(":has(")) {
             return has();
+        } else if (tq.matchChomp(":contains(")) {
+            return contains();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query " + query);
         }
@@ -254,6 +257,14 @@ public class Selector {
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
 
         return filterForParentsOfDescendants(elements, select(subQuery, elements));
+    }
+    
+    // pseudo selector :contains(text)
+    private Elements contains() {
+        String searchText = tq.chompTo(")");
+        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+        
+        return root.getElementsContainingText(searchText);
     }
 
     // direct child descendants

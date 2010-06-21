@@ -167,6 +167,17 @@ public abstract class Evaluator {
             this.index = index;
         }
     }
+    
+    static final class ContainsText extends Evaluator {
+        private String searchText;
+        ContainsText(String searchText) {
+            this.searchText = searchText.toLowerCase();
+        }
+
+        public boolean matches(Element element) {
+            return (element.text().toLowerCase().contains(searchText));
+        }
+    }
 
 
 }
