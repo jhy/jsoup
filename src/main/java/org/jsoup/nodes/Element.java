@@ -576,6 +576,16 @@ public class Element extends Node {
     }
     
     /**
+     * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
+     * in the element, or in any of its descendants.
+     * @param searchText
+     * @return elements that contain the string, case insensitive.
+     */
+    public Elements getElementsContainingText(String searchText) {
+        return Collector.collect(new Evaluator.ContainsText(searchText), this);
+    }
+    
+    /**
      * Find all elements under this element (including self, and children of children).
      * 
      * @return all elements
