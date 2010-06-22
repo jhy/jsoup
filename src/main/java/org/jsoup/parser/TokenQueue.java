@@ -189,6 +189,32 @@ public class TokenQueue {
     }
 
     /**
+     * Pulls a balanced string off the queue. E.g. if queue is "(one (two) three) four", (,) will return "one (two) three",
+     * and leave " four" on the queue
+     * @param open opener
+     * @param close closer
+     * @return data matched from the queue
+     */
+    public String chompBalanced(Character open, Character close) {
+        StringBuilder accum = new StringBuilder();
+        int depth = 0;
+        int i = 0;
+        do {
+            if (queue.isEmpty()) break;
+            Character c = consume();
+            if (c.equals(open))
+                depth++;
+            else if (c.equals(close))
+                depth--;
+
+            if (depth > 0 && i > 0)
+                accum.append(c); // dont include the outer match pair in the return
+            i++;
+        } while (depth > 0);
+        return accum.toString();
+    }
+
+    /**
      * Pulls the next run of whitespace characters of the queue.
      */
     public boolean consumeWhitespace() {

@@ -159,12 +159,12 @@ public class Selector {
             return indexGreaterThan();
         } else if (tq.matchChomp(":eq(")) {
             return indexEquals();
-        } else if (tq.matchChomp(":has(")) {
+        } else if (tq.matches(":has(")) {
             return has();
         } else if (tq.matchChomp(":contains(")) {
             return contains();
         } else { // unhandled
-            throw new SelectorParseException("Could not parse query " + query);
+            throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
     }
     
@@ -224,7 +224,7 @@ public class Selector {
                 return root.getElementsByAttributeValueContaining(key, tq.chompTo("]"));
             
             else
-                throw new SelectorParseException("Could not parse attribute query " + query);
+                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, tq.remainder());
         }
     }
 
@@ -253,13 +253,15 @@ public class Selector {
 
     // pseudo selector :has(el)
     private Elements has() {
-        String subQuery = tq.chompTo(")");
+        tq.consume(":has");
+        String subQuery = tq.chompBalanced('(',')');
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
 
         return filterForParentsOfDescendants(elements, select(subQuery, elements));
     }
     
     // pseudo selector :contains(text)
+    // todo: allow escaped ) in there. probably do a balanced match, for convenience of caller
     private Elements contains() {
         String searchText = tq.chompTo(")");
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
@@ -359,8 +361,8 @@ public class Selector {
     }
 
     public static class SelectorParseException extends IllegalStateException {
-        public SelectorParseException(String s) {
-            super(s);
+        public SelectorParseException(String msg, Object... params) {
+            super(String.format(msg, params));
         }
     }
 }
