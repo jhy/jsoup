@@ -370,6 +370,13 @@ public class SelectorTest {
         assertEquals("1", divs3.get(1).id());
         assertEquals("2", divs3.get(2).id());
     }
+
+    @Test public void testNestedHas() {
+        Document doc = Jsoup.parse("<div><p><span>One</span></p></div> <div><p>Two</p></div>");
+        Elements divs = doc.select("div:has(p:has(span))");
+        assertEquals(1, divs.size());
+        assertEquals("One", divs.first().text());
+    }
     
     @Test public void testPseudoContains() {
         Document doc = Jsoup.parse("<div><p>The Rain.</p> <p class=light>The <i>rain</i>.</p> <p>Rain, the.</p></div>");

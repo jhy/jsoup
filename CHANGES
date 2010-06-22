@@ -1,5 +1,8 @@
 jsoup changelog
 
+*** Release 1.2.2 [pending]
+ * Upgraded the selector query parser to allow nested selectors like 'div:has(p:has(span))'
+
 *** Release 1.2.1 [2010-Jun-21]
  * Added .before(html) and .after(html) methods to Element and Elements, to insert sibling HTML
  
