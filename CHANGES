@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.1.2 (pending)
+*** Release 1.2.1 [2010-Jun-21]
  * Added .before(html) and .after(html) methods to Element and Elements, to insert sibling HTML
  
  * Added :contains(text) selector, to search for elements containing the specified text
