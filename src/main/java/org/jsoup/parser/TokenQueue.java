@@ -12,6 +12,7 @@ import java.util.List;
  */
 public class TokenQueue {
     private LinkedList<Character> queue;
+    private static final Character ESC = '\\'; // escape char for chomp balanced.
 
     /**
      Create a new TokenQueue.
@@ -190,7 +191,9 @@ public class TokenQueue {
 
     /**
      * Pulls a balanced string off the queue. E.g. if queue is "(one (two) three) four", (,) will return "one (two) three",
-     * and leave " four" on the queue
+     * and leave " four" on the queue. Unbalanced openers and closers can be escaped (with \). Those escapes will be left
+     * in the returned string, which is suitable for regexes (where we need to preserve the escape), but unsuitable for
+     * contains text strings; use unescape for that.
      * @param open opener
      * @param close closer
      * @return data matched from the queue
@@ -198,20 +201,43 @@ public class TokenQueue {
     public String chompBalanced(Character open, Character close) {
         StringBuilder accum = new StringBuilder();
         int depth = 0;
-        int i = 0;
+        Character last = null;
+
         do {
             if (queue.isEmpty()) break;
             Character c = consume();
-            if (c.equals(open))
-                depth++;
-            else if (c.equals(close))
-                depth--;
+            if (last == null || !last.equals(ESC)) {
+                if (c.equals(open))
+                    depth++;
+                else if (c.equals(close))
+                    depth--;
+            }
 
-            if (depth > 0 && i > 0)
-                accum.append(c); // dont include the outer match pair in the return
-            i++;
+            if (depth > 0 && last != null)
+                accum.append(c); // don't include the outer match pair in the return
+            last = c;
         } while (depth > 0);
         return accum.toString();
+    }
+    
+    /**
+     * Unescaped a \ escaped string.
+     * @param in backslash escaped string
+     * @return unescaped string
+     */
+    public static String unescape(String in) {
+        StringBuilder out = new StringBuilder();
+        Character last = null;
+        for (Character c : in.toCharArray()) {
+            if (c.equals(ESC)) {
+                if (last != null && last.equals(ESC))
+                    out.append(c);
+            }
+            else 
+                out.append(c);
+            last = c;
+        }
+        return out.toString();
     }
 
     /**
