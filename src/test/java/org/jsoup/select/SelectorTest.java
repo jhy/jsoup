@@ -393,4 +393,16 @@ public class SelectorTest {
         assertEquals(1, ps3.size());
         assertEquals("light", ps3.first().className());
     }
+    
+    @Test public void testPsuedoContainsWithParentheses() {
+        Document doc = Jsoup.parse("<div><p id=1>This (is good)</p><p id=2>This is bad)</p>");
+        
+        Elements ps1 = doc.select("p:contains(this (is good))");
+        assertEquals(1, ps1.size());
+        assertEquals("1", ps1.first().id());
+        
+        Elements ps2 = doc.select("p:contains(this is bad\\))");
+        assertEquals(1, ps2.size());
+        assertEquals("2", ps2.first().id());
+    }
 }

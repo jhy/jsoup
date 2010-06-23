@@ -161,7 +161,7 @@ public class Selector {
             return indexEquals();
         } else if (tq.matches(":has(")) {
             return has();
-        } else if (tq.matchChomp(":contains(")) {
+        } else if (tq.matches(":contains(")) {
             return contains();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
@@ -263,7 +263,8 @@ public class Selector {
     // pseudo selector :contains(text)
     // todo: allow escaped ) in there. probably do a balanced match, for convenience of caller
     private Elements contains() {
-        String searchText = tq.chompTo(")");
+        tq.consume(":contains");
+        String searchText = TokenQueue.unescape(tq.chompBalanced('(',')'));
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
         
         return root.getElementsContainingText(searchText);
