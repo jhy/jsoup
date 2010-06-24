@@ -1,5 +1,8 @@
 package org.jsoup.nodes;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang.Validate;
 
 
@@ -176,6 +179,18 @@ public abstract class Evaluator {
 
         public boolean matches(Element element) {
             return (element.text().toLowerCase().contains(searchText));
+        }
+    }
+    
+    static final class Matches extends Evaluator {
+        private Pattern pattern;
+        Matches(Pattern pattern) {
+            this.pattern = pattern;
+        }
+
+        public boolean matches(Element element) {
+            Matcher m = pattern.matcher(element.text());
+            return m.find();
         }
     }
 

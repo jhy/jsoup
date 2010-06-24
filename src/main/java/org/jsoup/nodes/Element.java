@@ -9,6 +9,8 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -583,6 +585,30 @@ public class Element extends Node {
      */
     public Elements getElementsContainingText(String searchText) {
         return Collector.collect(new Evaluator.ContainsText(searchText), this);
+    }
+    
+    /**
+     * Find elements whose text matches the supplied regular expression.
+     * @param pattern regular expression to match text against
+     * @return elements matching the supplied regular expression.
+     */
+    public Elements getElementsMatchingText(Pattern pattern) {
+        return Collector.collect(new Evaluator.Matches(pattern), this);
+    }
+    
+    /**
+     * Find elements whose text matches the supplied regular expression.
+     * @param regex regular expression to match text against
+     * @return elements matching the supplied regular expression.
+     */
+    public Elements getElementsMatchingText(String regex) {
+        Pattern pattern;
+        try {
+            pattern = Pattern.compile(regex);
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
+        }
+        return getElementsMatchingText(pattern);
     }
     
     /**
