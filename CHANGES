@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.2.2 [pending]
+ * Added support for :matches(regex) selector
+
  * Upgraded the selector query parser to allow nested selectors like 'div:has(p:has(span))'
 
 *** Release 1.2.1 [2010-Jun-21]
