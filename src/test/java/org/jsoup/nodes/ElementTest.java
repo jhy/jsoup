@@ -145,7 +145,7 @@ public class ElementTest {
         List<Element> none = doc.getElementsByAttributeValue("style", "none");
         assertEquals(0, none.size());
     }
-
+    
     @Test public void testClassDomMethods() {
         Document doc = Jsoup.parse("<div><span class='mellow yellow'>Hello <b>Yellow</b></span></div>");
         List<Element> els = doc.getElementsByAttribute("class");

@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
  <tr><td><code>E:eq(<em>n</em>)</code></td><td>an Element whose sibling index is equal to <em>n</em></td><td><code>td:eq(0)</code> finds the first cell of each row</td></tr>
  <tr><td><code>E:has(<em>selector</em>)</code></td><td>an Element that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
  <tr><td><code>E:contains(<em>text</em>)</code></td><td>an Element that contains the specified text. The search is case insensitive. The text may appear in the found Element, or any of its descendants.</td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".</td></tr>
+ <tr><td><code>E:matches(<em>regex</em>)</code></td><td>an Element whose text matches the specified regular expression. The text may appear in the found Element, or any of its descendants.</td><td><code>td:matches(\\d+)</code> finds table cells containing digits. <code>div:matches((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
  </table>
 
  @see Element#select(String)
@@ -163,6 +164,8 @@ public class Selector {
             return has();
         } else if (tq.matches(":contains(")) {
             return contains();
+        } else if (tq.matches(":matches(")) {
+            return matches();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
@@ -261,13 +264,21 @@ public class Selector {
     }
     
     // pseudo selector :contains(text)
-    // todo: allow escaped ) in there. probably do a balanced match, for convenience of caller
     private Elements contains() {
         tq.consume(":contains");
         String searchText = TokenQueue.unescape(tq.chompBalanced('(',')'));
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
         
         return root.getElementsContainingText(searchText);
+    }
+    
+    // :matches(regex)
+    private Elements matches() {
+        tq.consume(":matches");
+        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+        
+        return root.getElementsMatchingText(regex);
     }
 
     // direct child descendants

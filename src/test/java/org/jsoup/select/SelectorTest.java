@@ -405,4 +405,31 @@ public class SelectorTest {
         assertEquals(1, ps2.size());
         assertEquals("2", ps2.first().id());
     }
+    
+    @Test public void testMatches() {       
+        Document doc = Jsoup.parse("<p id=1>The <i>Rain</i></p> <p id=2>There are 99 bottles.</p> <p id=3>Harder (this)</p> <p id=4>Rain</p>");
+        
+        Elements p1 = doc.select("p:matches(The rain)"); // no match, case sensitive
+        assertEquals(0, p1.size());
+        
+        Elements p2 = doc.select("p:matches((?i)the rain)"); // case insense. should include root, html, body
+        assertEquals(1, p2.size());
+        assertEquals("1", p2.first().id());
+        
+        Elements p4 = doc.select("p:matches((?i)^rain$)"); // bounding
+        assertEquals(1, p4.size());
+        assertEquals("4", p4.first().id());
+        
+        Elements p5 = doc.select("p:matches(\\d+)");
+        assertEquals(1, p5.size());
+        assertEquals("2", p5.first().id());
+        
+        Elements p6 = doc.select("p:matches(\\w+\\s+\\(\\w+\\))"); // test bracket matching
+        assertEquals(1, p6.size());
+        assertEquals("3", p6.first().id());
+        
+        Elements p7 = doc.select("p:matches((?i)the):has(i)"); // multi
+        assertEquals(1, p7.size());
+        assertEquals("1", p7.first().id());
+    }
 }

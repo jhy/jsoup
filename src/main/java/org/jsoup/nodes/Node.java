@@ -1,6 +1,5 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.StringUtils;
 
