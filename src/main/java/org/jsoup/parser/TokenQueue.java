@@ -11,7 +11,8 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class TokenQueue {
-    private LinkedList<Character> queue;
+    private StringBuilder queue;
+    private int pos = 0;
     private static final Character ESC = '\\'; // escape char for chomp balanced.
 
     /**
@@ -21,11 +22,7 @@ public class TokenQueue {
     public TokenQueue(String data) {
         Validate.notNull(data);
 
-        queue = new LinkedList<Character>();
-        char[] chars = data.toCharArray();
-        for (char c : chars) {
-            queue.add(c);
-        }
+        queue = new StringBuilder(data);
     }
 
     /**
@@ -33,7 +30,11 @@ public class TokenQueue {
      * @return true if no data left in queue.
      */
     public boolean isEmpty() {
-        return queue.isEmpty();
+        return remainingLength() == 0;
+    }
+    
+    private int remainingLength() {
+        return queue.length() - pos;
     }
 
     /**
@@ -41,7 +42,7 @@ public class TokenQueue {
      * @return First character, or null if empty.
      */
     public Character peek() {
-        return queue.peek();
+        return isEmpty() ? null : queue.charAt(pos);
     }
 
     /**
@@ -49,7 +50,7 @@ public class TokenQueue {
      @param c character to add
      */
     public void addFirst(Character c) {
-        queue.addFirst(c);
+        queue.insert(pos, c);
     }
 
     /**
@@ -57,10 +58,7 @@ public class TokenQueue {
      @param seq string to add.
      */
     public void addFirst(String seq) {
-        char[] chars = seq.toCharArray();
-        for (int i = chars.length - 1; i >= 0; i--) {
-            addFirst(chars[i]);
-        }
+        queue.insert(pos, seq);
     }
 
     /**
@@ -70,17 +68,10 @@ public class TokenQueue {
      */
     public boolean matches(String seq) {
         int len = seq.length();
-        if (len > queue.size())
+        if (len > remainingLength())
             return false;
-        List<Character> chars = queue.subList(0, len);
-        char[] seqChars = seq.toCharArray();
-        for (int i = 0; i < len; i++) {
-            Character found = Character.toLowerCase(chars.get(i));
-            Character check = Character.toLowerCase(seqChars[i]);
-            if (!found.equals(check))
-                return false;
-        }
-        return true;
+        String check = queue.substring(pos, pos+len);
+        return seq.equalsIgnoreCase(check);
     }
 
     /**
@@ -116,7 +107,7 @@ public class TokenQueue {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return !queue.isEmpty() && Character.isWhitespace(queue.peek());
+        return !isEmpty() && Character.isWhitespace(peek());
     }
 
     /**
@@ -124,7 +115,7 @@ public class TokenQueue {
      @return if matches a word character
      */
     public boolean matchesWord() {
-        return !queue.isEmpty() && Character.isLetterOrDigit(queue.peek());
+        return !isEmpty() && Character.isLetterOrDigit(peek());
     }
 
     /**
@@ -132,7 +123,9 @@ public class TokenQueue {
      * @return first character on queue.
      */
     public Character consume() {
-        return queue.removeFirst();
+        Character c= queue.charAt(pos);
+        pos++;
+        return c;
     }
 
     /**
@@ -146,11 +139,10 @@ public class TokenQueue {
         if (!matches(seq))
             throw new IllegalStateException("Queue did not match expected sequence");
         int len = seq.length();
-        if (len > queue.size())
+        if (len > remainingLength())
             throw new IllegalStateException("Queue not long enough to consume sequence");
-        for (int i = 0; i < len; i++) {
-            consume();
-        }
+        
+        pos += len;
     }
 
     /**
@@ -169,7 +161,7 @@ public class TokenQueue {
      */
     public String consumeToAny(String... seq) {
         StringBuilder accum = new StringBuilder();
-        while (!queue.isEmpty() && !matchesAny(seq))
+        while (!isEmpty() && !matchesAny(seq))
             accum.append(consume());
 
         return accum.toString();
@@ -204,7 +196,7 @@ public class TokenQueue {
         Character last = null;
 
         do {
-            if (queue.isEmpty()) break;
+            if (isEmpty()) break;
             Character c = consume();
             if (last == null || !last.equals(ESC)) {
                 if (c.equals(open))
@@ -245,7 +237,7 @@ public class TokenQueue {
      */
     public boolean consumeWhitespace() {
         boolean seen = false;
-        while (!queue.isEmpty() && Character.isWhitespace(queue.peek())) {
+        while (matchesWhitespace()) {
             consume();
             seen = true;
         }
@@ -258,8 +250,8 @@ public class TokenQueue {
      */
     public String consumeWord() {
         StringBuilder wordAccum = new StringBuilder();
-        while (!queue.isEmpty() && Character.isLetterOrDigit(queue.peek())) {
-            wordAccum.append(queue.removeFirst());
+        while (matchesWord()) {
+            wordAccum.append(consume());
         }
         return wordAccum.toString();
     }
@@ -271,10 +263,10 @@ public class TokenQueue {
      */
     public String consumeCssIdentifier() {
         StringBuilder accum = new StringBuilder();
-        Character c = queue.peek();
-        while (!queue.isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
-            accum.append(queue.removeFirst());
-            c = queue.peek();
+        Character c = peek();
+        while (!isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
+            accum.append(consume());
+            c = peek();
         }
         return accum.toString();
     }
@@ -285,8 +277,8 @@ public class TokenQueue {
      */
     public String consumeAttributeKey() {
         StringBuilder accum = new StringBuilder();
-        while (!queue.isEmpty() && (Character.isLetterOrDigit(queue.peek()) || matchesAny("-", "_", ":"))) {
-            accum.append(queue.removeFirst());
+        while (!isEmpty() && (matchesWord() || matchesAny("-", "_", ":"))) {
+            accum.append(consume());
         }
         return accum.toString();
     }
@@ -297,7 +289,7 @@ public class TokenQueue {
      */
     public String remainder() {
         StringBuilder accum = new StringBuilder();
-        while (!queue.isEmpty()) {
+        while (!isEmpty()) {
             accum.append(consume());
         }
         return accum.toString();
