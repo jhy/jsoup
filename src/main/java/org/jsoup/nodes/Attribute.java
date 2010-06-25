@@ -20,7 +20,7 @@ public class Attribute {
     public Attribute(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        this.key = key.trim().toLowerCase();
+        this.key = key.trim().toLowerCase().intern(); // attribute keys are interned as often repeated
         this.value = value;
     }
 

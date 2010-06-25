@@ -15,7 +15,7 @@ import java.util.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute> {
-    private LinkedHashMap<String, Attribute> attributes = new LinkedHashMap<String, Attribute>();
+    private LinkedHashMap<String, Attribute> attributes = new LinkedHashMap<String, Attribute>(2);
     // linked hash map to preserve insertion order.
 
     /**
