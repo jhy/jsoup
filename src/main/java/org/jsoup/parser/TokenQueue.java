@@ -2,9 +2,6 @@ package org.jsoup.parser;
 
 import org.apache.commons.lang.Validate;
 
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  * A character queue with parsing helpers.
  *
@@ -12,7 +9,9 @@ import java.util.List;
  */
 public class TokenQueue {
     private StringBuilder queue;
+    private StringBuilder lcQueue; // lower-cased clone of the queue, for faster matching 
     private int pos = 0;
+    
     private static final Character ESC = '\\'; // escape char for chomp balanced.
 
     /**
@@ -23,6 +22,7 @@ public class TokenQueue {
         Validate.notNull(data);
 
         queue = new StringBuilder(data);
+        lcQueue = new StringBuilder(data.toLowerCase());
     }
 
     /**
@@ -51,6 +51,7 @@ public class TokenQueue {
      */
     public void addFirst(Character c) {
         queue.insert(pos, c);
+        lcQueue.insert(pos, Character.toLowerCase(c));
     }
 
     /**
@@ -59,6 +60,7 @@ public class TokenQueue {
      */
     public void addFirst(String seq) {
         queue.insert(pos, seq);
+        lcQueue.insert(pos, seq.toLowerCase());
     }
 
     /**
@@ -70,9 +72,10 @@ public class TokenQueue {
         int len = seq.length();
         if (len > remainingLength())
             return false;
-        String check = queue.substring(pos, pos+len);
-        return seq.equalsIgnoreCase(check);
+        String check = lcQueue.substring(pos, pos+len);
+        return seq.toLowerCase().equals(check);
     }
+    
 
     /**
      Tests if the next characters match any of the sequences.
@@ -151,7 +154,14 @@ public class TokenQueue {
      * @return The matched data consumed from queue.
      */
     public String consumeTo(String seq) {
-        return consumeToAny(seq);
+        int offset = lcQueue.indexOf(seq.toLowerCase(), pos);
+        if (offset != -1) {
+            String consumed = queue.substring(pos, offset);
+            pos += consumed.length();
+            return consumed;
+        } else {
+            return remainder();
+        }
     }
 
     /**
