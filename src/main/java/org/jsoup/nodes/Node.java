@@ -28,7 +28,7 @@ public abstract class Node {
         Validate.notNull(baseUri);
         Validate.notNull(attributes);
         
-        childNodes = new ArrayList<Node>();
+        childNodes = new ArrayList<Node>(4);
         this.baseUri = baseUri.trim();
         this.attributes = attributes;
     }
