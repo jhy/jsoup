@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
+import org.jsoup.nodes.Node;
 
 import java.util.List;
 
@@ -20,14 +21,29 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         Elements elements = new Elements();
-        accumulateMatches(eval, elements, root);
+        new NodeTraversor(new Accumulator(elements, eval)).traverse(root);
         return elements;
     }
 
-    private static void accumulateMatches(Evaluator eval, List<Element> elements, Element element) {
-        if (eval.matches(element))
-            elements.add(element);
-        for (Element child: element.children())
-            accumulateMatches(eval, elements, child);
+    private static class Accumulator implements NodeVisitor {
+        private Elements elements;
+        private Evaluator eval;
+
+        Accumulator(Elements elements, Evaluator eval) {
+            this.elements = elements;
+            this.eval = eval;
+        }
+
+        public void head(Node node, int depth) {
+            if (node instanceof Element) {
+                Element el = (Element) node;
+                if (eval.matches(el))
+                    elements.add(el);
+            }
+        }
+
+        public void tail(Node node, int depth) {
+            // void
+        }
     }
 }

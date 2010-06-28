@@ -65,16 +65,18 @@ public class TextNode extends Node {
         return StringUtils.isBlank(normaliseWhitespace(getWholeText()));
     }
 
-    void outerHtml(StringBuilder accum) {
+    void outerHtmlHead(StringBuilder accum, int depth) {
         String html = StringEscapeUtils.escapeHtml(getWholeText());
         if (parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
             html = normaliseWhitespace(html);
         }
 
         if (siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock() && !isBlank())
-            indent(accum);
+            indent(accum, depth);
         accum.append(html);
     }
+
+    void outerHtmlTail(StringBuilder accum, int depth) {}
 
     public String toString() {
         return outerHtml();

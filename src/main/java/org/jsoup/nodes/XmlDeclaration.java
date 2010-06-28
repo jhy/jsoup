@@ -32,9 +32,11 @@ public class XmlDeclaration extends Node {
         return attributes.get(DECL_KEY);
     }
 
-    void outerHtml(StringBuilder accum) {
+    void outerHtmlHead(StringBuilder accum, int depth) {
         accum.append(String.format("<%s%s>", isProcessingInstruction ? "!" : "?", getWholeDeclaration()));
     }
+
+    void outerHtmlTail(StringBuilder accum, int depth) {}
 
     public String toString() {
         return outerHtml();

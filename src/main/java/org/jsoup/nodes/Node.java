@@ -2,6 +2,8 @@ package org.jsoup.nodes;
 
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang.StringUtils;
+import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.NodeTraversor;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -272,6 +274,9 @@ public abstract class Node {
      @return next sibling, or null if this is the last sibling
      */
     public Node nextSibling() {
+        if (parentNode == null)
+            return null; // root
+        
         List<Node> siblings = parentNode.childNodes;
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
@@ -327,18 +332,24 @@ public abstract class Node {
         return accum.toString();
     }
 
+    protected void outerHtml(StringBuilder accum) {
+        new NodeTraversor(new OuterHtmlVisitor(accum)).traverse(this);
+    }
+
     /**
      Get the outer HTML of this node.
      @param accum accumulator to place HTML into
      */
-    abstract void outerHtml(StringBuilder accum);
+    abstract void outerHtmlHead(StringBuilder accum, int depth);
+
+    abstract void outerHtmlTail(StringBuilder accum, int depth);
 
     public String toString() {
         return outerHtml();
     }
 
-    protected void indent(StringBuilder accum) {
-        accum.append("\n").append(StringUtils.leftPad("", nodeDepth() -1 * 2));
+    protected void indent(StringBuilder accum, int depth) {
+        accum.append("\n").append(StringUtils.leftPad("", depth));
     }
 
     @Override
@@ -354,5 +365,21 @@ public abstract class Node {
         // not children, or will block stack as they go back up to parent)
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
+    }
+
+    private static class OuterHtmlVisitor implements NodeVisitor {
+        private StringBuilder accum;
+
+        OuterHtmlVisitor(StringBuilder accum) {
+            this.accum = accum;
+        }
+
+        public void head(Node node, int depth) {
+            node.outerHtmlHead(accum, depth);
+        }
+
+        public void tail(Node node, int depth) {
+            node.outerHtmlTail(accum, depth);
+        }
     }
 }
