@@ -63,7 +63,8 @@ public class Attribute {
      @return HTML
      */
     public String html() {
-        return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
+        return key + "=\"" + StringEscapeUtils.escapeHtml(value) + "\"";
+        // return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
     }
 
     /**

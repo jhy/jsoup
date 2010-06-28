@@ -83,6 +83,20 @@ public class ParserTest {
         assertNotNull(p);
         assertEquals("p", p.tagName());
     }
+    
+    @Test public void parsesUnterminatedTextarea() {
+        Document doc = Jsoup.parse("<body><p><textarea>one<p>two");
+        Element t = doc.select("textarea").first();
+        assertEquals("one<p>two", t.text());
+    }
+    
+    @Test public void parsesUnterminatedOption() {
+        Document doc = Jsoup.parse("<body><p><select><option>One<option>Two</p><p>Three</p>");
+        Elements options = doc.select("option");
+        assertEquals(2, options.size());
+        assertEquals("One", options.first().text());
+        assertEquals("Two", options.last().text());
+    }
 
     @Test public void createsDocumentStructure() {
         String html = "<meta name=keywords /><link rel=stylesheet /><title>jsoup</title><p>Hello world</p>";

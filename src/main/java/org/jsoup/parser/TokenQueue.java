@@ -9,7 +9,6 @@ import org.apache.commons.lang.Validate;
  */
 public class TokenQueue {
     private StringBuilder queue;
-    private StringBuilder lcQueue; // lower-cased clone of the queue, for faster matching 
     private int pos = 0;
     
     private static final Character ESC = '\\'; // escape char for chomp balanced.
@@ -20,9 +19,7 @@ public class TokenQueue {
      */
     public TokenQueue(String data) {
         Validate.notNull(data);
-
         queue = new StringBuilder(data);
-        lcQueue = new StringBuilder(data.toLowerCase());
     }
 
     /**
@@ -38,7 +35,7 @@ public class TokenQueue {
     }
 
     /**
-     * Retrieves but does not remove the first characater from the queue.
+     * Retrieves but does not remove the first character from the queue.
      * @return First character, or null if empty.
      */
     public Character peek() {
@@ -51,7 +48,6 @@ public class TokenQueue {
      */
     public void addFirst(Character c) {
         queue.insert(pos, c);
-        lcQueue.insert(pos, Character.toLowerCase(c));
     }
 
     /**
@@ -60,7 +56,6 @@ public class TokenQueue {
      */
     public void addFirst(String seq) {
         queue.insert(pos, seq);
-        lcQueue.insert(pos, seq.toLowerCase());
     }
 
     /**
@@ -69,11 +64,15 @@ public class TokenQueue {
      * @return true if the next characters match.
      */
     public boolean matches(String seq) {
-        int len = seq.length();
-        if (len > remainingLength())
+        int count = seq.length();
+        if (count > remainingLength())
             return false;
-        String check = lcQueue.substring(pos, pos+len);
-        return seq.toLowerCase().equals(check);
+
+        while (--count >= 0) {
+            if (Character.toLowerCase(seq.charAt(count)) != Character.toLowerCase(queue.charAt(pos+count)))
+                return false;
+        }
+        return true;
     }
     
 
@@ -150,11 +149,11 @@ public class TokenQueue {
 
     /**
      * Pulls a string off the queue, up to but exclusive of the match sequence, or to the queue running out.
-     * @param seq String to end on (and not include in return, but leave on queue)
+     * @param seq String to end on (and not include in return, but leave on queue). <b>Case sensitive.</b>
      * @return The matched data consumed from queue.
      */
     public String consumeTo(String seq) {
-        int offset = lcQueue.indexOf(seq.toLowerCase(), pos);
+        int offset = queue.indexOf(seq, pos);
         if (offset != -1) {
             String consumed = queue.substring(pos, offset);
             pos += consumed.length();
@@ -163,18 +162,44 @@ public class TokenQueue {
             return remainder();
         }
     }
+    
+    public String consumeToIgnoreCase(String seq) {
+        int start = pos;
+        String first = seq.substring(0, 1);
+        boolean canScan = first.toLowerCase().equals(first.toUpperCase()); // if first is not cased, use index of
+        while (!isEmpty() && !matches(seq)) {
+            if (canScan) {
+                int skip = queue.indexOf(first, pos) - pos;
+                if (skip <= 0)
+                    pos++;
+                else if (skip < 0) // no chance of finding, grab to end
+                    pos = queue.length() - 1;
+                else
+                    pos += skip;
+            }
+            else
+                pos++;
+        }
+
+        String data = queue.substring(start, pos); 
+        return data; 
+    }
 
     /**
      Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
-     @param seq any number of terminators to consume to
-     @return consumed string
+     @param seq any number of terminators to consume to. <b>Case insensitive.</b>
+     @return consumed string   
      */
+    // todo: method name. not good that consumeTo cares for case, and consume to any doesn't. And the only use for this
+    // is is a case sensitive time...
     public String consumeToAny(String... seq) {
-        StringBuilder accum = new StringBuilder();
-        while (!isEmpty() && !matchesAny(seq))
-            accum.append(consume());
+        int start = pos;
+        while (!isEmpty() && !matchesAny(seq)) {
+            pos++;
+        }
 
-        return accum.toString();
+        String data = queue.substring(start, pos); 
+        return data; 
     }
 
     /**
@@ -182,11 +207,17 @@ public class TokenQueue {
      * <p>
      * If the queue runs out of characters before finding the seq, will return as much as it can (and queue will go
      * isEmpty() == true).
-     * @param seq String to match up to, and not include in return, and to pull off queue
+     * @param seq String to match up to, and not include in return, and to pull off queue. <b>Case sensitive.</b>
      * @return Data matched from queue.
      */
     public String chompTo(String seq) {
         String data = consumeTo(seq);
+        matchChomp(seq);
+        return data;
+    }
+    
+    public String chompToIgnoreCase(String seq) {
+        String data = consumeToIgnoreCase(seq); // case insensitive scan
         matchChomp(seq);
         return data;
     }
@@ -306,6 +337,6 @@ public class TokenQueue {
     }
     
     public String toString() {
-        return queue.toString();
+        return queue.substring(pos);
     }
 }
