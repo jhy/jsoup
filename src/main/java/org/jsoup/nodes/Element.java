@@ -826,20 +826,23 @@ public class Element extends Node {
         return this;
     }
 
-    void outerHtml(StringBuilder accum) {
+    void outerHtmlHead(StringBuilder accum, int depth) {
         if (isBlock() || (parent() != null && parent().tag().canContainBlock() && siblingIndex() == 0))
-            indent(accum);
+            indent(accum, depth);
         accum
                 .append("<")
                 .append(tagName())
                 .append(attributes.html());
 
-        if (childNodes.isEmpty() && tag.isEmpty()) {
+        if (childNodes.isEmpty() && tag.isEmpty())
             accum.append(" />");
-        } else {
+        else
             accum.append(">");
-            html(accum);
-            if (tag.canContainBlock()) indent(accum);
+    }
+
+    void outerHtmlTail(StringBuilder accum, int depth) {
+        if (!tag.isEmpty()) {
+            if (tag.canContainBlock()) indent(accum, depth);
             accum.append("</").append(tagName()).append(">");
         }
     }

@@ -188,7 +188,7 @@ public class ElementTest {
 
     @Test public void testFormatHtml() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
-        assertEquals("<html>\n<head>\n</head>\n<body>\n <div>\n  <p>Hello</p>\n </div>\n</body>\n</html>", doc.html());
+        assertEquals("<html>\n <head>\n </head>\n <body>\n  <div>\n   <p>Hello</p>\n  </div>\n </body>\n</html>", doc.html());
     }
 
     @Test public void testSetText() {

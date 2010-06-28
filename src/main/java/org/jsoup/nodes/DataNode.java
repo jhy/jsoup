@@ -31,9 +31,11 @@ public class DataNode extends Node{
         return attributes.get(DATA_KEY);
     }
 
-    void outerHtml(StringBuilder accum) {
+    void outerHtmlHead(StringBuilder accum, int depth) {
         accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
+
+    void outerHtmlTail(StringBuilder accum, int depth) {}
 
     public String toString() {
         return outerHtml();
