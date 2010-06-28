@@ -40,4 +40,15 @@ public class TokenQueueTest {
     @Test public void unescape() {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
+    
+    @Test public void chompToIgnoreCase() {
+        String t = "<textarea>one < two </TEXTarea>";
+        TokenQueue tq = new TokenQueue(t);
+        String data = tq.chompToIgnoreCase("</textarea");
+        assertEquals("<textarea>one < two ", data);
+        
+        tq = new TokenQueue("<textarea> one two < three </oops>");
+        data = tq.chompToIgnoreCase("</textarea");
+        assertEquals("<textarea> one two < three </oops>", data);
+    }
 }

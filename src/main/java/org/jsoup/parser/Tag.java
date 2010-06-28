@@ -295,7 +295,7 @@ public class Tag {
         createInline("LABEL").setAncestor("FORM").setOptionalClosing(); // not self
         createInline("BUTTON").setAncestor("FORM"); // bunch of excludes not defined
         createInline("OPTGROUP").setParent("SELECT"); //  only contain option
-        createInline("OPTION").setParent("SELECT").setContainDataOnly();
+        createInline("OPTION").setParent("SELECT").setOptionalClosing();
         createBlock("FIELDSET").setAncestor("FORM");
         createInline("LEGEND").setAncestor("FIELDSET");
 

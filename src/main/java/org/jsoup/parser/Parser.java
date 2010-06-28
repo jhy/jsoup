@@ -157,7 +157,7 @@ public class Parser {
 
         // pc data only tags (textarea, script): chomp to end tag, add content as text node
         if (tag.isData()) {
-            String data = tq.chompTo("</" + tagName);
+            String data = tq.chompToIgnoreCase("</" + tagName);
             tq.chompTo(">");
             popStackToClose(tag);
             
