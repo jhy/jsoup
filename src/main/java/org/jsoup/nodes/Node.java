@@ -244,7 +244,7 @@ public abstract class Node {
     protected void addChildren(Node... children) {
         addChildren(childNodes.size(), children);
     }
-      
+
     protected void addChildren(int index, Node... children) {
         Validate.noNullElements(children);
         for (int i = children.length - 1; i >= 0; i--) {

@@ -64,7 +64,6 @@ public class Attribute {
      */
     public String html() {
         return key + "=\"" + StringEscapeUtils.escapeHtml(value) + "\"";
-        // return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
     }
     
     protected void html(StringBuilder accum) {
