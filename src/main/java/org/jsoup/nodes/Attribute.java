@@ -20,7 +20,7 @@ public class Attribute {
     public Attribute(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        this.key = key.trim().toLowerCase().intern(); // attribute keys are interned as often repeated
+        this.key = key.trim().toLowerCase();
         this.value = value;
     }
 
@@ -65,6 +65,14 @@ public class Attribute {
     public String html() {
         return key + "=\"" + StringEscapeUtils.escapeHtml(value) + "\"";
         // return String.format("%s=\"%s\"", key, StringEscapeUtils.escapeHtml(value));
+    }
+    
+    protected void html(StringBuilder accum) {
+        accum
+            .append(key)
+            .append("=\"")
+            .append(StringEscapeUtils.escapeHtml(value))
+            .append("\"");
     }
 
     /**

@@ -107,11 +107,15 @@ public class Attributes implements Iterable<Attribute> {
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
+        html(accum);
+        return accum.toString();
+    }
+    
+    void html(StringBuilder accum) {
         for (Attribute attribute : this) {
             accum.append(" ");
-            accum.append(attribute.html());
+            attribute.html(accum);
         }
-        return accum.toString();
     }
     
     public String toString() {

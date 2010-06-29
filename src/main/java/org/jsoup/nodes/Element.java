@@ -107,7 +107,7 @@ public class Element extends Node {
     }
 
     @Override
-    public Element parent() {
+    public final Element parent() {
         return (Element) super.parent();
     }
 
@@ -430,6 +430,18 @@ public class Element extends Node {
     public Element lastElementSibling() {
         List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
+    }
+    
+    private static <E extends Element> Integer indexInList(Element search, List<E> elements) {
+        Validate.notNull(search);
+        Validate.notNull(elements);
+
+        for (int i = 0; i < elements.size(); i++) {
+            E element = elements.get(i);
+            if (element.equals(search))
+                return i;
+        }
+        return null;
     }
 
     // DOM type methods
