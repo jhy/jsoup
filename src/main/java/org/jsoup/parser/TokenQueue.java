@@ -20,7 +20,6 @@ public class TokenQueue {
     public TokenQueue(String data) {
         Validate.notNull(data);
         queue = data;
-        //queue = new StringBuilder(data);
     }
 
     /**
