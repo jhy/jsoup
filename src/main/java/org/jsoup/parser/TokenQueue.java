@@ -8,7 +8,7 @@ import org.apache.commons.lang.Validate;
  * @author Jonathan Hedley
  */
 public class TokenQueue {
-    private StringBuilder queue;
+    private String queue;
     private int pos = 0;
     
     private static final Character ESC = '\\'; // escape char for chomp balanced.
@@ -19,7 +19,8 @@ public class TokenQueue {
      */
     public TokenQueue(String data) {
         Validate.notNull(data);
-        queue = new StringBuilder(data);
+        queue = data;
+        //queue = new StringBuilder(data);
     }
 
     /**
@@ -47,7 +48,7 @@ public class TokenQueue {
      @param c character to add
      */
     public void addFirst(Character c) {
-        queue.insert(pos, c);
+        addFirst(c.toString());
     }
 
     /**
@@ -55,7 +56,9 @@ public class TokenQueue {
      @param seq string to add.
      */
     public void addFirst(String seq) {
-        queue.insert(pos, seq);
+        // not very performant, but an edge case
+        queue = seq + queue.substring(pos);
+        pos = 0;
     }
 
     /**
@@ -290,11 +293,10 @@ public class TokenQueue {
      * @return String of word characters from queue, or empty string if none.
      */
     public String consumeWord() {
-        StringBuilder wordAccum = new StringBuilder();
-        while (matchesWord()) {
-            wordAccum.append(consume());
-        }
-        return wordAccum.toString();
+        int start = pos;
+        while (matchesWord())
+            pos++;
+        return queue.substring(start, pos);
     }
 
     /**
@@ -317,11 +319,11 @@ public class TokenQueue {
      @return attribute key
      */
     public String consumeAttributeKey() {
-        StringBuilder accum = new StringBuilder();
-        while (!isEmpty() && (matchesWord() || matchesAny("-", "_", ":"))) {
-            accum.append(consume());
-        }
-        return accum.toString();
+        int start = pos;
+        while (!isEmpty() && (matchesWord() || matchesAny("-", "_", ":")))
+            pos++;
+        
+        return queue.substring(start, pos);
     }
 
     /**

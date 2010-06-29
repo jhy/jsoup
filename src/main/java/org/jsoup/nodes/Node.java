@@ -20,6 +20,7 @@ public abstract class Node {
     final List<Node> childNodes;
     final Attributes attributes;
     String baseUri;
+    int siblingIndex;
 
     /**
      Create a new Node.
@@ -225,23 +226,25 @@ public abstract class Node {
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
         
-        Integer index = indexInList(out, childNodes);
+        Integer index = out.siblingIndex();
         childNodes.set(index, in);
         in.parentNode = this;
+        in.setSiblingIndex(index);
         out.parentNode = null;
     }
 
     protected void removeChild(Node out) {
         Validate.isTrue(out.parentNode == this);
-        int index = indexInList(out, childNodes);
+        int index = out.siblingIndex();
         childNodes.remove(index);
+        reindexChildren();
         out.parentNode = null;
     }
 
     protected void addChildren(Node... children) {
         addChildren(childNodes.size(), children);
     }
-    
+      
     protected void addChildren(int index, Node... children) {
         Validate.noNullElements(children);
         for (int i = children.length - 1; i >= 0; i--) {
@@ -251,6 +254,13 @@ public abstract class Node {
             
             childNodes.add(index, in);
             in.setParentNode(this);
+        }
+        reindexChildren();
+    }
+    
+    private void reindexChildren() {
+        for (int i = 0; i < childNodes.size(); i++) {
+            childNodes.get(i).setSiblingIndex(i);
         }
     }
 
@@ -278,7 +288,7 @@ public abstract class Node {
             return null; // root
         
         List<Node> siblings = parentNode.childNodes;
-        Integer index = indexInList(this, siblings);
+        Integer index = siblingIndex();
         Validate.notNull(index);
         if (siblings.size() > index+1)
             return siblings.get(index+1);
@@ -292,7 +302,7 @@ public abstract class Node {
      */
     public Node previousSibling() {
         List<Node> siblings = parentNode.childNodes;
-        Integer index = indexInList(this, siblings);
+        Integer index = siblingIndex();
         Validate.notNull(index);
         if (index > 0)
             return siblings.get(index-1);
@@ -307,19 +317,11 @@ public abstract class Node {
      * @see org.jsoup.nodes.Element#elementSiblingIndex()
      */
     public Integer siblingIndex() {
-        return indexInList(this, parent().childNodes);
+        return siblingIndex;
     }
-
-    protected static <N extends Node> Integer indexInList(N search, List<N> nodes) {
-        Validate.notNull(search);
-        Validate.notNull(nodes);
-
-        for (int i = 0; i < nodes.size(); i++) {
-            N node = nodes.get(i);
-            if (node.equals(search))
-                return i;
-        }
-        return null;
+    
+    protected void setSiblingIndex(int siblingIndex) {
+        this.siblingIndex = siblingIndex;
     }
 
     /**
@@ -327,7 +329,7 @@ public abstract class Node {
      @return HTML
      */
     public String outerHtml() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder accum = new StringBuilder(32*1024);
         outerHtml(accum);
         return accum.toString();
     }
