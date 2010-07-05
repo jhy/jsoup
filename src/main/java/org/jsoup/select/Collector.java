@@ -4,8 +4,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 import org.jsoup.nodes.Node;
 
-import java.util.List;
-
 /**
  * Collects a list of elements that match the supplied criteria.
  *
