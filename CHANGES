@@ -1,7 +1,9 @@
 jsoup changelog
 
 *** Release 1.2.2 [pending]
- * Added support for :matches(regex) selector
+ * Added support for :matches(regex) selector, to find elements containing text matching regular expression
+ 
+ * Added support for [key~=regex] attribute selector, to find elements with attributes matching regular expression
 
  * Upgraded the selector query parser to allow nested selectors like 'div:has(p:has(span))'
 
