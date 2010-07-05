@@ -60,7 +60,7 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return (element.hasAttr(key));
+            return element.hasAttr(key);
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return (value.equalsIgnoreCase(element.attr(key)));
+            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
         }
     }
 
@@ -80,7 +80,7 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return (!value.equalsIgnoreCase(element.attr(key)));
+            return !value.equalsIgnoreCase(element.attr(key));
         }
     }
 
@@ -90,7 +90,7 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return element.attr(key).toLowerCase().startsWith(value); // value is lower case already
+            return element.hasAttr(key) && element.attr(key).toLowerCase().startsWith(value); // value is lower case already
         }
     }
 
@@ -100,7 +100,7 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return element.attr(key).toLowerCase().endsWith(value); // value is lower case
+            return element.hasAttr(key) && element.attr(key).toLowerCase().endsWith(value); // value is lower case
         }
     }
 
@@ -110,7 +110,21 @@ public abstract class Evaluator {
         }
 
         public boolean matches(Element element) {
-            return element.attr(key).toLowerCase().contains(value); // value is lower case
+            return element.hasAttr(key) && element.attr(key).toLowerCase().contains(value); // value is lower case
+        }
+    }
+    
+    static final class AttributeWithValueMatching extends Evaluator{
+        protected String key;
+        protected Pattern pattern;
+        
+        AttributeWithValueMatching(String key, Pattern pattern) {
+            this.key = key.trim().toLowerCase();
+            this.pattern = pattern;
+        }
+
+        public boolean matches(Element element) {
+            return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
         }
     }
 

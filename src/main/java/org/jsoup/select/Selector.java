@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
  <tr><td><code>E[attr^=val]</code></td><td>an Element with the attribute named "attr" and value starting with "val"</td><td><code>a[href^=http:]</code></code></td></tr>
  <tr><td><code>E[attr$=val]</code></td><td>an Element with the attribute named "attr" and value ending with "val"</td><td><code>img[src$=.png]</code></td></tr>
  <tr><td><code>E[attr*=val]</code></td><td>an Element with the attribute named "attr" and value containing "val"</td><td><code>a[href*=/search/]</code></td></tr>
+ <tr><td><code>E[attr~=<em>regex</em>]</code></td><td>an Element with the attribute named "attr" and value matching the regular expression</td><td><code>img[src~=(?i)\\.(png|jpe?g)]</code></td></tr>
  <tr><td></td><td>The above may be combined in any order</td><td><code>div.header[title]</code></td></tr>
  <tr><td><td colspan="3"><h3>Combinators</h3></td></tr>
  <tr><td><code>E F</code></td><td>an F element descended from an E element</td><td><code>div a</code>, <code>.logo h1</code></td></tr>
@@ -205,7 +206,7 @@ public class Selector {
     }
 
     private Elements byAttribute() {
-        String key = tq.consumeToAny("=", "!=", "^=", "$=", "*=", "]"); // eq, not, start, end, contain, (no val)
+        String key = tq.consumeToAny("=", "!=", "^=", "$=", "*=", "~=", "]"); // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key);
 
         if (tq.matchChomp("]")) {
@@ -225,6 +226,9 @@ public class Selector {
 
             else if (tq.matchChomp("*="))
                 return root.getElementsByAttributeValueContaining(key, tq.chompTo("]"));
+            
+            else if (tq.matchChomp("~="))
+                return root.getElementsByAttributeValueMatching(key, tq.chompTo("]"));
             
             else
                 throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, tq.remainder());
