@@ -385,6 +385,18 @@ public class SelectorTest {
         Elements divs = doc.select("div:has(p:has(span))");
         assertEquals(1, divs.size());
         assertEquals("One", divs.first().text());
+
+        // test matches in has
+        divs = doc.select("div:has(p:matches((?i)two))");
+        assertEquals(1, divs.size());
+        assertEquals("div", divs.first().tagName());
+        assertEquals("Two", divs.first().text());
+
+        // test contains in has
+        divs = doc.select("div:has(p:contains(two))");
+        assertEquals(1, divs.size());
+        assertEquals("div", divs.first().tagName());
+        assertEquals("Two", divs.first().text());
     }
     
     @Test public void testPseudoContains() {
