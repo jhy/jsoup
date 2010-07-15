@@ -75,6 +75,19 @@ public class ParseTest {
         assertEquals("全国、人気の駅ランキング", a.text());
     }
     
+    @Test public void testBaidu() throws IOException {
+        File in = getFile("/htmltests/baidu-cn-home.html");
+        Document doc = Jsoup.parse(in, null, "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
+        Element submit = doc.select("#su").first();
+        assertEquals("百度一下", submit.attr("value"));
+        
+        // test from attribute match
+        submit = doc.select("input[value=百度一下]").first();
+        assertEquals("su", submit.id());
+        Element newsLink = doc.select("a:contains(新)").first();
+        assertEquals("http://news.baidu.com", newsLink.absUrl("href"));
+    }
+    
     File getFile(String resourceName) {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());

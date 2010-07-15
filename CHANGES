@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.2.3 [PENDING]
+ * Now automatically detects the encoding character set when parsing HTML from a File or URL. The parser checks
+   the content-type header, then the meta http-equiv tag, and finally falls back to UTF-8.
+
 *** Release 1.2.2 [2010-Jul-11]
  
  * Performance optimisation:

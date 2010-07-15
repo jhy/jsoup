@@ -43,6 +43,8 @@ public class Jsoup {
 
     /**
      Fetch a URL, and parse it as HTML.
+     <p>
+     The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to {@code UTF-8}.
 
      @param url           URL to fetch (with a GET). The protocol must be {@code http} or {@code https}.
      @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
@@ -60,7 +62,8 @@ public class Jsoup {
      Parse the contents of a file as HTML.
 
      @param in          file to load HTML from
-     @param charsetName character set of file contents. If you don't know the charset, generally the best guess is {@code UTF-8}.
+     @param charsetName (optional) character set of file contents. Set to null to determine from http-equiv meta tag, if
+     present, or fall back to {@code UTF-8} (which is often safe to do).
      @param baseUri     The URL where the HTML was retrieved from, to generate absolute URLs relative to.
      @return sane HTML
 
@@ -75,7 +78,8 @@ public class Jsoup {
      Parse the contents of a file as HTML. The location of the file is used as the base URI to qualify relative URLs.
 
      @param in          file to load HTML from
-     @param charsetName character set of file contents. If you don't know the charset, generally the best guess is {@code UTF-8}.
+     @param charsetName (optional) character set of file contents. Set to null to determine from http-equiv meta tag, if
+     present, or fall back to {@code UTF-8} (which is often safe to do).
      @return sane HTML
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
