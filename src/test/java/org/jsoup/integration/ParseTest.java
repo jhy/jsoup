@@ -76,6 +76,7 @@ public class ParseTest {
     }
     
     @Test public void testBaidu() throws IOException {
+        // tests <meta http-equiv="Content-Type" content="text/html;charset=gb2312">
         File in = getFile("/htmltests/baidu-cn-home.html");
         Document doc = Jsoup.parse(in, null, "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
         Element submit = doc.select("#su").first();
@@ -86,6 +87,23 @@ public class ParseTest {
         assertEquals("su", submit.id());
         Element newsLink = doc.select("a:contains(新)").first();
         assertEquals("http://news.baidu.com", newsLink.absUrl("href"));
+    }
+    
+    @Test public void testHtml5Charset() throws IOException {
+        // test that <meta charset="gb2312"> works
+        File in = getFile("/htmltests/meta-charset-1.html");
+        Document doc = Jsoup.parse(in, null, "http://example.com/"); //gb2312, has html5 <meta charset>
+        assertEquals("新", doc.text());
+        
+        // double check, no charset, falls back to utf8 which is incorrect
+        in = getFile("/htmltests/meta-charset-2.html"); //
+        doc = Jsoup.parse(in, null, "http://example.com"); // gb2312, no charset
+        assertFalse("新".equals(doc.text()));
+        
+        // confirm fallback to utf8
+        in = getFile("/htmltests/meta-charset-3.html");
+        doc = Jsoup.parse(in, null, "http://example.com/"); // utf8, no charset
+        assertEquals("新", doc.text());
     }
     
     File getFile(String resourceName) {
