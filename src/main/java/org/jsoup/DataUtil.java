@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  */
 class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=([^\\s;]*)");
-    private static final String defaultCharset = "UTF-8"; // used if not found in header or http-equiv
+    private static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int bufferSize = 0x20000; // ~130K.
     
     /**
@@ -83,12 +83,13 @@ class DataUtil {
         ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
         
         String docData;
-        if (charsetName == null) { // determine from http-equiv. safe parse as UTF-8
+        if (charsetName == null) { // determine from meta. safe parse as UTF-8
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
             Document doc = Jsoup.parse(docData);
-            Element httpEquiv = doc.select("meta[http-equiv]").first();
-            if (httpEquiv != null) { // if not found, will keep utf-8 as best attempt
-                String foundCharset = getCharsetFromContentType(httpEquiv.attr("content"));
+            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+            if (meta != null) { // if not found, will keep utf-8 as best attempt
+                String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
                 if (foundCharset != null && !foundCharset.equals(defaultCharset)) { // need to re-decode
                     byteData.rewind();
                     docData = Charset.forName(foundCharset).decode(byteData).toString();
