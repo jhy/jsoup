@@ -260,6 +260,15 @@ public class ParserTest {
         assertEquals("Zug", dts.get(1).nextElementSibling().text());
     }
 
+    @Test public void handlesBlocksInDefinitions() {
+        // per the spec, dt and dd are inline, but in practise are block
+        String h = "<dl><dt><div id=1>Term</div></dt><dd><div id=2>Def</div></dd></dl>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("dt", doc.select("#1").first().parent().tagName());
+        assertEquals("dd", doc.select("#2").first().parent().tagName());
+        assertEquals("<dl><dt><div id=\"1\">Term</div></dt><dd><div id=\"2\">Def</div></dd></dl>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void handlesFrames() {
         String h = "<html><head><script></script><noscript></noscript></head><frameset><frame src=foo></frame><frame src=foo></frameset></html>";
         Document doc = Jsoup.parse(h);
