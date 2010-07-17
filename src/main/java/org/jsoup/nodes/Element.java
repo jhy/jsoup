@@ -497,7 +497,7 @@ public class Element extends Node {
     /**
      * Find elements that have a named attribute set. Case insensitive.
      *
-     * @param key name of the attribute
+     * @param key name of the attribute, e.g. {@code href}
      * @return elements that have this attribute, empty if none
      */
     public Elements getElementsByAttribute(String key) {
@@ -505,6 +505,19 @@ public class Element extends Node {
         key = key.trim().toLowerCase();
 
         return Collector.collect(new Evaluator.Attribute(key), this);
+    }
+
+    /**
+     * Find elements that have an attribute name starting with the supplied prefix. Use {@code data-} to find elements
+     * that have HTML5 datasets.
+     * @param keyPrefix name prefix of the attribute e.g. {@code data-}
+     * @return elements that have attribute names that start with with the prefix, empty if none.
+     */
+    public Elements getElementsByAttributeStarting(String keyPrefix) {
+        Validate.notEmpty(keyPrefix);
+        keyPrefix = keyPrefix.trim().toLowerCase();
+
+        return Collector.collect(new Evaluator.AttributeStarting(keyPrefix), this);
     }
 
     /**
