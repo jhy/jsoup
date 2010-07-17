@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.List;
 
 import org.apache.commons.lang.Validate;
 
@@ -61,6 +62,23 @@ public abstract class Evaluator {
 
         public boolean matches(Element element) {
             return element.hasAttr(key);
+        }
+    }
+
+    static final class AttributeStarting extends Evaluator {
+        private String keyPrefix;
+
+        AttributeStarting (String keyPrefix) {
+            this.keyPrefix = keyPrefix;
+        }
+
+        public boolean matches(Element element) {
+            List<org.jsoup.nodes.Attribute> values = element.attributes.asList();
+            for (org.jsoup.nodes.Attribute attribute : values) {
+                if (attribute.getKey().startsWith(keyPrefix))
+                    return true;
+            }
+            return false;
         }
     }
 

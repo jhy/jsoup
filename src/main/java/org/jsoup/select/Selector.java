@@ -25,10 +25,11 @@ import java.util.LinkedHashSet;
  <tr><td><code>E#id</code></td><td>an Element with attribute ID of "id"</td><td><code>div#wrap</code>, <code>#logo</code></td></tr>
  <tr><td><code>E.class</code></td><td>an Element with a class name of "class"</td><td><code>div.left</code>, <code>.result</code></td></tr>
  <tr><td><code>E[attr]</code></td><td>an Element with the attribute named "attr"</td><td><code>a[href]</code>, <code>[title]</code></td></tr>
+ <tr><td><code>E[^attrPrefix]</code></td><td>an Element with an attribute name starting with "attrPrefix". Use to find elements with HTML5 datasets</td><td><code>[^data-]</code>, <code>div[^data-]</code></td></tr>
  <tr><td><code>E[attr=val]</code></td><td>an Element with the attribute named "attr" and value equal to "val"</td><td><code>img[width=500]</code>, <code>a[rel=nofollow]</code></td></tr>
- <tr><td><code>E[attr^=val]</code></td><td>an Element with the attribute named "attr" and value starting with "val"</td><td><code>a[href^=http:]</code></code></td></tr>
- <tr><td><code>E[attr$=val]</code></td><td>an Element with the attribute named "attr" and value ending with "val"</td><td><code>img[src$=.png]</code></td></tr>
- <tr><td><code>E[attr*=val]</code></td><td>an Element with the attribute named "attr" and value containing "val"</td><td><code>a[href*=/search/]</code></td></tr>
+ <tr><td><code>E[attr^=valPrefix]</code></td><td>an Element with the attribute named "attr" and value starting with "valPrefix"</td><td><code>a[href^=http:]</code></code></td></tr>
+ <tr><td><code>E[attr$=valSuffix]</code></td><td>an Element with the attribute named "attr" and value ending with "valSuffix"</td><td><code>img[src$=.png]</code></td></tr>
+ <tr><td><code>E[attr*=valContaining]</code></td><td>an Element with the attribute named "attr" and value containing "valContaining"</td><td><code>a[href*=/search/]</code></td></tr>
  <tr><td><code>E[attr~=<em>regex</em>]</code></td><td>an Element with the attribute named "attr" and value matching the regular expression</td><td><code>img[src~=(?i)\\.(png|jpe?g)]</code></td></tr>
  <tr><td></td><td>The above may be combined in any order</td><td><code>div.header[title]</code></td></tr>
  <tr><td><td colspan="3"><h3>Combinators</h3></td></tr>
@@ -210,7 +211,7 @@ public class Selector {
         Validate.notEmpty(key);
 
         if (tq.matchChomp("]")) {
-            return root.getElementsByAttribute(key);
+            return key.startsWith("^") ? root.getElementsByAttributeStarting(key.substring(1)) : root.getElementsByAttribute(key);
         } else {
             if (tq.matchChomp("="))
                 return root.getElementsByAttributeValue(key, tq.chompTo("]"));

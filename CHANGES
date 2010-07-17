@@ -4,6 +4,9 @@ jsoup changelog
  * Now automatically detects the encoding character set when parsing HTML from a File or URL. The parser checks
    the content-type header, then the <meta http-equiv> or <meta charset> tag, and finally falls back to UTF-8.
 
+ * Added support for the [^attributePrefix] selector query, to find elements with attributes starting with a prefix.
+   Useful for finding elements with datasets: [^data-]
+
  * Changed DT & DD tags to block-mode tags, to follow practise over spec
 
 *** Release 1.2.2 [2010-Jul-11]

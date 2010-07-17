@@ -73,6 +73,18 @@ public class SelectorTest {
         assertEquals("Bar", contains.first().attr("title"));
         assertEquals("SLAM", contains.last().attr("title"));
     }
+
+    @Test public void testByAttributeStarting() {
+        Document doc = Jsoup.parse("<div id=1 data-name=jsoup>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>");
+        Elements withData = doc.select("[^data-]");
+        assertEquals(2, withData.size());
+        assertEquals("1", withData.first().id());
+        assertEquals("2", withData.last().id());
+
+        withData = doc.select("p[^data-]");
+        assertEquals(1, withData.size());
+        assertEquals("2", withData.first().id());
+    }
     
     @Test public void testByAttributeRegex() {
         Document doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif><img></p>");
