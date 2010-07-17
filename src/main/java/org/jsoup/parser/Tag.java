@@ -91,9 +91,9 @@ public class Tag {
         }
         
         // dt and dd (in dl)
-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+        if (this.tagName.equals("dt") && (child.tagName.equals("dd") || child.tagName.equals("dl")))
             return false;
-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+        if (this.tagName.equals("dd") && (child.tagName.equals("dt") || child.tagName.equals("dl")))
             return false;
 
         // don't allow children to contain their parent (directly)
@@ -288,7 +288,7 @@ public class Tag {
 
 
         // formctrl
-        createBlock("FORM").setOptionalClosing(); // can't contian self
+        createBlock("FORM").setOptionalClosing(); // can't contain self
         createInline("INPUT").setAncestor("FORM").setEmpty();
         createInline("SELECT").setAncestor("FORM"); // just contain optgroup or option
         createInline("TEXTAREA").setAncestor("FORM").setContainDataOnly();
@@ -305,9 +305,11 @@ public class Tag {
         createBlock("INS"); // only within body
         createBlock("DEL"); // only within body
 
-        createBlock("DL");
-        createInline("DT").setParent("DL").setOptionalClosing(); // only within DL.
-        createInline("DD").setParent("DL").setOptionalClosing(); // only within DL.
+        // definition lists. per spec, dt and dd are inline and must directly descend from dl. However in practise
+        // these are all used as blocks and dl need only be an ancestor
+        createBlock("DL").setOptionalClosing(); // can't nest
+        createBlock("DT").setAncestor("DL").setOptionalClosing(); // only within DL.
+        createBlock("DD").setAncestor("DL").setOptionalClosing(); // only within DL.
 
         createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
 
