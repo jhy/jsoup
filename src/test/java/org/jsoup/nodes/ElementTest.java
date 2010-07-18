@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -319,6 +320,40 @@ public class ElementTest {
         assertTrue(div.hasText());
         assertTrue(ps.first().hasText());
         assertFalse(ps.last().hasText());
+    }
+
+    @Test public void dataset() {
+        Document doc = Jsoup.parse("<div id=1 data-name=jsoup class=new data-package=jar>Hello</div><p id=2>Hello</p>");
+        Element div = doc.select("div").first();
+        Map<String, String> dataset = div.dataset();
+        Attributes attributes = div.attributes();
+
+        // size, get, set, add, remove
+        assertEquals(2, dataset.size());
+        assertEquals("jsoup", dataset.get("name"));
+        assertEquals("jar", dataset.get("package"));
+
+        dataset.put("name", "jsoup updated");
+        dataset.put("language", "java");
+        dataset.remove("package");
+
+        assertEquals(2, dataset.size());
+        assertEquals(4, attributes.size());
+        assertEquals("jsoup updated", attributes.get("data-name"));
+        assertEquals("jsoup updated", dataset.get("name"));
+        assertEquals("java", attributes.get("data-language"));
+        assertEquals("java", dataset.get("language"));
+
+        attributes.put("data-food", "bacon");
+        assertEquals(3, dataset.size());
+        assertEquals("bacon", dataset.get("food"));
+
+        attributes.put("data-", "empty");
+        assertEquals(null, dataset.get("")); // data- is not a data attribute
+
+        Element p = doc.select("p").first();
+        assertEquals(0, p.dataset().size());
+
     }
 
 

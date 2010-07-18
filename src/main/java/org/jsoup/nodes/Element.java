@@ -106,6 +106,23 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
+     * starting with "data-" is included the dataset.
+     * <p>
+     * E.g., the element {@code &lt;div data-package="jsoup" data-language="Java" class="group"&gt;...} has the dataset
+     * {@code package=jsoup, language=java}.
+     * <p>
+     * This map is a filtered view of the element's attribute map. Changes to one map (add, remove, update) are reflected
+     * in the other map.
+     * <p>
+     * You can find elements that have data attributes using the {@code [^data-]} attribute key prefix selector.
+     * @return a map of {@code key=value} custom data attributes.
+     */
+    public Map<String, String> dataset() {
+        return attributes.dataset();
+    }
+
     @Override
     public final Element parent() {
         return (Element) super.parent();

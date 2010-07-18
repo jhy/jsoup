@@ -15,6 +15,8 @@ import java.util.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute> {
+    protected static final String dataPrefix = "data-";
+    
     private LinkedHashMap<String, Attribute> attributes = new LinkedHashMap<String, Attribute>(2);
     // linked hash map to preserve insertion order.
 
@@ -102,6 +104,15 @@ public class Attributes implements Iterable<Attribute> {
     }
 
     /**
+     * Retrieves a filtered view of attributes that are HTML5 custom data attributes; that is, attributes with keys
+     * starting with {@code data-}.
+     * @return map of custom data attributes.
+     */
+    public Map<String, String> dataset() {
+        return new Dataset();
+    }
+
+    /**
      Get the HTML representation of these attributes.
      @return HTML
      */
@@ -139,4 +150,57 @@ public class Attributes implements Iterable<Attribute> {
         return attributes != null ? attributes.hashCode() : 0;
     }
 
+    private class Dataset extends AbstractMap<String, String> {
+
+        public Set<Entry<String, String>> entrySet() {
+            return new EntrySet();
+        }
+
+        @Override
+        public String put(String key, String value) {
+            String dataKey = dataKey(key);
+            String oldValue = hasKey(dataKey) ? attributes.get(dataKey).getValue() : null;
+            Attribute attr = new Attribute(dataKey, value);
+            attributes.put(dataKey, attr);
+            return oldValue;
+        }
+
+        private class EntrySet extends AbstractSet<Map.Entry<String, String>> {
+            public Iterator<Map.Entry<String, String>> iterator() {
+                return new DatasetIterator();
+            }
+
+            public int size() {
+                int count = 0;
+                Iterator iter = new DatasetIterator();
+                while (iter.hasNext())
+                    count++;
+                return count;
+            }
+        }
+
+        private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
+            private Iterator<Attribute> attrIter = attributes.values().iterator();
+            private Attribute attr;
+            public boolean hasNext() {
+                while (attrIter.hasNext()) {
+                    attr = attrIter.next();
+                    if (attr.isDataAttribute()) return true;
+                }
+                return false;
+            }
+
+            public Entry<String, String> next() {
+                return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
+            }
+
+            public void remove() {
+                attributes.remove(attr.getKey());
+            }
+        }
+    }
+
+    private static String dataKey(String key) {
+        return dataPrefix + key;
+    }
 }
