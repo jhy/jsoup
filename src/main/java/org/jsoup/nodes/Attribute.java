@@ -3,11 +3,13 @@ package org.jsoup.nodes;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.Validate;
 
+import java.util.Map;
+
 /**
  A single key + value attribute. Keys are trimmed and normalised to lower-case.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Attribute {
+public class Attribute implements Map.Entry<String, String>  {
     private String key;
     private String value;
 
@@ -53,9 +55,11 @@ public class Attribute {
      Set the attribute value.
      @param value the new attribute value; must not be null
      */
-    public void setValue(String value) {
+    public String setValue(String value) {
         Validate.notNull(value);
+        String old = this.value;
         this.value = value;
+        return old;
     }
 
     /**
@@ -91,6 +95,10 @@ public class Attribute {
     public static Attribute createFromEncoded(String unencodedKey, String encodedValue) {
         String value = StringEscapeUtils.unescapeHtml(encodedValue);
         return new Attribute(unencodedKey, value);
+    }
+
+    protected boolean isDataAttribute() {
+        return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
     }
 
     @Override

@@ -7,6 +7,8 @@ jsoup changelog
  * Added support for the [^attributePrefix] selector query, to find elements with attributes starting with a prefix.
    Useful for finding elements with datasets: [^data-]
 
+ * Added support for HTML5 dataset custom data attributes, with the Element.dataset() map.
+
  * Changed DT & DD tags to block-mode tags, to follow practise over spec
 
 *** Release 1.2.2 [2010-Jul-11]
