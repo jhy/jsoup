@@ -314,7 +314,7 @@ public class Tag {
 
         // tables
         createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
-        createBlock("CAPTION").setParent("TABLE");
+        createBlock("CAPTION").setParent("TABLE").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
         createBlock("THEAD").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
         createBlock("TFOOT").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
         createBlock("TBODY").setParent("TABLE").setLimitChildren().setOptionalClosing(); // optional / implicit open too. just TR

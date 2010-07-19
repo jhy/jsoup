@@ -199,6 +199,11 @@ public class ParserTest {
         Document doc = Jsoup.parse("<html><head></head><body><table><tbody><tr><td>aaa</td><td>bbb</td></tr></tbody></table></body></html>");
         assertEquals("<table><tbody><tr><td>aaa</td><td>bbb</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
+    
+    @Test public void handlesImplicitCaptionClose() {
+        Document doc = Jsoup.parse("<table><caption>A caption<td>One<td>Two");
+        assertEquals("<table><caption>A caption</caption><tr><td>One</td><td>Two</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
 
     @Test public void handlesBaseTags() {
         String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
