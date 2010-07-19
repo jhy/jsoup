@@ -10,6 +10,8 @@ jsoup changelog
  * Added support for HTML5 dataset custom data attributes, with the Element.dataset() map.
 
  * Changed DT & DD tags to block-mode tags, to follow practise over spec
+ 
+ * Improved implicit table element handling (particularly around thead, tbody, and tfoot).
 
 *** Release 1.2.2 [2010-Jul-11]
  
