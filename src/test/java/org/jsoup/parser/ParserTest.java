@@ -334,6 +334,11 @@ public class ParserTest {
         Document doc = Jsoup.parse(h);
         assertEquals("gb2312", doc.select("meta").attr("charset"));
     }
-
+    
+    @Test public void testHgroup() {
+        Document doc = Jsoup.parse("<h1>Hello <h2>There <hgroup><h1>Another<h2>headline</hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup>");
+        assertEquals("<h1>Hello </h1><h2>There </h2><hgroup><h1>Another</h1><h2>headline</h2></hgroup> <hgroup><h1>More</h1></hgroup><p>stuff</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+    
 
 }
