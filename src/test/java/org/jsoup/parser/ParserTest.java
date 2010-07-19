@@ -327,6 +327,13 @@ public class ParserTest {
         assertEquals("<html><head></head><body><span class=\"foo\">bar</span></body></html>",
                 TextUtil.stripNewlines(doc.html()));
     }
+    
+    @Test public void findsCharsetInMalformedMeta() {
+        String h = "<meta http-equiv=Content-Type content=text/html; charset=gb2312>";
+        // example cited for reason of html5's <meta charset> element
+        Document doc = Jsoup.parse(h);
+        assertEquals("gb2312", doc.select("meta").attr("charset"));
+    }
 
 
 }
