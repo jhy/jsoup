@@ -42,7 +42,7 @@ public class CleanerTest {
     @Test public void testRelaxed() {
         String h = "<h1>Head</h1><td>One<td>Two</td>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
-        assertEquals("<h1>Head</h1><table><tr><td>One</td><td>Two</td></tr></table>", TextUtil.stripNewlines(cleanHtml));
+        assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void testDropComments() {

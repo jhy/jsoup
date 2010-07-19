@@ -180,12 +180,24 @@ public class ParserTest {
     @Test public void createsImplicitTable() {
         String h = "<td>Hello<td><p>There<p>now";
         Document doc = Jsoup.parse(h);
-        assertEquals("<table><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><td>Hello</td><td><p>There</p><p>now</p></td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        // <tbody> is introduced if no implicitly creating table, but allows tr to be directly under table
     }
 
     @Test public void handlesNestedImplicitTable() {
         Document doc = Jsoup.parse("<table><td>1</td></tr> <td>2</td></tr> <td> <table><td>3</td> <td>4</td></table> <tr><td>5</table>");
         assertEquals("<table><tr><td>1</td></tr> <tr><td>2</td></tr> <tr><td> <table><tr><td>3</td> <td>4</td></tr></table> </td></tr><tr><td>5</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+    
+    @Test public void handlesWhatWgExpensesTableExample() {
+        // http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#examples-0
+        Document doc = Jsoup.parse("<table> <colgroup> <col> <colgroup> <col> <col> <col> <thead> <tr> <th> <th>2008 <th>2007 <th>2006 <tbody> <tr> <th scope=rowgroup> Research and development <td> $ 1,109 <td> $ 782 <td> $ 712 <tr> <th scope=row> Percentage of net sales <td> 3.4% <td> 3.3% <td> 3.7% <tbody> <tr> <th scope=rowgroup> Selling, general, and administrative <td> $ 3,761 <td> $ 2,963 <td> $ 2,433 <tr> <th scope=row> Percentage of net sales <td> 11.6% <td> 12.3% <td> 12.6% </table>");
+        assertEquals("<table> <colgroup> <col /> </colgroup><colgroup> <col /> <col /> <col /> </colgroup><thead> <tr> <th> </th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody> <tr> <th scope=\"rowgroup\">Research and development </th><td>$ 1,109 </td><td>$ 782 </td><td>$ 712 </td></tr><tr> <th scope=\"row\">Percentage of net sales </th><td>3.4% </td><td>3.3% </td><td>3.7% </td></tr></tbody><tbody> <tr> <th scope=\"rowgroup\">Selling, general, and administrative </th><td>$ 3,761 </td><td>$ 2,963 </td><td>$ 2,433 </td></tr><tr> <th scope=\"row\">Percentage of net sales </th><td>11.6% </td><td>12.3% </td><td>12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+    
+    @Test public void handlesTbodyTable() {
+        Document doc = Jsoup.parse("<html><head></head><body><table><tbody><tr><td>aaa</td><td>bbb</td></tr></tbody></table></body></html>");
+        assertEquals("<table><tbody><tr><td>aaa</td><td>bbb</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesBaseTags() {
