@@ -25,7 +25,9 @@ public class Tag {
     private boolean empty = false; // can hold nothing; e.g. img
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
     private List<Tag> ancestors; // elements must be a descendant of one of these ancestors
-    private Tag parent; // if not null, elements must be a direct child of parent
+    private List<Tag> excludes = Collections.emptyList(); // cannot contain these tags
+    private boolean directDescendant; // if true, must directly descend from one of the ancestors
+    private boolean limitChildren; // if true, only contain children that've registered parents
 
     private Tag(String tagName) {
         this.tagName = tagName.toLowerCase();
@@ -53,6 +55,7 @@ public class Tag {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.setAncestor(defaultAncestor.tagName);
+                tag.setExcludes();
                 tag.isBlock = false;
                 tag.canContainBlock = true;
             }
@@ -99,6 +102,23 @@ public class Tag {
         // don't allow children to contain their parent (directly)
         if (this.requiresSpecificParent() && this.getImplicitParent().equals(child))
             return false;
+        
+        // confirm limited children
+        if (limitChildren) {
+            for (Tag childParent : child.ancestors) {
+                if (childParent.equals(this))
+                    return true;
+            }
+            return false;
+        }
+        
+        // exclude children
+        if (!excludes.isEmpty()) {
+            for (Tag excluded: excludes) {
+                if (child.equals(excluded))
+                    return false;
+            }
+        }
         
         return true;
     }
@@ -156,11 +176,11 @@ public class Tag {
     }
 
     boolean requiresSpecificParent() {
-        return this.parent != null;
+        return directDescendant;
     }
 
     boolean isValidParent(Tag child) {
-        return this.equals(child.parent);
+        return isValidAncestor(child);
     }
 
     boolean isValidAncestor(Tag child) {
@@ -181,11 +201,6 @@ public class Tag {
 
         Tag tag = (Tag) o;
 
-        if (canContainBlock != tag.canContainBlock) return false;
-        if (canContainInline != tag.canContainInline) return false;
-        if (empty != tag.empty) return false;
-        if (isBlock != tag.isBlock) return false;
-        if (optionalClosing != tag.optionalClosing) return false;
         if (tagName != null ? !tagName.equals(tag.tagName) : tag.tagName != null) return false;
 
         return true;
@@ -316,14 +331,14 @@ public class Tag {
         // tables
         createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
         createBlock("CAPTION").setParent("TABLE");
-        createBlock("THEAD").setParent("TABLE").setOptionalClosing(); // just TR
-        createBlock("TFOOT").setParent("TABLE").setOptionalClosing(); // just TR
-        createBlock("TBODY").setParent("TABLE").setOptionalClosing(); // optional / implicit open too. just TR
-        createBlock("COLGROUP").setParent("TABLE").setOptionalClosing(); // just COL
+        createBlock("THEAD").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
+        createBlock("TFOOT").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
+        createBlock("TBODY").setParent("TABLE").setLimitChildren().setOptionalClosing(); // optional / implicit open too. just TR
+        createBlock("COLGROUP").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just COL
         createBlock("COL").setParent("COLGROUP").setEmpty();
-        createBlock("TR").setParent("TABLE").setOptionalClosing(); // just TH, TD
-        createBlock("TH").setParent("TR").setOptionalClosing();
-        createBlock("TD").setParent("TR").setOptionalClosing();
+        createBlock("TR").setParent("TBODY", "THEAD", "TFOOT", "TABLE").setLimitChildren().setOptionalClosing(); // just TH, TD
+        createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
+        createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
     }
 
     private static Tag createBlock(String tagName) {
@@ -376,7 +391,7 @@ public class Tag {
     }
 
     private Tag setAncestor(String... tagNames) {
-        if (tagNames == null) {
+        if (tagNames == null || tagNames.length == 0) {
             ancestors = Collections.emptyList();
         } else {
             ancestors = new ArrayList<Tag>(tagNames.length);
@@ -386,10 +401,27 @@ public class Tag {
         }
         return this;
     }
+    
+    private Tag setExcludes(String... tagNames) {
+        if (tagNames == null || tagNames.length == 0) {
+            excludes = Collections.emptyList();
+        } else {
+            excludes = new ArrayList<Tag>(tagNames.length);
+            for (String name : tagNames) {
+                excludes.add(Tag.valueOf(name));
+            }
+        }
+        return this;
+    }
 
-    private Tag setParent(String tagName) {
-        parent = Tag.valueOf(tagName);
-        setAncestor(tagName);
+    private Tag setParent(String... tagNames) {
+        directDescendant = true;
+        setAncestor(tagNames);
+        return this;
+    }
+    
+    private Tag setLimitChildren() {
+        limitChildren = true;
         return this;
     }
 }
