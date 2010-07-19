@@ -8,6 +8,8 @@ jsoup changelog
    Useful for finding elements with datasets: [^data-]
 
  * Added support for HTML5 dataset custom data attributes, with the Element.dataset() map.
+ 
+ * Added full support for all new HTML5 tags.
 
  * Changed DT & DD tags to block-mode tags, to follow practise over spec
  

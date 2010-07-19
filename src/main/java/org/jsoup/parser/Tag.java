@@ -232,7 +232,13 @@ public class Tag {
         createBlock("FRAME").setParent("FRAMESET").setEmpty();
         createBlock("NOFRAMES").setParent("FRAMESET").setContainDataOnly();
 
-
+        // html5 sections
+        createBlock("SECTION");
+        createBlock("NAV");
+        createBlock("ASIDE");
+        createBlock("HGROUP").setLimitChildren(); // limited to h1 - h6
+        createBlock("HEADER").setExcludes("HEADER", "FOOTER");
+        createBlock("FOOTER").setExcludes("HEADER", "FOOTER");
 
         // fontstyle
         createInline("FONT");
@@ -245,25 +251,35 @@ public class Tag {
         // phrase
         createInline("EM");
         createInline("STRONG");
-        createInline("DFN");
+        createInline("DFN").setOptionalClosing();
         createInline("CODE");
         createInline("SAMP");
         createInline("KBD");
         createInline("VAR");
         createInline("CITE");
         createInline("ABBR");
+        createInline("TIME").setOptionalClosing();
         createInline("ACRONYM");
+        createInline("MARK");
+        
+        // ruby
+        createInline("RUBY");
+        createInline("RT").setParent("RUBY").setExcludes("RT", "RP");
+        createInline("RP").setParent("RUBY").setExcludes("RT", "RP");
 
         // special
         createInline("A").setOptionalClosing(); // cannot contain self
         createInline("IMG").setEmpty();
         createInline("BR").setEmpty();
+        createInline("WBR").setEmpty();
         createInline("MAP"); // map is defined as inline, but can hold block (what?) or area. Seldom used so NBD.
         createInline("Q");
         createInline("SUB");
         createInline("SUP");
         createInline("SPAN");
         createInline("BDO");
+        createInline("IFRAME").setOptionalClosing();
+        createInline("EMBED").setEmpty();
 
         // things past this point aren't really blocks or inline. I'm using them because they can hold block or inline,
         // but per the spec, only specific elements can hold this. if this becomes a real-world parsing problem,
@@ -271,12 +287,12 @@ public class Tag {
 
         // block
         createBlock("P").setContainInlineOnly(); // emasculated block?
-        createBlock("H1").setContainInlineOnly();
-        createBlock("H2").setContainInlineOnly();
-        createBlock("H3").setContainInlineOnly();
-        createBlock("H4").setContainInlineOnly();
-        createBlock("H5").setContainInlineOnly();
-        createBlock("H6").setContainInlineOnly();
+        createBlock("H1").setAncestor("BODY", "HGROUP").setContainInlineOnly();
+        createBlock("H2").setAncestor("BODY", "HGROUP").setContainInlineOnly();
+        createBlock("H3").setAncestor("BODY", "HGROUP").setContainInlineOnly();
+        createBlock("H4").setAncestor("BODY", "HGROUP").setContainInlineOnly();
+        createBlock("H5").setAncestor("BODY", "HGROUP").setContainInlineOnly();
+        createBlock("H6").setAncestor("BODY", "HGROUP").setContainInlineOnly();
         createBlock("UL");
         createBlock("OL");
         createBlock("PRE").setContainInlineOnly().setPreserveWhitespace();
@@ -284,7 +300,8 @@ public class Tag {
         createBlock("BLOCKQUOTE");
         createBlock("HR").setEmpty();
         createBlock("ADDRESS").setContainInlineOnly();
-
+        createBlock("FIGURE");
+        createBlock("FIGCAPTION").setAncestor("FIGURE");
 
         // formctrl
         createBlock("FORM").setOptionalClosing(); // can't contain self
@@ -294,12 +311,19 @@ public class Tag {
         createInline("LABEL").setAncestor("FORM").setOptionalClosing(); // not self
         createInline("BUTTON").setAncestor("FORM"); // bunch of excludes not defined
         createInline("OPTGROUP").setParent("SELECT"); //  only contain option
-        createInline("OPTION").setParent("SELECT", "OPTGROUP").setOptionalClosing();
+        createInline("OPTION").setParent("SELECT", "OPTGROUP", "DATALIST").setOptionalClosing();
         createBlock("FIELDSET").setAncestor("FORM");
         createInline("LEGEND").setAncestor("FIELDSET");
+        
+        // html5 form ctrl, not specced to have to be in forms
+        createInline("DATALIST");
+        createInline("KEYGEN").setEmpty();
+        createInline("OUTPUT");
+        createInline("PROGRESS").setOptionalClosing();
+        createInline("METER").setOptionalClosing();
 
         // other
-        createInline("AREA").setEmpty(); // not an inline per-se
+        createInline("AREA").setAncestor("MAP").setEmpty(); // not an inline per-se
         createInline("PARAM").setParent("OBJECT").setEmpty();
         createBlock("INS"); // only within body
         createBlock("DEL"); // only within body
@@ -323,6 +347,20 @@ public class Tag {
         createBlock("TR").setParent("TBODY", "THEAD", "TFOOT", "TABLE").setLimitChildren().setOptionalClosing(); // just TH, TD
         createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
         createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
+        
+        // html5 media
+        createBlock("VIDEO").setExcludes("VIDEO", "AUDIO");
+        createBlock("AUDIO").setExcludes("VIDEO", "AUDIO");
+        createInline("SOURCE").setParent("VIDEO", "AUDIO").setEmpty();
+        createInline("TRACK").setParent("VIDEO", "AUDIO").setEmpty();
+        createBlock("CANVAS");
+        
+        // html5 interactive
+        createBlock("DETAILS");
+        createInline("SUMMARY").setParent("DETAILS");
+        createInline("COMMAND").setEmpty();
+        createBlock("MENU");
+        createInline("DEVICE").setEmpty();
     }
 
     private static Tag createBlock(String tagName) {
