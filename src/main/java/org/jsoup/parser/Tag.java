@@ -82,23 +82,7 @@ public class Tag {
 
         if (this.empty || this.isData())
             return false;
-
-        // head can only contain a few. if more than head in here, modify to have a list of valids
-        // TODO: (could solve this with walk for ancestor)
-        if (this.tagName.equals("head")) {
-            if (child.tagName.equals("base") || child.tagName.equals("script") || child.tagName.equals("noscript") || child.tagName.equals("link") ||
-                    child.tagName.equals("meta") || child.tagName.equals("title") || child.tagName.equals("style") || child.tagName.equals("object")) {
-                return true;
-            }
-            return false;
-        }
         
-        // dt and dd (in dl)
-        if (this.tagName.equals("dt") && (child.tagName.equals("dd") || child.tagName.equals("dl")))
-            return false;
-        if (this.tagName.equals("dd") && (child.tagName.equals("dt") || child.tagName.equals("dl")))
-            return false;
-
         // don't allow children to contain their parent (directly)
         if (this.requiresSpecificParent() && this.getImplicitParent().equals(child))
             return false;
@@ -230,7 +214,7 @@ public class Tag {
 
         // document
         createBlock("HTML").setAncestor(new String[0]); // specific includes not impl
-        createBlock("HEAD").setAncestor("HTML"); // specific includes not impl: SCRIPT, STYLE, META, LINK, OBJECT
+        createBlock("HEAD").setParent("HTML").setLimitChildren();
         createBlock("BODY").setAncestor("HTML"); // specific includes not impl
         createBlock("FRAMESET").setAncestor("HTML");
 
@@ -310,7 +294,7 @@ public class Tag {
         createInline("LABEL").setAncestor("FORM").setOptionalClosing(); // not self
         createInline("BUTTON").setAncestor("FORM"); // bunch of excludes not defined
         createInline("OPTGROUP").setParent("SELECT"); //  only contain option
-        createInline("OPTION").setParent("SELECT").setOptionalClosing();
+        createInline("OPTION").setParent("SELECT", "OPTGROUP").setOptionalClosing();
         createBlock("FIELDSET").setAncestor("FORM");
         createInline("LEGEND").setAncestor("FIELDSET");
 
@@ -323,8 +307,8 @@ public class Tag {
         // definition lists. per spec, dt and dd are inline and must directly descend from dl. However in practise
         // these are all used as blocks and dl need only be an ancestor
         createBlock("DL").setOptionalClosing(); // can't nest
-        createBlock("DT").setAncestor("DL").setOptionalClosing(); // only within DL.
-        createBlock("DD").setAncestor("DL").setOptionalClosing(); // only within DL.
+        createBlock("DT").setAncestor("DL").setExcludes("DL", "DD").setOptionalClosing(); // only within DL.
+        createBlock("DD").setAncestor("DL").setExcludes("DL", "DT").setOptionalClosing(); // only within DL.
 
         createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
 
