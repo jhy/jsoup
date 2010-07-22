@@ -39,6 +39,14 @@ public class ElementTest {
         List<Element> empty = doc.getElementsByTag("wtf");
         assertEquals(0, empty.size());
     }
+    
+    @Test public void getNamespacedElementsByTag() {
+        Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div>");
+        Elements els = doc.getElementsByTag("abc:def");
+        assertEquals(1, els.size());
+        assertEquals("1", els.first().id());
+        assertEquals("abc:def", els.first().tagName());
+    }
 
     @Test public void testGetElementById() {
         Document doc = Jsoup.parse(reference);
@@ -52,7 +60,7 @@ public class ElementTest {
         Element span = div2.child(0).getElementById("2"); // called from <p> context should be span
         assertEquals("span", span.tagName());
     }
-
+    
     @Test public void testGetText() {
         Document doc = Jsoup.parse(reference);
         assertEquals("Hello Another element", doc.text());

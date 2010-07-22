@@ -297,6 +297,32 @@ public class TokenQueue {
             pos++;
         return queue.substring(start, pos);
     }
+    
+    /**
+     * Consume an tag name off the queue (word or :)
+     * 
+     * @return tag name
+     */
+    public String consumeTagName() {
+        int start = pos;
+        while (!isEmpty() && (matchesWord() || matchesAny(":")))
+            pos++;
+        
+        return queue.substring(start, pos);
+    }
+    
+    /**
+     * Consume a CSS element selector (tag name, but | instead of : for namespaces, to not conflict with :pseudo selects).
+     * 
+     * @return tag name
+     */
+    public String consumeElementSelector() {
+        int start = pos;
+        while (!isEmpty() && (matchesWord() || matchesAny("|")))
+            pos++;
+        
+        return queue.substring(start, pos);
+    }
 
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
