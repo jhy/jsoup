@@ -118,7 +118,7 @@ public class Parser {
 
     private void parseEndTag() {
         tq.consume("</");
-        String tagName = tq.consumeWord();
+        String tagName = tq.consumeTagName();
         tq.chompTo(">");
 
         if (tagName.length() != 0) {
@@ -129,7 +129,7 @@ public class Parser {
 
     private void parseStartTag() {
         tq.consume("<");
-        String tagName = tq.consumeWord();
+        String tagName = tq.consumeTagName();
 
         if (tagName.length() == 0) { // doesn't look like a start tag after all; put < back on stack and handle as text
             tq.addFirst("&lt;");

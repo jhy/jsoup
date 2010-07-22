@@ -14,6 +14,8 @@ jsoup changelog
  * Changed DT & DD tags to block-mode tags, to follow practise over spec
  
  * Improved implicit table element handling (particularly around thead, tbody, and tfoot).
+ 
+ * Added support for namespaced elements (<fb:name>) and selectors (fb|name)
 
 *** Release 1.2.2 [2010-Jul-11]
  

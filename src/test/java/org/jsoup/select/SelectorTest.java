@@ -73,6 +73,27 @@ public class SelectorTest {
         assertEquals("Bar", contains.first().attr("title"));
         assertEquals("SLAM", contains.last().attr("title"));
     }
+    
+    @Test public void testNamespacedTag() {
+        Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>");
+        Elements byTag = doc.select("abc|def");
+        assertEquals(2, byTag.size());
+        assertEquals("1", byTag.first().id());
+        assertEquals("2", byTag.last().id());
+        
+        Elements byAttr = doc.select(".bold");
+        assertEquals(1, byAttr.size());
+        assertEquals("2", byAttr.last().id());
+        
+        Elements byTagAttr = doc.select("abc|def.bold");
+        assertEquals(1, byTagAttr.size());
+        assertEquals("2", byTagAttr.last().id());
+        
+        Elements byContains = doc.select("abc|def:contains(e)");
+        assertEquals(2, byContains.size());
+        assertEquals("1", byContains.first().id());
+        assertEquals("2", byContains.last().id());
+    }
 
     @Test public void testByAttributeStarting() {
         Document doc = Jsoup.parse("<div id=1 data-name=jsoup>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>");

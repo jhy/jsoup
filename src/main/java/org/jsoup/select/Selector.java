@@ -22,6 +22,7 @@ import java.util.LinkedHashSet;
  <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
  <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
  <tr><td><code>E</code></td><td>an element of type E</td><td><code>h1</code></td></tr>
+ <tr><td><code>ns|E</code></td><td>an element of type E in the namespace <i>ns</i></td><td><code>fb|name</code> finds <code>&lt;fb:name></code> elements</td></tr>
  <tr><td><code>E#id</code></td><td>an Element with attribute ID of "id"</td><td><code>div#wrap</code>, <code>#logo</code></td></tr>
  <tr><td><code>E.class</code></td><td>an Element with a class name of "class"</td><td><code>div.left</code>, <code>.result</code></td></tr>
  <tr><td><code>E[attr]</code></td><td>an Element with the attribute named "attr"</td><td><code>a[href]</code>, <code>[title]</code></td></tr>
@@ -200,9 +201,12 @@ public class Selector {
     }
 
     private Elements byTag() {
-        String tagName = tq.consumeWord();
+        String tagName = tq.consumeElementSelector();
         Validate.notEmpty(tagName);
-
+        
+        // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+        if (tagName.contains("|"))
+            tagName = tagName.replace("|", ":");
         return root.getElementsByTag(tagName);
     }
 

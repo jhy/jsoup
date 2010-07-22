@@ -254,6 +254,12 @@ public class ParserTest {
         assertEquals(h, TextUtil.stripNewlines(out));
     }
     
+    @Test public void handlesUnknownNamespaceTags() {
+        String h = "<foo:bar/><abc:def id=1>Foo<p>Hello</abc:def>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<foo:bar></foo:bar><abc:def id=\"1\">Foo<p>Hello</p></abc:def>", TextUtil.stripNewlines(doc.body().html()));
+    }
+    
     @Test public void handlesEmptyBlocks() {
         String h = "<div id=1/><div id=2><img /></div>";
         Document doc = Jsoup.parse(h);
