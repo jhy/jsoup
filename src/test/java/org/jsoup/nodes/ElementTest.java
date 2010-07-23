@@ -197,7 +197,13 @@ public class ElementTest {
 
     @Test public void testFormatHtml() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
-        assertEquals("<html>\n <head>\n </head>\n <body>\n  <div>\n   <p>Hello</p>\n  </div>\n </body>\n</html>", doc.html());
+        assertEquals("<html>\n <head></head>\n <body>\n  <div>\n   <p>Hello</p>\n  </div>\n </body>\n</html>", doc.html());
+    }
+    
+    @Test public void testEmptyElementFormatHtml() {
+        // don't put newlines into empty blocks
+        Document doc = Jsoup.parse("<section><div></div></section>");
+        assertEquals("\n<section>\n <div></div>\n</section>", doc.select("section").first().outerHtml());
     }
 
     @Test public void testSetText() {

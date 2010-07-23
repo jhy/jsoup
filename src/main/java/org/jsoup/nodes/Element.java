@@ -903,15 +903,16 @@ public class Element extends Node {
                 .append(tagName())
                 .append(attributes.html());
 
-        if (childNodes.isEmpty() && tag.isEmpty())
+        if (childNodes.isEmpty() && tag.isSelfClosing())
             accum.append(" />");
         else
             accum.append(">");
     }
 
     void outerHtmlTail(StringBuilder accum, int depth) {
-        if (!tag.isEmpty()) {
-            if (tag.canContainBlock()) indent(accum, depth);
+        if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
+            if (!childNodes.isEmpty() && tag.canContainBlock())
+                indent(accum, depth);
             accum.append("</").append(tagName()).append(">");
         }
     }

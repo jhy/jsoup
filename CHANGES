@@ -11,11 +11,13 @@ jsoup changelog
  
  * Added full support for all new HTML5 tags.
 
- * Changed DT & DD tags to block-mode tags, to follow practise over spec
+ * Changed DT & DD tags to block-mode tags, to follow practice over spec
  
  * Improved implicit table element handling (particularly around thead, tbody, and tfoot).
  
  * Added support for namespaced elements (<fb:name>) and selectors (fb|name)
+ 
+ * Improved HTML output format for empty elements and auto-detected self closing tags
 
 *** Release 1.2.2 [2010-Jul-11]
  

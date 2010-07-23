@@ -150,6 +150,8 @@ public class Parser {
         boolean isEmptyElement = tag.isEmpty(); // empty element if empty tag (e.g. img) or self-closed el (<div/>
         if (tq.matchChomp("/>")) { // close empty element or tag
             isEmptyElement = true;
+            if (!tag.isKnownTag()) // if unknown and a self closed, allow it to be self closed on output. this doesn't force all instances to be empty
+                tag.setSelfClosing();
         } else {
             tq.matchChomp(">");
         }
