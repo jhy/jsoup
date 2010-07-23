@@ -18,11 +18,13 @@ public class Tag {
     }
 
     private String tagName;
+    private boolean knownTag = false; // if pre-defined or auto-created
     private boolean isBlock = true; // block or inline
     private boolean canContainBlock = true; // Can this tag hold block level tags?
     private boolean canContainInline = true; // only pcdata if not
     private boolean optionalClosing = false; // If tag is open, and another seen, close previous tag
     private boolean empty = false; // can hold nothing; e.g. img
+    private boolean selfClosing = false; // can self close (<foo />). used for unknown tags that self close, without forcing them as empty.
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
     private List<Tag> ancestors; // elements must be a descendant of one of these ancestors
     private List<Tag> excludes = Collections.emptyList(); // cannot contain these tags
@@ -145,6 +147,22 @@ public class Tag {
      */
     public boolean isEmpty() {
         return empty;
+    }
+    
+    /**
+     * Get if this tag is self closing.
+     * @return if this tag should be output as self closing.
+     */
+    public boolean isSelfClosing() {
+        return empty || selfClosing;
+    }
+    
+    /**
+     * Get if this is a pre-defined tag, or was auto created on parsing.
+     * @return if a known tag
+     */
+    public boolean isKnownTag() {
+        return knownTag;
     }
 
     /**
@@ -376,6 +394,7 @@ public class Tag {
 
     private static Tag register(Tag tag) {
         tag.setAncestor(defaultAncestor.tagName);
+        tag.setKnownTag();
         synchronized (tags) {
             tags.put(tag.tagName, tag);
         }
@@ -444,6 +463,16 @@ public class Tag {
     
     private Tag setLimitChildren() {
         limitChildren = true;
+        return this;
+    }
+    
+    Tag setSelfClosing() {
+        selfClosing = true;
+        return this;
+    }
+    
+    private Tag setKnownTag() {
+        knownTag = true;
         return this;
     }
 }
