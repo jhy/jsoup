@@ -106,6 +106,15 @@ public class ParseTest {
         assertEquals("新", doc.text());
     }
     
+    @Test public void testNytArticle() throws IOException {
+        // has tags like <nyt_text>
+        File in = getFile("/htmltests/nyt-article-1.html");
+        Document doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
+        
+        Element headline = doc.select("nyt_headline[version=1.0]").first();
+        assertEquals("As BP Lays Out Future, It Will Not Include Hayward", headline.text());
+    }
+    
     File getFile(String resourceName) {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());

@@ -486,4 +486,16 @@ public class SelectorTest {
         assertEquals(1, p7.size());
         assertEquals("1", p7.first().id());
     }
+    
+    @Test public void testRelaxedTags() {
+        Document doc = Jsoup.parse("<abc_def id=1>Hello</abc_def> <abc-def id=2>There</abc-def>");
+        
+        Elements el1 = doc.select("abc_def");
+        assertEquals(1, el1.size());
+        assertEquals("1", el1.first().id());
+        
+        Elements el2 = doc.select("abc-def");
+        assertEquals(1, el2.size());
+        assertEquals("2", el2.first().id());
+    }
 }
