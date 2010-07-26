@@ -197,6 +197,19 @@ public abstract class Node {
     }
     
     /**
+     * Gets the Document associated with this Node. 
+     * @return the Document associated with this Node, or null if there is no such Document.
+     */
+    public Document ownerDocument() {
+        if (this instanceof Document)
+            return (Document) this;
+        else if (parentNode == null)
+            return null;
+        else
+            return parentNode.ownerDocument();
+    }
+    
+    /**
      * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
      */
     public void remove() {

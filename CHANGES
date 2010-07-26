@@ -21,6 +21,8 @@ jsoup changelog
  
  * Improved HTML output format for empty elements and auto-detected self closing tags
  
+ * Implemented Node.ownerDocument DOM method
+ 
 *** Release 1.2.2 [2010-Jul-11]
  
  * Performance optimisation:
