@@ -55,4 +55,12 @@ public class NodeTest {
         
         assertEquals("One <em>foo</em> three", p.html());
     }
+    
+    @Test public void ownerDocument() {
+        Document doc = Jsoup.parse("<p>Hello");
+        Element p = doc.select("p").first();
+        assertTrue(p.ownerDocument() == doc);
+        assertTrue(doc.ownerDocument() == doc);
+        assertNull(doc.parent());
+    }
 }
