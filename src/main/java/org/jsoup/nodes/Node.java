@@ -263,13 +263,6 @@ public abstract class Node {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
-
-    protected int nodeDepth() {
-        if (parentNode == null)
-            return 0;
-        else
-            return parentNode.nodeDepth() + 1;
-    }
     
     /**
      Retrieves this node's sibling nodes. Effectively, {@link #childNodes()  node.parent.childNodes()}.
