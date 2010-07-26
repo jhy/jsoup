@@ -136,7 +136,8 @@ public class Parser {
             parseTextNode();
             return;
         }
-
+        
+        tq.consumeWhitespace();
         Attributes attributes = new Attributes();
         while (!tq.matchesAny("<", "/>", ">") && !tq.isEmpty()) {
             Attribute attribute = parseAttribute();

@@ -97,6 +97,11 @@ public class ParserTest {
         assertEquals("One", options.first().text());
         assertEquals("Two", options.last().text());
     }
+    
+    @Test public void testSpaceAfterTag() {
+        Document doc = Jsoup.parse("<div > <a name=\"top\"></a ><p id=1 >Hello</p></div>");
+        assertEquals("<div> <a name=\"top\"></a><p id=\"1\">Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
 
     @Test public void createsDocumentStructure() {
         String html = "<meta name=keywords /><link rel=stylesheet /><title>jsoup</title><p>Hello world</p>";
@@ -346,5 +351,8 @@ public class ParserTest {
         assertEquals("<h1>Hello </h1><h2>There </h2><hgroup><h1>Another</h1><h2>headline</h2></hgroup> <hgroup><h1>More</h1></hgroup><p>stuff</p>", TextUtil.stripNewlines(doc.body().html()));
     }
     
-
+    @Test public void testRelaxedTags() {
+        Document doc = Jsoup.parse("<abc_def id=1>Hello</abc_def> <abc-def>There</abc-def>");
+        assertEquals("<abc_def id=\"1\">Hello</abc_def> <abc-def>There</abc-def>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }

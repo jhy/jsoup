@@ -299,13 +299,13 @@ public class TokenQueue {
     }
     
     /**
-     * Consume an tag name off the queue (word or :)
+     * Consume an tag name off the queue (word or :, _, -)
      * 
      * @return tag name
      */
     public String consumeTagName() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny(":")))
+        while (!isEmpty() && (matchesWord() || matchesAny(":", "_", "-")))
             pos++;
         
         return queue.substring(start, pos);
@@ -318,7 +318,7 @@ public class TokenQueue {
      */
     public String consumeElementSelector() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("|")))
+        while (!isEmpty() && (matchesWord() || matchesAny("|", "_", "-")))
             pos++;
         
         return queue.substring(start, pos);
