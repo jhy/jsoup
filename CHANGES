@@ -20,11 +20,11 @@ jsoup changelog
  * Added support for tag names with - and _ (<abc_foo>, <abc-foo>)
  
  * Improved HTML output format for empty elements and auto-detected self closing tags
- 
+
  * Implemented Node.ownerDocument DOM method
 
  * Fixed support for character class regular expressions in [attr=~regex] selector
- 
+
 *** Release 1.2.2 [2010-Jul-11]
  
  * Performance optimisation:
