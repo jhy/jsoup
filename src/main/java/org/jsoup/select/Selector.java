@@ -153,7 +153,7 @@ public class Selector {
             return byClass();
         } else if (tq.matchesWord()) {
             return byTag();
-        } else if (tq.matchChomp("[")) {
+        } else if (tq.matches("[")) {
             return byAttribute();
         } else if (tq.matchChomp("*")) {
             return allElements();
@@ -211,32 +211,34 @@ public class Selector {
     }
 
     private Elements byAttribute() {
-        String key = tq.consumeToAny("=", "!=", "^=", "$=", "*=", "~=", "]"); // eq, not, start, end, contain, match, (no val)
+        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key);
+        cq.consumeWhitespace();
 
-        if (tq.matchChomp("]")) {
+        if (cq.isEmpty()) {
             return key.startsWith("^") ? root.getElementsByAttributeStarting(key.substring(1)) : root.getElementsByAttribute(key);
         } else {
-            if (tq.matchChomp("="))
-                return root.getElementsByAttributeValue(key, tq.chompTo("]"));
+            if (cq.matchChomp("="))
+                return root.getElementsByAttributeValue(key, cq.remainder());
 
-            else if (tq.matchChomp("!="))
-                return root.getElementsByAttributeValueNot(key, tq.chompTo("]"));
+            else if (cq.matchChomp("!="))
+                return root.getElementsByAttributeValueNot(key, cq.remainder());
 
-            else if (tq.matchChomp("^="))
-                return root.getElementsByAttributeValueStarting(key, tq.chompTo("]"));
+            else if (cq.matchChomp("^="))
+                return root.getElementsByAttributeValueStarting(key, cq.remainder());
 
-            else if (tq.matchChomp("$="))
-                return root.getElementsByAttributeValueEnding(key, tq.chompTo("]"));
+            else if (cq.matchChomp("$="))
+                return root.getElementsByAttributeValueEnding(key, cq.remainder());
 
-            else if (tq.matchChomp("*="))
-                return root.getElementsByAttributeValueContaining(key, tq.chompTo("]"));
+            else if (cq.matchChomp("*="))
+                return root.getElementsByAttributeValueContaining(key, cq.remainder());
             
-            else if (tq.matchChomp("~="))
-                return root.getElementsByAttributeValueMatching(key, tq.chompTo("]"));
+            else if (cq.matchChomp("~="))
+                return root.getElementsByAttributeValueMatching(key, cq.remainder());
             
             else
-                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, tq.remainder());
+                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
     }
 

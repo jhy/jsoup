@@ -116,6 +116,14 @@ public class SelectorTest {
         assertEquals("3", imgs.get(2).id());
     }
 
+    @Test public void testByAttributeRegexCharacterClass() {
+        Document doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif id=4></p>");
+        Elements imgs = doc.select("img[src~=[o]]");
+        assertEquals(2, imgs.size());
+        assertEquals("1", imgs.get(0).id());
+        assertEquals("4", imgs.get(1).id());
+    }
+
     @Test public void testAllElements() {
         String h = "<div><p>Hello</p><p><b>there</b></p></div>";
         Document doc = Jsoup.parse(h);
