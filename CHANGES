@@ -18,6 +18,8 @@ jsoup changelog
  * Added support for namespaced elements (<fb:name>) and selectors (fb|name)
  
  * Added support for tag names with - and _ (<abc_foo>, <abc-foo>)
+
+ * Handle tags with internal trailing space (<foo >)
  
  * Improved HTML output format for empty elements and auto-detected self closing tags
 
