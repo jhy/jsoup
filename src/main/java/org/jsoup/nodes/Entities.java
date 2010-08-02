@@ -1,4 +1,6 @@
-package org.jsoup;
+package org.jsoup.nodes;
+
+import org.jsoup.parser.TokenQueue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,31 +15,88 @@ import java.nio.charset.CharsetEncoder;
  * Draft implementation. Do not consume.
  */
 class Entities {
-    static final Map<String, Integer> base;
-    static final Map<String, Integer> full;
-    static final Map<Integer, String> fullByVal;
+    public enum EscapeMode {
+        base, extended
+    }
 
-    static String escape(String string, Charset charset) {
-        // todo: this needs option to: use base names only (with numerical as fallback)
-        StringBuilder accum = new StringBuilder((int) (string.length() * 1.5));
-        CharsetEncoder encoder = charset.newEncoder();
+    private static final Map<String, Character> base;
+    private static final Map<String, Character> full;
+    private static final Map<Character, String> baseByVal;
+    private static final Map<Character, String> fullByVal;
+
+    static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
+        StringBuilder accum = new StringBuilder(string.length() * 2);
+        Map<Character, String> map = escapeMode == EscapeMode.extended ? fullByVal : baseByVal;
 
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
-            if (fullByVal.containsKey((int) c))
-                accum.append("&").append(fullByVal.get((int) c)).append(";");
+            if (map.containsKey(c))
+                accum.append("&").append(map.get(c)).append(";");
             else if (encoder.canEncode(c))
                 accum.append(c);
             else
-                accum.append("&#").append((int)c).append(";");
+                accum.append("&#").append((int) c).append(";");
         }
 
         return accum.toString();
     }
 
-    // base entities can be unescaped without trailing ;
+    static String unescape(String string) {
+        if (!string.contains("&"))
+            return string;
+
+        StringBuilder accum = new StringBuilder(string.length());
+        TokenQueue cq = new TokenQueue(string);
+
+        // formats dealt with: [&amp] (no semi), [&amp;], [&#123;] (int), &#
+        while (!cq.isEmpty()) {
+            accum.append(cq.consumeTo("&"));
+            if (!cq.matches("&")) { // ran to end
+                accum.append(cq.remainder());
+                break;
+            }
+            cq.advance(); // past &
+            String val;
+            int charval = -1;
+
+            boolean isNum = false;
+            if (cq.matches("#")) {
+                isNum = true;
+                cq.consume();
+            }
+            val = cq.consumeWord(); // and num!
+            if (val.length() == 0) {
+                accum.append("&");
+                continue;
+            }
+            if (cq.matches(";"))
+                cq.advance();
+
+            if (isNum) {
+                try {
+                    if (val.charAt(0) == 'x' || val.charAt(0) == 'X')
+                        charval = Integer.valueOf(val.substring(1), 16);
+                    else
+                        charval = Integer.valueOf(val, 10);
+                } catch (NumberFormatException e) {
+                    // skip
+                }
+            } else {
+                if (full.containsKey(val.toLowerCase()))
+                    charval = full.get(val.toLowerCase());
+            }
+            if (charval == -1 || charval > 0xFFFF) // out of range
+                accum.append("&").append(val).append(";");
+            else
+                accum.append((char) charval);
+        }
+
+        return accum.toString();
+    }
+
+    // most common, base entities can be unescaped without trailing ;
     // e.g. &amp
-    static final Object[][] baseArray = {
+    private static final Object[][] baseArray = {
             {"AElig", 0x000C6},
             {"AMP", 0x00026},
             {"Aacute", 0x000C1},
@@ -146,7 +205,9 @@ class Entities {
             {"yuml", 0x000FF}
     };
 
-    static final Object[][] fullArray = {
+    // in most situations, will be better to use UTF8 and use the character directly, or use the numerical escape.
+    // are people really likely to remember "&CounterClockwiseContourIntegral;"? good grief.
+    private static final Object[][] fullArray = {
             {"AElig", 0x000C6},
             {"AMP", 0x00026},
             {"Aacute", 0x000C1},
@@ -2182,14 +2243,20 @@ class Entities {
     };
 
     static {
-        base = new HashMap<String, Integer>(baseArray.length);
-        full = new HashMap<String, Integer>(fullArray.length);
-        fullByVal = new HashMap<Integer, String>(fullArray.length);
+        base = new HashMap<String, Character>(baseArray.length);
+        full = new HashMap<String, Character>(fullArray.length);
+        baseByVal = new HashMap<Character, String>(baseArray.length);
+        fullByVal = new HashMap<Character, String>(fullArray.length);
 
-        for (Object[] entity : baseArray) base.put(((String) entity[0]).toLowerCase(), (Integer) entity[1]);
+        for (Object[] entity : baseArray) {
+            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
+            base.put((String) entity[0], c);
+            baseByVal.put(c, ((String) entity[0]).toLowerCase());
+        }
         for (Object[] entity : fullArray) {
-            full.put(((String) entity[0]).toLowerCase(), (Integer) entity[1]);
-            fullByVal.put((Integer) entity[1], ((String) entity[0]));
+            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
+            full.put((String) entity[0], c);
+            fullByVal.put(c, ((String) entity[0]).toLowerCase());
         }
     }
 
