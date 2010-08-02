@@ -5,6 +5,7 @@ import org.jsoup.parser.Tag;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.nio.charset.Charset;
 
 /**
  A HTML Document.
@@ -147,6 +148,39 @@ public class Document extends Element {
     @Override
     public String nodeName() {
         return "#document";
+    }
+
+    /**
+     * A Document's output settings control the form of the text() and html() methods.
+     */
+    public static class OutputSettings {
+        private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
+        private Charset charset = Charset.forName("UTF-8");
+        
+        public OutputSettings() {}
+
+        public Entities.EscapeMode escapeMode() {
+            return escapeMode;
+        }
+
+        public OutputSettings escapeMode(Entities.EscapeMode escapeMode) {
+            this.escapeMode = escapeMode;
+            return this;
+        }
+
+        public Charset charset() {
+            return charset;
+        }
+
+        public OutputSettings charset(Charset charset) {
+            this.charset = charset;
+            return this;
+        }
+
+        public OutputSettings charset(String charset) {
+            this.charset = Charset.forName(charset);
+            return this;
+        }
     }
 }
 

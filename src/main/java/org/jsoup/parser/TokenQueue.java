@@ -123,6 +123,13 @@ public class TokenQueue {
     }
 
     /**
+     * Drops the next character off the queue.
+     */
+    public void advance() {
+        if (!isEmpty()) pos++;
+    }
+
+    /**
      * Consume one character off queue.
      * @return first character on queue.
      */
