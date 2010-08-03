@@ -24,7 +24,6 @@ public class EntitiesTest {
         String text = "Hello &amp;&LT&gt; &ANGST &#960; &#960 &#x65B0; there &!";
         assertEquals("Hello &<> Å π π 新 there &!", Entities.unescape(text));
 
-        assertEquals("&0987654321; &unknown;", Entities.unescape("&0987654321; &unknown"));
-        // these missed encodes aren't 100%, not sure how correct the fallback need to be
+        assertEquals("&0987654321; &unknown", Entities.unescape("&0987654321; &unknown"));
     }
 }
