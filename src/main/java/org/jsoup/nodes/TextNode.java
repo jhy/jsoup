@@ -65,8 +65,8 @@ public class TextNode extends Node {
         return StringUtils.isBlank(normaliseWhitespace(getWholeText()));
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth) {
-        String html = StringEscapeUtils.escapeHtml(getWholeText());
+    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+        String html = Entities.escape(getWholeText(), out);
         if (parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
             html = normaliseWhitespace(html);
         }
@@ -76,7 +76,7 @@ public class TextNode extends Node {
         accum.append(html);
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth) {}
+    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
     public String toString() {
         return outerHtml();
@@ -88,7 +88,7 @@ public class TextNode extends Node {
      * @return TextNode containing unencoded data (e.g. &lt;)
      */
     public static TextNode createFromEncoded(String encodedText, String baseUri) {
-        String text = StringEscapeUtils.unescapeHtml(encodedText);
+        String text = Entities.unescape(encodedText);
         return new TextNode(text, baseUri);
     }
 

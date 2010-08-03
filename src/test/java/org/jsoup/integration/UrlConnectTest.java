@@ -18,7 +18,13 @@ public class UrlConnectTest {
         String url = "http://www.google.com"; // no trailing / to force redir
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("Google"));
-    } 
+    }
+
+    // @Test // uncomment to enble
+    public void fetchBaidu() throws IOException {
+        Document doc = Jsoup.parse(new URL("http://www.baidu.com/"), 10*1000);
+        assertEquals("GB2312", doc.outputSettings().charset().displayName());
+    }
     
     // @Test // uncomment to enable
     public void exceptOnUnknownContentType() {

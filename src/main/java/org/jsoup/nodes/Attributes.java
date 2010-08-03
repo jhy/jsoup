@@ -118,14 +118,14 @@ public class Attributes implements Iterable<Attribute> {
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
-        html(accum);
+        html(accum, (new Document(null)).outputSettings()); // output settings a bit funky, but this html() seldom used
         return accum.toString();
     }
     
-    void html(StringBuilder accum) {
+    void html(StringBuilder accum, Document.OutputSettings out) {
         for (Attribute attribute : this) {
             accum.append(" ");
-            attribute.html(accum);
+            attribute.html(accum, out);
         }
     }
     

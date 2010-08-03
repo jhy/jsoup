@@ -341,16 +341,16 @@ public abstract class Node {
     }
 
     protected void outerHtml(StringBuilder accum) {
-        new NodeTraversor(new OuterHtmlVisitor(accum)).traverse(this);
+        new NodeTraversor(new OuterHtmlVisitor(accum, ownerDocument().outputSettings())).traverse(this);
     }
 
     /**
      Get the outer HTML of this node.
      @param accum accumulator to place HTML into
      */
-    abstract void outerHtmlHead(StringBuilder accum, int depth);
+    abstract void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out);
 
-    abstract void outerHtmlTail(StringBuilder accum, int depth);
+    abstract void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out);
 
     public String toString() {
         return outerHtml();
@@ -377,17 +377,19 @@ public abstract class Node {
 
     private static class OuterHtmlVisitor implements NodeVisitor {
         private StringBuilder accum;
+        private Document.OutputSettings out;
 
-        OuterHtmlVisitor(StringBuilder accum) {
+        OuterHtmlVisitor(StringBuilder accum, Document.OutputSettings out) {
             this.accum = accum;
+            this.out = out;
         }
 
         public void head(Node node, int depth) {
-            node.outerHtmlHead(accum, depth);
+            node.outerHtmlHead(accum, depth, out);
         }
 
         public void tail(Node node, int depth) {
-            node.outerHtmlTail(accum, depth);
+            node.outerHtmlTail(accum, depth, out);
         }
     }
 }

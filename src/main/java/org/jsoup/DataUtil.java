@@ -28,11 +28,11 @@ class DataUtil {
      * @return
      * @throws IOException
      */
-    static String load(File in, String charsetName) throws IOException {        
+    static Document load(File in, String charsetName, String baseUri) throws IOException {
         InputStream inStream = new FileInputStream(in);
-        String data = readInputStream(inStream, charsetName);
+        Document doc = readInputStream(inStream, charsetName, baseUri);
         inStream.close();
-        return data;
+        return doc;
     }
 
     /**
@@ -42,7 +42,7 @@ class DataUtil {
      @return
      @throws IOException
      */
-    static String load(URL url, int timeoutMillis) throws IOException {
+    static Document load(URL url, int timeoutMillis) throws IOException {
         String protocol = url.getProtocol();
         Validate.isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
 
@@ -64,14 +64,14 @@ class DataUtil {
         InputStream inStream = new BufferedInputStream(conn.getInputStream());
         String charSet = getCharsetFromContentType(contentType); // may be null, readInputStream deals with it
 
-        String data = readInputStream(inStream, charSet);
+        Document doc = readInputStream(inStream, charSet, url.toExternalForm());
         inStream.close();
-        return data;
+        return doc;
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
-    private static String readInputStream(InputStream inStream, String charsetName) throws IOException {
+    private static Document readInputStream(InputStream inStream, String charsetName, String baseUri) throws IOException {
         byte[] buffer = new byte[bufferSize];
         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
         int read;
@@ -83,22 +83,29 @@ class DataUtil {
         ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
         
         String docData;
+        Document doc = null;
         if (charsetName == null) { // determine from meta. safe parse as UTF-8
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
-            Document doc = Jsoup.parse(docData);
+            doc = Jsoup.parse(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
                 if (foundCharset != null && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                    charsetName = foundCharset;
                     byteData.rewind();
                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                    doc = null;
                 }
             }
         } else { // specified by content type header (or by user on file load)
             docData = Charset.forName(charsetName).decode(byteData).toString();
         }
-        return docData;
+        if (doc == null) {
+            doc = Jsoup.parse(docData, baseUri);
+            doc.outputSettings().charset(charsetName);
+        }
+        return doc;
     }
     
     /**

@@ -32,4 +32,18 @@ public class DocumentTest {
         assertEquals("Hello", withTitle.title());
         assertEquals("Hello", withTitle.select("title").first().text());
     }
+
+    @Test public void testOutputEncoding() {
+        Document doc = Jsoup.parse("<p title=π>π & < > </p>");
+        // default is utf-8
+        assertEquals("<p title=\"π\">π &amp; &lt; &gt; </p>", doc.body().html());
+        assertEquals("UTF-8", doc.outputSettings().charset().displayName());
+
+        doc.outputSettings().charset("ascii");
+        assertEquals(Entities.EscapeMode.base, doc.outputSettings().escapeMode());
+        assertEquals("<p title=\"&#960;\">&#960; &amp; &lt; &gt; </p>", doc.body().html());
+
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
+        assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt; </p>", doc.body().html());
+    }
 }

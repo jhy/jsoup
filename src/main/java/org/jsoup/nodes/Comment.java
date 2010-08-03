@@ -29,12 +29,15 @@ public class Comment extends Node {
         return attributes.get(COMMENT_KEY);
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth) {
+    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         indent(accum, depth);
-        accum.append(String.format("<!--%s-->", getData()));
+        accum
+                .append("<!--")
+                .append(getData())
+                .append("-->");
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth) {}
+    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
     public String toString() {
         return outerHtml();

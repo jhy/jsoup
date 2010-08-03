@@ -67,14 +67,14 @@ public class Attribute implements Map.Entry<String, String>  {
      @return HTML
      */
     public String html() {
-        return key + "=\"" + StringEscapeUtils.escapeHtml(value) + "\"";
+        return key + "=\"" + Entities.escape(value, (new Document(null)).outputSettings()) + "\"";
     }
     
-    protected void html(StringBuilder accum) {
+    protected void html(StringBuilder accum, Document.OutputSettings out) {
         accum
             .append(key)
             .append("=\"")
-            .append(StringEscapeUtils.escapeHtml(value))
+            .append(Entities.escape(value, out))
             .append("\"");
     }
 

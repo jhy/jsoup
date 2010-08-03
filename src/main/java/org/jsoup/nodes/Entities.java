@@ -13,7 +13,7 @@ import java.nio.charset.CharsetEncoder;
  * <p/>
  * Draft implementation. Do not consume.
  */
-class Entities {
+public class Entities {
     public enum EscapeMode {
         base, extended
     }
@@ -23,6 +23,10 @@ class Entities {
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?");
+
+    static String escape(String string, Document.OutputSettings out) {
+        return escape(string, out.encoder(), out.escapeMode());
+    }
 
     static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
