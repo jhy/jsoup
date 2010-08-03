@@ -54,8 +54,7 @@ public class Jsoup {
      the response stream.
      */
     public static Document parse(URL url, int timeoutMillis) throws IOException {
-        String html = DataUtil.load(url, timeoutMillis);
-        return parse(html, url.toExternalForm());
+        return DataUtil.load(url, timeoutMillis);
     }
 
     /**
@@ -70,8 +69,7 @@ public class Jsoup {
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
     public static Document parse(File in, String charsetName, String baseUri) throws IOException {
-        String html = DataUtil.load(in, charsetName);
-        return parse(html, baseUri);
+        return DataUtil.load(in, charsetName, baseUri);
     }
 
     /**
@@ -86,8 +84,7 @@ public class Jsoup {
      @see #parse(File, String, String)
      */
     public static Document parse(File in, String charsetName) throws IOException {
-        String html = DataUtil.load(in, charsetName);
-        return parse(html, in.getAbsolutePath());
+        return DataUtil.load(in, charsetName, in.getAbsolutePath());
     }
 
     /**

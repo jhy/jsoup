@@ -895,13 +895,13 @@ public class Element extends Node {
         return this;
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth) {
+    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         if (isBlock() || (parent() != null && parent().tag().canContainBlock() && siblingIndex() == 0))
             indent(accum, depth);
         accum
                 .append("<")
-                .append(tagName())
-                .append(attributes.html());
+                .append(tagName());
+        attributes.html(accum, out);
 
         if (childNodes.isEmpty() && tag.isSelfClosing())
             accum.append(" />");
@@ -909,7 +909,7 @@ public class Element extends Node {
             accum.append(">");
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth) {
+    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (!childNodes.isEmpty() && tag.canContainBlock())
                 indent(accum, depth);

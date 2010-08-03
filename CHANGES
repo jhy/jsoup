@@ -4,6 +4,9 @@ jsoup changelog
  * Now automatically detects the encoding character set when parsing HTML from a File or URL. The parser checks
    the content-type header, then the <meta http-equiv> or <meta charset> tag, and finally falls back to UTF-8.
 
+ * Added ability to configure the document's output charset, to control which characters are HTML escaped, and which
+   are kept intact. The output charset defaults to the document's input charset. This simplifies non-ascii output.
+
  * Added support for the [^attributePrefix] selector query, to find elements with attributes starting with a prefix.
    Useful for finding elements with datasets: [^data-]
 

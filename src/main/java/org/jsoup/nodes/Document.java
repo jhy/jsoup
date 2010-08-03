@@ -6,12 +6,14 @@ import org.jsoup.parser.Tag;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 
 /**
  A HTML Document.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
+    private OutputSettings outputSettings = new OutputSettings();
 
     /**
      Create a new, empty Document.
@@ -153,34 +155,80 @@ public class Document extends Element {
     /**
      * A Document's output settings control the form of the text() and html() methods.
      */
-    public static class OutputSettings {
+    public class OutputSettings {
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
-        
+        private CharsetEncoder charsetEncoder = charset.newEncoder();
+
         public OutputSettings() {}
 
+        /**
+         * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
+         * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
+         * which uses the complete set of HTML named entities.
+         * <p>
+         * The default escape mode is <code>base</code>.
+         * @return the document's current escape mode
+         */
         public Entities.EscapeMode escapeMode() {
             return escapeMode;
         }
 
+        /**
+         * Set the document's escape mode
+         * @param escapeMode the new escape mode to use
+         * @return the document's output settings, for chaining
+         */
         public OutputSettings escapeMode(Entities.EscapeMode escapeMode) {
             this.escapeMode = escapeMode;
             return this;
         }
 
+        /**
+         * Get the document's current output charset, which is used to control which characters are escaped when
+         * generating HTML (via the <code>html()</code> methods), and which are kept intact.
+         * <p>
+         * Where possible (when parsing from a URL or File), the document's output charset is automatically set to the
+         * input charset. Otherwise, it defaults to UTF-8.
+         * @return the document's current charset.
+         */
         public Charset charset() {
             return charset;
         }
 
+        /**
+         * Update the document's output charset.
+         * @param charset the new charset to use.
+         * @return the document's output settings, for chaining
+         */
         public OutputSettings charset(Charset charset) {
+            // todo: this should probably update the doc's meta charset
             this.charset = charset;
+            charsetEncoder = charset.newEncoder();
             return this;
         }
 
+        /**
+         * Update the document's output charset.
+         * @param charset the new charset (by name) to use.
+         * @return the document's output settings, for chaining
+         */
         public OutputSettings charset(String charset) {
-            this.charset = Charset.forName(charset);
+            charset(Charset.forName(charset));
             return this;
         }
+
+        CharsetEncoder encoder() {
+            return charsetEncoder;
+        }
+    }
+
+    /**
+     * Get the document's current output settings.
+     * @return the document's current output settings.
+     */
+    public OutputSettings outputSettings() {
+        return outputSettings;
     }
 }
 

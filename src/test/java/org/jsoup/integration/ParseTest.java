@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -87,6 +88,13 @@ public class ParseTest {
         assertEquals("su", submit.id());
         Element newsLink = doc.select("a:contains(新)").first();
         assertEquals("http://news.baidu.com", newsLink.absUrl("href"));
+
+        // check auto-detect from meta
+        assertEquals("GB2312", doc.outputSettings().charset().displayName());
+        assertEquals("\n<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
+
+        doc.outputSettings().charset("ascii");
+        assertEquals("\n<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>", doc.select("title").outerHtml());
     }
     
     @Test public void testHtml5Charset() throws IOException {
@@ -94,15 +102,18 @@ public class ParseTest {
         File in = getFile("/htmltests/meta-charset-1.html");
         Document doc = Jsoup.parse(in, null, "http://example.com/"); //gb2312, has html5 <meta charset>
         assertEquals("新", doc.text());
+        assertEquals("GB2312", doc.outputSettings().charset().displayName());
         
         // double check, no charset, falls back to utf8 which is incorrect
         in = getFile("/htmltests/meta-charset-2.html"); //
         doc = Jsoup.parse(in, null, "http://example.com"); // gb2312, no charset
+        assertEquals("UTF-8", doc.outputSettings().charset().displayName());
         assertFalse("新".equals(doc.text()));
         
         // confirm fallback to utf8
         in = getFile("/htmltests/meta-charset-3.html");
         doc = Jsoup.parse(in, null, "http://example.com/"); // utf8, no charset
+        assertEquals("UTF-8", doc.outputSettings().charset().displayName());
         assertEquals("新", doc.text());
     }
     

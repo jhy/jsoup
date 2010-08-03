@@ -31,11 +31,11 @@ public class DataNode extends Node{
         return attributes.get(DATA_KEY);
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth) {
+    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth) {}
+    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
     public String toString() {
         return outerHtml();
