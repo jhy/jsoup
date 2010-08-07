@@ -76,10 +76,19 @@ public class TokenQueue {
         }
         return true;
     }
+
+    /**
+     * Case sensitive match test.
+     * @param seq
+     * @return
+     */
+    public boolean matchesCS(String seq) {
+        return queue.startsWith(seq, pos);
+    }
     
 
     /**
-     Tests if the next characters match any of the sequences.
+     Tests if the next characters match any of the sequences. Case insensitive.
      @param seq
      @return
      */
@@ -91,6 +100,22 @@ public class TokenQueue {
         return false;
     }
 
+    public boolean matchesAny(char... seq) {
+        if (isEmpty())
+            return false;
+
+        for (char c: seq) {
+            if (queue.charAt(pos) == c)
+                return true;
+        }
+        return false;
+    }
+
+    public boolean matchesStartTag() {
+        // micro opt for matching "<x"
+        return (remainingLength() > 2 && queue.charAt(pos) == '<' && Character.isLetterOrDigit(queue.charAt(pos+1)));
+    }
+
     /**
      * Tests if the queue matches the sequence (as with match), and if they do, removes the matched string from the
      * queue.
@@ -99,7 +124,7 @@ public class TokenQueue {
      */
     public boolean matchChomp(String seq) {
         if (matches(seq)) {
-            consume(seq);
+            pos += seq.length();
             return true;
         } else {
             return false;
@@ -111,7 +136,7 @@ public class TokenQueue {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return !isEmpty() && Character.isWhitespace(peek());
+        return !isEmpty() && Character.isWhitespace(queue.charAt(pos));
     }
 
     /**
@@ -119,7 +144,7 @@ public class TokenQueue {
      @return if matches a word character
      */
     public boolean matchesWord() {
-        return !isEmpty() && Character.isLetterOrDigit(peek());
+        return !isEmpty() && Character.isLetterOrDigit(queue.charAt(pos));
     }
 
     /**
@@ -134,7 +159,7 @@ public class TokenQueue {
      * @return first character on queue.
      */
     public Character consume() {
-        Character c= queue.charAt(pos);
+        Character c = queue.charAt(pos);
         pos++;
         return c;
     }
@@ -288,7 +313,7 @@ public class TokenQueue {
     public boolean consumeWhitespace() {
         boolean seen = false;
         while (matchesWhitespace()) {
-            consume();
+            pos++;
             seen = true;
         }
         return seen;
@@ -312,7 +337,7 @@ public class TokenQueue {
      */
     public String consumeTagName() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny(":", "_", "-")))
+        while (!isEmpty() && (matchesWord() || matchesAny(':', '_', '-')))
             pos++;
         
         return queue.substring(start, pos);
@@ -325,7 +350,7 @@ public class TokenQueue {
      */
     public String consumeElementSelector() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("|", "_", "-")))
+        while (!isEmpty() && (matchesWord() || matchesAny('|', '_', '-')))
             pos++;
         
         return queue.substring(start, pos);
@@ -337,13 +362,11 @@ public class TokenQueue {
      @return identifier
      */
     public String consumeCssIdentifier() {
-        StringBuilder accum = new StringBuilder();
-        Character c = peek();
-        while (!isEmpty() && (Character.isLetterOrDigit(c) || c.equals('-') || c.equals('_'))) {
-            accum.append(consume());
-            c = peek();
-        }
-        return accum.toString();
+        int start = pos;
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
+            pos++;
+
+        return queue.substring(start, pos);
     }
 
     /**
@@ -352,7 +375,7 @@ public class TokenQueue {
      */
     public String consumeAttributeKey() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("-", "_", ":")))
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_', ':')))
             pos++;
         
         return queue.substring(start, pos);

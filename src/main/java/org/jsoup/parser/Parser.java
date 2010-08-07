@@ -79,16 +79,16 @@ public class Parser {
 
     private Document parse() {
         while (!tq.isEmpty()) {
-            if (tq.matches("<!--")) {
+            if (tq.matchesStartTag()) {
+                parseStartTag();
+            } else if (tq.matchesCS("</")) {
+                parseEndTag();
+            } else if (tq.matchesCS("<!--")) {
                 parseComment();
             } else if (tq.matches("<![CDATA[")) {
                 parseCdata();
-            } else if (tq.matches("<?") || tq.matches("<!")) {
+            } else if (tq.matchesCS("<?") || tq.matchesCS("<!")) {
                 parseXmlDecl();
-            } else if (tq.matches("</")) {
-                parseEndTag();
-            } else if (tq.matches("<")) {
-                parseStartTag();
             } else {
                 parseTextNode();
             }
@@ -130,12 +130,7 @@ public class Parser {
     private void parseStartTag() {
         tq.consume("<");
         String tagName = tq.consumeTagName();
-
-        if (tagName.length() == 0) { // doesn't look like a start tag after all; put < back on stack and handle as text
-            tq.addFirst("&lt;");
-            parseTextNode();
-            return;
-        }
+        Validate.notEmpty(tagName, "Unexpectedly empty tagname. (This should not occur, please report!)");
         
         tq.consumeWhitespace();
         Attributes attributes = new Attributes();
@@ -213,8 +208,15 @@ public class Parser {
     }
 
     private void parseTextNode() {
-        String text = tq.consumeTo("<");
-        TextNode textNode = TextNode.createFromEncoded(text, baseUri);
+        TextNode textNode;
+        // special case: handle string like "hello < there". first char will be "<", because of matchStartTag
+        if (tq.peek().equals('<')) {
+            tq.advance();
+            textNode = new TextNode("<", baseUri);
+        } else {
+            String text = tq.consumeTo("<");
+            textNode = TextNode.createFromEncoded(text, baseUri);
+        }
         last().appendChild(textNode);
     }
 
