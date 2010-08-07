@@ -110,7 +110,7 @@ public class Element extends Node {
      * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
      * starting with "data-" is included the dataset.
      * <p>
-     * E.g., the element {@code &lt;div data-package="jsoup" data-language="Java" class="group"&gt;...} has the dataset
+     * E.g., the element {@code <div data-package="jsoup" data-language="Java" class="group">...} has the dataset
      * {@code package=jsoup, language=java}.
      * <p>
      * This map is a filtered view of the element's attribute map. Changes to one map (add, remove, update) are reflected
