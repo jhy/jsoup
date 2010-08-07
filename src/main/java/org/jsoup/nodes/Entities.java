@@ -13,7 +13,7 @@ import java.nio.charset.CharsetEncoder;
  * <p/>
  * Draft implementation. Do not consume.
  */
-class Entities {
+public class Entities {
     public enum EscapeMode {
         base, extended
     }
