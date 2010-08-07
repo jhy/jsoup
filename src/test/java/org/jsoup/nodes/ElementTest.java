@@ -224,6 +224,12 @@ public class ElementTest {
         div.appendElement("P").attr("class", "second").text("now");
         assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
                 TextUtil.stripNewlines(doc.html()));
+
+        // check sibling index (with short circuit on reindexChildren):
+        Elements ps = doc.select("p");
+        for (int i = 0; i < ps.size(); i++) {
+            assertEquals(i, ps.get(i).siblingIndex);
+        }
     }
 
     @Test public void testAppendRowToTable() {
@@ -240,6 +246,12 @@ public class ElementTest {
         table.prepend("<tr><td>2</td></tr>");
 
         assertEquals("<table><tr><td>2</td></tr><tr><td>1</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+
+        // check sibling index (reindexChildren):
+        Elements ps = doc.select("tr");
+        for (int i = 0; i < ps.size(); i++) {
+            assertEquals(i, ps.get(i).siblingIndex);
+        }
     }
     
     @Test public void testPrependElement() {
@@ -270,6 +282,12 @@ public class ElementTest {
         Element div = doc.getElementById("1");
         div.append("<p>there</p><p>now</p>");
         assertEquals("<p>Hello</p><p>there</p><p>now</p>", TextUtil.stripNewlines(div.html()));
+
+        // check sibling index (no reindexChildren):
+        Elements ps = doc.select("p");
+        for (int i = 0; i < ps.size(); i++) {
+            assertEquals(i, ps.get(i).siblingIndex);
+        }
     }
     
     @Test public void testPrependNewHtml() {
@@ -277,6 +295,12 @@ public class ElementTest {
         Element div = doc.getElementById("1");
         div.prepend("<p>there</p><p>now</p>");
         assertEquals("<p>there</p><p>now</p><p>Hello</p>", TextUtil.stripNewlines(div.html()));
+
+        // check sibling index (reindexChildren):
+        Elements ps = doc.select("p");
+        for (int i = 0; i < ps.size(); i++) {
+            assertEquals(i, ps.get(i).siblingIndex);
+        }
     }
     
     @Test public void testSetHtml() {

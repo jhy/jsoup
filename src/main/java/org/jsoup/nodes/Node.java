@@ -255,20 +255,28 @@ public abstract class Node {
     }
 
     protected void addChildren(Node... children) {
-        addChildren(childNodes.size(), children);
+        //most used. short circuit addChildren(int), which hits reindex children and array copy
+        for (Node child: children) {
+            reparentChild(child);
+            childNodes.add(child);
+            child.setSiblingIndex(childNodes.size()-1);
+        }
     }
 
     protected void addChildren(int index, Node... children) {
         Validate.noNullElements(children);
         for (int i = children.length - 1; i >= 0; i--) {
             Node in = children[i];
-            if (in.parentNode != null)
-                in.parentNode.removeChild(in);
-            
+            reparentChild(in);
             childNodes.add(index, in);
-            in.setParentNode(this);
         }
         reindexChildren();
+    }
+
+    private void reparentChild(Node child) {
+        if (child.parentNode != null)
+            child.parentNode.removeChild(child);
+        child.setParentNode(this);
     }
     
     private void reindexChildren() {
