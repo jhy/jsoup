@@ -93,7 +93,7 @@ public class Attribute implements Map.Entry<String, String>  {
      * @return attribute
      */
     public static Attribute createFromEncoded(String unencodedKey, String encodedValue) {
-        String value = StringEscapeUtils.unescapeHtml(encodedValue);
+        String value = Entities.unescape(encodedValue);
         return new Attribute(unencodedKey, value);
     }
 
