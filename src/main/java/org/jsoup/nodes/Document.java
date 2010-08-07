@@ -46,7 +46,7 @@ public class Document extends Element {
      @return {@code head}
      */
     public Element head() {
-        return getElementsByTag("head").first();
+        return findFirstElementByTagName("head", this);
     }
 
     /**
@@ -54,7 +54,7 @@ public class Document extends Element {
      @return {@code body}
      */
     public Element body() {
-        return getElementsByTag("body").first();
+        return findFirstElementByTagName("body", this);
     }
 
     /**
@@ -96,17 +96,18 @@ public class Document extends Element {
      @return this document after normalisation
      */
     public Document normalise() {
-        if (select("html").isEmpty())
-            appendElement("html");
+        Element htmlEl = findFirstElementByTagName("html", this);
+        if (htmlEl == null)
+            htmlEl = appendElement("html");
         if (head() == null)
-            select("html").first().prependElement("head");
+            htmlEl.prependElement("head");
         if (body() == null)
-            select("html").first().appendElement("body");
+            htmlEl.appendElement("body");
 
         // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
         // of. do in inverse order to maintain text order.
         normalise(head());
-        normalise(select("html").first());
+        normalise(htmlEl);
         normalise(this);        
 
         return this;
@@ -129,6 +130,20 @@ public class Document extends Element {
             body().prependChild(new TextNode(" ", ""));
             body().prependChild(node);
         }
+    }
+
+    // fast method to get first by tag name, used for html, head, body finders
+    private Element findFirstElementByTagName(String tag, Node node) {
+        if (node.nodeName().equals(tag))
+            return (Element) node;
+        else {
+            for (Node child: node.childNodes) {
+                Element found = findFirstElementByTagName(tag, child);
+                if (found != null)
+                    return found;
+            }
+        }
+        return null;
     }
 
     @Override
