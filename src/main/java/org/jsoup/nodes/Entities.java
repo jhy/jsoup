@@ -13,7 +13,7 @@ import java.nio.charset.CharsetEncoder;
  * <p/>
  * Draft implementation. Do not consume.
  */
-public class Entities {
+class Entities {
     public enum EscapeMode {
         base, extended
     }
@@ -35,11 +35,11 @@ public class Entities {
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
             if (map.containsKey(c))
-                accum.append("&").append(map.get(c)).append(";");
+                accum.append('&').append(map.get(c)).append(';');
             else if (encoder.canEncode(c))
-                accum.append(c);
+                accum.append(c.charValue());
             else
-                accum.append("&#").append((int) c).append(";");
+                accum.append("&#").append((int) c).append(';');
         }
 
         return accum.toString();

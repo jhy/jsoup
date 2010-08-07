@@ -397,7 +397,8 @@ public abstract class Node {
         }
 
         public void tail(Node node, int depth) {
-            node.outerHtmlTail(accum, depth, out);
+            if (!node.nodeName().equals("#text")) // saves a void hit.
+                node.outerHtmlTail(accum, depth, out);
         }
     }
 }

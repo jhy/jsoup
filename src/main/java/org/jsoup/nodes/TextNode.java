@@ -12,7 +12,7 @@ import org.apache.commons.lang.StringUtils;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends Node {
     private static final String TEXT_KEY = "text";
-    private static final Pattern spaceNormaliser = Pattern.compile("\\s{2,}|(\\r\\n|\\r|\\n)");
+    private static final Pattern spaceNormaliser = Pattern.compile("\\s{2,}|(?:\\r\\n|\\r|\\n)");
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
