@@ -1,9 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
-
-import java.util.regex.Pattern;
 
 /**
  A text node.
@@ -11,7 +8,6 @@ import java.util.regex.Pattern;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends Node {
     private static final String TEXT_KEY = "text";
-    private static final Pattern spaceNormaliser = Pattern.compile("\\s{2,}|(?:\\r\\n|\\r|\\n)");
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
@@ -92,7 +88,7 @@ public class TextNode extends Node {
     }
 
     static String normaliseWhitespace(String text) {
-        text = spaceNormaliser.matcher(text).replaceAll(" "); // more than one space, and newlines to " "
+        text = StringUtil.normaliseWhitespace(text);
         return text;
     }
 

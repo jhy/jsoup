@@ -93,4 +93,31 @@ public final class StringUtil {
         }
         return true;
     }
+
+    public static String normaliseWhitespace(String string) {
+        StringBuilder sb = new StringBuilder(string.length());
+
+        boolean lastWasWhite = false;
+        boolean modified = false;
+
+        int l = string.length();
+        for (int i = 0; i < l; i++) {
+            int c = string.codePointAt(i);
+            if (Character.isWhitespace(c)) {
+                if (lastWasWhite) {
+                    modified = true;
+                    continue;
+                }
+                if (c != ' ')
+                    modified = true;
+                sb.append(' ');
+                lastWasWhite = true;
+            }
+            else {
+                sb.appendCodePoint(c);
+                lastWasWhite = false;
+            }
+        }
+        return modified ? sb.toString() : string;
+    }
 }
