@@ -125,7 +125,7 @@ public class Element extends Node {
 
     @Override
     public final Element parent() {
-        return (Element) super.parent();
+        return (Element) parentNode;
     }
 
     /**

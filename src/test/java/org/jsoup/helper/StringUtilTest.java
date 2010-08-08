@@ -41,4 +41,22 @@ public class StringUtilTest {
         assertTrue(StringUtil.isNumeric("1"));
         assertTrue(StringUtil.isNumeric("1234"));
     }
+
+    @Test public void normaliseWhiteSpace() {
+        assertEquals(" ", StringUtil.normaliseWhitespace("    \r \n \r\n"));
+        assertEquals(" hello there ", StringUtil.normaliseWhitespace("   hello   \r \n  there    \n"));
+        assertEquals("hello", StringUtil.normaliseWhitespace("hello"));
+        assertEquals("hello there", StringUtil.normaliseWhitespace("hello\nthere"));
+    }
+
+    @Test public void normaliseWhiteSpaceModified() {
+        String check1 = "Hello there";
+        String check2 = "Hello\nthere";
+        String check3 = "Hello  there";
+
+        // does not create new string no mods done
+        assertTrue(check1 == StringUtil.normaliseWhitespace(check1));
+        assertTrue(check2 != StringUtil.normaliseWhitespace(check2));
+        assertTrue(check3 != StringUtil.normaliseWhitespace(check3));
+    }
 }
