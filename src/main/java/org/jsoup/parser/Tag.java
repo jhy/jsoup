@@ -189,10 +189,10 @@ public class Tag {
         if (child.ancestors.isEmpty())
             return true; // HTML tag
 
-        for (Tag tag : child.ancestors) {
-            if (this.equals(tag))
+        for (int i = 0; i < child.ancestors.size(); i++)
+            if (this.equals(child.ancestors.get(i)))
                 return true;
-        }
+        
         return false;
     }
 
