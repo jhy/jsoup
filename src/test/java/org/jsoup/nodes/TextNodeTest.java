@@ -25,13 +25,22 @@ public class TextNodeTest {
     }
     
     @Test public void testTextBean() {
-        Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
+        Document doc = Jsoup.parse("<p>One <span>two &amp;</span> three &amp;</p>");
         Element p = doc.select("p").first();
+
+        Element span = doc.select("span").first();
+        assertEquals("two &", span.text());
+        TextNode spanText = (TextNode) span.childNode(0);
+        assertEquals("two &", spanText.text());
         
         TextNode tn = (TextNode) p.childNode(2);
-        assertEquals(" three", tn.text());
+        assertEquals(" three &", tn.text());
         
         tn.text(" POW!");
-        assertEquals("One <span>two</span> POW!", p.html());
+        assertEquals("One <span>two &amp;</span> POW!", p.html());
+
+        tn.attr("text", "kablam &");
+        assertEquals("kablam &", tn.text());
+        assertEquals("One <span>two &amp;</span>kablam &amp;", p.html());
     }
 }

@@ -17,8 +17,8 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node {
     Node parentNode;
-    final List<Node> childNodes;
-    final Attributes attributes;
+    List<Node> childNodes;
+    Attributes attributes;
     String baseUri;
     int siblingIndex;
 
@@ -38,6 +38,14 @@ public abstract class Node {
 
     protected Node(String baseUri) {
         this(baseUri, new Attributes());
+    }
+
+    /**
+     * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
+     */
+    protected Node() {
+        childNodes = Collections.EMPTY_LIST;
+        attributes = null;
     }
 
     /**
