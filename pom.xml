@@ -128,14 +128,9 @@
       <version>4.5</version>
       <scope>test</scope>
     </dependency>
-    
-    <dependency>
-      <!-- Commons Lang, for method argument validation. -->
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.4</version>
-    </dependency>
+
   </dependencies>
+    
   <dependencyManagement>
   	<dependencies>
   	</dependencies>

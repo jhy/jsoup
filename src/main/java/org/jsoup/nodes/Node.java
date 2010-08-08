@@ -1,9 +1,9 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.Validate;
-import org.apache.commons.lang.StringUtils;
-import org.jsoup.select.NodeVisitor;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -365,7 +365,7 @@ public abstract class Node {
     }
 
     protected void indent(StringBuilder accum, int depth) {
-        accum.append("\n").append(StringUtils.leftPad("", depth));
+        accum.append("\n").append(StringUtil.padding(depth));
     }
 
     @Override

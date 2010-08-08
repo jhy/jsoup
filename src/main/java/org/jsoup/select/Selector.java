@@ -1,7 +1,8 @@
 package org.jsoup.select;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.TokenQueue;
 
@@ -261,7 +262,7 @@ public class Selector {
 
     private int consumeIndex() {
         String indexS = tq.chompTo(")").trim();
-        Validate.isTrue(StringUtils.isNumeric(indexS), "Index must be numeric");
+        Validate.isTrue(StringUtil.isNumeric(indexS), "Index must be numeric");
         return Integer.parseInt(indexS);
     }
 

@@ -1,9 +1,10 @@
 package org.jsoup.parser;
 
-import org.apache.commons.lang.Validate;
+
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
-import java.util.*;
+import java.util.LinkedList;
 
 /**
  Parses HTML into a {@link Document}. Generally best to use one of the  more convenient parse methods in {@link org.jsoup.Jsoup}.

@@ -1,6 +1,6 @@
 package org.jsoup.parser;
 
-import org.apache.commons.lang.Validate;
+import org.jsoup.helper.Validate;
 
 /**
  * A character queue with parsing helpers.

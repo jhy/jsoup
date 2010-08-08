@@ -1,6 +1,6 @@
 package org.jsoup.safety;
 
-import org.apache.commons.lang.Validate;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 import org.jsoup.parser.Tag;
 

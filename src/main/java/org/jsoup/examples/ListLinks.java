@@ -1,13 +1,13 @@
 package org.jsoup.examples;
 
-import org.apache.commons.lang.Validate;
+import org.jsoup.Jsoup;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
-import java.net.URL;
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * Example program to list links from a URL.

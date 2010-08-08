@@ -1,7 +1,5 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.StringEscapeUtils;
-
 /**
  A data node, for contents of style, script tags etc, where contents should not show in text().
 
@@ -48,7 +46,7 @@ public class DataNode extends Node{
      @return new DataNode
      */
     public static DataNode createFromEncoded(String encodedData, String baseUri) {
-        String data = StringEscapeUtils.unescapeHtml(encodedData);
+        String data = Entities.unescape(encodedData);
         return new DataNode(data, baseUri);
     }
 }

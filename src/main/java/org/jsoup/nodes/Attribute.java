@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.Validate;
+import org.jsoup.helper.Validate;
 
 import java.util.Map;
 
