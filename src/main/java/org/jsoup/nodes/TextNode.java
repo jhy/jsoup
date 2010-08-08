@@ -7,7 +7,13 @@ import org.jsoup.helper.StringUtil;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends Node {
+    /*
+    TextNode is a node, and so by default comes with attributes and children. The attributes are seldom used, but use
+    memory, and the child nodes are never used. So we don't have them, and override accessors to attributes to create
+    them as needed on the fly.
+     */
     private static final String TEXT_KEY = "text";
+    String text;
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
@@ -17,8 +23,8 @@ public class TextNode extends Node {
      @see #createFromEncoded(String, String)
      */
     public TextNode(String text, String baseUri) {
-        super(baseUri);
-        attributes.put(TEXT_KEY, text);
+        this.baseUri = baseUri;
+        this.text = text;
     }
 
     public String nodeName() {
@@ -31,7 +37,7 @@ public class TextNode extends Node {
      * @see TextNode#getWholeText()
      */
     public String text() {
-        return outerHtml();
+        return normaliseWhitespace(getWholeText());
     }
     
     /**
@@ -40,7 +46,9 @@ public class TextNode extends Node {
      * @return this, for chaining
      */
     public TextNode text(String text) {
-        attributes.put(TEXT_KEY, text);
+        this.text = text;
+        if (attributes != null)
+            attributes.put(TEXT_KEY, text);
         return this;
     }
 
@@ -49,8 +57,9 @@ public class TextNode extends Node {
      @return text
      */
     public String getWholeText() {
-        return attributes.get(TEXT_KEY);
+        return attributes == null ? text : attributes.get(TEXT_KEY);
     }
+
 
     /**
      Test if this text node is blank -- that is, empty or only whitespace (including newlines).
@@ -98,5 +107,49 @@ public class TextNode extends Node {
 
     static boolean lastCharIsWhitespace(StringBuilder sb) {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
+    }
+
+    // attribute fiddling. create on first access.
+    private void ensureAttributes() {
+        if (attributes == null) {
+            attributes = new Attributes();
+            attributes.put(TEXT_KEY, text);
+        }
+    }
+
+    @Override
+    public String attr(String attributeKey) {
+        ensureAttributes();
+        return super.attr(attributeKey);
+    }
+
+    @Override
+    public Attributes attributes() {
+        ensureAttributes();
+        return super.attributes();
+    }
+
+    @Override
+    public Node attr(String attributeKey, String attributeValue) {
+        ensureAttributes();
+        return super.attr(attributeKey, attributeValue);
+    }
+
+    @Override
+    public boolean hasAttr(String attributeKey) {
+        ensureAttributes();
+        return super.hasAttr(attributeKey);
+    }
+
+    @Override
+    public Node removeAttr(String attributeKey) {
+        ensureAttributes();
+        return super.removeAttr(attributeKey);
+    }
+
+    @Override
+    public String absUrl(String attributeKey) {
+        ensureAttributes();
+        return super.absUrl(attributeKey);
     }
 }
