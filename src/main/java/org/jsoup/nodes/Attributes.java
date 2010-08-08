@@ -123,7 +123,8 @@ public class Attributes implements Iterable<Attribute> {
     }
     
     void html(StringBuilder accum, Document.OutputSettings out) {
-        for (Attribute attribute : this) {
+        for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
+            Attribute attribute = entry.getValue();
             accum.append(" ");
             attribute.html(accum, out);
         }
