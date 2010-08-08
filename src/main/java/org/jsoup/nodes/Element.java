@@ -1,7 +1,7 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.Validate;
-import org.apache.commons.lang.StringUtils;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -810,7 +810,7 @@ public class Element extends Node {
      */
     public Element classNames(Set<String> classNames) {
         Validate.notNull(classNames);
-        attributes.put("class", StringUtils.join(classNames, " "));
+        attributes.put("class", StringUtil.join(classNames, " "));
         return this;
     }
 

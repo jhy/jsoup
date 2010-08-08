@@ -1,7 +1,7 @@
 package org.jsoup.select;
 
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
-import org.apache.commons.lang.Validate;
 
 import java.util.*;
 

@@ -5,7 +5,7 @@ package org.jsoup.safety;
     this whitelist configuration, and the initial defaults.
  */
 
-import org.apache.commons.lang.Validate;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;

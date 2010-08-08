@@ -1,10 +1,9 @@
 package org.jsoup.nodes;
 
-import java.util.regex.Pattern;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.Validate;
-import org.apache.commons.lang.StringUtils;
+import java.util.regex.Pattern;
 
 /**
  A text node.
@@ -62,7 +61,7 @@ public class TextNode extends Node {
      @return true if this document is empty or only whitespace, false if it contains any text content.
      */
     public boolean isBlank() {
-        return StringUtils.isBlank(normaliseWhitespace(getWholeText()));
+        return StringUtil.isBlank(getWholeText());
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
@@ -102,10 +101,6 @@ public class TextNode extends Node {
     }
 
     static boolean lastCharIsWhitespace(StringBuilder sb) {
-        if (sb.length() == 0)
-            return false;
-        String lastChar = sb.substring(sb.length()-1, sb.length());
-        Validate.isTrue(lastChar.length() == 1); // todo: remove check
-        return lastChar.equals(" ");
+        return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
 }

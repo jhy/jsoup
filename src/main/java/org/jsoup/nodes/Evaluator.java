@@ -1,10 +1,10 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.Validate;
+
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
-
-import org.apache.commons.lang.Validate;
 
 
 /**

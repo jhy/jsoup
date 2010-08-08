@@ -1,12 +1,12 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang.Validate;
+import org.jsoup.helper.Validate;
 import org.jsoup.parser.Tag;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  A HTML Document.

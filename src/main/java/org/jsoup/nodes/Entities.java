@@ -1,10 +1,10 @@
 package org.jsoup.nodes;
 
+import java.nio.charset.CharsetEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.nio.charset.CharsetEncoder;
+import java.util.regex.Pattern;
 
 /**
  * HMTL entities, and escape routines.
