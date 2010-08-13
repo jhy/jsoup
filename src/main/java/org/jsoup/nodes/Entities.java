@@ -18,7 +18,6 @@ public class Entities {
         base, extended
     }
 
-    private static final Map<String, Character> base;
     private static final Map<String, Character> full;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
@@ -62,7 +61,7 @@ public class Entities {
                 } catch (NumberFormatException e) {
                 } // skip
             } else {
-                String name = m.group(1).toLowerCase();
+                String name = m.group(1);
                 if (full.containsKey(name))
                     charval = full.get(name);
             }
@@ -2227,20 +2226,18 @@ public class Entities {
     };
 
     static {
-        base = new HashMap<String, Character>(baseArray.length);
         full = new HashMap<String, Character>(fullArray.length);
         baseByVal = new HashMap<Character, String>(baseArray.length);
         fullByVal = new HashMap<Character, String>(fullArray.length);
 
         for (Object[] entity : baseArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
-            base.put((String) entity[0], c);
-            baseByVal.put(c, ((String) entity[0]).toLowerCase());
+            baseByVal.put(c, ((String) entity[0]));
         }
         for (Object[] entity : fullArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
             full.put((String) entity[0], c);
-            fullByVal.put(c, ((String) entity[0]).toLowerCase());
+            fullByVal.put(c, ((String) entity[0]));
         }
     }
 
