@@ -7,6 +7,9 @@ jsoup changelog
  
  * Fixed support for case-sensitive HTML escape entities.
    <http://github.com/jhy/jsoup/issues/issue/31>
+ 
+ * Fixed issue when parsing tags with keyless attributes.
+   <http://github.com/jhy/jsoup/issues/issue/32>
 
 *** Release 1.2.3 [2010-Aug-04]
  * Added support for automatic input character set detection and decoding. Jsoup now automatically detects the encoding

@@ -203,7 +203,9 @@ public class Parser {
         if (key.length() != 0)
             return Attribute.createFromEncoded(key, value);
         else {
-            tq.consume(); // unknown char, keep popping so not get stuck
+            if (value.length() == 0) // no key, no val; unknown char, keep popping so not get stuck
+                tq.advance();
+                
             return null;
         }
     }
