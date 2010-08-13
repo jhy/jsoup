@@ -9,21 +9,29 @@ import java.nio.charset.Charset;
 
 public class EntitiesTest {
     @Test public void escape() {
-        String text = "Hello &<> Å π 新 there";
+        String text = "Hello &<> Å å π 新 there";
         String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
         String escapedAsciiFull = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.extended);
         String escapedUtf = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
 
-        assertEquals("Hello &amp;&lt;&gt; &aring; &#960; &#26032; there", escapedAscii);
-        assertEquals("Hello &amp;&lt;&gt; &angst; &pi; &#26032; there", escapedAsciiFull);
-        assertEquals("Hello &amp;&lt;&gt; &aring; π 新 there", escapedUtf);
+        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#960; &#26032; there", escapedAscii);
+        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#26032; there", escapedAsciiFull);
+        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; π 新 there", escapedUtf);
         // odd that it's defined as aring in base but angst in full
     }
 
     @Test public void unescape() {
-        String text = "Hello &amp;&LT&gt; &ANGST &#960; &#960 &#x65B0; there &!";
+        String text = "Hello &amp;&LT&gt; &angst &#960; &#960 &#x65B0; there &!";
         assertEquals("Hello &<> Å π π 新 there &!", Entities.unescape(text));
 
         assertEquals("&0987654321; &unknown", Entities.unescape("&0987654321; &unknown"));
+    }
+    
+    @Test public void caseSensitive() {
+        String unescaped = "Ü ü & &";
+        assertEquals("&Uuml; &uuml; &amp; &amp;", Entities.escape(unescaped, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.extended));
+        
+        String escaped = "&Uuml; &uuml; &amp; &AMP";
+        assertEquals("Ü ü & &", Entities.unescape(escaped));
     }
 }
