@@ -10,8 +10,6 @@ import java.util.regex.Pattern;
  * HMTL entities, and escape routines.
  * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
  * named character references</a>.
- * <p/>
- * Draft implementation. Do not consume.
  */
 public class Entities {
     public enum EscapeMode {
