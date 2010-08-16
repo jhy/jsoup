@@ -4,6 +4,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +56,13 @@ public class Jsoup {
      the response stream.
      */
     public static Document parse(URL url, int timeoutMillis) throws IOException {
-        return DataUtil.load(url, timeoutMillis);
+        Connection con = HttpConnection.connect(url);
+        con.timeout(timeoutMillis / 1000);
+        return con.get();
+    }
+
+    public static Connection connect(String url) {
+        return HttpConnection.connect(url);
     }
 
     /**

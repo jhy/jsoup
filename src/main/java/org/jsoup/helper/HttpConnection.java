@@ -2,18 +2,36 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.TokenQueue;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Collection;
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * DRAFT implementation of Connection.
- */
+/** DRAFT implementation of Connection. */
 public class HttpConnection implements Connection {
+    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=([^\\s;]*)");
+
+    public static Connection connect(String url) {
+        Connection con = new HttpConnection();
+        con.url(url);
+        return con;
+    }
+
+    public static Connection connect(URL url) {
+        Connection con = new HttpConnection();
+        con.url(url);
+        return con;
+    }
+
     private Connection.Request req;
     private Connection.Response res;
 
@@ -69,8 +87,8 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(String... keyvals) {
-        for (int i = 0; i < keyvals.length; i+=2) {
-            req.data(KeyVal.create(keyvals[i], keyvals[i+1]));
+        for (int i = 0; i < keyvals.length; i += 2) {
+            req.data(KeyVal.create(keyvals[i], keyvals[i + 1]));
         }
         return this;
     }
@@ -85,22 +103,20 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Document get() {
+    public Document get() throws IOException {
         req.method(Method.GET);
         execute();
-        // todo: parse for doc
-        return null;
+        return res.parse();
     }
 
-    public Document post() {
+    public Document post() throws IOException {
         req.method(Method.POST);
         execute();
-        // todo: parse for doc
-        return null;
+        return res.parse();
     }
 
-    public Connection.Response execute() {
-        // todo: execute
+    public Connection.Response execute() throws IOException {
+        res = Response.execute(req);
         return res;
     }
 
@@ -124,10 +140,10 @@ public class HttpConnection implements Connection {
 
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
-        private URL url;
-        private Method method;
-        private Map<String, String> headers;
-        private Map<String, String> cookies;
+        URL url;
+        Method method;
+        Map<String, String> headers;
+        Map<String, String> cookies;
 
         private Base() {
             headers = new LinkedHashMap<String, String>();
@@ -203,6 +219,7 @@ public class HttpConnection implements Connection {
 
         private Request() {
             data = new ArrayList<Connection.KeyVal>();
+            method = Connection.Method.GET;
         }
 
         public int timeout() {
@@ -226,17 +243,106 @@ public class HttpConnection implements Connection {
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
         private int statusCode;
+        private String statusMessage;
+        private ByteBuffer byteData;
+        private String charset;
+
+        static Response execute(Connection.Request req) throws IOException {
+            URL url = req.url();
+            String protocol = url.getProtocol();
+            Validate
+                .isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(req.method().name());
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(req.timeout() * 1000);
+            conn.setReadTimeout(req.timeout() * 1000);
+            // todo: handle get params not in url, and post params
+            conn.connect();
+
+            // todo: error handling options, allow user to get !200 without exception
+            int status = conn.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK)
+                throw new IOException(status + " error loading URL " + url.toString());
+            Response res = new Response();
+            res.setupFromConnection(conn);
+
+            // todo: move to parse
+            String contentType = conn.getContentType();
+            if (contentType == null || !contentType.startsWith("text/"))
+                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
+                    contentType, url.toString()));
+
+            InputStream inStream = new BufferedInputStream(conn.getInputStream());
+            res.byteData = DataUtil.readToByteBuffer(inStream);
+            res.charset = getCharsetFromContentType(contentType); // may be null, readInputStream deals with it
+            inStream.close();
+
+            return res;
+        }
 
         public int statusCode() {
             return statusCode;
         }
 
+        public String statusMessage() {
+            return statusMessage;
+        }
+
+        public String charset() {
+            return charset;
+        }
+
+        public Document parse() {
+            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());
+            byteData.rewind();
+            charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
+            return doc;
+        }
+
         public String body() {
-            return null;
+            // gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
+            String body;
+            if (charset == null)
+                body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString();
+            else
+                body = Charset.forName(charset).decode(byteData).toString();
+            byteData.rewind();
+            return body;
         }
 
         public byte[] bodyAsBytes() {
-            return new byte[0];
+            return byteData.array();
+        }
+
+        // set up url, method, header, cookies
+        private void setupFromConnection(HttpURLConnection conn) throws IOException {
+            method = Connection.Method.valueOf(conn.getRequestMethod());
+            url = conn.getURL();
+            statusCode = conn.getResponseCode();
+            statusMessage = conn.getResponseMessage();
+
+            Map<String, List<String>> resHeaders = conn.getHeaderFields();
+            for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+                String name = entry.getKey();
+                if (name == null)
+                    continue; // http/1.1 line
+
+                List<String> values = entry.getValue();
+
+                if (name.equals("Set-Cookie")) {
+                    for (String value : values) {
+                        TokenQueue cd = new TokenQueue(value);
+                        String cookieName = cd.chompTo("=").trim();
+                        String cookieVal = cd.consumeTo(";").trim();
+                        // ignores path, date, domain, secure et al. req'd?
+                        cookie(cookieName, cookieVal);
+                    }
+                } else { // only take the first instance of each header
+                    header(name, values.get(0));
+                }
+            }
         }
     }
 
@@ -270,5 +376,21 @@ public class HttpConnection implements Connection {
         public String value() {
             return value;
         }
+    }
+
+    /**
+     * Parse out a charset from a content type header.
+     *
+     * @param contentType e.g. "text/html; charset=EUC-JP"
+     * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
+     */
+    private static String getCharsetFromContentType(String contentType) {
+        if (contentType == null) return null;
+
+        Matcher m = charsetPattern.matcher(contentType);
+        if (m.find()) {
+            return m.group(1).trim().toUpperCase();
+        }
+        return null;
     }
 }

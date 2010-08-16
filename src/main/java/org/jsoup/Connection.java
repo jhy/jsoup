@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document;
 import java.net.URL;
 import java.util.Map;
 import java.util.Collection;
+import java.io.IOException;
 
 /**
  * DRAFT interface to support HTTP connections.
@@ -36,11 +37,11 @@ public interface Connection {
 
     public Connection cookie(String name, String value);
 
-    public Document get();
+    public Document get() throws IOException;
 
-    public Document post();
+    public Document post() throws IOException;
 
-    public Response execute();
+    public Response execute() throws IOException;
 
     public Request request();
 
@@ -96,6 +97,12 @@ public interface Connection {
 
     public interface Response extends Base<Response> {
         public int statusCode();
+
+        public String statusMessage();
+
+        public String charset();
+
+        public Document parse();
 
         public String body();
 
