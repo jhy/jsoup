@@ -1,12 +1,10 @@
-package org.jsoup;
+package org.jsoup.helper;
 
-import org.jsoup.helper.Validate;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
@@ -16,9 +14,9 @@ import java.util.regex.Pattern;
  * Internal static utilities for handling data.
  *
  */
-class DataUtil {
+public class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=([^\\s;]*)");
-    private static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
+    static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int bufferSize = 0x20000; // ~130K.
     
     /**
@@ -28,60 +26,17 @@ class DataUtil {
      * @return
      * @throws IOException
      */
-    static Document load(File in, String charsetName, String baseUri) throws IOException {
+    public static Document load(File in, String charsetName, String baseUri) throws IOException {
         InputStream inStream = new FileInputStream(in);
-        Document doc = readInputStream(inStream, charsetName, baseUri);
-        inStream.close();
-        return doc;
-    }
-
-    /**
-     Fetches a URL and gets as a string.
-     @param url
-     @param timeoutMillis
-     @return
-     @throws IOException
-     */
-    static Document load(URL url, int timeoutMillis) throws IOException {
-        String protocol = url.getProtocol();
-        Validate.isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setInstanceFollowRedirects(true);
-        conn.setConnectTimeout(timeoutMillis);
-        conn.setReadTimeout(timeoutMillis);
-        conn.connect();
-
-        int res = conn.getResponseCode();
-        if (res != HttpURLConnection.HTTP_OK)
-            throw new IOException(res + " error loading URL " + url.toString());
-        
-        String contentType = conn.getContentType();
-        if (contentType == null || !contentType.startsWith("text/"))
-            throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*", 
-                    contentType, url.toString()));
-        
-        InputStream inStream = new BufferedInputStream(conn.getInputStream());
-        String charSet = getCharsetFromContentType(contentType); // may be null, readInputStream deals with it
-
-        Document doc = readInputStream(inStream, charSet, url.toExternalForm());
+        ByteBuffer byteData = readToByteBuffer(inStream);
+        Document doc = parseByteData(byteData, charsetName, baseUri);
         inStream.close();
         return doc;
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
-    private static Document readInputStream(InputStream inStream, String charsetName, String baseUri) throws IOException {
-        byte[] buffer = new byte[bufferSize];
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
-        int read;
-        while(true) {
-            read  = inStream.read(buffer);
-            if (read == -1) break;
-            outStream.write(buffer, 0, read);
-        }
-        ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
-        
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri) {
         String docData;
         Document doc = null;
         if (charsetName == null) { // determine from meta. safe parse as UTF-8
@@ -107,7 +62,20 @@ class DataUtil {
         }
         return doc;
     }
-    
+
+    static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+        byte[] buffer = new byte[bufferSize];
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+        int read;
+        while(true) {
+            read  = inStream.read(buffer);
+            if (read == -1) break;
+            outStream.write(buffer, 0, read);
+        }
+        ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
+        return byteData;
+    }
+
     /**
      * Parse out a charset from a content type header.
      * @param contentType e.g. "text/html; charset=EUC-JP"
