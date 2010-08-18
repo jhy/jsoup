@@ -1,20 +1,27 @@
 package org.jsoup.helper;
 
-import org.jsoup.Connection;
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.TokenQueue;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jsoup.Connection;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.TokenQueue;
 
 /** DRAFT implementation of Connection. */
 public class HttpConnection implements Connection {
@@ -218,6 +225,7 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
 
         private Request() {
+            timeoutSeconds = 3;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
         }
@@ -258,8 +266,17 @@ public class HttpConnection implements Connection {
             conn.setInstanceFollowRedirects(true);
             conn.setConnectTimeout(req.timeout() * 1000);
             conn.setReadTimeout(req.timeout() * 1000);
-            // todo: handle get params not in url, and post params
+            if (req.method() == Connection.Method.POST)
+                conn.setDoOutput(true);
+            
+            if (req.cookies().size() > 0)
+                conn.addRequestProperty("cookie", getRequestCookieString(req));
+                
+            // todo: handle get params not in url
             conn.connect();
+            
+            if (req.method() == Connection.Method.POST)
+                writePost(req.data(), conn.getOutputStream());          
 
             // todo: error handling options, allow user to get !200 without exception
             int status = conn.getResponseCode();
@@ -302,7 +319,7 @@ public class HttpConnection implements Connection {
         }
 
         public String body() {
-            // gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
+            // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body;
             if (charset == null)
                 body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString();
@@ -344,6 +361,36 @@ public class HttpConnection implements Connection {
                 }
             }
         }
+        
+        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
+            OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
+            boolean first = true;
+            for (Connection.KeyVal keyVal : data) {
+                if (!first) 
+                    w.append('&');
+                else
+                    first = false;
+                
+                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                w.write('=');
+                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+            }
+            w.close();
+        }
+        
+        private static String getRequestCookieString(Connection.Request req) {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
+                if (!first)
+                    sb.append("; ");
+                else
+                    first = false;
+                sb.append(cookie.getKey()).append('=').append(cookie.getValue());
+                // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
+            }
+            return sb.toString();
+        }
     }
 
     public static class KeyVal implements Connection.KeyVal {
@@ -376,6 +423,11 @@ public class HttpConnection implements Connection {
         public String value() {
             return value;
         }
+
+        @Override
+        public String toString() {
+            return key + "=" + value;
+        }      
     }
 
     /**
