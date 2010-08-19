@@ -270,7 +270,11 @@ public class HttpConnection implements Connection {
                 conn.setDoOutput(true);
             
             if (req.cookies().size() > 0)
-                conn.addRequestProperty("cookie", getRequestCookieString(req));
+                conn.addRequestProperty("Cookie", getRequestCookieString(req));
+            
+            for (Map.Entry<String, String> header : req.headers().entrySet()) {
+                conn.addRequestProperty(header.getKey(), header.getValue());
+            }
                 
             // todo: handle get params not in url
             conn.connect();
