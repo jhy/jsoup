@@ -261,6 +261,9 @@ public class HttpConnection implements Connection {
             Validate
                 .isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
 
+            if (req.method() == Connection.Method.GET && req.data().size() > 0)
+                url = getRequestUrl(req); // appends query string
+            
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(true);
@@ -394,6 +397,34 @@ public class HttpConnection implements Connection {
                 // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
             }
             return sb.toString();
+        }
+        
+        private static URL getRequestUrl(Connection.Request req) throws IOException {
+            URL in = req.url();
+            StringBuilder url = new StringBuilder();
+            boolean first = true;
+            // reconstitute the query, ready for appends
+            url
+                .append(in.getProtocol())
+                .append("://")
+                .append(in.getAuthority()) // includes host, port
+                .append(in.getPath())
+                .append("?");
+            if (in.getQuery() != null) {
+                url.append(in.getQuery());
+                first = false;
+            }
+            for (Connection.KeyVal keyVal : req.data()) {
+                if (!first)
+                    url.append('&');
+                else
+                    first = false;
+                url
+                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                    .append('=')
+                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+            }
+            return new URL(url.toString());
         }
     }
 
