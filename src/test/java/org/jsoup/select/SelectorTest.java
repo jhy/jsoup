@@ -468,6 +468,15 @@ public class SelectorTest {
         assertEquals("2", ps2.first().id());
     }
     
+    @Test public void containsOwn() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b> now</p>");
+        Elements ps = doc.select("p:containsOwn(Hello now)");
+        assertEquals(1, ps.size());
+        assertEquals("1", ps.first().id());
+        
+        assertEquals(0, doc.select("p:containsOwn(there)").size());
+    }
+    
     @Test public void testMatches() {       
         Document doc = Jsoup.parse("<p id=1>The <i>Rain</i></p> <p id=2>There are 99 bottles.</p> <p id=3>Harder (this)</p> <p id=4>Rain</p>");
         
@@ -493,6 +502,16 @@ public class SelectorTest {
         Elements p7 = doc.select("p:matches((?i)the):has(i)"); // multi
         assertEquals(1, p7.size());
         assertEquals("1", p7.first().id());
+    }
+    
+    @Test public void matchesOwn() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b> now</p>");
+        
+        Elements p1 = doc.select("p:matchesOwn((?i)hello now)");
+        assertEquals(1, p1.size());
+        assertEquals("1", p1.first().id());
+        
+        assertEquals(0, doc.select("p:matchesOwn(there)").size());
     }
     
     @Test public void testRelaxedTags() {
