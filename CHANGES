@@ -8,6 +8,8 @@ jsoup changelog
   
  * Added Element.ownText() method, to get only the direct text of an element, not including the text of its children.
 
+ * Added support for non-pretty-printed HTML output, to more closely mirror the input HTML.
+
  * Further speed optimisations for parsing and output generation.
  
  * Fixed support for case-sensitive HTML escape entities.
