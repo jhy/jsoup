@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -228,6 +229,7 @@ public class HttpConnection implements Connection {
             timeoutSeconds = 3;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
+            headers.put("Accept-Encoding", "gzip");
         }
 
         public int timeout() {
@@ -298,7 +300,10 @@ public class HttpConnection implements Connection {
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
                     contentType, url.toString()));
 
-            InputStream inStream = new BufferedInputStream(conn.getInputStream());
+            InputStream inStream =
+                (res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equals("gzip")) ?
+                    new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
+                    new BufferedInputStream(conn.getInputStream());
             res.byteData = DataUtil.readToByteBuffer(inStream);
             res.charset = getCharsetFromContentType(contentType); // may be null, readInputStream deals with it
             inStream.close();
