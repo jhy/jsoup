@@ -1,15 +1,8 @@
 package org.jsoup.nodes;
 
-import org.jsoup.Jsoup;
-import org.jsoup.TextUtil;
-import org.jsoup.select.Elements;
-import org.junit.Test;
-
 import static org.junit.Assert.*;
 
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import org.junit.Test;
 
 /**
  * Tests for Attributes.
@@ -32,6 +25,7 @@ public class AttributesTest {
         assertEquals("a&p", a.get("tot"));
 
         assertEquals(" tot=\"a&amp;p\" hello=\"There\" data-name=\"Jsoup\"", a.html());
+        assertEquals(a.html(), a.toString());
     }
 
 }
