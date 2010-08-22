@@ -71,12 +71,12 @@ public class TextNode extends Node {
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         String html = Entities.escape(getWholeText(), out);
-        if (parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
+        if (out.prettyPrint() && parent() instanceof Element && !((Element) parent()).preserveWhitespace()) {
             html = normaliseWhitespace(html);
         }
 
-        if (siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock() && !isBlank())
-            indent(accum, depth);
+        if (out.prettyPrint() && siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock() && !isBlank())
+            indent(accum, depth, out);
         accum.append(html);
     }
 
