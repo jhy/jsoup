@@ -206,6 +206,18 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
         assertEquals("<html>\n <head></head>\n <body>\n  <div>\n   <p>Hello</p>\n  </div>\n </body>\n</html>", doc.html());
     }
+
+    @Test public void testSetIndent() {
+        Document doc = Jsoup.parse("<div><p>Hello\nthere</p></div>");
+        doc.outputSettings().indentAmount(0);
+        assertEquals("<html>\n<head></head>\n<body>\n<div>\n<p>Hello there</p>\n</div>\n</body>\n</html>", doc.html());
+    }
+
+    @Test public void testNotPretty() {
+        Document doc = Jsoup.parse("<div>   \n<p>Hello\n there</p></div>");
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<html><head></head><body><div>   \n<p>Hello\n there</p></div></body></html>", doc.html());
+    }
     
     @Test public void testEmptyElementFormatHtml() {
         // don't put newlines into empty blocks

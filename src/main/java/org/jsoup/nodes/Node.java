@@ -372,8 +372,8 @@ public abstract class Node {
         return outerHtml();
     }
 
-    protected void indent(StringBuilder accum, int depth) {
-        accum.append("\n").append(StringUtil.padding(depth));
+    protected void indent(StringBuilder accum, int depth, Document.OutputSettings out) {
+        accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
     }
 
     @Override

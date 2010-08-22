@@ -174,6 +174,8 @@ public class Document extends Element {
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
+        private boolean prettyPrint = true;
+        private int indentAmount = 1;
 
         public OutputSettings() {}
 
@@ -235,6 +237,44 @@ public class Document extends Element {
 
         CharsetEncoder encoder() {
             return charsetEncoder;
+        }
+
+        /**
+         * Get if pretty printing is enabled. Default is true. If disabled, the HTML output methods will not re-format
+         * the output, and the output will generally look like the input.
+         * @return if pretty printing is enabled.
+         */
+        public boolean prettyPrint() {
+            return prettyPrint;
+        }
+
+        /**
+         * Enable or disable pretty printing.
+         * @param pretty new pretty print setting
+         * @return this, for chaining
+         */
+        public OutputSettings prettyPrint(boolean pretty) {
+            prettyPrint = pretty;
+            return this;
+        }
+
+        /**
+         * Get the current tag indent amount, used when pretty printing.
+         * @return the current indent amount
+         */
+        public int indentAmount() {
+            return indentAmount;
+        }
+
+        /**
+         * Set the indent amount for pretty printing
+         * @param indentAmount number of spaces to use for indenting each level. Must be >= 0.
+         * @return this, for chaining
+         */
+        public OutputSettings indentAmount(int indentAmount) {
+            Validate.isTrue(indentAmount >= 0);
+            this.indentAmount = indentAmount;
+            return this;
         }
     }
 
