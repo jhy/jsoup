@@ -649,17 +649,30 @@ public class Element extends Node {
     /**
      * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
      * in the element, or in any of its descendants.
-     * @param searchText
+     * @param searchText to look for in the element's text
      * @return elements that contain the string, case insensitive.
+     * @see Element#text()
      */
     public Elements getElementsContainingText(String searchText) {
         return Collector.collect(new Evaluator.ContainsText(searchText), this);
     }
     
     /**
+     * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
+     * in the element, not in any of its descendants.
+     * @param searchText to look for in the element's own text
+     * @return elements that contain the string, case insensitive.
+     * @see Element#ownText()
+     */
+    public Elements getElementsContainingOwnText(String searchText) {
+        return Collector.collect(new Evaluator.ContainsOwnText(searchText), this);
+    }
+    
+    /**
      * Find elements whose text matches the supplied regular expression.
      * @param pattern regular expression to match text against
      * @return elements matching the supplied regular expression.
+     * @see Element#text()
      */
     public Elements getElementsMatchingText(Pattern pattern) {
         return Collector.collect(new Evaluator.Matches(pattern), this);
@@ -669,6 +682,7 @@ public class Element extends Node {
      * Find elements whose text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
      * @return elements matching the supplied regular expression.
+     * @see Element#text()
      */
     public Elements getElementsMatchingText(String regex) {
         Pattern pattern;
@@ -678,6 +692,32 @@ public class Element extends Node {
             throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
         }
         return getElementsMatchingText(pattern);
+    }
+    
+    /**
+     * Find elements whose own text matches the supplied regular expression.
+     * @param pattern regular expression to match text against
+     * @return elements matching the supplied regular expression.
+     * @see Element#ownText()
+     */
+    public Elements getElementsMatchingOwnText(Pattern pattern) {
+        return Collector.collect(new Evaluator.MatchesOwn(pattern), this);
+    }
+    
+    /**
+     * Find elements whose text matches the supplied regular expression.
+     * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @return elements matching the supplied regular expression.
+     * @see Element#ownText()
+     */
+    public Elements getElementsMatchingOwnText(String regex) {
+        Pattern pattern;
+        try {
+            pattern = Pattern.compile(regex);
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
+        }
+        return getElementsMatchingOwnText(pattern);
     }
     
     /**

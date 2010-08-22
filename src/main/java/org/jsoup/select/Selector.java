@@ -47,6 +47,8 @@ import java.util.LinkedHashSet;
  <tr><td><code>E:has(<em>selector</em>)</code></td><td>an Element that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
  <tr><td><code>E:contains(<em>text</em>)</code></td><td>an Element that contains the specified text. The search is case insensitive. The text may appear in the found Element, or any of its descendants.</td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".</td></tr>
  <tr><td><code>E:matches(<em>regex</em>)</code></td><td>an Element whose text matches the specified regular expression. The text may appear in the found Element, or any of its descendants.</td><td><code>td:matches(\\d+)</code> finds table cells containing digits. <code>div:matches((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
+ <tr><td><code>E:containsOwn(<em>text</em>)</code></td><td>an Element that directly contains the specified text. The search is case insensitive. The text must appear in the found Element, not any of its descendants.</td><td><code>p:containsOwn(jsoup)</code> finds p elements with own text "jsoup".</td></tr>
+ <tr><td><code>E:matchesOwn(<em>regex</em>)</code></td><td>an Element whose own text matches the specified regular expression. The text must appear in the found Element, not any of its descendants.</td><td><code>td:matchesOwn(\\d+)</code> finds table cells directly containing digits. <code>div:matchesOwn((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
  </table>
 
  @see Element#select(String)
@@ -167,9 +169,13 @@ public class Selector {
         } else if (tq.matches(":has(")) {
             return has();
         } else if (tq.matches(":contains(")) {
-            return contains();
+            return contains(false);
+        } else if (tq.matches(":containsOwn(")) {
+            return contains(true);
         } else if (tq.matches(":matches(")) {
-            return matches();
+            return matches(false);
+        } else if (tq.matches(":matchesOwn(")) {
+            return matches(true);
         } else { // unhandled
             throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
@@ -275,22 +281,22 @@ public class Selector {
         return filterForParentsOfDescendants(elements, select(subQuery, elements));
     }
     
-    // pseudo selector :contains(text)
-    private Elements contains() {
-        tq.consume(":contains");
+    // pseudo selector :contains(text), containsOwn(text)
+    private Elements contains(boolean own) {
+        tq.consume(own ? ":containsOwn" : ":contains");
         String searchText = TokenQueue.unescape(tq.chompBalanced('(',')'));
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
         
-        return root.getElementsContainingText(searchText);
+        return own ? root.getElementsContainingOwnText(searchText) : root.getElementsContainingText(searchText);
     }
     
-    // :matches(regex)
-    private Elements matches() {
-        tq.consume(":matches");
+    // :matches(regex), matchesOwn(regex)
+    private Elements matches(boolean own) {
+        tq.consume(own? ":matchesOwn" : ":matches");
         String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, ":matches(regex) query must not be empty");
         
-        return root.getElementsMatchingText(regex);
+        return own ? root.getElementsMatchingOwnText(regex) : root.getElementsMatchingText(regex);
     }
 
     // direct child descendants

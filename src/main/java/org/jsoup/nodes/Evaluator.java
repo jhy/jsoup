@@ -214,6 +214,17 @@ public abstract class Evaluator {
         }
     }
     
+    static final class ContainsOwnText extends Evaluator {
+        private String searchText;
+        ContainsOwnText(String searchText) {
+            this.searchText = searchText.toLowerCase();
+        }
+
+        public boolean matches(Element element) {
+            return (element.ownText().toLowerCase().contains(searchText));
+        }
+    }
+    
     static final class Matches extends Evaluator {
         private Pattern pattern;
         Matches(Pattern pattern) {
@@ -222,6 +233,18 @@ public abstract class Evaluator {
 
         public boolean matches(Element element) {
             Matcher m = pattern.matcher(element.text());
+            return m.find();
+        }
+    }
+    
+    static final class MatchesOwn extends Evaluator {
+        private Pattern pattern;
+        MatchesOwn(Pattern pattern) {
+            this.pattern = pattern;
+        }
+
+        public boolean matches(Element element) {
+            Matcher m = pattern.matcher(element.ownText());
             return m.find();
         }
     }
