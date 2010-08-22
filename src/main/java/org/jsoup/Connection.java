@@ -21,7 +21,7 @@ public interface Connection {
 
     public Connection userAgent(String userAgent);
 
-    public Connection timeout(int seconds);
+    public Connection timeout(int millis);
 
     public Connection referrer(String referrer);
 
@@ -87,7 +87,7 @@ public interface Connection {
     public interface Request extends Base<Request> {
         public int timeout();
 
-        public Request timeout(int seconds);
+        public Request timeout(int millis);
 
         public Request data(KeyVal keyval);
 
