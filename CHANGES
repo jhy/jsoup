@@ -3,6 +3,11 @@ jsoup changelog
 *** Release 1.2.4 [PENDING]
  * Removed dependency on Apache Commons-lang. Jsoup now has no external dependencies.
 
+ * Added new Connection implementation, to enable easier and richer HTTP requests that parse to Documents. This includes
+   support for gzip responses, cookies, headers, data parameters, user-agent, referrer, etc.
+  
+ * Added Element.ownText() method, to get only the direct text of an element, not including the text of its children.
+
  * Further speed optimisations for parsing and output generation.
  
  * Fixed support for case-sensitive HTML escape entities.
