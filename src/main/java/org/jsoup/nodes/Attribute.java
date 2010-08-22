@@ -66,7 +66,7 @@ public class Attribute implements Map.Entry<String, String>  {
      @return HTML
      */
     public String html() {
-        return key + "=\"" + Entities.escape(value, (new Document(null)).outputSettings()) + "\"";
+        return key + "=\"" + Entities.escape(value, (new Document("")).outputSettings()) + "\"";
     }
     
     protected void html(StringBuilder accum, Document.OutputSettings out) {
