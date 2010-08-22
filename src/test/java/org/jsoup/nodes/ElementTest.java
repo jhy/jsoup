@@ -67,6 +67,13 @@ public class ElementTest {
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
+    @Test public void testGetChildText() {
+        Document doc = Jsoup.parse("<p>Hello <b>there</b> now");
+        Element p = doc.select("p").first();
+        assertEquals("Hello there now", p.text());
+        assertEquals("Hello now", p.ownText());
+    }
+
     @Test public void testNormalisesText() {
         String h = "<p>Hello<p>There.</p> \n <p>Here <b>is</b> \n s<b>om</b>e text.";
         Document doc = Jsoup.parse(h);

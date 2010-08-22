@@ -691,8 +691,11 @@ public class Element extends Node {
 
     /**
      * Gets the combined text of this element and all its children.
-     * 
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
+     *
      * @return unencoded text, or empty string if none.
+     * @see #ownText()
      */
     public String text() {
         StringBuilder sb = new StringBuilder();
@@ -704,15 +707,7 @@ public class Element extends Node {
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
-                String text = textNode.getWholeText();
-
-                if (!preserveWhitespace()) {
-                    text = TextNode.normaliseWhitespace(text);
-                    if (TextNode.lastCharIsWhitespace(accum))
-                        text = TextNode.stripLeadingWhitespace(text);
-                }
-                accum.append(text);
-
+                appendNormalisedText(accum, textNode);
             } else if (child instanceof Element) {
                 Element element = (Element) child;
                 if (accum.length() > 0 && element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
@@ -720,6 +715,41 @@ public class Element extends Node {
                 element.text(accum);
             }
         }
+    }
+
+    /**
+     * Gets the text owned by this element only; does not get the combined text of all children.
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello now!"}.
+     * Note that the text within the {@code b} element is not return, as it is not a direct child of the {@code p} element.
+     *
+     * @return unencoded text, or empty string if none.
+     * @see #text()
+     */
+    public String ownText() {
+        StringBuilder sb = new StringBuilder();
+        ownText(sb);
+        return sb.toString().trim();
+    }
+
+    private void ownText(StringBuilder accum) {
+        for (Node child : childNodes) {
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                appendNormalisedText(accum, textNode);
+            }
+        }
+    }
+
+    private void appendNormalisedText(StringBuilder accum, TextNode textNode) {
+        String text = textNode.getWholeText();
+
+        if (!preserveWhitespace()) {
+            text = TextNode.normaliseWhitespace(text);
+            if (TextNode.lastCharIsWhitespace(accum))
+                text = TextNode.stripLeadingWhitespace(text);
+        }
+        accum.append(text);
     }
 
     boolean preserveWhitespace() {
