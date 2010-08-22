@@ -118,7 +118,7 @@ public class Attributes implements Iterable<Attribute> {
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
-        html(accum, (new Document(null)).outputSettings()); // output settings a bit funky, but this html() seldom used
+        html(accum, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
         return accum.toString();
     }
     
