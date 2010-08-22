@@ -44,23 +44,16 @@ public class Jsoup {
     }
 
     /**
-     Fetch a URL, and parse it as HTML.
-     <p>
-     The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to {@code UTF-8}.
-
-     @param url           URL to fetch (with a GET). The protocol must be {@code http} or {@code https}.
-     @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
-     @return The parsed HTML.
-
-     @throws IOException If the final server response != 200 OK (redirects are followed), or if there's an error reading
-     the response stream.
+     * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
+     * <p>
+     * Use examples:
+     * <ul>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "jsoup").get();</code></li>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();
+     * </ul>
+     * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
+     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
      */
-    public static Document parse(URL url, int timeoutMillis) throws IOException {
-        Connection con = HttpConnection.connect(url);
-        con.timeout(timeoutMillis);
-        return con.get();
-    }
-
     public static Connection connect(String url) {
         return HttpConnection.connect(url);
     }
@@ -69,7 +62,7 @@ public class Jsoup {
      Parse the contents of a file as HTML.
 
      @param in          file to load HTML from
-     @param charsetName (optional) character set of file contents. Set to null to determine from http-equiv meta tag, if
+     @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
      present, or fall back to {@code UTF-8} (which is often safe to do).
      @param baseUri     The URL where the HTML was retrieved from, to generate absolute URLs relative to.
      @return sane HTML
@@ -84,7 +77,7 @@ public class Jsoup {
      Parse the contents of a file as HTML. The location of the file is used as the base URI to qualify relative URLs.
 
      @param in          file to load HTML from
-     @param charsetName (optional) character set of file contents. Set to null to determine from http-equiv meta tag, if
+     @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
      present, or fall back to {@code UTF-8} (which is often safe to do).
      @return sane HTML
 
@@ -118,6 +111,26 @@ public class Jsoup {
      */
     public static Document parseBodyFragment(String bodyHtml) {
         return Parser.parseBodyFragment(bodyHtml, "");
+    }
+
+    /**
+     Fetch a URL, and parse it as HTML. Provided for compatibility; in most cases use {@link #connect(String)} instead.
+     <p>
+     The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to {@code UTF-8}.
+
+     @param url           URL to fetch (with a GET). The protocol must be {@code http} or {@code https}.
+     @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
+     @return The parsed HTML.
+
+     @throws IOException If the final server response != 200 OK (redirects are followed), or if there's an error reading
+     the response stream.
+
+     @see #connect(String)
+     */
+    public static Document parse(URL url, int timeoutMillis) throws IOException {
+        Connection con = HttpConnection.connect(url);
+        con.timeout(timeoutMillis);
+        return con.get();
     }
 
     /**

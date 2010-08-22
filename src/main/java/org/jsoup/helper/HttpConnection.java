@@ -24,7 +24,10 @@ import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.TokenQueue;
 
-/** DRAFT implementation of Connection. */
+/**
+ * Implementation of {@link Connection}.
+ * @see org.jsoup.Jsoup#connect(String) 
+ */
 public class HttpConnection implements Connection {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=([^\\s;]*)");
 
@@ -256,6 +259,7 @@ public class HttpConnection implements Connection {
         private String statusMessage;
         private ByteBuffer byteData;
         private String charset;
+        private String contentType;
 
         static Response execute(Connection.Request req) throws IOException {
             URL url = req.url();
@@ -263,9 +267,9 @@ public class HttpConnection implements Connection {
             Validate
                 .isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
 
+            // set up the request for execution
             if (req.method() == Connection.Method.GET && req.data().size() > 0)
                 url = getRequestUrl(req); // appends query string
-            
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(true);
@@ -273,17 +277,12 @@ public class HttpConnection implements Connection {
             conn.setReadTimeout(req.timeout());
             if (req.method() == Connection.Method.POST)
                 conn.setDoOutput(true);
-            
             if (req.cookies().size() > 0)
                 conn.addRequestProperty("Cookie", getRequestCookieString(req));
-            
             for (Map.Entry<String, String> header : req.headers().entrySet()) {
                 conn.addRequestProperty(header.getKey(), header.getValue());
             }
-                
-            // todo: handle get params not in url
             conn.connect();
-            
             if (req.method() == Connection.Method.POST)
                 writePost(req.data(), conn.getOutputStream());          
 
@@ -294,18 +293,12 @@ public class HttpConnection implements Connection {
             Response res = new Response();
             res.setupFromConnection(conn);
 
-            // todo: move to parse
-            String contentType = conn.getContentType();
-            if (contentType == null || !contentType.startsWith("text/"))
-                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
-                    contentType, url.toString()));
-
             InputStream inStream =
                 (res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equals("gzip")) ?
                     new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
                     new BufferedInputStream(conn.getInputStream());
             res.byteData = DataUtil.readToByteBuffer(inStream);
-            res.charset = getCharsetFromContentType(contentType); // may be null, readInputStream deals with it
+            res.charset = getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             inStream.close();
 
             return res;
@@ -323,7 +316,14 @@ public class HttpConnection implements Connection {
             return charset;
         }
 
-        public Document parse() {
+        public String contentType() {
+            return contentType;
+        }
+
+        public Document parse() throws IOException {
+            if (contentType == null || !contentType.startsWith("text/"))
+                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
+                    contentType, url.toString()));
             Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
@@ -351,6 +351,7 @@ public class HttpConnection implements Connection {
             url = conn.getURL();
             statusCode = conn.getResponseCode();
             statusMessage = conn.getResponseMessage();
+            contentType = conn.getContentType();
 
             Map<String, List<String>> resHeaders = conn.getHeaderFields();
             for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {

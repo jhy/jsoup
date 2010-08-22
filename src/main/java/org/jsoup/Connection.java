@@ -327,10 +327,17 @@ public interface Connection {
         public String charset();
 
         /**
+         * Get the response content type (e.g. "text/html");
+         * @return the response content type
+         */
+        public String contentType();
+
+        /**
          * Parse the body of the response as a Document.
          * @return a parsed Document
+         * @throws IOException on error
          */
-        public Document parse();
+        public Document parse() throws IOException;
 
         /**
          * Get the body of the response as a plain string.
