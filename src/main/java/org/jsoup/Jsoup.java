@@ -57,7 +57,7 @@ public class Jsoup {
      */
     public static Document parse(URL url, int timeoutMillis) throws IOException {
         Connection con = HttpConnection.connect(url);
-        con.timeout(timeoutMillis / 1000);
+        con.timeout(timeoutMillis);
         return con.get();
     }
 

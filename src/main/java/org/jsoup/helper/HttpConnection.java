@@ -67,8 +67,8 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Connection timeout(int seconds) {
-        req.timeout(seconds);
+    public Connection timeout(int millis) {
+        req.timeout(millis);
         return this;
     }
 
@@ -222,22 +222,22 @@ public class HttpConnection implements Connection {
     }
 
     public static class Request extends Base<Connection.Request> implements Connection.Request {
-        private int timeoutSeconds;
+        private int timeoutMilliseconds;
         private Collection<Connection.KeyVal> data;
 
         private Request() {
-            timeoutSeconds = 3;
+            timeoutMilliseconds = 3000;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
         }
 
         public int timeout() {
-            return timeoutSeconds;
+            return timeoutMilliseconds;
         }
 
-        public Request timeout(int seconds) {
-            this.timeoutSeconds = seconds;
+        public Request timeout(int millis) {
+            this.timeoutMilliseconds = millis;
             return this;
         }
 
@@ -269,8 +269,8 @@ public class HttpConnection implements Connection {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(true);
-            conn.setConnectTimeout(req.timeout() * 1000);
-            conn.setReadTimeout(req.timeout() * 1000);
+            conn.setConnectTimeout(req.timeout());
+            conn.setReadTimeout(req.timeout());
             if (req.method() == Connection.Method.POST)
                 conn.setDoOutput(true);
             
