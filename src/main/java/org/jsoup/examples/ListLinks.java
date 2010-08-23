@@ -7,7 +7,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.URL;
 
 /**
  * Example program to list links from a URL.
@@ -15,10 +14,10 @@ import java.net.URL;
 public class ListLinks {
     public static void main(String[] args) throws IOException {
         Validate.isTrue(args.length == 1, "usage: supply url to fetch");
-        URL url = new URL(args[0]);
-        print("Fetching %s...", url.toExternalForm());
+        String url = args[0];
+        print("Fetching %s...", url);
 
-        Document doc = Jsoup.parse(url, 3*1000);
+        Document doc = Jsoup.connect(url).get();
         Elements links = doc.select("a[href]");
         Elements media = doc.select("[src]");
         Elements imports = doc.select("link[href]");
