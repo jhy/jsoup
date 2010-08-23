@@ -51,7 +51,7 @@ public interface Connection {
 
     /**
      * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is 3 seconds (3000 millis).
+     * timeout is 3 seconds (3000 millis). A timeout of zero is treated as an infinite timeout.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
      */

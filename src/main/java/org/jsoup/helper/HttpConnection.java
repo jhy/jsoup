@@ -57,6 +57,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection url(String url) {
+        Validate.notEmpty(url, "Must supply a valid URL");
         try {
             req.url(new URL(url));
         } catch (MalformedURLException e) {
@@ -66,6 +67,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection userAgent(String userAgent) {
+        Validate.notNull(userAgent, "User agent must not be null");
         req.header("User-Agent", userAgent);
         return this;
     }
@@ -76,6 +78,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection referrer(String referrer) {
+        Validate.notNull(referrer, "Referrer must not be null");
         req.header("Referer", referrer);
         return this;
     }
@@ -91,6 +94,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(Map<String, String> data) {
+        Validate.notNull(data, "Data map must not be null");
         for (Map.Entry<String, String> entry : data.entrySet()) {
             req.data(KeyVal.create(entry.getKey(), entry.getValue()));
         }
@@ -98,9 +102,14 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(String... keyvals) {
+        Validate.notNull(keyvals, "Data key value pairs must not be null");
         Validate.isTrue(keyvals.length %2 == 0, "Must supply an even number of key value pairs");
         for (int i = 0; i < keyvals.length; i += 2) {
-            req.data(KeyVal.create(keyvals[i], keyvals[i + 1]));
+            String key = keyvals[i];
+            String value = keyvals[i+1];
+            Validate.notEmpty(key, "Data key must not be empty");
+            Validate.notNull(value, "Data value must not be null");
+            req.data(KeyVal.create(key, value));
         }
         return this;
     }
@@ -167,6 +176,7 @@ public class HttpConnection implements Connection {
         }
 
         public T url(URL url) {
+            Validate.notNull(url, "URL must not be null");
             this.url = url;
             return (T) this;
         }
@@ -176,24 +186,30 @@ public class HttpConnection implements Connection {
         }
 
         public T method(Method method) {
+            Validate.notNull(method, "Method must not be null");
             this.method = method;
             return (T) this;
         }
 
         public String header(String name) {
+            Validate.notNull(name, "Header name must not be null");
             return headers.get(name);
         }
 
         public T header(String name, String value) {
+            Validate.notEmpty(name, "Header name must not be empty");
+            Validate.notNull(value, "Header value must not be null");
             headers.put(name, value);
             return (T) this;
         }
 
         public boolean hasHeader(String name) {
+            Validate.notEmpty(name, "Header name must not be empty");
             return headers.containsKey(name);
         }
 
         public T removeHeader(String name) {
+            Validate.notEmpty(name, "Header name must not be empty");
             headers.remove(name);
             return (T) this;
         }
@@ -203,19 +219,24 @@ public class HttpConnection implements Connection {
         }
 
         public String cookie(String name) {
+            Validate.notNull(name, "Cookie name must not be null");
             return cookies.get(name);
         }
 
         public T cookie(String name, String value) {
+            Validate.notEmpty(name, "Cookie name must not be empty");
+            Validate.notNull(value, "Cookie value must not be null");
             cookies.put(name, value);
             return (T) this;
         }
 
         public boolean hasCookie(String name) {
+            Validate.notEmpty("Cookie name must not be empty");
             return cookies.containsKey(name);
         }
 
         public T removeCookie(String name) {
+            Validate.notEmpty("Cookie name must not be empty");
             cookies.remove(name);
             return (T) this;
         }
@@ -241,11 +262,13 @@ public class HttpConnection implements Connection {
         }
 
         public Request timeout(int millis) {
+            Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
             this.timeoutMilliseconds = millis;
             return this;
         }
 
         public Request data(Connection.KeyVal keyval) {
+            Validate.notNull(keyval, "Key val must not be null");
             data.add(keyval);
             return this;
         }
@@ -261,8 +284,10 @@ public class HttpConnection implements Connection {
         private ByteBuffer byteData;
         private String charset;
         private String contentType;
+        private boolean executed = false;
 
         static Response execute(Connection.Request req) throws IOException {
+            Validate.notNull(req, "Request must not be null");
             URL url = req.url();
             String protocol = url.getProtocol();
             Validate
@@ -302,6 +327,7 @@ public class HttpConnection implements Connection {
             res.charset = getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             inStream.close();
 
+            res.executed = true;
             return res;
         }
 
@@ -322,6 +348,7 @@ public class HttpConnection implements Connection {
         }
 
         public Document parse() throws IOException {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
             if (contentType == null || !contentType.startsWith("text/"))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
                     contentType, url.toString()));
@@ -332,6 +359,7 @@ public class HttpConnection implements Connection {
         }
 
         public String body() {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body;
             if (charset == null)
@@ -343,6 +371,7 @@ public class HttpConnection implements Connection {
         }
 
         public byte[] bodyAsBytes() {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             return byteData.array();
         }
 
@@ -440,15 +469,18 @@ public class HttpConnection implements Connection {
         private String value;
 
         public static KeyVal create(String key, String value) {
+            Validate.notEmpty(key, "Data key must not be empty");
+            Validate.notNull(value, "Data value must not be null");
             return new KeyVal(key, value);
         }
 
-        public KeyVal(String key, String value) {
+        private KeyVal(String key, String value) {
             this.key = key;
             this.value = value;
         }
 
         public KeyVal key(String key) {
+            Validate.notEmpty(key, "Data key must not be empty");
             this.key = key;
             return this;
         }
@@ -458,6 +490,7 @@ public class HttpConnection implements Connection {
         }
 
         public KeyVal value(String value) {
+            Validate.notNull(value, "Data value must not be null");
             this.value = value;
             return this;
         }
