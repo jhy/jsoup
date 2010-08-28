@@ -760,8 +760,9 @@ public class Element extends Node {
     /**
      * Gets the text owned by this element only; does not get the combined text of all children.
      * <p>
-     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello now!"}.
-     * Note that the text within the {@code b} element is not return, as it is not a direct child of the {@code p} element.
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
+     * whereas {@code p.text()} returns {@code "Hello there now!"}.
+     * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
      *
      * @return unencoded text, or empty string if none.
      * @see #text()
