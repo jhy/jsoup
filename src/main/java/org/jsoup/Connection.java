@@ -195,7 +195,9 @@ public interface Connection {
 
         /**
          * Get the value of a header. This is a simplified header model, where a header may only have one value.
-         * @param name name of header
+         * <p>
+         * Header names are case insensitive.
+         * @param name name of header (case insensitive)
          * @return value of header, or null if not set.
          * @see #hasHeader(String)
          * @see #cookie(String)
@@ -203,7 +205,7 @@ public interface Connection {
         public String header(String name);
 
         /**
-         * Set a header.
+         * Set a header. This method will overwrite any existing header with the same case insensitive name. 
          * @param name Name of header
          * @param value Value of header
          * @return this, for chaining
@@ -212,14 +214,14 @@ public interface Connection {
 
         /**
          * Check if a header is present
-         * @param name name of header
+         * @param name name of header (case insensitive)
          * @return if the header is present in this request/response
          */
         public boolean hasHeader(String name);
 
         /**
          * Remove a header by name
-         * @param name name of header to remove
+         * @param name name of header to remove (case insensitive)
          * @return this, for chianing
          */
         public T removeHeader(String name);

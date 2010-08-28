@@ -193,29 +193,55 @@ public class HttpConnection implements Connection {
 
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
-            return headers.get(name);
+            return getHeaderCaseInsensitive(name);
         }
 
         public T header(String name, String value) {
             Validate.notEmpty(name, "Header name must not be empty");
             Validate.notNull(value, "Header value must not be null");
+            removeHeader(name); // ensures we don't get an "accept-encoding" and a "Accept-Encoding"
             headers.put(name, value);
             return (T) this;
         }
 
         public boolean hasHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            return headers.containsKey(name);
+            return getHeaderCaseInsensitive(name) != null;
         }
 
         public T removeHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            headers.remove(name);
+            Map.Entry<String, String> entry = scanHeaders(name); // remove is case insensitive too
+            if (entry != null)
+                headers.remove(entry.getKey()); // ensures correct case
             return (T) this;
         }
 
         public Map<String, String> headers() {
             return headers;
+        }
+
+        private String getHeaderCaseInsensitive(String name) {
+            Validate.notNull(name, "Header name must not be null");
+            // quick evals for common case of title case, lower case, then scan for mixed
+            String value = headers.get(name);
+            if (value == null)
+                value = headers.get(name.toLowerCase());
+            if (value == null) {
+                Map.Entry<String, String> entry = scanHeaders(name);
+                if (entry != null)
+                    value = entry.getValue();
+            }
+            return value;
+        }
+
+        private Map.Entry<String, String> scanHeaders(String name) {
+            String lc = name.toLowerCase();
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                if (entry.getKey().toLowerCase().equals(lc))
+                    return entry;
+            }
+            return null;
         }
 
         public String cookie(String name) {
