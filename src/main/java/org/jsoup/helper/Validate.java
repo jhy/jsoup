@@ -1,11 +1,11 @@
 package org.jsoup.helper;
 
-import java.util.Collection;
-
 /**
  * Simple validation methods. Designed for jsoup internal use
  */
 public final class Validate {
+    
+    private Validate() {}
 
     /**
      * Validates that the obect is not null

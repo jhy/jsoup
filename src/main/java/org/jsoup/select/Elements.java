@@ -311,10 +311,7 @@ public class Elements implements List<Element> {
      * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
      */
     public Elements eq(int index) {
-        if (contents.size() > index)
-            return new Elements(get(index));
-        else
-            return new Elements();
+        return contents.size() > index ? new Elements(get(index)) : new Elements();
     }
     
     /**
@@ -323,7 +320,7 @@ public class Elements implements List<Element> {
      * @return true if at least one element in the list matches the query.
      */
     public boolean is(String query) {
-        Elements children = this.select(query);
+        Elements children = select(query);
         return !children.isEmpty();
     }
 
@@ -345,7 +342,7 @@ public class Elements implements List<Element> {
      @return The first matched element, or <code>null</code> if contents is empty;
      */
     public Element first() {
-        return !contents.isEmpty() ? contents.get(0) : null;
+        return contents.isEmpty() ? null : contents.get(0);
     }
 
     /**
@@ -353,7 +350,7 @@ public class Elements implements List<Element> {
      @return The last matched element, or <code>null</code> if contents is empty.
      */
     public Element last() {
-        return !contents.isEmpty() ? contents.get(contents.size() - 1) : null;
+        return contents.isEmpty() ? null : contents.get(contents.size() - 1);
     }
 
     // implements List<Element> delegates:

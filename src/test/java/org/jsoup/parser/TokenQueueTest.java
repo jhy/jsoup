@@ -51,4 +51,11 @@ public class TokenQueueTest {
         data = tq.chompToIgnoreCase("</textarea");
         assertEquals("<textarea> one two < three </oops>", data);
     }
+
+    @Test public void addFirst() {
+        TokenQueue tq = new TokenQueue("One Two");
+        tq.consumeWord();
+        tq.addFirst("Three");
+        assertEquals("Three Two", tq.remainder());
+    }
 }

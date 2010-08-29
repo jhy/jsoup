@@ -11,6 +11,9 @@ import org.jsoup.nodes.Node;
  */
 public class Collector {
 
+    private Collector() {
+    }
+
     /**
      Build a list of elements, by visiting root and every descendant of root, and testing it against the evaluator.
      @param eval Evaluator to test elements against
@@ -24,8 +27,8 @@ public class Collector {
     }
 
     private static class Accumulator implements NodeVisitor {
-        private Elements elements;
-        private Evaluator eval;
+        private final Elements elements;
+        private final Evaluator eval;
 
         Accumulator(Elements elements, Evaluator eval) {
             this.elements = elements;

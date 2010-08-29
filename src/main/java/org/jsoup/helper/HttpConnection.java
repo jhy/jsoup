@@ -1,28 +1,20 @@
 package org.jsoup.helper;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import org.jsoup.Connection;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.TokenQueue;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jsoup.Connection;
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.TokenQueue;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Implementation of {@link Connection}.
@@ -289,7 +281,7 @@ public class HttpConnection implements Connection {
 
         public Request timeout(int millis) {
             Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
-            this.timeoutMilliseconds = millis;
+            timeoutMilliseconds = millis;
             return this;
         }
 
