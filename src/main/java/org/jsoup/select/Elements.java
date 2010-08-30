@@ -197,8 +197,8 @@ public class Elements implements List<Element> {
     }
     
     /**
-     * Get the combined inner HTML of all matched elements.
-     * @return string of all element's inner HTML.
+     * Get the combined outer HTML of all matched elements.
+     * @return string of all element's outer HTML.
      * @see #text()
      * @see #html()
      */
@@ -211,9 +211,19 @@ public class Elements implements List<Element> {
         }
         return sb.toString();
     }
+
+    /**
+     * Get the combined outer HTML of all matched elements. Alias of {@link #outerHtml()}.
+     * @return string of all element's outer HTML.
+     * @see #text()
+     * @see #html()
+     */
+    public String toString() {
+        return outerHtml();
+    }
     
     /**
-     * Set each matched element's inner HTML.
+     * Set the inner HTML of each matched element.
      * @param html HTML to parse and set into each matched element.
      * @return this, for chaining
      * @see Element#html(String)
@@ -290,6 +300,43 @@ public class Elements implements List<Element> {
         Validate.notEmpty(html);
         for (Element element : contents) {
             element.wrap(html);
+        }
+        return this;
+    }
+
+    /**
+     * Empty (remove all child nodes from) each matched element. This is similar to setting the inner HTML of each
+     * element to nothing.
+     * <p>
+     * E.g. HTML: {@code <div><p>Hello <b>there</b></p> <p>now</p></div>}<br>
+     * <code>doc.select("p").empty();</code><br>
+     * HTML = {@code <div><p></p> <p></p></div>}
+     * @return this, for chaining
+     * @see Element#empty()
+     * @see #remove()
+     */
+    public Elements empty() {
+        for (Element element : contents) {
+            element.empty();
+        }
+        return this;
+    }
+
+    /**
+     * Remove each matched element from the DOM. This is similar to setting the outer HTML of each element to nothing.
+     * <p>
+     * E.g. HTML: {@code <div><p>Hello</p> <p>there</p> <img /></div>}<br>
+     * <code>doc.select("p").remove();</code><br>
+     * HTML = {@code <div> <img /></div>}
+     * <p>
+     * Note that this method should not be used to clean user-submitted HTML; rather, use {@link org.jsoup.safety.Cleaner} to clean HTML.
+     * @return this, for chaining
+     * @see Element#empty()
+     * @see #empty()
+     */
+    public Elements remove() {
+        for (Element element : contents) {
+            element.remove();
         }
         return this;
     }
