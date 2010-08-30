@@ -353,7 +353,9 @@ public class Elements implements List<Element> {
     }
     
     /**
-     * Reduce the matched elements to one element
+     * Get the <i>nth</i> matched element as an Elements object.
+     * <p>
+     * See also {@link #get(int)} to retrieve an Element.
      * @param index the (zero-based) index of the element in the list to retain
      * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
      */

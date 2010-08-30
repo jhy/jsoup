@@ -154,6 +154,7 @@ public class ElementsTest {
         String h = "<p>Hello<p>there<p>world";
         Document doc = Jsoup.parse(h);
         assertEquals("there", doc.select("p").eq(1).text());
+        assertEquals("there", doc.select("p").get(1).text());
     }
     
     @Test public void is() {
