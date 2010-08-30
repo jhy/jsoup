@@ -454,6 +454,13 @@ public class SelectorTest {
         Elements ps3 = doc.select("p:contains(the Rain):has(i)");
         assertEquals(1, ps3.size());
         assertEquals("light", ps3.first().className());
+
+        Elements ps4 = doc.select(".light:contains(rain)");
+        assertEquals(1, ps4.size());
+        assertEquals("light", ps3.first().className());
+
+        Elements ps5 = doc.select(":contains(rain)");
+        assertEquals(8, ps5.size()); // html, body, div,...
     }
     
     @Test public void testPsuedoContainsWithParentheses() {
