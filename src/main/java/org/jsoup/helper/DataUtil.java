@@ -56,6 +56,7 @@ public class DataUtil {
                 }
             }
         } else { // specified by content type header (or by user on file load)
+            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
             docData = Charset.forName(charsetName).decode(byteData).toString();
         }
         if (doc == null) {

@@ -28,6 +28,7 @@ public class Tag {
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
     private List<Tag> ancestors; // elements must be a descendant of one of these ancestors
     private List<Tag> excludes = Collections.emptyList(); // cannot contain these tags
+    private List<Tag> ignoreEndTags = Collections.emptyList(); // ignore these end tags
     private boolean directDescendant; // if true, must directly descend from one of the ancestors
     private boolean limitChildren; // if true, only contain children that've registered parents
 
@@ -88,7 +89,7 @@ public class Tag {
         // don't allow children to contain their parent (directly)
         if (this.requiresSpecificParent() && this.getImplicitParent().equals(child))
             return false;
-        
+
         // confirm limited children
         if (limitChildren) {
             for (Tag childParent : child.ancestors) {
@@ -194,6 +195,14 @@ public class Tag {
                 return true;
         
         return false;
+    }
+
+    boolean isIgnorableEndTag(Tag child) {
+        for (Tag endTag : ignoreEndTags) {
+            if (child.equals(endTag))
+                return true;
+        }
+        return false;        
     }
 
     @Override
@@ -355,16 +364,16 @@ public class Tag {
         createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
 
         // tables
-        createBlock("TABLE"); // specific list of only includes (tr, td, thead etc) not implemented
-        createBlock("CAPTION").setParent("TABLE").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
-        createBlock("THEAD").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
-        createBlock("TFOOT").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just TR
-        createBlock("TBODY").setParent("TABLE").setLimitChildren().setOptionalClosing(); // optional / implicit open too. just TR
-        createBlock("COLGROUP").setParent("TABLE").setLimitChildren().setOptionalClosing(); // just COL
+        createBlock("TABLE").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TBODY", "TD", "TFOO", "TH", "THEAD", "TR"); // specific list of only includes (tr, td, thead etc) not implemented
+        createBlock("CAPTION").setParent("TABLE").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "COL", "COLGROUP", "HTML", "TBODY", "TD", "TFOOT", "TH", "THEAD", "TR");
+        createBlock("THEAD").setParent("TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TD", "TH", "TR"); // just TR
+        createBlock("TFOOT").setParent("TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TD", "TH", "TR"); // just TR
+        createBlock("TBODY").setParent("TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TD", "TH", "TR"); // optional / implicit open too. just TR
+        createBlock("COLGROUP").setParent("TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("COL"); // just COL
         createBlock("COL").setParent("COLGROUP").setEmpty();
-        createBlock("TR").setParent("TBODY", "THEAD", "TFOOT", "TABLE").setLimitChildren().setOptionalClosing(); // just TH, TD
-        createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
-        createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing();
+        createBlock("TR").setParent("TBODY", "THEAD", "TFOOT", "TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TD", "TH"); // just TH, TD
+        createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML");
+        createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML");
         
         // html5 media
         createBlock("VIDEO").setExcludes("VIDEO", "AUDIO");
@@ -450,6 +459,18 @@ public class Tag {
             excludes = new ArrayList<Tag>(tagNames.length);
             for (String name : tagNames) {
                 excludes.add(Tag.valueOf(name));
+            }
+        }
+        return this;
+    }
+
+    private Tag setIgnoreEnd(String... tagNames) {
+        if (tagNames == null || tagNames.length == 0) {
+            ignoreEndTags = Collections.emptyList();
+        } else {
+            ignoreEndTags = new ArrayList<Tag>(tagNames.length);
+            for (String name : tagNames) {
+                ignoreEndTags.add(Tag.valueOf(name));
             }
         }
         return this;

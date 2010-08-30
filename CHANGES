@@ -3,6 +3,8 @@ jsoup changelog
 *** Release 1.3.2 [PENDING]
  * Treat HTTP headers as case insensitive in Jsoup.Connection. Improves compatibility for HTTP responses.
 
+ * Improved malformed table parsing by implementing ignorable end tags.
+
 *** Release 1.3.1 [2010-Aug-23]
  * Removed dependency on Apache Commons-lang. Jsoup now has no external dependencies.
 
