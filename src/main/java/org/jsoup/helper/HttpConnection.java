@@ -337,13 +337,16 @@ public class HttpConnection implements Connection {
             Response res = new Response();
             res.setupFromConnection(conn);
 
-            InputStream inStream =
-                (res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equals("gzip")) ?
-                    new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
-                    new BufferedInputStream(conn.getInputStream());
-            res.byteData = DataUtil.readToByteBuffer(inStream);
-            res.charset = getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
-            inStream.close();
+            InputStream inStream = null;
+            try {
+                inStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
+                        new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
+                        new BufferedInputStream(conn.getInputStream());
+                res.byteData = DataUtil.readToByteBuffer(inStream);
+                res.charset = getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+            } finally {
+                if (inStream != null) inStream.close();
+            }
 
             res.executed = true;
             return res;
@@ -409,7 +412,7 @@ public class HttpConnection implements Connection {
 
                 List<String> values = entry.getValue();
 
-                if (name.equals("Set-Cookie")) {
+                if (name.equalsIgnoreCase("Set-Cookie")) {
                     for (String value : values) {
                         TokenQueue cd = new TokenQueue(value);
                         String cookieName = cd.chompTo("=").trim();
