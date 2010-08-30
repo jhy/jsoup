@@ -133,6 +133,22 @@ public class ElementsTest {
         doc.select("b").wrap("<i></i>");
         assertEquals("<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>", doc.body().html());
     }
+
+    @Test public void empty() {
+        Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> <p>now!</p></div>");
+        doc.outputSettings().prettyPrint(false);
+
+        doc.select("p").empty();
+        assertEquals("<div><p></p> <p></p></div>", doc.body().html());
+    }
+
+    @Test public void remove() {
+        Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> jsoup <p>now!</p></div>");
+        doc.outputSettings().prettyPrint(false);
+        
+        doc.select("p").remove();
+        assertEquals("<div> jsoup </div>", doc.body().html());
+    }
     
     @Test public void eq() {
         String h = "<p>Hello<p>there<p>world";
