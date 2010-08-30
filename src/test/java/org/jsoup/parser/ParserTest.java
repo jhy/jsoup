@@ -201,7 +201,7 @@ public class ParserTest {
         // <tbody> is introduced if no implicitly creating table, but allows tr to be directly under table
     }
 
-    @Test public void handlesNestedImplicitTable() {
+     @Test public void handlesNestedImplicitTable() {
         Document doc = Jsoup.parse("<table><td>1</td></tr> <td>2</td></tr> <td> <table><td>3</td> <td>4</td></table> <tr><td>5</table>");
         assertEquals("<table><tr><td>1</td></tr> <tr><td>2</td></tr> <tr><td> <table><tr><td>3</td> <td>4</td></tr></table> </td></tr><tr><td>5</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
     }
@@ -220,6 +220,18 @@ public class ParserTest {
     @Test public void handlesImplicitCaptionClose() {
         Document doc = Jsoup.parse("<table><caption>A caption<td>One<td>Two");
         assertEquals("<table><caption>A caption</caption><tr><td>One</td><td>Two</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void noTableDirectInTable() {
+        Document doc = Jsoup.parse("<table> <td>One <td><table><td>Two</table> <table><td>Three");
+        assertEquals("<table> <tr><td>One </td><td><table><tr><td>Two</td></tr></table> <table><tr><td>Three</td></tr></table></td></tr></table>", 
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void ignoresDupeEndTrTag() {
+        Document doc = Jsoup.parse("<table><tr><td>One</td><td><table><tr><td>Two</td></tr></tr></table></td><td>Three</td></tr></table>"); // two </tr></tr>, must ignore or will close table
+        assertEquals("<table><tr><td>One</td><td><table><tr><td>Two</td></tr></table></td><td>Three</td></tr></table>",
+            TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesBaseTags() {

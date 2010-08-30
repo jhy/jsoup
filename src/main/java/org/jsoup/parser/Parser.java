@@ -124,7 +124,8 @@ public class Parser {
 
         if (tagName.length() != 0) {
             Tag tag = Tag.valueOf(tagName);
-            popStackToClose(tag);
+            if (!last().tag().isIgnorableEndTag(tag)) // skips </tr> if in <table>
+                popStackToClose(tag);
         }
     }
 
