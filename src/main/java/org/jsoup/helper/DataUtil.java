@@ -29,11 +29,15 @@ public class DataUtil {
      * @throws IOException
      */
     public static Document load(File in, String charsetName, String baseUri) throws IOException {
-        InputStream inStream = new FileInputStream(in);
-        ByteBuffer byteData = readToByteBuffer(inStream);
-        Document doc = parseByteData(byteData, charsetName, baseUri);
-        inStream.close();
-        return doc;
+        InputStream inStream = null;
+        try {
+            inStream = new FileInputStream(in);
+            ByteBuffer byteData = readToByteBuffer(inStream);
+            return parseByteData(byteData, charsetName, baseUri);
+        } finally {
+            if (inStream != null)
+                inStream.close();
+        }
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
