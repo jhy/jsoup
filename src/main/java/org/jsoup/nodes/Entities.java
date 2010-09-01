@@ -48,6 +48,7 @@ public class Entities {
 
         Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?
         StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+        // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
 
         while (m.find()) {
             int charval = -1;
@@ -66,9 +67,9 @@ public class Entities {
 
             if (charval != -1 || charval > 0xFFFF) { // out of range
                 String c = Character.toString((char) charval);
-                m.appendReplacement(accum, c);
+                m.appendReplacement(accum, Matcher.quoteReplacement(c));
             } else {
-                m.appendReplacement(accum, m.group(0)); // replace with original string
+                m.appendReplacement(accum, Matcher.quoteReplacement(m.group(0))); // replace with original string
             }
         }
         m.appendTail(accum);
