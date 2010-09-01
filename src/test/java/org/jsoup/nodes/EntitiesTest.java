@@ -34,4 +34,11 @@ public class EntitiesTest {
         String escaped = "&Uuml; &uuml; &amp; &AMP";
         assertEquals("Ü ü & &", Entities.unescape(escaped));
     }
+    
+    @Test public void quoteReplacements() {
+        String escaped = "&#92; &#36;";
+        String unescaped = "\\ $";
+        
+        assertEquals(unescaped, Entities.unescape(escaped));
+    }
 }
