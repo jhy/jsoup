@@ -13,10 +13,21 @@ import java.util.regex.Pattern;
  */
 public class Entities {
     public enum EscapeMode {
-        base, extended
+        minimum(minimumByVal), base(baseByVal), extended(fullByVal);
+
+        private Map<Character, String> map;
+
+        EscapeMode(Map<Character, String> map) {
+            this.map = map;
+        }
+
+        public Map<Character, String> getMap() {
+            return map;
+        }
     }
 
     private static final Map<String, Character> full;
+    private static final Map<Character, String> minimumByVal;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?");
@@ -27,7 +38,7 @@ public class Entities {
 
     static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
-        Map<Character, String> map = escapeMode == EscapeMode.extended ? fullByVal : baseByVal;
+        Map<Character, String> map = escapeMode.getMap();
 
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
@@ -75,6 +86,14 @@ public class Entities {
         m.appendTail(accum);
         return accum.toString();
     }
+
+    private static final Object[][] minimumArray = {
+            {"quot", 0x00022},
+            {"amp", 0x00026},
+            {"apos", 0x00027},
+            {"lt", 0x0003C},
+            {"gt", 0x0003E}
+    };
 
     // most common, base entities can be unescaped without trailing ;
     // e.g. &amp
@@ -2226,9 +2245,14 @@ public class Entities {
 
     static {
         full = new HashMap<String, Character>(fullArray.length);
+        minimumByVal = new HashMap<Character, String>(minimumArray.length);
         baseByVal = new HashMap<Character, String>(baseArray.length);
         fullByVal = new HashMap<Character, String>(fullArray.length);
 
+        for (Object[] entity : minimumArray) {
+            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
+            minimumByVal.put(c, ((String) entity[0]));
+        }
         for (Object[] entity : baseArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
             baseByVal.put(c, ((String) entity[0]));

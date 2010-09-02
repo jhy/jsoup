@@ -46,4 +46,11 @@ public class DocumentTest {
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
         assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt; </p>", doc.body().html());
     }
+
+    @Test public void testReferences() {
+        Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
+        doc.outputSettings().escapeMode(Entities.EscapeMode.minimum);
+        assertEquals("&lt; &gt; &amp; &quot; &apos; ×", doc.body().html());
+    }
+
 }
