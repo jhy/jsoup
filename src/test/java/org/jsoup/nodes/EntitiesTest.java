@@ -12,10 +12,12 @@ public class EntitiesTest {
         String text = "Hello &<> Å å π 新 there";
         String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
         String escapedAsciiFull = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.extended);
+        String escapedAsciiXhtml = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.xhtml);
         String escapedUtf = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
 
         assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#960; &#26032; there", escapedAscii);
         assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#26032; there", escapedAsciiFull);
+        assertEquals("Hello &amp;&lt;&gt; &#197; &#229; &#960; &#26032; there", escapedAsciiXhtml);
         assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; π 新 there", escapedUtf);
         // odd that it's defined as aring in base but angst in full
     }

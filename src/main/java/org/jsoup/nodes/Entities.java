@@ -7,13 +7,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * HMTL entities, and escape routines.
+ * HTML entities, and escape routines.
  * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
  * named character references</a>.
  */
 public class Entities {
     public enum EscapeMode {
-        minimum(minimumByVal), base(baseByVal), extended(fullByVal);
+        /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
+        xhtml(xhtmlByVal),
+        /** Default HTML output entities. */
+        base(baseByVal),
+        /** Complete HTML entities. */
+        extended(fullByVal);
 
         private Map<Character, String> map;
 
@@ -27,7 +32,7 @@ public class Entities {
     }
 
     private static final Map<String, Character> full;
-    private static final Map<Character, String> minimumByVal;
+    private static final Map<Character, String> xhtmlByVal;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?");
@@ -87,7 +92,8 @@ public class Entities {
         return accum.toString();
     }
 
-    private static final Object[][] minimumArray = {
+    // xhtml has restricted entities
+    private static final Object[][] xhtmlArray = {
             {"quot", 0x00022},
             {"amp", 0x00026},
             {"apos", 0x00027},
@@ -2245,13 +2251,13 @@ public class Entities {
 
     static {
         full = new HashMap<String, Character>(fullArray.length);
-        minimumByVal = new HashMap<Character, String>(minimumArray.length);
+        xhtmlByVal = new HashMap<Character, String>(xhtmlArray.length);
         baseByVal = new HashMap<Character, String>(baseArray.length);
         fullByVal = new HashMap<Character, String>(fullArray.length);
 
-        for (Object[] entity : minimumArray) {
+        for (Object[] entity : xhtmlArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
-            minimumByVal.put(c, ((String) entity[0]));
+            xhtmlByVal.put(c, ((String) entity[0]));
         }
         for (Object[] entity : baseArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
