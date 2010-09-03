@@ -7,6 +7,9 @@ jsoup changelog
  * Fixed issue in Entities when unescaping &#36; ("$")
    <http://github.com/jhy/jsoup/issues/issue/34>
 
+ * Added restricted XHTML output entity option
+   <http://github.com/jhy/jsoup/issues/issue/35>
+
 *** Release 1.3.2 [2010-Aug-30]
  * Treat HTTP headers as case insensitive in Jsoup.Connection. Improves compatibility for HTTP responses.
 
