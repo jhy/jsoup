@@ -1,7 +1,10 @@
 jsoup changelog
 
+*** Release 1.3.4 [2010-Sep-19]
+ * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
+
 *** Release 1.3.3 [2010-Sep-19]
- * Implement Elements.empty() and Elements.remove(). This allows easy element removal, like:
+ * Implemented Elements.empty() and Elements.remove(). This allows easy element removal, like:
     doc.select("iframe").remove();
     
  * Fixed issue in Entities when unescaping &#36; ("$")
