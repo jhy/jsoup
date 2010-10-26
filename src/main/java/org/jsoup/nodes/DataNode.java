@@ -29,6 +29,16 @@ public class DataNode extends Node{
         return attributes.get(DATA_KEY);
     }
 
+    /**
+     * Set the data contents of this node.
+     * @param data unencoded data
+     * @return this node, for chaining
+     */
+    public DataNode setWholeData(String data) {
+        attributes.put(DATA_KEY, data);
+        return this;
+    }
+
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
