@@ -434,7 +434,8 @@ public class HttpConnection implements Connection {
                         cookie(cookieName, cookieVal);
                     }
                 } else { // only take the first instance of each header
-                    header(name, values.get(0));
+                    if (!values.isEmpty())
+                        header(name, values.get(0));
                 }
             }
         }
