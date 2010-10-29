@@ -306,36 +306,34 @@ public class HttpConnection implements Connection {
 
         static Response execute(Connection.Request req) throws IOException {
             Validate.notNull(req, "Request must not be null");
-            URL url = req.url();
-            String protocol = url.getProtocol();
+            String protocol = req.url().getProtocol();
             Validate
                 .isTrue(protocol.equals("http") || protocol.equals("https"), "Only http & https protocols supported");
 
             // set up the request for execution
             if (req.method() == Connection.Method.GET && req.data().size() > 0)
-                url = getRequestUrl(req); // appends query string
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod(req.method().name());
-            conn.setInstanceFollowRedirects(true);
-            conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(req.timeout());
-            if (req.method() == Connection.Method.POST)
-                conn.setDoOutput(true);
-            if (req.cookies().size() > 0)
-                conn.addRequestProperty("Cookie", getRequestCookieString(req));
-            for (Map.Entry<String, String> header : req.headers().entrySet()) {
-                conn.addRequestProperty(header.getKey(), header.getValue());
-            }
+                serialiseRequestUrl(req); // appends query string
+            HttpURLConnection conn = createConnection(req);
             conn.connect();
             if (req.method() == Connection.Method.POST)
                 writePost(req.data(), conn.getOutputStream());          
 
             // todo: error handling options, allow user to get !200 without exception
             int status = conn.getResponseCode();
-            if (status != HttpURLConnection.HTTP_OK)
-                throw new IOException(status + " error loading URL " + url.toString());
+            boolean needsRedirect = false;
+            if (status != HttpURLConnection.HTTP_OK) {
+                // java url connection will follow redirects on same protocol, but not switch between http & https, so do that here
+                if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
+                    needsRedirect = true;
+                else
+                    throw new IOException(status + " error loading URL " + req.url().toString());
+            }
             Response res = new Response();
             res.setupFromConnection(conn);
+            if (needsRedirect) {
+                req.url(new URL(res.header("Location")));
+                return execute(req);
+            }
 
             InputStream inStream = null;
             try {
@@ -394,6 +392,23 @@ public class HttpConnection implements Connection {
         public byte[] bodyAsBytes() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             return byteData.array();
+        }
+
+        // set up connection defaults, and details from request
+        private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            conn.setRequestMethod(req.method().name());
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(req.timeout());
+            conn.setReadTimeout(req.timeout());
+            if (req.method() == Method.POST)
+                conn.setDoOutput(true);
+            if (req.cookies().size() > 0)
+                conn.addRequestProperty("Cookie", getRequestCookieString(req));
+            for (Map.Entry<String, String> header : req.headers().entrySet()) {
+                conn.addRequestProperty(header.getKey(), header.getValue());
+            }
+            return conn;
         }
 
         // set up url, method, header, cookies
@@ -455,8 +470,9 @@ public class HttpConnection implements Connection {
             }
             return sb.toString();
         }
-        
-        private static URL getRequestUrl(Connection.Request req) throws IOException {
+
+        // for get url reqs, serialise the data map into the url
+        private static void serialiseRequestUrl(Connection.Request req) throws IOException {
             URL in = req.url();
             StringBuilder url = new StringBuilder();
             boolean first = true;
@@ -481,7 +497,8 @@ public class HttpConnection implements Connection {
                     .append('=')
                     .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
             }
-            return new URL(url.toString());
+            req.url(new URL(url.toString()));
+            req.data().clear(); // moved into url as get params
         }
     }
 

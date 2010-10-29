@@ -80,4 +80,19 @@ public class UrlConnectTest {
         return doc.select("th:contains("+key+") + td").first().text();
     }
 
+    @Test
+    public void followsTempRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://infohound.net/tools/302.pl"); // http://jsoup.org
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup"));
+    }
+
+    @Test
+    public void followsRedirectToHttps() throws IOException {
+        Connection con = Jsoup.connect("http://infohound.net/tools/302-secure.pl"); // https://www.google.com
+        con.data("id", "5");
+        Document doc = con.get();
+        assertTrue(doc.title().contains("Google"));
+    }
+
 }

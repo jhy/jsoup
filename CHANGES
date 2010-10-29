@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.3.4 [2010-Sep-19]
+ * Fixed support for jsoup.connect to follow redirects between http & https URLs.
+   <http://github.com/jhy/jsoup/issues/issue/37>
+
  * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
 
 *** Release 1.3.3 [2010-Sep-19]
