@@ -12,4 +12,10 @@ public class DataUtilTest {
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html"));
         assertEquals(null, DataUtil.getCharsetFromContentType(null));
     }
+
+    @Test public void testQuotedCharset() {
+        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset=\"utf-8\""));
+        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html;charset=\"utf-8\""));
+        assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=\"ISO-8859-1\""));
+    }
 }

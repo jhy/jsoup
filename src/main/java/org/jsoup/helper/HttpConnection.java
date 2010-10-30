@@ -21,8 +21,6 @@ import java.util.zip.GZIPInputStream;
  * @see org.jsoup.Jsoup#connect(String) 
  */
 public class HttpConnection implements Connection {
-    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=([^\\s;]*)");
-
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
         con.url(url);
@@ -341,7 +339,7 @@ public class HttpConnection implements Connection {
                         new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
                         new BufferedInputStream(conn.getInputStream());
                 res.byteData = DataUtil.readToByteBuffer(inStream);
-                res.charset = getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             } finally {
                 if (inStream != null) inStream.close();
             }
@@ -541,21 +539,5 @@ public class HttpConnection implements Connection {
         public String toString() {
             return key + "=" + value;
         }      
-    }
-
-    /**
-     * Parse out a charset from a content type header.
-     *
-     * @param contentType e.g. "text/html; charset=EUC-JP"
-     * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
-     */
-    private static String getCharsetFromContentType(String contentType) {
-        if (contentType == null) return null;
-
-        Matcher m = charsetPattern.matcher(contentType);
-        if (m.find()) {
-            return m.group(1).trim().toUpperCase();
-        }
-        return null;
     }
 }
