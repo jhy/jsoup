@@ -386,4 +386,10 @@ public class ParserTest {
         Document doc = Jsoup.parse("<h1>Hello <div>There</div> now</h1> <h2>More <h3>Content</h3></h2>");
         assertEquals("<h1>Hello <div>There</div> now</h1> <h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test public void testSpanContents() {
+        // like h1 tags, the spec says SPAN is phrasing only, but browsers and publisher treat span as a block tag
+        Document doc = Jsoup.parse("<span>Hello <div>there</div> <span>now</span></span>");
+        assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }

@@ -303,7 +303,6 @@ public class Tag {
         createInline("Q");
         createInline("SUB");
         createInline("SUP");
-        createInline("SPAN");
         createInline("BDO");
         createInline("IFRAME").setOptionalClosing();
         createInline("EMBED").setEmpty();
@@ -313,6 +312,7 @@ public class Tag {
         // will need to have another non block/inline type, and explicit include & exclude rules. should be right though
 
         // block
+        createBlock("SPAN"); // spec is phrasing only, practise is block
         createBlock("P").setContainInlineOnly(); // emasculated block?
         createBlock("H1").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
         createBlock("H2").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
