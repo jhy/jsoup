@@ -312,14 +312,14 @@ public class Tag {
         // will need to have another non block/inline type, and explicit include & exclude rules. should be right though
 
         // block
-        createBlock("SPAN"); // spec is phrasing only, practise is block
+        createInline("SPAN").setCanContainBlock(); // spec is phrasing only, practise is block
         createBlock("P").setContainInlineOnly(); // emasculated block?
-        createBlock("H1").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H2").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H3").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H4").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H5").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H6").setAncestor("BODY", "HGROUP").setExcludes("H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H1").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H2").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H3").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H4").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H5").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H6").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
         createBlock("UL");
         createBlock("OL");
         createBlock("PRE").setContainInlineOnly().setPreserveWhitespace();
@@ -408,6 +408,11 @@ public class Tag {
             tags.put(tag.tagName, tag);
         }
         return tag;
+    }
+
+    private Tag setCanContainBlock() {
+        canContainBlock = true;
+        return this;
     }
 
     private Tag setContainInlineOnly() {

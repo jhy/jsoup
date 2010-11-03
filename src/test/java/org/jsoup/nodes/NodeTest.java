@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class NodeTest {
         p.childNode(0).remove();
         
         assertEquals("two three", p.text());
-        assertEquals("<span>two</span> three", p.html());
+        assertEquals("<span>two</span> three", TextUtil.stripNewlines(p.html()));
     }
     
     @Test public void testReplace() {
