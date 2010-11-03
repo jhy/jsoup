@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -37,10 +38,10 @@ public class TextNodeTest {
         assertEquals(" three &", tn.text());
         
         tn.text(" POW!");
-        assertEquals("One <span>two &amp;</span> POW!", p.html());
+        assertEquals("One <span>two &amp;</span> POW!", TextUtil.stripNewlines(p.html()));
 
         tn.attr("text", "kablam &");
         assertEquals("kablam &", tn.text());
-        assertEquals("One <span>two &amp;</span>kablam &amp;", p.html());
+        assertEquals("One <span>two &amp;</span>kablam &amp;", TextUtil.stripNewlines(p.html()));
     }
 }

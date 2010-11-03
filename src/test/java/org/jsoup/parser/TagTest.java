@@ -53,8 +53,8 @@ public class TagTest {
         Tag div = Tag.valueOf("div");
 
         assertTrue(span.canContain(span));
-        assertFalse(span.canContain(p));
-        assertFalse(span.canContain(div));
+        assertTrue(span.canContain(p));
+        assertTrue(span.canContain(div));
     }
 
     @Test public void imgSemantics() {

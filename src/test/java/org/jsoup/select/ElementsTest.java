@@ -118,13 +118,13 @@ public class ElementsTest {
     @Test public void before() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").before("<span>foo</span>");
-        assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", doc.body().html());
+        assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
     
     @Test public void after() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");
-        assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", doc.body().html());
+        assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void wrap() {
