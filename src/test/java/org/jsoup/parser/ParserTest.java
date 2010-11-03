@@ -379,4 +379,11 @@ public class ParserTest {
         Document doc = Jsoup.parse("<abc_def id=1>Hello</abc_def> <abc-def>There</abc-def>");
         assertEquals("<abc_def id=\"1\">Hello</abc_def> <abc-def>There</abc-def>", TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test public void testHeaderContents() {
+        // h* tags (h1 .. h9) in browsers can handle any internal content other than other h*. which is not per any
+        // spec, which defines them as containing phrasing content only. so, reality over theory.
+        Document doc = Jsoup.parse("<h1>Hello <div>There</div> now</h1> <h2>More <h3>Content</h3></h2>");
+        assertEquals("<h1>Hello <div>There</div> now</h1> <h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }
