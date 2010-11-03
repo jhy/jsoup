@@ -22,22 +22,35 @@ public class DataUtil {
     private DataUtil() {}
 
     /**
-     * Loads a file to a String.
-     * @param in
-     * @param charsetName
-     * @return
-     * @throws IOException
+     * Loads a file to a Document.
+     * @param in file to load
+     * @param charsetName character set of input
+     * @param baseUri base URI of document, to resolve relative links against
+     * @return Document
+     * @throws IOException on IO error
      */
     public static Document load(File in, String charsetName, String baseUri) throws IOException {
         InputStream inStream = null;
         try {
             inStream = new FileInputStream(in);
-            ByteBuffer byteData = readToByteBuffer(inStream);
-            return parseByteData(byteData, charsetName, baseUri);
+            return load(inStream, charsetName, baseUri);
         } finally {
             if (inStream != null)
                 inStream.close();
         }
+    }
+
+    /**
+     * Parses a Document from an input steam.
+     * @param in input stream to parse. You will need to close it.
+     * @param charsetName character set of input
+     * @param baseUri base URI of document, to resolve relative links against
+     * @return Document
+     * @throws IOException on IO error
+     */
+    public static Document load(InputStream in, String charsetName, String baseUri) throws IOException {
+        ByteBuffer byteData = readToByteBuffer(in);
+        return parseByteData(byteData, charsetName, baseUri);
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
