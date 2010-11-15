@@ -379,4 +379,10 @@ public class ParserTest {
         Document doc = Jsoup.parse("<abc_def id=1>Hello</abc_def> <abc-def>There</abc-def>");
         assertEquals("<abc_def id=\"1\">Hello</abc_def> <abc-def>There</abc-def>", TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test public void testAllowsImageInNoScriptInHead() {
+        // some sites use this pattern as an analytics mechanism
+        Document doc = Jsoup.parse("<html><head><noscript><img src='foo'></noscript></head><body><p>Hello</p></body></html>");
+        assertEquals("<html><head><noscript><img src=\"foo\" /></noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
 }

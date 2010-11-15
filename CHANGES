@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.3.4 [2010-Sep-19]
+*** Release 1.3.4 [PENDING]
  * Fixed issue in jsoup.connect when extracting character set from content-type header; now supports quoted
    charset declaration.
    
@@ -8,6 +8,8 @@ jsoup changelog
    <http://github.com/jhy/jsoup/issues/issue/37>
 
  * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
+
+ * Document normalisation now more correctly enforces document structure.
 
 *** Release 1.3.3 [2010-Sep-19]
  * Implemented Elements.empty() and Elements.remove(). This allows easy element removal, like:
