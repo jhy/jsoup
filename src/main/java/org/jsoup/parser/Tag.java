@@ -296,7 +296,7 @@ public class Tag {
 
         // special
         createInline("A").setOptionalClosing(); // cannot contain self
-        createInline("IMG").setEmpty();
+        createInline("IMG").setEmpty().setAncestor("BODY", "NOSCRIPT"); // noscript so an image can be in html->head->noscript
         createInline("BR").setEmpty();
         createInline("WBR").setEmpty();
         createInline("MAP"); // map is defined as inline, but can hold block (what?) or area. Seldom used so NBD.
