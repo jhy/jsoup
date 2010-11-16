@@ -7,19 +7,35 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * HMTL entities, and escape routines.
+ * HTML entities, and escape routines.
  * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
  * named character references</a>.
  */
 public class Entities {
     public enum EscapeMode {
-        base, extended
+        /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
+        xhtml(xhtmlByVal),
+        /** Default HTML output entities. */
+        base(baseByVal),
+        /** Complete HTML entities. */
+        extended(fullByVal);
+
+        private Map<Character, String> map;
+
+        EscapeMode(Map<Character, String> map) {
+            this.map = map;
+        }
+
+        public Map<Character, String> getMap() {
+            return map;
+        }
     }
 
     private static final Map<String, Character> full;
+    private static final Map<Character, String> xhtmlByVal;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
-    private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?");
+    private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
 
     static String escape(String string, Document.OutputSettings out) {
         return escape(string, out.encoder(), out.escapeMode());
@@ -27,7 +43,7 @@ public class Entities {
 
     static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
-        Map<Character, String> map = escapeMode == EscapeMode.extended ? fullByVal : baseByVal;
+        Map<Character, String> map = escapeMode.getMap();
 
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
@@ -46,8 +62,9 @@ public class Entities {
         if (!string.contains("&"))
             return string;
 
-        Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+);?
+        Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
         StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
+        // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
 
         while (m.find()) {
             int charval = -1;
@@ -66,14 +83,23 @@ public class Entities {
 
             if (charval != -1 || charval > 0xFFFF) { // out of range
                 String c = Character.toString((char) charval);
-                m.appendReplacement(accum, c);
+                m.appendReplacement(accum, Matcher.quoteReplacement(c));
             } else {
-                m.appendReplacement(accum, m.group(0)); // replace with original string
+                m.appendReplacement(accum, Matcher.quoteReplacement(m.group(0))); // replace with original string
             }
         }
         m.appendTail(accum);
         return accum.toString();
     }
+
+    // xhtml has restricted entities
+    private static final Object[][] xhtmlArray = {
+            {"quot", 0x00022},
+            {"amp", 0x00026},
+            {"apos", 0x00027},
+            {"lt", 0x0003C},
+            {"gt", 0x0003E}
+    };
 
     // most common, base entities can be unescaped without trailing ;
     // e.g. &amp
@@ -2225,9 +2251,14 @@ public class Entities {
 
     static {
         full = new HashMap<String, Character>(fullArray.length);
+        xhtmlByVal = new HashMap<Character, String>(xhtmlArray.length);
         baseByVal = new HashMap<Character, String>(baseArray.length);
         fullByVal = new HashMap<Character, String>(fullArray.length);
 
+        for (Object[] entity : xhtmlArray) {
+            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
+            xhtmlByVal.put(c, ((String) entity[0]));
+        }
         for (Object[] entity : baseArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
             baseByVal.put(c, ((String) entity[0]));

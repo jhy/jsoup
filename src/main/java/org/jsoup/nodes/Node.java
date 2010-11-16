@@ -135,14 +135,17 @@ public abstract class Node {
 
     /**
      * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href></code> or
-     * <code>&lt;img src></code>.
+     * <code>&lt;img src></code>).
+     * <p/>
+     * E.g.: <code>String absUrl = linkEl.absUrl("href");</code>
      * <p/>
      * If the attribute value is already absolute (i.e. it starts with a protocol, like
      * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
      * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
      * absolute using that.
      * <p/>
-     * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix.
+     * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix, e.g.:
+     * <code>String absUrl = linkEl.attr("abs:href");</code>
      *
      * @param attributeKey The attribute key
      * @return An absolute URL if one could be made, or an empty string (not null) if the attribute was missing or
@@ -357,7 +360,12 @@ public abstract class Node {
     }
 
     protected void outerHtml(StringBuilder accum) {
-        new NodeTraversor(new OuterHtmlVisitor(accum, ownerDocument().outputSettings())).traverse(this);
+        new NodeTraversor(new OuterHtmlVisitor(accum, getOutputSettings())).traverse(this);
+    }
+
+    // if this node has no document (or parent), retrieve the default output settings
+    private Document.OutputSettings getOutputSettings() {
+        return ownerDocument() != null ? ownerDocument().outputSettings() : (new Document("")).outputSettings();
     }
 
     /**

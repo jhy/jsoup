@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -46,4 +47,16 @@ public class DocumentTest {
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
         assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt; </p>", doc.body().html());
     }
+
+    @Test public void testXhtmlReferences() {
+        Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
+        doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
+        assertEquals("&lt; &gt; &amp; &quot; &apos; ×", doc.body().html());
+    }
+
+    @Test public void testNormalisesStructure() {
+        Document doc = Jsoup.parse("<html><head><script>one</script><noscript><p>two</p></noscript></head><body><p>three</p></body></html>");
+        assertEquals("<html><head><script>one</script><noscript></noscript></head><body><p>two</p><p>three</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
 }
