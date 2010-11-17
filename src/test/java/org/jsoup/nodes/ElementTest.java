@@ -422,5 +422,25 @@ public class ElementTest {
         assertEquals("<img src=\"foo\" />", img.toString());
     }
 
+    @Test public void testClone() {
+        Document doc = Jsoup.parse("<div><p>One<p><span>Two</div>");
+
+        Element p = doc.select("p").get(1);
+        Element clone = p.clone();
+
+        assertNull(clone.parent()); // should be orphaned
+        assertEquals(0, clone.siblingIndex);
+        assertEquals(1, p.siblingIndex);
+        assertNotNull(p.parent());
+
+        clone.append("<span>Three");
+        assertEquals("<p><span>Two</span><span>Three</span></p>", TextUtil.stripNewlines(clone.outerHtml()));
+        assertEquals("<div><p>One</p><p><span>Two</span></p></div>", TextUtil.stripNewlines(doc.body().html())); // not modified
+
+        doc.body().appendChild(clone); // adopt
+        assertNotNull(clone.parent());
+        assertEquals("<div><p>One</p><p><span>Two</span></p></div><p><span>Two</span><span>Three</span></p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
 
 }

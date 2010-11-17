@@ -193,10 +193,17 @@ public class Document extends Element {
         return "#document";
     }
 
+    @Override
+    public Document clone() {
+        Document clone = (Document) super.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        return clone;
+    }
+
     /**
      * A Document's output settings control the form of the text() and html() methods.
      */
-    public class OutputSettings {
+    public class OutputSettings implements Cloneable {
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
@@ -301,6 +308,20 @@ public class Document extends Element {
             Validate.isTrue(indentAmount >= 0);
             this.indentAmount = indentAmount;
             return this;
+        }
+
+        @Override
+        public OutputSettings clone() {
+            OutputSettings clone;
+            try {
+                clone = (OutputSettings) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+            clone.charset(charset.name()); // new charset and charset encoder
+            clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
+            // indentAmount, prettyPrint are primitives so object.clone() will handle
+            return clone;
         }
     }
 

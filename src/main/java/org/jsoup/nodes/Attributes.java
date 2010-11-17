@@ -14,7 +14,7 @@ import java.util.*;
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
-public class Attributes implements Iterable<Attribute> {
+public class Attributes implements Iterable<Attribute>, Cloneable {
     protected static final String dataPrefix = "data-";
     
     private LinkedHashMap<String, Attribute> attributes = new LinkedHashMap<String, Attribute>(2);
@@ -149,6 +149,20 @@ public class Attributes implements Iterable<Attribute> {
     @Override
     public int hashCode() {
         return attributes != null ? attributes.hashCode() : 0;
+    }
+
+    @Override
+    public Attributes clone() {
+        Attributes clone;
+        try {
+            clone = (Attributes) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+        clone.attributes = new LinkedHashMap<String, Attribute>(attributes.size());
+        for (Attribute attribute: this)
+            clone.attributes.put(attribute.getKey(), attribute.clone());
+        return clone;
     }
 
     private class Dataset extends AbstractMap<String, String> {

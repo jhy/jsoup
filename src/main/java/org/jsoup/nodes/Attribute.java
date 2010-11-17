@@ -8,7 +8,7 @@ import java.util.Map;
  A single key + value attribute. Keys are trimmed and normalised to lower-case.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Attribute implements Map.Entry<String, String>  {
+public class Attribute implements Map.Entry<String, String>, Cloneable  {
     private String key;
     private String value;
 
@@ -118,5 +118,14 @@ public class Attribute implements Map.Entry<String, String>  {
         int result = key != null ? key.hashCode() : 0;
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public Attribute clone() {
+        try {
+            return (Attribute) super.clone(); // only fields are immutable strings key and value, so no more deep copy reqd
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
