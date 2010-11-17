@@ -1041,4 +1041,11 @@ public class Element extends Node {
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public Element clone() {
+        Element clone = (Element) super.clone();
+        clone.classNames(); // creates linked set of class names from class attribute
+        return clone;
+    }
 }

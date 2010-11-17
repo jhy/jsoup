@@ -59,4 +59,15 @@ public class DocumentTest {
         assertEquals("<html><head><script>one</script><noscript></noscript></head><body><p>two</p><p>three</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test public void testClone() {
+        Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
+        Document clone = doc.clone();
+
+        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        clone.title("Hello there");
+        clone.select("p").first().text("One more").attr("id", "1");
+        assertEquals("<html><head><title>Hello there</title> </head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
 }

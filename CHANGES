@@ -4,6 +4,8 @@ jsoup changelog
 
  * Added ability to load and parse HTML from an input stream.
 
+ * Implemented Node.clone() to create deep, independent copies of Nodes, Elements, and Documents.
+
  * Relaxed parse rules of H1 - H6, to allow nested content. This is against spec, but matches browser and publisher
    behaviour.
 
