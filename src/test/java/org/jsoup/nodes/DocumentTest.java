@@ -70,4 +70,13 @@ public class DocumentTest {
         assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test public void testClonesDeclarations() {
+        Document doc = Jsoup.parse("<!DOCTYPE html><html><head><title>Doctype test");
+        Document clone = doc.clone();
+
+        assertEquals(doc.html(), clone.html());
+        assertEquals("<!DOCTYPE html><html><head><title>Doctype test</title></head><body></body></html>",
+                TextUtil.stripNewlines(clone.html()));
+    }
+
 }
