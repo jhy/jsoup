@@ -169,6 +169,9 @@ public abstract class Node implements Cloneable {
                     URL abs = new URL(relUrl);
                     return abs.toExternalForm();
                 }
+                // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+                if (relUrl.startsWith("?"))
+                    relUrl = base.getPath() + relUrl;
                 URL abs = new URL(base, relUrl);
                 return abs.toExternalForm();
             } catch (MalformedURLException e) {
