@@ -38,6 +38,19 @@ public class NodeTest {
         assertEquals("http://jsoup.org/foo", a.attr("abs:href"));
         assertFalse(a.hasAttr("abs:href")); // only realised on the get method, not in has or iterator
     }
+
+    /*
+    Test for an issue with Java's abs URL handler.
+     */
+    @Test public void absHandlesRelativeQuery() {
+        Document doc = Jsoup.parse("<a href='?foo'>One</a> <a href='bar.html?foo'>Two</a>", "http://jsoup.org/path/file?bar");
+
+        Element a1 = doc.select("a").first();
+        assertEquals("http://jsoup.org/path/file?foo", a1.absUrl("href"));
+
+        Element a2 = doc.select("a").get(1);
+        assertEquals("http://jsoup.org/path/bar.html?foo", a2.absUrl("href"));
+    }
     
     @Test public void testRemove() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");

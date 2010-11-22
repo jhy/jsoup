@@ -23,7 +23,9 @@ jsoup changelog
 
  * Support node.outerHtml() method when node has no parent.
 
- * Fixed support for HTML entities with numbers in name (e.g. &frac34, &sup1)
+ * Fixed support for HTML entities with numbers in name (e.g. &frac34, &sup1).
+
+ * Fixed absolute URL generation from relative URLs which are only query strings.
 
 *** Release 1.3.3 [2010-Sep-19]
  * Implemented Elements.empty() and Elements.remove(). This allows easy element removal, like:
