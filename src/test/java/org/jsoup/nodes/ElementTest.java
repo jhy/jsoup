@@ -203,8 +203,8 @@ public class ElementTest {
     }
 
     @Test public void testFormatHtml() {
-        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
-        assertEquals("<html>\n <head></head>\n <body>\n  <div>\n   <p>Hello</p>\n  </div>\n </body>\n</html>", doc.html());
+        Document doc = Jsoup.parse("<title>Format test</title><div><p>Hello <span>jsoup <span>users</span></span></p><p>Good.</p></div>");
+        assertEquals("<html>\n <head>\n  <title>Format test</title>\n </head>\n <body>\n  <div>\n   <p>Hello <span>jsoup <span>users</span></span></p>\n   <p>Good.</p>\n  </div>\n </body>\n</html>", doc.html());
     }
 
     @Test public void testSetIndent() {
