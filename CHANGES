@@ -11,7 +11,7 @@ jsoup changelog
 
  * Added Elements.not(selector) method, to remove undesired results from selector results.
 
-  * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
+ * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
 
  * Relaxed parse rules of H1 - H6, to allow nested content. This is against spec, but matches browser and publisher
    behaviour.
