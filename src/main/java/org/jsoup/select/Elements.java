@@ -345,11 +345,26 @@ public class Elements implements List<Element> {
     
     /**
      * Find matching elements within this element list.
-     * @param query A selector query
+     * @param query A {@link Selector} query
      * @return the filtered list of elements, or an empty list if none match.
      */
     public Elements select(String query) {
         return Selector.select(query, this);
+    }
+
+    /**
+     * Remove elements from this list that do not match the {@link Selector} query.
+     * <p>
+     * E.g. HTML: {@code <div class=logo>One</div> <div>Two</div>}<br>
+     * <code>Elements divs = doc.select("div").not("#logo");</code><br>
+     * Result: {@code divs: [<div>Two</div>]}
+     * <p>
+     * @param query the selector query whose results should be removed from these elements
+     * @return a new elements list that contains only the filtered results
+     */
+    public Elements not(String query) {
+        Elements out = Selector.select(query, this);
+        return Selector.filterOut(this, out);
     }
     
     /**
