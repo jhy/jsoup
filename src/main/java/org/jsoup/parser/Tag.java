@@ -20,6 +20,7 @@ public class Tag {
     private String tagName;
     private boolean knownTag = false; // if pre-defined or auto-created
     private boolean isBlock = true; // block or inline
+    private boolean formatAsBlock = true;
     private boolean canContainBlock = true; // Can this tag hold block level tags?
     private boolean canContainInline = true; // only pcdata if not
     private boolean optionalClosing = false; // If tag is open, and another seen, close previous tag
@@ -116,6 +117,14 @@ public class Tag {
      */
     public boolean isBlock() {
         return isBlock;
+    }
+
+    /**
+     * Gets if this tag should be formatted as a block (or as inline)
+     * @return if should be formatted as block or inline
+     */
+    public boolean formatAsBlock() {
+        return formatAsBlock;
     }
 
     /**
@@ -253,7 +262,7 @@ public class Tag {
         createBlock("META").setAncestor("HEAD", "BODY").setEmpty();
         createBlock("LINK").setAncestor("HEAD", "BODY").setEmpty(); // only within head
         createInline("OBJECT").setAncestor("HEAD", "BODY"); // flow (block/inline) or param
-        createBlock("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly();
+        createBlock("TITLE").setAncestor("HEAD", "BODY").setContainDataOnly().setFormatAsInline();
         createInline("BASE").setAncestor("HEAD", "BODY").setEmpty();
 
         createBlock("FRAME").setParent("FRAMESET").setEmpty();
@@ -312,14 +321,14 @@ public class Tag {
         // will need to have another non block/inline type, and explicit include & exclude rules. should be right though
 
         // block
-        createInline("SPAN").setCanContainBlock(); // spec is phrasing only, practise is block
+        createInline("SPAN").setCanContainBlock().setFormatAsInline(); // spec is phrasing only, practise is block
         createBlock("P").setContainInlineOnly(); // emasculated block?
-        createBlock("H1").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H2").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H3").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H4").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H5").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
-        createBlock("H6").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6");
+        createBlock("H1").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
+        createBlock("H2").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
+        createBlock("H3").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
+        createBlock("H4").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
+        createBlock("H5").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
+        createBlock("H6").setAncestor("BODY", "HGROUP").setExcludes("HGROUP", "H1", "H2", "H3", "H4", "H5", "H6").setFormatAsInline();
         createBlock("UL");
         createBlock("OL");
         createBlock("PRE").setContainInlineOnly().setPreserveWhitespace();
@@ -361,7 +370,7 @@ public class Tag {
         createBlock("DT").setAncestor("DL").setExcludes("DL", "DD").setOptionalClosing(); // only within DL.
         createBlock("DD").setAncestor("DL").setExcludes("DL", "DT").setOptionalClosing(); // only within DL.
 
-        createBlock("LI").setAncestor("UL", "OL").setOptionalClosing(); // only within OL or UL.
+        createBlock("LI").setAncestor("UL", "OL").setOptionalClosing().setFormatAsInline(); // only within OL or UL.
 
         // tables
         createBlock("TABLE").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TBODY", "TD", "TFOO", "TH", "THEAD", "TR"); // specific list of only includes (tr, td, thead etc) not implemented
@@ -372,8 +381,8 @@ public class Tag {
         createBlock("COLGROUP").setParent("TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("COL"); // just COL
         createBlock("COL").setParent("COLGROUP").setEmpty();
         createBlock("TR").setParent("TBODY", "THEAD", "TFOOT", "TABLE").setLimitChildren().setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML", "TD", "TH"); // just TH, TD
-        createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML");
-        createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML");
+        createBlock("TH").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML").setFormatAsInline();
+        createBlock("TD").setParent("TR").setExcludes("THEAD", "TFOOT", "TBODY", "COLGROUP", "COL", "TR", "TH", "TD").setOptionalClosing().setIgnoreEnd("BODY", "CAPTION", "COL", "COLGROUP", "HTML").setFormatAsInline();
         
         // html5 media
         createBlock("VIDEO").setExcludes("VIDEO", "AUDIO");
@@ -398,6 +407,7 @@ public class Tag {
         Tag inline = new Tag(tagName);
         inline.isBlock = false;
         inline.canContainBlock = false;
+        inline.formatAsBlock = false;
         return register(inline);
     }
 
@@ -418,6 +428,12 @@ public class Tag {
     private Tag setContainInlineOnly() {
         canContainBlock = false;
         canContainInline = true;
+        formatAsBlock = false;
+        return this;
+    }
+
+    private Tag setFormatAsInline() {
+        formatAsBlock = false;
         return this;
     }
 

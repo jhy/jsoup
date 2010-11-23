@@ -967,7 +967,7 @@ public class Element extends Node {
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        if (out.prettyPrint() && (isBlock() || (parent() != null && parent().tag().canContainBlock() && siblingIndex() == 0)))
+        if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock())))
             indent(accum, depth, out);
         accum
                 .append("<")
@@ -982,7 +982,7 @@ public class Element extends Node {
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
-            if (out.prettyPrint() && !childNodes.isEmpty() && tag.canContainBlock())
+            if (out.prettyPrint() && !childNodes.isEmpty() && tag.formatAsBlock())
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append(">");
         }

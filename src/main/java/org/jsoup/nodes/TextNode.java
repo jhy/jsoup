@@ -75,7 +75,7 @@ public class TextNode extends Node {
             html = normaliseWhitespace(html);
         }
 
-        if (out.prettyPrint() && siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().canContainBlock() && !isBlank())
+        if (out.prettyPrint() && siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank())
             indent(accum, depth, out);
         accum.append(html);
     }
