@@ -45,6 +45,7 @@ import java.util.LinkedHashSet;
   <tr><td><code>:gt(<em>n</em>)</code></td><td>elements whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
   <tr><td><code>:eq(<em>n</em>)</code></td><td>elements whose sibling index is equal to <em>n</em></td><td><code>td:eq(0)</code> finds the first cell of each row</td></tr>
   <tr><td><code>:has(<em>selector</em>)</code></td><td>elements that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
+  <tr><td><code>:not(<em>selector</em>)</code></td><td>elements that do not match the <em>selector</em></td><code>div:not(.logo)</code> finds all divs that do not have the "logo" class</td></tr>
   <tr><td><code>:contains(<em>text</em>)</code></td><td>elements that contains the specified text. The search is case insensitive. The text may appear in the found element, or any of its descendants.</td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".</td></tr>
   <tr><td><code>:matches(<em>regex</em>)</code></td><td>elements whose text matches the specified regular expression. The text may appear in the found element, or any of its descendants.</td><td><code>td:matches(\\d+)</code> finds table cells containing digits. <code>div:matches((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
   <tr><td><code>:containsOwn(<em>text</em>)</code></td><td>elements that directly contains the specified text. The search is case insensitive. The text must appear in the found element, not any of its descendants.</td><td><code>p:containsOwn(jsoup)</code> finds p elements with own text "jsoup".</td></tr>
@@ -106,6 +107,8 @@ public class Selector {
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
             elements.add(root);
             combinator(tq.consume().toString());
+        } else if (tq.matches(":has(")) {
+            elements.addAll(root.getAllElements());
         } else {
             addElements(findElements()); // chomp first element matcher off queue 
         }            
@@ -177,6 +180,8 @@ public class Selector {
             return matches(false);
         } else if (tq.matches(":matchesOwn(")) {
             return matches(true);
+        } else if (tq.matches(":not(")) {
+            return not();
         } else { // unhandled
             throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
@@ -300,6 +305,15 @@ public class Selector {
         return own ? root.getElementsMatchingOwnText(regex) : root.getElementsMatchingText(regex);
     }
 
+    // :not(selector)
+    private Elements not() {
+        tq.consume(":not");
+        String subQuery = tq.chompBalanced('(', ')');
+        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+
+        return filterOut(root.getAllElements(), select(subQuery, root));
+    }
+
     // direct child descendants
     private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidates) {
         Elements children = new Elements();
@@ -389,6 +403,23 @@ public class Selector {
             }   
         }
         return children;
+    }
+
+    // exclude set. package open so that Elements can implement .not() selector.
+    static Elements filterOut(Collection<Element> elements, Collection<Element> outs) {
+        Elements output = new Elements();
+        for (Element el: elements) {
+            boolean found = false;
+            for (Element out: outs) {
+                if (el.equals(out)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                output.add(el);
+        }
+        return output;
     }
 
     public static class SelectorParseException extends IllegalStateException {
