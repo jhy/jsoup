@@ -179,7 +179,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that match the selector query, with this element as the starting context. Matched elements
+     * Find elements that match the {@link Selector} query, with this element as the starting context. Matched elements
      * may include this element, or any of its children.
      * <p/>
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because

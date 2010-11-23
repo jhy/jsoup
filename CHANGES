@@ -9,6 +9,8 @@ jsoup changelog
  * Added :not() selector, to find elements that do not match the selector. E.g. div:not(.logo) finds divs that
    do not have the "logo" class name.
 
+ * Added Elements.not(selector) method, to remove undesired results from selector results.
+
  * Relaxed parse rules of H1 - H6, to allow nested content. This is against spec, but matches browser and publisher
    behaviour.
 
