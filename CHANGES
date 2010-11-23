@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.3.4 [PENDING]
+*** Release 1.4.1 [2010-11-23]
 
  * Added ability to load and parse HTML from an input stream.
 
@@ -11,6 +11,8 @@ jsoup changelog
 
  * Added Elements.not(selector) method, to remove undesired results from selector results.
 
+  * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
+
  * Relaxed parse rules of H1 - H6, to allow nested content. This is against spec, but matches browser and publisher
    behaviour.
 
@@ -20,13 +22,10 @@ jsoup changelog
    charset declaration.
    
  * Fixed support for jsoup.connect to follow redirects between http & https URLs.
-   <http://github.com/jhy/jsoup/issues/issue/37>
 
- * Implemented DataNode.setWholeData() to allow updating of script and style data contents.
+ * Document normalisation now more enthusiastically enforces the correct document structure.
 
- * Document normalisation now more correctly enforces document structure.
-
- * Support node.outerHtml() method when node has no parent.
+ * Support node.outerHtml() method when node has no parent (e.g. when it has been removed from its DOM tree)
 
  * Fixed support for HTML entities with numbers in name (e.g. &frac34, &sup1).
 
