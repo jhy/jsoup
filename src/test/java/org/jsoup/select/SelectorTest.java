@@ -419,6 +419,12 @@ public class SelectorTest {
         assertEquals("0", divs3.get(0).id());
         assertEquals("1", divs3.get(1).id());
         assertEquals("2", divs3.get(2).id());
+
+        Elements els1 = doc.body().select(":has(p)");
+        assertEquals(3, els1.size()); // body, div, dib
+        assertEquals("body", els1.first().tagName());
+        assertEquals("0", els1.get(1).id());
+        assertEquals("2", els1.get(2).id());
     }
 
     @Test public void testNestedHas() {
@@ -531,5 +537,36 @@ public class SelectorTest {
         Elements el2 = doc.select("abc-def");
         assertEquals(1, el2.size());
         assertEquals("2", el2.first().id());
+    }
+
+    @Test public void notParas() {
+        Document doc = Jsoup.parse("<p id=1>One</p> <p>Two</p> <p><span>Three</span></p>");
+
+        Elements el1 = doc.select("p:not([id=1])");
+        assertEquals(2, el1.size());
+        assertEquals("Two", el1.first().text());
+        assertEquals("Three", el1.last().text());
+
+        Elements el2 = doc.select("p:not(:has(span))");
+        assertEquals(2, el2.size());
+        assertEquals("One", el2.first().text());
+        assertEquals("Two", el2.last().text());
+    }
+
+    @Test public void notAll() {
+        Document doc = Jsoup.parse("<p>Two</p> <p><span>Three</span></p>");
+
+        Elements el1 = doc.body().select(":not(p)"); // should just be the span
+        assertEquals(2, el1.size());
+        assertEquals("body", el1.first().tagName());
+        assertEquals("span", el1.last().tagName());
+    }
+
+    @Test public void notClass() {
+        Document doc = Jsoup.parse("<div class=left>One</div><div class=right id=1><p>Two</p></div>");
+
+        Elements el1 = doc.select("div:not(.left)");
+        assertEquals(1, el1.size());
+        assertEquals("1", el1.first().id());
     }
 }
