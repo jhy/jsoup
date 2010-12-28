@@ -115,7 +115,7 @@ public class TokenQueue {
 
     public boolean matchesStartTag() {
         // micro opt for matching "<x"
-        return (remainingLength() > 1 && queue.charAt(pos) == '<' && Character.isLetterOrDigit(queue.charAt(pos + 1)));
+        return (remainingLength() >= 2 && queue.charAt(pos) == '<' && Character.isLetter(queue.charAt(pos+1)));
     }
 
     /**
