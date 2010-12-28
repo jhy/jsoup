@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
  */
 public class Entities {
     public enum EscapeMode {
+    	/** Performs no escaping of text nodes */
+    	none(new HashMap<Character, String>()),
         /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
         xhtml(xhtmlByVal),
         /** Default HTML output entities. */
