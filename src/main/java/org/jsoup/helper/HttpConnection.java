@@ -1,20 +1,27 @@
 package org.jsoup.helper;
 
-import org.jsoup.Connection;
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.TokenQueue;
-
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
+
+import org.jsoup.Connection;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.TokenQueue;
 
 /**
  * Implementation of {@link Connection}.
@@ -113,6 +120,16 @@ public class HttpConnection implements Connection {
         req.cookie(name, value);
         return this;
     }
+    
+    public Connection proxy(Proxy proxy) {
+		req.proxy(proxy);
+		return this;
+	}
+    
+    public Connection proxy(Proxy proxy, String username, String password) {
+		req.proxy(proxy, username, password);
+		return this;
+	}
 
     public Document get() throws IOException {
         req.method(Method.GET);
@@ -265,12 +282,18 @@ public class HttpConnection implements Connection {
     public static class Request extends Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
         private Collection<Connection.KeyVal> data;
+        private Proxy proxy;
+        private String proxyUsername;
+        private String proxyPassword;
 
         private Request() {
             timeoutMilliseconds = 3000;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            proxy = null;
+            proxyUsername = "";
+            proxyPassword = "";
         }
 
         public int timeout() {
@@ -292,6 +315,30 @@ public class HttpConnection implements Connection {
         public Collection<Connection.KeyVal> data() {
             return data;
         }
+        
+        public Request proxy(Proxy proxy) {
+        	this.proxy = proxy;
+        	return this;
+        }
+        
+        public Request proxy(Proxy proxy, String username, String password) {
+        	this.proxy = proxy;
+        	this.proxyUsername = username;
+        	this.proxyPassword = password;
+        	return this;
+        }
+        
+        public Proxy proxy() {
+        	return proxy;
+        }
+
+		public String username() {
+			return proxyUsername;
+		}
+
+		public String password() {
+			return proxyPassword;
+		}
     }
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
@@ -313,6 +360,7 @@ public class HttpConnection implements Connection {
                 serialiseRequestUrl(req); // appends query string
             HttpURLConnection conn = createConnection(req);
             conn.connect();
+            
             if (req.method() == Connection.Method.POST)
                 writePost(req.data(), conn.getOutputStream());          
 
@@ -394,7 +442,24 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+        	HttpURLConnection conn;
+        	if (req.proxy() != null) {
+        		conn = (HttpURLConnection) req.url().openConnection(req.proxy());
+        		StringBuffer sb = new StringBuffer();
+				try {
+					Validate.notEmpty(req.username());
+					sb.append(req.username());
+					sb.append(":");
+				} catch (IllegalArgumentException e) {}
+				try {
+					Validate.notEmpty(req.password());
+					sb.append(req.password());
+				} catch (IllegalArgumentException e) {}
+	            if (sb.length() > 1)
+		            conn.setRequestProperty("Proxy-Authorization", "Basic " + StringUtil.encode(sb.toString()));
+        	} else {
+                conn = (HttpURLConnection) req.url().openConnection();
+        	}
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(true);
             conn.setConnectTimeout(req.timeout());
@@ -541,4 +606,5 @@ public class HttpConnection implements Connection {
             return key + "=" + value;
         }      
     }
+
 }

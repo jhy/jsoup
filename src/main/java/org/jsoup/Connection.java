@@ -1,11 +1,12 @@
 package org.jsoup;
 
-import org.jsoup.nodes.Document;
-
-import java.net.URL;
-import java.util.Map;
-import java.util.Collection;
 import java.io.IOException;
+import java.net.Proxy;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+
+import org.jsoup.nodes.Document;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -112,6 +113,22 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection cookie(String name, String value);
+    
+    /**
+     * Set a proxy to be used for the request
+     * @param proxy the proxy
+     * @return this Connection, for chaining
+     */
+    public Connection proxy(Proxy proxy);
+    
+    /**
+     * Set a proxy, proxy username, and proxy password to be used for the request
+     * @param proxy the proxy
+     * @param username the proxy username
+     * @param password the proxy password
+     * @return this Connection, for chaining
+     */
+    public Connection proxy(Proxy proxy, String username, String password);
 
     /**
      * Execute the request as a GET, and parse the result.
@@ -302,6 +319,40 @@ public interface Connection {
          * @return collection of keyvals
          */
         public Collection<KeyVal> data();
+        
+        /**
+         * Update the Proxy
+         * @param proxy the proxy
+         * @return this Request, for chaining
+         */
+        public Request proxy(Proxy proxy);
+        
+        /**
+         * Updates the Proxy, proxy username, and proxy password
+         * @param proxy the proxy
+         * @param username the proxy username
+         * @param password the proxy password
+         * @return this Request, for chaining
+         */
+        public Request proxy(Proxy proxy, String username, String password);
+        
+        /**
+         * Get the proxy
+         * @return the proxy
+         */
+        public Proxy proxy();
+        
+        /**
+         * Get the proxy username
+         * @return the proxy username
+         */
+        public String username();
+        
+        /**
+         * Get the proxy password
+         * @return the proxy password
+         */
+        public String password();
 
     }
 
