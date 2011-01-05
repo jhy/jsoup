@@ -456,7 +456,7 @@ public class HttpConnection implements Connection {
 					sb.append(req.password());
 				} catch (IllegalArgumentException e) {}
 	            if (sb.length() > 1)
-		            conn.setRequestProperty("Proxy-Authorization", "Basic " + StringUtil.encode(sb.toString()));
+		            conn.setRequestProperty("Proxy-Authorization", "Basic " + Base64.encodeBytes(sb.toString().getBytes()));
         	} else {
                 conn = (HttpURLConnection) req.url().openConnection();
         	}
