@@ -449,8 +449,10 @@ public class HttpConnection implements Connection {
 				try {
 					Validate.notEmpty(req.username());
 					sb.append(req.username());
+				} catch (IllegalArgumentException e) {
+				} finally {
 					sb.append(":");
-				} catch (IllegalArgumentException e) {}
+				}
 				try {
 					Validate.notEmpty(req.password());
 					sb.append(req.password());
