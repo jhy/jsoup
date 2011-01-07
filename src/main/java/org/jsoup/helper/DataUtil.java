@@ -1,14 +1,18 @@
 package org.jsoup.helper;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 /**
  * Internal static utilities for handling data.
@@ -17,6 +21,7 @@ import java.util.regex.Pattern;
 public class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*\"?([^\\s;\"]*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
+    private static final String noneCharset = "NONE";
     private static final int bufferSize = 0x20000; // ~130K.
 
     private DataUtil() {}
@@ -58,7 +63,7 @@ public class DataUtil {
     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri) {
         String docData;
         Document doc = null;
-        if (charsetName == null) { // determine from meta. safe parse as UTF-8
+        if (charsetName == null || charsetName.equalsIgnoreCase(noneCharset)) { // determine from meta. safe parse as UTF-8
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
             doc = Jsoup.parse(docData, baseUri);
