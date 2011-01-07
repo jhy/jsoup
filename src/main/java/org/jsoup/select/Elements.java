@@ -9,7 +9,7 @@ import java.util.*;
  A list of {@link Element Elements}, with methods that act on every element in the list
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Elements implements List<Element> {
+public class Elements implements List<Element>, Cloneable {
     private List<Element> contents;
 
     public Elements() {
@@ -28,7 +28,20 @@ public class Elements implements List<Element> {
         this(Arrays.asList(elements));
     }
     
-    // attribute methods
+    
+    
+    @Override
+	public Elements clone() {
+    	List<Element> elements = new ArrayList<Element>();
+    	
+    	for(Element e : contents)
+    		elements.add(e.clone());
+		
+    	
+    	return new Elements(elements);
+	}
+
+	// attribute methods
     /**
      Get an attribute value from the first matched element that has the attribute.
      @param attributeKey The attribute key.
