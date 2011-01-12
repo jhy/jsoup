@@ -1,5 +1,6 @@
 package org.jsoup.select.ng;
 
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
@@ -85,12 +86,23 @@ public class AttrSelector {
 			return element.attributes().get(name).matches(value);
 		}
 	}
-
-
-
 	
-	
+	public static class AttrNamePrefixSelector extends BaseAttrSelector implements Selector {
 
+		public AttrNamePrefixSelector(String name) {
+			super(name, null);
+		}
 
-
+		@Override
+		public boolean select(Element element) {
+			Attributes attrs = element.attributes();
+			
+			for(Attribute attr : attrs) {
+				if(attr.getKey().startsWith(name))
+					return true;
+			}
+			
+			return false;			
+		}
+	}
 }
