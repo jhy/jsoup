@@ -21,6 +21,10 @@ public class AndSelector extends Evaluator {
 		this.selectors = new ArrayList<Evaluator>();
 		this.selectors.addAll(selectors);
 	}
+	
+	public void add(Evaluator e) {
+		selectors.add(e);
+	}
 
 
 	@Override
@@ -31,6 +35,11 @@ public class AndSelector extends Evaluator {
 		}
 		
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format(":and%s", selectors);
 	}
 
 	

@@ -32,8 +32,8 @@ public class OrSelector extends Evaluator {
 		return false;
 	}
 	
-	
-	
-	
-
+	@Override
+	public String toString() {
+		return String.format(":or%s", selectors);
+	}
 }

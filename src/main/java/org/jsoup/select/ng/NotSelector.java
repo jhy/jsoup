@@ -20,5 +20,13 @@ public class NotSelector extends Evaluator {
 	public boolean matches(Element node) {
 		return !sel.matches(node);
 	}
+	
+	@Override
+	public String toString() {
+		return String.format(":not%s", sel);
+	}
+
+	
+	
 
 }

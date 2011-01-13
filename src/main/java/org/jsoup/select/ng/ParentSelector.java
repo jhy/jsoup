@@ -24,5 +24,11 @@ public class ParentSelector extends Evaluator {
 
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format(":parent%s", sel);
+	}
+
 
 }

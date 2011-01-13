@@ -27,5 +27,11 @@ public class PreviousSequentSiblingSelector extends Evaluator {
 		
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format(":prev*%s", sel);
+	}
+
 
 }

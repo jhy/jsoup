@@ -37,4 +37,10 @@ public class ElementSelector extends Evaluator {
 			
 			return true;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format(":element(tag=%s,class=%s,id=%s)", tag, cls, id);
+	}
+
 }
