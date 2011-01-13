@@ -214,7 +214,7 @@ public class Parser {
     private void parseTextNode() {
         TextNode textNode;
         // special case: handle string like "hello < there". first char will be "<", because of matchStartTag
-        if (tq.peek().equals('<')) {
+        if (tq.peek() =='<') {
             tq.advance();
             textNode = new TextNode("<", baseUri);
         } else {

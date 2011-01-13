@@ -106,7 +106,7 @@ public class Selector {
         
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
             elements.add(root);
-            combinator(tq.consume().toString());
+            combinator(tq.consume());
         } else if (tq.matches(":has(")) {
             elements.addAll(root.getAllElements());
         } else {
@@ -123,9 +123,9 @@ public class Selector {
                     elements.addAll(select(subQuery, root));
                 }
             } else if (tq.matchesAny(combinators)) {
-                combinator(tq.consume().toString());
+                combinator(tq.consume());
             } else if (seenWhite) {
-                combinator(" ");
+                combinator(' ');
             } else { // E.class, E#id, E[attr] etc. AND
                 Elements candidates = findElements(); // take next el, #. etc off queue
                 intersectElements(filterForSelf(elements, candidates));
@@ -134,18 +134,18 @@ public class Selector {
         return new Elements(elements);
     }
     
-    private void combinator(String combinator) {
+    private void combinator(char combinator) {
         tq.consumeWhitespace();
         String subQuery = tq.consumeToAny(combinators); // support multi > childs
         
         Elements output;
-        if (combinator.equals(">"))
+        if (combinator == '>')
             output = filterForChildren(elements, select(subQuery, elements));
-        else if (combinator.equals(" "))
+        else if (combinator == ' ')
             output = filterForDescendants(elements, select(subQuery, elements));
-        else if (combinator.equals("+"))
+        else if (combinator == '+')
             output = filterForAdjacentSiblings(elements, select(subQuery, root));
-        else if (combinator.equals("~"))
+        else if (combinator == '~')
             output = filterForGeneralSiblings(elements, select(subQuery, root));
         else
             throw new IllegalStateException("Unknown combinator: " + combinator);
