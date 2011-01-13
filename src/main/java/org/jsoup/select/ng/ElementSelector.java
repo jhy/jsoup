@@ -1,9 +1,9 @@
 package org.jsoup.select.ng;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
+import org.jsoup.nodes.Evaluator;
 
-public class ElementSelector implements Selector {
+public class ElementSelector extends Evaluator {
 	String tag;
 	String cls;
 	String id;
@@ -22,7 +22,7 @@ public class ElementSelector implements Selector {
 	}
 
 	@Override
-	public boolean select(Element node) {
+	public boolean matches(Element node) {
 			Element el = (Element) node;
 			
 			if(tag != null && !el.tagName().equals(tag))

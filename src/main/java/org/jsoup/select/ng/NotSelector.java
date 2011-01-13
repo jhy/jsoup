@@ -1,14 +1,15 @@
 package org.jsoup.select.ng;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Evaluator;
 import org.jsoup.nodes.Node;
 
-public class NotSelector implements Selector {
-	Selector sel;
+public class NotSelector extends Evaluator {
+	Evaluator sel;
 	
 	
 
-	public NotSelector(Selector sel) {
+	public NotSelector(Evaluator sel) {
 		super();
 		this.sel = sel;
 	}
@@ -16,8 +17,8 @@ public class NotSelector implements Selector {
 
 
 	@Override
-	public boolean select(Element node) {
-		return !sel.select(node);
+	public boolean matches(Element node) {
+		return !sel.matches(node);
 	}
 
 }
