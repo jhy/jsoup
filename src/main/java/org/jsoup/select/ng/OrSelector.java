@@ -5,10 +5,10 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
-public class ListSelector extends Evaluator {
+public class OrSelector extends Evaluator {
 	List<Evaluator> selectors;
 
-	public ListSelector(List<Evaluator> selectors) {
+	public OrSelector(List<Evaluator> selectors) {
 		super();
 		this.selectors = selectors;
 	}

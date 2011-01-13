@@ -1,6 +1,7 @@
 package org.jsoup.select.ng;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
@@ -69,6 +70,20 @@ public class SelectMatch {
 		
 		return sm.match(elements);
 	}
+	
+	public static Elements match(Elements elements, Evaluator... sel) {
+		SelectMatch sm = new SelectMatch(new AndSelector(Arrays.asList(sel)));
+		
+		return sm.match(elements);
+	}
+	
+	public static Elements match(Node root, Evaluator... sel) {
+		SelectMatch sm = new SelectMatch(new AndSelector(Arrays.asList(sel)));
+		
+		return sm.match(root);
+	}
+
+
 
 
 	

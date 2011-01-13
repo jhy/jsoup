@@ -6,8 +6,8 @@ import org.jsoup.nodes.Evaluator;
 
 public class BasicSelector {
 	
-	public static ListSelector list(Evaluator... sels) {
-		return new ListSelector(Arrays.asList(sels));
+	public static OrSelector or(Evaluator... sels) {
+		return new OrSelector(Arrays.asList(sels));
 	}
 	
 	public static AndSelector and(Evaluator... sels) {
