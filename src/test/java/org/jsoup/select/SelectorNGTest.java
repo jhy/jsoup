@@ -9,8 +9,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Evaluator;
 import org.jsoup.select.ng.BasicSelector;
 import org.jsoup.select.ng.ElementSelector;
+import org.jsoup.select.ng.ImmediateParentSelector;
+import org.jsoup.select.ng.PrevSiblingSelector;
 import org.jsoup.select.ng.ParentSelector;
 import org.jsoup.select.ng.SelectMatch;
+import org.jsoup.select.ng.PreviousSequentSiblingSelector;
 import org.junit.Test;
 
 public class SelectorNGTest extends TestCase {
@@ -218,21 +221,25 @@ public class SelectorNGTest extends TestCase {
         assertEquals("span", els.first().tagName());
     }
 
-    /*@Test public void parentChildElement() {
+    @Test 
+    public void testParentChildElement() {
         String h = "<div id=1><div id=2><div id = 3></div></div></div><div id=4></div>";
         Document doc = Jsoup.parse(h);
 
-        Elements divs = doc.select("div > div");
+        Elements divs = SelectMatch.match(doc, 
+        		new Evaluator.Tag("div"), 
+        		new ImmediateParentSelector(new Evaluator.Tag("div")));
         assertEquals(2, divs.size());
         assertEquals("2", divs.get(0).id()); // 2 is child of 1
         assertEquals("3", divs.get(1).id()); // 3 is child of 2
 
-        Elements div2 = doc.select("div#1 > div");
+        Elements div2 = SelectMatch.match(doc, new Evaluator.Tag("div"),
+        		new ImmediateParentSelector(new ElementSelector("div", null, "1"))); //"div#1 > div";
         assertEquals(1, div2.size());
         assertEquals("2", div2.get(0).id());
     }
     
-    @Test public void parentWithClassChild() {
+    /*@Test public void parentWithClassChild() {
         String h = "<h1 class=foo><a href=1 /></h1><h1 class=foo><a href=2 class=bar /></h1><h1><a href=3 /></h1>";
         Document doc = Jsoup.parse(h);
         
@@ -274,33 +281,38 @@ public class SelectorNGTest extends TestCase {
         assertEquals(1, doc.select("DIV[TITLE]").size());
         assertEquals(1, doc.select("DIV[TITLE=BAR]").size());
         assertEquals(0, doc.select("DIV[TITLE=BARBARELLA").size());
-    }
+    }*/
     
-    @Test public void adjacentSiblings() {
+    @Test 
+    public void testAdjacentSiblings() {
         String h = "<ol><li>One<li>Two<li>Three</ol>";
         Document doc = Jsoup.parse(h);
-        Elements sibs = doc.select("li + li");
+        Elements sibs = SelectMatch.match(doc, new Evaluator.Tag("li"), 
+        		new PrevSiblingSelector(new Evaluator.Tag("li"))); //"li + li");
         assertEquals(2, sibs.size());
         assertEquals("Two", sibs.get(0).text());
         assertEquals("Three", sibs.get(1).text());
     }
     
-    @Test public void adjacentSiblingsWithId() {
+    @Test 
+    public void testAdjacentSiblingsWithId() {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
-        Elements sibs = doc.select("li#1 + li#2");
+        Elements sibs = SelectMatch.match(doc, new ElementSelector("li", null, "2"),
+        		new PrevSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");
         assertEquals(1, sibs.size());
         assertEquals("Two", sibs.get(0).text());
     }
     
-    @Test public void notAdjacent() {
+    @Test public void testNotAdjacent() {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
-        Elements sibs = doc.select("li#1 + li#3");
+        Elements sibs = SelectMatch.match(doc, new ElementSelector("li", null, "3"),
+        		new PrevSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");//doc.select("li#1 + li#3");
         assertEquals(0, sibs.size());
     }
     
-    @Test public void mixCombinator() {
+    /*@Test public void mixCombinator() {
         String h = "<div class=foo><ol><li>One<li>Two<li>Three</ol></div>";
         Document doc = Jsoup.parse(h);
         Elements sibs = doc.select("body > div.foo li + li");
@@ -319,18 +331,19 @@ public class SelectorNGTest extends TestCase {
         assertEquals("ol", els.get(0).tagName());
         assertEquals("Two", els.get(1).text());
         assertEquals("Three", els.get(2).text());
-    }
+    }*/
     
-    @Test public void generalSiblings() {
+    @Test 
+    public void testGeneralSiblings() {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
-        Elements els = doc.select("#1 ~ #3");
+        Elements els = SelectMatch.match(doc, new Evaluator.Id("3"), new PreviousSequentSiblingSelector(new Evaluator.Id("1")));//doc.select("#1 ~ #3");
         assertEquals(1, els.size());
         assertEquals("Three", els.first().text());
     }
     
     // for http://github.com/jhy/jsoup/issues#issue/10
-    @Test public void testCharactersInIdAndClass() {
+  /*  @Test public void testCharactersInIdAndClass() {
         // using CSS spec for identifiers (id and class): a-z0-9, -, _. NOT . (which is OK in html spec, but not css)
         String h = "<div><p id='a1-foo_bar'>One</p><p class='b2-qux_bif'>Two</p></div>";
         Document doc = Jsoup.parse(h);
@@ -361,18 +374,20 @@ public class SelectorNGTest extends TestCase {
         doc = Jsoup.parse(h);
         Element div = doc.select("div").select(" > div").first();
         assertEquals("2", div.id());
-    }
+    }*/
     
-    @Test public void testPseudoLessThan() {
+    @Test 
+    public void testPseudoLessThan() {
         Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</>p></div><div><p>Four</p>");
-        Elements ps = doc.select("div p:lt(2)");
+        Elements ps = SelectMatch.match(doc, new Evaluator.Tag("p"), new Evaluator.IndexLessThan(2), 
+        		new ParentSelector(new Evaluator.Tag("div"))); //"div p:lt(2)");
         assertEquals(3, ps.size());
         assertEquals("One", ps.get(0).text());
         assertEquals("Two", ps.get(1).text());
         assertEquals("Four", ps.get(2).text());
     }
     
-    @Test public void testPseudoGreaterThan() {
+    /*@Test public void testPseudoGreaterThan() {
         Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</p></div><div><p>Four</p>");
         Elements ps = doc.select("div p:gt(0)");
         assertEquals(2, ps.size());

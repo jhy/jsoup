@@ -3,18 +3,18 @@ package org.jsoup.select.ng;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
-public class NextSiblingSelector extends Evaluator {
+public class PrevSiblingSelector extends Evaluator {
 	Evaluator sel;
 	
-	public NextSiblingSelector(Evaluator sel) {
+	public PrevSiblingSelector(Evaluator sel) {
 		this.sel = sel;
 	}
 
 	@Override
 	public boolean matches(Element element) {
-		Element next = element.nextElementSibling();
+		Element prev = element.previousElementSibling();
 		
-		if(next != null && sel.matches(next))
+		if(prev != null && sel.matches(prev))
 			return true;
 		
 		return false;
