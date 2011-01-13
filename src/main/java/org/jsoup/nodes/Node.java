@@ -344,7 +344,7 @@ public abstract class Node implements Cloneable {
      * @return position in node sibling list
      * @see org.jsoup.nodes.Element#elementSiblingIndex()
      */
-    public Integer siblingIndex() {
+    public int siblingIndex() {
         return siblingIndex;
     }
     
