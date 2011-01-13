@@ -13,16 +13,16 @@ import java.util.regex.Pattern;
  * @author Jonathan Hedley
  */
 public abstract class Evaluator {
-    private Evaluator() {}
+    protected Evaluator() {}
     
     /**
      * Test if the element meets the evaluator's requirements.
      */
     public abstract boolean matches(Element element);
 
-    static final class Tag extends Evaluator {
+    public static final class Tag extends Evaluator {
         private String tagName;
-        Tag (String tagName) {
+        public Tag (String tagName) {
             this.tagName = tagName;
         }
 
@@ -31,9 +31,9 @@ public abstract class Evaluator {
         }
     }
 
-    static final class Id extends Evaluator {
+    public static final class Id extends Evaluator {
         private String id;
-        Id (String id) {
+        public Id (String id) {
             this.id = id;
         }
 
@@ -42,9 +42,9 @@ public abstract class Evaluator {
         }
     }
 
-    static final class Class extends Evaluator {
+    public static final class Class extends Evaluator {
         private String className;
-        Class(String className) {
+        public Class(String className) {
             this.className = className;
         }
 
@@ -53,10 +53,10 @@ public abstract class Evaluator {
         }
     }
 
-    static final class Attribute extends Evaluator {
+    public static final class Attribute extends Evaluator {
         private String key;
 
-        Attribute (String key) {
+        public Attribute (String key) {
             this.key = key;
         }
 
@@ -65,10 +65,10 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeStarting extends Evaluator {
+    public static final class AttributeStarting extends Evaluator {
         private String keyPrefix;
 
-        AttributeStarting (String keyPrefix) {
+        public AttributeStarting (String keyPrefix) {
             this.keyPrefix = keyPrefix;
         }
 
@@ -82,8 +82,8 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeWithValue extends AttributeKeyPair {
-        AttributeWithValue(String key, String value) {
+    public static final class AttributeWithValue extends AttributeKeyPair {
+        public AttributeWithValue(String key, String value) {
             super(key, value);
         }
 
@@ -92,8 +92,8 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeWithValueNot extends AttributeKeyPair {
-        AttributeWithValueNot(String key, String value) {
+    public static final class AttributeWithValueNot extends AttributeKeyPair {
+        public AttributeWithValueNot(String key, String value) {
             super(key, value);
         }
 
@@ -102,8 +102,8 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeWithValueStarting extends AttributeKeyPair {
-        AttributeWithValueStarting(String key, String value) {
+    public static final class AttributeWithValueStarting extends AttributeKeyPair {
+        public AttributeWithValueStarting(String key, String value) {
             super(key, value);
         }
 
@@ -112,8 +112,8 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeWithValueEnding extends AttributeKeyPair {
-        AttributeWithValueEnding(String key, String value) {
+    public static final class AttributeWithValueEnding extends AttributeKeyPair {
+        public AttributeWithValueEnding(String key, String value) {
             super(key, value);
         }
 
@@ -122,8 +122,8 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AttributeWithValueContaining extends AttributeKeyPair {
-        AttributeWithValueContaining(String key, String value) {
+    public static final class AttributeWithValueContaining extends AttributeKeyPair {
+        public AttributeWithValueContaining(String key, String value) {
             super(key, value);
         }
 
@@ -132,11 +132,11 @@ public abstract class Evaluator {
         }
     }
     
-    static final class AttributeWithValueMatching extends Evaluator{
+    public static final class AttributeWithValueMatching extends Evaluator{
         protected String key;
         protected Pattern pattern;
         
-        AttributeWithValueMatching(String key, Pattern pattern) {
+        public AttributeWithValueMatching(String key, Pattern pattern) {
             this.key = key.trim().toLowerCase();
             this.pattern = pattern;
         }
@@ -146,11 +146,11 @@ public abstract class Evaluator {
         }
     }
 
-    abstract static class AttributeKeyPair extends Evaluator {
+    public abstract static class AttributeKeyPair extends Evaluator {
         protected String key;
         protected String value;
 
-        AttributeKeyPair(String key, String value) {
+        public AttributeKeyPair(String key, String value) {
             Validate.notEmpty(key);
             Validate.notEmpty(value);
             
@@ -159,14 +159,14 @@ public abstract class Evaluator {
         }
     }
 
-    static final class AllElements extends Evaluator {
+    public static final class AllElements extends Evaluator {
         public boolean matches(Element element) {
             return true;
         }
     }
     
-    static final class IndexLessThan extends IndexEvaluator {
-        IndexLessThan(int index) {
+    public static final class IndexLessThan extends IndexEvaluator {
+        public IndexLessThan(int index) {
             super(index);
         }
 
@@ -175,8 +175,8 @@ public abstract class Evaluator {
         }
     }
     
-    static final class IndexGreaterThan extends IndexEvaluator {
-        IndexGreaterThan(int index) {
+    public static final class IndexGreaterThan extends IndexEvaluator {
+        public IndexGreaterThan(int index) {
             super(index);
         }
 
@@ -185,8 +185,8 @@ public abstract class Evaluator {
         }
     }
     
-    static final class IndexEquals extends IndexEvaluator {
-        IndexEquals(int index) {
+    public static final class IndexEquals extends IndexEvaluator {
+        public IndexEquals(int index) {
             super(index);
         }
 
@@ -195,17 +195,17 @@ public abstract class Evaluator {
         }
     }    
     
-    abstract static class IndexEvaluator extends Evaluator {
+    public abstract static class IndexEvaluator extends Evaluator {
         protected int index;
         
-        IndexEvaluator(int index) {
+        public IndexEvaluator(int index) {
             this.index = index;
         }
     }
     
-    static final class ContainsText extends Evaluator {
+    public static final class ContainsText extends Evaluator {
         private String searchText;
-        ContainsText(String searchText) {
+        public ContainsText(String searchText) {
             this.searchText = searchText.toLowerCase();
         }
 
@@ -214,9 +214,9 @@ public abstract class Evaluator {
         }
     }
     
-    static final class ContainsOwnText extends Evaluator {
+    public static final class ContainsOwnText extends Evaluator {
         private String searchText;
-        ContainsOwnText(String searchText) {
+        public ContainsOwnText(String searchText) {
             this.searchText = searchText.toLowerCase();
         }
 
@@ -225,9 +225,9 @@ public abstract class Evaluator {
         }
     }
     
-    static final class Matches extends Evaluator {
+    public static final class Matches extends Evaluator {
         private Pattern pattern;
-        Matches(Pattern pattern) {
+        public Matches(Pattern pattern) {
             this.pattern = pattern;
         }
 
@@ -237,9 +237,9 @@ public abstract class Evaluator {
         }
     }
     
-    static final class MatchesOwn extends Evaluator {
+    public static final class MatchesOwn extends Evaluator {
         private Pattern pattern;
-        MatchesOwn(Pattern pattern) {
+        public MatchesOwn(Pattern pattern) {
             this.pattern = pattern;
         }
 
