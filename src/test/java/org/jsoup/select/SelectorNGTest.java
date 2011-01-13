@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Evaluator;
-import org.jsoup.select.ng.AndSelector;
 import org.jsoup.select.ng.BasicSelector;
 import org.jsoup.select.ng.ElementSelector;
 import org.jsoup.select.ng.ParentSelector;
@@ -190,62 +189,36 @@ public class SelectorNGTest extends TestCase {
         assertEquals("span", els.get(4).tagName());
     }
 
-    /*@Test public void testGroupOrAttribute() {
-        String h = "<div id=1 /><div id=2 /><div title=foo /><div title=bar />";
-        Elements els = Jsoup.parse(h).select("[id],[title=foo]");
-
-        assertEquals(3, els.size());
-        assertEquals("1", els.get(0).id());
-        assertEquals("2", els.get(1).id());
-        assertEquals("foo", els.get(2).attr("title"));
-    }
-
-    @Test public void descendant() {
+    @Test 
+    public void testDescendant() {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
-        Elements els = doc.select(".head p");
+        Elements els = SelectMatch.match(doc, new Evaluator.Tag("p"), new ParentSelector(new Evaluator.Class("head"))); //".head p"
         assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
         assertEquals("There", els.get(1).text());
 
-        Elements p = doc.select("p.first");
+        Elements p = SelectMatch.match(doc, new ElementSelector("p", "first", null)); //"p.first"
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
 
-        Elements empty = doc.select("p .first"); // self, not descend, should not match
+        Elements empty = SelectMatch.match(doc, new Evaluator.Class("first"), new ParentSelector(new Evaluator.Tag("p")));// "p .first" self, not descend, should not match
         assertEquals(0, empty.size());
     }
     
-    @Test public void and() {
-        String h = "<div id=1 class='foo bar' title=bar name=qux><p class=foo title=bar>Hello</p></div";
-        Document doc = Jsoup.parse(h);
-        
-        Elements div = doc.select("div.foo");
-        assertEquals(1, div.size());
-        assertEquals("div", div.first().tagName());
-        
-        Elements p = doc.select("div .foo"); // space indicates like "div *.foo"
-        assertEquals(1, p.size());
-        assertEquals("p", p.first().tagName());
-        
-        Elements div2 = doc.select("div#1.foo.bar[title=bar][name=qux]"); // very specific!
-        assertEquals(1, div2.size());
-        assertEquals("div", div2.first().tagName());
-        
-        Elements p2 = doc.select("div *.foo"); // space indicates like "div *.foo"
-        assertEquals(1, p2.size());
-        assertEquals("p", p2.first().tagName());
-    }
 
-    @Test public void deeperDescendant() {
+    @Test 
+    public void testDeeperDescendant() {
         String h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>";
-        Elements els = Jsoup.parse(h).select("div p .first");
+        Elements els = SelectMatch.match(Jsoup.parse(h), new Evaluator.Class("first"), 
+        		
+        		new ParentSelector(BasicSelector.and(new Evaluator.Tag("p"), new ParentSelector(new Evaluator.Tag("div"))))); //"div p .first"
         assertEquals(1, els.size());
         assertEquals("Hello", els.first().text());
         assertEquals("span", els.first().tagName());
     }
 
-    @Test public void parentChildElement() {
+    /*@Test public void parentChildElement() {
         String h = "<div id=1><div id=2><div id = 3></div></div></div><div id=4></div>";
         Document doc = Jsoup.parse(h);
 
