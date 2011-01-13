@@ -36,10 +36,10 @@ public class TokenQueue {
 
     /**
      * Retrieves but does not remove the first character from the queue.
-     * @return First character, or null if empty.
+     * @return First character, or 0 if empty.
      */
-    public Character peek() {
-        return isEmpty() ? null : queue.charAt(pos);
+    public char peek() {
+        return isEmpty() ? 0 : queue.charAt(pos);
     }
 
     /**
@@ -158,8 +158,8 @@ public class TokenQueue {
      * Consume one character off queue.
      * @return first character on queue.
      */
-    public Character consume() {
-        Character c = queue.charAt(pos);
+    public char consume() {
+        char c = queue.charAt(pos);
         pos++;
         return c;
     }
