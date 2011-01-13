@@ -28,7 +28,8 @@ public class ElementSelector implements Selector {
 			if(tag != null && !el.tagName().equals(tag))
 				return false;
 			
-			if(cls != null && !el.className().equals(cls))
+			
+			if(cls != null && !el.classNames().contains(cls))
 				return false;
 			
 			if(id != null && !el.id().equals(id))
