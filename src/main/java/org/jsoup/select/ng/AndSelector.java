@@ -16,6 +16,12 @@ public class AndSelector extends Evaluator {
 		this.selectors = selectors;
 	}
 	
+	public AndSelector() {
+		super();
+		this.selectors = new ArrayList<Evaluator>();
+	}
+
+	
 	public AndSelector(Collection<Evaluator> selectors) {
 		super();
 		this.selectors = new ArrayList<Evaluator>();
@@ -25,6 +31,11 @@ public class AndSelector extends Evaluator {
 	public void add(Evaluator e) {
 		selectors.add(e);
 	}
+	
+	public void addAll(Collection<Evaluator> e) {
+		selectors.addAll(e);
+	}
+
 
 
 	@Override
