@@ -1,5 +1,7 @@
 package org.jsoup.select.ng;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
@@ -13,6 +15,13 @@ public class AndSelector extends Evaluator {
 		super();
 		this.selectors = selectors;
 	}
+	
+	public AndSelector(Collection<Evaluator> selectors) {
+		super();
+		this.selectors = new ArrayList<Evaluator>();
+		this.selectors.addAll(selectors);
+	}
+
 
 	@Override
 	public boolean matches(Element node) {
