@@ -29,6 +29,11 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return (element.tagName().equals(tagName));
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":tag=%s", tagName);
+        }
     }
 
     public static final class Id extends Evaluator {
@@ -40,6 +45,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return (id.equals(element.id()));
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":id=%s", id);
+        }
+
     }
 
     public static final class Class extends Evaluator {
@@ -51,6 +62,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return (element.hasClass(className));
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":class=%s", className);
+        }
+
     }
 
     public static final class Attribute extends Evaluator {
@@ -63,6 +80,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key);
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s]", key);
+        }
+
     }
 
     public static final class AttributeStarting extends Evaluator {
@@ -80,6 +103,12 @@ public abstract class Evaluator {
             }
             return false;
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[^%s]", keyPrefix);
+        }
+
     }
 
     public static final class AttributeWithValue extends AttributeKeyPair {
@@ -90,6 +119,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s=%s]", key, value);
+        }
+
     }
 
     public static final class AttributeWithValueNot extends AttributeKeyPair {
@@ -100,6 +135,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return !value.equalsIgnoreCase(element.attr(key));
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s!=%s]", key, value);
+        }
+
     }
 
     public static final class AttributeWithValueStarting extends AttributeKeyPair {
@@ -110,6 +151,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().startsWith(value); // value is lower case already
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s^=%s]", key, value);
+        }
+
     }
 
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
@@ -120,6 +167,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().endsWith(value); // value is lower case
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s$=%s]", key, value);
+        }
+
     }
 
     public static final class AttributeWithValueContaining extends AttributeKeyPair {
@@ -130,6 +183,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().contains(value); // value is lower case
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s*=%s]", key, value);
+        }
+
     }
     
     public static final class AttributeWithValueMatching extends Evaluator{
@@ -144,6 +203,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":[%s~=%s]", key, pattern.toString());
+        }
+
     }
 
     public abstract static class AttributeKeyPair extends Evaluator {
@@ -173,6 +238,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.elementSiblingIndex() < index;
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":lt(%d)", index);
+        }
+
     }
     
     public static final class IndexGreaterThan extends IndexEvaluator {
@@ -183,6 +254,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.elementSiblingIndex() > index;
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":gt(%d)", index);
+        }
+
     }
     
     public static final class IndexEquals extends IndexEvaluator {
@@ -193,6 +270,12 @@ public abstract class Evaluator {
         public boolean matches(Element element) {
             return element.elementSiblingIndex() == index;
         }
+        
+        @Override
+        public String toString() {
+        	return String.format(":eq(%d)", index);
+        }
+
     }    
     
     public abstract static class IndexEvaluator extends Evaluator {
