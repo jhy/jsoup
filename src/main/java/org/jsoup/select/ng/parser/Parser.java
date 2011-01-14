@@ -1,8 +1,6 @@
 package org.jsoup.select.ng.parser;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -15,7 +13,6 @@ import org.jsoup.nodes.Evaluator;
 import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.ng.AndSelector;
 import org.jsoup.select.ng.BasicSelector;
-import org.jsoup.select.ng.ElementContainerSelector;
 import org.jsoup.select.ng.HasSelector;
 import org.jsoup.select.ng.ImmediateParentSelector;
 import org.jsoup.select.ng.NotSelector;
@@ -29,7 +26,8 @@ public class Parser {
 	TokenQueue tq;
     private final static String[] combinators = {",", ">", "+", "~", " "};
     String query;
-    Deque<Evaluator> s = new ArrayDeque<Evaluator>();
+    //Deque<Evaluator> s = new ArrayDeque<Evaluator>();
+    List<Evaluator> s = new ArrayList<Evaluator>();
     
     
     
@@ -63,7 +61,8 @@ public class Parser {
             if (tq.matchChomp(",")) { // group or
             	OrSelector or = new OrSelector(s);
             	s.clear();
-            	s.push(or);
+            	//s.push(or);
+            	s.add(or);
             	while (!tq.isEmpty()) {
                     String subQuery = tq.chompTo(",");
                     or.add(parse(subQuery));
@@ -78,7 +77,7 @@ public class Parser {
         }
         
         if(s.size() == 1)
-        	return s.getFirst();
+        	return s.get(0);
         
         return new AndSelector(s);
     }
@@ -91,22 +90,22 @@ public class Parser {
         Evaluator e = null;
         
         if(s.size() == 1)
-        	e = s.pop();
+        	e = s.get(0);
         else {
         	e = new AndSelector(s);
-        	s.clear();
         }
+    	s.clear();
         Evaluator f = parse(subQuery);
         
 
         if (combinator == '>') {
-        	s.push(BasicSelector.and(f, new ImmediateParentSelector(e)));
+        	s.add(BasicSelector.and(f, new ImmediateParentSelector(e)));
         } else if (combinator == ' ') {
-        	s.push(BasicSelector.and(f, new ParentSelector(e)));
+        	s.add(BasicSelector.and(f, new ParentSelector(e)));
         } else if (combinator == '+') {
-        	s.push(BasicSelector.and(f, new PrevSiblingSelector(e)));
+        	s.add(BasicSelector.and(f, new PrevSiblingSelector(e)));
         } else if (combinator == '~') {
-        	s.push(BasicSelector.and(f, new PreviousSequentSiblingSelector(e)));
+        	s.add(BasicSelector.and(f, new PreviousSequentSiblingSelector(e)));
         } else
             throw new IllegalStateException("Unknown combinator: " + combinator);
         
@@ -235,7 +234,7 @@ public class Parser {
         tq.consume(":has");
         String subQuery = tq.chompBalanced('(',')');
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
-        s.push(new HasSelector(parse(subQuery)));
+        s.add(new HasSelector(parse(subQuery)));
         
 
 
@@ -247,9 +246,9 @@ public class Parser {
         String searchText = TokenQueue.unescape(tq.chompBalanced('(',')'));
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
         if(own)
-        	s.push(new Evaluator.ContainsOwnText(searchText));
+        	s.add(new Evaluator.ContainsOwnText(searchText));
         else
-        	s.push(new Evaluator.ContainsText(searchText));
+        	s.add(new Evaluator.ContainsText(searchText));
     }
     
     // :matches(regex), matchesOwn(regex)
@@ -259,9 +258,9 @@ public class Parser {
         Validate.notEmpty(regex, ":matches(regex) query must not be empty");
         
         if(own)
-        	s.push(new Evaluator.MatchesOwn(Pattern.compile(regex)));
+        	s.add(new Evaluator.MatchesOwn(Pattern.compile(regex)));
         else
-        	s.push(new Evaluator.Matches(Pattern.compile(regex)));
+        	s.add(new Evaluator.Matches(Pattern.compile(regex)));
 
         
     }
@@ -272,7 +271,7 @@ public class Parser {
         String subQuery = tq.chompBalanced('(', ')');
         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
         
-        s.push(new NotSelector(parse(subQuery)));
+        s.add(new NotSelector(parse(subQuery)));
     }
 
 
@@ -292,12 +291,13 @@ public class Parser {
     	
     	ElementContainerSelector ec = (ElementContainerSelector) p;*/
     	//ec.add(e);
-    	s.push(e);
+    	s.add(e);
     }
 
     
     public static void main(String[] args) {
         // make sure doesn't get nested
+    	Evaluator eval = Parser.parse("div.head, div.body");
         Document doc = Jsoup.parse("<div id=1><div id=2><div id=3></div></div></div>");
         Element div = SelectMatch.match(SelectMatch.match(doc, Parser.parse("div")), Parser.parse(" > div")).first();
 	}
