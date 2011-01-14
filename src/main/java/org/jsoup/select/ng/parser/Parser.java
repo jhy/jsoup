@@ -6,14 +6,24 @@ import java.util.Deque;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.ng.AndSelector;
 import org.jsoup.select.ng.BasicSelector;
 import org.jsoup.select.ng.ElementContainerSelector;
+import org.jsoup.select.ng.HasSelector;
+import org.jsoup.select.ng.ImmediateParentSelector;
+import org.jsoup.select.ng.NotSelector;
+import org.jsoup.select.ng.OrSelector;
 import org.jsoup.select.ng.ParentSelector;
+import org.jsoup.select.ng.PrevSiblingSelector;
+import org.jsoup.select.ng.PreviousSequentSiblingSelector;
+import org.jsoup.select.ng.SelectMatch;
 
 public class Parser {
 	TokenQueue tq;
@@ -28,17 +38,17 @@ public class Parser {
     	this.tq = new TokenQueue(query);
     }
     
-    public static Evaluator select(String query) {
+    public static Evaluator parse(String query) {
     	Parser p = new Parser(query);
-    	return p.select();
+    	return p.parse();
     }
     
-    public Evaluator select() {
+    public Evaluator parse() {
         tq.consumeWhitespace();
         
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
             //elements.add(root);
-            combinator(tq.consume().toString());
+            combinator(tq.consume());
         } else if (tq.matches(":has(")) {
             //elements.addAll(root.getAllElements());
         } else {
@@ -51,19 +61,17 @@ public class Parser {
             boolean seenWhite = tq.consumeWhitespace();
             
             if (tq.matchChomp(",")) { // group or
-
+            	OrSelector or = new OrSelector(s);
+            	s.clear();
+            	s.push(or);
             	while (!tq.isEmpty()) {
                     String subQuery = tq.chompTo(",");
-                    
-                    
-                    
-                    //elements.addAll(select(subQuery, root));
-                    //select(subQuery);
+                    or.add(parse(subQuery));
                 }
             } else if (tq.matchesAny(combinators)) {
-                combinator(tq.consume().toString());
+                combinator(tq.consume());
             } else if (seenWhite) {
-                combinator(" ");
+                combinator(' ');
             } else { // E.class, E#id, E[attr] etc. AND
                 findElements(); // take next el, #. etc off queue
             }
@@ -75,27 +83,30 @@ public class Parser {
         return new AndSelector(s);
     }
     
-    private void combinator(String combinator) {
+    private void combinator(char combinator) {
         tq.consumeWhitespace();
         String subQuery = tq.consumeToAny(combinators); // support multi > childs
         
         
-
-        if (combinator.equals(">")) {
-            //output = filterForChildren(elements, select(subQuery, elements));
-        } else if (combinator.equals(" ")) {
-        	AndSelector a = new AndSelector();
-        	a.add(select(subQuery));
-        	a.add(new ParentSelector(new AndSelector(s)));
+        Evaluator e = null;
+        
+        if(s.size() == 1)
+        	e = s.pop();
+        else {
+        	e = new AndSelector(s);
         	s.clear();
-        	s.push(a);
-        	
-        	
-            //output = filterForDescendants(elements, select(subQuery, elements));
-        } else if (combinator.equals("+")) {
-            //output = filterForAdjacentSiblings(elements, select(subQuery, root));
-        } else if (combinator.equals("~")) {
-            //output = filterForGeneralSiblings(elements, select(subQuery, root));
+        }
+        Evaluator f = parse(subQuery);
+        
+
+        if (combinator == '>') {
+        	s.push(BasicSelector.and(f, new ImmediateParentSelector(e)));
+        } else if (combinator == ' ') {
+        	s.push(BasicSelector.and(f, new ParentSelector(e)));
+        } else if (combinator == '+') {
+        	s.push(BasicSelector.and(f, new PrevSiblingSelector(e)));
+        } else if (combinator == '~') {
+        	s.push(BasicSelector.and(f, new PreviousSequentSiblingSelector(e)));
         } else
             throw new IllegalStateException("Unknown combinator: " + combinator);
         
@@ -172,25 +183,23 @@ public class Parser {
             else
             	ecPush(new Evaluator.Attribute(key));
         } else {
-        	String value = cq.remainder();
             if (cq.matchChomp("="))
-            	ecPush(new Evaluator.AttributeWithValue(key, value));
+            	ecPush(new Evaluator.AttributeWithValue(key, cq.remainder()));
 
             else if (cq.matchChomp("!="))
-                ecPush(new Evaluator.AttributeWithValueNot(key, value));
+                ecPush(new Evaluator.AttributeWithValueNot(key, cq.remainder()));
 
             else if (cq.matchChomp("^="))
-            	ecPush(new Evaluator.AttributeWithValueStarting(key, value));
+            	ecPush(new Evaluator.AttributeWithValueStarting(key, cq.remainder()));
 
             else if (cq.matchChomp("$="))
-            	ecPush(new Evaluator.AttributeWithValueEnding(key, value));
+            	ecPush(new Evaluator.AttributeWithValueEnding(key, cq.remainder()));
 
             else if (cq.matchChomp("*="))
-            	ecPush(new Evaluator.AttributeWithValueContaining(key, value));
+            	ecPush(new Evaluator.AttributeWithValueContaining(key, cq.remainder()));
             
             else if (cq.matchChomp("~="))
-            	ecPush(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(value)));
-            
+            	ecPush(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())));
             else
                 throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
@@ -226,7 +235,10 @@ public class Parser {
         tq.consume(":has");
         String subQuery = tq.chompBalanced('(',')');
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
-        // TODO: add has parsing
+        s.push(new HasSelector(parse(subQuery)));
+        
+
+
     }
     
     // pseudo selector :contains(text), containsOwn(text)
@@ -234,8 +246,10 @@ public class Parser {
         tq.consume(own ? ":containsOwn" : ":contains");
         String searchText = TokenQueue.unescape(tq.chompBalanced('(',')'));
         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
-        
-        // TODO: add :contains parsing
+        if(own)
+        	s.push(new Evaluator.ContainsOwnText(searchText));
+        else
+        	s.push(new Evaluator.ContainsText(searchText));
     }
     
     // :matches(regex), matchesOwn(regex)
@@ -244,7 +258,11 @@ public class Parser {
         String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, ":matches(regex) query must not be empty");
         
-        // TODO: add :matches parsing
+        if(own)
+        	s.push(new Evaluator.MatchesOwn(Pattern.compile(regex)));
+        else
+        	s.push(new Evaluator.Matches(Pattern.compile(regex)));
+
         
     }
 
@@ -253,8 +271,8 @@ public class Parser {
         tq.consume(":not");
         String subQuery = tq.chompBalanced('(', ')');
         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
-
-        // TODO: add :not parsing
+        
+        s.push(new NotSelector(parse(subQuery)));
     }
 
 
@@ -265,20 +283,23 @@ public class Parser {
     }
     
     void ecPush(Evaluator e) {
-    	Evaluator p = s.peek();
+    	/*Evaluator p = s.peek();
 
     	if(p == null || !(p instanceof ElementContainerSelector)) {
     		s.push(new ElementContainerSelector().add(e));
     		return;
     	}
     	
-    	ElementContainerSelector ec = (ElementContainerSelector) p;
-    	ec.add(e);
+    	ElementContainerSelector ec = (ElementContainerSelector) p;*/
+    	//ec.add(e);
+    	s.push(e);
     }
 
     
     public static void main(String[] args) {
-    	Evaluator e = select("div p href");
+        // make sure doesn't get nested
+        Document doc = Jsoup.parse("<div id=1><div id=2><div id=3></div></div></div>");
+        Element div = SelectMatch.match(SelectMatch.match(doc, Parser.parse("div")), Parser.parse(" > div")).first();
 	}
     
 
