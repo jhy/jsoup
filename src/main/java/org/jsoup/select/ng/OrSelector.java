@@ -10,11 +10,6 @@ import org.jsoup.nodes.Evaluator;
 public class OrSelector extends Evaluator {
 	List<Evaluator> selectors;
 
-	public OrSelector(List<Evaluator> selectors) {
-		super();
-		this.selectors = selectors;
-	}
-	
 	public OrSelector(Collection<Evaluator> selectors) {
 		super();
 		this.selectors = new ArrayList<Evaluator>();

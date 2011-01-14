@@ -2,7 +2,6 @@ package org.jsoup.select.ng;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
-import org.jsoup.nodes.Node;
 
 public class NotSelector extends Evaluator {
 	Evaluator sel;
