@@ -20,6 +20,10 @@ public class OrSelector extends Evaluator {
 		this.selectors = new ArrayList<Evaluator>();
 		this.selectors.addAll(selectors);
 	}
+	
+	public void add(Evaluator e) {
+		selectors.add(e);
+	}
 
 
 	@Override

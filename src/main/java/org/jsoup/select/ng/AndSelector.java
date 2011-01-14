@@ -1,6 +1,7 @@
 package org.jsoup.select.ng;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,11 +21,16 @@ public class AndSelector extends Evaluator {
 		super();
 		this.selectors = new ArrayList<Evaluator>();
 	}
+	
+	public AndSelector(Evaluator... evals) {
+		this();
+		this.selectors.addAll(Arrays.asList(evals));
+	}
+
 
 	
 	public AndSelector(Collection<Evaluator> selectors) {
-		super();
-		this.selectors = new ArrayList<Evaluator>();
+		this();
 		this.selectors.addAll(selectors);
 	}
 	
