@@ -279,7 +279,7 @@ public class ParserSelectorNG extends TestCase {
         assertEquals("a", els.first().tagName());
     }
 
-    /*@Test 
+    @Test 
     public void testCaseInsensitive() {
         String h = "<dIv tItle=bAr><div>"; // mixed case so a simple toLowerCase() on value doesn't catch
         Document doc = Jsoup.parse(h);
@@ -288,7 +288,7 @@ public class ParserSelectorNG extends TestCase {
         assertEquals(1, SelectMatch.match(doc, Parser.parse("DIV[TITLE]")).size());
         assertEquals(1, SelectMatch.match(doc, Parser.parse("DIV[TITLE=BAR]")).size());
         assertEquals(0, SelectMatch.match(doc, Parser.parse("DIV[TITLE=BARBARELLA")).size());
-    }*/
+    }
     
     @Test 
     public void testAdjacentSiblings() {
