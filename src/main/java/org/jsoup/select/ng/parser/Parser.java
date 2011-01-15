@@ -20,6 +20,7 @@ import org.jsoup.select.ng.OrSelector;
 import org.jsoup.select.ng.ParentSelector;
 import org.jsoup.select.ng.PrevSiblingSelector;
 import org.jsoup.select.ng.PreviousSequentSiblingSelector;
+import org.jsoup.select.ng.RootSelector;
 import org.jsoup.select.ng.SelectMatch;
 
 public class Parser {
@@ -46,6 +47,7 @@ public class Parser {
         
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
             //elements.add(root);
+        	s.add(new RootSelector());
             combinator(tq.consume());
         } else if (tq.matches(":has(")) {
             //elements.addAll(root.getAllElements());
@@ -156,7 +158,7 @@ public class Parser {
     private void byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        ecPush(new Evaluator.Class(className));
+        ecPush(new Evaluator.Class(className.trim().toLowerCase()));
     }
 
     private void byTag() {
@@ -167,7 +169,7 @@ public class Parser {
         if (tagName.contains("|"))
             tagName = tagName.replace("|", ":");
         
-        ecPush(new Evaluator.Tag(tagName));
+        ecPush(new Evaluator.Tag(tagName.trim().toLowerCase()));
     }
 
     private void byAttribute() {
