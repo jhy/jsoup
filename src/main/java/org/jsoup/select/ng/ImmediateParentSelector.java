@@ -11,12 +11,12 @@ public class ImmediateParentSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		
 		Element parent = element.parent();
 
 		if(parent != null)
-			return sel.matches(parent);
+			return sel.matches(root, parent);
 
 		return false;
 	}

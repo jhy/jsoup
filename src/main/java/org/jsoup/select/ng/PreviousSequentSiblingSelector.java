@@ -15,11 +15,11 @@ public class PreviousSequentSiblingSelector extends Evaluator {
 
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		Element prev = element.previousElementSibling();
 		
 		while(prev != null) {
-			if(sel.matches(prev))
+			if(sel.matches(root, prev))
 				return true;
 			
 			prev = prev.previousElementSibling();

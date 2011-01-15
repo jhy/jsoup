@@ -16,27 +16,27 @@ public class SelectMatch {
 		this.sel = sel;
 	}
 	
-	public Elements match(Node root) {
-		return new Elements(match(root, new ArrayList<Element>()));
+	public Elements match(Element root) {
+		return new Elements(match(root, root, new ArrayList<Element>()));
 	}
 	
 	public Elements match(Elements elements) {
 		List<Element> matched = new ArrayList<Element>();
 		
 		for(Element el : elements) {
-			match(el, matched);
+			match(el, el, matched);
 		}
 		
 		return new Elements(matched);
 	}
 	
-	public List<Element> match(Node root, List<Element> matched) {
-		if((root instanceof Element) && sel.matches((Element)root))
-			matched.add((Element)root);
+	List<Element> match(Element root, Element test, List<Element> matched) {
+		if(sel.matches(root, test))
+			matched.add((Element)test);
 		
-		for(Node n : root.childNodes())
+		for(Node n : test.childNodes())
 			if(n instanceof Element)
-				match(n, matched);
+				match(root, (Element)n, matched);
 		
 		return matched;
 	}
@@ -59,7 +59,7 @@ public class SelectMatch {
 		return matched;
 	}*/
 	
-	public static Elements match(Node root, Evaluator sel) {
+	public static Elements match(Element root, Evaluator sel) {
 		SelectMatch sm = new SelectMatch(sel);
 		
 		return sm.match(root);
@@ -77,7 +77,7 @@ public class SelectMatch {
 		return sm.match(elements);
 	}
 	
-	public static Elements match(Node root, Evaluator... sel) {
+	public static Elements match(Element root, Evaluator... sel) {
 		SelectMatch sm = new SelectMatch(new AndSelector(Arrays.asList(sel)));
 		
 		return sm.match(root);

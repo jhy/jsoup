@@ -17,8 +17,11 @@ public abstract class Evaluator {
     
     /**
      * Test if the element meets the evaluator's requirements.
+     * 
+     * @param root Root of the matching subtree
+     * @param element tested element
      */
-    public abstract boolean matches(Element element);
+    public abstract boolean matches(Element root, Element element);
 
     public static final class Tag extends Evaluator {
         private String tagName;
@@ -26,7 +29,8 @@ public abstract class Evaluator {
             this.tagName = tagName;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return (element.tagName().equals(tagName));
         }
         
@@ -42,7 +46,8 @@ public abstract class Evaluator {
             this.id = id;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return (id.equals(element.id()));
         }
         
@@ -59,7 +64,8 @@ public abstract class Evaluator {
             this.className = className;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return (element.hasClass(className));
         }
         
@@ -77,7 +83,8 @@ public abstract class Evaluator {
             this.key = key;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key);
         }
         
@@ -95,7 +102,8 @@ public abstract class Evaluator {
             this.keyPrefix = keyPrefix;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             List<org.jsoup.nodes.Attribute> values = element.attributes.asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
                 if (attribute.getKey().startsWith(keyPrefix))
@@ -116,7 +124,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
         }
         
@@ -132,7 +141,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return !value.equalsIgnoreCase(element.attr(key));
         }
         
@@ -148,7 +158,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().startsWith(value); // value is lower case already
         }
         
@@ -164,7 +175,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().endsWith(value); // value is lower case
         }
         
@@ -180,7 +192,8 @@ public abstract class Evaluator {
             super(key, value);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && element.attr(key).toLowerCase().contains(value); // value is lower case
         }
         
@@ -200,7 +213,8 @@ public abstract class Evaluator {
             this.pattern = pattern;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
         }
         
@@ -225,7 +239,9 @@ public abstract class Evaluator {
     }
 
     public static final class AllElements extends Evaluator {
-        public boolean matches(Element element) {
+
+    	@Override
+        public boolean matches(Element root, Element element) {
             return true;
         }
     }
@@ -235,7 +251,8 @@ public abstract class Evaluator {
             super(index);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.elementSiblingIndex() < index;
         }
         
@@ -251,7 +268,8 @@ public abstract class Evaluator {
             super(index);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.elementSiblingIndex() > index;
         }
         
@@ -267,7 +285,8 @@ public abstract class Evaluator {
             super(index);
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return element.elementSiblingIndex() == index;
         }
         
@@ -292,7 +311,8 @@ public abstract class Evaluator {
             this.searchText = searchText.toLowerCase();
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return (element.text().toLowerCase().contains(searchText));
         }
     }
@@ -303,7 +323,8 @@ public abstract class Evaluator {
             this.searchText = searchText.toLowerCase();
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             return (element.ownText().toLowerCase().contains(searchText));
         }
     }
@@ -314,7 +335,8 @@ public abstract class Evaluator {
             this.pattern = pattern;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             Matcher m = pattern.matcher(element.text());
             return m.find();
         }
@@ -326,7 +348,8 @@ public abstract class Evaluator {
             this.pattern = pattern;
         }
 
-        public boolean matches(Element element) {
+        @Override
+        public boolean matches(Element root, Element element) {
             Matcher m = pattern.matcher(element.ownText());
             return m.find();
         }

@@ -11,10 +11,10 @@ public class PrevSiblingSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		Element prev = element.previousElementSibling();
 		
-		if(prev != null && sel.matches(prev))
+		if(prev != null && sel.matches(root, prev))
 			return true;
 		
 		return false;
