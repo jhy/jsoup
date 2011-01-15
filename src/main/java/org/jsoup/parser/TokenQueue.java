@@ -11,7 +11,7 @@ public class TokenQueue {
     private String queue;
     private int pos = 0;
     
-    private static final Character ESC = '\\'; // escape char for chomp balanced.
+    private static final char ESC = '\\'; // escape char for chomp balanced.
 
     /**
      Create a new TokenQueue.
