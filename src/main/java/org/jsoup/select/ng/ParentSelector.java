@@ -11,12 +11,12 @@ public class ParentSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		
 		Element parent = element.parent();
 		
 		while(parent != null) {
-			if(sel.matches(parent))
+			if(sel.matches(root, parent))
 				return true;
 			
 			parent = parent.parent();

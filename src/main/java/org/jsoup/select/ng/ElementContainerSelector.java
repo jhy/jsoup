@@ -20,9 +20,9 @@ public class ElementContainerSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		for(Evaluator e: sels)
-			if(!e.matches(element))
+			if(!e.matches(root, element))
 				return false;
 		
 		return true;

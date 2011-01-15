@@ -22,7 +22,7 @@ public class ElementSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element node) {
+	public boolean matches(Element root, Element node) {
 			Element el = (Element) node;
 			
 			if(tag != null && !el.tagName().equals(tag))

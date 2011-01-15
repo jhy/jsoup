@@ -11,11 +11,11 @@ public class HasSelector extends Evaluator {
 	}
 
 	@Override
-	public boolean matches(Element element) {
+	public boolean matches(Element root, Element element) {
 		
 
 		for(Element e : element.getAllElements()) {
-			if(e != element && sel.matches(e))
+			if(e != element && sel.matches(root, e))
 				return true;
 		}
 		

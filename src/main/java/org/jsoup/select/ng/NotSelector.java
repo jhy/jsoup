@@ -16,8 +16,8 @@ public class NotSelector extends Evaluator {
 
 
 	@Override
-	public boolean matches(Element node) {
-		return !sel.matches(node);
+	public boolean matches(Element root, Element node) {
+		return !sel.matches(root, node);
 	}
 	
 	@Override

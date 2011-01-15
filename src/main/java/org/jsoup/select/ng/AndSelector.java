@@ -39,9 +39,9 @@ public class AndSelector extends Evaluator {
 
 
 	@Override
-	public boolean matches(Element node) {
+	public boolean matches(Element root, Element node) {
 		for(Evaluator s : selectors) {
-			if(!s.matches(node))
+			if(!s.matches(root, node))
 				return false;
 		}
 		
