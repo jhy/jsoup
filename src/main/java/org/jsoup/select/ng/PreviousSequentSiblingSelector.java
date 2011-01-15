@@ -16,6 +16,9 @@ public class PreviousSequentSiblingSelector extends Evaluator {
 
 	@Override
 	public boolean matches(Element root, Element element) {
+		if(root == element)
+			return false;
+		
 		Element prev = element.previousElementSibling();
 		
 		while(prev != null) {
