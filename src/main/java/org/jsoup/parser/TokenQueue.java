@@ -66,7 +66,7 @@ public class TokenQueue {
      * @return true if the next characters match.
      */
     public boolean matches(String seq) {
-        int count = seq.length();
+        /*int count = seq.length();
         if (count > remainingLength())
             return false;
 
@@ -74,7 +74,9 @@ public class TokenQueue {
             if (Character.toLowerCase(seq.charAt(count)) != Character.toLowerCase(queue.charAt(pos+count)))
                 return false;
         }
-        return true;
+        return true;*/
+    	
+    	return queue.regionMatches(true, pos, seq, 0, seq.length());
     }
 
     /**
@@ -113,7 +115,7 @@ public class TokenQueue {
 
     public boolean matchesStartTag() {
         // micro opt for matching "<x"
-        return (remainingLength() >= 2 && queue.charAt(pos) == '<' && Character.isLetterOrDigit(queue.charAt(pos+1)));
+        return (remainingLength() > 1 && queue.charAt(pos) == '<' && Character.isLetterOrDigit(queue.charAt(pos + 1)));
     }
 
     /**
@@ -159,9 +161,7 @@ public class TokenQueue {
      * @return first character on queue.
      */
     public char consume() {
-        char c = queue.charAt(pos);
-        pos++;
-        return c;
+        return queue.charAt(pos++);
     }
 
     /**
@@ -265,22 +265,22 @@ public class TokenQueue {
      * @param close closer
      * @return data matched from the queue
      */
-    public String chompBalanced(Character open, Character close) {
+    public String chompBalanced(char open, char close) {
         StringBuilder accum = new StringBuilder();
         int depth = 0;
-        Character last = null;
+        char last = 0;
 
         do {
             if (isEmpty()) break;
             Character c = consume();
-            if (last == null || !last.equals(ESC)) {
+            if (last == 0 || last != ESC) {
                 if (c.equals(open))
                     depth++;
                 else if (c.equals(close))
                     depth--;
             }
 
-            if (depth > 0 && last != null)
+            if (depth > 0 && last != 0)
                 accum.append(c); // don't include the outer match pair in the return
             last = c;
         } while (depth > 0);
@@ -294,10 +294,10 @@ public class TokenQueue {
      */
     public static String unescape(String in) {
         StringBuilder out = new StringBuilder();
-        Character last = null;
-        for (Character c : in.toCharArray()) {
-            if (c.equals(ESC)) {
-                if (last != null && last.equals(ESC))
+        char last = 0;
+        for (char c : in.toCharArray()) {
+            if (c == ESC) {
+                if (last != 0 && last == ESC)
                     out.append(c);
             }
             else 
