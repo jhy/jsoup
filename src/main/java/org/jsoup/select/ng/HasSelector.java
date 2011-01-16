@@ -3,6 +3,12 @@ package org.jsoup.select.ng;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
+/**
+ * Evaluator for :has() construction
+ * Matches if element's descendents matches underlying evaluator
+ * @author ant
+ *
+ */
 public class HasSelector extends Evaluator {
 	Evaluator sel;
 	

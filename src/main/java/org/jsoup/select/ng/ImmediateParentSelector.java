@@ -3,6 +3,12 @@ package org.jsoup.select.ng;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
+/**
+ * Tree-based evaluator for matching Element's immediate parent.
+ * For evaluating 'E > F' construction
+ * @author ant
+ *
+ */
 public class ImmediateParentSelector extends Evaluator {
 	Evaluator sel;
 	

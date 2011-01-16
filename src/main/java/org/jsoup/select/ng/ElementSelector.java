@@ -3,6 +3,12 @@ package org.jsoup.select.ng;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
+/**
+ * Evaluator for matching elements
+ * Designed to be faster than separated chained Tag/Class/Id evaluators
+ * @author ant
+ *
+ */
 public class ElementSelector extends Evaluator {
 	String tag;
 	String cls;

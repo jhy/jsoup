@@ -7,6 +7,12 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
+/**
+ * Sequencing 'or' evaluator.
+ * Matches only if any underlying evaluators have matched
+ * @author ant
+ *
+ */
 public class OrSelector extends Evaluator {
 	List<Evaluator> selectors;
 

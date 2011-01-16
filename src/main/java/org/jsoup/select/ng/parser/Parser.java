@@ -18,8 +18,8 @@ import org.jsoup.select.ng.ImmediateParentSelector;
 import org.jsoup.select.ng.NotSelector;
 import org.jsoup.select.ng.OrSelector;
 import org.jsoup.select.ng.ParentSelector;
-import org.jsoup.select.ng.PrevSiblingSelector;
-import org.jsoup.select.ng.PreviousSequentSiblingSelector;
+import org.jsoup.select.ng.ImmediatePreviousSiblingSelector;
+import org.jsoup.select.ng.PrevioustSiblingSelector;
 import org.jsoup.select.ng.RootSelector;
 import org.jsoup.select.ng.SelectMatch;
 
@@ -46,13 +46,10 @@ public class Parser {
         tq.consumeWhitespace();
         
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
-            //elements.add(root);
         	s.add(new RootSelector());
             combinator(tq.consume());
         } else if (tq.matches(":has(")) {
-            //elements.addAll(root.getAllElements());
         } else {
-            //addElements(findElements()); // chomp first element matcher off queue 
         	findElements();
         }            
                
@@ -63,7 +60,6 @@ public class Parser {
             if (tq.matchChomp(",")) { // group or
             	OrSelector or = new OrSelector(s);
             	s.clear();
-            	//s.push(or);
             	s.add(or);
             	while (!tq.isEmpty()) {
                     String subQuery = tq.chompTo(",");
@@ -105,9 +101,9 @@ public class Parser {
         } else if (combinator == ' ') {
         	s.add(BasicSelector.and(f, new ParentSelector(e)));
         } else if (combinator == '+') {
-        	s.add(BasicSelector.and(f, new PrevSiblingSelector(e)));
+        	s.add(BasicSelector.and(f, new ImmediatePreviousSiblingSelector(e)));
         } else if (combinator == '~') {
-        	s.add(BasicSelector.and(f, new PreviousSequentSiblingSelector(e)));
+        	s.add(BasicSelector.and(f, new PrevioustSiblingSelector(e)));
         } else
             throw new IllegalStateException("Unknown combinator: " + combinator);
         
@@ -152,13 +148,13 @@ public class Parser {
     private void byId() {
         String id = tq.consumeCssIdentifier();
         Validate.notEmpty(id);
-        ecPush(new Evaluator.Id(id));
+        s.add(new Evaluator.Id(id));
     }
 
     private void byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        ecPush(new Evaluator.Class(className.trim().toLowerCase()));
+        s.add(new Evaluator.Class(className.trim().toLowerCase()));
     }
 
     private void byTag() {
@@ -169,7 +165,7 @@ public class Parser {
         if (tagName.contains("|"))
             tagName = tagName.replace("|", ":");
         
-        ecPush(new Evaluator.Tag(tagName.trim().toLowerCase()));
+        s.add(new Evaluator.Tag(tagName.trim().toLowerCase()));
     }
 
     private void byAttribute() {
@@ -180,27 +176,27 @@ public class Parser {
 
         if (cq.isEmpty()) {
             if(key.startsWith("^"))
-            	ecPush(new Evaluator.AttributeStarting(key.substring(1)));
+            	s.add(new Evaluator.AttributeStarting(key.substring(1)));
             else
-            	ecPush(new Evaluator.Attribute(key));
+            	s.add(new Evaluator.Attribute(key));
         } else {
             if (cq.matchChomp("="))
-            	ecPush(new Evaluator.AttributeWithValue(key, cq.remainder()));
+            	s.add(new Evaluator.AttributeWithValue(key, cq.remainder()));
 
             else if (cq.matchChomp("!="))
-                ecPush(new Evaluator.AttributeWithValueNot(key, cq.remainder()));
+                s.add(new Evaluator.AttributeWithValueNot(key, cq.remainder()));
 
             else if (cq.matchChomp("^="))
-            	ecPush(new Evaluator.AttributeWithValueStarting(key, cq.remainder()));
+            	s.add(new Evaluator.AttributeWithValueStarting(key, cq.remainder()));
 
             else if (cq.matchChomp("$="))
-            	ecPush(new Evaluator.AttributeWithValueEnding(key, cq.remainder()));
+            	s.add(new Evaluator.AttributeWithValueEnding(key, cq.remainder()));
 
             else if (cq.matchChomp("*="))
-            	ecPush(new Evaluator.AttributeWithValueContaining(key, cq.remainder()));
+            	s.add(new Evaluator.AttributeWithValueContaining(key, cq.remainder()));
             
             else if (cq.matchChomp("~="))
-            	ecPush(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())));
+            	s.add(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())));
             else
                 throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
@@ -214,15 +210,15 @@ public class Parser {
     // pseudo selectors :lt, :gt, :eq
     private void indexLessThan() {
     	
-        ecPush(new Evaluator.IndexLessThan(consumeIndex()));
+        s.add(new Evaluator.IndexLessThan(consumeIndex()));
     }
     
     private void indexGreaterThan() {
-    	ecPush(new Evaluator.IndexGreaterThan(consumeIndex()));
+    	s.add(new Evaluator.IndexGreaterThan(consumeIndex()));
     }
     
     private void indexEquals() {
-    	ecPush(new Evaluator.IndexEquals(consumeIndex()));
+    	s.add(new Evaluator.IndexEquals(consumeIndex()));
     }
 
     private int consumeIndex() {
@@ -277,25 +273,11 @@ public class Parser {
     }
 
 
-    public static class SelectorParseException extends IllegalStateException {
+	public static class SelectorParseException extends IllegalStateException {
         public SelectorParseException(String msg, Object... params) {
             super(String.format(msg, params));
         }
     }
-    
-    void ecPush(Evaluator e) {
-    	/*Evaluator p = s.peek();
-
-    	if(p == null || !(p instanceof ElementContainerSelector)) {
-    		s.push(new ElementContainerSelector().add(e));
-    		return;
-    	}
-    	
-    	ElementContainerSelector ec = (ElementContainerSelector) p;*/
-    	//ec.add(e);
-    	s.add(e);
-    }
-
     
     public static void main(String[] args) {
         // make sure doesn't get nested
