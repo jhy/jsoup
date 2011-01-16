@@ -8,6 +8,12 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
+/**
+ * Sequencing 'and' evaluator.
+ * Matches only if all underlying evaluators have matched
+ * @author ant
+ *
+ */
 public class AndSelector extends Evaluator {
 	List<Evaluator> selectors;
 

@@ -3,12 +3,18 @@ package org.jsoup.select.ng;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Evaluator;
 
-public class PreviousSequentSiblingSelector extends Evaluator {
+/**
+ * Tree-based evaluator for matching Element's parent.
+ * For evaluating 'E ~ F' construction
+ * @author ant
+ *
+ */
+public class PrevioustSiblingSelector extends Evaluator {
 	Evaluator sel;
 	
 	
 
-	public PreviousSequentSiblingSelector(Evaluator sel) {
+	public PrevioustSiblingSelector(Evaluator sel) {
 		this.sel = sel;
 	}
 

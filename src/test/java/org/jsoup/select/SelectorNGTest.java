@@ -10,10 +10,10 @@ import org.jsoup.nodes.Evaluator;
 import org.jsoup.select.ng.BasicSelector;
 import org.jsoup.select.ng.ElementSelector;
 import org.jsoup.select.ng.ImmediateParentSelector;
-import org.jsoup.select.ng.PrevSiblingSelector;
+import org.jsoup.select.ng.ImmediatePreviousSiblingSelector;
 import org.jsoup.select.ng.ParentSelector;
 import org.jsoup.select.ng.SelectMatch;
-import org.jsoup.select.ng.PreviousSequentSiblingSelector;
+import org.jsoup.select.ng.PrevioustSiblingSelector;
 import org.junit.Test;
 
 public class SelectorNGTest extends TestCase {
@@ -288,7 +288,7 @@ public class SelectorNGTest extends TestCase {
         String h = "<ol><li>One<li>Two<li>Three</ol>";
         Document doc = Jsoup.parse(h);
         Elements sibs = SelectMatch.match(doc, new Evaluator.Tag("li"), 
-        		new PrevSiblingSelector(new Evaluator.Tag("li"))); //"li + li");
+        		new ImmediatePreviousSiblingSelector(new Evaluator.Tag("li"))); //"li + li");
         assertEquals(2, sibs.size());
         assertEquals("Two", sibs.get(0).text());
         assertEquals("Three", sibs.get(1).text());
@@ -299,7 +299,7 @@ public class SelectorNGTest extends TestCase {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
         Elements sibs = SelectMatch.match(doc, new ElementSelector("li", null, "2"),
-        		new PrevSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");
+        		new ImmediatePreviousSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");
         assertEquals(1, sibs.size());
         assertEquals("Two", sibs.get(0).text());
     }
@@ -308,7 +308,7 @@ public class SelectorNGTest extends TestCase {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
         Elements sibs = SelectMatch.match(doc, new ElementSelector("li", null, "3"),
-        		new PrevSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");//doc.select("li#1 + li#3");
+        		new ImmediatePreviousSiblingSelector(new ElementSelector("li", null, "1")));//doc.select("li#1 + li#2");//doc.select("li#1 + li#3");
         assertEquals(0, sibs.size());
     }
     
@@ -337,7 +337,7 @@ public class SelectorNGTest extends TestCase {
     public void testGeneralSiblings() {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
         Document doc = Jsoup.parse(h);
-        Elements els = SelectMatch.match(doc, new Evaluator.Id("3"), new PreviousSequentSiblingSelector(new Evaluator.Id("1")));//doc.select("#1 ~ #3");
+        Elements els = SelectMatch.match(doc, new Evaluator.Id("3"), new PrevioustSiblingSelector(new Evaluator.Id("1")));//doc.select("#1 ~ #3");
         assertEquals(1, els.size());
         assertEquals("Three", els.first().text());
     }
