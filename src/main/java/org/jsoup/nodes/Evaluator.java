@@ -23,6 +23,11 @@ public abstract class Evaluator {
      */
     public abstract boolean matches(Element root, Element element);
 
+    /**
+     * Evaluator for tag name
+     * @author ant
+     *
+     */
     public static final class Tag extends Evaluator {
         private String tagName;
         public Tag (String tagName) {
@@ -39,7 +44,12 @@ public abstract class Evaluator {
         	return String.format(":tag=%s", tagName);
         }
     }
-
+    
+    /**
+     * Evaluator for element id
+     * @author ant
+     *
+     */
     public static final class Id extends Evaluator {
         private String id;
         public Id (String id) {
@@ -57,7 +67,12 @@ public abstract class Evaluator {
         }
 
     }
-
+    
+    /**
+     * Evaluator for element class
+     * @author ant
+     *
+     */
     public static final class Class extends Evaluator {
         private String className;
         public Class(String className) {
@@ -76,6 +91,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attibute name matching
+     * @author ant
+     *
+     */
     public static final class Attribute extends Evaluator {
         private String key;
 
@@ -95,6 +115,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attribute name prefix matching
+     * @author ant
+     *
+     */
     public static final class AttributeStarting extends Evaluator {
         private String keyPrefix;
 
@@ -119,6 +144,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attribute name/value matching
+     * @author ant
+     *
+     */
     public static final class AttributeWithValue extends AttributeKeyPair {
         public AttributeWithValue(String key, String value) {
             super(key, value);
@@ -136,6 +166,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attribute name != value matching
+     * @author ant
+     *
+     */
     public static final class AttributeWithValueNot extends AttributeKeyPair {
         public AttributeWithValueNot(String key, String value) {
             super(key, value);
@@ -152,7 +187,12 @@ public abstract class Evaluator {
         }
 
     }
-
+    
+    /**
+     * Evaluator for attribute name/value matching (value prefix)
+     * @author ant
+     *
+     */
     public static final class AttributeWithValueStarting extends AttributeKeyPair {
         public AttributeWithValueStarting(String key, String value) {
             super(key, value);
@@ -170,6 +210,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attribute name/value matching (value ending)
+     * @author ant
+     *
+     */
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
         public AttributeWithValueEnding(String key, String value) {
             super(key, value);
@@ -187,6 +232,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Evaluator for attribute name/value matching (value containing)
+     * @author ant
+     *
+     */
     public static final class AttributeWithValueContaining extends AttributeKeyPair {
         public AttributeWithValueContaining(String key, String value) {
             super(key, value);
@@ -203,7 +253,12 @@ public abstract class Evaluator {
         }
 
     }
-    
+
+    /**
+     * Evaluator for attribute name/value matching (value regex matching)
+     * @author ant
+     *
+     */
     public static final class AttributeWithValueMatching extends Evaluator{
         protected String key;
         protected Pattern pattern;
@@ -225,6 +280,11 @@ public abstract class Evaluator {
 
     }
 
+    /**
+     * Abstract evaluator for attribute name/value matching
+     * @author ant
+     *
+     */
     public abstract static class AttributeKeyPair extends Evaluator {
         protected String key;
         protected String value;
@@ -238,6 +298,11 @@ public abstract class Evaluator {
         }
     }
 
+    /**
+     * Dummy evaluator for any element matching
+     * @author ant
+     *
+     */
     public static final class AllElements extends Evaluator {
 
     	@Override
@@ -245,7 +310,12 @@ public abstract class Evaluator {
             return true;
         }
     }
-    
+
+    /**
+     * Evaluator for matching by sibling index number (e < idx)
+     * @author ant
+     *
+     */
     public static final class IndexLessThan extends IndexEvaluator {
         public IndexLessThan(int index) {
             super(index);
@@ -262,7 +332,12 @@ public abstract class Evaluator {
         }
 
     }
-    
+
+    /**
+     * Evaluator for matching by sibling index number (e > idx)
+     * @author ant
+     *
+     */
     public static final class IndexGreaterThan extends IndexEvaluator {
         public IndexGreaterThan(int index) {
             super(index);
@@ -280,6 +355,11 @@ public abstract class Evaluator {
 
     }
     
+    /**
+     * Evaluator for matching by sibling index number (e = idx)
+     * @author ant
+     *
+     */
     public static final class IndexEquals extends IndexEvaluator {
         public IndexEquals(int index) {
             super(index);
@@ -297,6 +377,11 @@ public abstract class Evaluator {
 
     }    
     
+    /**
+     * Abstract evaluator for sibling index matching
+     * @author ant
+     *
+     */
     public abstract static class IndexEvaluator extends Evaluator {
         protected int index;
         
@@ -304,7 +389,12 @@ public abstract class Evaluator {
             this.index = index;
         }
     }
-    
+
+    /**
+     * Evaluator for matching Element (and its descendents) text
+     * @author ant
+     *
+     */
     public static final class ContainsText extends Evaluator {
         private String searchText;
         public ContainsText(String searchText) {
@@ -316,7 +406,12 @@ public abstract class Evaluator {
             return (element.text().toLowerCase().contains(searchText));
         }
     }
-    
+
+    /**
+     * Evaluator for matching Element's own text
+     * @author ant
+     *
+     */
     public static final class ContainsOwnText extends Evaluator {
         private String searchText;
         public ContainsOwnText(String searchText) {
@@ -329,6 +424,11 @@ public abstract class Evaluator {
         }
     }
     
+    /**
+     * Evaluator for matching Element (and its descendents) text with regex
+     * @author ant
+     *
+     */
     public static final class Matches extends Evaluator {
         private Pattern pattern;
         public Matches(Pattern pattern) {
@@ -341,7 +441,12 @@ public abstract class Evaluator {
             return m.find();
         }
     }
-    
+
+    /**
+     * Evaluator for matching Element's own text with regex
+     * @author ant
+     *
+     */
     public static final class MatchesOwn extends Evaluator {
         private Pattern pattern;
         public MatchesOwn(Pattern pattern) {
