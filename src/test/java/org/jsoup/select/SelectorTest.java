@@ -131,6 +131,14 @@ public class SelectorTest {
         assertEquals("Hello", els.text());
     }
 
+    @Test public void testCombinedWithContains() {
+        Document doc = Jsoup.parse("<p id=1>One</p><p>Two +</p><p>Three +</p>");
+        Elements els = doc.select("p#1 + :contains(+)");
+        assertEquals(1, els.size());
+        assertEquals("Two +", els.text());
+        assertEquals("p", els.first().tagName());
+    }
+
     @Test public void testAllElements() {
         String h = "<div><p>Hello</p><p><b>there</b></p></div>";
         Document doc = Jsoup.parse(h);
