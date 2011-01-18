@@ -136,7 +136,7 @@ public class Selector {
     
     private void combinator(char combinator) {
         tq.consumeWhitespace();
-        String subQuery = tq.consumeToAny(combinators); // support multi > childs
+        String subQuery = consumeSubQuery(); // support multi > childs
         
         Elements output;
         if (combinator == '>')
@@ -151,6 +151,21 @@ public class Selector {
             throw new IllegalStateException("Unknown combinator: " + combinator);
         
         elements.clear(); elements.addAll(output);
+    }
+
+    private String consumeSubQuery() {
+        StringBuilder sq = new StringBuilder();
+        while (!tq.isEmpty()) {
+            if (tq.matches("("))
+                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
+            else if (tq.matches("["))
+                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
+            else if (tq.matchesAny(combinators))
+                break;
+            else
+                sq.append(tq.consume());
+        }
+        return sq.toString();
     }
     
     private Elements findElements() {
