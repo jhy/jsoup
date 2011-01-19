@@ -286,19 +286,15 @@ public class ParserTest {
     @Test public void handlesUnknownNamespaceTags() {
         String h = "<foo:bar id=1/><abc:def id=2>Foo<p>Hello</abc:def><foo:bar>There</foo:bar>";
         Document doc = Jsoup.parse(h);
-        //assertEquals("<foo:bar id=\"1\" /><abc:def id=\"2\">Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>", TextUtil.stripNewlines(doc.body().html()));
-        assertEquals("<foo:bar id=\"1/\"><abc:def id=\"2\">Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar></foo:bar>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<foo:bar id=\"1\" /><abc:def id=\"2\">Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>", TextUtil.stripNewlines(doc.body().html()));
     }
     
     @Test public void handlesEmptyBlocks() {
         String h = "<div id=1/><div id=2><img /></div> <hr /> hr text";
         Document doc = Jsoup.parse(h);
-        //Element div1 = doc.getElementById("1");
-        //assertFalse(div1.children().isEmpty());
-        assertTrue(doc.select("#1").isEmpty());
-        assertTrue(doc.select("hr").get(0).children().isEmpty());
-        
-        
+        Element div1 = doc.getElementById("1");
+        assertTrue(div1.children().isEmpty());
+        assertTrue(doc.select("hr").first().children().isEmpty());
     }
     
     @Test public void handlesMultiClosingBody() {
