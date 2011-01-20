@@ -1,7 +1,7 @@
-package org.jsoup.select.ng;
+package org.jsoup.select.selectors;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Evaluator;
+import org.jsoup.select.Evaluator;
 
 /**
  * Root matcher matches only on root node

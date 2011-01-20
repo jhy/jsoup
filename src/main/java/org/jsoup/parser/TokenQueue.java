@@ -66,17 +66,7 @@ public class TokenQueue {
      * @return true if the next characters match.
      */
     public boolean matches(String seq) {
-        /*int count = seq.length();
-        if (count > remainingLength())
-            return false;
-
-        while (--count >= 0) {
-            if (Character.toLowerCase(seq.charAt(count)) != Character.toLowerCase(queue.charAt(pos+count)))
-                return false;
-        }
-        return true;*/
-    	
-    	return queue.regionMatches(true, pos, seq, 0, seq.length());
+        return queue.regionMatches(true, pos, seq, 0, seq.length());
     }
 
     /**
@@ -114,6 +104,7 @@ public class TokenQueue {
     }
 
     public boolean matchesStartTag() {
+        // micro opt for matching "<x"
         return (remainingLength() >= 2 && queue.charAt(pos) == '<' && Character.isLetter(queue.charAt(pos+1)));
     }
 

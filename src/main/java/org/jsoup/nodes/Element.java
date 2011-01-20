@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
 
 import java.util.*;
@@ -886,12 +887,17 @@ public class Element extends Node {
     }
 
     /**
-     * Tests if this element has a class.
+     * Tests if this element has a class. Case insensitive.
      * @param className name of class to check for
      * @return true if it does, false if not
      */
     public boolean hasClass(String className) {
-        return classNames().contains(className);
+        Set<String> classNames = classNames();
+        for (String name : classNames) {
+            if (className.equalsIgnoreCase(name))
+                return true;
+        }
+        return false;
     }
 
     /**

@@ -1,23 +1,23 @@
-package org.jsoup.select.ng;
+package org.jsoup.select.selectors;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.sun.xml.internal.ws.util.StringUtils;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Evaluator;
+import org.jsoup.select.Evaluator;
 
 /**
  * Sequencing 'and' evaluator.
  * Matches only if all underlying evaluators have matched
- * @author ant
- *
  */
 public class AndSelector extends Evaluator {
-	List<Evaluator> selectors;
+	private List<Evaluator> selectors;
 
-	public AndSelector() {
+	private AndSelector() {
 		super();
 		this.selectors = new ArrayList<Evaluator>();
 	}
@@ -27,8 +27,6 @@ public class AndSelector extends Evaluator {
 		this.selectors.addAll(Arrays.asList(evals));
 	}
 
-
-	
 	public AndSelector(Collection<Evaluator> selectors) {
 		this();
 		this.selectors.addAll(selectors);
@@ -42,8 +40,6 @@ public class AndSelector extends Evaluator {
 		selectors.addAll(e);
 	}
 
-
-
 	@Override
 	public boolean matches(Element root, Element node) {
 		for(Evaluator s : selectors) {
@@ -56,9 +52,6 @@ public class AndSelector extends Evaluator {
 	
 	@Override
 	public String toString() {
-		return String.format(":and%s", selectors);
+		return StringUtil.join(selectors, " ");
 	}
-
-	
-
 }
