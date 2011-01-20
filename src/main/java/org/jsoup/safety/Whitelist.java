@@ -322,7 +322,7 @@ public class Whitelist {
         
         for (Protocol protocol : protocols) {
             String prot = protocol.toString() + ":";
-            if (value.toString().toLowerCase().startsWith(prot)) {
+            if (value.toLowerCase().startsWith(prot)) {
                 return true;
             }
         }

@@ -1,20 +1,18 @@
-package org.jsoup.select.ng;
+package org.jsoup.select.selectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Evaluator;
+import org.jsoup.select.Evaluator;
 
 /**
  * Sequencing 'or' evaluator.
  * Matches only if any underlying evaluators have matched
- * @author ant
- *
  */
 public class OrSelector extends Evaluator {
-	List<Evaluator> selectors;
+	private List<Evaluator> selectors;
 
 	public OrSelector(Collection<Evaluator> selectors) {
 		super();
@@ -25,7 +23,6 @@ public class OrSelector extends Evaluator {
 	public void add(Evaluator e) {
 		selectors.add(e);
 	}
-
 
 	@Override
 	public boolean matches(Element root, Element node) {

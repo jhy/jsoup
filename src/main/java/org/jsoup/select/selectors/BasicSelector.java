@@ -1,8 +1,8 @@
-package org.jsoup.select.ng;
+package org.jsoup.select.selectors;
 
 import java.util.Arrays;
 
-import org.jsoup.nodes.Evaluator;
+import org.jsoup.select.Evaluator;
 
 public class BasicSelector {
 	

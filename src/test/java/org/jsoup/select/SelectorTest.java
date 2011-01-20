@@ -24,8 +24,9 @@ public class SelectorTest {
 
     @Test public void testById() {
         Elements els = Jsoup.parse("<div><p id=foo>Hello</p><p id=foo>Foo two!</p></div>").select("#foo");
-        assertEquals(1, els.size());
+        assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
+        assertEquals("Foo two!", els.get(1).text());
 
         Elements none = Jsoup.parse("<div id=1></div>").select("#foo");
         assertEquals(0, none.size());
@@ -40,7 +41,7 @@ public class SelectorTest {
         Elements none = Jsoup.parse("<div class='one'></div>").select(".foo");
         assertEquals(0, none.size());
 
-        Elements els2 = Jsoup.parse("<div class='one-two'></div>").select(".one-two");
+        Elements els2 = Jsoup.parse("<div class='One-Two'></div>").select(".one-two");
         assertEquals(1, els2.size());
     }
 
@@ -162,14 +163,14 @@ public class SelectorTest {
         Elements els = doc.select("p,div,[title]");
 
         assertEquals(5, els.size());
-        assertEquals("p", els.get(0).tagName());
+        assertEquals("div", els.get(0).tagName());
+        assertEquals("foo", els.get(0).attr("title"));
         assertEquals("div", els.get(1).tagName());
-        assertEquals("foo", els.get(1).attr("title"));
+        assertEquals("bar", els.get(1).attr("title"));
         assertEquals("div", els.get(2).tagName());
-        assertEquals("bar", els.get(2).attr("title"));
-        assertEquals("div", els.get(3).tagName());
-        assertTrue(els.get(3).attr("title").length() == 0); // missing attributes come back as empty string
-        assertFalse(els.get(3).hasAttr("title"));
+        assertTrue(els.get(2).attr("title").length() == 0); // missing attributes come back as empty string
+        assertFalse(els.get(2).hasAttr("title"));
+        assertEquals("p", els.get(3).tagName());
         assertEquals("span", els.get(4).tagName());
     }
 
