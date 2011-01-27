@@ -10,10 +10,6 @@ public final class StringUtil {
     // memoised padding up to 10
     private static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          "};
 
-    private static final String base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    private static final int lineLength = 76;
-
     /**
      * Join a collection of strings by a seperator
      * @param strings collection of string objects
