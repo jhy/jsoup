@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
-import org.jsoup.select.selectors.*;
 
 /**
  * Parses a CSS selector into an Evaluator tree.
@@ -46,7 +45,7 @@ class QueryParser {
         tq.consumeWhitespace();
 
         if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
-            evals.add(new RootSelector());
+            evals.add(new StructuralEvaluator.Root());
             combinator(tq.consume());
         } else {
             findElements();
@@ -57,7 +56,7 @@ class QueryParser {
             boolean seenWhite = tq.consumeWhitespace();
 
             if (tq.matchChomp(",")) { // group or
-                OrSelector or = new OrSelector(evals);
+                CombiningEvaluator.Or or = new CombiningEvaluator.Or(evals);
                 evals.clear();
                 evals.add(or);
                 while (!tq.isEmpty()) {
@@ -76,7 +75,7 @@ class QueryParser {
         if (evals.size() == 1)
             return evals.get(0);
 
-        return new AndSelector(evals);
+        return new CombiningEvaluator.And(evals);
     }
 
     private void combinator(char combinator) {
@@ -87,18 +86,18 @@ class QueryParser {
         if (evals.size() == 1)
             e = evals.get(0);
         else
-            e = new AndSelector(evals);
+            e = new CombiningEvaluator.And(evals);
         evals.clear();
         Evaluator f = parse(subQuery);
 
         if (combinator == '>')
-            evals.add(BasicSelector.and(f, new ImmediateParentSelector(e)));
+            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.ImmediateParent(e)));
         else if (combinator == ' ')
-            evals.add(BasicSelector.and(f, new ParentSelector(e)));
+            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.Parent(e)));
         else if (combinator == '+')
-            evals.add(BasicSelector.and(f, new ImmediatePreviousSiblingSelector(e)));
+            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.ImmediatePreviousSibling(e)));
         else if (combinator == '~')
-            evals.add(BasicSelector.and(f, new PreviousSiblingSelector(e)));
+            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.PreviousSibling(e)));
         else
             throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
     }
@@ -237,7 +236,7 @@ class QueryParser {
         tq.consume(":has");
         String subQuery = tq.chompBalanced('(', ')');
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
-        evals.add(new HasSelector(parse(subQuery)));
+        evals.add(new StructuralEvaluator.Has(parse(subQuery)));
     }
 
     // pseudo selector :contains(text), containsOwn(text)
@@ -269,6 +268,6 @@ class QueryParser {
         String subQuery = tq.chompBalanced('(', ')');
         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
 
-        evals.add(new NotSelector(parse(subQuery)));
+        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
     }
 }
