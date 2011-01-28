@@ -329,7 +329,7 @@ public class HttpConnection implements Connection {
             Response res = new Response();
             res.setupFromConnection(conn);
             if (needsRedirect) {
-                req.url(new URL(res.header("Location")));
+                req.url(new URL(req.url(), res.header("Location")));
                 return execute(req);
             }
 

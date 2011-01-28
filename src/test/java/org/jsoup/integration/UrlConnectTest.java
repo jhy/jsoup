@@ -95,4 +95,11 @@ public class UrlConnectTest {
         assertTrue(doc.title().contains("Google"));
     }
 
+    @Test
+    public void followsRelativeRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://infohound.net/tools/302-rel.pl"); // to ./ - /tools/
+        Document doc = con.post();
+        assertTrue(doc.title().contains("HTML Tidy Online"));
+    }
+
 }
