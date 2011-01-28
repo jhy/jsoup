@@ -281,6 +281,7 @@ public class Tag {
         createInline("TT");
         createInline("I");
         createInline("B");
+        createInline("U");
         createInline("BIG");
         createInline("SMALL");
 
