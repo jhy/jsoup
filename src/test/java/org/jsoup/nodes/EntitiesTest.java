@@ -28,6 +28,14 @@ public class EntitiesTest {
 
         assertEquals("&0987654321; &unknown", Entities.unescape("&0987654321; &unknown"));
     }
+
+    @Test public void strictUnescape() { // for attributes, enforce strict unescaping (must look like &xxx; , not just &xxx)
+        String text = "Hello &mid &amp;";
+        assertEquals("Hello &mid &", Entities.unescape(text, true));
+        assertEquals("Hello ∣ &", Entities.unescape(text));
+        assertEquals("Hello ∣ &", Entities.unescape(text, false));
+    }
+
     
     @Test public void caseSensitive() {
         String unescaped = "Ü ü & &";

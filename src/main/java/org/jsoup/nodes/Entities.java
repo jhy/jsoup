@@ -36,6 +36,7 @@ public class Entities {
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
+    private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
 
     static String escape(String string, Document.OutputSettings out) {
         return escape(string, out.encoder(), out.escapeMode());
@@ -59,10 +60,20 @@ public class Entities {
     }
 
     static String unescape(String string) {
+        return unescape(string, false);
+    }
+
+    /**
+     * Unescape the input string.
+     * @param string
+     * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
+     * @return
+     */
+    static String unescape(String string, boolean strict) {
         if (!string.contains("&"))
             return string;
 
-        Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
+        Matcher m = strict? strictUnescapePattern.matcher(string) : unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
         StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
         // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
 
