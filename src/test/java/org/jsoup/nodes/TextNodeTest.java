@@ -56,4 +56,14 @@ public class TextNodeTest {
         assertEquals("Hello there!", div.text());
         assertTrue(tn.parent() == tail.parent());
     }
+
+    @Test public void testSplitAnEmbolden() {
+        Document doc = Jsoup.parse("<div>Hello there</div>");
+        Element div = doc.select("div").first();
+        TextNode tn = (TextNode) div.childNode(0);
+        TextNode tail = tn.splitText(6);
+        tail.wrap("<b></b>");
+
+        assertEquals("Hello <b>there</b>", TextUtil.stripNewlines(div.html())); // not great that we get \n<b>there there... must correct
+    }
 }

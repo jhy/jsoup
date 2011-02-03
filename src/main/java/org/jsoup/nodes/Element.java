@@ -303,37 +303,31 @@ public class Element extends Node {
         addChildren(0, fragment.childNodesAsArray());
         return this;
     }
-    
+
     /**
      * Insert the specified HTML into the DOM before this element (i.e. as a preceeding sibling).
+     *
      * @param html HTML to add before this element
      * @return this element, for chaining
      * @see #after(String)
      */
+    @Override
     public Element before(String html) {
-        addSiblingHtml(siblingIndex(), html);
-        return this;
+        return (Element) super.before(html);
     }
-    
+
     /**
      * Insert the specified HTML into the DOM after this element (i.e. as a following sibling).
+     *
      * @param html HTML to add after this element
      * @return this element, for chaining
      * @see #before(String)
      */
+    @Override
     public Element after(String html) {
-        addSiblingHtml(siblingIndex()+1, html);
-        return this;
+        return (Element) super.after(html);
     }
-    
-    private void addSiblingHtml(int index, String html) {
-        Validate.notNull(html);
-        Validate.notNull(parentNode);
-        
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        parentNode.addChildren(index, fragment.childNodesAsArray());
-    }
-       
+
     /**
      * Remove all of the element's child nodes. Any attributes are left as-is.
      * @return this element
@@ -344,42 +338,16 @@ public class Element extends Node {
     }
 
     /**
-     Wrap the supplied HTML around this element.
-     @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitralily deep.
-     @return this element, for chaining.
+     * Wrap the supplied HTML around this element.
+     *
+     * @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+     * @return this element, for chaining.
      */
+    @Override
     public Element wrap(String html) {
-        Validate.notEmpty(html);
-
-        Element wrapBody = Parser.parseBodyFragmentRelaxed(html, baseUri).body();
-        Elements wrapChildren = wrapBody.children();
-        Element wrap = wrapChildren.first();
-        if (wrap == null) // nothing to wrap with; noop
-            return null;
-
-        Element deepest = getDeepChild(wrap);
-        parentNode.replaceChild(this, wrap);
-        deepest.addChildren(this);
-
-        // remainder (unbalananced wrap, like <div></div><p></p> -- The <p> is remainder
-        if (wrapChildren.size() > 1) {
-            for (int i = 1; i < wrapChildren.size(); i++) { // skip first
-                Element remainder = wrapChildren.get(i);
-                remainder.parentNode.removeChild(remainder);
-                wrap.appendChild(remainder);
-            }
-        }
-        return this;
+        return (Element) super.wrap(html);
     }
 
-    private Element getDeepChild(Element el) {
-        List<Element> children = el.children();
-        if (children.size() > 0)
-            return getDeepChild(children.get(0));
-        else
-            return el;
-    }
-    
     /**
      * Get sibling elements.
      * @return sibling elements
