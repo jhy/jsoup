@@ -39,6 +39,13 @@ public class NodeTest {
         assertFalse(a.hasAttr("abs:href")); // only realised on the get method, not in has or iterator
     }
 
+    @Test public void handlesAbsOnImage() {
+        Document doc = Jsoup.parse("<p><img src=\"/rez/osi_logo.png\" /></p>", "http://jsoup.org/");
+        Element img = doc.select("img").first();
+        assertEquals("http://jsoup.org/rez/osi_logo.png", img.attr("abs:src"));
+        assertEquals(img.absUrl("src"), img.attr("abs:src"));
+    }
+
     /*
     Test for an issue with Java's abs URL handler.
      */
