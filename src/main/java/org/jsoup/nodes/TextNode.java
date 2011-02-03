@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 
 /**
  A text node.
@@ -60,13 +61,32 @@ public class TextNode extends Node {
         return attributes == null ? text : attributes.get(TEXT_KEY);
     }
 
-
     /**
      Test if this text node is blank -- that is, empty or only whitespace (including newlines).
      @return true if this document is empty or only whitespace, false if it contains any text content.
      */
     public boolean isBlank() {
         return StringUtil.isBlank(getWholeText());
+    }
+
+    /**
+     * Split this text node into two nodes at the specified string offset. After splitting, this node will contain the
+     * original text up to the offset, and will have a new text node sibling containing the text after the offset.
+     * @param offset string offset point to split node at.
+     * @return the newly created text node containing the text after the offset.
+     */
+    public TextNode splitText(int offset) {
+        Validate.isTrue(offset >= 0, "Split offset must be not be negative");
+        Validate.isTrue(offset < text.length(), "Split offset must not be greater than current text length");
+
+        String head = getWholeText().substring(0, offset);
+        String tail = getWholeText().substring(offset);
+        text(head);
+        TextNode tailNode = new TextNode(tail, this.baseUri());
+        if (parent() != null)
+            parent().addChildren(siblingIndex()+1, tailNode);
+
+        return tailNode;
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {

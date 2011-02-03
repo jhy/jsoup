@@ -44,4 +44,16 @@ public class TextNodeTest {
         assertEquals("kablam &", tn.text());
         assertEquals("One <span>two &amp;</span>kablam &amp;", TextUtil.stripNewlines(p.html()));
     }
+
+    @Test public void testSplitText() {
+        Document doc = Jsoup.parse("<div>Hello there</div>");
+        Element div = doc.select("div").first();
+        TextNode tn = (TextNode) div.childNode(0);
+        TextNode tail = tn.splitText(6);
+        assertEquals("Hello ", tn.getWholeText());
+        assertEquals("there", tail.getWholeText());
+        tail.text("there!");
+        assertEquals("Hello there!", div.text());
+        assertTrue(tn.parent() == tail.parent());
+    }
 }
