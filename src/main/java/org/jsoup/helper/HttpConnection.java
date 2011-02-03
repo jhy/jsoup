@@ -67,6 +67,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection followRedirects(boolean followRedirects) {
+        req.followRedirects(followRedirects);
+        return this;
+    }
+
     public Connection referrer(String referrer) {
         Validate.notNull(referrer, "Referrer must not be null");
         req.header("Referer", referrer);
@@ -264,10 +269,12 @@ public class HttpConnection implements Connection {
 
     public static class Request extends Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
+        private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
 
         private Request() {
             timeoutMilliseconds = 3000;
+            followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
@@ -280,6 +287,15 @@ public class HttpConnection implements Connection {
         public Request timeout(int millis) {
             Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
             timeoutMilliseconds = millis;
+            return this;
+        }
+
+        public boolean followRedirects() {
+            return followRedirects;
+        }
+
+        public Connection.Request followRedirects(boolean followRedirects) {
+            this.followRedirects = followRedirects;
             return this;
         }
 
@@ -303,6 +319,10 @@ public class HttpConnection implements Connection {
         private boolean executed = false;
 
         static Response execute(Connection.Request req) throws IOException {
+            return execute(req, null);
+        }
+
+        static Response execute(Connection.Request req, Connection.Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
             String protocol = req.url().getProtocol();
             Validate
@@ -316,21 +336,22 @@ public class HttpConnection implements Connection {
             if (req.method() == Connection.Method.POST)
                 writePost(req.data(), conn.getOutputStream());          
 
-            // todo: error handling options, allow user to get !200 without exception
             int status = conn.getResponseCode();
             boolean needsRedirect = false;
             if (status != HttpURLConnection.HTTP_OK) {
-                // java url connection will follow redirects on same protocol, but not switch between http & https, so do that here
                 if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
                     needsRedirect = true;
                 else
                     throw new IOException(status + " error loading URL " + req.url().toString());
             }
             Response res = new Response();
-            res.setupFromConnection(conn);
-            if (needsRedirect) {
+            res.setupFromConnection(conn, previousResponse);
+            if (needsRedirect && req.followRedirects()) {
                 req.url(new URL(req.url(), res.header("Location")));
-                return execute(req);
+                for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
+                    req.cookie(cookie.getKey(), cookie.getValue());
+                }
+                return execute(req, res);
             }
 
             InputStream inStream = null;
@@ -396,7 +417,7 @@ public class HttpConnection implements Connection {
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
             HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
             conn.setRequestMethod(req.method().name());
-            conn.setInstanceFollowRedirects(true);
+            conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
             if (req.method() == Method.POST)
@@ -410,13 +431,14 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn) throws IOException {
+        private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
             method = Connection.Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
             statusMessage = conn.getResponseMessage();
             contentType = conn.getContentType();
 
+            // headers into map
             Map<String, List<String>> resHeaders = conn.getHeaderFields();
             for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
                 String name = entry.getKey();
@@ -436,6 +458,14 @@ public class HttpConnection implements Connection {
                 } else { // only take the first instance of each header
                     if (!values.isEmpty())
                         header(name, values.get(0));
+                }
+            }
+
+            // if from a redirect, map previous response cookies into this response
+            if (previousResponse != null) {
+                for (Map.Entry<String, String> prevCookie : previousResponse.cookies().entrySet()) {
+                    if (!hasCookie(prevCookie.getKey()))
+                        cookie(prevCookie.getKey(), prevCookie.getValue());
                 }
             }
         }
