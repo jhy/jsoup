@@ -14,7 +14,7 @@ import java.io.IOException;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-@Ignore // ignored by default so tests don't require network access. comment out to enable.
+//@Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static String echoURL = "http://infohound.net/tools/q.pl";
 
@@ -128,6 +128,18 @@ public class UrlConnectTest {
         assertEquals("asdfg123", res.cookie("token")); // confirms that cookies set on 1st hit are presented in final result
         Document doc = res.parse();
         assertEquals("token=asdfg123", ihVal("HTTP_COOKIE", doc)); // confirms that redirected hit saw cookie
+    }
+
+    @Test
+    public void maximumRedirects() {
+        boolean threw = false;
+        try {
+            Document doc = Jsoup.connect("http://infohound.net/tools/loop.pl").get();
+        } catch (IOException e) {
+            assertTrue(e.getMessage().contains("Too many redirects"));
+            threw = true;
+        }
+        assertTrue(threw);
     }
 
 }

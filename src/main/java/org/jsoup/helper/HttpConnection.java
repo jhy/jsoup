@@ -311,18 +311,33 @@ public class HttpConnection implements Connection {
     }
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
+        private static final int MAX_REDIRECTS = 20;
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
         private String charset;
         private String contentType;
         private boolean executed = false;
+        private int numRedirects = 0;
+
+        Response() {
+            super();
+        }
+
+        private Response(Response previousResponse) throws IOException {
+            super();
+            if (previousResponse != null) {
+                numRedirects = previousResponse.numRedirects + 1;
+                if (numRedirects >= MAX_REDIRECTS)
+                    throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
+            }
+        }
 
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
 
-        static Response execute(Connection.Request req, Connection.Response previousResponse) throws IOException {
+        static Response execute(Connection.Request req, Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
             String protocol = req.url().getProtocol();
             Validate
@@ -344,7 +359,7 @@ public class HttpConnection implements Connection {
                 else
                     throw new IOException(status + " error loading URL " + req.url().toString());
             }
-            Response res = new Response();
+            Response res = new Response(previousResponse);
             res.setupFromConnection(conn, previousResponse);
             if (needsRedirect && req.followRedirects()) {
                 req.url(new URL(req.url(), res.header("Location")));
