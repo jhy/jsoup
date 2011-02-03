@@ -2,6 +2,8 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -229,6 +231,73 @@ public abstract class Node implements Cloneable {
     public void remove() {
         Validate.notNull(parentNode);
         parentNode.removeChild(this);
+    }
+
+    /**
+     * Insert the specified HTML into the DOM before this node (i.e. as a preceeding sibling).
+     * @param html HTML to add before this element
+     * @return this node, for chaining
+     * @see #after(String)
+     */
+    public Node before(String html) {
+        addSiblingHtml(siblingIndex(), html);
+        return this;
+    }
+
+    /**
+     * Insert the specified HTML into the DOM after this node (i.e. as a following sibling).
+     * @param html HTML to add after this element
+     * @return this node, for chaining
+     * @see #before(String)
+     */
+    public Node after(String html) {
+        addSiblingHtml(siblingIndex()+1, html);
+        return this;
+    }
+
+    private void addSiblingHtml(int index, String html) {
+        Validate.notNull(html);
+        Validate.notNull(parentNode);
+
+        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
+        parentNode.addChildren(index, fragment.childNodesAsArray());
+    }
+
+    /**
+     Wrap the supplied HTML around this node.
+     @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+     @return this node, for chaining.
+     */
+    public Node wrap(String html) {
+        Validate.notEmpty(html);
+
+        Element wrapBody = Parser.parseBodyFragmentRelaxed(html, baseUri).body();
+        Elements wrapChildren = wrapBody.children();
+        Element wrap = wrapChildren.first();
+        if (wrap == null) // nothing to wrap with; noop
+            return null;
+
+        Element deepest = getDeepChild(wrap);
+        parentNode.replaceChild(this, wrap);
+        deepest.addChildren(this);
+
+        // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
+        if (wrapChildren.size() > 1) {
+            for (int i = 1; i < wrapChildren.size(); i++) { // skip first
+                Element remainder = wrapChildren.get(i);
+                remainder.parentNode.removeChild(remainder);
+                wrap.appendChild(remainder);
+            }
+        }
+        return this;
+    }
+
+    private Element getDeepChild(Element el) {
+        List<Element> children = el.children();
+        if (children.size() > 0)
+            return getDeepChild(children.get(0));
+        else
+            return el;
     }
     
     /**
