@@ -46,7 +46,7 @@ public abstract class Node implements Cloneable {
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
      */
     protected Node() {
-        childNodes = Collections.EMPTY_LIST;
+        childNodes = Collections.emptyList();
         attributes = null;
     }
 
