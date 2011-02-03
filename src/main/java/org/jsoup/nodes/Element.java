@@ -22,7 +22,7 @@ import java.util.regex.PatternSyntaxException;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Element extends Node {
-    private final Tag tag;
+    private Tag tag;
     private Set<String> classNames;
     
     /**
@@ -65,6 +65,19 @@ public class Element extends Node {
      */
     public String tagName() {
         return tag.getName();
+    }
+
+    /**
+     * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @return this element, for chaining
+     */
+    public Element tagName(String tagName) {
+        Validate.notEmpty(tagName, "Tag name must not be empty.");
+        tag = Tag.valueOf(tagName);
+        return this;
     }
 
     /**
