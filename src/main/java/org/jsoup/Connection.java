@@ -65,6 +65,13 @@ public interface Connection {
     public Connection referrer(String referrer);
 
     /**
+     * Configures the connection to (not) follow server redirects. By default this is <b>true</b>.
+     * @param followRedirects true if server redirects should be followed.
+     * @return this Connection, for chaining
+     */
+    public Connection followRedirects(boolean followRedirects);
+
+    /**
      * Set the request method to use, GET or POST. Default is GET.
      * @param method HTTP request method
      * @return this Connection, for chaining
@@ -289,6 +296,20 @@ public interface Connection {
          * @return this Request, for chaining
          */
         public Request timeout(int millis);
+
+        /**
+         * Get the current followRedirects configuration.
+         * @return true if followRedirects is enabled.
+         */
+        public boolean followRedirects();
+
+        /**
+         * Configures the request to (not) follow server redirects. By default this is <b>true</b>.
+         *
+         * @param followRedirects true if server redirects should be followed.
+         * @return this Connection, for chaining
+         */
+        public Request followRedirects(boolean followRedirects);
 
         /**
          * Add a data parameter to the request
