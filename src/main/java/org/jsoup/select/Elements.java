@@ -28,8 +28,6 @@ public class Elements implements List<Element>, Cloneable {
         this(Arrays.asList(elements));
     }
     
-    
-    
     @Override
 	public Elements clone() {
     	List<Element> elements = new ArrayList<Element>();
@@ -233,6 +231,20 @@ public class Elements implements List<Element>, Cloneable {
      */
     public String toString() {
         return outerHtml();
+    }
+
+    /**
+     * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
+     * {@code doc.select("i").tagName("em");}
+     * @param tagName the new tag name
+     * @return this, for chaining
+     * @see Element#tagName(String)
+     */
+    public Elements tagName(String tagName) {
+        for (Element element : contents) {
+            element.tagName(tagName);
+        }
+        return this;
     }
     
     /**

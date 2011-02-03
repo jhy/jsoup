@@ -442,5 +442,13 @@ public class ElementTest {
         assertEquals("<div><p>One</p><p><span>Two</span></p></div><p><span>Two</span><span>Three</span></p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void testTagNameSet() {
+        Document doc = Jsoup.parse("<div><i>Hello</i>");
+        doc.select("i").first().tagName("em");
+        assertEquals(0, doc.select("i").size());
+        assertEquals(1, doc.select("em").size());
+        assertEquals("<em>Hello</em>", doc.select("div").first().html());
+    }
+
 
 }
