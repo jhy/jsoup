@@ -249,7 +249,7 @@ public class Tag {
         // TODO[must]: incorporate html 5 as appropriate
 
         // document
-        createBlock("HTML").setAncestor(new String[0]); // specific includes not impl
+        createBlock("HTML").setAncestor(); // specific includes not impl
         createBlock("HEAD").setParent("HTML").setLimitChildren();
         createBlock("BODY").setAncestor("HTML"); // specific includes not impl
         createBlock("FRAMESET").setAncestor("HTML");
