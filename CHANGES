@@ -1,6 +1,41 @@
 jsoup changelog
 
-*** Release 1.4.1 [2010-11-23]
+*** Release 1.5.1 [2011-02-19]
+
+ * Integrated new single-pass selector evaluators, contributed by knz (Anton Kazennikov). This significantly speeds up
+   the execution of combined selector queries.
+
+ * Implemented workaround to fix Scala support. Contributed by bbeck (Brandon Beck).
+
+ * Added ability to change an element's tag with Element.tagName(String), and to change many at once
+   with Elements.tagName(String).
+
+ * Added Node.wrap(html), Node.before(html), and Node.after(html), to allow HTML to be easily added to all nodes. These
+   functions were previously supported on Elements only.
+
+ * Added TextNode.splitText(index), which allows a text node to be split into two nodes at a specified index point.
+   This is convenient if you need to surround some text in an element.
+
+ * Updated Jsoup.Connection so that cookies set on a redirect response will be included on both the redirected request
+   and response.
+
+ * Infinite redirection loops in Jsoup.Connect are now prevented.
+
+ * Allow Jsoup.Connect to parse application/xml and application/xhtml+xml responses.
+
+ * Modified Jsoup.Connect to always follow relative links, regardless of the underlying HTTP sub-system.
+
+ * Defined U (underline) element as an inline tag.
+
+ * Force strict entity matching (must be &xxx; and not &xxx) in element attributes.
+
+ * Implemented clone method for Elements (contributed by knz).
+
+ * Fixed tokeniser optimisation when scanning for missing data element close tags.
+
+ * Fixed issue when using descendant regex attribute selectors. 
+
+  *** Release 1.4.1 [2010-11-23]
 
  * Added ability to load and parse HTML from an input stream.
 
