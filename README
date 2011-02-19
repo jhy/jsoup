@@ -1,3 +1,14 @@
 jsoup: Java HTML parser that makes sense of real-world HTML soup.
 
+jsoup is a Java library for working with real-world HTML. It provides a very convenient API
+for extracting and manipulating data, using the best of DOM, CSS, and jquery-like methods.
+
+* parse HTML from a URL, file, or string
+* find and extract data, using DOM traversal or CSS selectors
+* manipulate the HTML elements, attributes, and text
+* clean user-submitted content against a safe white-list, to prevent XSS
+
+jsoup is designed to deal with all varieties of HTML found in the wild; from pristine and validating,
+to invalid tag-soup; jsoup will create a sensible parse tree.
+
 See http://jsoup.org/ for downloads and documentation.
