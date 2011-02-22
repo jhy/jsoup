@@ -1,5 +1,11 @@
 jsoup changelog
 
+*** Release 1.5.2 [PENDING]
+ * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
+   were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
+
+ * Fixed issue where a content-tye specified in a meta tag may not be reliably detected, due to the above issue. 
+
 *** Release 1.5.1 [2011-02-19]
 
  * Integrated new single-pass selector evaluators, contributed by knz (Anton Kazennikov). This significantly speeds up
