@@ -152,6 +152,13 @@ public class ElementTest {
         assertEquals(0, none.size());
     }
 
+    @Test public void testGetElementsWithAttributeDash() {
+        Document doc = Jsoup.parse("<meta http-equiv=content-type value=utf8 id=1> <meta name=foo content=bar id=2> <div http-equiv=content-type value=utf8 id=3>");
+        Elements meta = doc.select("meta[http-equiv=content-type], meta[charset]");
+        assertEquals(1, meta.size());
+        assertEquals("1", meta.first().id());
+    }
+
     @Test public void testGetElementsWithAttributeValue() {
         Document doc = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>");
         List<Element> els = doc.getElementsByAttributeValue("style", "bold");
