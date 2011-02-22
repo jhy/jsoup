@@ -399,4 +399,16 @@ public class ParserTest {
         Document doc = Jsoup.parse("<html><head><noscript><img src='foo'></noscript></head><body><p>Hello</p></body></html>");
         assertEquals("<html><head><noscript><img src=\"foo\" /></noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test public void testAFlowContents() {
+        // html5 has <a> as either phrasing or block
+        Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
+        assertEquals("<a>Hello <div>there</div> <span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+     @Test public void testFontFlowContents() {
+        // html5 has no definition of <font>; often used as flow
+        Document doc = Jsoup.parse("<font>Hello <div>there</div> <span>now</span></font>");
+        assertEquals("<font>Hello <div>there</div> <span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }
