@@ -314,7 +314,11 @@ public class Whitelist {
         return false;
     }
 
-    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
+    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {        
+        if (isValidAnchor(attr.getValue())) {
+            return true;
+        }
+        
         // resolve relative urls to abs, and update the attribute so output html has abs.
         // rels without a baseuri get removed
         String value = el.absUrl(attr.getKey());
@@ -327,6 +331,10 @@ public class Whitelist {
             }
         }
         return false;
+    }
+
+    private boolean isValidAnchor(String value) {
+        return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 
     Attributes getEnforcedAttributes(String tagName) {

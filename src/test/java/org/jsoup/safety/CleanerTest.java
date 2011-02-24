@@ -75,6 +75,18 @@ public class CleanerTest {
         assertEquals("<a>XSS</a>", cleanHtml);
     }
 
+    @Test public void testAllowsValidAnchors() {
+        String h = "<A HREF=\"#myanchor\">anchored</A>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<a href=\"#myanchor\">anchored</a>", cleanHtml);
+    }
+    
+    @Test public void testDoesNotAllowInvalidAnchors() {
+        String h = "<A HREF=\"#my anchor\">unanchored</A>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
+        assertEquals("<a>unanchored</a>", cleanHtml);
+    }
+
     @Test public void testDropsUnknownTags() {
         String h = "<p><custom foo=true>Test</custom></p>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
