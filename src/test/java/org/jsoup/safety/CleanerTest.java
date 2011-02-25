@@ -119,4 +119,10 @@ public class CleanerTest {
         String clean = Jsoup.clean(html, Whitelist.basic());
         assertEquals("<a rel=\"nofollow\">Link</a>", clean);
     }
+    
+    @Test public void allowsRelativeLinksIfConfiguredThusly() {
+        String html = "<a href='/foo'>Link</a>";
+        String clean = Jsoup.clean(html, Whitelist.basic().setUseAbsoluteURLs(false));
+        assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a>", clean);
+    }
 }
