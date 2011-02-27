@@ -726,8 +726,7 @@ public class Element extends Node {
     }
 
     private void text(StringBuilder accum) {
-        if (tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
-            accum.append(" ");
+        appendWhitespaceIfBr(this, accum);
         
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
@@ -763,6 +762,8 @@ public class Element extends Node {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
+            } else if (child instanceof Element) {
+                appendWhitespaceIfBr((Element) child, accum);
             }
         }
     }
@@ -776,6 +777,11 @@ public class Element extends Node {
                 text = TextNode.stripLeadingWhitespace(text);
         }
         accum.append(text);
+    }
+
+    private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
+        if (element.tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
+            accum.append(" ");
     }
 
     boolean preserveWhitespace() {
