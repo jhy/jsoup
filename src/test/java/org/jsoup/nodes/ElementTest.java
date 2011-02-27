@@ -237,7 +237,14 @@ public class ElementTest {
     @Test public void testEmptyElementFormatHtml() {
         // don't put newlines into empty blocks
         Document doc = Jsoup.parse("<section><div></div></section>");
-        assertEquals("\n<section>\n <div></div>\n</section>", doc.select("section").first().outerHtml());
+        assertEquals("<section>\n <div></div>\n</section>", doc.select("section").first().outerHtml());
+    }
+
+    @Test public void testContainerOutput() {
+        Document doc = Jsoup.parse("<title>Hello there</title> <div><p>Hello</p><p>there</p></div> <div>Another</div>");
+        assertEquals("<title>Hello there</title>", doc.select("title").first().outerHtml());
+        assertEquals("<div>\n <p>Hello</p>\n <p>there</p>\n</div>", doc.select("div").first().outerHtml());
+        assertEquals("<div>\n <p>Hello</p>\n <p>there</p>\n</div> \n<div>\n Another\n</div>", doc.select("body").first().html());
     }
 
     @Test public void testSetText() {
@@ -431,7 +438,7 @@ public class ElementTest {
     @Test public void parentlessToString() {
         Document doc = Jsoup.parse("<img src='foo'>");
         Element img = doc.select("img").first();
-        assertEquals("\n<img src=\"foo\" />", img.toString());
+        assertEquals("<img src=\"foo\" />", img.toString());
 
         img.remove(); // lost its parent
         assertEquals("<img src=\"foo\" />", img.toString());

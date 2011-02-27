@@ -112,7 +112,7 @@ public class ElementsTest {
         els.val("three");
         assertEquals("three", els.first().val());
         assertEquals("three", els.last().val());
-        assertEquals("\n<textarea>three</textarea>", els.last().outerHtml());
+        assertEquals("<textarea>three</textarea>", els.last().outerHtml());
     }
     
     @Test public void before() {
