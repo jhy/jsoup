@@ -97,6 +97,7 @@ public class ElementTest {
     @Test public void testBrHasSpace() {
         Document doc = Jsoup.parse("<p>Hello<br>there</p>");
         assertEquals("Hello there", doc.text());
+        assertEquals("Hello there", doc.select("p").first().ownText());
 
         doc = Jsoup.parse("<p>Hello <br> there</p>");
         assertEquals("Hello there", doc.text());
