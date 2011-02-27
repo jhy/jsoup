@@ -473,5 +473,12 @@ public class ElementTest {
         assertEquals("<em>Hello</em>", doc.select("div").first().html());
     }
 
+    @Test public void testHtmlContainsOuter() {
+        Document doc = Jsoup.parse("<title>Check</title> <div>Hello there</div>");
+        doc.outputSettings().indentAmount(0);
+        assertTrue(doc.html().contains(doc.select("title").outerHtml()));
+        assertTrue(doc.html().contains(doc.select("div").outerHtml()));
+    }
+
 
 }
