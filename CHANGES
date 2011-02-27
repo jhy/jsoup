@@ -1,12 +1,12 @@
 jsoup changelog
 
-*** Release 1.5.2 [PENDING]
+*** Release 1.5.2 [2011-02-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
 
- * Fixed issue where a content-tye specified in a meta tag may not be reliably detected, due to the above issue.
+ * Fixed issue where a content-type specified in a meta tag may not be reliably detected, due to the above issue.
 
- * Updated Element.text() method to ensure <br> tags output as whitespace.
+ * Updated Element.text() and Element.ownText() methods to ensure <br> tags output as whitespace.
 
  * Tweaked Element.outerHtml() method to not generate initial newline on first output element.
 
