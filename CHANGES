@@ -4,7 +4,9 @@ jsoup changelog
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
 
- * Fixed issue where a content-tye specified in a meta tag may not be reliably detected, due to the above issue. 
+ * Fixed issue where a content-tye specified in a meta tag may not be reliably detected, due to the above issue.
+
+ * Updated Element.text() method to ensure <br> tags output as whitespace.
 
 *** Release 1.5.1 [2011-02-19]
 

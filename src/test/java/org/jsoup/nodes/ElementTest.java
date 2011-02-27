@@ -94,6 +94,14 @@ public class ElementTest {
         assertEquals("<pre><code>code\n\ncode</code></pre>", doc.body().html());
     }
 
+    @Test public void testBrHasSpace() {
+        Document doc = Jsoup.parse("<p>Hello<br>there</p>");
+        assertEquals("Hello there", doc.text());
+
+        doc = Jsoup.parse("<p>Hello <br> there</p>");
+        assertEquals("Hello there", doc.text());
+    }
+
     @Test public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
         Element p = doc.getElementById("1");

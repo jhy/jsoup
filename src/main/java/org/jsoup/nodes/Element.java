@@ -726,6 +726,9 @@ public class Element extends Node {
     }
 
     private void text(StringBuilder accum) {
+        if (tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
+            accum.append(" ");
+        
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
