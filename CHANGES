@@ -8,7 +8,9 @@ jsoup changelog
 
  * Updated Element.text() method to ensure <br> tags output as whitespace.
 
-*** Release 1.5.1 [2011-02-19]
+ * Tweaked Element.outerHtml() method to not generate initial newline on first output element.
+
+ *** Release 1.5.1 [2011-02-19]
 
  * Integrated new single-pass selector evaluators, contributed by knz (Anton Kazennikov). This significantly speeds up
    the execution of combined selector queries.

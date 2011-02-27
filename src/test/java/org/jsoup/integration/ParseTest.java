@@ -101,10 +101,10 @@ public class ParseTest {
 
         // check auto-detect from meta
         assertEquals("GB2312", doc.outputSettings().charset().displayName());
-        assertEquals("\n<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
+        assertEquals("<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
 
         doc.outputSettings().charset("ascii");
-        assertEquals("\n<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>",
+        assertEquals("<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>",
             doc.select("title").outerHtml());
     }
 
