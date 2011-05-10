@@ -55,8 +55,8 @@ public class DocumentTest {
     }
 
     @Test public void testNormalisesStructure() {
-        Document doc = Jsoup.parse("<html><head><script>one</script><noscript><p>two</p></noscript></head><body><p>three</p></body></html>");
-        assertEquals("<html><head><script>one</script><noscript></noscript></head><body><p>two</p><p>three</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        Document doc = Jsoup.parse("<html><head><script>one</script><noscript><p>two</p></noscript></head><body><p>three</p></body><p>four</p></html>");
+        assertEquals("<html><head><script>one</script><noscript></noscript></head><body><p>two</p><p>three</p><p>four</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void testClone() {

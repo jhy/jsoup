@@ -3,7 +3,6 @@ package org.jsoup.nodes;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -235,7 +234,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Insert the specified HTML into the DOM before this node (i.e. as a preceeding sibling).
-     * @param html HTML to add before this element
+     * @param html HTML to add before this node
      * @return this node, for chaining
      * @see #after(String)
      */
@@ -245,8 +244,22 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * @param node to add before this node
+     * @return this node, for chaining
+     * @see #after(Node)
+     */
+    public Node before(Node node) {
+        Validate.notNull(node);
+        Validate.notNull(parentNode);
+
+        parentNode.addChildren(siblingIndex(), node);
+        return this;
+    }
+
+    /**
      * Insert the specified HTML into the DOM after this node (i.e. as a following sibling).
-     * @param html HTML to add after this element
+     * @param html HTML to add after this node
      * @return this node, for chaining
      * @see #before(String)
      */
@@ -255,12 +268,27 @@ public abstract class Node implements Cloneable {
         return this;
     }
 
+    /**
+     * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+     * @param node to add after this node
+     * @return this node, for chaining
+     * @see #before(Node)
+     */
+    public Node after(Node node) {
+        Validate.notNull(node);
+        Validate.notNull(parentNode);
+
+        parentNode.addChildren(siblingIndex()+1, node);
+        return this;
+    }
+
     private void addSiblingHtml(int index, String html) {
         Validate.notNull(html);
         Validate.notNull(parentNode);
 
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        parentNode.addChildren(index, fragment.childNodesAsArray());
+        Element context = parent() instanceof Element ? (Element) parent() : null;        
+        List<Node> nodes = Parser.parseFragment(html, context, baseUri());
+        parentNode.addChildren(index, nodes.toArray(new Node[nodes.size()]));
     }
 
     /**
@@ -271,20 +299,21 @@ public abstract class Node implements Cloneable {
     public Node wrap(String html) {
         Validate.notEmpty(html);
 
-        Element wrapBody = Parser.parseBodyFragmentRelaxed(html, baseUri).body();
-        Elements wrapChildren = wrapBody.children();
-        Element wrap = wrapChildren.first();
-        if (wrap == null) // nothing to wrap with; noop
+        Element context = parent() instanceof Element ? (Element) parent() : null;
+        List<Node> wrapChildren = Parser.parseFragment(html, context, baseUri());
+        Node wrapNode = wrapChildren.get(0);
+        if (wrapNode == null || !(wrapNode instanceof Element)) // nothing to wrap with; noop
             return null;
 
+        Element wrap = (Element) wrapNode;
         Element deepest = getDeepChild(wrap);
         parentNode.replaceChild(this, wrap);
         deepest.addChildren(this);
 
         // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
-        if (wrapChildren.size() > 1) {
-            for (int i = 1; i < wrapChildren.size(); i++) { // skip first
-                Element remainder = wrapChildren.get(i);
+        if (wrapChildren.size() > 0) {
+            for (int i = 0; i < wrapChildren.size(); i++) {
+                Node remainder = wrapChildren.get(i);
                 remainder.parentNode.removeChild(remainder);
                 wrap.appendChild(remainder);
             }

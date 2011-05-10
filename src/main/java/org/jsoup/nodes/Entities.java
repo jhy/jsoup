@@ -38,6 +38,26 @@ public class Entities {
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
     private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
 
+    private Entities() {}
+
+    /**
+     * Check if the input is a known named entity
+     * @param name the possible entity name (e.g. "lt" or "amp"
+     * @return true if a known named entity
+     */
+    public static boolean isNamedEntity(String name) {
+        return full.containsKey(name);
+    }
+
+    /**
+     * Get the Character value of the named entity
+     * @param name named entity (e.g. "lt" or "amp")
+     * @return the Character value of the named entity (e.g. '<' or '&')
+     */
+    public static Character getCharacterByName(String name) {
+        return full.get(name);
+    }
+    
     static String escape(String string, Document.OutputSettings out) {
         return escape(string, out.encoder(), out.escapeMode());
     }
@@ -70,6 +90,7 @@ public class Entities {
      * @return
      */
     static String unescape(String string, boolean strict) {
+        // todo: change this method to use Tokeniser.consumeCharacterReference
         if (!string.contains("&"))
             return string;
 

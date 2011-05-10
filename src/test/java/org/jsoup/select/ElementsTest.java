@@ -104,7 +104,7 @@ public class ElementsTest {
     
     @Test public void val() {
         Document doc = Jsoup.parse("<input value='one' /><textarea>two</textarea>");
-        Elements els = doc.select("form > *");
+        Elements els = doc.select("input, textarea");
         assertEquals(2, els.size());
         assertEquals("one", els.val());
         assertEquals("two", els.last().val());

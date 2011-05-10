@@ -214,7 +214,7 @@ public class Element extends Node {
     }
     
     /**
-     * Add a node to the last child of this element.
+     * Add a node child node to this element.
      * 
      * @param child node to add. Must not already have a parent.
      * @return this element, so that you can add more child nodes or elements.
@@ -297,9 +297,9 @@ public class Element extends Node {
      */
     public Element append(String html) {
         Validate.notNull(html);
-        
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        addChildren(fragment.childNodesAsArray());
+
+        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        addChildren(nodes.toArray(new Node[nodes.size()]));
         return this;
     }
     
@@ -312,8 +312,8 @@ public class Element extends Node {
     public Element prepend(String html) {
         Validate.notNull(html);
         
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        addChildren(0, fragment.childNodesAsArray());
+        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        addChildren(0, nodes.toArray(new Node[nodes.size()]));
         return this;
     }
 
@@ -330,6 +330,17 @@ public class Element extends Node {
     }
 
     /**
+     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * @param node to add before this element
+     * @return this Element, for chaining
+     * @see #after(Node)
+     */
+    @Override
+    public Element before(Node node) {
+        return (Element) super.before(node);
+    }
+
+    /**
      * Insert the specified HTML into the DOM after this element (i.e. as a following sibling).
      *
      * @param html HTML to add after this element
@@ -339,6 +350,17 @@ public class Element extends Node {
     @Override
     public Element after(String html) {
         return (Element) super.after(html);
+    }
+
+    /**
+     * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+     * @param node to add after this element
+     * @return this element, for chaining
+     * @see #before(Node)
+     */
+    @Override
+    public Element after(Node node) {
+        return (Element) super.after(node);
     }
 
     /**
@@ -848,7 +870,7 @@ public class Element extends Node {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attributes.hasKey("class") ? attributes.get("class") : "";
+        return attr("class");
     }
 
     /**
@@ -1020,19 +1042,12 @@ public class Element extends Node {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Element)) return false;
-        if (!super.equals(o)) return false;
-
-        Element element = (Element) o;
-
-        if (tag != null ? !tag.equals(element.tag) : element.tag != null) return false;
-
-        return true;
+        return this == o;
     }
 
     @Override
     public int hashCode() {
+        // todo: fixup, not very useful
         int result = super.hashCode();
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         return result;

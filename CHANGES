@@ -1,5 +1,13 @@
 jsoup changelog
 
+*** Release 1.6.0 [PENDING]
+ * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
+   http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.
+
+ * When parsing files from disk, files are loaded via memory mapping, to increase parse speed.
+
+ * Reduced memory overhead and lowered garbage collector pressure with Attribute, Node and Entity model optimisations.
+
 *** Release 1.5.2 [2011-02-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
