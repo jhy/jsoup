@@ -46,6 +46,25 @@ public final class Validate {
     }
 
     /**
+     * Validates that the value is false
+     * @param val object to test
+     */
+    public static void isFalse(boolean val) {
+        if (val)
+            throw new IllegalArgumentException("Must be false");
+    }
+
+    /**
+     * Validates that the value is false
+     * @param val object to test
+     * @param msg message to output if validation fails
+     */
+    public static void isFalse(boolean val, String msg) {
+        if (val)
+            throw new IllegalArgumentException(msg);
+    }
+
+    /**
      * Validates that the array contains no null elements
      * @param objects the array to test
      */
@@ -81,5 +100,13 @@ public final class Validate {
     public static void notEmpty(String string, String msg) {
         if (string == null || string.length() == 0)
             throw new IllegalArgumentException(msg);
+    }
+
+    /**
+     Cause a failure.
+     @param msg message to output.
+     */
+    public static void fail(String msg) {
+        throw new IllegalArgumentException(msg);
     }
 }

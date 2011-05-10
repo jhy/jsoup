@@ -84,4 +84,28 @@ public class NodeTest {
         assertTrue(doc.ownerDocument() == doc);
         assertNull(doc.parent());
     }
+
+    @Test public void before() {
+        Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
+        Element newNode = new Element(Tag.valueOf("em"), "");
+        newNode.appendText("four");
+
+        doc.select("b").first().before(newNode);
+        assertEquals("<p>One <em>four</em><b>two</b> three</p>", doc.body().html());
+
+        doc.select("b").first().before("<i>five</i>");
+        assertEquals("<p>One <em>four</em><i>five</i><b>two</b> three</p>", doc.body().html());
+    }
+
+    @Test public void after() {
+        Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
+        Element newNode = new Element(Tag.valueOf("em"), "");
+        newNode.appendText("four");
+
+        doc.select("b").first().after(newNode);
+        assertEquals("<p>One <b>two</b><em>four</em> three</p>", doc.body().html());
+
+        doc.select("b").first().after("<i>five</i>");
+        assertEquals("<p>One <b>two</b><i>five</i><em>four</em> three</p>", doc.body().html());
+    }
 }

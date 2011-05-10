@@ -6,6 +6,8 @@ import org.jsoup.nodes.Element;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,10 +32,11 @@ public class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(File in, String charsetName, String baseUri) throws IOException {
-        InputStream inStream = null;
+        FileInputStream inStream = null;
         try {
             inStream = new FileInputStream(in);
-            return load(inStream, charsetName, baseUri);
+            MappedByteBuffer byteData = inStream.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, in.length());
+            return parseByteData(byteData, charsetName, baseUri);
         } finally {
             if (inStream != null)
                 inStream.close();

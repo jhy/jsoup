@@ -276,18 +276,18 @@ public class ElementTest {
 
     @Test public void testAppendRowToTable() {
         Document doc = Jsoup.parse("<table><tr><td>1</td></tr></table>");
-        Element table = doc.select("table").first();
+        Element table = doc.select("tbody").first();
         table.append("<tr><td>2</td></tr>");
 
-        assertEquals("<table><tr><td>1</td></tr><tr><td>2</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><td>1</td></tr><tr><td>2</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
         @Test public void testPrependRowToTable() {
         Document doc = Jsoup.parse("<table><tr><td>1</td></tr></table>");
-        Element table = doc.select("table").first();
+        Element table = doc.select("tbody").first();
         table.prepend("<tr><td>2</td></tr>");
 
-        assertEquals("<table><tr><td>2</td></tr><tr><td>1</td></tr></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><td>2</td></tr><tr><td>1</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
 
         // check sibling index (reindexChildren):
         Elements ps = doc.select("tr");

@@ -26,7 +26,7 @@ public class CleanerTest {
     }
 
     @Test public void basicBehaviourTest() {
-        String h = "<div><p><a href='javascript:sendAllMoney()'>Dodgy</a> <A HREF='HTTP://nice.com'>Nice</p><blockquote>Hello</blockquote>";
+        String h = "<div><p><a href='javascript:sendAllMoney()'>Dodgy</a> <A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
         String cleanHtml = Jsoup.clean(h, Whitelist.basic());
 
         assertEquals("<p><a rel=\"nofollow\">Dodgy</a> <a href=\"http://nice.com\" rel=\"nofollow\">Nice</a></p><blockquote>Hello</blockquote>",
@@ -40,7 +40,7 @@ public class CleanerTest {
     }
     
     @Test public void testRelaxed() {
-        String h = "<h1>Head</h1><td>One<td>Two</td>";
+        String h = "<h1>Head</h1><table><tr><td>One<td>Two</td></tr></table>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
     }
