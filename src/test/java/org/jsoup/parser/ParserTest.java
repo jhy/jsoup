@@ -521,4 +521,13 @@ public class ParserTest {
         Document doc = Jsoup.parse(h);
         assertEquals("<td>One</td>\n<td id=\"2\"></td>", doc.select("tr").first().html());
     }
+
+    @Test public void handlesSolidusInA() {
+        // test for bug #66
+        String h = "<a class=lp href=/lib/14160711/>link text</a>";
+        Document doc = Jsoup.parse(h);
+        Element a = doc.select("a").first();
+        assertEquals("link text", a.text());
+        assertEquals("/lib/14160711/", a.attr("href"));
+    }
 }
