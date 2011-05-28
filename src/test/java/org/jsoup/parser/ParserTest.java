@@ -530,4 +530,12 @@ public class ParserTest {
         assertEquals("link text", a.text());
         assertEquals("/lib/14160711/", a.attr("href"));
     }
+
+    @Test public void handlesSpanInTbody() {
+        // test for bug 64
+        String h = "<table><tbody><span class='1'><tr><td>One</td></tr><tr><td>Two</td></tr></span></tbody></table>";
+        Document doc = Jsoup.parse(h);
+        assertEquals(doc.select("span").first().children().size(), 0); // the span gets closed
+        assertEquals(doc.select("table").size(), 1); // only one table
+    }
 }
