@@ -36,7 +36,7 @@ public class NodeTest {
         Element a = doc.select("a").first();
         assertEquals("/foo", a.attr("href"));
         assertEquals("http://jsoup.org/foo", a.attr("abs:href"));
-        assertFalse(a.hasAttr("abs:href")); // only realised on the get method, not in has or iterator
+        assertTrue(a.hasAttr("abs:href"));
     }
 
     @Test public void handlesAbsOnImage() {
@@ -44,6 +44,29 @@ public class NodeTest {
         Element img = doc.select("img").first();
         assertEquals("http://jsoup.org/rez/osi_logo.png", img.attr("abs:src"));
         assertEquals(img.absUrl("src"), img.attr("abs:src"));
+    }
+
+    @Test public void handlesAbsPrefixOnHasAttr() {
+        // 1: no abs url; 2: has abs url
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='http://jsoup.org/'>Two</a>");
+        Element one = doc.select("#1").first();
+        Element two = doc.select("#2").first();
+
+        assertFalse(one.hasAttr("abs:href"));
+        assertTrue(one.hasAttr("href"));
+        assertEquals("", one.absUrl("href"));
+
+        assertTrue(two.hasAttr("abs:href"));
+        assertTrue(two.hasAttr("href"));
+        assertEquals("http://jsoup.org/", two.absUrl("href"));
+    }
+
+    @Test public void literalAbsPrefix() {
+        // if there is a literal attribute "abs:xxx", don't try and make absolute.
+        Document doc = Jsoup.parse("<a abs:href='odd'>One</a>");
+        Element el = doc.select("a").first();
+        assertTrue(el.hasAttr("abs:href"));
+        assertEquals("odd", el.attr("abs:href"));
     }
 
     /*

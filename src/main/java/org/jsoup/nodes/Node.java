@@ -70,7 +70,7 @@ public abstract class Node implements Cloneable {
     public String attr(String attributeKey) {
         Validate.notNull(attributeKey);
 
-        if (hasAttr(attributeKey))
+        if (attributes.hasKey(attributeKey))
             return attributes.get(attributeKey);
         else if (attributeKey.toLowerCase().startsWith("abs:"))
             return absUrl(attributeKey.substring("abs:".length()));
@@ -103,6 +103,12 @@ public abstract class Node implements Cloneable {
      */
     public boolean hasAttr(String attributeKey) {
         Validate.notNull(attributeKey);
+
+        if (attributeKey.toLowerCase().startsWith("abs:")) {
+            String key = attributeKey.substring("abs:".length());
+            if (attributes.hasKey(key) && !absUrl(key).equals(""))
+                return true;
+        }
         return attributes.hasKey(attributeKey);
     }
 

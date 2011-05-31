@@ -8,6 +8,9 @@ jsoup changelog
 
  * Reduced memory overhead and lowered garbage collector pressure with Attribute, Node and Entity model optimisations.
 
+ * Improved "abs:" absolute URL handling in Elements.attr("abs:href") and Node.hasAttr("abs:href").
+   <https://github.com/jhy/jsoup/issues/97>
+
 *** Release 1.5.2 [2011-02-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
