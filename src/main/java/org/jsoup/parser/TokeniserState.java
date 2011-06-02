@@ -244,7 +244,6 @@ enum TokeniserState {
             }
 
             char c = r.consume();
-            boolean handled = true;
             switch (c) {
                 case '\t':
                 case '\n':
@@ -253,13 +252,13 @@ enum TokeniserState {
                     if (t.isAppropriateEndTagToken())
                         t.transition(BeforeAttributeName);
                     else
-                        handled = false;
+                        anythingElse(t, r);
                     break;
                 case '/':
                     if (t.isAppropriateEndTagToken())
                         t.transition(SelfClosingStartTag);
                     else
-                        handled = false;
+                        anythingElse(t, r);
                     break;
                 case '>':
                     if (t.isAppropriateEndTagToken()) {
@@ -267,14 +266,16 @@ enum TokeniserState {
                         t.transition(Data);
                     }
                     else
-                        handled = false;
+                        anythingElse(t, r);
                     break;
+                default:
+                    anythingElse(t, r);
             }
-            if (!handled) {
-                t.emit("</" + t.dataBuffer.toString());
-                r.unconsume();
-                t.transition(Rcdata);
-            }
+        }
+
+        private void anythingElse(Tokeniser t, CharacterReader r) {
+            t.emit("</" + t.dataBuffer.toString());
+            t.transition(Rcdata);
         }
     },
     RawtextLessthanSign {

@@ -538,4 +538,14 @@ public class ParserTest {
         assertEquals(doc.select("span").first().children().size(), 0); // the span gets closed
         assertEquals(doc.select("table").size(), 1); // only one table
     }
+
+    @Test public void handlesUnclosedTitleAtEof() {
+        assertEquals("Data", Jsoup.parse("<title>Data").title());
+        assertEquals("Data<", Jsoup.parse("<title>Data<").title());
+        assertEquals("Data</", Jsoup.parse("<title>Data</").title());
+        assertEquals("Data</t", Jsoup.parse("<title>Data</t").title());
+        assertEquals("Data</ti", Jsoup.parse("<title>Data</ti").title());
+        assertEquals("Data", Jsoup.parse("<title>Data</title>").title());
+        assertEquals("Data", Jsoup.parse("<title>Data</title >").title());
+    }
 }
