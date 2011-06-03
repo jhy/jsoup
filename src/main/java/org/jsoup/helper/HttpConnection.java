@@ -35,8 +35,19 @@ public class HttpConnection implements Connection {
 
     private Connection.Request req;
     private Connection.Response res;
+    private boolean ignoreContentType = false;
+ 
+	public Connection throwExceptionOnHttpError(boolean throwExceptionOnHttpError) {
+		req.throwExceptionOnHttpError(throwExceptionOnHttpError);
+		return this;
+	}
+	
+	public Connection ignoreContentType(boolean ignoreContentType) {
+		this.ignoreContentType = ignoreContentType;
+		return this;
+	}
 
-    private HttpConnection() {
+	private HttpConnection() {
         req = new Request();
         res = new Response();
     }
@@ -133,6 +144,7 @@ public class HttpConnection implements Connection {
 
     public Connection.Response execute() throws IOException {
         res = Response.execute(req);
+        res.ignoreContentType(ignoreContentType);
         return res;
     }
 
@@ -271,8 +283,17 @@ public class HttpConnection implements Connection {
         private int timeoutMilliseconds;
         private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
+        private boolean throwExceptionOnHttpError = true;
 
-        private Request() {
+    	public boolean throwExceptionOnHttpError() {
+    		return throwExceptionOnHttpError;
+    	}
+    	
+    	public void throwExceptionOnHttpError(boolean throwExceptionOnHttpError) {
+    		this.throwExceptionOnHttpError = throwExceptionOnHttpError;
+    	}
+
+    	private Request() {
             timeoutMilliseconds = 3000;
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
@@ -319,6 +340,7 @@ public class HttpConnection implements Connection {
         private String contentType;
         private boolean executed = false;
         private int numRedirects = 0;
+        private boolean ignoreContentType = false;
 
         Response() {
             super();
@@ -333,6 +355,10 @@ public class HttpConnection implements Connection {
             }
         }
 
+        public void ignoreContentType(boolean ignoreContentType) {
+        	this.ignoreContentType = ignoreContentType;
+        }
+        
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -356,7 +382,7 @@ public class HttpConnection implements Connection {
             if (status != HttpURLConnection.HTTP_OK) {
                 if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
                     needsRedirect = true;
-                else
+                else if (req.throwExceptionOnHttpError())
                     throw new IOException(status + " error loading URL " + req.url().toString());
             }
             Response res = new Response(previousResponse);
@@ -370,10 +396,18 @@ public class HttpConnection implements Connection {
             }
 
             InputStream inStream = null;
+            InputStream rawStream = null;
             try {
-                inStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
-                        new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
-                        new BufferedInputStream(conn.getInputStream());
+                if (status == HttpURLConnection.HTTP_OK) {
+                	rawStream = conn.getInputStream();
+                } else {
+                	rawStream = conn.getErrorStream();
+                }
+
+            	inStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
+                        new BufferedInputStream(new GZIPInputStream(rawStream)) :
+                        new BufferedInputStream(rawStream);
+                
                 res.byteData = DataUtil.readToByteBuffer(inStream);
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             } finally {
@@ -402,7 +436,7 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            if (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml")))
+            if (!ignoreContentType && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, url.toString()));
             Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());

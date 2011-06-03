@@ -28,6 +28,20 @@ public interface Connection {
         GET, POST
     }
 
+	/**
+	 * Determine the behavior of this connection upon receiving a 4xx or 5xx error.
+	 * @param throwExceptionOnHttpError - Set to false if you would like the Response populated on 4xx and 5xx HTTP response codes.
+     * @return this Connection, for chaining
+	 */
+    public Connection throwExceptionOnHttpError(boolean throwExceptionOnHttpError);
+
+	/**
+	 * Ignore content-type header when parsing the response
+	 * @param ignoreContentType - Set to true if you would like the content type ignored on parsing the response into a Document.
+     * @return this Connection, for chaining
+	 */
+    public Connection ignoreContentType(boolean ignoreContentType);
+
     /**
      * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
      * @param url URL to connect to
@@ -285,6 +299,19 @@ public interface Connection {
     public interface Request extends Base<Request> {
 
         /**
+         * Will this request throw an IOException if a 4xx or 5xx error is returned 
+         * @return true if it will, false if it will populate the Response.  Default is true.
+         */
+        public boolean throwExceptionOnHttpError();
+        
+
+    	/**
+    	 * Determine the behavior of this request upon receiving a 4xx or 5xx error response.
+    	 * @param throwExceptionOnHttpError - Set to false if you would like the Response populated on 4xx and 5xx HTTP response codes.
+    	 */
+        public void throwExceptionOnHttpError(boolean throwExceptionOnHttpError);
+
+        /**
          * Get the request timeout, in milliseconds.
          * @return the timeout in milliseconds.
          */
@@ -330,8 +357,8 @@ public interface Connection {
      * Represents a HTTP response.
      */
     public interface Response extends Base<Response> {
-
-        /**
+    	
+    	/**
          * Get the status code of the response.
          * @return status code
          */
@@ -373,6 +400,8 @@ public interface Connection {
          * @return body bytes
          */
         public byte[] bodyAsBytes();
+        
+        public void ignoreContentType(boolean ignoreContentType);
     }
 
     /**
