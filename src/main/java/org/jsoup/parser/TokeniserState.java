@@ -215,6 +215,13 @@ enum TokeniserState {
             if (r.matches('/')) {
                 t.createTempBuffer();
                 t.advanceTransition(RCDATAEndTagOpen);
+            } else if (r.matchesLetter() && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
+                // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
+                // consuming to EOF; break out here
+                t.tagPending = new Token.EndTag(t.appropriateEndTagName());
+                t.emitTagPending();
+                r.unconsume(); // undo "<"
+                t.transition(Data);
             } else {
                 t.emit("<");
                 t.transition(Rcdata);
