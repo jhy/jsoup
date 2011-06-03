@@ -189,6 +189,13 @@ class CharacterReader {
         }
     }
 
+    boolean containsIgnoreCase(String seq) {
+        // used to check presence of </title>, </style>. only finds consistent case.
+        String loScan = seq.toLowerCase();
+        String hiScan = seq.toUpperCase();
+        return (input.indexOf(loScan, pos) > -1) || (input.indexOf(hiScan, pos) > -1);
+    }
+
     @Override
     public String toString() {
         return input.substring(pos);
