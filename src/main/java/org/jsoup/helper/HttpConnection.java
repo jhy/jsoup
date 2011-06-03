@@ -401,7 +401,6 @@ public class HttpConnection implements Connection {
             InputStream dataStream = null;
             try {
                 dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                //dataStream = status == HttpURLConnection.HTTP_OK ? conn.getInputStream() : conn.getErrorStream();
             	bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
                         new BufferedInputStream(new GZIPInputStream(dataStream)) :
                         new BufferedInputStream(dataStream);
