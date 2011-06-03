@@ -14,6 +14,10 @@ jsoup changelog
  * Fixed cookie handling issue in jsoup.Connect where empty cookies would cause a validation exception.
    <https://github.com/jhy/jsoup/issues/87>
 
+ * Added jsoup.Connect configuration options to allow HTTP errors to be ignored, and the content-type to be ignored.
+   Contributed by Jesse Piascik (piascikj)
+   <https://github.com/jhy/jsoup/pull/78>
+
 *** Release 1.5.2 [2011-02-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
