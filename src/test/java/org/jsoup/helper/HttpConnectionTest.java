@@ -5,8 +5,7 @@ import org.junit.Test;
 import org.jsoup.Connection;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Collection;
+import java.util.*;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -49,6 +48,36 @@ public class HttpConnectionTest {
         res.header("accept-encoding", "deflate");
         assertEquals("deflate", res.header("Accept-Encoding"));
         assertEquals("deflate", res.header("accept-Encoding"));
+    }
+
+    @Test public void ignoresEmptySetCookies() {
+        // prep http response header map
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        headers.put("Set-Cookie", Collections.<String>emptyList());
+        HttpConnection.Response res = new HttpConnection.Response();
+        res.processResponseHeaders(headers);
+        assertEquals(0, res.cookies().size());
+    }
+
+    @Test public void ignoresEmptyCookieNameAndVals() {
+        // prep http response header map
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        List<String> cookieStrings = new ArrayList<String>();
+        cookieStrings.add(null);
+        cookieStrings.add("");
+        cookieStrings.add("one");
+        cookieStrings.add("two=");
+        cookieStrings.add("three=;");
+        cookieStrings.add("four=data; Domain=.example.com; Path=/");
+
+        headers.put("Set-Cookie", cookieStrings);
+        HttpConnection.Response res = new HttpConnection.Response();
+        res.processResponseHeaders(headers);
+        assertEquals(4, res.cookies().size());
+        assertEquals("", res.cookie("one"));
+        assertEquals("", res.cookie("two"));
+        assertEquals("", res.cookie("three"));
+        assertEquals("data", res.cookie("four"));
     }
 
     @Test public void connectWithUrl() throws MalformedURLException {

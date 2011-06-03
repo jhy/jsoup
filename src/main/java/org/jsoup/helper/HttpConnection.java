@@ -453,28 +453,8 @@ public class HttpConnection implements Connection {
             statusMessage = conn.getResponseMessage();
             contentType = conn.getContentType();
 
-            // headers into map
             Map<String, List<String>> resHeaders = conn.getHeaderFields();
-            for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
-                String name = entry.getKey();
-                if (name == null)
-                    continue; // http/1.1 line
-
-                List<String> values = entry.getValue();
-
-                if (name.equalsIgnoreCase("Set-Cookie")) {
-                    for (String value : values) {
-                        TokenQueue cd = new TokenQueue(value);
-                        String cookieName = cd.chompTo("=").trim();
-                        String cookieVal = cd.consumeTo(";").trim();
-                        // ignores path, date, domain, secure et al. req'd?
-                        cookie(cookieName, cookieVal);
-                    }
-                } else { // only take the first instance of each header
-                    if (!values.isEmpty())
-                        header(name, values.get(0));
-                }
-            }
+            processResponseHeaders(resHeaders);
 
             // if from a redirect, map previous response cookies into this response
             if (previousResponse != null) {
@@ -484,7 +464,35 @@ public class HttpConnection implements Connection {
                 }
             }
         }
-        
+
+        void processResponseHeaders(Map<String, List<String>> resHeaders) {
+            for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+                String name = entry.getKey();
+                if (name == null)
+                    continue; // http/1.1 line
+
+                List<String> values = entry.getValue();
+                if (name.equalsIgnoreCase("Set-Cookie")) {
+                    for (String value : values) {
+                        if (value == null)
+                            continue;
+                        TokenQueue cd = new TokenQueue(value);
+                        String cookieName = cd.chompTo("=").trim();
+                        String cookieVal = cd.consumeTo(";").trim();
+                        if (cookieVal == null)
+                            cookieVal = "";
+                        // ignores path, date, domain, secure et al. req'd?
+                        // name not blank, value not null
+                        if (cookieName != null && cookieName.length() > 0)
+                            cookie(cookieName, cookieVal);
+                    }
+                } else { // only take the first instance of each header
+                    if (!values.isEmpty())
+                        header(name, values.get(0));
+                }
+            }
+        }
+
         private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
             OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
             boolean first = true;
