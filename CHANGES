@@ -22,6 +22,9 @@ jsoup changelog
    eating up to the end of the document.
    <https://github.com/jhy/jsoup/issues/82>
 
+ * Added OSGi bundle support to the jsoup package jar.
+   <https://github.com/jhy/jsoup/issues/98>
+
 *** Release 1.5.2 [2011-02-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
