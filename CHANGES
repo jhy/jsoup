@@ -21,6 +21,10 @@ jsoup changelog
  * Added Node.before(node) and Node.after(node), to allow existing nodes to be moved, or new nodes to be inserted, into
    precise DOM positions.
 
+ * Added Node.unwrap() and Elements.unwrap(), to remove a node but keep its contents. Useful for e.g. removing unwanted
+   formatting tags.
+   <https://github.com/jhy/jsoup/issues/100>
+
  * Now handles unclosed <title> tags in document by breaking out of the title at the next start tag, instead of
    eating up to the end of the document.
    <https://github.com/jhy/jsoup/issues/82>

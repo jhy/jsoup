@@ -131,4 +131,25 @@ public class NodeTest {
         doc.select("b").first().after("<i>five</i>");
         assertEquals("<p>One <b>two</b><i>five</i><em>four</em> three</p>", doc.body().html());
     }
+
+    @Test public void unwrap() {
+        Document doc = Jsoup.parse("<div>One <span>Two <b>Three</b></span> Four</div>");
+        Element span = doc.select("span").first();
+        Node twoText = span.childNode(0);
+        Node node = span.unwrap();
+
+        assertEquals("<div>One Two <b>Three</b> Four</div>", TextUtil.stripNewlines(doc.body().html()));
+        assertTrue(node instanceof TextNode);
+        assertEquals("Two ", ((TextNode) node).text());
+        assertEquals(node, twoText);
+        assertEquals(node.parent(), doc.select("div").first());
+    }
+
+    @Test public void unwrapNoChildren() {
+        Document doc = Jsoup.parse("<div>One <span></span> Two</div>");
+        Element span = doc.select("span").first();
+        Node node = span.unwrap();
+        assertEquals("<div>One  Two</div>", TextUtil.stripNewlines(doc.body().html()));
+        assertTrue(node == null);
+    }
 }

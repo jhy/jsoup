@@ -155,6 +155,13 @@ public class ElementsTest {
         assertEquals("<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>", doc.body().html());
     }
 
+    @Test public void unwrap() {
+        String h = "<div><font>One</font> <font><a href=\"/\">Two</a></font></div";
+        Document doc = Jsoup.parse(h);
+        doc.select("font").unwrap();
+        assertEquals("<div>One <a href=\"/\">Two</a></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void empty() {
         Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> <p>now!</p></div>");
         doc.outputSettings().prettyPrint(false);
