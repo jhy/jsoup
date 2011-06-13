@@ -10,7 +10,7 @@ jsoup changelog
 
  * When parsing files from disk, files are loaded via memory mapping, to increase parse speed.
 
- * Reduced memory overhead and lowered garbage collector pressure with Attribute, Node and Entity model optimisations.
+ * Reduced memory overhead and lowered garbage collector pressure with Attribute, Node and Element model optimisations.
 
  * Improved "abs:" absolute URL handling in Elements.attr("abs:href") and Node.hasAttr("abs:href").
    <https://github.com/jhy/jsoup/issues/97>
