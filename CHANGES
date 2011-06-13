@@ -18,6 +18,9 @@ jsoup changelog
    Contributed by Jesse Piascik (piascikj)
    <https://github.com/jhy/jsoup/pull/78>
 
+ * Added Node.before(node) and Node.after(node), to allow existing nodes to be moved, or new nodes to be inserted, into
+   precise DOM positions.
+
  * Now handles unclosed <title> tags in document by breaking out of the title at the next start tag, instead of
    eating up to the end of the document.
    <https://github.com/jhy/jsoup/issues/82>
