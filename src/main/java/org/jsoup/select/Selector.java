@@ -64,6 +64,7 @@ public class Selector {
         Validate.notNull(root);
 
         this.evaluator = QueryParser.parse(query);
+
         this.root = root;
     }
 
