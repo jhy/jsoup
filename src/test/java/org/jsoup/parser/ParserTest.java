@@ -566,4 +566,10 @@ public class ParserTest {
         assertEquals("One", two.title());
         assertEquals("<b>Two <p>Test</p></b>", two.body().html());
     }
+
+    @Test public void noImplicitFormForTextAreas() {
+        // old jsoup parser would create implicit forms for form children like <textarea>, but no more
+        Document doc = Jsoup.parse("<textarea>One</textarea>");
+        assertEquals("<textarea>One</textarea>", doc.body().html());
+    }
 }
