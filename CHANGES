@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.6.0 [PENDING]
+*** Release 1.6.0 [2011-Jun-13]
  * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
    http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.
 
