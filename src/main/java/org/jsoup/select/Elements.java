@@ -7,7 +7,9 @@ import org.jsoup.nodes.Node;
 import java.util.*;
 
 /**
- A list of {@link Element Elements}, with methods that act on every element in the list
+ A list of {@link Element Elements}, with methods that act on every element in the list.
+ <p/>
+ To get an Elements object, use the {@link Element#select(String)} method.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Elements implements List<Element>, Cloneable {
