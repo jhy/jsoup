@@ -327,6 +327,30 @@ public abstract class Node implements Cloneable {
         return this;
     }
 
+    /**
+     * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
+     * the node but keeping its children.
+     * <p/>
+     * For example, with the input html:<br/>
+     * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
+     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
+     * {@code <div>One Two <b>Three</b></div>}<br/>
+     * and the {@code "Two "} {@link TextNode} being returned.
+     * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
+     * @see #remove()
+     * @see #wrap(String)
+     */
+    public Node unwrap() {
+        Validate.notNull(parentNode);
+
+        int index = siblingIndex;
+        Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
+        parentNode.addChildren(index, this.childNodesAsArray());
+        this.remove();
+
+        return firstChild;
+    }
+
     private Element getDeepChild(Element el) {
         List<Element> children = el.children();
         if (children.size() > 0)

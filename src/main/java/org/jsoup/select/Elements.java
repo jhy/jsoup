@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 import java.util.*;
 
@@ -325,6 +326,26 @@ public class Elements implements List<Element>, Cloneable {
         Validate.notEmpty(html);
         for (Element element : contents) {
             element.wrap(html);
+        }
+        return this;
+    }
+
+    /**
+     * Removes the matched elements from the DOM, and moves their children up into their parents. This has the effect of
+     * dropping the elements but keeping their children.
+     * <p/>
+     * This is useful for e.g removing unwanted formatting elements but keeping their contents.
+     * <p/>
+     * E.g. with HTML: {@code <div><font>One</font> <font><a href="/">Two</a></font></div>}<br/>
+     * {@code doc.select("font").unwrap();}<br/>
+     * HTML = {@code <div>One <a href="/">Two</a></div>}
+     *
+     * @return this (for chaining)
+     * @see Node#unwrap
+     */
+    public Elements unwrap() {
+        for (Element element : contents) {
+            element.unwrap();
         }
         return this;
     }
