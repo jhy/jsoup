@@ -1,8 +1,10 @@
 package org.jsoup.parser;
 
 /**
+ * A Parse Error records an error in the input HTML that occurs in either the tokenisation or the tree building phase.
  */
-public class ParseError {
+// todo: currently not ready for public consumption. revisit api, and exposure methods
+class ParseError {
     private String errorMsg;
     private int pos;
     private char c;
@@ -10,36 +12,36 @@ public class ParseError {
     private TreeBuilderState treeBuilderState;
     private Token token;
 
-    public ParseError(String errorMsg, char c, TokeniserState tokeniserState, int pos) {
+    ParseError(String errorMsg, char c, TokeniserState tokeniserState, int pos) {
         this.errorMsg = errorMsg;
         this.c = c;
         this.tokeniserState = tokeniserState;
         this.pos = pos;
     }
 
-    public ParseError(String errorMsg, TokeniserState tokeniserState, int pos) {
+    ParseError(String errorMsg, TokeniserState tokeniserState, int pos) {
         this.errorMsg = errorMsg;
         this.tokeniserState = tokeniserState;
         this.pos = pos;
     }
 
-    public ParseError(String errorMsg, int pos) {
+    ParseError(String errorMsg, int pos) {
         this.errorMsg = errorMsg;
         this.pos = pos;
     }
 
-    public ParseError(String errorMsg, TreeBuilderState treeBuilderState, Token token, int pos) {
+    ParseError(String errorMsg, TreeBuilderState treeBuilderState, Token token, int pos) {
         this.errorMsg = errorMsg;
         this.treeBuilderState = treeBuilderState;
         this.token = token;
         this.pos = pos;
     }
 
-    public String getErrorMsg() {
+    String getErrorMsg() {
         return errorMsg;
     }
 
-    public int getPos() {
+    int getPos() {
         return pos;
     }
 }

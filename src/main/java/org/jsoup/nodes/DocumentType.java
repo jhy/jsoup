@@ -8,8 +8,13 @@ import org.jsoup.helper.StringUtil;
 public class DocumentType extends Node {
     // todo: quirk mode from publicId and systemId
 
-    private DocumentType() {}
-
+    /**
+     * Create a new doctype element.
+     * @param name the doctype's name
+     * @param publicId the doctype's public ID
+     * @param systemId the doctype's system ID
+     * @param baseUri the doctype's base URI
+     */
     public DocumentType(String name, String publicId, String systemId, String baseUri) {
         super(baseUri);
 

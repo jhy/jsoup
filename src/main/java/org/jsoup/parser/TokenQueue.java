@@ -71,8 +71,8 @@ public class TokenQueue {
 
     /**
      * Case sensitive match test.
-     * @param seq
-     * @return
+     * @param seq string to case sensitively check for
+     * @return true if matched, false if not
      */
     public boolean matchesCS(String seq) {
         return queue.startsWith(seq, pos);
@@ -81,8 +81,8 @@ public class TokenQueue {
 
     /**
      Tests if the next characters match any of the sequences. Case insensitive.
-     @param seq
-     @return
+     @param seq list of strings to case insensitively check for
+     @return true of any matched, false if none did
      */
     public boolean matchesAny(String... seq) {
         for (String s : seq) {
