@@ -1,16 +1,15 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
+ * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
  */
-public enum TreeBuilderState {
+enum TreeBuilderState {
     Initial {
         boolean process(Token t, TreeBuilder tb) {
             if (isWhitespace(t)) {

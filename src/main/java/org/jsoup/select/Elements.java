@@ -415,7 +415,7 @@ public class Elements implements List<Element>, Cloneable {
 
     /**
      * Get all of the parents and ancestor elements of the matched elements.
-     * @return
+     * @return all of the parents and ancestor elements of the matched elements
      */
     public Elements parents() {
         HashSet<Element> combo = new LinkedHashSet<Element>();
