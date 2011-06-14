@@ -158,10 +158,10 @@ public class ParserTest {
         assertEquals("font-family: bold", tels.get(0).data());
         assertEquals("", tels.get(0).text());
 
-        String s = "<p>Hello</p><script>Nope</script><p>There</p>";
+        String s = "<p>Hello</p><script>obj.insert('<a rel=\"none\" />');\ni++;</script><p>There</p>";
         Document doc = Jsoup.parse(s);
         assertEquals("Hello There", doc.text());
-        assertEquals("Nope", doc.data());
+        assertEquals("obj.insert('<a rel=\"none\" />');\ni++;", doc.data());
     }
 
     @Test public void handlesTextAfterData() {

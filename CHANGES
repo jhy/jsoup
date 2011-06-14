@@ -4,6 +4,10 @@ jsoup changelog
  * Fixed Java 1.5 compatibility
    <https://github.com/jhy/jsoup/issues/103>
 
+ * Fixed an issue when parsing <script> tags in body where the tokeniser wouldn't switch to the InScript state, which
+   meant that data wasn't parsed correctly.
+   <https://github.com/jhy/jsoup/issues/104>
+
 *** Release 1.6.0 [2011-Jun-13]
  * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
    http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.

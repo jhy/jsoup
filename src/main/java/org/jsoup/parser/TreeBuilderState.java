@@ -280,7 +280,7 @@ enum TreeBuilderState {
                             if (!html.hasAttr(attribute.getKey()))
                                 html.attributes().put(attribute);
                         }
-                    } else if (StringUtil.in(name, "base", "basefont", "bgsound", "command", "link", "meta", "noframes", "style", "title")) {
+                    } else if (StringUtil.in(name, "base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "title")) {
                         return tb.process(t, InHead);
                     } else if (name.equals("body")) {
                         tb.error(this);
