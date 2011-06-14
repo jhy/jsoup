@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-
 /**
  * Provides a descending iterator and other 1.6 methods to allow support on the 1.5 JRE.
  */
@@ -57,14 +56,25 @@ public class DescendableLinkedList<E> extends LinkedList<E> {
             iter = (ListIterator<E>) listIterator(index);
         }
 
+        /**
+         * Check if there is another element on the list.
+         * @return if another element
+         */
         public boolean hasNext() {
             return iter.hasPrevious();
         }
 
+        /**
+         * Get the next element.
+         * @return the next element.
+         */
         public E next() {
             return iter.previous();
         }
 
+        /**
+         * Remove the current element.
+         */
         public void remove() {
             iter.remove();
         }
