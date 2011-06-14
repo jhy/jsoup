@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
@@ -19,14 +20,14 @@ class TreeBuilder {
     private TreeBuilderState state; // the current state
     private TreeBuilderState originalState; // original / marked state
     private Document doc; // current doc we are building into
-    private LinkedList<Element> stack; // the stack of open elements
+    private DescendableLinkedList<Element> stack; // the stack of open elements
 
     private String baseUri; // current base uri, for creating new elements
     private Token currentToken; // currentToken is used only for error tracking.
     private Element headElement; // the current head element
     private Element formElement; // the current form element
     private Element contextElement; // fragment parse context -- could be null even if fragment parsing
-    private LinkedList<Element> formattingElements = new LinkedList<Element>(); // active (open) formatting elements
+    private DescendableLinkedList<Element> formattingElements = new DescendableLinkedList<Element>(); // active (open) formatting elements
     private List<Token.Character> pendingTableCharacters = new ArrayList<Token.Character>(); // chars in table to be shifted out
 
     private boolean framesetOk = true; // if ok to go into frameset
@@ -42,7 +43,7 @@ class TreeBuilder {
         doc = new Document(baseUri);
         reader = new CharacterReader(input);
         tokeniser = new Tokeniser(reader);
-        stack = new LinkedList<Element>();
+        stack = new DescendableLinkedList<Element>();
         this.baseUri = baseUri;
     }
 
@@ -243,7 +244,7 @@ class TreeBuilder {
         stack.add(element);
     }
 
-    LinkedList<Element> getStack() {
+    DescendableLinkedList<Element> getStack() {
         return stack;
     }
 
@@ -251,7 +252,7 @@ class TreeBuilder {
         return isElementInQueue(stack, el);
     }
 
-    private boolean isElementInQueue(LinkedList<Element> queue, Element element) {
+    private boolean isElementInQueue(DescendableLinkedList<Element> queue, Element element) {
         Iterator<Element> it = queue.descendingIterator();
         while (it.hasNext()) {
             Element next = it.next();

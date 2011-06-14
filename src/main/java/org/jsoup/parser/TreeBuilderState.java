@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.*;
 
@@ -761,7 +762,7 @@ enum TreeBuilderState {
 
         boolean anyOtherEndTag(Token t, TreeBuilder tb) {
             String name = t.asEndTag().name();
-            LinkedList<Element> stack = tb.getStack();
+            DescendableLinkedList<Element> stack = tb.getStack();
             Iterator<Element> it = stack.descendingIterator();
             while (it.hasNext()) {
                 Element node = it.next();
