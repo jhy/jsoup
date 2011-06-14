@@ -173,7 +173,7 @@ class TreeBuilder {
         // handle empty unknown tags
         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate fake end tag.
         if (startTag.isSelfClosing() && !Tag.isKnownTag(startTag.name())) {
-            Element el =  insertEmpty(startTag);
+            Element el = insertEmpty(startTag);
             process(new Token.EndTag(el.tagName())); // ensure we get out of whatever state we are in
             return el;
         }
