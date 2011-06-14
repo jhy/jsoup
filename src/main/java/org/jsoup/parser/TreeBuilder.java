@@ -604,6 +604,7 @@ class TreeBuilder {
         while(true) {
             if (!skip) // step 7: on later than entry
                 entry = formattingElements.get(++pos);
+            Validate.notNull(entry); // should not occur, as we break at last element
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
@@ -679,8 +680,10 @@ class TreeBuilder {
             fosterParent = stack.get(0);
         }
 
-        if (isLastTableParent)
+        if (isLastTableParent) {
+            Validate.notNull(lastTable); // last table cannot be null by this point.
             lastTable.before(in);
+        }
         else
             fosterParent.appendChild(in);
     }

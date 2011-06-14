@@ -699,6 +699,7 @@ enum TokeniserState {
                 case '>':
                     t.emit(c);
                     t.transition(ScriptData);
+                    break;
                 case nullChar:
                     t.error(this);
                     t.emit(replacementChar);
