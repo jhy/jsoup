@@ -68,7 +68,7 @@ abstract class Token {
         }
 
         String name() {
-            Validate.isFalse(tagName.isEmpty());
+            Validate.isFalse(tagName.length() == 0);
             return tagName;
         }
 
