@@ -316,38 +316,33 @@ enum TokeniserState {
                 return;
             }
 
-            char c = r.consume();
-            boolean handled = true;
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\f':
-                case ' ':
-                    if (t.isAppropriateEndTagToken())
+            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
+                char c = r.consume();
+                switch (c) {
+                    case '\t':
+                    case '\n':
+                    case '\f':
+                    case ' ':
                         t.transition(BeforeAttributeName);
-                    else
-                        handled = false;
-                    break;
-                case '/':
-                    if (t.isAppropriateEndTagToken())
+                        break;
+                    case '/':
                         t.transition(SelfClosingStartTag);
-                    else
-                        handled = false;
-                    break;
-                case '>':
-                    if (t.isAppropriateEndTagToken()) {
+                        break;
+                    case '>':
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
-                        handled = false;
-                    break;
-            }
-            if (!handled) {
-                t.emit("</" + t.dataBuffer.toString());
-                r.unconsume();
-                t.transition(Rawtext);
-            }
+                        break;
+                    default:
+                        t.dataBuffer.append(c);
+                        anythingElse(t, r);
+                }
+            } else
+                anythingElse(t, r);
+        }
+
+        private void anythingElse(Tokeniser t, CharacterReader r) {
+            t.emit("</" + t.dataBuffer.toString());
+            t.transition(Rawtext);
         }
     },
     ScriptDataLessthanSign {
@@ -389,38 +384,34 @@ enum TokeniserState {
                 return;
             }
 
-            char c = r.consume();
-            boolean handled = true;
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\f':
-                case ' ':
-                    if (t.isAppropriateEndTagToken())
+            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
+                char c = r.consume();
+                switch (c) {
+                    case '\t':
+                    case '\n':
+                    case '\f':
+                    case ' ':
                         t.transition(BeforeAttributeName);
-                    else
-                        handled = false;
-                    break;
-                case '/':
-                    if (t.isAppropriateEndTagToken())
+                        break;
+                    case '/':
                         t.transition(SelfClosingStartTag);
-                    else
-                        handled = false;
-                    break;
-                case '>':
-                    if (t.isAppropriateEndTagToken()) {
+                        break;
+                    case '>':
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
-                        handled = false;
-                    break;
+                        break;
+                    default:
+                        t.dataBuffer.append(c);
+                        anythingElse(t, r);
+                }
+            } else {
+                anythingElse(t, r);
             }
-            if (!handled) {
-                t.emit("</" + t.dataBuffer.toString());
-                r.unconsume();
-                t.transition(ScriptData);
-            }
+        }
+
+        private void anythingElse(Tokeniser t, CharacterReader r) {
+            t.emit("</" + t.dataBuffer.toString());
+            t.transition(ScriptData);
         }
     },
     ScriptDataEscapeStart {
@@ -568,38 +559,34 @@ enum TokeniserState {
                 return;
             }
 
-            char c = r.consume();
-            boolean handled = true;
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\f':
-                case ' ':
-                    if (t.isAppropriateEndTagToken())
+            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
+                char c = r.consume();
+                switch (c) {
+                    case '\t':
+                    case '\n':
+                    case '\f':
+                    case ' ':
                         t.transition(BeforeAttributeName);
-                    else
-                        handled = false;
-                    break;
-                case '/':
-                    if (t.isAppropriateEndTagToken())
+                        break;
+                    case '/':
                         t.transition(SelfClosingStartTag);
-                    else
-                        handled = false;
-                    break;
-                case '>':
-                    if (t.isAppropriateEndTagToken()) {
+                        break;
+                    case '>':
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
-                        handled = false;
-                    break;
+                    default:
+                        t.dataBuffer.append(c);
+                        anythingElse(t, r);
+                        break;
+                }
+            } else {
+                anythingElse(t, r);
             }
-            if (!handled) {
-                t.emit("</" + t.dataBuffer.toString());
-                r.unconsume();
-                t.transition(ScriptDataEscaped);
-            }
+        }
+        
+        private void anythingElse(Tokeniser t, CharacterReader r) {
+            t.emit("</" + t.dataBuffer.toString());
+            t.transition(ScriptDataEscaped);
         }
     },
     ScriptDataDoubleEscapeStart {
