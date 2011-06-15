@@ -567,6 +567,26 @@ public class ParserTest {
         assertEquals("<b>Two <p>Test</p></b>", two.body().html());
     }
 
+    @Test public void handlesUnclosedScriptAtEof() {
+        assertEquals("Data", Jsoup.parse("<script>Data").select("script").first().data());
+        assertEquals("Data</sc", Jsoup.parse("<script>Data</sc").select("script").first().data());
+        assertEquals("Data</-sc", Jsoup.parse("<script>Data</-sc").select("script").first().data());
+        assertEquals("Data</sc-", Jsoup.parse("<script>Data</sc-").select("script").first().data());
+        assertEquals("Data</sc--", Jsoup.parse("<script>Data</sc--").select("script").first().data());
+        assertEquals("Data", Jsoup.parse("<script>Data</script>").select("script").first().data());
+        assertEquals("Data</script", Jsoup.parse("<script>Data</script").select("script").first().data());
+    }
+
+    @Test public void handlesUnclosedRawtextAtEof() {
+        assertEquals("Data", Jsoup.parse("<style>Data").select("style").first().data());
+        assertEquals("Data</st", Jsoup.parse("<style>Data</st").select("style").first().data());
+        assertEquals("Data", Jsoup.parse("<style>Data</style>").select("style").first().data());
+        assertEquals("Data</style", Jsoup.parse("<style>Data</style").select("style").first().data());
+        assertEquals("Data</-style", Jsoup.parse("<style>Data</-style").select("style").first().data());
+        assertEquals("Data</style-", Jsoup.parse("<style>Data</style-").select("style").first().data());
+        assertEquals("Data</style--", Jsoup.parse("<style>Data</style--").select("style").first().data());
+    }
+
     @Test public void noImplicitFormForTextAreas() {
         // old jsoup parser would create implicit forms for form children like <textarea>, but no more
         Document doc = Jsoup.parse("<textarea>One</textarea>");
