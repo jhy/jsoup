@@ -29,7 +29,9 @@ class CharacterReader {
     }
 
     char consume() {
-        return isEmpty() ? EOF : input.charAt(pos++);
+        char val = isEmpty() ? EOF : input.charAt(pos);
+        pos++;
+        return val;
     }
 
     void unconsume() {

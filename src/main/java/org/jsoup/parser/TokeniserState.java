@@ -574,6 +574,7 @@ enum TokeniserState {
                     case '>':
                         t.emitTagPending();
                         t.transition(Data);
+                        break;
                     default:
                         t.dataBuffer.append(c);
                         anythingElse(t, r);
