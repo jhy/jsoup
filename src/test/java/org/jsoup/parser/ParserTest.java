@@ -603,4 +603,14 @@ public class ParserTest {
         Document doc = Jsoup.parse("<script><!-- one <script>Blah</script> --></script>");
         assertEquals("<!-- one <script>Blah</script> -->", doc.select("script").first().data());
     }
+
+    @Test public void handles0CharacterAsText() {
+        Document doc = Jsoup.parse("0<p>0</p>");
+        assertEquals("0\n<p>0</p>", doc.body().html());
+    }
+
+    @Test public void handlesNullInData() {
+        Document doc = Jsoup.parse("<p id=\u0000>Blah \u0000</p>");
+        assertEquals("<p id=\"\uFFFD\">Blah \u0000</p>", doc.body().html()); // replaced in attr, NOT replaced in data
+    }
 }
