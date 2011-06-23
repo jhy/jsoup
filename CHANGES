@@ -14,6 +14,9 @@ jsoup changelog
  * Fixed issue where a single 0 character was lexed incorrectly as a null character.
    <https://github.com/jhy/jsoup/issues/107>
 
+ * Fixed normalisation of carriage returns to newlines on input HTML.
+   <https://github.com/jhy/jsoup/issues/110>
+
 *** Release 1.6.0 [2011-Jun-13]
  * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
    http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.

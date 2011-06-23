@@ -1,5 +1,7 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.Validate;
+
 /**
  CharacterReader cosumes tokens off a string. To replace the old TokenQueue.
  */
@@ -12,6 +14,9 @@ class CharacterReader {
     private int mark = 0;
 
     CharacterReader(String input) {
+        Validate.notNull(input);
+        input = input.replaceAll("\r\n?", "\n"); // normalise carriage returns to newlines
+
         this.input = input;
         this.length = input.length();
     }
@@ -92,7 +97,7 @@ class CharacterReader {
     }
 
     String consumeToEnd() {
-        String data = input.substring(pos, input.length() - 1);
+        String data = input.substring(pos, input.length());
         pos = input.length();
         return data;
     }
