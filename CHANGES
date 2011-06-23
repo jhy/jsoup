@@ -8,6 +8,9 @@ jsoup changelog
    meant that data wasn't parsed correctly.
    <https://github.com/jhy/jsoup/issues/104>
 
+ * Fixed an issue with a missing quote when serialising DocumentType nodes.
+   <https://github.com/jhy/jsoup/issues/109>
+
 *** Release 1.6.0 [2011-Jun-13]
  * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
    http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.
