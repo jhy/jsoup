@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.6.1 [PENDING]
+*** Release 1.6.1 [2011-Jul-02]
  * Fixed Java 1.5 compatibility
    <https://github.com/jhy/jsoup/issues/103>
 
@@ -51,7 +51,7 @@ jsoup changelog
  * Added OSGi bundle support to the jsoup package jar.
    <https://github.com/jhy/jsoup/issues/98>
 
-*** Release 1.5.2 [2011-02-27]
+*** Release 1.5.2 [2011-Feb-27]
  * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
    were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
 
@@ -61,7 +61,7 @@ jsoup changelog
 
  * Tweaked Element.outerHtml() method to not generate initial newline on first output element.
 
- *** Release 1.5.1 [2011-02-19]
+ *** Release 1.5.1 [2011-Feb-19]
 
  * Integrated new single-pass selector evaluators, contributed by knz (Anton Kazennikov). This significantly speeds up
    the execution of combined selector queries.
@@ -96,7 +96,7 @@ jsoup changelog
 
  * Fixed issue when using descendant regex attribute selectors. 
 
-  *** Release 1.4.1 [2010-11-23]
+  *** Release 1.4.1 [2010-Nov-23]
 
  * Added ability to load and parse HTML from an input stream.
 
