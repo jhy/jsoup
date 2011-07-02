@@ -1,7 +1,7 @@
 jsoup changelog
 
 *** Release 1.6.1 [2011-Jul-02]
- * Fixed Java 1.5 compatibility
+ * Fixed Java 1.5 compatibility.
    <https://github.com/jhy/jsoup/issues/103>
 
  * Fixed an issue when parsing <script> tags in body where the tokeniser wouldn't switch to the InScript state, which
