@@ -11,7 +11,7 @@ public class TokenQueue {
     private String queue;
     private int pos = 0;
     
-    private static final Character ESC = '\\'; // escape char for chomp balanced.
+    private static final char ESC = '\\'; // escape char for chomp balanced.
 
     /**
      Create a new TokenQueue.
@@ -36,10 +36,10 @@ public class TokenQueue {
 
     /**
      * Retrieves but does not remove the first character from the queue.
-     * @return First character, or null if empty.
+     * @return First character, or 0 if empty.
      */
-    public Character peek() {
-        return isEmpty() ? null : queue.charAt(pos);
+    public char peek() {
+        return isEmpty() ? 0 : queue.charAt(pos);
     }
 
     /**
@@ -66,21 +66,13 @@ public class TokenQueue {
      * @return true if the next characters match.
      */
     public boolean matches(String seq) {
-        int count = seq.length();
-        if (count > remainingLength())
-            return false;
-
-        while (--count >= 0) {
-            if (Character.toLowerCase(seq.charAt(count)) != Character.toLowerCase(queue.charAt(pos+count)))
-                return false;
-        }
-        return true;
+        return queue.regionMatches(true, pos, seq, 0, seq.length());
     }
 
     /**
      * Case sensitive match test.
-     * @param seq
-     * @return
+     * @param seq string to case sensitively check for
+     * @return true if matched, false if not
      */
     public boolean matchesCS(String seq) {
         return queue.startsWith(seq, pos);
@@ -89,8 +81,8 @@ public class TokenQueue {
 
     /**
      Tests if the next characters match any of the sequences. Case insensitive.
-     @param seq
-     @return
+     @param seq list of strings to case insensitively check for
+     @return true of any matched, false if none did
      */
     public boolean matchesAny(String... seq) {
         for (String s : seq) {
@@ -158,10 +150,8 @@ public class TokenQueue {
      * Consume one character off queue.
      * @return first character on queue.
      */
-    public Character consume() {
-        Character c = queue.charAt(pos);
-        pos++;
-        return c;
+    public char consume() {
+        return queue.charAt(pos++);
     }
 
     /**
@@ -201,13 +191,16 @@ public class TokenQueue {
         int start = pos;
         String first = seq.substring(0, 1);
         boolean canScan = first.toLowerCase().equals(first.toUpperCase()); // if first is not cased, use index of
-        while (!isEmpty() && !matches(seq)) {
+        while (!isEmpty()) {
+            if (matches(seq))
+                break;
+            
             if (canScan) {
                 int skip = queue.indexOf(first, pos) - pos;
-                if (skip <= 0)
+                if (skip == 0) // this char is the skip char, but not match, so force advance of pos
                     pos++;
                 else if (skip < 0) // no chance of finding, grab to end
-                    pos = queue.length() - 1;
+                    pos = queue.length();
                 else
                     pos += skip;
             }
@@ -265,22 +258,22 @@ public class TokenQueue {
      * @param close closer
      * @return data matched from the queue
      */
-    public String chompBalanced(Character open, Character close) {
+    public String chompBalanced(char open, char close) {
         StringBuilder accum = new StringBuilder();
         int depth = 0;
-        Character last = null;
+        char last = 0;
 
         do {
             if (isEmpty()) break;
             Character c = consume();
-            if (last == null || !last.equals(ESC)) {
+            if (last == 0 || last != ESC) {
                 if (c.equals(open))
                     depth++;
                 else if (c.equals(close))
                     depth--;
             }
 
-            if (depth > 0 && last != null)
+            if (depth > 0 && last != 0)
                 accum.append(c); // don't include the outer match pair in the return
             last = c;
         } while (depth > 0);
@@ -294,10 +287,10 @@ public class TokenQueue {
      */
     public static String unescape(String in) {
         StringBuilder out = new StringBuilder();
-        Character last = null;
-        for (Character c : in.toCharArray()) {
-            if (c.equals(ESC)) {
-                if (last != null && last.equals(ESC))
+        char last = 0;
+        for (char c : in.toCharArray()) {
+            if (c == ESC) {
+                if (last != 0 && last == ESC)
                     out.append(c);
             }
             else 

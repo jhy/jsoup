@@ -1,6 +1,102 @@
 jsoup changelog
 
-*** Release 1.4.1 [2010-11-23]
+*** Release 1.6.1 [2011-Jul-02]
+ * Fixed Java 1.5 compatibility.
+   <https://github.com/jhy/jsoup/issues/103>
+
+ * Fixed an issue when parsing <script> tags in body where the tokeniser wouldn't switch to the InScript state, which
+   meant that data wasn't parsed correctly.
+   <https://github.com/jhy/jsoup/issues/104>
+
+ * Fixed an issue with a missing quote when serialising DocumentType nodes.
+   <https://github.com/jhy/jsoup/issues/109>
+
+ * Fixed issue where a single 0 character was lexed incorrectly as a null character.
+   <https://github.com/jhy/jsoup/issues/107>
+
+ * Fixed normalisation of carriage returns to newlines on input HTML.
+   <https://github.com/jhy/jsoup/issues/110>
+
+ * Disabled memory mapped files when loading files from disk, to improve compatibility in Windows environments.
+
+*** Release 1.6.0 [2011-Jun-13]
+ * HTML5 conformant parser. Complete reimplemenation of HTML tokenisation and parsing, to implement the
+   http://whatwg.org/html spec. This ensures jsoup parses HTML identically to current modern browsers.
+
+ * When parsing files from disk, files are loaded via memory mapping, to increase parse speed.
+
+ * Reduced memory overhead and lowered garbage collector pressure with Attribute, Node and Element model optimisations.
+
+ * Improved "abs:" absolute URL handling in Elements.attr("abs:href") and Node.hasAttr("abs:href").
+   <https://github.com/jhy/jsoup/issues/97>
+
+ * Fixed cookie handling issue in jsoup.Connect where empty cookies would cause a validation exception.
+   <https://github.com/jhy/jsoup/issues/87>
+
+ * Added jsoup.Connect configuration options to allow HTTP errors to be ignored, and the content-type to be ignored.
+   Contributed by Jesse Piascik (piascikj)
+   <https://github.com/jhy/jsoup/pull/78>
+
+ * Added Node.before(node) and Node.after(node), to allow existing nodes to be moved, or new nodes to be inserted, into
+   precise DOM positions.
+
+ * Added Node.unwrap() and Elements.unwrap(), to remove a node but keep its contents. Useful for e.g. removing unwanted
+   formatting tags.
+   <https://github.com/jhy/jsoup/issues/100>
+
+ * Now handles unclosed <title> tags in document by breaking out of the title at the next start tag, instead of
+   eating up to the end of the document.
+   <https://github.com/jhy/jsoup/issues/82>
+
+ * Added OSGi bundle support to the jsoup package jar.
+   <https://github.com/jhy/jsoup/issues/98>
+
+*** Release 1.5.2 [2011-Feb-27]
+ * Fixed issue with selector parser where some boolean AND + OR combined queries (e.g. "meta[http-equiv], meta[content]")
+   were being parsed incorrectly as OR only queries (e.g. former as "meta, [http-equiv], meta[content]")
+
+ * Fixed issue where a content-type specified in a meta tag may not be reliably detected, due to the above issue.
+
+ * Updated Element.text() and Element.ownText() methods to ensure <br> tags output as whitespace.
+
+ * Tweaked Element.outerHtml() method to not generate initial newline on first output element.
+
+ *** Release 1.5.1 [2011-Feb-19]
+
+ * Integrated new single-pass selector evaluators, contributed by knz (Anton Kazennikov). This significantly speeds up
+   the execution of combined selector queries.
+
+ * Implemented workaround to fix Scala support. Contributed by bbeck (Brandon Beck).
+
+ * Added ability to change an element's tag with Element.tagName(String), and to change many at once
+   with Elements.tagName(String).
+
+ * Added Node.wrap(html), Node.before(html), and Node.after(html), to allow HTML to be easily added to all nodes. These
+   functions were previously supported on Elements only.
+
+ * Added TextNode.splitText(index), which allows a text node to be split into two nodes at a specified index point.
+   This is convenient if you need to surround some text in an element.
+
+ * Updated Jsoup.Connection so that cookies set on a redirect response will be included on both the redirected request
+   and response.
+
+ * Infinite redirection loops in Jsoup.Connect are now prevented.
+
+ * Allow Jsoup.Connect to parse application/xml and application/xhtml+xml responses.
+
+ * Modified Jsoup.Connect to always follow relative links, regardless of the underlying HTTP sub-system.
+
+ * Defined U (underline) element as an inline tag.
+
+ * Force strict entity matching (must be &xxx; and not &xxx) in element attributes.
+
+ * Implemented clone method for Elements (contributed by knz).
+
+ * Fixed tokeniser optimisation when scanning for missing data element close tags.
+
+ * Fixed issue when using descendant regex attribute selectors. 
+
+  *** Release 1.4.1 [2010-Nov-23]
 
  * Added ability to load and parse HTML from an input stream.
 

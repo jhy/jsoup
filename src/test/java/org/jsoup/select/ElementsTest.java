@@ -45,11 +45,32 @@ public class ElementsTest {
         assertTrue(ps.hasAttr("class"));
         assertFalse(ps.hasAttr("style"));
     }
+
+    @Test public void hasAbsAttr() {
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='http://jsoup.org'>Two</a>");
+        Elements one = doc.select("#1");
+        Elements two = doc.select("#2");
+        Elements both = doc.select("a");
+        assertFalse(one.hasAttr("abs:href"));
+        assertTrue(two.hasAttr("abs:href"));
+        assertTrue(both.hasAttr("abs:href")); // hits on #2
+    }
     
     @Test public void attr() {
         Document doc = Jsoup.parse("<p title=foo><p title=bar><p class=foo><p class=bar>");
         String classVal = doc.select("p").attr("class");
         assertEquals("foo", classVal);
+    }
+
+    @Test public void absAttr() {
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='http://jsoup.org'>Two</a>");
+        Elements one = doc.select("#1");
+        Elements two = doc.select("#2");
+        Elements both = doc.select("a");
+
+        assertEquals("", one.attr("abs:href"));
+        assertEquals("http://jsoup.org", two.attr("abs:href"));
+        assertEquals("http://jsoup.org", both.attr("abs:href"));
     }
 
     @Test public void classes() {
@@ -104,7 +125,7 @@ public class ElementsTest {
     
     @Test public void val() {
         Document doc = Jsoup.parse("<input value='one' /><textarea>two</textarea>");
-        Elements els = doc.select("form > *");
+        Elements els = doc.select("input, textarea");
         assertEquals(2, els.size());
         assertEquals("one", els.val());
         assertEquals("two", els.last().val());
@@ -112,7 +133,7 @@ public class ElementsTest {
         els.val("three");
         assertEquals("three", els.first().val());
         assertEquals("three", els.last().val());
-        assertEquals("\n<textarea>three</textarea>", els.last().outerHtml());
+        assertEquals("<textarea>three</textarea>", els.last().outerHtml());
     }
     
     @Test public void before() {
@@ -132,6 +153,13 @@ public class ElementsTest {
         Document doc = Jsoup.parse(h);
         doc.select("b").wrap("<i></i>");
         assertEquals("<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>", doc.body().html());
+    }
+
+    @Test public void unwrap() {
+        String h = "<div><font>One</font> <font><a href=\"/\">Two</a></font></div";
+        Document doc = Jsoup.parse(h);
+        doc.select("font").unwrap();
+        assertEquals("<div>One <a href=\"/\">Two</a></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void empty() {
@@ -185,5 +213,12 @@ public class ElementsTest {
         Elements div2 = doc.select("div").not("#1");
         assertEquals(1, div2.size());
         assertEquals("2", div2.first().id());
+    }
+
+    @Test public void tagNameSet() {
+        Document doc = Jsoup.parse("<p>Hello <i>there</i> <i>now</i></p>");
+        doc.select("i").tagName("em");
+
+        assertEquals("<p>Hello <em>there</em> <em>now</em></p>", doc.body().html());
     }
 }

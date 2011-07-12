@@ -30,10 +30,11 @@ public class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(File in, String charsetName, String baseUri) throws IOException {
-        InputStream inStream = null;
+        FileInputStream inStream = null;
         try {
             inStream = new FileInputStream(in);
-            return load(inStream, charsetName, baseUri);
+            ByteBuffer byteData = readToByteBuffer(inStream);
+            return parseByteData(byteData, charsetName, baseUri);
         } finally {
             if (inStream != null)
                 inStream.close();
@@ -65,7 +66,7 @@ public class DataUtil {
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
-                if (foundCharset != null && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
                     charsetName = foundCharset;
                     byteData.rewind();
                     docData = Charset.forName(foundCharset).decode(byteData).toString();
@@ -103,7 +104,6 @@ public class DataUtil {
      */
     static String getCharsetFromContentType(String contentType) {
         if (contentType == null) return null;
-        
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
             return m.group(1).trim().toUpperCase();

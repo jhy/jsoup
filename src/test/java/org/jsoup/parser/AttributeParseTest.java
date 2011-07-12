@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -36,10 +37,19 @@ public class AttributeParseTest {
         assertEquals(0, attr.size());
     }
 
-    @Test public void emptyOnNoKey() {
+    @Test public void canStartWithEq() {
         String html = "<a =empty />";
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
         Attributes attr = el.attributes();
-        assertEquals(0, attr.size());
+        assertEquals(1, attr.size());
+        assertTrue(attr.hasKey("=empty"));
+        assertEquals("", attr.get("=empty"));
+    }
+
+    @Test public void strictAttributeUnescapes() {
+        String html = "<a id=1 href='?foo=bar&mid&lt=true'>One</a> <a id=2 href='?foo=bar&lt;qux&lg=1'>Two</a>";
+        Elements els = Jsoup.parse(html).select("a");
+        assertEquals("?foo=bar∣&lt=true", els.first().attr("href")); // &mid gets to ∣ because not tailed by =; lt is so not unescaped
+        assertEquals("?foo=bar<qux&lg=1", els.last().attr("href"));
     }
 }

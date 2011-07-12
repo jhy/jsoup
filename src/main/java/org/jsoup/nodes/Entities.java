@@ -38,7 +38,28 @@ public class Entities {
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
+    private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
 
+    private Entities() {}
+
+    /**
+     * Check if the input is a known named entity
+     * @param name the possible entity name (e.g. "lt" or "amp"
+     * @return true if a known named entity
+     */
+    public static boolean isNamedEntity(String name) {
+        return full.containsKey(name);
+    }
+
+    /**
+     * Get the Character value of the named entity
+     * @param name named entity (e.g. "lt" or "amp")
+     * @return the Character value of the named entity (e.g. '<' or '&')
+     */
+    public static Character getCharacterByName(String name) {
+        return full.get(name);
+    }
+    
     static String escape(String string, Document.OutputSettings out) {
         return escape(string, out.encoder(), out.escapeMode());
     }
@@ -61,10 +82,21 @@ public class Entities {
     }
 
     static String unescape(String string) {
+        return unescape(string, false);
+    }
+
+    /**
+     * Unescape the input string.
+     * @param string
+     * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
+     * @return
+     */
+    static String unescape(String string, boolean strict) {
+        // todo: change this method to use Tokeniser.consumeCharacterReference
         if (!string.contains("&"))
             return string;
 
-        Matcher m = unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
+        Matcher m = strict? strictUnescapePattern.matcher(string) : unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
         StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
         // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
 

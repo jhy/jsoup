@@ -15,6 +15,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
+    private QuirksMode quirksMode = QuirksMode.noQuirks;
 
     /**
      Create a new, empty Document.
@@ -203,7 +204,7 @@ public class Document extends Element {
     /**
      * A Document's output settings control the form of the text() and html() methods.
      */
-    public class OutputSettings implements Cloneable {
+    public static class OutputSettings implements Cloneable {
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
@@ -331,6 +332,19 @@ public class Document extends Element {
      */
     public OutputSettings outputSettings() {
         return outputSettings;
+    }
+
+    public enum QuirksMode {
+        noQuirks, quirks, limitedQuirks;
+    }
+
+    public QuirksMode quirksMode() {
+        return quirksMode;
+    }
+
+    public Document quirksMode(QuirksMode quirksMode) {
+        this.quirksMode = quirksMode;
+        return this;
     }
 }
 

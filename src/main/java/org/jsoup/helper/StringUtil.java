@@ -16,7 +16,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Collection<String> strings, String sep) {
+    public static String join(Collection strings, String sep) {
         return join(strings.iterator(), sep);
     }
 
@@ -26,11 +26,11 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Iterator<String> strings, String sep) {
+    public static String join(Iterator strings, String sep) {
         if (!strings.hasNext())
             return "";
 
-        String start = strings.next();
+        String start = strings.next().toString();
         if (!strings.hasNext()) // only one, avoid builder
             return start;
 
@@ -119,5 +119,13 @@ public final class StringUtil {
             }
         }
         return modified ? sb.toString() : string;
+    }
+
+    public static boolean in(String needle, String... haystack) {
+        for (String hay : haystack) {
+            if (hay.equals(needle))
+            return true;
+        }
+        return false;
     }
 }

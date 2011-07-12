@@ -101,11 +101,22 @@ public class ParseTest {
 
         // check auto-detect from meta
         assertEquals("GB2312", doc.outputSettings().charset().displayName());
-        assertEquals("\n<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
+        assertEquals("<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
 
         doc.outputSettings().charset("ascii");
-        assertEquals("\n<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>",
+        assertEquals("<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>",
             doc.select("title").outerHtml());
+    }
+
+    @Test
+    public void testBaiduVariant() throws IOException {
+        // tests <meta charset> when preceded by another <meta>
+        File in = getFile("/htmltests/baidu-variant.html");
+        Document doc = Jsoup.parse(in, null,
+            "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
+        // check auto-detect from meta
+        assertEquals("GB2312", doc.outputSettings().charset().displayName());
+        assertEquals("<title>百度一下，你就知道</title>", doc.select("title").outerHtml());
     }
 
     @Test

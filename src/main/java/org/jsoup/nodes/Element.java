@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
 
 import java.util.*;
@@ -21,7 +22,7 @@ import java.util.regex.PatternSyntaxException;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Element extends Node {
-    private final Tag tag;
+    private Tag tag;
     private Set<String> classNames;
     
     /**
@@ -64,6 +65,19 @@ public class Element extends Node {
      */
     public String tagName() {
         return tag.getName();
+    }
+
+    /**
+     * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @return this element, for chaining
+     */
+    public Element tagName(String tagName) {
+        Validate.notEmpty(tagName, "Tag name must not be empty.");
+        tag = Tag.valueOf(tagName);
+        return this;
     }
 
     /**
@@ -200,7 +214,7 @@ public class Element extends Node {
     }
     
     /**
-     * Add a node to the last child of this element.
+     * Add a node child node to this element.
      * 
      * @param child node to add. Must not already have a parent.
      * @return this element, so that you can add more child nodes or elements.
@@ -283,9 +297,9 @@ public class Element extends Node {
      */
     public Element append(String html) {
         Validate.notNull(html);
-        
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        addChildren(fragment.childNodesAsArray());
+
+        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        addChildren(nodes.toArray(new Node[nodes.size()]));
         return this;
     }
     
@@ -298,41 +312,57 @@ public class Element extends Node {
     public Element prepend(String html) {
         Validate.notNull(html);
         
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        addChildren(0, fragment.childNodesAsArray());
+        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        addChildren(0, nodes.toArray(new Node[nodes.size()]));
         return this;
     }
-    
+
     /**
      * Insert the specified HTML into the DOM before this element (i.e. as a preceeding sibling).
+     *
      * @param html HTML to add before this element
      * @return this element, for chaining
      * @see #after(String)
      */
+    @Override
     public Element before(String html) {
-        addSiblingHtml(siblingIndex(), html);
-        return this;
+        return (Element) super.before(html);
     }
-    
+
+    /**
+     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * @param node to add before this element
+     * @return this Element, for chaining
+     * @see #after(Node)
+     */
+    @Override
+    public Element before(Node node) {
+        return (Element) super.before(node);
+    }
+
     /**
      * Insert the specified HTML into the DOM after this element (i.e. as a following sibling).
+     *
      * @param html HTML to add after this element
      * @return this element, for chaining
      * @see #before(String)
      */
+    @Override
     public Element after(String html) {
-        addSiblingHtml(siblingIndex()+1, html);
-        return this;
+        return (Element) super.after(html);
     }
-    
-    private void addSiblingHtml(int index, String html) {
-        Validate.notNull(html);
-        Validate.notNull(parentNode);
-        
-        Element fragment = Parser.parseBodyFragmentRelaxed(html, baseUri()).body();
-        parentNode.addChildren(index, fragment.childNodesAsArray());
+
+    /**
+     * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+     * @param node to add after this element
+     * @return this element, for chaining
+     * @see #before(Node)
+     */
+    @Override
+    public Element after(Node node) {
+        return (Element) super.after(node);
     }
-       
+
     /**
      * Remove all of the element's child nodes. Any attributes are left as-is.
      * @return this element
@@ -343,42 +373,16 @@ public class Element extends Node {
     }
 
     /**
-     Wrap the supplied HTML around this element.
-     @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitralily deep.
-     @return this element, for chaining.
+     * Wrap the supplied HTML around this element.
+     *
+     * @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+     * @return this element, for chaining.
      */
+    @Override
     public Element wrap(String html) {
-        Validate.notEmpty(html);
-
-        Element wrapBody = Parser.parseBodyFragmentRelaxed(html, baseUri).body();
-        Elements wrapChildren = wrapBody.children();
-        Element wrap = wrapChildren.first();
-        if (wrap == null) // nothing to wrap with; noop
-            return null;
-
-        Element deepest = getDeepChild(wrap);
-        parentNode.replaceChild(this, wrap);
-        deepest.addChildren(this);
-
-        // remainder (unbalananced wrap, like <div></div><p></p> -- The <p> is remainder
-        if (wrapChildren.size() > 1) {
-            for (int i = 1; i < wrapChildren.size(); i++) { // skip first
-                Element remainder = wrapChildren.get(i);
-                remainder.parentNode.removeChild(remainder);
-                wrap.appendChild(remainder);
-            }
-        }
-        return this;
+        return (Element) super.wrap(html);
     }
 
-    private Element getDeepChild(Element el) {
-        List<Element> children = el.children();
-        if (children.size() > 0)
-            return getDeepChild(children.get(0));
-        else
-            return el;
-    }
-    
     /**
      * Get sibling elements.
      * @return sibling elements
@@ -744,6 +748,8 @@ public class Element extends Node {
     }
 
     private void text(StringBuilder accum) {
+        appendWhitespaceIfBr(this, accum);
+        
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
@@ -778,6 +784,8 @@ public class Element extends Node {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
+            } else if (child instanceof Element) {
+                appendWhitespaceIfBr((Element) child, accum);
             }
         }
     }
@@ -791,6 +799,11 @@ public class Element extends Node {
                 text = TextNode.stripLeadingWhitespace(text);
         }
         accum.append(text);
+    }
+
+    private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
+        if (element.tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
+            accum.append(" ");
     }
 
     boolean preserveWhitespace() {
@@ -857,7 +870,7 @@ public class Element extends Node {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attributes.hasKey("class") ? attributes.get("class") : "";
+        return attr("class");
     }
 
     /**
@@ -886,12 +899,17 @@ public class Element extends Node {
     }
 
     /**
-     * Tests if this element has a class.
+     * Tests if this element has a class. Case insensitive.
      * @param className name of class to check for
      * @return true if it does, false if not
      */
     public boolean hasClass(String className) {
-        return classNames().contains(className);
+        Set<String> classNames = classNames();
+        for (String name : classNames) {
+            if (className.equalsIgnoreCase(name))
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -967,7 +985,7 @@ public class Element extends Node {
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock())))
+        if (accum.length() > 0 && out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock())))
             indent(accum, depth, out);
         accum
                 .append("<")
@@ -1024,19 +1042,12 @@ public class Element extends Node {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Element)) return false;
-        if (!super.equals(o)) return false;
-
-        Element element = (Element) o;
-
-        if (tag != null ? !tag.equals(element.tag) : element.tag != null) return false;
-
-        return true;
+        return this == o;
     }
 
     @Override
     public int hashCode() {
+        // todo: fixup, not very useful
         int result = super.hashCode();
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         return result;

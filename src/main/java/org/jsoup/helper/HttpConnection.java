@@ -12,8 +12,6 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -36,7 +34,7 @@ public class HttpConnection implements Connection {
     private Connection.Request req;
     private Connection.Response res;
 
-    private HttpConnection() {
+	private HttpConnection() {
         req = new Request();
         res = new Response();
     }
@@ -67,6 +65,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection followRedirects(boolean followRedirects) {
+        req.followRedirects(followRedirects);
+        return this;
+    }
+
     public Connection referrer(String referrer) {
         Validate.notNull(referrer, "Referrer must not be null");
         req.header("Referer", referrer);
@@ -75,6 +78,16 @@ public class HttpConnection implements Connection {
 
     public Connection method(Method method) {
         req.method(method);
+        return this;
+    }
+
+    public Connection ignoreHttpErrors(boolean ignoreHttpErrors) {
+		req.ignoreHttpErrors(ignoreHttpErrors);
+		return this;
+	}
+
+    public Connection ignoreContentType(boolean ignoreContentType) {
+        req.ignoreContentType(ignoreContentType);
         return this;
     }
 
@@ -264,10 +277,14 @@ public class HttpConnection implements Connection {
 
     public static class Request extends Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
+        private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
+        private boolean ignoreHttpErrors = false;
+        private boolean ignoreContentType = false;
 
-        private Request() {
+      	private Request() {
             timeoutMilliseconds = 3000;
+            followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
@@ -283,6 +300,31 @@ public class HttpConnection implements Connection {
             return this;
         }
 
+        public boolean followRedirects() {
+            return followRedirects;
+        }
+
+        public Connection.Request followRedirects(boolean followRedirects) {
+            this.followRedirects = followRedirects;
+            return this;
+        }
+
+        public boolean ignoreHttpErrors() {
+            return ignoreHttpErrors;
+        }
+
+        public void ignoreHttpErrors(boolean ignoreHttpErrors) {
+            this.ignoreHttpErrors = ignoreHttpErrors;
+        }
+
+        public boolean ignoreContentType() {
+            return ignoreContentType;
+        }
+
+        public void ignoreContentType(boolean ignoreContentType) {
+            this.ignoreContentType = ignoreContentType;
+        }
+
         public Request data(Connection.KeyVal keyval) {
             Validate.notNull(keyval, "Key val must not be null");
             data.add(keyval);
@@ -295,14 +337,34 @@ public class HttpConnection implements Connection {
     }
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
+        private static final int MAX_REDIRECTS = 20;
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
         private String charset;
         private String contentType;
         private boolean executed = false;
+        private int numRedirects = 0;
+        private Connection.Request req;
+
+        Response() {
+            super();
+        }
+
+        private Response(Response previousResponse) throws IOException {
+            super();
+            if (previousResponse != null) {
+                numRedirects = previousResponse.numRedirects + 1;
+                if (numRedirects >= MAX_REDIRECTS)
+                    throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
+            }
+        }
 
         static Response execute(Connection.Request req) throws IOException {
+            return execute(req, null);
+        }
+
+        static Response execute(Connection.Request req, Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
             String protocol = req.url().getProtocol();
             Validate
@@ -316,32 +378,38 @@ public class HttpConnection implements Connection {
             if (req.method() == Connection.Method.POST)
                 writePost(req.data(), conn.getOutputStream());          
 
-            // todo: error handling options, allow user to get !200 without exception
             int status = conn.getResponseCode();
             boolean needsRedirect = false;
             if (status != HttpURLConnection.HTTP_OK) {
-                // java url connection will follow redirects on same protocol, but not switch between http & https, so do that here
                 if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
                     needsRedirect = true;
-                else
+                else if (!req.ignoreHttpErrors())
                     throw new IOException(status + " error loading URL " + req.url().toString());
             }
-            Response res = new Response();
-            res.setupFromConnection(conn);
-            if (needsRedirect) {
-                req.url(new URL(res.header("Location")));
-                return execute(req);
+            Response res = new Response(previousResponse);
+            res.setupFromConnection(conn, previousResponse);
+            if (needsRedirect && req.followRedirects()) {
+                req.url(new URL(req.url(), res.header("Location")));
+                for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
+                    req.cookie(cookie.getKey(), cookie.getValue());
+                }
+                return execute(req, res);
             }
+            res.req = req;
 
-            InputStream inStream = null;
+            InputStream bodyStream = null;
+            InputStream dataStream = null;
             try {
-                inStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
-                        new BufferedInputStream(new GZIPInputStream(conn.getInputStream())) :
-                        new BufferedInputStream(conn.getInputStream());
-                res.byteData = DataUtil.readToByteBuffer(inStream);
+                dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+            	bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
+                        new BufferedInputStream(new GZIPInputStream(dataStream)) :
+                        new BufferedInputStream(dataStream);
+                
+                res.byteData = DataUtil.readToByteBuffer(bodyStream);
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             } finally {
-                if (inStream != null) inStream.close();
+                if (bodyStream != null) bodyStream.close();
+                if (dataStream != null) dataStream.close();
             }
 
             res.executed = true;
@@ -366,8 +434,8 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            if (contentType == null || !contentType.startsWith("text/"))
-                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*",
+            if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, url.toString()));
             Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());
             byteData.rewind();
@@ -396,7 +464,7 @@ public class HttpConnection implements Connection {
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
             HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
             conn.setRequestMethod(req.method().name());
-            conn.setInstanceFollowRedirects(true);
+            conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
             if (req.method() == Method.POST)
@@ -410,7 +478,7 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn) throws IOException {
+        private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
             method = Connection.Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
@@ -418,20 +486,37 @@ public class HttpConnection implements Connection {
             contentType = conn.getContentType();
 
             Map<String, List<String>> resHeaders = conn.getHeaderFields();
+            processResponseHeaders(resHeaders);
+
+            // if from a redirect, map previous response cookies into this response
+            if (previousResponse != null) {
+                for (Map.Entry<String, String> prevCookie : previousResponse.cookies().entrySet()) {
+                    if (!hasCookie(prevCookie.getKey()))
+                        cookie(prevCookie.getKey(), prevCookie.getValue());
+                }
+            }
+        }
+
+        void processResponseHeaders(Map<String, List<String>> resHeaders) {
             for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
                 String name = entry.getKey();
                 if (name == null)
                     continue; // http/1.1 line
 
                 List<String> values = entry.getValue();
-
                 if (name.equalsIgnoreCase("Set-Cookie")) {
                     for (String value : values) {
+                        if (value == null)
+                            continue;
                         TokenQueue cd = new TokenQueue(value);
                         String cookieName = cd.chompTo("=").trim();
                         String cookieVal = cd.consumeTo(";").trim();
+                        if (cookieVal == null)
+                            cookieVal = "";
                         // ignores path, date, domain, secure et al. req'd?
-                        cookie(cookieName, cookieVal);
+                        // name not blank, value not null
+                        if (cookieName != null && cookieName.length() > 0)
+                            cookie(cookieName, cookieVal);
                     }
                 } else { // only take the first instance of each header
                     if (!values.isEmpty())
@@ -439,7 +524,7 @@ public class HttpConnection implements Connection {
                 }
             }
         }
-        
+
         private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
             OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
             boolean first = true;
