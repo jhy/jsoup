@@ -32,7 +32,7 @@ public class Parser {
      * provides stack context (for implicit element creation).
      * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
      *
-     * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modifed.
+     * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
         TreeBuilder treeBuilder = new TreeBuilder();
