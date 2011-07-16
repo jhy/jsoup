@@ -4,6 +4,9 @@ jsoup changelog
  * Updated jsoup.connect so that when requests made as POSTs are redirected, the redirect is followed as a GET.
    <https://github.com/jhy/jsoup/issues/120>
 
+ * Updated the Cleaner and whitelists to optionally preserve related links in elements, instead of converting them
+   to absolute links.
+
 *** Release 1.6.1 [2011-Jul-02]
  * Fixed Java 1.5 compatibility.
    <https://github.com/jhy/jsoup/issues/103>

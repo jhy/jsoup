@@ -52,6 +52,7 @@ public class Whitelist {
     private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
+    private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
      This whitelist allows only text nodes: all HTML will be stripped.
@@ -171,6 +172,7 @@ public class Whitelist {
         attributes = new HashMap<TagName, Set<AttributeKey>>();
         enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
         protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
+        preserveRelativeLinks = false;
     }
 
     /**
@@ -250,6 +252,25 @@ public class Whitelist {
     }
 
     /**
+     * Configure this Whitelist to preserve relative links in an element's URL attribute, or convert them to absolute
+     * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
+     * e.g. {@code http://}.
+     * <p />
+     * Note that when handling relative links, the input document must have an appropriate {@code base URI} set when
+     * parsing, so that the link's protocol can be confirmed. Regardless of the setting of the {@code preserve relative
+     * links} option, the link must be resolvable against the base URI to an allowed protocol; otherwise the attribute
+     * will be removed.
+     *
+     * @param preserve {@code true} to allow relative links, {@code false} (default) to deny
+     * @return this Whitelist, for chaining.
+     * @see #addProtocols
+     */
+    public Whitelist preserveRelativeLinks(boolean preserve) {
+        preserveRelativeLinks = preserve;
+        return this;
+    }
+
+    /**
      Add allowed URL protocols for an element's URL attribute. This restricts the possible values of the attribute to
      URLs with the defined protocol.
      <p/>
@@ -315,10 +336,11 @@ public class Whitelist {
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
-        // resolve relative urls to abs, and update the attribute so output html has abs.
+        // resolve relative urls to abs, and optionally update the attribute so output html has abs.
         // rels without a baseuri get removed
         String value = el.absUrl(attr.getKey());
-        attr.setValue(value);
+        if (!preserveRelativeLinks)
+            attr.setValue(value);
         
         for (Protocol protocol : protocols) {
             String prot = protocol.toString() + ":";

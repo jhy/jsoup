@@ -97,9 +97,15 @@ public class CleanerTest {
     }
     
     @Test public void resolvesRelativeLinks() {
-        String html = "<a href='/foo'>Link</a>";
-        String clean = Jsoup.clean(html, "http://example.com/", Whitelist.basic());
-        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a>", clean);
+        String html = "<a href='/foo'>Link</a><img src='/bar'>";
+        String clean = Jsoup.clean(html, "http://example.com/", Whitelist.basicWithImages());
+        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a>\n<img src=\"http://example.com/bar\" />", clean);
+    }
+
+    @Test public void preservesRelatedLinksIfConfigured() {
+        String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
+        String clean = Jsoup.clean(html, "http://example.com/", Whitelist.basicWithImages().preserveRelativeLinks(true));
+        assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a>\n<img src=\"/bar\" /> \n<img />", clean);
     }
     
     @Test public void dropsUnresolvableRelativeLinks() {
