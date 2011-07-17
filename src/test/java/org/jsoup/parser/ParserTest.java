@@ -614,6 +614,11 @@ public class ParserTest {
         assertEquals("<p id=\"\uFFFD\">Blah \u0000</p>", doc.body().html()); // replaced in attr, NOT replaced in data
     }
 
+    @Test public void handlesNullInComments() {
+        Document doc = Jsoup.parse("<body><!-- \u0000 \u0000 -->");
+        assertEquals("<!-- \uFFFD \uFFFD -->", doc.body().html());
+    }
+
     @Test public void handlesNewlinesAndWhitespaceInTag() {
         Document doc = Jsoup.parse("<a \n href=\"one\" \r\n id=\"two\" \f >");
         assertEquals("<a href=\"one\" id=\"two\"></a>", doc.body().html());

@@ -1168,6 +1168,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
+                    r.advance();
                     t.commentPending.data.append(replacementChar);
                     break;
                 case eof:
