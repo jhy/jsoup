@@ -94,6 +94,16 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void postRedirectsFetchWithGet() throws IOException {
+        Connection con = Jsoup.connect("http://infohound.net/tools/302.pl")
+                .data("Argument", "Riposte")
+                .method(Connection.Method.POST);
+        Connection.Response res = con.execute();
+        assertEquals("http://jsoup.org", res.url().toExternalForm());
+        assertEquals(Connection.Method.GET, res.method());
+    }
+
+    @Test
     public void followsRedirectToHttps() throws IOException {
         Connection con = Jsoup.connect("http://infohound.net/tools/302-secure.pl"); // https://www.google.com
         con.data("id", "5");
