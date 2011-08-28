@@ -9,6 +9,7 @@ import org.jsoup.Connection;
 
 import java.net.URL;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
@@ -166,5 +167,20 @@ public class UrlConnectTest {
             threw = true;
         }
         assertTrue(threw);
+    }
+
+    @Test
+    public void multiCookieSet() throws IOException {
+        Connection con = Jsoup.connect("http://infohound.net/tools/302-cookie.pl");
+        Connection.Response res = con.execute();
+
+        // test cookies set by redirect:
+        Map<String, String> cookies = res.cookies();
+        assertEquals("asdfg123", cookies.get("token"));
+        assertEquals("jhy", cookies.get("uid"));
+
+        // send those cookies into the echo URL by map:
+        Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
+        assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc));
     }
 }

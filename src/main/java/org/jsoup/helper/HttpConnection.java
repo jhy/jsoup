@@ -127,6 +127,14 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection cookies(Map<String, String> cookies) {
+        Validate.notNull(cookies, "Cookie map must not be null");
+        for (Map.Entry<String, String> entry : cookies.entrySet()) {
+            req.cookie(entry.getKey(), entry.getValue());
+        }
+        return this;
+    }
+
     public Document get() throws IOException {
         req.method(Method.GET);
         execute();

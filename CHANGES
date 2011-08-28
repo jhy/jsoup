@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.6.2 [PENDING]
+ * Added jsoup.connect.cookies(Map) method, to set multiple cookies at once, possibly from a prior request.
+ 
  * Updated jsoup.connect so that when requests made as POSTs are redirected, the redirect is followed as a GET.
    <https://github.com/jhy/jsoup/issues/120>
 

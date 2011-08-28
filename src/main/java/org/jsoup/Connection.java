@@ -132,12 +132,19 @@ public interface Connection {
     public Connection header(String name, String value);
 
     /**
-     * Set a cookie to be sent in the request
+     * Set a cookie to be sent in the request.
      * @param name name of cookie
      * @param value value of cookie
      * @return this Connection, for chaining
      */
     public Connection cookie(String name, String value);
+
+    /**
+     * Adds each of the supplied cookies to the request.
+     * @param cookies map of cookie name -> value pairs
+     * @return this Connection, for chaining
+     */
+    public Connection cookies(Map<String, String> cookies);
 
     /**
      * Execute the request as a GET, and parse the result.
