@@ -623,4 +623,12 @@ public class ParserTest {
         Document doc = Jsoup.parse("<a \n href=\"one\" \r\n id=\"two\" \f >");
         assertEquals("<a href=\"one\" id=\"two\"></a>", doc.body().html());
     }
+
+    @Test public void handlesWhitespaceInoDocType() {
+        String html = "<!DOCTYPE html\n" +
+                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n" +
+                "      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
+    }
 }

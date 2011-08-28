@@ -1364,7 +1364,9 @@ enum TokeniserState {
                 t.transition(Data);
                 return;
             }
-            if (r.matches('>')) {
+            if (r.matchesAny('\t', '\n', '\f', ' '))
+                r.advance(); // ignore whitespace
+            else if (r.matches('>')) {
                 t.emitDoctypePending();
                 t.advanceTransition(Data);
             } else if (r.matchConsumeIgnoreCase("PUBLIC")) {
