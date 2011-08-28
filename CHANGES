@@ -12,6 +12,9 @@ jsoup changelog
  * Fixed handling of null characters within comments.
    <https://github.com/jhy/jsoup/issues/121>
 
+ * Tweaked escaped entity detection in attributes to not treat &entity_... as an entity form.
+   <https://github.com/jhy/jsoup/issues/129>
+
 *** Release 1.6.1 [2011-Jul-02]
  * Fixed Java 1.5 compatibility.
    <https://github.com/jhy/jsoup/issues/103>

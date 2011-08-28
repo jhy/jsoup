@@ -102,7 +102,7 @@ class Tokeniser {
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
-        if (reader.matchesAny('\t', '\n', '\f', '<', '&'))
+        if (reader.matchesAny('\t', '\n', '\f', ' ', '<', '&'))
             return null;
 
         reader.mark();
@@ -149,7 +149,7 @@ class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
-            if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matches('='))) {
+            if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
                 // don't want that to match
                 reader.rewindToMark();
                 return null;

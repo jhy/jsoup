@@ -52,4 +52,10 @@ public class AttributeParseTest {
         assertEquals("?foo=bar∣&lt=true", els.first().attr("href")); // &mid gets to ∣ because not tailed by =; lt is so not unescaped
         assertEquals("?foo=bar<qux&lg=1", els.last().attr("href"));
     }
+
+    @Test public void moreAttributeUnescapes() {
+        String html = "<a href='&wr_id=123&mid-size=true&ok=&wr'>Check</a>";
+        Elements els = Jsoup.parse(html).select("a");
+        assertEquals("&wr_id=123&mid-size=true&ok=≀", els.first().attr("href"));
+    }
 }
