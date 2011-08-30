@@ -486,5 +486,46 @@ public class ElementTest {
         assertTrue(doc.html().contains(doc.select("div").outerHtml()));
     }
 
+    @Test public void testGetTextNodes() {
+        Document doc = Jsoup.parse("<p>One <span>Two</span> Three <br> Four</p>");
+        List<TextNode> textNodes = doc.select("p").first().textNodes();
 
+        assertEquals(3, textNodes.size());
+        assertEquals("One ", textNodes.get(0).text());
+        assertEquals(" Three ", textNodes.get(1).text());
+        assertEquals(" Four", textNodes.get(2).text());
+
+        assertEquals(0, doc.select("br").first().textNodes().size());
+    }
+
+    @Test public void testManipulateTextNodes() {
+        Document doc = Jsoup.parse("<p>One <span>Two</span> Three <br> Four</p>");
+        Element p = doc.select("p").first();
+        List<TextNode> textNodes = p.textNodes();
+
+        textNodes.get(1).text(" three-more ");
+        textNodes.get(2).splitText(3).text("-ur");
+
+        assertEquals("One Two three-more Fo-ur", p.text());
+        assertEquals("One three-more Fo-ur", p.ownText());
+        assertEquals(4, p.textNodes().size()); // grew because of split
+    }
+
+    @Test public void testGetDataNodes() {
+        Document doc = Jsoup.parse("<script>One Two</script> <style>Three Four</style> <p>Fix Six</p>");
+        Element script = doc.select("script").first();
+        Element style = doc.select("style").first();
+        Element p = doc.select("p").first();
+
+        List<DataNode> scriptData = script.dataNodes();
+        assertEquals(1, scriptData.size());
+        assertEquals("One Two", scriptData.get(0).getWholeData());
+
+        List<DataNode> styleData = style.dataNodes();
+        assertEquals(1, styleData.size());
+        assertEquals("Three Four", styleData.get(0).getWholeData());
+
+        List<DataNode> pData = p.dataNodes();
+        assertEquals(0, pData.size());
+    }
 }
