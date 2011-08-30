@@ -193,7 +193,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that match the {@link Selector} query, with this element as the starting context. Matched elements
+     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
      * may include this element, or any of its children.
      * <p/>
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -205,12 +205,12 @@ public class Element extends Node {
      * <p/>
      * See the query syntax documentation in {@link org.jsoup.select.Selector}.
      *
-     * @param query a {@link Selector} query
+     * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector
      */
-    public Elements select(String query) {
-        return Selector.select(query, this);
+    public Elements select(String cssQuery) {
+        return Selector.select(cssQuery, this);
     }
     
     /**
