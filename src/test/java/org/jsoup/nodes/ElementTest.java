@@ -241,6 +241,12 @@ public class ElementTest {
         assertEquals("<section>\n <div></div>\n</section>", doc.select("section").first().outerHtml());
     }
 
+    @Test public void testNoIndentOnScriptAndStyle() {
+        // don't newline+indent closing </script> and </style> tags
+        Document doc = Jsoup.parse("<script>one\ntwo</script>\n<style>three\nfour</style>");
+        assertEquals("<script>one\ntwo</script> \n<style>three\nfour</style>", doc.head().html());
+    }
+
     @Test public void testContainerOutput() {
         Document doc = Jsoup.parse("<title>Hello there</title> <div><p>Hello</p><p>there</p></div> <div>Another</div>");
         assertEquals("<title>Hello there</title>", doc.select("title").first().outerHtml());

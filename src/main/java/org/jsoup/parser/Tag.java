@@ -213,7 +213,7 @@ public class Tag {
             "device"
     };
     private static final String[] formatAsInlineTags = {
-            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td"
+            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style"
     };
     private static final String[] preserveWhitespaceTags = {"pre", "plaintext", "title"};
 
