@@ -25,6 +25,8 @@ public class HtmlToPlainText {
     public static void main(String... args) throws IOException {
         Validate.isTrue(args.length == 1, "usage: supply url to fetch");
         String url = args[0];
+
+        // fetch the specified URL and parse to a HTML DOM
         Document doc = Jsoup.connect(url).get();
 
         HtmlToPlainText formatter = new HtmlToPlainText();
@@ -32,6 +34,11 @@ public class HtmlToPlainText {
         System.out.println(plainText);
     }
 
+    /**
+     * Format an Element to plain-text
+     * @param element the root element to format
+     * @return formatted text
+     */
     public String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
         NodeTraversor traversor = new NodeTraversor(formatter);
