@@ -465,6 +465,20 @@ public class Elements implements List<Element>, Cloneable {
         return contents.isEmpty() ? null : contents.get(contents.size() - 1);
     }
 
+    /**
+     * Perform a depth-first traversal on each of the selected elements.
+     * @param nodeVisitor the visitor callbacks to perform on each node
+     * @return this, for chaining
+     */
+    public Elements traverse(NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeVisitor);
+        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
+        for (Element el: contents) {
+            traversor.traverse(el);
+        }
+        return this;
+    }
+
     // implements List<Element> delegates:
     public int size() {return contents.size();}
 

@@ -481,6 +481,18 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     * Perform a depth-first traversal through this node and its descendants.
+     * @param nodeVisitor the visitor callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public Node traverse(NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeVisitor);
+        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
+        traversor.traverse(this);
+        return this;
+    }
+
+    /**
      Get the outer HTML of this node.
      @return HTML
      */

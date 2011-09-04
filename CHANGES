@@ -6,6 +6,8 @@ jsoup changelog
  * Added Element.textNodes() and Element.dataNodes(), to easily access an element's children text nodes and data nodes.
 
  * Added an example program that demonstrates how to format HTML as plain-text, and the use of the NodeVisitor interface.
+
+ * Added Node.traverse() and Elements.traverse() methods, to iterate through a node's descendants.
  
  * Updated jsoup.connect so that when requests made as POSTs are redirected, the redirect is followed as a GET.
    <https://github.com/jhy/jsoup/issues/120>
