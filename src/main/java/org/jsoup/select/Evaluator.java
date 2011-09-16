@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Evaluates that an element matches the selector.
  */
 public abstract class Evaluator {
-    Evaluator() {
+    protected Evaluator() {
     }
 
     /**
