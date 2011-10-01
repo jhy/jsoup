@@ -23,6 +23,7 @@ class TreeBuilder {
     private DescendableLinkedList<Element> stack; // the stack of open elements
 
     private String baseUri; // current base uri, for creating new elements
+    private boolean baseUriSetFromDoc = false;
     private Token currentToken; // currentToken is used only for error tracking.
     private Element headElement; // the current head element
     private Element formElement; // the current form element
@@ -152,11 +153,15 @@ class TreeBuilder {
         return baseUri;
     }
 
-    void setBaseUri(Element base) {
+    void maybeSetBaseUri(Element base) {
+        if (baseUriSetFromDoc) // only listen to the first <base href> in parse
+            return;
+
         String href = base.absUrl("href");
         if (href.length() != 0) { // ignore <base target> etc
             baseUri = href;
-            doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base
+            baseUriSetFromDoc = true;
+            doc.setBaseUri(href); // set on the doc so doc.createElement(Tag) will get updated base, and to update all descendants
         }
     }
 

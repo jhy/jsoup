@@ -32,6 +32,16 @@ public class NodeTest {
         assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
     }
 
+    @Test public void setBaseUriIsRecursive() {
+        Document doc = Jsoup.parse("<div><p></p></div>");
+        String baseUri = "http://jsoup.org";
+        doc.setBaseUri(baseUri);
+        
+        assertEquals(baseUri, doc.baseUri());
+        assertEquals(baseUri, doc.select("div").first().baseUri());
+        assertEquals(baseUri, doc.select("p").first().baseUri());
+    }
+
     @Test public void handlesAbsPrefix() {
         Document doc = Jsoup.parse("<a href=/foo>Hello</a>", "http://jsoup.org/");
         Element a = doc.select("a").first();

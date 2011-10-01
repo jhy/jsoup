@@ -132,12 +132,20 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Update the base URI of this node.
+     Update the base URI of this node and all of its descendants.
      @param baseUri base URI to set
      */
-    public void setBaseUri(String baseUri) {
+    public void setBaseUri(final String baseUri) {
         Validate.notNull(baseUri);
-        this.baseUri = baseUri;
+
+        traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                node.baseUri = baseUri;
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        });
     }
 
     /**

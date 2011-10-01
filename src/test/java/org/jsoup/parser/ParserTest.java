@@ -240,22 +240,21 @@ public class ParserTest {
     }
 
     @Test public void handlesBaseTags() {
-        // todo -- don't handle base tags like this -- spec and browsers don't (any more -- v. old ones do).
-        // instead, just maintain one baseUri in the doc
-        String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
+        // only listen to the first base href
+        String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=/4>#</a>";
         Document doc = Jsoup.parse(h, "http://foo/");
-        assertEquals("http://bar", doc.baseUri()); // gets updated as base changes, so doc.createElement has latest.
+        assertEquals("http://foo/2/", doc.baseUri()); // gets set once, so doc and descendants have first only
 
         Elements anchors = doc.getElementsByTag("a");
         assertEquals(3, anchors.size());
 
-        assertEquals("http://foo/", anchors.get(0).baseUri());
+        assertEquals("http://foo/2/", anchors.get(0).baseUri());
         assertEquals("http://foo/2/", anchors.get(1).baseUri());
-        assertEquals("http://bar", anchors.get(2).baseUri());
+        assertEquals("http://foo/2/", anchors.get(2).baseUri());
 
-        assertEquals("http://foo/1", anchors.get(0).absUrl("href"));
+        assertEquals("http://foo/2/1", anchors.get(0).absUrl("href"));
         assertEquals("http://foo/2/3", anchors.get(1).absUrl("href"));
-        assertEquals("http://bar/4", anchors.get(2).absUrl("href"));
+        assertEquals("http://foo/4", anchors.get(2).absUrl("href"));
     }
 
     @Test public void handlesCdata() {

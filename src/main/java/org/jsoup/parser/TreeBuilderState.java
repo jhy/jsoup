@@ -111,9 +111,9 @@ enum TreeBuilderState {
                         return InBody.process(t, tb);
                     } else if (StringUtil.in(name, "base", "basefont", "bgsound", "command", "link")) {
                         Element el = tb.insertEmpty(start);
-                        // jsoup special: update base as it is seen. todo: flip to current browser behaviour of one shot
+                        // jsoup special: update base the frist time it is seen
                         if (name.equals("base") && el.hasAttr("href"))
-                            tb.setBaseUri(el);
+                            tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
                         Element meta = tb.insertEmpty(start);
                         // todo: charset switches
