@@ -630,4 +630,9 @@ public class ParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
     }
+    
+    @Test public void issue134() throws java.io.IOException {
+        Document doc = Jsoup.connect("http://dl.dropbox.com/u/972460/test.html").get();
+        assertEquals(true, doc.head().hasText());
+    }
 }

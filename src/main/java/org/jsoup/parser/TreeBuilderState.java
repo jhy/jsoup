@@ -1458,6 +1458,9 @@ enum TreeBuilderState {
             // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
             for (int i = 0; i < data.length(); i++) {
                 char c = data.charAt(i);
+                if (Character.isIdentifierIgnorable(c)){
+                	return true;
+                }
                 if (!Character.isWhitespace(c))
                     return false;
             }
