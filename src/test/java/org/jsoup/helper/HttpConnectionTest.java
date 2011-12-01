@@ -80,6 +80,21 @@ public class HttpConnectionTest {
         assertEquals("data", res.cookie("four"));
     }
 
+    @Test public void multipleCookies() {
+        // prep http response header map
+        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        List<String> cookieStrings = new ArrayList<String>();
+        cookieStrings.add("cookie=1;");
+        cookieStrings.add("cookie=2;");
+        cookieStrings.add("cookie=3; expires=Mon, 23-Aug-2012 02:20:35 GMT;");
+        cookieStrings.add("cookie=4; expires=Mon, 23-Aug-2010 02:20:35 GMT;");
+
+        headers.put("Set-Cookie", cookieStrings);
+        HttpConnection.Response res = new HttpConnection.Response();
+        res.processResponseHeaders(headers);
+        assertEquals("3", res.cookie("cookie"));
+    }
+
     @Test public void connectWithUrl() throws MalformedURLException {
         Connection con = HttpConnection.connect(new URL("http://example.com"));
         assertEquals("http://example.com", con.request().url().toExternalForm());

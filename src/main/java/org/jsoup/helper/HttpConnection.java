@@ -5,12 +5,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.TokenQueue;
 
 import java.io.*;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -515,18 +517,31 @@ public class HttpConnection implements Connection {
 
                 List<String> values = entry.getValue();
                 if (name.equalsIgnoreCase("Set-Cookie")) {
+                    
                     for (String value : values) {
                         if (value == null)
                             continue;
-                        TokenQueue cd = new TokenQueue(value);
-                        String cookieName = cd.chompTo("=").trim();
-                        String cookieVal = cd.consumeTo(";").trim();
-                        if (cookieVal == null)
-                            cookieVal = "";
-                        // ignores path, date, domain, secure et al. req'd?
-                        // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
-                            cookie(cookieName, cookieVal);
+                        try
+                        {
+                            for(HttpCookie c : HttpCookie.parse(value))
+                            {
+                                if(!c.hasExpired())
+                                    cookie(c.getName(), c.getValue());
+                            }
+                        }
+                        // fall back
+                        catch(IllegalArgumentException iae)
+                        {
+                            TokenQueue cd = new TokenQueue(value);
+                            String cookieName = cd.chompTo("=").trim();
+                            String cookieVal = cd.consumeTo(";").trim();
+                            if (cookieVal == null)
+                                cookieVal = "";
+                            // ignores path, date, domain, secure et al. req'd?
+                            // name not blank, value not null
+                            if (cookieName != null && cookieName.length() > 0)
+                                cookie(cookieName, cookieVal);
+                        }
                     }
                 } else { // only take the first instance of each header
                     if (!values.isEmpty())
