@@ -100,6 +100,12 @@ public class HttpConnectionTest {
         assertEquals("http://example.com", con.request().url().toExternalForm());
     }
 
+    @Test public void rangeRequest() throws MalformedURLException, IOException {
+        Connection.Response res = HttpConnection.connect(new URL("http://example.com"))
+                                            .followRedirects(true).range(0, 10).execute();
+        assertEquals("<!DOCTYPE h", res.body());
+    }
+
     @Test(expected=IllegalArgumentException.class) public void throwsOnMalformedUrl() {
         Connection con = HttpConnection.connect("bzzt");
     }

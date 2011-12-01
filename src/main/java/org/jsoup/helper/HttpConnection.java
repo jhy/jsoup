@@ -171,6 +171,19 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection range(long start, long end) {
+        req.range(start, end);
+        return this;
+    }
+
+    public long rangeEnd() {
+        return(req.rangeEnd());
+    }
+
+    public long rangeStart() {
+        return(req.rangeStart());
+    }
+
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
@@ -290,6 +303,7 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
+        private long rangeStart, rangeEnd;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -297,6 +311,7 @@ public class HttpConnection implements Connection {
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            rangeStart = rangeEnd = -1;
         }
 
         public int timeout() {
@@ -342,6 +357,24 @@ public class HttpConnection implements Connection {
 
         public Collection<Connection.KeyVal> data() {
             return data;
+        }
+
+        public void range(long start, long end) {
+            this.rangeStart = start;
+            this.rangeEnd = end;
+            // TODO decide if I should allow gzip for partial
+            if(this.rangeStart != -1)
+                this.headers.remove("Accept-Encoding");
+            else
+                this.headers.put("Accept-Encoding", "gzip");
+        }
+
+        public long rangeEnd() {
+            return(this.rangeEnd);
+        }
+
+        public long rangeStart() {
+            return(this.rangeStart);
         }
     }
 
@@ -392,6 +425,8 @@ public class HttpConnection implements Connection {
             if (status != HttpURLConnection.HTTP_OK) {
                 if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
                     needsRedirect = true;
+                else if(req.rangeStart() != -1 && status == HttpURLConnection.HTTP_PARTIAL)
+                    ;
                 else if (!req.ignoreHttpErrors())
                     throw new IOException(status + " error loading URL " + req.url().toString());
             }
@@ -478,6 +513,9 @@ public class HttpConnection implements Connection {
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
+            if (req.rangeStart() != -1)
+                conn.addRequestProperty("Range", "bytes=" + req.rangeStart()
+                        + (req.rangeEnd() == -1 ? "-" : "-" + req.rangeEnd()));
             if (req.method() == Method.POST)
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)

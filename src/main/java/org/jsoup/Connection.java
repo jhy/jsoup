@@ -193,6 +193,26 @@ public interface Connection {
      */
     public Connection response(Response response);
 
+    /**
+     * Do an HTTP range request
+     * @param start The start of range. Pass -1 to cancel range request
+     * @param end   The end of range. Pass -1 for no lower bound (goes to end of file)
+     * @return this Connection, for chaining
+     */
+    public Connection range(long start, long end);
+
+    /**
+     * Get the start of the range, if there is one
+     * @return If this request is configured to do a range request, it's the offset of the first byte.  Else, it's -1.
+     */
+    public long rangeStart();
+
+    /**
+     * Get the end of the range, if there is one
+     * @return If this request is configured to do a range request and there is a lower bound, it's the offset of the last byte.  Else, it's -1.
+     */
+    public long rangeEnd();
+
 
     /**
      * Common methods for Requests and Responses
@@ -373,6 +393,24 @@ public interface Connection {
          */
         public Collection<KeyVal> data();
 
+        /**
+         * Do an HTTP range request
+         * @param start The start of range. Pass -1 to cancel range request
+         * @param end   The end of range. Pass -1 for no lower bound (goes to end of file)
+         */
+        public void range(long start, long end);
+
+        /**
+         * Get the start of the range, if there is one
+         * @return If this request is configured to do a range request, it's the offset of the first byte.  Else, it's -1.
+         */
+        public long rangeStart();
+        
+        /**
+         * Get the end of the range, if there is one
+         * @return If this request is configured to do a range request and there is a lower bound, it's the offset of the last byte.  Else, it's -1.
+         */
+        public long rangeEnd();
     }
 
     /**
