@@ -184,6 +184,15 @@ public class HttpConnection implements Connection {
         return(req.rangeStart());
     }
 
+    public Connection ignoreReadError(boolean ignoreReadError) {
+        req.ignoreReadError(ignoreReadError);
+        return(this);
+    }
+
+    public boolean ignoreReadError() {
+        return(req.ignoreReadError());
+    }
+
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
@@ -303,6 +312,7 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
+        private boolean ignoreReadError = false;
         private long rangeStart, rangeEnd;
 
       	private Request() {
@@ -375,6 +385,14 @@ public class HttpConnection implements Connection {
 
         public long rangeStart() {
             return(this.rangeStart);
+        }
+
+        public void ignoreReadError(boolean ignoreReadError) {
+            this.ignoreReadError = ignoreReadError;
+        }
+
+        public boolean ignoreReadError() {
+            return(this.ignoreReadError);
         }
     }
 
@@ -451,7 +469,9 @@ public class HttpConnection implements Connection {
                         new BufferedInputStream(new GZIPInputStream(dataStream)) :
                         new BufferedInputStream(dataStream);
                 
-                res.byteData = DataUtil.readToByteBuffer(bodyStream);
+                res.byteData = req.ignoreReadError() ? 
+                                    DataUtil.safeReadToByteBuffer(bodyStream) : 
+                                    DataUtil.readToByteBuffer(bodyStream);
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             } finally {
                 if (bodyStream != null) bodyStream.close();

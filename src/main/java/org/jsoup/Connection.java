@@ -212,7 +212,20 @@ public interface Connection {
      * @return If this request is configured to do a range request and there is a lower bound, it's the offset of the last byte.  Else, it's -1.
      */
     public long rangeEnd();
+    
+    
+    /**
+     * Sets if this connection should ignore read errors (i.e. when a socket timeout error happens, it just returns what it has)
+     * @param ignoreReadError   Set to true to ignore read errors
+     * @return  this for chaining
+     */
+    public Connection ignoreReadError(boolean ignoreReadError);
 
+    /**
+     * True if this connection should ignore read errors
+     * @return True if this request should ignore read errors
+     */
+    public boolean ignoreReadError();
 
     /**
      * Common methods for Requests and Responses
@@ -411,6 +424,18 @@ public interface Connection {
          * @return If this request is configured to do a range request and there is a lower bound, it's the offset of the last byte.  Else, it's -1.
          */
         public long rangeEnd();
+        
+        /**
+         * Sets if this request should ignore read errors (i.e. when a socket timeout error happens, it just returns what it has)
+         * @param ignoreReadError   Set to true to ignore read errors
+         */
+        public void ignoreReadError(boolean ignoreReadError);
+        
+        /**
+         * True if this request should ignore read errors
+         * @return True if this request should ignore read errors
+         */
+        public boolean ignoreReadError();
     }
 
     /**

@@ -96,6 +96,31 @@ public class DataUtil {
         ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
         return byteData;
     }
+    
+    /**
+     * Same as readToByteBuffer, but it doesn't throw an exception.
+     * @param inStream  InputStream to read
+     * @return  Everything that it has read up until the end or an exception
+     */
+    static ByteBuffer safeReadToByteBuffer(InputStream inStream) {
+        byte[] buffer = new byte[bufferSize];
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+        try
+        {
+            int read;
+            while(true) {
+                read  = inStream.read(buffer);
+                if (read == -1) break;
+                outStream.write(buffer, 0, read);
+            }
+        }
+        catch(IOException ioe)
+        {
+            // TODO what do I do with this?
+        }
+        ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
+        return byteData;
+    }
 
     /**
      * Parse out a charset from a content type header.
