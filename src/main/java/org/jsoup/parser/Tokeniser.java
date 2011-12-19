@@ -13,7 +13,7 @@ class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
 
     private CharacterReader reader; // html input
-    private boolean trackErrors = true;
+    private boolean trackErrors = false;
     private List<ParseError> errors = new ArrayList<ParseError>(); // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
