@@ -18,7 +18,7 @@ import static org.junit.Assert.assertTrue;
  Tests for the Parser
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class ParserTest {
+public class HtmlParserTest {
 
     @Test public void parsesSimpleDocument() {
         String html = "<html><head><title>First!</title></head><body><p>First post! <img src=\"foo.png\" /></p></body></html>";

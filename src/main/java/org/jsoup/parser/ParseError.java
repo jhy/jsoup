@@ -9,7 +9,7 @@ class ParseError {
     private int pos;
     private char c;
     private TokeniserState tokeniserState;
-    private TreeBuilderState treeBuilderState;
+    private HtmlTreeBuilderState treeBuilderState;
     private Token token;
 
     ParseError(String errorMsg, char c, TokeniserState tokeniserState, int pos) {
@@ -30,7 +30,7 @@ class ParseError {
         this.pos = pos;
     }
 
-    ParseError(String errorMsg, TreeBuilderState treeBuilderState, Token token, int pos) {
+    ParseError(String errorMsg, HtmlTreeBuilderState treeBuilderState, Token token, int pos) {
         this.errorMsg = errorMsg;
         this.treeBuilderState = treeBuilderState;
         this.token = token;

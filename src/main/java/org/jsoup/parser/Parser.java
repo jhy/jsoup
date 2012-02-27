@@ -20,7 +20,7 @@ public class Parser {
      * @return parsed Document
      */
     public static Document parse(String html, String baseUri) {
-        TreeBuilder treeBuilder = new TreeBuilder();
+        TreeBuilder treeBuilder = new HtmlTreeBuilder();
         return treeBuilder.parse(html, baseUri);
     }
 
@@ -35,7 +35,7 @@ public class Parser {
      * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
-        TreeBuilder treeBuilder = new TreeBuilder();
+        HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
         return treeBuilder.parseFragment(fragmentHtml, context, baseUri);
     }
 
