@@ -32,6 +32,20 @@ public class Jsoup {
     }
 
     /**
+     Parse HTML into a Document, using the provided Parser. You can provide an alternate parser, such as a simple XML
+     (non-HTML) parser.
+
+     @param html    HTML to parse
+     @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     before the HTML declares a {@code <base href>} tag.
+     @param parser alternate {@link Parser#xmlParser() parser} to use.
+     @return sane HTML
+     */
+    public static Document parse(String html, String baseUri, Parser parser) {
+        return parser.parseInput(html, baseUri);
+    }
+
+    /**
      Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
      {@code <base href>} tag.
 
@@ -102,6 +116,23 @@ public class Jsoup {
      */
     public static Document parse(InputStream in, String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
+    }
+
+    /**
+     Read an input stream, and parse it to a Document. You can provide an alternate parser, such as a simple XML
+     (non-HTML) parser.
+
+     @param in          input stream to read. Make sure to close it after parsing.
+     @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
+     present, or fall back to {@code UTF-8} (which is often safe to do).
+     @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
+     @param parser alternate {@link Parser#xmlParser() parser} to use.
+     @return sane HTML
+
+     @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
+     */
+    public static Document parse(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+        return DataUtil.load(in, charsetName, baseUri, parser);
     }
 
     /**

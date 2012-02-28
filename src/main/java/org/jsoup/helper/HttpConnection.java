@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import java.io.*;
@@ -132,6 +133,11 @@ public class HttpConnection implements Connection {
         for (Map.Entry<String, String> entry : cookies.entrySet()) {
             req.cookie(entry.getKey(), entry.getValue());
         }
+        return this;
+    }
+
+    public Connection parser(Parser parser) {
+        res.parser(parser);
         return this;
     }
 
@@ -346,6 +352,7 @@ public class HttpConnection implements Connection {
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
+        private Parser parser = Parser.htmlParser();
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
@@ -367,7 +374,7 @@ public class HttpConnection implements Connection {
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
-
+        
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -447,10 +454,15 @@ public class HttpConnection implements Connection {
             if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, url.toString()));
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());
+            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), parser);
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             return doc;
+        }
+
+        public void parser(Parser parser) {
+            Validate.notNull(parser);
+            this.parser = parser;
         }
 
         public String body() {

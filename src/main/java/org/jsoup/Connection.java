@@ -1,6 +1,7 @@
 package org.jsoup;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 import java.net.URL;
 import java.util.Map;
@@ -145,6 +146,13 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection cookies(Map<String, String> cookies);
+
+    /**
+     * Provide an alternate parser to use when parsing the response to a Document.
+     * @param parser alternate parser
+     * @return this Connection, for chaining
+     */
+    public Connection parser(Parser parser);
 
     /**
      * Execute the request as a GET, and parse the result.
@@ -410,6 +418,12 @@ public interface Connection {
          * @throws IOException on error
          */
         public Document parse() throws IOException;
+
+        /**
+         * Specify the parser to use when parsing the document.
+         * @param parser parser to use.
+         */
+        public void parser(Parser parser);
 
         /**
          * Get the body of the response as a plain string.

@@ -11,6 +11,66 @@ import java.util.List;
  * in {@link org.jsoup.Jsoup}.
  */
 public class Parser {
+    private TreeBuilder treeBuilder;
+    private boolean trackErrors = false;
+    private List<ParseError> errors;
+
+    /**
+     * Create a new Parser, using the specified TreeBuilder
+     * @param treeBuilder TreeBuilder to use to parse input into Documents.
+     */
+    public Parser(TreeBuilder treeBuilder) {
+        this.treeBuilder = treeBuilder;
+    }
+    
+    public Document parseInput(String html, String baseUri) {
+        Document doc = treeBuilder.parse(html, baseUri, trackErrors);
+        errors = treeBuilder.getErrors();
+        return doc;
+    }
+
+    // gets & sets
+    /**
+     * Get the TreeBuilder currently in use.
+     * @return current TreeBuilder.
+     */
+    public TreeBuilder getTreeBuilder() {
+        return treeBuilder;
+    }
+
+    /**
+     * Update the TreeBuilder used when parsing content.
+     * @param treeBuilder current TreeBuilder
+     */
+    public void setTreeBuilder(TreeBuilder treeBuilder) {
+        this.treeBuilder = treeBuilder;
+    }
+
+    /**
+     * Check if parse error tracking is enabled.
+     * @return current track error state.
+     */
+    public boolean isTrackErrors() {
+        return trackErrors;
+    }
+
+    /**
+     * Enable or disable parse error tracking for the next parse/
+     * @param trackErrors on/off
+     */
+    public void setTrackErrors(boolean trackErrors) {
+        this.trackErrors = trackErrors;
+    }
+
+    /**
+     * Retrieve the parse errors, if any, from the last parse.
+     * @return list of parse errors, if error tracking was enabled and errors occurred.
+     */
+    public List<ParseError> getErrors() {
+        return errors;
+    }
+
+    // static parse functions below
     /**
      * Parse HTML into a Document.
      *
@@ -21,7 +81,7 @@ public class Parser {
      */
     public static Document parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parse(html, baseUri);
+        return treeBuilder.parse(html, baseUri, false);
     }
 
     /**
@@ -36,7 +96,7 @@ public class Parser {
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri);
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, false);
     }
 
     /**
@@ -67,5 +127,25 @@ public class Parser {
      */
     public static Document parseBodyFragmentRelaxed(String bodyHtml, String baseUri) {
         return parse(bodyHtml, baseUri);
+    }
+    
+    // builders
+
+    /**
+     * Create a new HTML parser. This parser treats input as HTML5, and enforces the creation of a normalised document,
+     * based on a knowledge of the semantics of the incoming tags.
+     * @return a new HTML parser.
+     */
+    public static Parser htmlParser() {
+        return new Parser(new HtmlTreeBuilder());
+    }
+
+    /**
+     * Create a new XML parser. This parser assumes no knowledge of the incoming tags and does not treat it as HTML,
+     * rather creates a simple tree directly from the input.
+     * @return a new simple XML parser.
+     */
+    public static Parser xmlParser() {
+        return new Parser(new XmlTreeBuilder());
     }
 }
