@@ -340,7 +340,7 @@ public interface Connection {
          * Configures the request to (not) follow server redirects. By default this is <b>true</b>.
          *
          * @param followRedirects true if server redirects should be followed.
-         * @return this Connection, for chaining
+         * @return this Request, for chaining
          */
         public Request followRedirects(boolean followRedirects);
 
@@ -353,8 +353,9 @@ public interface Connection {
     	/**
     	 * Configures the request to ignore HTTP errors in the response.
     	 * @param ignoreHttpErrors set to true to ignore HTTP errors.
+         * @return this Request, for chaining
     	 */
-        public void ignoreHttpErrors(boolean ignoreHttpErrors);
+        public Request ignoreHttpErrors(boolean ignoreHttpErrors);
 
         /**
          * Get the current ignoreContentType configuration.
@@ -365,8 +366,9 @@ public interface Connection {
         /**
     	 * Configures the request to ignore the Content-Type of the response.
     	 * @param ignoreContentType set to true to ignore the contenet type.
+         * @return this Request, for chaining
     	 */
-        public void ignoreContentType(boolean ignoreContentType);
+        public Request ignoreContentType(boolean ignoreContentType);
 
         /**
          * Add a data parameter to the request
@@ -381,6 +383,18 @@ public interface Connection {
          */
         public Collection<KeyVal> data();
 
+        /**
+         * Specify the parser to use when parsing the document.
+         * @param parser parser to use.
+         * @return this Request, for chaining
+         */
+        public Request parser(Parser parser);
+
+        /**
+         * Get the current parser to use when parsing the document.
+         * @return current Parser
+         */
+        public Parser parser();
     }
 
     /**
@@ -418,12 +432,6 @@ public interface Connection {
          * @throws IOException on error
          */
         public Document parse() throws IOException;
-
-        /**
-         * Specify the parser to use when parsing the document.
-         * @param parser parser to use.
-         */
-        public void parser(Parser parser);
 
         /**
          * Get the body of the response as a plain string.

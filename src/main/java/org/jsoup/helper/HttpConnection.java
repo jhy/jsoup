@@ -137,7 +137,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection parser(Parser parser) {
-        res.parser(parser);
+        req.parser(parser);
         return this;
     }
 
@@ -295,6 +295,7 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
+        private Parser parser;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -302,6 +303,7 @@ public class HttpConnection implements Connection {
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            parser = Parser.htmlParser();
         }
 
         public int timeout() {
@@ -327,16 +329,18 @@ public class HttpConnection implements Connection {
             return ignoreHttpErrors;
         }
 
-        public void ignoreHttpErrors(boolean ignoreHttpErrors) {
+        public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
             this.ignoreHttpErrors = ignoreHttpErrors;
+            return this;
         }
 
         public boolean ignoreContentType() {
             return ignoreContentType;
         }
 
-        public void ignoreContentType(boolean ignoreContentType) {
+        public Connection.Request ignoreContentType(boolean ignoreContentType) {
             this.ignoreContentType = ignoreContentType;
+            return this;
         }
 
         public Request data(Connection.KeyVal keyval) {
@@ -348,11 +352,19 @@ public class HttpConnection implements Connection {
         public Collection<Connection.KeyVal> data() {
             return data;
         }
+        
+        public Request parser(Parser parser) {
+            this.parser = parser;
+            return this;
+        }
+        
+        public Parser parser() {
+            return parser;
+        }
     }
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
-        private Parser parser = Parser.htmlParser();
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
@@ -454,15 +466,10 @@ public class HttpConnection implements Connection {
             if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, url.toString()));
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), parser);
+            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             return doc;
-        }
-
-        public void parser(Parser parser) {
-            Validate.notNull(parser);
-            this.parser = parser;
         }
 
         public String body() {

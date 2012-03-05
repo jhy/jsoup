@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.DescendableLinkedList;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -21,6 +22,9 @@ abstract class TreeBuilder {
     protected List<ParseError> errors;
 
     protected void initialiseParse(String input, String baseUri, boolean trackErrors) {
+        Validate.notNull(input, "String input must not be null");
+        Validate.notNull(baseUri, "BaseURI must not be null");
+
         doc = new Document(baseUri);
         reader = new CharacterReader(input);
         tokeniser = new Tokeniser(reader);
