@@ -786,12 +786,29 @@ public class Element extends Node {
      */
     public String text() {
         StringBuilder sb = new StringBuilder();
-        text(sb);
+        Boolean linebreaks = false;
+        text(sb, linebreaks);
         return sb.toString().trim();
     }
 
-    private void text(StringBuilder accum) {
-        appendWhitespaceIfBr(this, accum);
+    /**
+     * Gets the combined text of this element and all its children.
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
+     *
+     * @return unencoded text, or empty string if none.
+     * @see #ownText()
+     * @see #textNodes()
+     */
+    public String textWithLinebreaks() {
+        StringBuilder sb = new StringBuilder();
+        Boolean linebreaks = true;
+        text(sb, linebreaks);
+        return sb.toString().trim();
+    }
+    
+    private void text(StringBuilder accum, Boolean linebreaks) {
+        appendWhitespaceOrNewlineIfBr(this, accum, linebreaks);
         
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
@@ -801,7 +818,9 @@ public class Element extends Node {
                 Element element = (Element) child;
                 if (accum.length() > 0 && element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
                     accum.append(" ");
-                element.text(accum);
+                if (linebreaks && element.isBlock())
+                	accum.append("\n");
+                element.text(accum, linebreaks);
             }
         }
     }
@@ -819,17 +838,36 @@ public class Element extends Node {
      */
     public String ownText() {
         StringBuilder sb = new StringBuilder();
-        ownText(sb);
+        Boolean linebreaks = false;
+        ownText(sb, linebreaks);
+        return sb.toString().trim();
+    }
+    
+    /**
+     * Gets the text owned by this element only; does not get the combined text of all children.
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
+     * whereas {@code p.text()} returns {@code "Hello there now!"}.
+     * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
+     *
+     * @return unencoded text, or empty string if none.
+     * @see #text()
+     * @see #textNodes()
+     */
+    public String ownTextWithLinebreaks() {
+        StringBuilder sb = new StringBuilder();
+        Boolean linebreaks = true;
+        ownText(sb, linebreaks);
         return sb.toString().trim();
     }
 
-    private void ownText(StringBuilder accum) {
+    private void ownText(StringBuilder accum, Boolean linebreaks) {
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
             } else if (child instanceof Element) {
-                appendWhitespaceIfBr((Element) child, accum);
+            	appendWhitespaceOrNewlineIfBr((Element) child, accum, linebreaks);
             }
         }
     }
@@ -845,9 +883,12 @@ public class Element extends Node {
         accum.append(text);
     }
 
-    private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
+    private static void appendWhitespaceOrNewlineIfBr(Element element, StringBuilder accum, Boolean linebreaks) {
         if (element.tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
-            accum.append(" ");
+        	if(linebreaks) 
+        		accum.append("\n");
+        	else
+        		accum.append(" ");
     }
 
     boolean preserveWhitespace() {
