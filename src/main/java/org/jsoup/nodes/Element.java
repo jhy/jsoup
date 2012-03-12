@@ -792,7 +792,7 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the combined text of this element and all its children.
+     * Gets the combined text of this element and all its children and formats blockElements and br with linebreaks.
      * <p>
      * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
@@ -844,7 +844,7 @@ public class Element extends Node {
     }
     
     /**
-     * Gets the text owned by this element only; does not get the combined text of all children.
+     * Gets the text owned by this element only; does not get the combined text of all children and formats blockElements and br with linebreaks.
      * <p>
      * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
      * whereas {@code p.text()} returns {@code "Hello there now!"}.
