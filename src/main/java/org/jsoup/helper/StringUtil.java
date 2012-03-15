@@ -71,7 +71,7 @@ public final class StringUtil {
 
         int l = string.length();
         for (int i = 0; i < l; i++) {
-            if (!Character.isWhitespace(string.codePointAt(i)))
+            if (!StringUtil.isWhitespace(string.codePointAt(i)))
                 return false;
         }
         return true;
@@ -94,6 +94,18 @@ public final class StringUtil {
         return true;
     }
 
+    /**
+     * Tests if a code point is "whitespace" defined in spec.
+     * @param c code point to test
+     * @return true if code point is whitespace, false otherwise
+     */
+    public static boolean isWhitespace(int c){
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r'){
+            return true;
+        }
+        return false;
+    }
+
     public static String normaliseWhitespace(String string) {
         StringBuilder sb = new StringBuilder(string.length());
 
@@ -103,7 +115,7 @@ public final class StringUtil {
         int l = string.length();
         for (int i = 0; i < l; i++) {
             int c = string.codePointAt(i);
-            if (Character.isWhitespace(c)) {
+            if (isWhitespace(c)) {
                 if (lastWasWhite) {
                     modified = true;
                     continue;
