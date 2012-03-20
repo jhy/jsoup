@@ -82,4 +82,14 @@ public class XmlTreeBuilderTest {
         assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
                 TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test
+    public void testDoesNotForceSelfClosingKnownTags() {
+        // html will force "<br>one</br>" to "<br />One<br />". XML should be stay "<br>one</br> -- don't recognise tag.
+        Document htmlDoc = Jsoup.parse("<br>one</br>");
+        assertEquals("<br />one\n<br />", htmlDoc.body().html());
+
+        Document xmlDoc = Jsoup.parse("<br>one</br>", "", Parser.xmlParser());
+        assertEquals("<br>one</br>", xmlDoc.html());
+    }
 }
