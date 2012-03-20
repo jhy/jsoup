@@ -12,6 +12,10 @@ abstract class Token {
 
     private Token() {
     }
+    
+    String tokenType() {
+        return this.getClass().getSimpleName();
+    }
 
     static class Doctype extends Token {
         final StringBuilder name = new StringBuilder();

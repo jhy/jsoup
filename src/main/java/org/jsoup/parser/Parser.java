@@ -41,9 +41,11 @@ public class Parser {
     /**
      * Update the TreeBuilder used when parsing content.
      * @param treeBuilder current TreeBuilder
+     * @return this, for chaining
      */
-    public void setTreeBuilder(TreeBuilder treeBuilder) {
+    public Parser setTreeBuilder(TreeBuilder treeBuilder) {
         this.treeBuilder = treeBuilder;
+        return this;
     }
 
     /**
@@ -57,14 +59,16 @@ public class Parser {
     /**
      * Enable or disable parse error tracking for the next parse/
      * @param trackErrors on/off
+     * @return this, for chaining
      */
-    public void setTrackErrors(boolean trackErrors) {
+    public Parser setTrackErrors(boolean trackErrors) {
         this.trackErrors = trackErrors;
+        return this;
     }
 
     /**
      * Retrieve the parse errors, if any, from the last parse.
-     * @return list of parse errors, if error tracking was enabled and errors occurred.
+     * @return list of parse errors, if error tracking was enabled and errors occurred. If not enabled, returns null.
      */
     public List<ParseError> getErrors() {
         return errors;

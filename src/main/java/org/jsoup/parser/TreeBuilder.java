@@ -19,7 +19,7 @@ abstract class TreeBuilder {
     protected String baseUri; // current base uri, for creating new elements
     protected Token currentToken; // currentToken is used only for error tracking.
     protected boolean trackErrors = false;
-    protected List<ParseError> errors;
+    protected List<ParseError> errors; // null when not tracking errors
 
     protected void initialiseParse(String input, String baseUri, boolean trackErrors) {
         Validate.notNull(input, "String input must not be null");
@@ -27,11 +27,11 @@ abstract class TreeBuilder {
 
         doc = new Document(baseUri);
         reader = new CharacterReader(input);
-        tokeniser = new Tokeniser(reader);
+        this.trackErrors = trackErrors;
+        errors = trackErrors ? new ArrayList<ParseError>() : null;
+        tokeniser = new Tokeniser(reader, errors);
         stack = new DescendableLinkedList<Element>();
         this.baseUri = baseUri;
-        errors = new ArrayList<ParseError>();
-        this.trackErrors = trackErrors;
     }
 
     Document parse(String input, String baseUri) {

@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -629,5 +630,28 @@ public class HtmlParserTest {
                 "      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
         Document doc = Jsoup.parse(html);
         assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
+    }
+    
+    @Test public void tracksErrorsWhenRequested() {
+        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser().setTrackErrors(true);
+        Document doc = parser.parseInput(html, "http://example.com");
+        
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(5, errors.size());
+        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("36: Invalid character reference: invalid named referenece 'arrgh'", errors.get(2).toString());
+        assertEquals("50: Self closing flag not acknowledged", errors.get(3).toString());
+        assertEquals("61: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
+    }
+
+    @Test public void noErrorsByDefault() {
+        String html = "<p>One</p href='no'>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser();
+        Document doc = parser.parseInput(html, "http://example.com");
+
+        List<ParseError> errors = parser.getErrors();
+        assertNull(errors);
     }
 }
