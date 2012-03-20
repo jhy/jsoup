@@ -1,6 +1,11 @@
 jsoup changelog
 
 *** Release 1.6.2 [PENDING]
+ * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
+   document structure or special tag behaviour.
+
+ * Added the optional ability to track errors when tokenising and parsing.
+
  * Added jsoup.connect.cookies(Map) method, to set multiple cookies at once, possibly from a prior request.
 
  * Added Element.textNodes() and Element.dataNodes(), to easily access an element's children text nodes and data nodes.
