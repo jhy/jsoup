@@ -654,4 +654,10 @@ public class HtmlParserTest {
         List<ParseError> errors = parser.getErrors();
         assertNull(errors);
     }
+    
+    @Test public void handlesCommentsInTable() {
+        String html = "<table><tr><td>text</td><!-- Comment --></tr></table>";
+        Document node = Jsoup.parseBodyFragment(html);
+        assertEquals("<html><head></head><body><table><tbody><tr><td>text</td><!-- Comment --></tr></tbody></table></body></html>", TextUtil.stripNewlines(node.outerHtml()));
+    }
 }

@@ -35,6 +35,9 @@ jsoup changelog
 
  * Fixed doctype tokeniser to allow whitespace between name and public identifier.
 
+ * Fixed issue where comments within a table tag would be duplicate-fostered into body.
+   <https://github.com/jhy/jsoup/pull/165>
+
  * Tweaked whitespace checks to align with HTML spec
    <https://github.com/jhy/jsoup/pull/175>
 
