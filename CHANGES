@@ -35,6 +35,9 @@ jsoup changelog
 
  * Fixed doctype tokeniser to allow whitespace between name and public identifier.
 
+ * Tweaked whitespace checks to align with HTML spec
+   <https://github.com/jhy/jsoup/pull/175>
+
  * Tweaked HTML output of closing script and style tags to not add an extraneous newline when pretty-printing.
 
 *** Release 1.6.1 [2011-Jul-02]

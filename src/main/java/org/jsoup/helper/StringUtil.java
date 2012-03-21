@@ -95,15 +95,12 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a code point is "whitespace" defined in spec.
+     * Tests if a code point is "whitespace" as defined in the HTML spec.
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
     public static boolean isWhitespace(int c){
-        if (c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r'){
-            return true;
-        }
-        return false;
+        return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
 
     public static String normaliseWhitespace(String string) {
