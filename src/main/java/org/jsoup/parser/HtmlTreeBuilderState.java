@@ -810,6 +810,7 @@ enum HtmlTreeBuilderState {
                 return tb.process(t);
             } else if (t.isComment()) {
                 tb.insert(t.asComment());
+                return true;
             } else if (t.isDoctype()) {
                 tb.error(this);
                 return false;
