@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
 /**
@@ -128,7 +129,7 @@ public class TokenQueue {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return !isEmpty() && Character.isWhitespace(queue.charAt(pos));
+        return !isEmpty() && StringUtil.isWhitespace(queue.charAt(pos));
     }
 
     /**

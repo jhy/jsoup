@@ -2,9 +2,11 @@ package org.jsoup.helper;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class StringUtilTest {
 
@@ -40,6 +42,18 @@ public class StringUtilTest {
 
         assertTrue(StringUtil.isNumeric("1"));
         assertTrue(StringUtil.isNumeric("1234"));
+    }
+
+    @Test public void isWhitespace() {
+        assertTrue(StringUtil.isWhitespace('\t'));
+        assertTrue(StringUtil.isWhitespace('\n'));
+        assertTrue(StringUtil.isWhitespace('\r'));
+        assertTrue(StringUtil.isWhitespace('\f'));
+        assertTrue(StringUtil.isWhitespace(' '));
+        
+        assertFalse(StringUtil.isWhitespace('\u00a0'));
+        assertFalse(StringUtil.isWhitespace('\u2000'));
+        assertFalse(StringUtil.isWhitespace('\u3000'));
     }
 
     @Test public void normaliseWhiteSpace() {
