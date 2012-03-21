@@ -634,8 +634,8 @@ public class HtmlParserTest {
     
     @Test public void tracksErrorsWhenRequested() {
         String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
-        Parser parser = Parser.htmlParser().setTrackErrors(true);
-        Document doc = parser.parseInput(html, "http://example.com");
+        Parser parser = Parser.htmlParser().setTrackErrors(500);
+        Document doc = Jsoup.parse(html, "http://example.com", parser);
         
         List<ParseError> errors = parser.getErrors();
         assertEquals(5, errors.size());
@@ -646,13 +646,25 @@ public class HtmlParserTest {
         assertEquals("61: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
     }
 
-    @Test public void noErrorsByDefault() {
-        String html = "<p>One</p href='no'>&arrgh;<font /><br /><foo";
-        Parser parser = Parser.htmlParser();
+    @Test public void tracksLimitedErrorsWhenRequested() {
+        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser().setTrackErrors(3);
         Document doc = parser.parseInput(html, "http://example.com");
 
         List<ParseError> errors = parser.getErrors();
-        assertNull(errors);
+        assertEquals(3, errors.size());
+        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("36: Invalid character reference: invalid named referenece 'arrgh'", errors.get(2).toString());
+    }
+
+    @Test public void noErrorsByDefault() {
+        String html = "<p>One</p href='no'>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser();
+        Document doc = Jsoup.parse(html, "http://example.com", parser);
+
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(0, errors.size());
     }
     
     @Test public void handlesCommentsInTable() {

@@ -10,8 +10,8 @@ import java.util.Iterator;
  */
 public class XmlTreeBuilder extends TreeBuilder {
     @Override
-    protected void initialiseParse(String input, String baseUri, boolean trackErrors) {
-        super.initialiseParse(input, baseUri, trackErrors);
+    protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
+        super.initialiseParse(input, baseUri, errors);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
     }
 

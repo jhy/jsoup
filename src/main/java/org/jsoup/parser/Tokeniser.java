@@ -13,8 +13,7 @@ class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
 
     private CharacterReader reader; // html input
-    private boolean trackErrors;
-    private List<ParseError> errors; // errors found while tokenising
+    private ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
@@ -28,10 +27,9 @@ class Tokeniser {
     private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
     private boolean selfClosingFlagAcknowledged = true;
 
-    Tokeniser(CharacterReader reader, List<ParseError> errors) {
+    Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
         this.errors = errors;
-        this.trackErrors = errors != null;
     }
 
     Token read() {
@@ -202,22 +200,22 @@ class Tokeniser {
     }
 
     void error(TokeniserState state) {
-        if (trackErrors)
+        if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), "Unexpected character '%s' in input state [%s]", reader.current(), state));
     }
 
     void eofError(TokeniserState state) {
-        if (trackErrors)
+        if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
     private void characterReferenceError(String message) {
-        if (trackErrors)
+        if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), "Invalid character reference: %s", message));
     }
 
     private void error(String errorMsg) {
-        if (trackErrors)
+        if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), errorMsg));
     }
 

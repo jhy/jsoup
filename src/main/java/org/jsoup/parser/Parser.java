@@ -11,9 +11,11 @@ import java.util.List;
  * in {@link org.jsoup.Jsoup}.
  */
 public class Parser {
+    private static final int DEFAULT_MAX_ERRORS = 0; // by default, error tracking is disabled.
+    
     private TreeBuilder treeBuilder;
-    private boolean trackErrors = false;
-    private List<ParseError> errors;
+    private int maxErrors = DEFAULT_MAX_ERRORS;
+    private ParseErrorList errors;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -24,8 +26,8 @@ public class Parser {
     }
     
     public Document parseInput(String html, String baseUri) {
-        Document doc = treeBuilder.parse(html, baseUri, trackErrors);
-        errors = treeBuilder.getErrors();
+        errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
+        Document doc = treeBuilder.parse(html, baseUri, errors);
         return doc;
     }
 
@@ -53,22 +55,22 @@ public class Parser {
      * @return current track error state.
      */
     public boolean isTrackErrors() {
-        return trackErrors;
+        return maxErrors > 0;
     }
 
     /**
-     * Enable or disable parse error tracking for the next parse/
-     * @param trackErrors on/off
+     * Enable or disable parse error tracking for the next parse.
+     * @param maxErrors the maximum number of errors to track. Set to 0 to disable.
      * @return this, for chaining
      */
-    public Parser setTrackErrors(boolean trackErrors) {
-        this.trackErrors = trackErrors;
+    public Parser setTrackErrors(int maxErrors) {
+        this.maxErrors = maxErrors;
         return this;
     }
 
     /**
      * Retrieve the parse errors, if any, from the last parse.
-     * @return list of parse errors, if error tracking was enabled and errors occurred. If not enabled, returns null.
+     * @return list of parse errors, up to the size of the maximum errors tracked.
      */
     public List<ParseError> getErrors() {
         return errors;
@@ -85,7 +87,7 @@ public class Parser {
      */
     public static Document parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parse(html, baseUri, false);
+        return treeBuilder.parse(html, baseUri, ParseErrorList.noTracking());
     }
 
     /**
@@ -100,7 +102,7 @@ public class Parser {
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, false);
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, ParseErrorList.noTracking());
     }
 
     /**

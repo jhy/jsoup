@@ -32,14 +32,14 @@ class HtmlTreeBuilder extends TreeBuilder {
     HtmlTreeBuilder() {}
 
     @Override
-    Document parse(String input, String baseUri, boolean trackErrors) {
+    Document parse(String input, String baseUri, ParseErrorList errors) {
         state = HtmlTreeBuilderState.Initial;
-        return super.parse(input, baseUri, trackErrors);
+        return super.parse(input, baseUri, errors);
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, boolean trackErrors) {
+    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors) {
         // context may be null
-        initialiseParse(inputFragment, baseUri, trackErrors);
+        initialiseParse(inputFragment, baseUri, errors);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;
@@ -137,7 +137,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void error(HtmlTreeBuilderState state) {
-        if (trackErrors)
+        if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
 
