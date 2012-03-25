@@ -3,7 +3,7 @@ package org.jsoup.parser;
 /**
  * A Parse Error records an error in the input HTML that occurs in either the tokenisation or the tree building phase.
  */
-class ParseError {
+public class ParseError {
     private int pos;
     private String errorMsg;
 
@@ -17,10 +17,18 @@ class ParseError {
         this.pos = pos;
     }
 
+    /**
+     * Retrieve the error message.
+     * @return the error message.
+     */
     public String getErrorMessage() {
         return errorMsg;
     }
 
+    /**
+     * Retrieves the offset of the error.
+     * @return error offset within input
+     */
     public int getPosition() {
         return pos;
     }
