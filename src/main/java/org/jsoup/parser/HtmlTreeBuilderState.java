@@ -1432,12 +1432,11 @@ enum HtmlTreeBuilderState {
                 return tb.process(t, InBody);
             } else if (t.isEOF()) {
                 // nice work chuck
-            } else if (t.isStartTag() && t.asStartTag().name().equals("nofrmes")) {
+            } else if (t.isStartTag() && t.asStartTag().name().equals("noframes")) {
                 return tb.process(t, InHead);
             } else {
                 tb.error(this);
-                tb.transition(InBody);
-                return tb.process(t);
+                return false;
             }
             return true;
         }

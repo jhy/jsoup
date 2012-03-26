@@ -42,6 +42,10 @@ jsoup changelog
    contents.
    <https://github.com/jhy/jsoup/issues/134>
 
+ * Fixed an issue where content after a frameset could cause a NPE crash. Now correctly implements spec and ignores
+   the trailing content.
+   <https://github.com/jhy/jsoup/issues/162>
+
  * Tweaked whitespace checks to align with HTML spec
    <https://github.com/jhy/jsoup/pull/175>
 

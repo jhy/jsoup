@@ -358,6 +358,13 @@ public class HtmlParserTest {
                 TextUtil.stripNewlines(doc.html()));
         // no body auto vivification
     }
+    
+    @Test public void ignoresContentAfterFrameset() {
+        String h = "<html><head><title>One</title></head><frameset><frame /><frame /></frameset><table></table></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><title>One</title></head><frameset><frame /><frame /></frameset></html>", TextUtil.stripNewlines(doc.html()));
+        // no body, no table. No crash!
+    }
 
     @Test public void handlesJavadocFont() {
         String h = "<TD BGCOLOR=\"#EEEEFF\" CLASS=\"NavBarCell1\">    <A HREF=\"deprecated-list.html\"><FONT CLASS=\"NavBarFont1\"><B>Deprecated</B></FONT></A>&nbsp;</TD>";
