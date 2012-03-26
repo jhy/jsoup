@@ -38,6 +38,10 @@ jsoup changelog
  * Fixed issue where comments within a table tag would be duplicate-fostered into body.
    <https://github.com/jhy/jsoup/pull/165>
 
+ * Fixed an issue where a spurious byte-order-mark at the start of a document would cause the parser to miss head
+   contents.
+   <https://github.com/jhy/jsoup/issues/134>
+
  * Tweaked whitespace checks to align with HTML spec
    <https://github.com/jhy/jsoup/pull/175>
 

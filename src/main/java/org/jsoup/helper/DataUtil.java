@@ -92,6 +92,12 @@ public class DataUtil {
             docData = Charset.forName(charsetName).decode(byteData).toString();
         }
         if (doc == null) {
+            // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+            // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+            // into head mode
+            if (docData.charAt(0) == 65279)
+                docData = docData.substring(1);
+
             doc = parser.parseInput(docData, baseUri);
             doc.outputSettings().charset(charsetName);
         }
