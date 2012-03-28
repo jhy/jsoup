@@ -22,7 +22,7 @@
   </licenses>
   <scm>
   	<url>http://github.com/jhy/jsoup</url>
-    <connection>scm:git:git@github.com:jhy/jsoup.git</connection>
+    <connection>scm:git:http://github.com/jhy/jsoup.git</connection>
     <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
   </scm>
   <organization>
