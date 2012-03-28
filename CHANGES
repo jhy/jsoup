@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.6.2 [PENDING]
+*** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
 
