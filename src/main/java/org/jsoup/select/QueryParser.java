@@ -55,15 +55,7 @@ class QueryParser {
             // hierarchy and extras
             boolean seenWhite = tq.consumeWhitespace();
 
-            if (tq.matchChomp(",")) { // group or
-                CombiningEvaluator.Or or = new CombiningEvaluator.Or(evals);
-                evals.clear();
-                evals.add(or);
-                while (!tq.isEmpty()) {
-                    String subQuery = tq.chompTo(",");
-                    or.add(parse(subQuery));
-                }
-            } else if (tq.matchesAny(combinators)) {
+            if (tq.matchesAny(combinators)) {
                 combinator(tq.consume());
             } else if (seenWhite) {
                 combinator(' ');
@@ -98,6 +90,18 @@ class QueryParser {
             evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.ImmediatePreviousSibling(e)));
         else if (combinator == '~')
             evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.PreviousSibling(e)));
+        else if (combinator == ',') { // group or
+            CombiningEvaluator.Or or;
+            if (e instanceof CombiningEvaluator.Or) {
+                or = (CombiningEvaluator.Or) e;
+                or.add(f);
+            } else {
+                or = new CombiningEvaluator.Or();
+                or.add(e);
+                or.add(f);
+            }
+            evals.add(or);
+        }
         else
             throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
     }
