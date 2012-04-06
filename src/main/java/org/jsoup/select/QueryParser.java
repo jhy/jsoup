@@ -73,37 +73,53 @@ class QueryParser {
     private void combinator(char combinator) {
         tq.consumeWhitespace();
         String subQuery = consumeSubQuery(); // support multi > childs
-        Evaluator e;
 
-        if (evals.size() == 1)
-            e = evals.get(0);
-        else
-            e = new CombiningEvaluator.And(evals);
+        Evaluator rootEval; // the new topmost evaluator
+        Evaluator currentEval; // the evaluator the new eval will be combined to. could be root, or rightmost or.
+        Evaluator newEval = parse(subQuery); // the evaluator to add into target evaluator
+        boolean replaceRightMost = false;
+
+        if (evals.size() == 1) {
+            rootEval = currentEval = evals.get(0);
+            // make sure OR (,) has precedence:
+            if (rootEval instanceof CombiningEvaluator.Or && combinator != ',') {
+                currentEval = ((CombiningEvaluator.Or) currentEval).rightMostEvaluator();
+                replaceRightMost = true;
+            }
+        }
+        else {
+            rootEval = currentEval = new CombiningEvaluator.And(evals);
+        }
         evals.clear();
-        Evaluator f = parse(subQuery);
 
+        // for most combinators: change the current eval into an AND of the current eval and the new eval
         if (combinator == '>')
-            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.ImmediateParent(e)));
+            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediateParent(currentEval));
         else if (combinator == ' ')
-            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.Parent(e)));
+            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.Parent(currentEval));
         else if (combinator == '+')
-            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.ImmediatePreviousSibling(e)));
+            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediatePreviousSibling(currentEval));
         else if (combinator == '~')
-            evals.add(new CombiningEvaluator.And(f, new StructuralEvaluator.PreviousSibling(e)));
-        else if (combinator == ',') { // group or
+            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.PreviousSibling(currentEval));
+        else if (combinator == ',') { // group or.
             CombiningEvaluator.Or or;
-            if (e instanceof CombiningEvaluator.Or) {
-                or = (CombiningEvaluator.Or) e;
-                or.add(f);
+            if (currentEval instanceof CombiningEvaluator.Or) {
+                or = (CombiningEvaluator.Or) currentEval;
+                or.add(newEval);
             } else {
                 or = new CombiningEvaluator.Or();
-                or.add(e);
-                or.add(f);
+                or.add(currentEval);
+                or.add(newEval);
             }
-            evals.add(or);
+            currentEval = or;
         }
         else
             throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
+
+        if (replaceRightMost)
+            ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
+        else rootEval = currentEval;
+        evals.add(rootEval);
     }
 
     private String consumeSubQuery() {

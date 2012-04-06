@@ -81,6 +81,10 @@ abstract class StructuralEvaluator extends Evaluator {
             Element parent = element.parent();
             return parent != null && evaluator.matches(root, parent);
         }
+
+        public String toString() {
+            return String.format(":ImmediateParent%s", evaluator);
+        }
     }
 
     static class PreviousSibling extends StructuralEvaluator {

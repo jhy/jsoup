@@ -326,9 +326,10 @@ public class SelectorTest {
         Document doc = Jsoup.parse(h);
         Elements els = doc.select(".foo > ol, ol > li + li");
 
-        assertEquals(2, els.size());
-        assertEquals("li", els.get(0).tagName());
-        assertEquals("Three", els.get(1).text());
+        assertEquals(3, els.size());
+        assertEquals("ol", els.get(0).tagName());
+        assertEquals("Two", els.get(1).text());
+        assertEquals("Three", els.get(2).text());
     }
 
     @Test public void generalSiblings() {
