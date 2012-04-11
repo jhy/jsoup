@@ -10,9 +10,9 @@ import java.util.LinkedList;
 /**
  * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
  */
-enum TreeBuilderState {
+enum HtmlTreeBuilderState {
     Initial {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return true; // ignore whitespace
             } else if (t.isComment()) {
@@ -35,7 +35,7 @@ enum TreeBuilderState {
         }
     },
     BeforeHtml {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isDoctype()) {
                 tb.error(this);
                 return false;
@@ -57,14 +57,14 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.insert("html");
             tb.transition(BeforeHead);
             return tb.process(t);
         }
     },
     BeforeHead {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return true;
             } else if (t.isComment()) {
@@ -92,7 +92,7 @@ enum TreeBuilderState {
         }
     },
     InHead {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
                 return true;
@@ -111,9 +111,9 @@ enum TreeBuilderState {
                         return InBody.process(t, tb);
                     } else if (StringUtil.in(name, "base", "basefont", "bgsound", "command", "link")) {
                         Element el = tb.insertEmpty(start);
-                        // jsoup special: update base as it is seen. todo: flip to current browser behaviour of one shot
+                        // jsoup special: update base the frist time it is seen
                         if (name.equals("base") && el.hasAttr("href"))
-                            tb.setBaseUri(el);
+                            tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
                         Element meta = tb.insertEmpty(start);
                         // todo: charset switches
@@ -163,7 +163,7 @@ enum TreeBuilderState {
         }
     },
     InHeadNoscript {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isDoctype()) {
                 tb.error(this);
             } else if (t.isStartTag() && t.asStartTag().name().equals("html")) {
@@ -185,14 +185,14 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
             tb.process(new Token.EndTag("noscript"));
             return tb.process(t);
         }
     },
     AfterHead {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
             } else if (t.isComment()) {
@@ -236,14 +236,14 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.process(new Token.StartTag("body"));
             tb.framesetOk(true);
             return tb.process(t);
         }
     },
     InBody {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character: {
                     Token.Character c = t.asCharacter();
@@ -516,7 +516,7 @@ enum TreeBuilderState {
                         tb.insert(startTag);
                         tb.framesetOk(false);
 
-                        TreeBuilderState state = tb.state();
+                        HtmlTreeBuilderState state = tb.state();
                         if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
                             tb.transition(InSelectInTable);
                         else
@@ -760,7 +760,7 @@ enum TreeBuilderState {
             return true;
         }
 
-        boolean anyOtherEndTag(Token t, TreeBuilder tb) {
+        boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             String name = t.asEndTag().name();
             DescendableLinkedList<Element> stack = tb.getStack();
             Iterator<Element> it = stack.descendingIterator();
@@ -784,7 +784,7 @@ enum TreeBuilderState {
     },
     Text {
         // in script, style etc. normally treated as data tags
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter()) {
                 tb.insert(t.asCharacter());
             } else if (t.isEOF()) {
@@ -802,7 +802,7 @@ enum TreeBuilderState {
         }
     },
     InTable {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter()) {
                 tb.newPendingTableCharacters();
                 tb.markInsertionMode();
@@ -810,6 +810,7 @@ enum TreeBuilderState {
                 return tb.process(t);
             } else if (t.isComment()) {
                 tb.insert(t.asComment());
+                return true;
             } else if (t.isDoctype()) {
                 tb.error(this);
                 return false;
@@ -886,7 +887,7 @@ enum TreeBuilderState {
             return anythingElse(t, tb);
         }
 
-        boolean anythingElse(Token t, TreeBuilder tb) {
+        boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
             boolean processed = true;
             if (StringUtil.in(tb.currentElement().nodeName(), "table", "tbody", "tfoot", "thead", "tr")) {
@@ -900,7 +901,7 @@ enum TreeBuilderState {
         }
     },
     InTableText {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character:
                     Token.Character c = t.asCharacter();
@@ -936,7 +937,7 @@ enum TreeBuilderState {
         }
     },
     InCaption {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isEndTag() && t.asEndTag().name().equals("caption")) {
                 Token.EndTag endTag = t.asEndTag();
                 String name = endTag.name();
@@ -971,7 +972,7 @@ enum TreeBuilderState {
         }
     },
     InColumnGroup {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
                 return true;
@@ -1026,7 +1027,7 @@ enum TreeBuilderState {
         }
     },
     InTableBody {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case StartTag:
                     Token.StartTag startTag = t.asStartTag();
@@ -1070,7 +1071,7 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean exitTableBody(Token t, TreeBuilder tb) {
+        private boolean exitTableBody(Token t, HtmlTreeBuilder tb) {
             if (!(tb.inTableScope("tbody") || tb.inTableScope("thead") || tb.inScope("tfoot"))) {
                 // frag case
                 tb.error(this);
@@ -1081,12 +1082,12 @@ enum TreeBuilderState {
             return tb.process(t);
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             return tb.process(t, InTable);
         }
     },
     InRow {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag()) {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.name();
@@ -1134,7 +1135,7 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             return tb.process(t, InTable);
         }
 
@@ -1147,7 +1148,7 @@ enum TreeBuilderState {
         }
     },
     InCell {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isEndTag()) {
                 Token.EndTag endTag = t.asEndTag();
                 String name = endTag.name();
@@ -1192,11 +1193,11 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             return tb.process(t, InBody);
         }
 
-        private void closeCell(TreeBuilder tb) {
+        private void closeCell(HtmlTreeBuilder tb) {
             if (tb.inTableScope("td"))
                 tb.process(new Token.EndTag("td"));
             else
@@ -1204,7 +1205,7 @@ enum TreeBuilderState {
         }
     },
     InSelect {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character:
                     Token.Character c = t.asCharacter();
@@ -1286,13 +1287,13 @@ enum TreeBuilderState {
             return true;
         }
 
-        private boolean anythingElse(Token t, TreeBuilder tb) {
+        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
             return false;
         }
     },
     InSelectInTable {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag() && StringUtil.in(t.asStartTag().name(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
                 tb.process(new Token.EndTag("select"));
@@ -1310,7 +1311,7 @@ enum TreeBuilderState {
         }
     },
     AfterBody {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return tb.process(t, InBody);
             } else if (t.isComment()) {
@@ -1338,7 +1339,7 @@ enum TreeBuilderState {
         }
     },
     InFrameset {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
             } else if (t.isComment()) {
@@ -1384,7 +1385,7 @@ enum TreeBuilderState {
         }
     },
     AfterFrameset {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
             } else if (t.isComment()) {
@@ -1408,7 +1409,7 @@ enum TreeBuilderState {
         }
     },
     AfterAfterBody {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
                 tb.insert(t.asComment());
             } else if (t.isDoctype() || isWhitespace(t) || (t.isStartTag() && t.asStartTag().name().equals("html"))) {
@@ -1424,25 +1425,24 @@ enum TreeBuilderState {
         }
     },
     AfterAfterFrameset {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
                 tb.insert(t.asComment());
             } else if (t.isDoctype() || isWhitespace(t) || (t.isStartTag() && t.asStartTag().name().equals("html"))) {
                 return tb.process(t, InBody);
             } else if (t.isEOF()) {
                 // nice work chuck
-            } else if (t.isStartTag() && t.asStartTag().name().equals("nofrmes")) {
+            } else if (t.isStartTag() && t.asStartTag().name().equals("noframes")) {
                 return tb.process(t, InHead);
             } else {
                 tb.error(this);
-                tb.transition(InBody);
-                return tb.process(t);
+                return false;
             }
             return true;
         }
     },
     ForeignContent {
-        boolean process(Token t, TreeBuilder tb) {
+        boolean process(Token t, HtmlTreeBuilder tb) {
             return true;
             // todo: implement. Also; how do we get here?
         }
@@ -1450,7 +1450,7 @@ enum TreeBuilderState {
 
     private static String nullString = String.valueOf('\u0000');
 
-    abstract boolean process(Token t, TreeBuilder tb);
+    abstract boolean process(Token t, HtmlTreeBuilder tb);
 
     private static boolean isWhitespace(Token t) {
         if (t.isCharacter()) {
@@ -1458,7 +1458,7 @@ enum TreeBuilderState {
             // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
             for (int i = 0; i < data.length(); i++) {
                 char c = data.charAt(i);
-                if (!Character.isWhitespace(c))
+                if (!StringUtil.isWhitespace(c))
                     return false;
             }
             return true;
@@ -1466,14 +1466,14 @@ enum TreeBuilderState {
         return false;
     }
 
-    private static void handleRcData(Token.StartTag startTag, TreeBuilder tb) {
+    private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
         tb.insert(startTag);
         tb.tokeniser.transition(TokeniserState.Rcdata);
         tb.markInsertionMode();
         tb.transition(Text);
     }
 
-    private static void handleRawtext(Token.StartTag startTag, TreeBuilder tb) {
+    private static void handleRawtext(Token.StartTag startTag, HtmlTreeBuilder tb) {
         tb.insert(startTag);
         tb.tokeniser.transition(TokeniserState.Rawtext);
         tb.markInsertionMode();

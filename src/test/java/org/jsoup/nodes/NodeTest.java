@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
+import org.jsoup.select.NodeVisitor;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -29,6 +30,16 @@ public class NodeTest {
         Element dodgyBase = new Element(tag, "wtf://no-such-protocol/", attribs);
         assertEquals("http://bar/qux", dodgyBase.absUrl("absHref")); // base fails, but href good, so get that
         assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
+    }
+
+    @Test public void setBaseUriIsRecursive() {
+        Document doc = Jsoup.parse("<div><p></p></div>");
+        String baseUri = "http://jsoup.org";
+        doc.setBaseUri(baseUri);
+        
+        assertEquals(baseUri, doc.baseUri());
+        assertEquals(baseUri, doc.select("div").first().baseUri());
+        assertEquals(baseUri, doc.select("p").first().baseUri());
     }
 
     @Test public void handlesAbsPrefix() {
@@ -151,5 +162,20 @@ public class NodeTest {
         Node node = span.unwrap();
         assertEquals("<div>One  Two</div>", TextUtil.stripNewlines(doc.body().html()));
         assertTrue(node == null);
+    }
+
+    @Test public void traverse() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
+        final StringBuilder accum = new StringBuilder();
+        doc.select("div").first().traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                accum.append("<" + node.nodeName() + ">");
+            }
+
+            public void tail(Node node, int depth) {
+                accum.append("</" + node.nodeName() + ">");
+            }
+        });
+        assertEquals("<div><p><#text></#text></p></div>", accum.toString());
     }
 }

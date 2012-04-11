@@ -13,8 +13,7 @@ class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
 
     private CharacterReader reader; // html input
-    private boolean trackErrors = true;
-    private List<ParseError> errors = new ArrayList<ParseError>(); // errors found while tokenising
+    private ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
@@ -28,8 +27,9 @@ class Tokeniser {
     private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
     private boolean selfClosingFlagAcknowledged = true;
 
-    Tokeniser(CharacterReader reader) {
+    Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
+        this.errors = errors;
     }
 
     Token read() {
@@ -102,7 +102,7 @@ class Tokeniser {
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
-        if (reader.matchesAny('\t', '\n', '\f', '<', '&'))
+        if (reader.matchesAny('\t', '\n', '\f', ' ', '<', '&'))
             return null;
 
         reader.mark();
@@ -110,12 +110,12 @@ class Tokeniser {
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
             String numRef = isHexMode ? reader.consumeHexSequence() : reader.consumeDigitSequence();
             if (numRef.length() == 0) { // didn't match anything
-                characterReferenceError();
+                characterReferenceError("numeric reference with no numerals");
                 reader.rewindToMark();
                 return null;
             }
             if (!reader.matchConsume(";"))
-                characterReferenceError(); // missing semi
+                characterReferenceError("missing semicolon"); // missing semi
             int charval = -1;
             try {
                 int base = isHexMode ? 16 : 10;
@@ -123,7 +123,7 @@ class Tokeniser {
             } catch (NumberFormatException e) {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
-                characterReferenceError();
+                characterReferenceError("character outside of valid range");
                 return replacementChar;
             } else {
                 // todo: implement number replacement table
@@ -133,6 +133,7 @@ class Tokeniser {
         } else { // named
             // get as many letters as possible, and look for matching entities. unconsume backwards till a match is found
             String nameRef = reader.consumeLetterSequence();
+            String origNameRef = new String(nameRef); // for error reporting. nameRef gets chomped looking for matches
             boolean looksLegit = reader.matches(';');
             boolean found = false;
             while (nameRef.length() > 0 && !found) {
@@ -145,17 +146,17 @@ class Tokeniser {
             }
             if (!found) {
                 if (looksLegit) // named with semicolon
-                    characterReferenceError();
+                    characterReferenceError(String.format("invalid named referenece '%s'", origNameRef));
                 reader.rewindToMark();
                 return null;
             }
-            if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matches('='))) {
+            if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
                 // don't want that to match
                 reader.rewindToMark();
                 return null;
             }
             if (!reader.matchConsume(";"))
-                characterReferenceError(); // missing semi
+                characterReferenceError("missing semicolon"); // missing semi
             return Entities.getCharacterByName(nameRef);
         }
     }
@@ -198,32 +199,24 @@ class Tokeniser {
         return lastStartTag.tagName;
     }
 
-    boolean isTrackErrors() {
-        return trackErrors;
-    }
-
-    void setTrackErrors(boolean trackErrors) {
-        this.trackErrors = trackErrors;
-    }
-
     void error(TokeniserState state) {
-        if (trackErrors)
-            errors.add(new ParseError("Unexpected character in input", reader.current(), state, reader.pos()));
+        if (errors.canAddError())
+            errors.add(new ParseError(reader.pos(), "Unexpected character '%s' in input state [%s]", reader.current(), state));
     }
 
     void eofError(TokeniserState state) {
-        if (trackErrors)
-            errors.add(new ParseError("Unexpectedly reached end of file (EOF)", state, reader.pos()));
+        if (errors.canAddError())
+            errors.add(new ParseError(reader.pos(), "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
-    private void characterReferenceError() {
-        if (trackErrors)
-            errors.add(new ParseError("Invalid character reference", reader.pos()));
+    private void characterReferenceError(String message) {
+        if (errors.canAddError())
+            errors.add(new ParseError(reader.pos(), "Invalid character reference: %s", message));
     }
 
     private void error(String errorMsg) {
-        if (trackErrors)
-            errors.add(new ParseError(errorMsg, reader.pos()));
+        if (errors.canAddError())
+            errors.add(new ParseError(reader.pos(), errorMsg));
     }
 
     boolean currentNodeInHtmlNS() {

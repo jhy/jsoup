@@ -1,14 +1,63 @@
 jsoup changelog
 
-*** Release 1.6.2 [PENDING]
+*** Release 1.6.3 [PENDING]
+ * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
+   <https://github.com/jhy/jsoup/issues/179>
+
+*** Release 1.6.2 [2011-Mar-27]
+ * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
+   document structure or special tag behaviour.
+
+ * Added the optional ability to track errors when tokenising and parsing.
+
+ * Added jsoup.connect.cookies(Map) method, to set multiple cookies at once, possibly from a prior request.
+
+ * Added Element.textNodes() and Element.dataNodes(), to easily access an element's children text nodes and data nodes.
+
+ * Added an example program that demonstrates how to format HTML as plain-text, and the use of the NodeVisitor interface.
+
+ * Added Node.traverse() and Elements.traverse() methods, to iterate through a node's descendants.
+ 
  * Updated jsoup.connect so that when requests made as POSTs are redirected, the redirect is followed as a GET.
    <https://github.com/jhy/jsoup/issues/120>
 
  * Updated the Cleaner and whitelists to optionally preserve related links in elements, instead of converting them
    to absolute links.
 
+ * Updated the Cleaner to support custom allowed protocols such as "cid:" and "data:".
+   <https://github.com/jhy/jsoup/issues/127>
+
+ * Updated handling of <base href> tags, to act on only the first one seen when parsing, to align with modern browsers.
+
+ * Updated Node.setBaseUri(), to recursively set on all the node's descendants.
+
  * Fixed handling of null characters within comments.
    <https://github.com/jhy/jsoup/issues/121>
+
+ * Tweaked escaped entity detection in attributes to not treat &entity_... as an entity form.
+   <https://github.com/jhy/jsoup/issues/129>
+
+ * Fixed doctype tokeniser to allow whitespace between name and public identifier.
+
+ * Fixed issue where comments within a table tag would be duplicate-fostered into body.
+   <https://github.com/jhy/jsoup/pull/165>
+
+ * Fixed an issue where a spurious byte-order-mark at the start of a document would cause the parser to miss head
+   contents.
+   <https://github.com/jhy/jsoup/issues/134>
+
+ * Fixed an issue where content after a frameset could cause a NPE crash. Now correctly implements spec and ignores
+   the trailing content.
+   <https://github.com/jhy/jsoup/issues/162>
+
+ * Tweaked whitespace checks to align with HTML spec
+   <https://github.com/jhy/jsoup/pull/175>
+
+ * Tweaked HTML output of closing script and style tags to not add an extraneous newline when pretty-printing.
+
+ * Substantially reduced default memory allocation within Node.outerHtml, to reduce memory pressure when serialising
+   smaller DOMs.
+   <https://github.com/jhy/jsoup/issues/143>
 
 *** Release 1.6.1 [2011-Jul-02]
  * Fixed Java 1.5 compatibility.

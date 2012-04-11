@@ -12,13 +12,14 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  Tests for the Parser
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class ParserTest {
+public class HtmlParserTest {
 
     @Test public void parsesSimpleDocument() {
         String html = "<html><head><title>First!</title></head><body><p>First post! <img src=\"foo.png\" /></p></body></html>";
@@ -240,22 +241,21 @@ public class ParserTest {
     }
 
     @Test public void handlesBaseTags() {
-        // todo -- don't handle base tags like this -- spec and browsers don't (any more -- v. old ones do).
-        // instead, just maintain one baseUri in the doc
-        String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=4>#</a>";
+        // only listen to the first base href
+        String h = "<a href=1>#</a><base href='/2/'><a href='3'>#</a><base href='http://bar'><a href=/4>#</a>";
         Document doc = Jsoup.parse(h, "http://foo/");
-        assertEquals("http://bar", doc.baseUri()); // gets updated as base changes, so doc.createElement has latest.
+        assertEquals("http://foo/2/", doc.baseUri()); // gets set once, so doc and descendants have first only
 
         Elements anchors = doc.getElementsByTag("a");
         assertEquals(3, anchors.size());
 
-        assertEquals("http://foo/", anchors.get(0).baseUri());
+        assertEquals("http://foo/2/", anchors.get(0).baseUri());
         assertEquals("http://foo/2/", anchors.get(1).baseUri());
-        assertEquals("http://bar", anchors.get(2).baseUri());
+        assertEquals("http://foo/2/", anchors.get(2).baseUri());
 
-        assertEquals("http://foo/1", anchors.get(0).absUrl("href"));
+        assertEquals("http://foo/2/1", anchors.get(0).absUrl("href"));
         assertEquals("http://foo/2/3", anchors.get(1).absUrl("href"));
-        assertEquals("http://bar/4", anchors.get(2).absUrl("href"));
+        assertEquals("http://foo/4", anchors.get(2).absUrl("href"));
     }
 
     @Test public void handlesCdata() {
@@ -357,6 +357,13 @@ public class ParserTest {
         assertEquals("<html><head><script></script><noscript></noscript></head><frameset><frame src=\"foo\" /><frame src=\"foo\" /></frameset></html>",
                 TextUtil.stripNewlines(doc.html()));
         // no body auto vivification
+    }
+    
+    @Test public void ignoresContentAfterFrameset() {
+        String h = "<html><head><title>One</title></head><frameset><frame /><frame /></frameset><table></table></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><title>One</title></head><frameset><frame /><frame /></frameset></html>", TextUtil.stripNewlines(doc.html()));
+        // no body, no table. No crash!
     }
 
     @Test public void handlesJavadocFont() {
@@ -622,5 +629,54 @@ public class ParserTest {
     @Test public void handlesNewlinesAndWhitespaceInTag() {
         Document doc = Jsoup.parse("<a \n href=\"one\" \r\n id=\"two\" \f >");
         assertEquals("<a href=\"one\" id=\"two\"></a>", doc.body().html());
+    }
+
+    @Test public void handlesWhitespaceInoDocType() {
+        String html = "<!DOCTYPE html\n" +
+                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n" +
+                "      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
+    }
+    
+    @Test public void tracksErrorsWhenRequested() {
+        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser().setTrackErrors(500);
+        Document doc = Jsoup.parse(html, "http://example.com", parser);
+        
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(5, errors.size());
+        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("36: Invalid character reference: invalid named referenece 'arrgh'", errors.get(2).toString());
+        assertEquals("50: Self closing flag not acknowledged", errors.get(3).toString());
+        assertEquals("61: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
+    }
+
+    @Test public void tracksLimitedErrorsWhenRequested() {
+        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser().setTrackErrors(3);
+        Document doc = parser.parseInput(html, "http://example.com");
+
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(3, errors.size());
+        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("36: Invalid character reference: invalid named referenece 'arrgh'", errors.get(2).toString());
+    }
+
+    @Test public void noErrorsByDefault() {
+        String html = "<p>One</p href='no'>&arrgh;<font /><br /><foo";
+        Parser parser = Parser.htmlParser();
+        Document doc = Jsoup.parse(html, "http://example.com", parser);
+
+        List<ParseError> errors = parser.getErrors();
+        assertEquals(0, errors.size());
+    }
+    
+    @Test public void handlesCommentsInTable() {
+        String html = "<table><tr><td>text</td><!-- Comment --></tr></table>";
+        Document node = Jsoup.parseBodyFragment(html);
+        assertEquals("<html><head></head><body><table><tbody><tr><td>text</td><!-- Comment --></tr></tbody></table></body></html>", TextUtil.stripNewlines(node.outerHtml()));
     }
 }

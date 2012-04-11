@@ -1,8 +1,8 @@
 package org.jsoup.helper;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -34,7 +34,7 @@ public class DataUtil {
         try {
             inStream = new FileInputStream(in);
             ByteBuffer byteData = readToByteBuffer(inStream);
-            return parseByteData(byteData, charsetName, baseUri);
+            return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
         } finally {
             if (inStream != null)
                 inStream.close();
@@ -51,18 +51,32 @@ public class DataUtil {
      */
     public static Document load(InputStream in, String charsetName, String baseUri) throws IOException {
         ByteBuffer byteData = readToByteBuffer(in);
-        return parseByteData(byteData, charsetName, baseUri);
+        return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
+    }
+
+    /**
+     * Parses a Document from an input steam, using the provided Parser.
+     * @param in input stream to parse. You will need to close it.
+     * @param charsetName character set of input
+     * @param baseUri base URI of document, to resolve relative links against
+     * @param parser alternate {@link Parser#xmlParser() parser} to use.
+     * @return Document
+     * @throws IOException on IO error
+     */
+    public static Document load(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+        ByteBuffer byteData = readToByteBuffer(in);
+        return parseByteData(byteData, charsetName, baseUri, parser);
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
-    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri) {
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
         String docData;
         Document doc = null;
         if (charsetName == null) { // determine from meta. safe parse as UTF-8
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
-            doc = Jsoup.parse(docData, baseUri);
+            doc = parser.parseInput(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
                 String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
@@ -78,7 +92,13 @@ public class DataUtil {
             docData = Charset.forName(charsetName).decode(byteData).toString();
         }
         if (doc == null) {
-            doc = Jsoup.parse(docData, baseUri);
+            // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
+            // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
+            // into head mode
+            if (docData.charAt(0) == 65279)
+                docData = docData.substring(1);
+
+            doc = parser.parseInput(docData, baseUri);
             doc.outputSettings().charset(charsetName);
         }
         return doc;

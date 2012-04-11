@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import java.io.*;
@@ -124,6 +125,19 @@ public class HttpConnection implements Connection {
 
     public Connection cookie(String name, String value) {
         req.cookie(name, value);
+        return this;
+    }
+
+    public Connection cookies(Map<String, String> cookies) {
+        Validate.notNull(cookies, "Cookie map must not be null");
+        for (Map.Entry<String, String> entry : cookies.entrySet()) {
+            req.cookie(entry.getKey(), entry.getValue());
+        }
+        return this;
+    }
+
+    public Connection parser(Parser parser) {
+        req.parser(parser);
         return this;
     }
 
@@ -281,6 +295,7 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
+        private Parser parser;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -288,6 +303,7 @@ public class HttpConnection implements Connection {
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            parser = Parser.htmlParser();
         }
 
         public int timeout() {
@@ -313,16 +329,18 @@ public class HttpConnection implements Connection {
             return ignoreHttpErrors;
         }
 
-        public void ignoreHttpErrors(boolean ignoreHttpErrors) {
+        public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
             this.ignoreHttpErrors = ignoreHttpErrors;
+            return this;
         }
 
         public boolean ignoreContentType() {
             return ignoreContentType;
         }
 
-        public void ignoreContentType(boolean ignoreContentType) {
+        public Connection.Request ignoreContentType(boolean ignoreContentType) {
             this.ignoreContentType = ignoreContentType;
+            return this;
         }
 
         public Request data(Connection.KeyVal keyval) {
@@ -333,6 +351,15 @@ public class HttpConnection implements Connection {
 
         public Collection<Connection.KeyVal> data() {
             return data;
+        }
+        
+        public Request parser(Parser parser) {
+            this.parser = parser;
+            return this;
+        }
+        
+        public Parser parser() {
+            return parser;
         }
     }
 
@@ -359,7 +386,7 @@ public class HttpConnection implements Connection {
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
-
+        
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -439,7 +466,7 @@ public class HttpConnection implements Connection {
             if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, url.toString()));
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm());
+            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             return doc;

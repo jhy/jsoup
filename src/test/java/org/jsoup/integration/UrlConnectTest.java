@@ -9,6 +9,7 @@ import org.jsoup.Connection;
 
 import java.net.URL;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
@@ -16,7 +17,7 @@ import java.io.IOException;
  @author Jonathan Hedley, jonathan@hedley.net */
 @Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
-    private static String echoURL = "http://infohound.net/tools/q.pl";
+    private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
     @Test
     public void fetchURl() throws IOException {
@@ -88,14 +89,14 @@ public class UrlConnectTest {
 
     @Test
     public void followsTempRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302.pl"); // http://jsoup.org
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl"); // http://jsoup.org
         Document doc = con.get();
         assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
     public void postRedirectsFetchWithGet() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302.pl")
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl")
                 .data("Argument", "Riposte")
                 .method(Connection.Method.POST);
         Connection.Response res = con.execute();
@@ -105,7 +106,7 @@ public class UrlConnectTest {
 
     @Test
     public void followsRedirectToHttps() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302-secure.pl"); // https://www.google.com
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-secure.pl"); // https://www.google.com
         con.data("id", "5");
         Document doc = con.get();
         assertTrue(doc.title().contains("Google"));
@@ -113,7 +114,7 @@ public class UrlConnectTest {
 
     @Test
     public void followsRelativeRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302-rel.pl"); // to ./ - /tools/
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to ./ - /tools/
         Document doc = con.post();
         assertTrue(doc.title().contains("HTML Tidy Online"));
     }
@@ -132,7 +133,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignoresExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/404").ignoreHttpErrors(true);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/404").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
@@ -141,7 +142,7 @@ public class UrlConnectTest {
 
     @Test
     public void doesntRedirectIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302.pl").followRedirects(false);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl").followRedirects(false);
         Connection.Response res = con.execute();
         assertEquals(302, res.statusCode());
         assertEquals("http://jsoup.org", res.header("Location"));
@@ -149,22 +150,37 @@ public class UrlConnectTest {
 
     @Test
     public void redirectsResponseCookieToNextResponse() throws IOException {
-        Connection con = Jsoup.connect("http://infohound.net/tools/302-cookie.pl");
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
         Connection.Response res = con.execute();
         assertEquals("asdfg123", res.cookie("token")); // confirms that cookies set on 1st hit are presented in final result
         Document doc = res.parse();
-        assertEquals("token=asdfg123", ihVal("HTTP_COOKIE", doc)); // confirms that redirected hit saw cookie
+        assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc)); // confirms that redirected hit saw cookie
     }
 
     @Test
     public void maximumRedirects() {
         boolean threw = false;
         try {
-            Document doc = Jsoup.connect("http://infohound.net/tools/loop.pl").get();
+            Document doc = Jsoup.connect("http://direct.infohound.net/tools/loop.pl").get();
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("Too many redirects"));
             threw = true;
         }
         assertTrue(threw);
+    }
+
+    @Test
+    public void multiCookieSet() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
+        Connection.Response res = con.execute();
+
+        // test cookies set by redirect:
+        Map<String, String> cookies = res.cookies();
+        assertEquals("asdfg123", cookies.get("token"));
+        assertEquals("jhy", cookies.get("uid"));
+
+        // send those cookies into the echo URL by map:
+        Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
+        assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc));
     }
 }

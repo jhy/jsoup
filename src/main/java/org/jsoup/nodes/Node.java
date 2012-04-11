@@ -132,12 +132,20 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Update the base URI of this node.
+     Update the base URI of this node and all of its descendants.
      @param baseUri base URI to set
      */
-    public void setBaseUri(String baseUri) {
+    public void setBaseUri(final String baseUri) {
         Validate.notNull(baseUri);
-        this.baseUri = baseUri;
+
+        traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                node.baseUri = baseUri;
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        });
     }
 
     /**
@@ -481,11 +489,23 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     * Perform a depth-first traversal through this node and its descendants.
+     * @param nodeVisitor the visitor callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public Node traverse(NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeVisitor);
+        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
+        traversor.traverse(this);
+        return this;
+    }
+
+    /**
      Get the outer HTML of this node.
      @return HTML
      */
     public String outerHtml() {
-        StringBuilder accum = new StringBuilder(32*1024);
+        StringBuilder accum = new StringBuilder(128);
         outerHtml(accum);
         return accum.toString();
     }

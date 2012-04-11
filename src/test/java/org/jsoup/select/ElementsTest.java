@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Node;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -220,5 +221,20 @@ public class ElementsTest {
         doc.select("i").tagName("em");
 
         assertEquals("<p>Hello <em>there</em> <em>now</em></p>", doc.body().html());
+    }
+
+    @Test public void traverse() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
+        final StringBuilder accum = new StringBuilder();
+        doc.select("div").traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                accum.append("<" + node.nodeName() + ">");
+            }
+
+            public void tail(Node node, int depth) {
+                accum.append("</" + node.nodeName() + ">");
+            }
+        });
+        assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString());
     }
 }

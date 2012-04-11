@@ -193,7 +193,49 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that match the {@link Selector} query, with this element as the starting context. Matched elements
+     * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
+     * <p/>
+     * This is effectively a filter on {@link #childNodes()} to get Text nodes.
+     * @return child text nodes. If this element has no text nodes, returns an
+     * empty list.
+     * <p/>
+     * For example, with the input HTML: {@code <p>One <span>Two</span> Three <br> Four</p>} with the {@code p} element selected:
+     * <ul>
+     *     <li>{@code p.text()} = {@code "One Two Three Four"}</li>
+     *     <li>{@code p.ownText()} = {@code "One Three Four"}</li>
+     *     <li>{@code p.children()} = {@code Elements[<span>, <br>]}</li>
+     *     <li>{@code p.childNodes()} = {@code List<Node>["One ", <span>, " Three ", <br>, " Four"]}</li>
+     *     <li>{@code p.textNodes()} = {@code List<TextNode>["One ", " Three ", " Four"]}</li>
+     * </ul>
+     */
+    public List<TextNode> textNodes() {
+        List<TextNode> textNodes = new ArrayList<TextNode>();
+        for (Node node : childNodes) {
+            if (node instanceof TextNode)
+                textNodes.add((TextNode) node);
+        }
+        return Collections.unmodifiableList(textNodes);
+    }
+
+    /**
+     * Get this element's child data nodes. The list is unmodifiable but the data nodes may be manipulated.
+     * <p/>
+     * This is effectively a filter on {@link #childNodes()} to get Data nodes.
+     * @return child data nodes. If this element has no data nodes, returns an
+     * empty list.
+     * @see #data()
+     */
+    public List<DataNode> dataNodes() {
+        List<DataNode> dataNodes = new ArrayList<DataNode>();
+        for (Node node : childNodes) {
+            if (node instanceof DataNode)
+                dataNodes.add((DataNode) node);
+        }
+        return Collections.unmodifiableList(dataNodes);
+    }
+
+    /**
+     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
      * may include this element, or any of its children.
      * <p/>
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
@@ -205,12 +247,12 @@ public class Element extends Node {
      * <p/>
      * See the query syntax documentation in {@link org.jsoup.select.Selector}.
      *
-     * @param query a {@link Selector} query
+     * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector
      */
-    public Elements select(String query) {
-        return Selector.select(query, this);
+    public Elements select(String cssQuery) {
+        return Selector.select(cssQuery, this);
     }
     
     /**
@@ -740,6 +782,7 @@ public class Element extends Node {
      *
      * @return unencoded text, or empty string if none.
      * @see #ownText()
+     * @see #textNodes()
      */
     public String text() {
         StringBuilder sb = new StringBuilder();
@@ -772,6 +815,7 @@ public class Element extends Node {
      *
      * @return unencoded text, or empty string if none.
      * @see #text()
+     * @see #textNodes()
      */
     public String ownText() {
         StringBuilder sb = new StringBuilder();
@@ -847,6 +891,8 @@ public class Element extends Node {
     /**
      * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
      * @return the data, or empty string if none
+     *
+     * @see #dataNodes()
      */
     public String data() {
         StringBuilder sb = new StringBuilder();

@@ -24,6 +24,14 @@ abstract class CombiningEvaluator extends Evaluator {
         this.evaluators.addAll(evaluators);
     }
 
+    Evaluator rightMostEvaluator() {
+        return evaluators.size() > 0 ? evaluators.get(evaluators.size() - 1) : null;
+    }
+    
+    void replaceRightMostEvaluator(Evaluator replacement) {
+        evaluators.set(evaluators.size() - 1, replacement);
+    }
+
     static final class And extends CombiningEvaluator {
         And(Collection<Evaluator> evaluators) {
             super(evaluators);
@@ -59,6 +67,10 @@ abstract class CombiningEvaluator extends Evaluator {
                 this.evaluators.add(new And(evaluators));
             else // 0 or 1
                 this.evaluators.addAll(evaluators);
+        }
+
+        Or() {
+            super();
         }
 
         public void add(Evaluator e) {
