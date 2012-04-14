@@ -132,7 +132,7 @@ class Tokeniser {
             }
         } else { // named
             // get as many letters as possible, and look for matching entities. unconsume backwards till a match is found
-            String nameRef = reader.consumeLetterSequence();
+            String nameRef = reader.consumeLetterThenDigitSequence();
             String origNameRef = new String(nameRef); // for error reporting. nameRef gets chomped looking for matches
             boolean looksLegit = reader.matches(';');
             boolean found = false;

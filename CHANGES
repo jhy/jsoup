@@ -9,6 +9,9 @@ jsoup changelog
 
  * Updated Node.siblingNodes() and Element.siblingElements() to exclude the current node (a node is not its own sibling).
 
+ * Fixed HTML entity parser to correctly parse entities like frac14 (letter + number combo).
+   <https://github.com/jhy/jsoup/issues/145>
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
