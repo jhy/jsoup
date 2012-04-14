@@ -4,6 +4,11 @@ jsoup changelog
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
 
+ * If a node has no parent, return null on previousSibling and nextSibling instead of throwing a null pointer exception.
+   <https://github.com/jhy/jsoup/issues/184>
+
+ * Updated Node.siblingNodes() and Element.siblingElements() to exclude the current node (a node is not its own sibling).
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.

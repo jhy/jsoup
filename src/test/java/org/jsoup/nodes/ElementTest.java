@@ -528,4 +528,15 @@ public class ElementTest {
         List<DataNode> pData = p.dataNodes();
         assertEquals(0, pData.size());
     }
+
+    @Test public void elementIsNotASiblingOfItself() {
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three</div>");
+        Element p2 = doc.select("p").get(1);
+
+        assertEquals("Two", p2.text());
+        Elements els = p2.siblingElements();
+        assertEquals(2, els.size());
+        assertEquals("<p>One</p>", els.get(0).outerHtml());
+        assertEquals("<p>Three</p>", els.get(1).outerHtml());
+    }
 }

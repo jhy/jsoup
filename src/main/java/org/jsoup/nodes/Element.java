@@ -426,11 +426,20 @@ public class Element extends Node {
     }
 
     /**
-     * Get sibling elements.
+     * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
+     * of itself, so will not be included in the returned list.
      * @return sibling elements
      */
     public Elements siblingElements() {
-        return parent().children();
+        if (parentNode == null)
+            return new Elements(0);
+
+        List<Element> elements = parent().children();
+        Elements siblings = new Elements(elements.size() - 1);
+        for (Element el: elements)
+            if (el != this)
+                siblings.add(el);
+        return siblings;
     }
 
     /**
@@ -442,6 +451,7 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public Element nextElementSibling() {
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
@@ -457,6 +467,7 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public Element previousElementSibling() {
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);

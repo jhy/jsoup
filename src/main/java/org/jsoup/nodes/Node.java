@@ -436,11 +436,20 @@ public abstract class Node implements Cloneable {
     }
     
     /**
-     Retrieves this node's sibling nodes. Effectively, {@link #childNodes()  node.parent.childNodes()}.
-     @return node siblings, including this node
+     Retrieves this node's sibling nodes. Similar to {@link #childNodes()  node.parent.childNodes()}, but does not
+     include this node (a node is not a sibling of itself).
+     @return node siblings. If the node has no parent, returns an empty list.
      */
     public List<Node> siblingNodes() {
-        return parent().childNodes(); // TODO: should this strip out this node? i.e. not a sibling of self?
+        if (parentNode == null)
+            return Collections.emptyList();
+
+        List<Node> nodes = parentNode.childNodes;
+        List<Node> siblings = new ArrayList<Node>(nodes.size() - 1);
+        for (Node node: nodes)
+            if (node != this)
+                siblings.add(node);
+        return siblings;
     }
 
     /**
@@ -465,6 +474,9 @@ public abstract class Node implements Cloneable {
      @return the previous sibling, or null if this is the first sibling
      */
     public Node previousSibling() {
+        if (parentNode == null)
+            return null; // root
+
         List<Node> siblings = parentNode.childNodes;
         Integer index = siblingIndex();
         Validate.notNull(index);

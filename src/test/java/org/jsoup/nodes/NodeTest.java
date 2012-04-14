@@ -3,8 +3,11 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 /**
@@ -177,5 +180,31 @@ public class NodeTest {
             }
         });
         assertEquals("<div><p><#text></#text></p></div>", accum.toString());
+    }
+
+    @Test public void orphanNodeReturnsNullForSiblingElements() {
+        Node node = new Element(Tag.valueOf("p"), "");
+        Element el = new Element(Tag.valueOf("p"), "");
+
+        assertEquals(0, node.siblingIndex());
+        assertEquals(0, node.siblingNodes().size());
+
+        assertNull(node.previousSibling());
+        assertNull(node.nextSibling());
+
+        assertEquals(0, el.siblingElements().size());
+        assertNull(el.previousElementSibling());
+        assertNull(el.nextElementSibling());
+    }
+
+    @Test public void nodeIsNotASiblingOfItself() {
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three</div>");
+        Element p2 = doc.select("p").get(1);
+
+        assertEquals("Two", p2.text());
+        List<Node> nodes = p2.siblingNodes();
+        assertEquals(2, nodes.size());
+        assertEquals("<p>One</p>", nodes.get(0).outerHtml());
+        assertEquals("<p>Three</p>", nodes.get(1).outerHtml());
     }
 }

@@ -19,6 +19,10 @@ public class Elements implements List<Element>, Cloneable {
         contents = new ArrayList<Element>();
     }
 
+    public Elements(int initialCapacity) {
+        contents = new ArrayList<Element>(initialCapacity);
+    }
+
     public Elements(Collection<Element> elements) {
         contents = new ArrayList<Element>(elements);
     }
