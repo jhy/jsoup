@@ -555,7 +555,6 @@ enum TokeniserState {
                 String name = r.consumeLetterSequence();
                 t.tagPending.appendTagName(name.toLowerCase());
                 t.dataBuffer.append(name);
-                r.advance();
                 return;
             }
 
