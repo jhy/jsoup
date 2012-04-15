@@ -15,6 +15,8 @@ jsoup changelog
  * Fixed issue where contents of a script tag within a comment could be incorrectly parsed.
    <https://github.com/jhy/jsoup/issues/115>
 
+ * Fixed GAE support: load HTML entities from a file on startup, instead of embedding in the class.
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
