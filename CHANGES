@@ -17,6 +17,9 @@ jsoup changelog
 
  * Fixed GAE support: load HTML entities from a file on startup, instead of embedding in the class.
 
+ * Fixed NPE when HTML fragment parsing a <style> tag
+   <https://github.com/jhy/jsoup/issues/189>
+
  * Fixed issue with :all pseudo-tag in HTML sanitizer when cleaning tags previously defined in whitelist
    <https://github.com/jhy/jsoup/issues/156>
 
