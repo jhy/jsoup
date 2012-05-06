@@ -329,10 +329,9 @@ public class Whitelist {
                     return true;
                 }
             }
-        } else { // no attributes defined for tag, try :all tag
-            return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
         }
-        return false;
+        // no attributes defined for tag, try :all tag
+        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {

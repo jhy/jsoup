@@ -17,6 +17,9 @@ jsoup changelog
 
  * Fixed GAE support: load HTML entities from a file on startup, instead of embedding in the class.
 
+ * Fixed issue with :all pseudo-tag in HTML sanitizer when cleaning tags previously defined in whitelist
+   <https://github.com/jhy/jsoup/issues/156>
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
