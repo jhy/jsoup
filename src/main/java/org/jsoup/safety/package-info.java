@@ -1,4 +1,4 @@
 /**
- Contains the jsoup HMTL cleaner, and whitelist definitions.
+ Contains the jsoup HTML cleaner, and whitelist definitions.
  */
 package org.jsoup.safety;

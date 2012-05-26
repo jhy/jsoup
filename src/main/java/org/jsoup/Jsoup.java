@@ -184,7 +184,7 @@ public class Jsoup {
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
      tags and attributes.
 
-     @param bodyHtml  input untrusted HMTL
+     @param bodyHtml  input untrusted HTML
      @param baseUri   URL to resolve relative URLs against
      @param whitelist white-list of permitted HTML elements
      @return safe HTML

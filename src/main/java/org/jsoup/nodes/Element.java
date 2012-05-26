@@ -360,7 +360,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified HTML into the DOM before this element (i.e. as a preceeding sibling).
+     * Insert the specified HTML into the DOM before this element (i.e. as a preceding sibling).
      *
      * @param html HTML to add before this element
      * @return this element, for chaining
@@ -372,7 +372,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
      * @param node to add before this element
      * @return this Element, for chaining
      * @see #after(Node)
@@ -663,7 +663,7 @@ public class Element extends Node {
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
-     * @param regex regular expression to match agaisnt attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @param regex regular expression to match against attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
      * @return elements that have attributes matching this regular expression
      */
     public Elements getElementsByAttributeValueMatching(String key, String regex) {

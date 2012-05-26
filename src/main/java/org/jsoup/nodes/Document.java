@@ -61,7 +61,7 @@ public class Document extends Element {
 
     /**
      Get the string contents of the document's {@code title} element.
-     @return Trimed title, or empty string if none set.
+     @return Trimmed title, or empty string if none set.
      */
     public String title() {
         Element titleEl = getElementsByTag("title").first();

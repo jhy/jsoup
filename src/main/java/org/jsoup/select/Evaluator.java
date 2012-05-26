@@ -89,7 +89,7 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for attibute name matching
+     * Evaluator for attribute name matching
      */
     public static final class Attribute extends Evaluator {
         private String key;
@@ -367,7 +367,7 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching Element (and its descendents) text
+     * Evaluator for matching Element (and its descendants) text
      */
     public static final class ContainsText extends Evaluator {
         private String searchText;
@@ -409,7 +409,7 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching Element (and its descendents) text with regex
+     * Evaluator for matching Element (and its descendants) text with regex
      */
     public static final class Matches extends Evaluator {
         private Pattern pattern;

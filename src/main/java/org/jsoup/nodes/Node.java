@@ -247,7 +247,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified HTML into the DOM before this node (i.e. as a preceeding sibling).
+     * Insert the specified HTML into the DOM before this node (i.e. as a preceding sibling).
      * @param html HTML to add before this node
      * @return this node, for chaining
      * @see #after(String)
@@ -258,7 +258,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
      * @param node to add before this node
      * @return this node, for chaining
      * @see #after(Node)

@@ -46,7 +46,7 @@ public class Cleaner {
     }
 
     /**
-     Dertmines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
+     Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
      in the input HTML are allowed by the whitelist.
      <p/>
      This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully

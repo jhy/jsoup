@@ -3,7 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 
 /**
- CharacterReader cosumes tokens off a string. To replace the old TokenQueue.
+ CharacterReader consumes tokens off a string. To replace the old TokenQueue.
  */
 class CharacterReader {
     static final char EOF = (char) -1;

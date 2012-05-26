@@ -8,7 +8,7 @@ public final class Validate {
     private Validate() {}
 
     /**
-     * Validates that the obect is not null
+     * Validates that the object is not null
      * @param obj object to test
      */
     public static void notNull(Object obj) {

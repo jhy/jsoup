@@ -108,7 +108,7 @@ public class Tag {
     /**
      * Get if this is an empty tag
      *
-     * @return if this is an emtpy tag
+     * @return if this is an empty tag
      */
     public boolean isEmpty() {
         return empty;

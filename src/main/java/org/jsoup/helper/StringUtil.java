@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * A minimal String utility class. Designed for interal jsoup use only.
+ * A minimal String utility class. Designed for internal jsoup use only.
  */
 public final class StringUtil {
     // memoised padding up to 10

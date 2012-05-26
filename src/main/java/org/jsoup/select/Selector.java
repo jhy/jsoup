@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
  * CSS-like element selector, that finds elements matching a query.
  * <p/>
  * <h2>Selector syntax</h2>
- * A selector is a chain of simple selectors, seperated by combinators. Selectors are case insensitive (including against
+ * A selector is a chain of simple selectors, separated by combinators. Selectors are case insensitive (including against
  * elements, attributes, and attribute values).
  * <p/>
  * The universal selector (*) is implicit when no element selector is supplied (i.e. {@code *.header} and {@code .header}
