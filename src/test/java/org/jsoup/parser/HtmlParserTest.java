@@ -2,10 +2,8 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.TextNode;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -692,5 +690,13 @@ public class HtmlParserTest {
                 "    document.write('</scr' + 'ipt>');\n" +
                 "  // -->\n" +
                 "</script>", node.body().html());
+    }
+
+    @Test public void handleNullContextInParseFragment() {
+        String html = "<ol><li>One</li></ol><p>Two</p>";
+        List<Node> nodes = Parser.parseFragment(html, null, "http://example.com/");
+        assertEquals(1, nodes.size()); // returns <html> node (not document) -- no context means doc gets created
+        assertEquals("html", nodes.get(0).nodeName());
+        assertEquals("<html> <head></head> <body> <ol> <li>One</li> </ol> <p>Two</p> </body> </html>", StringUtil.normaliseWhitespace(nodes.get(0).outerHtml()));
     }
 }

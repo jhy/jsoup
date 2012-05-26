@@ -23,6 +23,9 @@ jsoup changelog
  * Fixed issue with :all pseudo-tag in HTML sanitizer when cleaning tags previously defined in whitelist
    <https://github.com/jhy/jsoup/issues/156>
 
+ * Fixed NPE in Parser.parseFragment() when context parameter is null.
+   <https://github.com/jhy/jsoup/issues/195>
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
