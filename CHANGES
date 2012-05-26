@@ -26,6 +26,8 @@ jsoup changelog
  * Fixed NPE in Parser.parseFragment() when context parameter is null.
    <https://github.com/jhy/jsoup/issues/195>
 
+ * In HTML whitelists, when defining allowed attributes for a tag, automatically add the tag to the allowed list.
+
 *** Release 1.6.2 [2011-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.

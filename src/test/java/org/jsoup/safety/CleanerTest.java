@@ -133,4 +133,13 @@ public class CleanerTest {
         String clean = Jsoup.clean(html, whitelist);
         assertEquals("<p class=\"foo\"><a class=\"qux\">link</a></p>", clean);
     }
+
+    @Test public void addsTagOnAttributesIfNotSet() {
+        String html = "<p class='foo' src='bar'>One</p>";
+        Whitelist whitelist = new Whitelist()
+            .addAttributes("p", "class");
+        // ^^ whitelist does not have explicit tag add for p, inferred from add attributes.
+        String clean = Jsoup.clean(html, whitelist);
+        assertEquals("<p class=\"foo\">One</p>", clean);
+    }
 }
