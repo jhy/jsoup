@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.6.3 [PENDING]
+*** Release 1.6.3 [2012-May-27]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
 
