@@ -28,7 +28,7 @@ jsoup changelog
 
  * In HTML whitelists, when defining allowed attributes for a tag, automatically add the tag to the allowed list.
 
-*** Release 1.6.2 [2011-Mar-27]
+*** Release 1.6.2 [2012-Mar-27]
  * Added a simplified XML parsing mode, which can usefully parse valid and invalid XML, but does not enforce any HTML
    document structure or special tag behaviour.
 
