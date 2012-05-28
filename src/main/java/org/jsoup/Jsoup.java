@@ -184,10 +184,10 @@ public class Jsoup {
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
      tags and attributes.
 
-     @param bodyHtml  input untrusted HTML
+     @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
      @param whitelist white-list of permitted HTML elements
-     @return safe HTML
+     @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
@@ -202,14 +202,34 @@ public class Jsoup {
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
      tags and attributes.
 
-     @param bodyHtml  input untrusted HTML
+     @param bodyHtml  input untrusted HTML (body fragment)
      @param whitelist white-list of permitted HTML elements
-     @return safe HTML
+     @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, Whitelist whitelist) {
         return clean(bodyHtml, "", whitelist);
+    }
+
+    /**
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of
+     * permitted
+     * tags and attributes.
+     *
+     * @param bodyHtml input untrusted HTML (body fragment)
+     * @param baseUri URL to resolve relative URLs against
+     * @param whitelist white-list of permitted HTML elements
+     * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
+     * @return safe HTML (body fragment)
+     * @see Cleaner#clean(Document)
+     */
+    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+        Document dirty = parseBodyFragment(bodyHtml, baseUri);
+        Cleaner cleaner = new Cleaner(whitelist);
+        Document clean = cleaner.clean(dirty);
+        clean.outputSettings(outputSettings);
+        return clean.body().html();
     }
 
     /**

@@ -2,6 +2,8 @@ package org.jsoup.safety;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Entities;
 import org.jsoup.safety.Whitelist;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -141,5 +143,27 @@ public class CleanerTest {
         // ^^ whitelist does not have explicit tag add for p, inferred from add attributes.
         String clean = Jsoup.clean(html, whitelist);
         assertEquals("<p class=\"foo\">One</p>", clean);
+    }
+
+    @Test public void supplyOutputSettings() {
+        // test that one can override the default document output settings
+        Document.OutputSettings os = new Document.OutputSettings();
+        os.prettyPrint(false);
+        os.escapeMode(Entities.EscapeMode.extended);
+
+        String html = "<div><p>&bernou;</p></div>";
+        String customOut = Jsoup.clean(html, "http://foo.com/", Whitelist.relaxed(), os);
+        String defaultOut = Jsoup.clean(html, "http://foo.com/", Whitelist.relaxed());
+        assertNotSame(defaultOut, customOut);
+
+        assertEquals("<div><p>&bernou;</p></div>", customOut);
+        assertEquals("<div>\n" +
+            " <p>ℬ</p>\n" +
+            "</div>", defaultOut);
+
+        os.charset("ASCII");
+        os.escapeMode(Entities.EscapeMode.base);
+        String customOut2 = Jsoup.clean(html, "http://foo.com/", Whitelist.relaxed(), os);
+        assertEquals("<div><p>&#8492;</p></div>", customOut2);
     }
 }
