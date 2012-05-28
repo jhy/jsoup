@@ -17,7 +17,7 @@ import java.util.LinkedHashSet;
  * is equivalent).
  * <p/>
  * <table>
- * <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
+ * <tr><th align="left">Pattern</th><th align="left">Matches</th><th align="left">Example</th></tr>
  * <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
  * <tr><td><code>tag</code></td><td>elements with the given tag name</td><td><code>div</code></td></tr>
  * <tr><td><code>ns|E</code></td><td>elements of type E in the namespace <i>ns</i></td><td><code>fb|name</code> finds <code>&lt;fb:name></code> elements</td></tr>
