@@ -176,6 +176,27 @@ public class HtmlParserTest {
         assertEquals("Hello", els.val());
     }
 
+    @Test public void preservesSpaceInTextArea() {
+        // preserve because the tag is marked as preserve white space
+        Document doc = Jsoup.parse("<textarea>\n\tOne\n\tTwo\n\tThree\n</textarea>");
+        String expect = "One\n\tTwo\n\tThree"; // the leading and trailing spaces are dropped as a convenience to authors
+        Element el = doc.select("textarea").first();
+        assertEquals(expect, el.text());
+        assertEquals(expect, el.val());
+        assertEquals(expect, el.html());
+        assertEquals("<textarea>\n\t" + expect + "\n</textarea>", el.outerHtml()); // but preserved in round-trip html
+    }
+
+    @Test public void preservesSpaceInScript() {
+        // preserve because it's content is a data node
+        Document doc = Jsoup.parse("<script>\nOne\n\tTwo\n\tThree\n</script>");
+        String expect = "\nOne\n\tTwo\n\tThree\n";
+        Element el = doc.select("script").first();
+        assertEquals(expect, el.data());
+        assertEquals("One\n\tTwo\n\tThree", el.html());
+        assertEquals("<script>" + expect + "</script>", el.outerHtml());
+    }
+
     @Test public void doesNotCreateImplicitLists() {
         // old jsoup used to wrap this in <ul>, but that's not to spec
         String h = "<li>Point one<li>Point two";

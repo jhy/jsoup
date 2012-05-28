@@ -4,6 +4,9 @@ jsoup changelog
  * Fixed an issue when determining the Windows-1254 character-set from a meta tag when run in the Turkish locale.
    <https://github.com/jhy/jsoup/issues/191>
 
+ * Fixed whitespace preservation in <textarea> tags.
+   <https://github.com/jhy/jsoup/issues/167>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
