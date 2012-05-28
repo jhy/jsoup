@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Locale;
 
 /**
  * Internal static utilities for handling data.
@@ -126,7 +127,7 @@ public class DataUtil {
         if (contentType == null) return null;
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
-            return m.group(1).trim().toUpperCase();
+            return m.group(1).trim().toUpperCase(Locale.ENGLISH);
         }
         return null;
     }
