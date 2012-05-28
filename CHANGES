@@ -7,6 +7,9 @@ jsoup changelog
  * Fixed whitespace preservation in <textarea> tags.
    <https://github.com/jhy/jsoup/issues/167>
 
+ * In jsoup.connect, fail faster if the return content type is not supported.
+   <https://github.com/jhy/jsoup/issues/153>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
