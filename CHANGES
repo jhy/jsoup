@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.6.4 [PENDING]
+ * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
+
  * Fixed an issue when determining the Windows-1254 character-set from a meta tag when run in the Turkish locale.
    <https://github.com/jhy/jsoup/issues/191>
 
