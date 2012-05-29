@@ -182,12 +182,13 @@ enum TokeniserState {
         // from < or </ in data, will have start or end tag pending
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
-            String tagName = r.consumeToAny('\t', '\n', '\f', ' ', '/', '>', nullChar).toLowerCase();
+            String tagName = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '/', '>', nullChar).toLowerCase();
             t.tagPending.appendTagName(tagName);
 
             switch (r.consume()) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeAttributeName);
@@ -254,6 +255,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     if (t.isAppropriateEndTagToken())
@@ -321,6 +323,7 @@ enum TokeniserState {
                 switch (c) {
                     case '\t':
                     case '\n':
+                    case '\r':
                     case '\f':
                     case ' ':
                         t.transition(BeforeAttributeName);
@@ -389,6 +392,7 @@ enum TokeniserState {
                 switch (c) {
                     case '\t':
                     case '\n':
+                    case '\r':
                     case '\f':
                     case ' ':
                         t.transition(BeforeAttributeName);
@@ -563,6 +567,7 @@ enum TokeniserState {
                 switch (c) {
                     case '\t':
                     case '\n':
+                    case '\r':
                     case '\f':
                     case ' ':
                         t.transition(BeforeAttributeName);
@@ -602,6 +607,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                 case '/':
@@ -726,6 +732,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                 case '/':
@@ -749,6 +756,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break; // ignore whitespace
@@ -788,13 +796,14 @@ enum TokeniserState {
     AttributeName {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
-            String name = r.consumeToAny('\t', '\n', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<');
+            String name = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<');
             t.tagPending.appendAttributeName(name.toLowerCase());
 
             char c = r.consume();
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(AfterAttributeName);
@@ -832,6 +841,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     // ignore
@@ -876,6 +886,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     // ignore
@@ -979,7 +990,7 @@ enum TokeniserState {
     },
     AttributeValue_unquoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny('\t', '\n', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`');
+            String value = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`');
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
 
@@ -987,6 +998,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeAttributeName);
@@ -1030,6 +1042,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeAttributeName);
@@ -1270,6 +1283,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeDoctypeName);
@@ -1298,6 +1312,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break; // ignore whitespace
@@ -1335,6 +1350,7 @@ enum TokeniserState {
                     break;
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(AfterDoctypeName);
@@ -1363,7 +1379,7 @@ enum TokeniserState {
                 t.transition(Data);
                 return;
             }
-            if (r.matchesAny('\t', '\n', '\f', ' '))
+            if (r.matchesAny('\t', '\n', '\r', '\f', ' '))
                 r.advance(); // ignore whitespace
             else if (r.matches('>')) {
                 t.emitDoctypePending();
@@ -1386,6 +1402,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeDoctypePublicIdentifier);
@@ -1425,6 +1442,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break;
@@ -1517,6 +1535,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BetweenDoctypePublicAndSystemIdentifiers);
@@ -1554,6 +1573,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break;
@@ -1590,6 +1610,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     t.transition(BeforeDoctypeSystemIdentifier);
@@ -1629,6 +1650,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break;
@@ -1721,6 +1743,7 @@ enum TokeniserState {
             switch (c) {
                 case '\t':
                 case '\n':
+                case '\r':
                 case '\f':
                 case ' ':
                     break;

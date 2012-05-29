@@ -61,15 +61,6 @@ public class CharacterReaderTest {
         assertEquals('n', r.consume());
     }
 
-    @Test public void handleCarriageReturnAsLineFeed() {
-        String in = "one \r two \r\n three";
-        CharacterReader r = new CharacterReader(in);
-
-        String first = r.consumeTo('\n');
-        assertEquals("one ", first);
-        assertEquals("\n two \n three", r.consumeToEnd());
-    }
-
     @Test public void consumeToEnd() {
         String in = "one two three";
         CharacterReader r = new CharacterReader(in);

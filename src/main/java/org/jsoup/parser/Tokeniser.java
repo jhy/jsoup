@@ -102,7 +102,7 @@ class Tokeniser {
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
-        if (reader.matchesAny('\t', '\n', '\f', ' ', '<', '&'))
+        if (reader.matchesAny('\t', '\n', '\r', '\f', ' ', '<', '&'))
             return null;
 
         reader.mark();

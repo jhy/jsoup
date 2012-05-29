@@ -651,8 +651,8 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesWhitespaceInoDocType() {
-        String html = "<!DOCTYPE html\n" +
-                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n" +
+        String html = "<!DOCTYPE html\r\n" +
+                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\r\n" +
                 "      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
         Document doc = Jsoup.parse(html);
         assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
