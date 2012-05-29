@@ -46,17 +46,19 @@ abstract class Token {
 
     static abstract class Tag extends Token {
         protected String tagName;
-        private String pendingAttributeName;
-        private String pendingAttributeValue;
+        private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
+        private StringBuilder pendingAttributeValue; // but values are accumulated, from e.g. & in hrefs
 
         boolean selfClosing = false;
         Attributes attributes = new Attributes(); // todo: allow nodes to not have attributes
 
         void newAttribute() {
             if (pendingAttributeName != null) {
+                Attribute attribute;
                 if (pendingAttributeValue == null)
-                    pendingAttributeValue = "";
-                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
+                    attribute = new Attribute(pendingAttributeName, "");
+                else
+                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
@@ -108,7 +110,7 @@ abstract class Token {
         }
 
         void appendAttributeValue(String append) {
-            pendingAttributeValue = pendingAttributeValue == null ? append : pendingAttributeValue.concat(append);
+            pendingAttributeValue = pendingAttributeValue == null ? new StringBuilder(append) : pendingAttributeValue.append(append);
         }
 
         void appendAttributeValue(char append) {
