@@ -62,7 +62,8 @@ abstract class Token {
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
-            pendingAttributeValue = null;
+            if (pendingAttributeValue != null)
+                pendingAttributeValue.delete(0, pendingAttributeValue.length());
         }
 
         void finaliseTag() {
