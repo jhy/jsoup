@@ -56,13 +56,13 @@ class CharacterReader {
     }
 
     String consumeAsString() {
-        return input.substring(pos, pos++);
+        return new String(input.substring(pos, pos++));
     }
 
     String consumeTo(char c) {
         int offset = input.indexOf(c, pos);
         if (offset != -1) {
-            String consumed = input.substring(pos, offset);
+            String consumed = new String(input.substring(pos, offset));
             pos += consumed.length();
             return consumed;
         } else {
@@ -73,7 +73,7 @@ class CharacterReader {
     String consumeTo(String seq) {
         int offset = input.indexOf(seq, pos);
         if (offset != -1) {
-            String consumed = input.substring(pos, offset);
+            String consumed = new String(input.substring(pos, offset));
             pos += consumed.length();
             return consumed;
         } else {
@@ -93,11 +93,11 @@ class CharacterReader {
             pos++;
         }
 
-        return pos > start ? input.substring(start, pos) : "";
+        return pos > start ? new String(input.substring(start, pos)) : "";
     }
 
     String consumeToEnd() {
-        String data = input.substring(pos, input.length());
+        String data = new String(input.substring(pos, input.length()));
         pos = input.length();
         return data;
     }
@@ -112,7 +112,7 @@ class CharacterReader {
                 break;
         }
 
-        return input.substring(start, pos);
+        return new String(input.substring(start, pos));
     }
 
     String consumeLetterThenDigitSequence() {
@@ -132,7 +132,7 @@ class CharacterReader {
                 break;
         }
 
-        return input.substring(start, pos);
+        return new String(input.substring(start, pos));
     }
 
     String consumeHexSequence() {
@@ -144,7 +144,7 @@ class CharacterReader {
             else
                 break;
         }
-        return input.substring(start, pos);
+        return new String(input.substring(start, pos));
     }
 
     String consumeDigitSequence() {
@@ -156,7 +156,7 @@ class CharacterReader {
             else
                 break;
         }
-        return input.substring(start, pos);
+        return new String(input.substring(start, pos));
     }
 
     boolean matches(char c) {
