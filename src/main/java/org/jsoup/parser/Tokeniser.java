@@ -65,7 +65,7 @@ class Tokeniser {
                 selfClosingFlagAcknowledged = false;
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
-            if (endTag.attributes.size() > 0)
+            if (endTag.attributes != null)
                 error("Attributes incorrectly present on end tag");
         }
     }

@@ -50,9 +50,12 @@ abstract class Token {
         private StringBuilder pendingAttributeValue; // but values are accumulated, from e.g. & in hrefs
 
         boolean selfClosing = false;
-        Attributes attributes = new Attributes(); // todo: allow nodes to not have attributes
+        Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
         void newAttribute() {
+            if (attributes == null)
+                attributes = new Attributes();
+
             if (pendingAttributeName != null) {
                 Attribute attribute;
                 if (pendingAttributeValue == null)
@@ -122,6 +125,7 @@ abstract class Token {
     static class StartTag extends Tag {
         StartTag() {
             super();
+            attributes = new Attributes();
             type = TokenType.StartTag;
         }
 
@@ -138,7 +142,10 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "<" + name() + " " + attributes.toString() + ">";
+            if (attributes != null && attributes.size() > 0)
+                return "<" + name() + " " + attributes.toString() + ">";
+            else
+                return "<" + name() + ">";
         }
     }
 
@@ -155,7 +162,7 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "</" + name() + " " + attributes.toString() + ">";
+            return "</" + name() + ">";
         }
     }
 
