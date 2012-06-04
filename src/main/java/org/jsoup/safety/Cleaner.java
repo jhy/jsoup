@@ -40,7 +40,8 @@ public class Cleaner {
         Validate.notNull(dirtyDocument);
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
-        copySafeNodes(dirtyDocument.body(), clean.body());
+        if (dirtyDocument.body() != null) // frameset documents won't have a body. the clean doc will have empty body.
+            copySafeNodes(dirtyDocument.body(), clean.body());
 
         return clean;
     }
