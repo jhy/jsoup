@@ -3,6 +3,8 @@ jsoup changelog
 *** Release 1.6.4 [PENDING]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 
+ * Reduced memory consumption when selecting elements.
+
  * Fixed an issue when determining the Windows-1254 character-set from a meta tag when run in the Turkish locale.
    <https://github.com/jhy/jsoup/issues/191>
 
@@ -14,6 +16,9 @@ jsoup changelog
 
  * In jsoup.clean, allow custom OutputSettings, to control pretty printing, character set, and entity escaping.
    <https://github.com/jhy/jsoup/issues/148>
+
+ * Fixed an issue that prevented frameset documents to be cleaned by the Cleaner.
+   <https://github.com/jhy/jsoup/issues/154>
 
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
