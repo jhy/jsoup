@@ -10,15 +10,15 @@ import java.util.Locale;
 class CharacterReader {
     static final char EOF = (char) -1;
 
-    private final String input;
+    private final char[] input;
     private final int length;
     private int pos = 0;
     private int mark = 0;
 
     CharacterReader(String input) {
         Validate.notNull(input);
-        this.input = input;
-        this.length = input.length();
+        this.input = input.toCharArray();
+        this.length = this.input.length;
     }
 
     int pos() {
@@ -30,11 +30,11 @@ class CharacterReader {
     }
 
     char current() {
-        return isEmpty() ? EOF : input.charAt(pos);
+        return isEmpty() ? EOF : input[pos];
     }
 
     char consume() {
-        char val = isEmpty() ? EOF : input.charAt(pos);
+        char val = isEmpty() ? EOF : input[pos];
         pos++;
         return val;
     }
@@ -56,14 +56,52 @@ class CharacterReader {
     }
 
     String consumeAsString() {
-        return new String(input.substring(pos, pos++));
+        return new String(input, pos++, 1);
+    }
+
+    /**
+     * Returns the number of characters between the current position and the next instance of the input char
+     * @param c scan target
+     * @return offset between current position and next instance of target. -1 if not found.
+     */
+    int nextIndexOf(char c) {
+        // doesn't handle scanning for surrogates
+        for (int i = pos; i < length; i++) {
+            if (c == input[i])
+                return i - pos;
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the number of characters between the current position and the next instance of the input sequence
+     *
+     * @param seq scan target
+     * @return offset between current position and next instance of target. -1 if not found.
+     */
+    int nextIndexOf(CharSequence seq) {
+        // doesn't handle scanning for surrogates
+        char startChar = seq.charAt(0);
+        for (int offset = pos; offset < length; offset++) {
+            // scan to first instance of startchar:
+            if (startChar != input[offset])
+                while(++offset < length && startChar != input[offset]);
+            if (offset < length) {
+                int i = offset + 1;
+                int last = i + seq.length()-1;
+                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
+                if (i == last) // found full sequence
+                    return offset - pos;
+            }
+        }
+        return -1;
     }
 
     String consumeTo(char c) {
-        int offset = input.indexOf(c, pos);
+        int offset = nextIndexOf(c);
         if (offset != -1) {
-            String consumed = new String(input.substring(pos, offset));
-            pos += consumed.length();
+            String consumed = new String(input, pos, offset);
+            pos += offset;
             return consumed;
         } else {
             return consumeToEnd();
@@ -71,112 +109,128 @@ class CharacterReader {
     }
 
     String consumeTo(String seq) {
-        int offset = input.indexOf(seq, pos);
+        int offset = nextIndexOf(seq);
         if (offset != -1) {
-            String consumed = new String(input.substring(pos, offset));
-            pos += consumed.length();
+            String consumed = new String(input, pos, offset);
+            pos += offset;
             return consumed;
         } else {
             return consumeToEnd();
         }
     }
 
-    String consumeToAny(char... seq) {
+    String consumeToAny(final char... chars) {
         int start = pos;
 
-        OUTER: while (!isEmpty()) {
-            char c = input.charAt(pos);
-            for (char seek : seq) {
-                if (seek == c)
+        OUTER: while (pos < length) {
+            for (int i = 0; i < chars.length; i++) {
+                if (input[pos] == chars[i])
                     break OUTER;
             }
             pos++;
         }
 
-        return pos > start ? new String(input.substring(start, pos)) : "";
+        return pos > start ? new String(input, start, pos-start) : "";
     }
 
     String consumeToEnd() {
-        String data = new String(input.substring(pos, input.length()));
-        pos = input.length();
+        String data = new String(input, pos, length-pos);
+        pos = length;
         return data;
     }
 
     String consumeLetterSequence() {
         int start = pos;
-        while (!isEmpty()) {
-            char c = input.charAt(pos);
+        while (pos < length) {
+            char c = input[pos];
             if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
                 pos++;
             else
                 break;
         }
 
-        return new String(input.substring(start, pos));
+        return new String(input, start, pos - start);
     }
 
     String consumeLetterThenDigitSequence() {
         int start = pos;
-        while (!isEmpty()) {
-            char c = input.charAt(pos);
+        while (pos < length) {
+            char c = input[pos];
             if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
                 pos++;
             else
                 break;
         }
         while (!isEmpty()) {
-            char c = input.charAt(pos);
+            char c = input[pos];
             if (c >= '0' && c <= '9')
                 pos++;
             else
                 break;
         }
 
-        return new String(input.substring(start, pos));
+        return new String(input, start, pos - start);
     }
 
     String consumeHexSequence() {
         int start = pos;
-        while (!isEmpty()) {
-            char c = input.charAt(pos);
+        while (pos < length) {
+            char c = input[pos];
             if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
                 pos++;
             else
                 break;
         }
-        return new String(input.substring(start, pos));
+        return new String(input, start, pos - start);
     }
 
     String consumeDigitSequence() {
         int start = pos;
-        while (!isEmpty()) {
-            char c = input.charAt(pos);
+        while (pos < length) {
+            char c = input[pos];
             if (c >= '0' && c <= '9')
                 pos++;
             else
                 break;
         }
-        return new String(input.substring(start, pos));
+        return new String(input, start, pos - start);
     }
 
     boolean matches(char c) {
-        return !isEmpty() && input.charAt(pos) == c;
+        return !isEmpty() && input[pos] == c;
 
     }
 
     boolean matches(String seq) {
-        return input.startsWith(seq, pos);
+        int scanLength = seq.length();
+        if (scanLength > length - pos)
+            return false;
+
+        for (int offset = 0; offset < scanLength; offset++)
+            if (seq.charAt(offset) != input[pos+offset])
+                return false;
+        return true;
     }
 
     boolean matchesIgnoreCase(String seq) {
-        return input.regionMatches(true, pos, seq, 0, seq.length());
+        int scanLength = seq.length();
+        if (scanLength > length - pos)
+            return false;
+
+        for (int offset = 0; offset < scanLength; offset++) {
+            char upScan = Character.toUpperCase(seq.charAt(offset));
+            char upTarget = Character.toUpperCase(input[pos + offset]);
+            if (upScan != upTarget)
+                return false;
+        }
+        return true;
     }
 
     boolean matchesAny(char... seq) {
         if (isEmpty())
             return false;
 
-        char c = input.charAt(pos);
+        char c = input[pos];
         for (char seek : seq) {
             if (seek == c)
                 return true;
@@ -187,14 +241,14 @@ class CharacterReader {
     boolean matchesLetter() {
         if (isEmpty())
             return false;
-        char c = input.charAt(pos);
+        char c = input[pos];
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }
 
     boolean matchesDigit() {
         if (isEmpty())
             return false;
-        char c = input.charAt(pos);
+        char c = input[pos];
         return (c >= '0' && c <= '9');
     }
 
@@ -220,11 +274,11 @@ class CharacterReader {
         // used to check presence of </title>, </style>. only finds consistent case.
         String loScan = seq.toLowerCase(Locale.ENGLISH);
         String hiScan = seq.toUpperCase(Locale.ENGLISH);
-        return (input.indexOf(loScan, pos) > -1) || (input.indexOf(hiScan, pos) > -1);
+        return (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1);
     }
 
     @Override
     public String toString() {
-        return input.substring(pos);
+        return new String(input, pos, length - pos);
     }
 }
