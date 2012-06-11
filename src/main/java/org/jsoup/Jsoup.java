@@ -64,7 +64,7 @@ public class Jsoup {
      * Use examples:
      * <ul>
      *  <li><code>Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "jsoup").get();</code></li>
-     *  <li><code>Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();</code></li>
      * </ul>
      * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
      * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
