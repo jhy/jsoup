@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.6.4a-SNAPSHOT</version>
+  <version>1.6.4a-LMF</version>
   <description>jsoup HTML parser</description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -119,14 +119,14 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>snml.snapshots</id>
+      <name>LMF Snapshots</name>
+      <url>http://devel.kiwi-project.eu:8080/nexus/content/repositories/snapshots/</url>
     </snapshotRepository>
     <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>snml.releases</id>
+      <name>LMF Repository</name>
+      <url>http://devel.kiwi-project.eu:8080/nexus/content/repositories/releases/</url>
     </repository>
   </distributionManagement>
 
@@ -189,6 +189,14 @@
         <role>Lead Developer</role>
       </roles>
       <timezone>+11</timezone>
+    </developer>
+    <developer>
+          <id>ja-fra</id>
+      <name>Jakob Frank</name>
+      <email>jakob.frank@salzburgresearch.at</email>
+      <organization>Salzburg Research</organization>
+      <organizationUrl>www.salzburgresearch.at</organizationUrl>
+      <timezone>+1</timezone>
     </developer>
   </developers>
 
