@@ -19,6 +19,10 @@ public class Elements implements List<Element>, Cloneable {
         contents = new ArrayList<Element>();
     }
 
+    public Elements(int initialCapacity) {
+        contents = new ArrayList<Element>(initialCapacity);
+    }
+
     public Elements(Collection<Element> elements) {
         contents = new ArrayList<Element>(elements);
     }
@@ -401,7 +405,7 @@ public class Elements implements List<Element>, Cloneable {
     }
 
     /**
-     * Remove elements from this list that do not match the {@link Selector} query.
+     * Remove elements from this list that match the {@link Selector} query.
      * <p>
      * E.g. HTML: {@code <div class=logo>One</div> <div>Two</div>}<br>
      * <code>Elements divs = doc.select("div").not("#logo");</code><br>

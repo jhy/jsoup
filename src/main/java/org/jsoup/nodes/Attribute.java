@@ -86,7 +86,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     * Create a new Attribute from an unencoded key and a HMTL attribute encoded value.
+     * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
      * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
      * @param encodedValue HTML attribute encoded value
      * @return attribute
@@ -123,7 +123,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     @Override
     public Attribute clone() {
         try {
-            return (Attribute) super.clone(); // only fields are immutable strings key and value, so no more deep copy reqd
+            return (Attribute) super.clone(); // only fields are immutable strings key and value, so no more deep copy required
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

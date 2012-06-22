@@ -10,14 +10,14 @@ import java.util.LinkedHashSet;
  * CSS-like element selector, that finds elements matching a query.
  * <p/>
  * <h2>Selector syntax</h2>
- * A selector is a chain of simple selectors, seperated by combinators. Selectors are case insensitive (including against
+ * A selector is a chain of simple selectors, separated by combinators. Selectors are case insensitive (including against
  * elements, attributes, and attribute values).
  * <p/>
  * The universal selector (*) is implicit when no element selector is supplied (i.e. {@code *.header} and {@code .header}
  * is equivalent).
  * <p/>
  * <table>
- * <tr><th>Pattern</th><th>Matches</th><th>Example</th></tr>
+ * <tr><th align="left">Pattern</th><th align="left">Matches</th><th align="left">Example</th></tr>
  * <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
  * <tr><td><code>tag</code></td><td>elements with the given tag name</td><td><code>div</code></td></tr>
  * <tr><td><code>ns|E</code></td><td>elements of type E in the namespace <i>ns</i></td><td><code>fb|name</code> finds <code>&lt;fb:name></code> elements</td></tr>
@@ -42,7 +42,7 @@ import java.util.LinkedHashSet;
  * <tr><td><code>:gt(<em>n</em>)</code></td><td>elements whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
  * <tr><td><code>:eq(<em>n</em>)</code></td><td>elements whose sibling index is equal to <em>n</em></td><td><code>td:eq(0)</code> finds the first cell of each row</td></tr>
  * <tr><td><code>:has(<em>selector</em>)</code></td><td>elements that contains at least one element matching the <em>selector</em></td><td><code>div:has(p)</code> finds divs that contain p elements </td></tr>
- * <tr><td><code>:not(<em>selector</em>)</code></td><td>elements that do not match the <em>selector</em>. See also {@link Elements#not(String)}</td><code>div:not(.logo)</code> finds all divs that do not have the "logo" class.<br /><code>div:not(:has(div))</code> finds divs that do not contain divs.</code></td></tr>
+ * <tr><td><code>:not(<em>selector</em>)</code></td><td>elements that do not match the <em>selector</em>. See also {@link Elements#not(String)}</td><td><code>div:not(.logo)</code> finds all divs that do not have the "logo" class.<br /><code>div:not(:has(div))</code> finds divs that do not contain divs.</code></td></tr>
  * <tr><td><code>:contains(<em>text</em>)</code></td><td>elements that contains the specified text. The search is case insensitive. The text may appear in the found element, or any of its descendants.</td><td><code>p:contains(jsoup)</code> finds p elements containing the text "jsoup".</td></tr>
  * <tr><td><code>:matches(<em>regex</em>)</code></td><td>elements whose text matches the specified regular expression. The text may appear in the found element, or any of its descendants.</td><td><code>td:matches(\\d+)</code> finds table cells containing digits. <code>div:matches((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
  * <tr><td><code>:containsOwn(<em>text</em>)</code></td><td>elements that directly contains the specified text. The search is case insensitive. The text must appear in the found element, not any of its descendants.</td><td><code>p:containsOwn(jsoup)</code> finds p elements with own text "jsoup".</td></tr>

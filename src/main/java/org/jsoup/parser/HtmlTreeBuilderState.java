@@ -723,7 +723,7 @@ enum HtmlTreeBuilderState {
                             Element adopter = new Element(Tag.valueOf(name), tb.getBaseUri());
                             Node[] childNodes = furthestBlock.childNodes().toArray(new Node[furthestBlock.childNodes().size()]);
                             for (Node childNode : childNodes) {
-                                adopter.appendChild(childNode); // append will reparent. thus the clone to avvoid concurrent mod.
+                                adopter.appendChild(childNode); // append will reparent. thus the clone to avoid concurrent mod.
                             }
                             furthestBlock.appendChild(adopter);
                             tb.removeFromActiveFormattingElements(formatEl);

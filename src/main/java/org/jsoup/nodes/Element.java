@@ -360,7 +360,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified HTML into the DOM before this element (i.e. as a preceeding sibling).
+     * Insert the specified HTML into the DOM before this element (i.e. as a preceding sibling).
      *
      * @param html HTML to add before this element
      * @return this element, for chaining
@@ -372,7 +372,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified node into the DOM before this node (i.e. as a preceeding sibling).
+     * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
      * @param node to add before this element
      * @return this Element, for chaining
      * @see #after(Node)
@@ -426,11 +426,20 @@ public class Element extends Node {
     }
 
     /**
-     * Get sibling elements.
+     * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
+     * of itself, so will not be included in the returned list.
      * @return sibling elements
      */
     public Elements siblingElements() {
-        return parent().children();
+        if (parentNode == null)
+            return new Elements(0);
+
+        List<Element> elements = parent().children();
+        Elements siblings = new Elements(elements.size() - 1);
+        for (Element el: elements)
+            if (el != this)
+                siblings.add(el);
+        return siblings;
     }
 
     /**
@@ -442,6 +451,7 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public Element nextElementSibling() {
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
@@ -457,6 +467,7 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public Element previousElementSibling() {
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
@@ -652,7 +663,7 @@ public class Element extends Node {
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
-     * @param regex regular expression to match agaisnt attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @param regex regular expression to match against attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
      * @return elements that have attributes matching this regular expression
      */
     public Elements getElementsByAttributeValueMatching(String key, String regex) {

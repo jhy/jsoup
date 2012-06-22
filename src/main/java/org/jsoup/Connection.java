@@ -176,7 +176,7 @@ public interface Connection {
     public Response execute() throws IOException;
 
     /**
-     * Get the request object associatated with this connection
+     * Get the request object associated with this connection
      * @return request
      */
     public Request request();
@@ -195,7 +195,7 @@ public interface Connection {
     public Response response();
 
     /**
-     * Set the conenction's response
+     * Set the connection's response
      * @param response new response
      * @return this Connection, for chaining
      */
@@ -263,7 +263,7 @@ public interface Connection {
         /**
          * Remove a header by name
          * @param name name of header to remove (case insensitive)
-         * @return this, for chianing
+         * @return this, for chaining
          */
         public T removeHeader(String name);
 
@@ -287,7 +287,7 @@ public interface Connection {
          * Set a cookie in this request/response.
          * @param name name of cookie
          * @param value value of cookie
-         * @return this, for chianing
+         * @return this, for chaining
          */
         public T cookie(String name, String value);
 
@@ -301,7 +301,7 @@ public interface Connection {
         /**
          * Remove a cookie by name
          * @param name name of cookie to remove
-         * @return this, for chianing
+         * @return this, for chaining
          */
         public T removeCookie(String name);
 
@@ -365,7 +365,7 @@ public interface Connection {
 
         /**
     	 * Configures the request to ignore the Content-Type of the response.
-    	 * @param ignoreContentType set to true to ignore the contenet type.
+    	 * @param ignoreContentType set to true to ignore the content type.
          * @return this Request, for chaining
     	 */
         public Request ignoreContentType(boolean ignoreContentType);

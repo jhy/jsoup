@@ -46,21 +46,27 @@ abstract class Token {
 
     static abstract class Tag extends Token {
         protected String tagName;
-        private String pendingAttributeName;
-        private String pendingAttributeValue;
+        private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
+        private StringBuilder pendingAttributeValue; // but values are accumulated, from e.g. & in hrefs
 
         boolean selfClosing = false;
-        Attributes attributes = new Attributes(); // todo: allow nodes to not have attributes
+        Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
         void newAttribute() {
+            if (attributes == null)
+                attributes = new Attributes();
+
             if (pendingAttributeName != null) {
+                Attribute attribute;
                 if (pendingAttributeValue == null)
-                    pendingAttributeValue = "";
-                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
+                    attribute = new Attribute(pendingAttributeName, "");
+                else
+                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
-            pendingAttributeValue = null;
+            if (pendingAttributeValue != null)
+                pendingAttributeValue.delete(0, pendingAttributeValue.length());
         }
 
         void finaliseTag() {
@@ -108,7 +114,7 @@ abstract class Token {
         }
 
         void appendAttributeValue(String append) {
-            pendingAttributeValue = pendingAttributeValue == null ? append : pendingAttributeValue.concat(append);
+            pendingAttributeValue = pendingAttributeValue == null ? new StringBuilder(append) : pendingAttributeValue.append(append);
         }
 
         void appendAttributeValue(char append) {
@@ -119,6 +125,7 @@ abstract class Token {
     static class StartTag extends Tag {
         StartTag() {
             super();
+            attributes = new Attributes();
             type = TokenType.StartTag;
         }
 
@@ -135,7 +142,10 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "<" + name() + " " + attributes.toString() + ">";
+            if (attributes != null && attributes.size() > 0)
+                return "<" + name() + " " + attributes.toString() + ">";
+            else
+                return "<" + name() + ">";
         }
     }
 
@@ -152,7 +162,7 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "</" + name() + " " + attributes.toString() + ">";
+            return "</" + name() + ">";
         }
     }
 

@@ -47,7 +47,7 @@ public class HtmlToPlainText {
         return formatter.toString();
     }
 
-    // the formatting rules, implemented in a breadth-first DOM travarse
+    // the formatting rules, implemented in a breadth-first DOM traverse
     private class FormattingVisitor implements NodeVisitor {
         private static final int maxWidth = 80;
         private int width = 0;

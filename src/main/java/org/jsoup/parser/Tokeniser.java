@@ -65,7 +65,7 @@ class Tokeniser {
                 selfClosingFlagAcknowledged = false;
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
-            if (endTag.attributes.size() > 0)
+            if (endTag.attributes != null)
                 error("Attributes incorrectly present on end tag");
         }
     }
@@ -102,7 +102,7 @@ class Tokeniser {
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
-        if (reader.matchesAny('\t', '\n', '\f', ' ', '<', '&'))
+        if (reader.matchesAny('\t', '\n', '\r', '\f', ' ', '<', '&'))
             return null;
 
         reader.mark();
@@ -132,7 +132,7 @@ class Tokeniser {
             }
         } else { // named
             // get as many letters as possible, and look for matching entities. unconsume backwards till a match is found
-            String nameRef = reader.consumeLetterSequence();
+            String nameRef = reader.consumeLetterThenDigitSequence();
             String origNameRef = new String(nameRef); // for error reporting. nameRef gets chomped looking for matches
             boolean looksLegit = reader.matches(';');
             boolean found = false;
@@ -192,6 +192,8 @@ class Tokeniser {
     }
 
     boolean isAppropriateEndTagToken() {
+        if (lastStartTag == null)
+            return false;
         return tagPending.tagName.equals(lastStartTag.tagName);
     }
 
@@ -220,7 +222,7 @@ class Tokeniser {
     }
 
     boolean currentNodeInHtmlNS() {
-        // todo: implememnt namespaces correctly
+        // todo: implement namespaces correctly
         return true;
         // Element currentNode = currentNode();
         // return currentNode != null && currentNode.namespace().equals("HTML");

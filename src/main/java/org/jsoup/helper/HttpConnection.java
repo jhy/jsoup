@@ -426,6 +426,12 @@ public class HttpConnection implements Connection {
             }
             res.req = req;
 
+            // check that we can handle the returned content type; if not, abort before fetching it
+            String contentType = res.contentType();
+            if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
+                    contentType, req.url().toString()));
+
             InputStream bodyStream = null;
             InputStream dataStream = null;
             try {
@@ -463,9 +469,6 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
-                throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
-                    contentType, url.toString()));
             Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly

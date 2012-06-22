@@ -39,6 +39,7 @@ class HtmlTreeBuilder extends TreeBuilder {
 
     List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors) {
         // context may be null
+        state = HtmlTreeBuilderState.Initial;
         initialiseParse(inputFragment, baseUri, errors);
         contextElement = context;
         fragmentParsing = true;

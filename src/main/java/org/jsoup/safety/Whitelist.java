@@ -194,18 +194,24 @@ public class Whitelist {
     /**
      Add a list of allowed attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p/>
+     E.g.: <code>addAttributes("a", "href", "class")</code> allows <code>href</code> and <code>class</code> attributes
+     on <code>a</code> tags.
+     <p/>
      To make an attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
      <code>addAttributes(":all", "class")</code>.
 
-     @param tag  The tag the attributes are for
+     @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
      @param keys List of valid attributes for the tag
      @return this (for chaining)
      */
     public Whitelist addAttributes(String tag, String... keys) {
         Validate.notEmpty(tag);
         Validate.notNull(keys);
+        Validate.isTrue(keys.length > 0, "No attributes supplied.");
 
         TagName tagName = TagName.valueOf(tag);
+        if (!tagNames.contains(tagName))
+            tagNames.add(tagName);
         Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
         for (String key : keys) {
             Validate.notEmpty(key);
@@ -227,7 +233,7 @@ public class Whitelist {
      E.g.: <code>addEnforcedAttribute("a", "rel", "nofollow")</code> will make all <code>a</code> tags output as
      <code>&lt;a href="..." rel="nofollow"></code>
 
-     @param tag   The tag the enforced attribute is for
+     @param tag   The tag the enforced attribute is for. The tag will be added to the allowed tag list if necessary.
      @param key   The attribute key
      @param value The enforced attribute value
      @return this (for chaining)
@@ -238,6 +244,8 @@ public class Whitelist {
         Validate.notEmpty(value);
 
         TagName tagName = TagName.valueOf(tag);
+        if (!tagNames.contains(tagName))
+            tagNames.add(tagName);
         AttributeKey attrKey = AttributeKey.valueOf(key);
         AttributeValue attrVal = AttributeValue.valueOf(value);
 
@@ -329,10 +337,9 @@ public class Whitelist {
                     return true;
                 }
             }
-        } else { // no attributes defined for tag, try :all tag
-            return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
         }
-        return false;
+        // no attributes defined for tag, try :all tag
+        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {

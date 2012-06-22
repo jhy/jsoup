@@ -30,6 +30,14 @@ public class AttributeParseTest {
         assertEquals("18", attr.get("mux"));
     }
 
+    @Test public void handlesNewLinesAndReturns() {
+        String html = "<a\r\nfoo='bar\r\nqux'\r\nbar\r\n=\r\ntwo>One</a>";
+        Element el = Jsoup.parse(html).select("a").first();
+        assertEquals(2, el.attributes().size());
+        assertEquals("bar\r\nqux", el.attr("foo")); // currently preserves newlines in quoted attributes. todo confirm if should.
+        assertEquals("two", el.attr("bar"));
+    }
+
     @Test public void parsesEmptyString() {
         String html = "<a />";
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);

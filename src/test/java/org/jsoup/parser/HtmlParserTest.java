@@ -2,10 +2,8 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.TextNode;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -176,6 +174,27 @@ public class HtmlParserTest {
         Elements els = doc.select("textarea");
         assertEquals("Hello", els.text());
         assertEquals("Hello", els.val());
+    }
+
+    @Test public void preservesSpaceInTextArea() {
+        // preserve because the tag is marked as preserve white space
+        Document doc = Jsoup.parse("<textarea>\n\tOne\n\tTwo\n\tThree\n</textarea>");
+        String expect = "One\n\tTwo\n\tThree"; // the leading and trailing spaces are dropped as a convenience to authors
+        Element el = doc.select("textarea").first();
+        assertEquals(expect, el.text());
+        assertEquals(expect, el.val());
+        assertEquals(expect, el.html());
+        assertEquals("<textarea>\n\t" + expect + "\n</textarea>", el.outerHtml()); // but preserved in round-trip html
+    }
+
+    @Test public void preservesSpaceInScript() {
+        // preserve because it's content is a data node
+        Document doc = Jsoup.parse("<script>\nOne\n\tTwo\n\tThree\n</script>");
+        String expect = "\nOne\n\tTwo\n\tThree\n";
+        Element el = doc.select("script").first();
+        assertEquals(expect, el.data());
+        assertEquals("One\n\tTwo\n\tThree", el.html());
+        assertEquals("<script>" + expect + "</script>", el.outerHtml());
     }
 
     @Test public void doesNotCreateImplicitLists() {
@@ -632,8 +651,8 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesWhitespaceInoDocType() {
-        String html = "<!DOCTYPE html\n" +
-                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\n" +
+        String html = "<!DOCTYPE html\r\n" +
+                "      PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\r\n" +
                 "      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
         Document doc = Jsoup.parse(html);
         assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">", doc.childNode(0).outerHtml());
@@ -678,5 +697,27 @@ public class HtmlParserTest {
         String html = "<table><tr><td>text</td><!-- Comment --></tr></table>";
         Document node = Jsoup.parseBodyFragment(html);
         assertEquals("<html><head></head><body><table><tbody><tr><td>text</td><!-- Comment --></tr></tbody></table></body></html>", TextUtil.stripNewlines(node.outerHtml()));
+    }
+
+    @Test public void handlesQuotesInCommentsInScripts() {
+        String html = "<script>\n" +
+                "  <!--\n" +
+                "    document.write('</scr' + 'ipt>');\n" +
+                "  // -->\n" +
+                "</script>";
+        Document node = Jsoup.parseBodyFragment(html);
+        assertEquals("<script>\n" +
+                "  <!--\n" +
+                "    document.write('</scr' + 'ipt>');\n" +
+                "  // -->\n" +
+                "</script>", node.body().html());
+    }
+
+    @Test public void handleNullContextInParseFragment() {
+        String html = "<ol><li>One</li></ol><p>Two</p>";
+        List<Node> nodes = Parser.parseFragment(html, null, "http://example.com/");
+        assertEquals(1, nodes.size()); // returns <html> node (not document) -- no context means doc gets created
+        assertEquals("html", nodes.get(0).nodeName());
+        assertEquals("<html> <head></head> <body> <ol> <li>One</li> </ol> <p>Two</p> </body> </html>", StringUtil.normaliseWhitespace(nodes.get(0).outerHtml()));
     }
 }

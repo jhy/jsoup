@@ -40,13 +40,14 @@ public class Cleaner {
         Validate.notNull(dirtyDocument);
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
-        copySafeNodes(dirtyDocument.body(), clean.body());
+        if (dirtyDocument.body() != null) // frameset documents won't have a body. the clean doc will have empty body.
+            copySafeNodes(dirtyDocument.body(), clean.body());
 
         return clean;
     }
 
     /**
-     Dertmines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
+     Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
      in the input HTML are allowed by the whitelist.
      <p/>
      This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully

@@ -43,7 +43,8 @@ abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (Evaluator s : evaluators) {
+            for (int i = 0; i < evaluators.size(); i++) {
+                Evaluator s = evaluators.get(i);
                 if (!s.matches(root, node))
                     return false;
             }
@@ -79,7 +80,8 @@ abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (Evaluator s : evaluators) {
+            for (int i = 0; i < evaluators.size(); i++) {
+                Evaluator s = evaluators.get(i);
                 if (s.matches(root, node))
                     return true;
             }

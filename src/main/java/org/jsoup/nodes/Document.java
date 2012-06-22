@@ -61,7 +61,7 @@ public class Document extends Element {
 
     /**
      Get the string contents of the document's {@code title} element.
-     @return Trimed title, or empty string if none set.
+     @return Trimmed title, or empty string if none set.
      */
     public String title() {
         Element titleEl = getElementsByTag("title").first();
@@ -332,6 +332,17 @@ public class Document extends Element {
      */
     public OutputSettings outputSettings() {
         return outputSettings;
+    }
+
+    /**
+     * Set the document's output settings.
+     * @param outputSettings new output settings.
+     * @return this document, for chaining.
+     */
+    public Document outputSettings(OutputSettings outputSettings) {
+        Validate.notNull(outputSettings);
+        this.outputSettings = outputSettings;
+        return this;
     }
 
     public enum QuirksMode {
