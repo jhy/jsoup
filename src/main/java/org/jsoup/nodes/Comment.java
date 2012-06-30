@@ -30,7 +30,7 @@ public class Comment extends Node {
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        if (out.prettyPrint())
+        if (out.prettyPrint() && out.indent())
             indent(accum, depth, out);
         accum
                 .append("<!--")
