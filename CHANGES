@@ -20,6 +20,9 @@ jsoup changelog
  * Fixed an issue that prevented frameset documents to be cleaned by the Cleaner.
    <https://github.com/jhy/jsoup/issues/154>
 
+ * Fixed an issue when normalising whitespace for strings containing high-surrogate characters.
+   <https://github.com/jhy/jsoup/issues/214>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
