@@ -428,7 +428,7 @@ public class HttpConnection implements Connection {
 
             // check that we can handle the returned content type; if not, abort before fetching it
             String contentType = res.contentType();
-            if (!req.ignoreContentType() && (contentType == null || !(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+            if (contentType != null && !req.ignoreContentType() && (!(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
                 throw new IOException(String.format("Unhandled content type \"%s\" on URL %s. Must be text/*, application/xml, or application/xhtml+xml",
                     contentType, req.url().toString()));
 

@@ -23,6 +23,9 @@ jsoup changelog
  * Fixed an issue when normalising whitespace for strings containing high-surrogate characters.
    <https://github.com/jhy/jsoup/issues/214>
 
+ * If a server doesn't specify a content-type header, treat that as OK.
+   <https://github.com/jhy/jsoup/issues/213>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
