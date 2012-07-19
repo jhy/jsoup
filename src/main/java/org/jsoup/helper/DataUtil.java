@@ -119,7 +119,8 @@ public class DataUtil {
     }
 
     /**
-     * Parse out a charset from a content type header.
+     * Parse out a charset from a content type header. If the charset is not supported, returns null (so the default
+     * will kick in.)
      * @param contentType e.g. "text/html; charset=EUC-JP"
      * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
      */
@@ -127,7 +128,10 @@ public class DataUtil {
         if (contentType == null) return null;
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
-            return m.group(1).trim().toUpperCase(Locale.ENGLISH);
+            String charset = m.group(1).trim();
+            if (Charset.isSupported(charset)) return charset;
+            charset = charset.toUpperCase(Locale.ENGLISH);
+            if (Charset.isSupported(charset)) return charset;
         }
         return null;
     }

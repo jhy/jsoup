@@ -26,6 +26,10 @@ jsoup changelog
  * If a server doesn't specify a content-type header, treat that as OK.
    <https://github.com/jhy/jsoup/issues/213>
 
+ * If a server returns an unsupported character-set header, attempt to decode the content with the default charset
+   (UTF8), instead of bailing with an unsupported charset exception.
+   <https://github.com/jhy/jsoup/issues/215>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>

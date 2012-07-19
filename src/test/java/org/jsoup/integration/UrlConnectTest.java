@@ -183,4 +183,16 @@ public class UrlConnectTest {
         Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
         assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc));
     }
+
+    @Test
+    public void handlesDodgyCharset() throws IOException {
+        // tests that when we get back "UFT8", that it is recognised as unsupported, and falls back to default instead
+        String url = "http://direct.infohound.net/tools/bad-charset.pl";
+        Connection.Response res = Jsoup.connect(url).execute();
+        assertEquals("text/html; charset=UFT8", res.header("Content-Type")); // from the header
+        assertEquals(null, res.charset()); // tried to get from header, not supported, so returns null
+        Document doc = res.parse(); // would throw an error if charset unsupported
+        assertTrue(doc.text().contains("Hello!"));
+        assertEquals("UTF-8", res.charset()); // set from default on parse
+    }
 }
