@@ -66,6 +66,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection defaultCharset(String defaultCharset) {
+        req.defaultCharset(defaultCharset);
+        return this;
+    }
+
     public Connection followRedirects(boolean followRedirects) {
         req.followRedirects(followRedirects);
         return this;
@@ -296,6 +301,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+		private String defaultCharset = "UTF-8";
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -313,6 +319,15 @@ public class HttpConnection implements Connection {
         public Request timeout(int millis) {
             Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
             timeoutMilliseconds = millis;
+            return this;
+        }
+
+        public String defaultCharset() {
+            return defaultCharset;
+        }
+
+        public Request defaultCharset(String defaultCharset) {
+            this.defaultCharset = defaultCharset;
             return this;
         }
 
@@ -469,7 +484,7 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
+            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser(), req.defaultCharset());
             byteData.rewind();
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             return doc;

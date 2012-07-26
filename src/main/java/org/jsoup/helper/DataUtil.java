@@ -69,11 +69,21 @@ public class DataUtil {
         return parseByteData(byteData, charsetName, baseUri, parser);
     }
 
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+		return parseByteData(byteData, charsetName, baseUri, parser, null);
+	}
+
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
-    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
+    static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser, String defaultCharset) {
         String docData;
         Document doc = null;
+
+		if (defaultCharset == null)
+		{
+			defaultCharset = DataUtil.defaultCharset;
+		}
+
         if (charsetName == null) { // determine from meta. safe parse as UTF-8
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();

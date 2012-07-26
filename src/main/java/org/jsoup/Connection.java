@@ -59,6 +59,13 @@ public interface Connection {
     public Connection timeout(int millis);
 
     /**
+     * Set the request defaultCharset, default UTF-8
+     * @param defaultCharset
+     * @return this Connection, for chaining
+     */
+    public Connection defaultCharset(String defaultCharset);
+
+    /**
      * Set the request referrer (aka "referer") header.
      * @param referrer referrer to use
      * @return this Connection, for chaining
@@ -329,6 +336,19 @@ public interface Connection {
          * @return this Request, for chaining
          */
         public Request timeout(int millis);
+
+        /**
+         * Get the request defaultCharset. Default is UTF-8.
+         * @return the defaultCharset.
+         */
+        public String defaultCharset();
+
+        /**
+         * Update the request defaultCharset.
+         * @param defaultCharset
+         * @return this Request, for chaining
+         */
+        public Request defaultCharset(String defaultCharset);
 
         /**
          * Get the current followRedirects configuration.
