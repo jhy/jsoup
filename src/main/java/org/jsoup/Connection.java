@@ -124,6 +124,13 @@ public interface Connection {
     public Connection data(String... keyvals);
 
     /**
+     * Specify the encoding of request data parameters.
+     * @param charsetName the encoding of data parameters
+     * @return this Request, for chaining
+     */
+    public Connection dataEncoding(String charsetName);
+
+    /**
      * Set a request header.
      * @param name header name
      * @param value header value
@@ -200,7 +207,6 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection response(Response response);
-
 
     /**
      * Common methods for Requests and Responses
@@ -382,6 +388,19 @@ public interface Connection {
          * @return collection of keyvals
          */
         public Collection<KeyVal> data();
+
+        /**
+         * Specify the encoding of data parameters
+         * @param charsetName the encoding of data parameters
+         * @return this Request, for chaining
+         */
+        public Request dataEncoding(String charsetName);
+
+        /**
+         * Get the current encoding of data parameters
+         * @return current encoding of data parameters
+         */
+        public String dataEncoding();
 
         /**
          * Specify the parser to use when parsing the document.

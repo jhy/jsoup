@@ -83,9 +83,9 @@ public class HttpConnection implements Connection {
     }
 
     public Connection ignoreHttpErrors(boolean ignoreHttpErrors) {
-		req.ignoreHttpErrors(ignoreHttpErrors);
-		return this;
-	}
+        req.ignoreHttpErrors(ignoreHttpErrors);
+        return this;
+    }
 
     public Connection ignoreContentType(boolean ignoreContentType) {
         req.ignoreContentType(ignoreContentType);
@@ -115,6 +115,11 @@ public class HttpConnection implements Connection {
             Validate.notNull(value, "Data value must not be null");
             req.data(KeyVal.create(key, value));
         }
+        return this;
+    }
+
+    public Connection dataEncoding(String charsetName) {
+        req.dataEncoding(charsetName);
         return this;
     }
 
@@ -295,9 +300,10 @@ public class HttpConnection implements Connection {
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
+        private String dataEncoding = DataUtil.defaultCharset;
         private Parser parser;
 
-      	private Request() {
+        private Request() {
             timeoutMilliseconds = 3000;
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
@@ -352,12 +358,21 @@ public class HttpConnection implements Connection {
         public Collection<Connection.KeyVal> data() {
             return data;
         }
-        
+
+        public Request dataEncoding(String dataEncoding) {
+            this.dataEncoding = dataEncoding;
+            return this;
+        }
+
+        public String dataEncoding() {
+            return dataEncoding;
+        }
+
         public Request parser(Parser parser) {
             this.parser = parser;
             return this;
         }
-        
+
         public Parser parser() {
             return parser;
         }
@@ -386,7 +401,7 @@ public class HttpConnection implements Connection {
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
-        
+
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -403,7 +418,7 @@ public class HttpConnection implements Connection {
             HttpURLConnection conn = createConnection(req);
             conn.connect();
             if (req.method() == Connection.Method.POST)
-                writePost(req.data(), conn.getOutputStream());          
+                writePost(req.data(), req.dataEncoding(), conn.getOutputStream());
 
             int status = conn.getResponseCode();
             boolean needsRedirect = false;
@@ -439,7 +454,7 @@ public class HttpConnection implements Connection {
             	bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
                         new BufferedInputStream(new GZIPInputStream(dataStream)) :
                         new BufferedInputStream(dataStream);
-                
+
                 res.byteData = DataUtil.readToByteBuffer(bodyStream);
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
             } finally {
@@ -557,7 +572,7 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
+        private static void writePost(Collection<Connection.KeyVal> data, String dataEncoding, OutputStream outputStream) throws IOException {
             OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
             boolean first = true;
             for (Connection.KeyVal keyVal : data) {
@@ -566,13 +581,13 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 
-                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                w.write(URLEncoder.encode(keyVal.key(), dataEncoding));
                 w.write('=');
-                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                w.write(URLEncoder.encode(keyVal.value(), dataEncoding));
             }
             w.close();
         }
-        
+
         private static String getRequestCookieString(Connection.Request req) {
             StringBuilder sb = new StringBuilder();
             boolean first = true;
@@ -603,15 +618,16 @@ public class HttpConnection implements Connection {
                 url.append(in.getQuery());
                 first = false;
             }
+            String dataEncoding = req.dataEncoding();
             for (Connection.KeyVal keyVal : req.data()) {
                 if (!first)
                     url.append('&');
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                    .append(URLEncoder.encode(keyVal.key(), dataEncoding))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    .append(URLEncoder.encode(keyVal.value(), dataEncoding));
             }
             req.url(new URL(url.toString()));
             req.data().clear(); // moved into url as get params
@@ -656,6 +672,6 @@ public class HttpConnection implements Connection {
         @Override
         public String toString() {
             return key + "=" + value;
-        }      
+        }
     }
 }
