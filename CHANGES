@@ -30,6 +30,9 @@ jsoup changelog
    (UTF8), instead of bailing with an unsupported charset exception.
    <https://github.com/jhy/jsoup/issues/215>
 
+ * Removed an unnecessary synchronisation in Tag.valueOf, allowing multi-threaded parsing to run faster.
+   <https://github.com/jhy/jsoup/issues/238>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>
