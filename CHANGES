@@ -36,6 +36,9 @@ jsoup changelog
  * Made entity decoding less greedy, so that non-entities are less likely to be incorrectly treated as entities.
    <https://github.com/jhy/jsoup/issues/224>
 
+ * Whitespace normalise document.title() output.
+   <https://github.com/jhy/jsoup/issues/168>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>

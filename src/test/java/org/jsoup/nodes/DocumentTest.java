@@ -32,6 +32,9 @@ public class DocumentTest {
         withTitle.title("Hello");
         assertEquals("Hello", withTitle.title());
         assertEquals("Hello", withTitle.select("title").first().text());
+
+        Document normaliseTitle = Jsoup.parse("<title>   Hello\nthere   \n   now   \n");
+        assertEquals("Hello there now", normaliseTitle.title());
     }
 
     @Test public void testOutputEncoding() {
