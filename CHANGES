@@ -5,6 +5,10 @@ jsoup changelog
 
  * Reduced memory consumption when selecting elements.
 
+ * Introduced finer granularity of exceptions in Jsoup.connect, including HttpStatusException and
+   UnsupportedMimeTypeException.
+   <https://github.com/jhy/jsoup/issues/229>
+
  * Fixed an issue when determining the Windows-1254 character-set from a meta tag when run in the Turkish locale.
    <https://github.com/jhy/jsoup/issues/191>
 
@@ -38,6 +42,9 @@ jsoup changelog
 
  * Whitespace normalise document.title() output.
    <https://github.com/jhy/jsoup/issues/168>
+
+ * In Jsoup.connection, enforce a connection disconnect after every connect. This precludes keep-alive connections to
+   the same host, but in practise many implementations will leak connections, particularly on error.
 
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.

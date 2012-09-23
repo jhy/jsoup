@@ -169,8 +169,11 @@ public class Jsoup {
      @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
      @return The parsed HTML.
 
-     @throws IOException If the final server response != 200 OK (redirects are followed), or if there's an error reading
-     the response stream.
+     @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
+     @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
+     @throws java.net.SocketTimeoutException if the connection times out
+     @throws IOException if a connection or read error occurs
 
      @see #connect(String)
      */

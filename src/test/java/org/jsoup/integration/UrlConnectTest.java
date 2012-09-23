@@ -1,5 +1,7 @@
 package org.jsoup.integration;
 
+import org.jsoup.HttpStatusException;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.junit.Test;
 import org.junit.Ignore;
 import static org.junit.Assert.*;
@@ -7,6 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.io.IOException;
 import java.util.Map;
@@ -15,7 +18,7 @@ import java.util.Map;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-@Ignore // ignored by default so tests don't require network access. comment out to enable.
+//@Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
@@ -31,10 +34,10 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect("http://www.baidu.com/").timeout(10*1000).execute();
         Document doc = res.parse();
 
-        assertEquals("GB2312", doc.outputSettings().charset().displayName());
-        assertEquals("GB2312", res.charset());
+        assertEquals("GBK", doc.outputSettings().charset().displayName());
+        assertEquals("GBK", res.charset());
         assert(res.hasCookie("BAIDUID"));
-        assertEquals("text/html;charset=gb2312", res.contentType());
+        assertEquals("text/html;charset=gbk", res.contentType());
     }
     
     @Test
@@ -43,8 +46,26 @@ public class UrlConnectTest {
         boolean threw = false;
         try {
             Document doc = Jsoup.parse(new URL(url), 3000);
-        } catch (IOException e) {
+        } catch (UnsupportedMimeTypeException e) {
             threw = true;
+            assertEquals("org.jsoup.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://jsoup.org/rez/osi_logo.png", e.toString());
+            assertEquals(url, e.getUrl());
+            assertEquals("image/png", e.getMimeType());
+        } catch (IOException e) {
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void exceptOnUnsupportedProtocol(){
+        String url = "file://etc/passwd";
+        boolean threw = false;
+        try {
+            Document doc = Jsoup.connect(url).get();
+        } catch (MalformedURLException e) {
+            threw = true;
+            assertEquals("java.net.MalformedURLException: Only http & https protocols supported", e.toString());
+        } catch (IOException e) {
         }
         assertTrue(threw);
     }
@@ -121,12 +142,17 @@ public class UrlConnectTest {
 
     @Test
     public void throwsExceptionOnError() {
-        Connection con = Jsoup.connect("http://infohound.net/tools/404");
+        String url = "http://direct.infohound.net/tools/404";
+        Connection con = Jsoup.connect(url);
         boolean threw = false;
         try {
             Document doc = con.get();
-        } catch (IOException e) {
+        } catch (HttpStatusException e) {
             threw = true;
+            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=http://direct.infohound.net/tools/404", e.toString());
+            assertEquals(url, e.getUrl());
+            assertEquals(404, e.getStatusCode());
+        } catch (IOException e) {
         }
         assertTrue(threw);
     }
