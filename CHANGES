@@ -33,6 +33,9 @@ jsoup changelog
  * Removed an unnecessary synchronisation in Tag.valueOf, allowing multi-threaded parsing to run faster.
    <https://github.com/jhy/jsoup/issues/238>
 
+ * Made entity decoding less greedy, so that non-entities are less likely to be incorrectly treated as entities.
+   <https://github.com/jhy/jsoup/issues/224>
+
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.
    <https://github.com/jhy/jsoup/issues/179>

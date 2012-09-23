@@ -125,6 +125,17 @@ public class Parser {
     }
 
     /**
+     * Utility method to unescape HTML entities from a string
+     * @param string HTML escaped string
+     * @param inAttribute if the string is to be escaped in strict mode (as attributes are)
+     * @return an unescaped string
+     */
+    public static String unescapeEntities(String string, boolean inAttribute) {
+        Tokeniser tokeniser = new Tokeniser(new CharacterReader(string), ParseErrorList.noTracking());
+        return tokeniser.unescapeEntities(inAttribute);
+    }
+
+    /**
      * @param bodyHtml HTML to parse
      * @param baseUri baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
      *

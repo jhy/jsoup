@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import org.jsoup.nodes.Entities;
 
 import java.nio.charset.Charset;
 
@@ -24,17 +23,17 @@ public class EntitiesTest {
     }
 
     @Test public void unescape() {
-        String text = "Hello &amp;&LT&gt; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;";
-        assertEquals("Hello &<> Å π π 新 there &! ¾ © ©", Entities.unescape(text));
+        String text = "Hello &amp;&LT&gt; &reg &angst; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;";
+        assertEquals("Hello &<> ® Å &angst π π 新 there &! ¾ © ©", Entities.unescape(text));
 
         assertEquals("&0987654321; &unknown", Entities.unescape("&0987654321; &unknown"));
     }
 
     @Test public void strictUnescape() { // for attributes, enforce strict unescaping (must look like &xxx; , not just &xxx)
-        String text = "Hello &mid &amp;";
-        assertEquals("Hello &mid &", Entities.unescape(text, true));
-        assertEquals("Hello ∣ &", Entities.unescape(text));
-        assertEquals("Hello ∣ &", Entities.unescape(text, false));
+        String text = "Hello &amp= &amp;";
+        assertEquals("Hello &amp= &", Entities.unescape(text, true));
+        assertEquals("Hello &= &", Entities.unescape(text));
+        assertEquals("Hello &= &", Entities.unescape(text, false));
     }
 
     
@@ -59,5 +58,10 @@ public class EntitiesTest {
         Element p = doc.select("p").first();
         assertEquals("&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;", p.html());
         assertEquals("¹²³¼½¾", p.text());
+    }
+
+    @Test public void noSpuriousDecodes() {
+        String string = "http://www.foo.com?a=1&num_rooms=1&children=0&int=VA&b=2";
+        assertEquals(string, Entities.unescape(string));
     }
 }

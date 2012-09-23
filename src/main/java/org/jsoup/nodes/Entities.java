@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.parser.Parser;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
@@ -34,6 +36,7 @@ public class Entities {
 
     private static final Map<String, Character> full;
     private static final Map<Character, String> xhtmlByVal;
+    private static final Map<String, Character> base;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
@@ -43,11 +46,21 @@ public class Entities {
 
     /**
      * Check if the input is a known named entity
-     * @param name the possible entity name (e.g. "lt" or "amp"
+     * @param name the possible entity name (e.g. "lt" or "amp")
      * @return true if a known named entity
      */
     public static boolean isNamedEntity(String name) {
         return full.containsKey(name);
+    }
+
+    /**
+     * Check if the input is a known named entity in the base entity set.
+     * @param name the possible entity name (e.g. "lt" or "amp")
+     * @return true if a known named entity in the base set
+     * @see #isNamedEntity(String)
+     */
+    public static boolean isBaseNamedEntity(String name) {
+        return base.containsKey(name);
     }
 
     /**
@@ -91,38 +104,7 @@ public class Entities {
      * @return
      */
     static String unescape(String string, boolean strict) {
-        // todo: change this method to use Tokeniser.consumeCharacterReference
-        if (!string.contains("&"))
-            return string;
-
-        Matcher m = strict? strictUnescapePattern.matcher(string) : unescapePattern.matcher(string); // &(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]\\d*);?
-        StringBuffer accum = new StringBuffer(string.length()); // pity matcher can't use stringbuilder, avoid syncs
-        // todo: replace m.appendReplacement with own impl, so StringBuilder and quoteReplacement not required
-
-        while (m.find()) {
-            int charval = -1;
-            String num = m.group(3);
-            if (num != null) {
-                try {
-                    int base = m.group(2) != null ? 16 : 10; // 2 is hex indicator
-                    charval = Integer.valueOf(num, base);
-                } catch (NumberFormatException e) {
-                } // skip
-            } else {
-                String name = m.group(1);
-                if (full.containsKey(name))
-                    charval = full.get(name);
-            }
-
-            if (charval != -1 || charval > 0xFFFF) { // out of range
-                String c = Character.toString((char) charval);
-                m.appendReplacement(accum, Matcher.quoteReplacement(c));
-            } else {
-                m.appendReplacement(accum, Matcher.quoteReplacement(m.group(0))); // replace with original string
-            }
-        }
-        m.appendTail(accum);
-        return accum.toString();
+        return Parser.unescapeEntities(string, strict);
     }
 
     // xhtml has restricted entities
@@ -136,7 +118,8 @@ public class Entities {
 
     static {
         xhtmlByVal = new HashMap<Character, String>();
-        baseByVal = toCharacterKey(loadEntities("entities-base.properties")); // most common / default
+        base = loadEntities("entities-base.properties");  // most common / default
+        baseByVal = toCharacterKey(base);
         full = loadEntities("entities-full.properties"); // extended and overblown.
         fullByVal = toCharacterKey(full);
 
