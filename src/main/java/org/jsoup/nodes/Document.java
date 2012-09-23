@@ -65,7 +65,7 @@ public class Document extends Element {
      */
     public String title() {
         Element titleEl = getElementsByTag("title").first();
-        return titleEl != null ? titleEl.text().trim() : "";
+        return titleEl != null ? titleEl.text().trim().replaceAll("\\n", "").replaceAll("(\\s){2,}", " ") : "";
     }
 
     /**
