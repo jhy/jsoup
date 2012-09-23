@@ -18,7 +18,7 @@ import java.util.Map;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-//@Ignore // ignored by default so tests don't require network access. comment out to enable.
+@Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
