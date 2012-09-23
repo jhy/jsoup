@@ -360,7 +360,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified HTML into the DOM before this element (i.e. as a preceding sibling).
+     * Insert the specified HTML into the DOM before this element (as a preceding sibling).
      *
      * @param html HTML to add before this element
      * @return this element, for chaining
@@ -372,7 +372,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
+     * Insert the specified node into the DOM before this node (as a preceding sibling).
      * @param node to add before this element
      * @return this Element, for chaining
      * @see #after(Node)
@@ -383,7 +383,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified HTML into the DOM after this element (i.e. as a following sibling).
+     * Insert the specified HTML into the DOM after this element (as a following sibling).
      *
      * @param html HTML to add after this element
      * @return this element, for chaining
@@ -395,7 +395,7 @@ public class Element extends Node {
     }
 
     /**
-     * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+     * Insert the specified node into the DOM after this node (as a following sibling).
      * @param node to add after this element
      * @return this element, for chaining
      * @see #before(Node)
