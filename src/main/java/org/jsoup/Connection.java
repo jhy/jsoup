@@ -157,6 +157,10 @@ public interface Connection {
     /**
      * Execute the request as a GET, and parse the result.
      * @return parsed Document
+     * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
+     * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
+     * @throws java.net.SocketTimeoutException if the connection times out
      * @throws IOException on error
      */
     public Document get() throws IOException;
@@ -164,6 +168,10 @@ public interface Connection {
     /**
      * Execute the request as a POST, and parse the result.
      * @return parsed Document
+     * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
+     * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
+     * @throws java.net.SocketTimeoutException if the connection times out
      * @throws IOException on error
      */
     public Document post() throws IOException;
@@ -171,6 +179,10 @@ public interface Connection {
     /**
      * Execute the request.
      * @return a response object
+     * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
+     * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
+     * @throws java.net.SocketTimeoutException if the connection times out
      * @throws IOException on error
      */
     public Response execute() throws IOException;

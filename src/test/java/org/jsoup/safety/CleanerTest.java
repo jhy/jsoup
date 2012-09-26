@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
-import org.jsoup.safety.Whitelist;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -176,5 +175,9 @@ public class CleanerTest {
         Document cleanDoc = new Cleaner(Whitelist.basic()).clean(dirtyDoc);
         assertFalse(cleanDoc == null);
         assertEquals(0, cleanDoc.body().childNodes().size());
+    }
+
+    @Test public void cleansInternationalText() {
+        assertEquals("привет", Jsoup.clean("привет", Whitelist.none()));
     }
 }

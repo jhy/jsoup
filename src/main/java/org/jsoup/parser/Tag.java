@@ -45,19 +45,21 @@ public class Tag {
      */
     public static Tag valueOf(String tagName) {
         Validate.notNull(tagName);
-        tagName = tagName.trim().toLowerCase();
-        Validate.notEmpty(tagName);
+        Tag tag = tags.get(tagName);
 
-        synchronized (tags) {
-            Tag tag = tags.get(tagName);
+        if (tag == null) {
+            tagName = tagName.trim().toLowerCase();
+            Validate.notEmpty(tagName);
+            tag = tags.get(tagName);
+
             if (tag == null) {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.isBlock = false;
                 tag.canContainBlock = true;
             }
-            return tag;
         }
+        return tag;
     }
 
     /**
@@ -253,10 +255,7 @@ public class Tag {
         }
     }
 
-    private static Tag register(Tag tag) {
-        synchronized (tags) {
-            tags.put(tag.tagName, tag);
-        }
-        return tag;
+    private static void register(Tag tag) {
+        tags.put(tag.tagName, tag);
     }
 }

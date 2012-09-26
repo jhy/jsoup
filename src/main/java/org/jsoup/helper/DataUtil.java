@@ -96,7 +96,7 @@ public class DataUtil {
             // there are times where there is a spurious byte-order-mark at the start of the text. Shouldn't be present
             // in utf-8. If after decoding, there is a BOM, strip it; otherwise will cause the parser to go straight
             // into head mode
-            if (docData.charAt(0) == 65279)
+            if (docData.length() > 0 && docData.charAt(0) == 65279)
                 docData = docData.substring(1);
 
             doc = parser.parseInput(docData, baseUri);
@@ -119,7 +119,8 @@ public class DataUtil {
     }
 
     /**
-     * Parse out a charset from a content type header.
+     * Parse out a charset from a content type header. If the charset is not supported, returns null (so the default
+     * will kick in.)
      * @param contentType e.g. "text/html; charset=EUC-JP"
      * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
      */
@@ -127,7 +128,10 @@ public class DataUtil {
         if (contentType == null) return null;
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
-            return m.group(1).trim().toUpperCase(Locale.ENGLISH);
+            String charset = m.group(1).trim();
+            if (Charset.isSupported(charset)) return charset;
+            charset = charset.toUpperCase(Locale.ENGLISH);
+            if (Charset.isSupported(charset)) return charset;
         }
         return null;
     }

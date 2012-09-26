@@ -156,11 +156,26 @@ public class ElementsTest {
         assertEquals("<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>", doc.body().html());
     }
 
+    @Test public void wrapDiv() {
+        String h = "<p><b>This</b> is <b>jsoup</b>.</p> <p>How do you like it?</p>";
+        Document doc = Jsoup.parse(h);
+        doc.select("p").wrap("<div></div>");
+        assertEquals("<div><p><b>This</b> is <b>jsoup</b>.</p></div> <div><p>How do you like it?</p></div>",
+                TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void unwrap() {
         String h = "<div><font>One</font> <font><a href=\"/\">Two</a></font></div";
         Document doc = Jsoup.parse(h);
         doc.select("font").unwrap();
         assertEquals("<div>One <a href=\"/\">Two</a></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void unwrapP() {
+        String h = "<p><a>One</a> Two</p> Three <i>Four</i> <p>Fix <i>Six</i></p>";
+        Document doc = Jsoup.parse(h);
+        doc.select("p").unwrap();
+        assertEquals("<a>One</a> Two Three <i>Four</i> Fix <i>Six</i>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void empty() {

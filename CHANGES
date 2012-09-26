@@ -5,6 +5,10 @@ jsoup changelog
 
  * Reduced memory consumption when selecting elements.
 
+ * Introduced finer granularity of exceptions in Jsoup.connect, including HttpStatusException and
+   UnsupportedMimeTypeException.
+   <https://github.com/jhy/jsoup/issues/229>
+
  * Fixed an issue when determining the Windows-1254 character-set from a meta tag when run in the Turkish locale.
    <https://github.com/jhy/jsoup/issues/191>
 
@@ -19,6 +23,28 @@ jsoup changelog
 
  * Fixed an issue that prevented frameset documents to be cleaned by the Cleaner.
    <https://github.com/jhy/jsoup/issues/154>
+
+ * Fixed an issue when normalising whitespace for strings containing high-surrogate characters.
+   <https://github.com/jhy/jsoup/issues/214>
+
+ * If a server doesn't specify a content-type header, treat that as OK.
+   <https://github.com/jhy/jsoup/issues/213>
+
+ * If a server returns an unsupported character-set header, attempt to decode the content with the default charset
+   (UTF8), instead of bailing with an unsupported charset exception.
+   <https://github.com/jhy/jsoup/issues/215>
+
+ * Removed an unnecessary synchronisation in Tag.valueOf, allowing multi-threaded parsing to run faster.
+   <https://github.com/jhy/jsoup/issues/238>
+
+ * Made entity decoding less greedy, so that non-entities are less likely to be incorrectly treated as entities.
+   <https://github.com/jhy/jsoup/issues/224>
+
+ * Whitespace normalise document.title() output.
+   <https://github.com/jhy/jsoup/issues/168>
+
+ * In Jsoup.connection, enforce a connection disconnect after every connect. This precludes keep-alive connections to
+   the same host, but in practise many implementations will leak connections, particularly on error.
 
 *** Release 1.6.3 [2012-May-28]
  * Fixed parsing of group-or commas in CSS selectors, to correctly handle sub-queries containing commas.

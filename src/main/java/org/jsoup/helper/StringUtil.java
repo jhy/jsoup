@@ -110,8 +110,9 @@ public final class StringUtil {
         boolean modified = false;
 
         int l = string.length();
-        for (int i = 0; i < l; i++) {
-            int c = string.codePointAt(i);
+        int c;
+        for (int i = 0; i < l; i+= Character.charCount(c)) {
+            c = string.codePointAt(i);
             if (isWhitespace(c)) {
                 if (lastWasWhite) {
                     modified = true;
