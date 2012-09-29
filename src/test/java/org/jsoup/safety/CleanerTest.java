@@ -92,9 +92,11 @@ public class CleanerTest {
         String ok = "<p>Test <b><a href='http://example.com/'>OK</a></b></p>";
         String nok1 = "<p><script></script>Not <b>OK</b></p>";
         String nok2 = "<p align=right>Test Not <b>OK</b></p>";
+        String nok3 = "<!-- comment --><p>Not OK</p>"; // comments and the like will be cleaned
         assertTrue(Jsoup.isValid(ok, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok1, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok2, Whitelist.basic()));
+        assertFalse(Jsoup.isValid(nok3, Whitelist.basic()));
     }
     
     @Test public void resolvesRelativeLinks() {
@@ -103,7 +105,7 @@ public class CleanerTest {
         assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a>\n<img src=\"http://example.com/bar\" />", clean);
     }
 
-    @Test public void preservesRelatedLinksIfConfigured() {
+    @Test public void preservesRelativeLinksIfConfigured() {
         String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
         String clean = Jsoup.clean(html, "http://example.com/", Whitelist.basicWithImages().preserveRelativeLinks(true));
         assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a>\n<img src=\"/bar\" /> \n<img />", clean);
