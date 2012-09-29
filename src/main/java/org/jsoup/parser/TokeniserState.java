@@ -1091,6 +1091,7 @@ enum TokeniserState {
             // rewind to capture character that lead us here
             r.unconsume();
             Token.Comment comment = new Token.Comment();
+            comment.bogus = true;
             comment.data.append(r.consumeTo('>'));
             // todo: replace nullChar with replaceChar
             t.emit(comment);

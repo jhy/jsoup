@@ -736,4 +736,10 @@ public class HtmlParserTest {
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended); // modifies output only to clarify test
         assertEquals(StringUtil.normaliseWhitespace("&amp; &quot; &reg; &amp;icy &amp;hopf &icy; &hopf;"), doc.body().html());
     }
+
+    @Test public void handlesXmlDeclarationAsBogusComment() {
+        String html = "<?xml encoding='UTF-8' ?><body>One</body>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!--?xml encoding='UTF-8' ?--> <html> <head></head> <body> One </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
 }

@@ -168,6 +168,7 @@ abstract class Token {
 
     static class Comment extends Token {
         final StringBuilder data = new StringBuilder();
+        boolean bogus = false;
 
         Comment() {
             type = TokenType.Comment;
