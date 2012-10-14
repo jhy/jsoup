@@ -1,6 +1,16 @@
 jsoup changelog
 
-*** Release 1.6.4 [PENDING]
+*** Release 1.7.2 [PENDING]
+ * Refactored the Cleaner to traverse rather than recurse child nodes, to avoid the risk of overflowing the stack.
+   <https://github.com/jhy/jsoup/issues/246>
+
+ * When parsing in XML mode, preserve XML declarations (<?xml ... ?>).
+   <https://github.com/jhy/jsoup/issues/242>
+
+ * Allow Whitelist test methods to be extended
+   <https://github.com/jhy/jsoup/issues/85>
+
+*** Release 1.7.1 [2012-Sep-23]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 
  * Reduced memory consumption when selecting elements.

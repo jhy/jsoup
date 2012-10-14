@@ -4,7 +4,7 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
 /**
- * A {@code <!DOCTPYE>} node.
+ * A {@code <!DOCTYPE>} node.
  */
 public class DocumentType extends Node {
     // todo: quirk mode from publicId and systemId
