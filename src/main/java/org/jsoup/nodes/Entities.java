@@ -84,7 +84,9 @@ public class Entities {
 
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
-            if (map.containsKey(c))
+			if(Character.isHighSurrogate(c) && pos < string.length() - 1 && Character.isLowSurrogate(string.charAt(pos+1)))
+				accum.append(new String(new int[]{c, string.charAt(++pos)}, 0, 2));
+            else if (map.containsKey(c))
                 accum.append('&').append(map.get(c)).append(';');
             else if (encoder.canEncode(c))
                 accum.append(c.charValue());
