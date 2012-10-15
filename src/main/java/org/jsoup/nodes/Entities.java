@@ -1,13 +1,15 @@
 package org.jsoup.nodes;
 
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
-import java.util.*;
-import java.util.regex.Matcher;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.regex.Pattern;
+
+import org.jsoup.parser.Parser;
 
 /**
  * HTML entities, and escape routines.
@@ -41,6 +43,7 @@ public class Entities {
     private static final Map<String, Character> base;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
+    private static final Map<String, String> fullNameCache;
     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
     private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
 
@@ -70,8 +73,8 @@ public class Entities {
      * @param name named entity (e.g. "lt" or "amp")
      * @return the Character value of the named entity (e.g. '<' or '&')
      */
-    public static Character getCharacterByName(String name) {
-        return full.get(name);
+    public static String getCharacterByName(String name) {
+        return fullNameCache.get(name);
     }
     
     static String escape(String string, Document.OutputSettings out) {
@@ -85,7 +88,7 @@ public class Entities {
         for (int pos = 0; pos < string.length(); pos++) {
             Character c = string.charAt(pos);
 			if(pos < string.length() - 1 && Character.isSurrogatePair(c, string.charAt(pos+1)))
-				accum.append(new String(new int[]{c, string.charAt(++pos)}, 0, 2));
+				accum.append("&#x").append(Integer.toHexString(string.codePointAt(pos++))).append(';');				
             else if (map.containsKey(c))
                 accum.append('&').append(map.get(c)).append(';');
             else if (encoder.canEncode(c))
@@ -131,6 +134,10 @@ public class Entities {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
             xhtmlByVal.put(c, ((String) entity[0]));
         }
+        
+        fullNameCache = new HashMap<String, String>();
+        for(Map.Entry<String, Character> entry : full.entrySet())
+        	fullNameCache.put(entry.getKey(), new String(new char[]{entry.getValue()}));
     }
 
     private static Map<String, Character> loadEntities(String filename) {
