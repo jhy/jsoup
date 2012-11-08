@@ -411,7 +411,11 @@ enum HtmlTreeBuilderState {
                         }
                         tb.reconstructFormattingElements();
                         Element a = tb.insert(startTag);
-                        tb.pushActiveFormattingElements(a);
+                        if (startTag.isSelfClosing()) {
+                            tb.popStackToClose(a.nodeName());
+                        } else {
+                            tb.pushActiveFormattingElements(a);
+                        }
                     } else if (StringUtil.in(name,
                             "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
                         tb.reconstructFormattingElements();
