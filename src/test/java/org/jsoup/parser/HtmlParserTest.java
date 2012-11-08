@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -741,5 +740,23 @@ public class HtmlParserTest {
         String html = "<?xml encoding='UTF-8' ?><body>One</body>";
         Document doc = Jsoup.parse(html);
         assertEquals("<!--?xml encoding='UTF-8' ?--> <html> <head></head> <body> One </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+  
+  	@Test public void handlesTrailingNewlines() {
+        String html = "<html><body><div><p><a id=\"theId\" /></p></div></body></html>\n";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<html> <head></head> <body> <div> <p><a id=\"theId\"></a></p> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+    
+    @Test public void handlesSelfClosingAnchors() {
+        String html = "<html><body><div><p><a id=\"theId\" />foo.</p></div></body></html>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<html> <head></head> <body> <div> <p><a id=\"theId\"></a>foo.</p> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    } 
+
+    @Test public void handlesRogueNewlines() {
+        String html = "<html><body><div><p><a id=\"theId\" />foo</p>\n</div></body></html>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<html> <head></head> <body> <div> <p><a id=\"theId\"></a>foo</p> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 }
