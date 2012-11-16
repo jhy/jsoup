@@ -1,11 +1,12 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.DescendableLinkedList;
-import org.jsoup.helper.StringUtil;
-import org.jsoup.nodes.*;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import org.jsoup.helper.DescendableLinkedList;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.nodes.*;
 
 /**
  * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
@@ -347,7 +348,7 @@ enum HtmlTreeBuilderState {
                             tb.process(new Token.EndTag("p"));
                         }
                         Element form = tb.insert(startTag);
-                        tb.setFormElement(form);
+                        tb.setFormElement((FormElement)form);
                     } else if (name.equals("li")) {
                         tb.framesetOk(false);
                         LinkedList<Element> stack = tb.getStack();
@@ -445,6 +446,13 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("input")) {
                         tb.reconstructFormattingElements();
                         Element el = tb.insertEmpty(startTag);
+                        
+                        FormElement fe = tb.getFormElement();
+                        if(fe != null)
+                        {
+                        	fe.addElement(el);
+                        }
+                        
                         if (!el.attr("type").equalsIgnoreCase("hidden"))
                             tb.framesetOk(false);
                     } else if (StringUtil.in(name, "param", "source", "track")) {
@@ -847,15 +855,20 @@ enum HtmlTreeBuilderState {
                     if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
                         return anythingElse(t, tb);
                     } else {
-                        tb.insertEmpty(startTag);
+                        Element el = tb.insertEmpty(startTag);
+                        FormElement fe = tb.getFormElement();
+                        if(fe != null)
+                        {
+                        	fe.addElement(el);
+                        }
                     }
                 } else if (name.equals("form")) {
                     tb.error(this);
                     if (tb.getFormElement() != null)
                         return false;
                     else {
-                        Element form = tb.insertEmpty(startTag);
-                        tb.setFormElement(form);
+                        Element form = tb.insert(startTag);
+                        tb.setFormElement((FormElement)form);
                     }
                 } else {
                     return anythingElse(t, tb);
