@@ -376,7 +376,7 @@ class HtmlTreeBuilder extends TreeBuilder {
                 transition(HtmlTreeBuilderState.InRow);
                 break;
             } else if ("tbody".equals(name) || "thead".equals(name) || "tfoot".equals(name)) {
-                //transition(HtmlTreeBuilderState.);
+                transition(HtmlTreeBuilderState.InTableBody);
                 break;
             } else if ("caption".equals(name)) {
                 transition(HtmlTreeBuilderState.InCaption);
