@@ -334,6 +334,29 @@ public abstract class Evaluator {
     }
 
     /**
+     * Evaluator for matching nth-child
+     * @author bleporini@gmail.com
+     */
+    public static final class IndexNthChild extends IndexEvaluator {
+        public IndexNthChild(int index) {
+            super(index);
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return element.parent().children().size()>=index &&
+                    element.parent().child(index-1).equals(element);
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":nth-child(%d)", index);
+        }
+
+    }
+
+
+    /**
      * Evaluator for matching by sibling index number (e = idx)
      */
     public static final class IndexEquals extends IndexEvaluator {
