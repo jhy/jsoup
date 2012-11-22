@@ -111,7 +111,7 @@ public class Entities {
     private static final Object[][] xhtmlArray = {
             {"quot", 0x00022},
             {"amp", 0x00026},
-            {"apos", 0x00027},
+//            {"apos", 0x00027}, // Not properly supported by all browsers: http://www.w3.org/TR/xhtml1/#C_16
             {"lt", 0x0003C},
             {"gt", 0x0003E}
     };
