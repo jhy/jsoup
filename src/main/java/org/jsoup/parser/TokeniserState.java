@@ -284,6 +284,7 @@ enum TokeniserState {
 
         private void anythingElse(Tokeniser t, CharacterReader r) {
             t.emit("</" + t.dataBuffer.toString());
+            r.unconsume();
             t.transition(Rcdata);
         }
     },

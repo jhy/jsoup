@@ -10,6 +10,8 @@ jsoup changelog
  * Allow Whitelist test methods to be extended
    <https://github.com/jhy/jsoup/issues/85>
 
+ * Fixed an issue when parsing <textarea>/RCData tags containing unescaped closing tags that would drop the traling >.
+
 *** Release 1.7.1 [2012-Sep-23]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 

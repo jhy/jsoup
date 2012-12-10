@@ -742,4 +742,10 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<!--?xml encoding='UTF-8' ?--> <html> <head></head> <body> One </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
+
+    @Test public void handlesTagsInTextarea() {
+        String html = "<textarea><p>Jsoup</p></textarea>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<textarea>&lt;p&gt;Jsoup&lt;/p&gt;</textarea>", doc.body().html());
+    }
 }
