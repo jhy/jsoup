@@ -17,8 +17,6 @@ import java.io.IOException;
  * Request configuration can be made using either the shortcut methods in Connection (e.g. {@link #userAgent(String)}),
  * or by methods in the Connection.Request object directly. All request configuration must be made before the request
  * is executed.
- * <p>
- * The Connection interface is <b>currently in beta</b> and subject to change. Comments, suggestions, and bug reports are welcome.
  */
 public interface Connection {
 
