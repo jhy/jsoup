@@ -105,17 +105,33 @@ public class DataUtil {
         return doc;
     }
 
-    static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+    /**
+     * Read the input stream into a byte buffer.
+     * @param inStream the input stream to read from
+     * @param maxSize the maximum size in bytes to read from the stream. Set to 0 to be unlimited. Note that this size
+     * is treated as a imprecise hint, and the actual amount read may be greater by up to the size of the internal
+     * read buffer.
+     * @return the filled byte buffer
+     * @throws IOException if an exception occurs whilst reading from the input stream.
+     */
+    static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
+        Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
         byte[] buffer = new byte[bufferSize];
         ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
-        int read;
-        while(true) {
-            read  = inStream.read(buffer);
+        int read, totalRead = 0;
+        while (true) {
+            read = inStream.read(buffer);
+            totalRead += read;
             if (read == -1) break;
             outStream.write(buffer, 0, read);
+            if (maxSize > 0 && totalRead >= maxSize) break;
         }
         ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
         return byteData;
+    }
+
+    static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
+        return readToByteBuffer(inStream, 0);
     }
 
     /**

@@ -221,4 +221,22 @@ public class UrlConnectTest {
         assertTrue(doc.text().contains("Hello!"));
         assertEquals("UTF-8", res.charset()); // set from default on parse
     }
+
+    @Test
+    public void maxBodySize() throws IOException {
+        String url = "http://direct.infohound.net/tools/large.html"; // 280 K
+
+        Document defaultDoc = Jsoup.connect(url).get();
+        Document smallDoc = Jsoup.connect(url).maxBodySize(50 * 1024).get();
+        Document mediumDoc = Jsoup.connect(url).maxBodySize(200 * 1024).get();
+        Document largeDoc = Jsoup.connect(url).maxBodySize(300 * 1024).get();
+        Document unlimitedDoc = Jsoup.connect(url).maxBodySize(0).get();
+
+        int actual = 269541;
+        assertEquals(actual, defaultDoc.text().length());
+        assertEquals(125812, smallDoc.text().length()); // asked for 50, but rounds up to buffer (~ 130K). ok.
+        assertEquals(251736, mediumDoc.text().length()); // as above, next multiple of 130K
+        assertEquals(actual, largeDoc.text().length());
+        assertEquals(actual, unlimitedDoc.text().length());
+    }
 }

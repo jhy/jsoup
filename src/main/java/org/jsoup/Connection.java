@@ -59,6 +59,17 @@ public interface Connection {
     public Connection timeout(int millis);
 
     /**
+     * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
+     * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
+     * only by your patience and the memory available on your machine). The amount actually read may be up to ~ 100K
+     * larger, as a result of the internal stream read buffer.
+     *
+     * @param bytes number of bytes to read from the input before truncating
+     * @return this Connection, for chaining
+     */
+    public Connection maxBodySize(int bytes);
+
+    /**
      * Set the request referrer (aka "referer") header.
      * @param referrer referrer to use
      * @return this Connection, for chaining
@@ -341,6 +352,19 @@ public interface Connection {
          * @return this Request, for chaining
          */
         public Request timeout(int millis);
+
+        /**
+         * Get the maximum body size, in milliseconds.
+         * @return the maximum body size, in milliseconds.
+         */
+        public int maxBodySize();
+
+        /**
+         * Update the maximum body size, in milliseconds.
+         * @param bytes maximum body size, in milliseconds.
+         * @return this Request, for chaining
+         */
+        public Request maxBodySize(int bytes);
 
         /**
          * Get the current followRedirects configuration.

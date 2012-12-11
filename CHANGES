@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.7.2 [PENDING]
+ * Added a maximum body response size to Jsoup.Connection, to prevent running out of memory when trying to read
+   extremely large documents.
+
  * Refactored the Cleaner to traverse rather than recurse child nodes, to avoid the risk of overflowing the stack.
    <https://github.com/jhy/jsoup/issues/246>
 
