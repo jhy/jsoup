@@ -59,9 +59,7 @@ public interface Connection {
     /**
      * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
      * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
-     * only by your patience and the memory available on your machine). The amount actually read may be up to ~ 100K
-     * larger, as a result of the internal stream read buffer.
-     *
+     * only by your patience and the memory available on your machine).
      * @param bytes number of bytes to read from the input before truncating
      * @return this Connection, for chaining
      */

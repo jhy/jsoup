@@ -226,17 +226,24 @@ public class UrlConnectTest {
     public void maxBodySize() throws IOException {
         String url = "http://direct.infohound.net/tools/large.html"; // 280 K
 
-        Document defaultDoc = Jsoup.connect(url).get();
-        Document smallDoc = Jsoup.connect(url).maxBodySize(50 * 1024).get();
-        Document mediumDoc = Jsoup.connect(url).maxBodySize(200 * 1024).get();
-        Document largeDoc = Jsoup.connect(url).maxBodySize(300 * 1024).get();
-        Document unlimitedDoc = Jsoup.connect(url).maxBodySize(0).get();
+        Connection.Response defaultRes = Jsoup.connect(url).execute();
+        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
+        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
+        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
+        Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
 
-        int actual = 269541;
-        assertEquals(actual, defaultDoc.text().length());
-        assertEquals(125812, smallDoc.text().length()); // asked for 50, but rounds up to buffer (~ 130K). ok.
-        assertEquals(251736, mediumDoc.text().length()); // as above, next multiple of 130K
-        assertEquals(actual, largeDoc.text().length());
-        assertEquals(actual, unlimitedDoc.text().length());
+        int actualString = 280735;
+        assertEquals(actualString, defaultRes.body().length());
+        assertEquals(50 * 1024, smallRes.body().length());
+        assertEquals(200 * 1024, mediumRes.body().length());
+        assertEquals(actualString, largeRes.body().length());
+        assertEquals(actualString, unlimitedRes.body().length());
+
+        int actualDocText = 269541;
+        assertEquals(actualDocText, defaultRes.parse().text().length());
+        assertEquals(49165, smallRes.parse().text().length());
+        assertEquals(196577, mediumRes.parse().text().length());
+        assertEquals(actualDocText, largeRes.parse().text().length());
+        assertEquals(actualDocText, unlimitedRes.parse().text().length());
     }
 }
