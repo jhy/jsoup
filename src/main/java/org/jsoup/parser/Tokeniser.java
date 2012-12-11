@@ -3,14 +3,12 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Entities;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Readers the input stream into tokens.
  */
 class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
+    static final String replacementString = new String(new char[]{replacementChar});
 
     private CharacterReader reader; // html input
     private ParseErrorList errors; // errors found while tokenising
@@ -97,7 +95,7 @@ class Tokeniser {
         selfClosingFlagAcknowledged = true;
     }
 
-    Character consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    String consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -124,11 +122,11 @@ class Tokeniser {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
-                return replacementChar;
+                return replacementString;
             } else {
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
-                return (char) charval;
+                return new String(new int[]{charval}, 0, 1);
             }
         } else { // named
             // get as many letters as possible, and look for matching entities.
@@ -232,7 +230,7 @@ class Tokeniser {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {
                 reader.consume();
-                Character c = consumeCharacterReference(null, inAttribute);
+                String c = consumeCharacterReference(null, inAttribute);
                 if (c == null)
                     builder.append('&');
                 else
