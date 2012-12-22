@@ -166,6 +166,8 @@ class QueryParser {
             matches(true);
         else if (tq.matches(":not("))
             not();
+        else if (tq.matchChomp(":nth-child("))
+            indexChild();
         else // unhandled
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
 
@@ -240,6 +242,11 @@ class QueryParser {
     private void indexGreaterThan() {
         evals.add(new Evaluator.IndexGreaterThan(consumeIndex()));
     }
+
+    private void indexChild() {
+        evals.add(new Evaluator.IndexNthChild(consumeIndex()));
+    }
+
 
     private void indexEquals() {
         evals.add(new Evaluator.IndexEquals(consumeIndex()));

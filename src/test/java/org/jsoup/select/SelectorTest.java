@@ -11,6 +11,25 @@ import static org.junit.Assert.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class SelectorTest {
+
+    @Test public void testNthChild() {
+        final String html = ""
+                + "  <ul>                                                 "
+                + "   <li><a href=\"http://lemonde.fr\">Le Monde</a></li> "
+                + "   <li><a href=\"http://letemps.ch\">Le Temps</a></li> "
+                + "  </ul>                                                ";
+        final Document doc = Jsoup.parse(html);
+        Elements lis = doc.select("ul li:nth-child(1)");
+        assertEquals (1,lis.size());
+        assertEquals("a",lis.get(0).child(0).nodeName());
+        assertEquals("http://lemonde.fr",lis.get(0).child(0).attr("href"));
+        lis = doc.select("ul li:nth-child(2)");
+        assertEquals (1,lis.size());
+        assertEquals("a",lis.get(0).child(0).nodeName());
+        assertEquals("http://letemps.ch",lis.get(0).child(0).attr("href"));
+    }
+
+
     @Test public void testByTag() {
         Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><div id=3>").select("div");
         assertEquals(3, els.size());
