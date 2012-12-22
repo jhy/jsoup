@@ -83,6 +83,21 @@ public class NodeTest {
         assertEquals("odd", el.attr("abs:href"));
     }
 
+    @Test public void handleAbsOnFileUris() {
+        Document doc = Jsoup.parse("<a href='password'>One/a><a href='/var/log/messages'>Two</a>", "file:/etc/");
+        Element one = doc.select("a").first();
+        assertEquals("file:/etc/password", one.absUrl("href"));
+        Element two = doc.select("a").get(1);
+        assertEquals("file:/var/log/messages", two.absUrl("href"));
+    }
+
+    @Test
+    public void handleAbsOnLocalhostFileUris() {
+        Document doc = Jsoup.parse("<a href='password'>One/a><a href='/var/log/messages'>Two</a>", "file://localhost/etc/");
+        Element one = doc.select("a").first();
+        assertEquals("file://localhost/etc/password", one.absUrl("href"));
+    }
+
     /*
     Test for an issue with Java's abs URL handler.
      */
