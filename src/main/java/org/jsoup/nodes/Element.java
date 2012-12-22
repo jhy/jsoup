@@ -167,7 +167,7 @@ public class Element extends Node {
      * a filtered list of children that are elements, and the index is based on that filtered list.
      * 
      * @param index the index number of the element to retrieve
-     * @return the child element, if it exists, or {@code null} if absent.
+     * @return the child element, if it exists, otherwise throws an {@code IndexOutOfBoundsException}
      * @see #childNode(int)
      */
     public Element child(int index) {

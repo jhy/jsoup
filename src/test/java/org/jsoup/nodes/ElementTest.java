@@ -539,4 +539,17 @@ public class ElementTest {
         assertEquals("<p>One</p>", els.get(0).outerHtml());
         assertEquals("<p>Three</p>", els.get(1).outerHtml());
     }
+
+    @Test public void testChildThrowsIndexOutOfBoundsOnMissing() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p></div>");
+        Element div = doc.select("div").first();
+
+        assertEquals(2, div.children().size());
+        assertEquals("One", div.child(0).text());
+
+        try {
+            div.child(3);
+            fail("Should throw index out of bounds");
+        } catch (IndexOutOfBoundsException e) {}
+    }
 }

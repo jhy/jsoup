@@ -196,9 +196,9 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get a child node by index
+     Get a child node by its 0-based index.
      @param index index of child node
-     @return the child node at this index.
+     @return the child node at this index. Throws a {@code IndexOutOfBoundsException} if the index is out of bounds.
      */
     public Node childNode(int index) {
         return childNodes.get(index);
