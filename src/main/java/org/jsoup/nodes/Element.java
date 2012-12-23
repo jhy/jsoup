@@ -1135,7 +1135,7 @@ public class Element extends Node {
     @Override
     public Element clone() {
         Element clone = (Element) super.clone();
-        clone.classNames(); // creates linked set of class names from class attribute
+        clone.classNames = null; // derived on first hit, otherwise gets a pointer to source classnames
         return clone;
     }
 }

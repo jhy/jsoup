@@ -23,6 +23,9 @@ jsoup changelog
  * Corrected the javadoc for Element#child() to note that it throws IndexOutOfBounds.
    <https://github.com/jhy/jsoup/issues/277>
 
+ * When cloning an Element, reset the classnames set so as not to hold a pointer to the source's.
+   <https://github.com/jhy/jsoup/issues/278>
+
 *** Release 1.7.1 [2012-Sep-23]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 
