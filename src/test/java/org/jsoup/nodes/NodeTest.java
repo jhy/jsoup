@@ -222,4 +222,19 @@ public class NodeTest {
         assertEquals("<p>One</p>", nodes.get(0).outerHtml());
         assertEquals("<p>Three</p>", nodes.get(1).outerHtml());
     }
+
+    @Test public void childNodesCopy() {
+        Document doc = Jsoup.parse("<div id=1>Text 1 <p>One</p> Text 2 <p>Two<p>Three</div><div id=2>");
+        Element div1 = doc.select("#1").first();
+        Element div2 = doc.select("#2").first();
+        List<Node> divChildren = div1.childNodesCopy();
+        assertEquals(5, divChildren.size());
+        TextNode tn1 = (TextNode) div1.childNode(0);
+        TextNode tn2 = (TextNode) divChildren.get(0);
+        tn2.text("Text 1 updated");
+        assertEquals("Text 1 ", tn1.text());
+        div2.insertChildren(-1, divChildren);
+        assertEquals("<div id=\"1\">Text 1 <p>One</p> Text 2 <p>Two</p><p>Three</p></div><div id=\"2\">Text 1 updated"
+            +"<p>One</p> Text 2 <p>Two</p><p>Three</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }

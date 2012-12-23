@@ -10,6 +10,8 @@ jsoup changelog
  * Added Element.insertChildren(), to easily insert a list of child nodes at a specific index.
    <https://github.com/jhy/jsoup/issues/239>
 
+ * Added Node.childNodesCopy(), to create an independent copy of a Node's children.
+
  * When parsing in XML mode, preserve XML declarations (<?xml ... ?>).
    <https://github.com/jhy/jsoup/issues/242>
 

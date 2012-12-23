@@ -214,6 +214,19 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     * Returns a deep copy of this node's children. Changes made to these nodes will not be reflected in the original
+     * nodes
+     * @return a deep copy of this node's children
+     */
+    public List<Node> childNodesCopy() {
+        List<Node> children = new ArrayList<Node>(childNodes.size());
+        for (Node node : childNodes) {
+            children.add(node.clone());
+        }
+        return children;
+    }
+
+    /**
      * Get the number of child nodes that this node holds.
      * @return the number of child nodes that this node holds.
      */
