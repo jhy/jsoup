@@ -176,7 +176,7 @@ public class CleanerTest {
         Document dirtyDoc = Jsoup.parse(dirty);
         Document cleanDoc = new Cleaner(Whitelist.basic()).clean(dirtyDoc);
         assertFalse(cleanDoc == null);
-        assertEquals(0, cleanDoc.body().childNodes().size());
+        assertEquals(0, cleanDoc.body().childNodeSize());
     }
 
     @Test public void cleansInternationalText() {

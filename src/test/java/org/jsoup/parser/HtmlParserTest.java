@@ -284,7 +284,7 @@ public class HtmlParserTest {
         Element div = doc.getElementById("1");
         assertEquals("<html> <foo><&amp;", div.text());
         assertEquals(0, div.children().size());
-        assertEquals(1, div.childNodes().size()); // no elements, one text node
+        assertEquals(1, div.childNodeSize()); // no elements, one text node
     }
 
     @Test public void handlesInvalidStartTags() {

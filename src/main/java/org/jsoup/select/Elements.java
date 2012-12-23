@@ -34,7 +34,11 @@ public class Elements implements List<Element>, Cloneable {
     public Elements(Element... elements) {
         this(Arrays.asList(elements));
     }
-    
+
+    /**
+     * Creates a deep copy of these elements.
+     * @return a deep copy
+     */
     @Override
 	public Elements clone() {
     	List<Element> elements = new ArrayList<Element>();

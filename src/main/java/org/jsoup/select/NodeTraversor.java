@@ -28,7 +28,7 @@ public class NodeTraversor {
         
         while (node != null) {
             visitor.head(node, depth);
-            if (node.childNodes().size() > 0) {
+            if (node.childNodeSize() > 0) {
                 node = node.childNode(0);
                 depth++;
             } else {

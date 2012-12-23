@@ -258,7 +258,7 @@ public class Element extends Node {
     /**
      * Add a node child node to this element.
      * 
-     * @param child node to add. Must not already have a parent.
+     * @param child node to add.
      * @return this element, so that you can add more child nodes or elements.
      */
     public Element appendChild(Node child) {
@@ -267,17 +267,39 @@ public class Element extends Node {
         addChildren(child);
         return this;
     }
-    
+
     /**
      * Add a node to the start of this element's children.
      * 
-     * @param child node to add. Must not already have a parent.
+     * @param child node to add.
      * @return this element, so that you can add more child nodes or elements.
      */
     public Element prependChild(Node child) {
         Validate.notNull(child);
         
         addChildren(0, child);
+        return this;
+    }
+
+
+    /**
+     * Inserts the given child nodes into this element at the specified index. Current nodes will be shifted to the
+     * right. The inserted nodes will be moved from their current parent. To prevent moving, copy the nodes first.
+     *
+     * @param index 0-based index to insert children at. Specify {@code 0} to insert at the start, {@code -1} at the
+     * end
+     * @param children child nodes to insert
+     * @return this element, for chaining.
+     */
+    public Element insertChildren(int index, Collection<? extends Node> children) {
+        Validate.notNull(children, "Children collection to be inserted must not be null.");
+        int currentSize = childNodeSize();
+        if (index < 0) index += currentSize +1; // roll around
+        Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
+
+        ArrayList<Node> nodes = new ArrayList<Node>(children);
+        Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
+        addChildren(index, nodeArray);
         return this;
     }
     

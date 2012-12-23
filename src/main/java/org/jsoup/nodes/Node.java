@@ -210,13 +210,19 @@ public abstract class Node implements Cloneable {
      @return list of children. If no children, returns an empty list.
      */
     public List<Node> childNodes() {
-        // actually returns the real list, as this method is hit many times during selection, and so is a GC time-sink
-        // leaving the documentation as is (warning of unmodifiability) to discourage out-of-API modifications
-        return childNodes;
+        return Collections.unmodifiableList(childNodes);
+    }
+
+    /**
+     * Get the number of child nodes that this node holds.
+     * @return the number of child nodes that this node holds.
+     */
+    public final int childNodeSize() {
+        return childNodes.size();
     }
     
     protected Node[] childNodesAsArray() {
-        return childNodes.toArray(new Node[childNodes().size()]);
+        return childNodes.toArray(new Node[childNodeSize()]);
     }
 
     /**

@@ -2,11 +2,14 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -551,5 +554,96 @@ public class ElementTest {
             div.child(3);
             fail("Should throw index out of bounds");
         } catch (IndexOutOfBoundsException e) {}
+    }
+
+    @Test
+    public void moveByAppend() {
+        // test for https://github.com/jhy/jsoup/issues/239
+        // can empty an element and append its children to another element
+        Document doc = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>");
+        Element div1 = doc.select("div").get(0);
+        Element div2 = doc.select("div").get(1);
+
+        assertEquals(4, div1.childNodeSize());
+        List<Node> children = div1.childNodes();
+        assertEquals(4, children.size());
+
+        div2.insertChildren(0, children);
+
+        assertEquals(0, children.size()); // children is backed by div1.childNodes, moved, so should be 0 now
+        assertEquals(0, div1.childNodeSize());
+        assertEquals(4, div2.childNodeSize());
+        assertEquals("<div id=\"1\"></div>\n<div id=\"2\">\n Text \n <p>One</p> Text \n <p>Two</p>\n</div>",
+            doc.body().html());
+    }
+
+    @Test
+    public void insertChildrenArgumentValidation() {
+        Document doc = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>");
+        Element div1 = doc.select("div").get(0);
+        Element div2 = doc.select("div").get(1);
+        List<Node> children = div1.childNodes();
+
+        try {
+            div2.insertChildren(6, children);
+            fail();
+        } catch (IllegalArgumentException e) {}
+
+        try {
+            div2.insertChildren(-5, children);
+            fail();
+        } catch (IllegalArgumentException e) {
+        }
+
+        try {
+            div2.insertChildren(0, null);
+            fail();
+        } catch (IllegalArgumentException e) {
+        }
+    }
+
+    @Test
+    public void insertChildrenAtPosition() {
+        Document doc = Jsoup.parse("<div id=1>Text1 <p>One</p> Text2 <p>Two</p></div><div id=2>Text3 <p>Three</p></div>");
+        Element div1 = doc.select("div").get(0);
+        Elements p1s = div1.select("p");
+        Element div2 = doc.select("div").get(1);
+
+        assertEquals(2, div2.childNodeSize());
+        div2.insertChildren(-1, p1s);
+        assertEquals(2, div1.childNodeSize()); // moved two out
+        assertEquals(4, div2.childNodeSize());
+        assertEquals(3, p1s.get(1).siblingIndex()); // should be last
+
+        List<Node> els = new ArrayList<Node>();
+        Element el1 = new Element(Tag.valueOf("span"), "").text("Span1");
+        Element el2 = new Element(Tag.valueOf("span"), "").text("Span2");
+        TextNode tn1 = new TextNode("Text4", "");
+        els.add(el1);
+        els.add(el2);
+        els.add(tn1);
+
+        assertNull(el1.parent());
+        div2.insertChildren(-2, els);
+        assertEquals(div2, el1.parent());
+        assertEquals(7, div2.childNodeSize());
+        assertEquals(3, el1.siblingIndex());
+        assertEquals(4, el2.siblingIndex());
+        assertEquals(5, tn1.siblingIndex());
+    }
+
+    @Test
+    public void insertChildrenAsCopy() {
+        Document doc = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>");
+        Element div1 = doc.select("div").get(0);
+        Element div2 = doc.select("div").get(1);
+        Elements ps = doc.select("p").clone();
+        ps.first().text("One cloned");
+        div2.insertChildren(-1, ps);
+
+        assertEquals(4, div1.childNodeSize()); // not moved -- cloned
+        assertEquals(2, div2.childNodeSize());
+        assertEquals("<div id=\"1\">Text <p>One</p> Text <p>Two</p></div><div id=\"2\"><p>One cloned</p><p>Two</p></div>",
+            TextUtil.stripNewlines(doc.body().html()));
     }
 }

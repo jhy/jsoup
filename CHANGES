@@ -7,6 +7,9 @@ jsoup changelog
  * Refactored the Cleaner to traverse rather than recurse child nodes, to avoid the risk of overflowing the stack.
    <https://github.com/jhy/jsoup/issues/246>
 
+ * Added Element.insertChildren(), to easily insert a list of child nodes at a specific index.
+   <https://github.com/jhy/jsoup/issues/239>
+
  * When parsing in XML mode, preserve XML declarations (<?xml ... ?>).
    <https://github.com/jhy/jsoup/issues/242>
 
