@@ -26,6 +26,10 @@ jsoup changelog
  * When cloning an Element, reset the classnames set so as not to hold a pointer to the source's.
    <https://github.com/jhy/jsoup/issues/278>
 
+ * Limit how far up the stack the formatting adoption agency algorithm will travel, to prevent the chance of a run-away
+   parse when the HTML stack is hopelessly deep.
+   <https://github.com/jhy/jsoup/issues/234>
+
 *** Release 1.7.1 [2012-Sep-23]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 
