@@ -4,10 +4,7 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.Collector;
-import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.Selector;
+import org.jsoup.select.*;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -818,25 +815,25 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
-        StringBuilder sb = new StringBuilder();
-        text(sb);
-        return sb.toString().trim();
-    }
-
-    private void text(StringBuilder accum) {
-        appendWhitespaceIfBr(this, accum);
-        
-        for (Node child : childNodes) {
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                appendNormalisedText(accum, textNode);
-            } else if (child instanceof Element) {
-                Element element = (Element) child;
-                if (accum.length() > 0 && element.isBlock() && !TextNode.lastCharIsWhitespace(accum))
-                    accum.append(" ");
-                element.text(accum);
+        final StringBuilder accum = new StringBuilder();
+        new NodeTraversor(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    appendNormalisedText(accum, textNode);
+                } else if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (accum.length() > 0 &&
+                        (element.isBlock() || element.tag.getName().equals("br")) &&
+                        !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(" ");
+                }
             }
-        }
+
+            public void tail(Node node, int depth) {
+            }
+        }).traverse(this);
+        return accum.toString().trim();
     }
 
     /**
@@ -867,10 +864,10 @@ public class Element extends Node {
         }
     }
 
-    private void appendNormalisedText(StringBuilder accum, TextNode textNode) {
+    private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
 
-        if (!preserveWhitespace()) {
+        if (!preserveWhitespace(textNode.parent())) {
             text = TextNode.normaliseWhitespace(text);
             if (TextNode.lastCharIsWhitespace(accum))
                 text = TextNode.stripLeadingWhitespace(text);
@@ -883,8 +880,14 @@ public class Element extends Node {
             accum.append(" ");
     }
 
-    boolean preserveWhitespace() {
-        return tag.preserveWhitespace() || parent() != null && parent().preserveWhitespace();
+    static boolean preserveWhitespace(Node node) {
+        // looks only at this element and one level up, to prevent recursion & needless stack searches
+        if (node != null && node instanceof Element) {
+            Element element = (Element) node;
+            return element.tag.preserveWhitespace() ||
+                element.parent() != null && element.parent().tag.preserveWhitespace();
+        }
+        return false;
     }
 
     /**

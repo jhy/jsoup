@@ -30,6 +30,10 @@ jsoup changelog
    parse when the HTML stack is hopelessly deep.
    <https://github.com/jhy/jsoup/issues/234>
 
+ * Modified Element.text() to build text by traversing child nodes rather than recursing. This avoids stack-overflow
+   errors when the DOM is very deep and the VM stack-size is low.
+   <https://github.com/jhy/jsoup/issues/271>
+
 *** Release 1.7.1 [2012-Sep-23]
  * Improved parse time, now 2.3x faster than previous release, with lower memory consumption.
 
