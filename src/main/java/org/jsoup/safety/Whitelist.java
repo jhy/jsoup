@@ -10,11 +10,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import java.util.*;
 
 /**
  Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
@@ -382,6 +378,11 @@ public class Whitelist {
             }
         }
         return attrs;
+    }
+
+    /** Returns unmodifiable map of tag name -> attribute name set. */
+    public Map<TagName, Set<AttributeKey>> getAttributes() {
+        return Collections.unmodifiableMap(attributes);
     }
 
     // named types for config. All just hold strings, but here for my sanity.
