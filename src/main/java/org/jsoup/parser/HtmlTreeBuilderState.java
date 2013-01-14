@@ -446,13 +446,6 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("input")) {
                         tb.reconstructFormattingElements();
                         Element el = tb.insertEmpty(startTag);
-                        
-                        FormElement fe = tb.getFormElement();
-                        if(fe != null)
-                        {
-                        	fe.addElement(el);
-                        }
-                        
                         if (!el.attr("type").equalsIgnoreCase("hidden"))
                             tb.framesetOk(false);
                     } else if (StringUtil.in(name, "param", "source", "track")) {
@@ -500,8 +493,15 @@ enum HtmlTreeBuilderState {
                         tb.process(new Token.StartTag("hr"));
                         tb.process(new Token.EndTag("form"));
                     } else if (name.equals("textarea")) {
-                        tb.insert(startTag);
+                        Element el = tb.insert(startTag);
                         // todo: If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
+
+                        FormElement fe = tb.getFormElement(); // DMA: Add <textarea> to FormElement object
+                        if(fe != null)
+                        {
+                                fe.addElement(el);
+                        }
+
                         tb.tokeniser.transition(TokeniserState.Rcdata);
                         tb.markInsertionMode();
                         tb.framesetOk(false);
@@ -521,9 +521,13 @@ enum HtmlTreeBuilderState {
                         handleRawtext(startTag, tb);
                     } else if (name.equals("select")) {
                         tb.reconstructFormattingElements();
-                        tb.insert(startTag);
+                        Element el = tb.insert(startTag);          
                         tb.framesetOk(false);
-
+                        FormElement fe = tb.getFormElement(); // DMA: Add <select> blocks to FormElement object
+                        if(fe != null)
+                        {
+                                fe.addElement(el);
+                        }
                         HtmlTreeBuilderState state = tb.state();
                         if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
                             tb.transition(InSelectInTable);
@@ -533,7 +537,7 @@ enum HtmlTreeBuilderState {
                         if (tb.currentElement().nodeName().equals("option"))
                             tb.process(new Token.EndTag("option"));
                         tb.reconstructFormattingElements();
-                        tb.insert(startTag);
+			tb.insert(startTag);
                     } else if (StringUtil.in("rp", "rt")) {
                         if (tb.inScope("ruby")) {
                             tb.generateImpliedEndTags();
@@ -1244,13 +1248,13 @@ enum HtmlTreeBuilderState {
                         return tb.process(start, InBody);
                     else if (name.equals("option")) {
                         tb.process(new Token.EndTag("option"));
-                        tb.insert(start);
+			tb.insert(start);
                     } else if (name.equals("optgroup")) {
                         if (tb.currentElement().nodeName().equals("option"))
                             tb.process(new Token.EndTag("option"));
                         else if (tb.currentElement().nodeName().equals("optgroup"))
                             tb.process(new Token.EndTag("optgroup"));
-                        tb.insert(start);
+			tb.insert(start);
                     } else if (name.equals("select")) {
                         tb.error(this);
                         return tb.process(new Token.EndTag("select"));
