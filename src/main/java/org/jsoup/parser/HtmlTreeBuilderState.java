@@ -446,6 +446,11 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("input")) {
                         tb.reconstructFormattingElements();
                         Element el = tb.insertEmpty(startTag);
+                        FormElement fe = tb.getFormElement();
+                        if(fe != null)
+                        {
+                        	fe.addElement(el);
+                        }
                         if (!el.attr("type").equalsIgnoreCase("hidden"))
                             tb.framesetOk(false);
                     } else if (StringUtil.in(name, "param", "source", "track")) {
@@ -860,14 +865,7 @@ enum HtmlTreeBuilderState {
                 } else if (name.equals("input")) {
                     if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
                         return anythingElse(t, tb);
-                    } else {
-                        Element el = tb.insertEmpty(startTag);
-                        FormElement fe = tb.getFormElement();
-                        if(fe != null)
-                        {
-                        	fe.addElement(el);
-                        }
-                    }
+                    } 
                 } else if (name.equals("form")) {
                     tb.error(this);
                     if (tb.getFormElement() != null)
