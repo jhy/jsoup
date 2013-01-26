@@ -97,7 +97,7 @@ class Tokeniser {
         selfClosingFlagAcknowledged = true;
     }
 
-    Character consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    char[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -124,11 +124,11 @@ class Tokeniser {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
-                return replacementChar;
+                return new char[]{replacementChar};
             } else {
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
-                return (char) charval;
+                return Character.toChars(charval);
             }
         } else { // named
             // get as many letters as possible, and look for matching entities.
@@ -150,7 +150,7 @@ class Tokeniser {
             }
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
-            return Entities.getCharacterByName(nameRef);
+            return new char[]{Entities.getCharacterByName(nameRef)};
         }
     }
 
@@ -232,8 +232,8 @@ class Tokeniser {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {
                 reader.consume();
-                Character c = consumeCharacterReference(null, inAttribute);
-                if (c == null)
+                char[] c = consumeCharacterReference(null, inAttribute);
+                if (c == null || c.length==0)
                     builder.append('&');
                 else
                     builder.append(c);
