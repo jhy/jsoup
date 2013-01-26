@@ -22,6 +22,14 @@ public class EntitiesTest {
         // odd that it's defined as aring in base but angst in full
     }
 
+    @Test public void escapeSupplementaryCharacter(){
+        String text = new String(Character.toChars(135361));
+        String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
+        assertEquals("&#135361;", escapedAscii);
+        String escapedUtf = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
+        assertEquals(text, escapedUtf);
+    }
+
     @Test public void unescape() {
         String text = "Hello &amp;&LT&gt; &reg &angst; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;";
         assertEquals("Hello &<> ® Å &angst π π 新 there &! ¾ © ©", Entities.unescape(text));
