@@ -603,8 +603,8 @@ public class SelectorTest {
 
     @Test public void selectSupplementaryCharacter() {
         String s = new String(Character.toChars(135361));
-        Document doc = Jsoup.parse("<div k" + s + "='" + s + "'>");
+        Document doc = Jsoup.parse("<div k" + s + "='" + s + "'>^" + s +"$/div>");
         assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
-        assertEquals("div", doc.select("div[k" + s + "*=" + s + "]").first().tagName());
+        assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
     }
 }
