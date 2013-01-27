@@ -106,6 +106,18 @@ public class Parser {
     }
 
     /**
+     * Parse a fragment of XML into a list of nodes.
+     *
+     * @param fragmentXml the fragment of XML to parse
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @return list of nodes parsed from the input XML.
+     */
+    public static List<Node> parseXmlFragment(String fragmentXml, String baseUri) {
+        XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
+        return treeBuilder.parseFragment(fragmentXml, baseUri, ParseErrorList.noTracking());
+    }
+
+    /**
      * Parse a fragment of HTML into the {@code body} of a Document.
      *
      * @param bodyHtml fragment of HTML

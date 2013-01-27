@@ -4,6 +4,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Jonathan Hedley
@@ -115,5 +116,11 @@ public class XmlTreeBuilder extends TreeBuilder {
                 it.remove();
             }
         }
+    }
+
+    List<Node> parseFragment(String inputFragment, String baseUri, ParseErrorList errors) {
+        initialiseParse(inputFragment, baseUri, errors);
+        runParser();
+        return doc.childNodes();
     }
 }

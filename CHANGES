@@ -15,6 +15,9 @@ jsoup changelog
  * When parsing in XML mode, preserve XML declarations (<?xml ... ?>).
    <https://github.com/jhy/jsoup/issues/242>
 
+ * Introduced Parser.parseXmlFragment(), to allow easy parsing of XML fragments.
+   <https://github.com/jhy/jsoup/issues/279>
+
  * Allow Whitelist test methods to be extended
    <https://github.com/jhy/jsoup/issues/85>
 
