@@ -4,12 +4,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
- Tests that the selector selects correctly.
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * Tests that the selector selects correctly.
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class SelectorTest {
     @Test public void testByTag() {
         Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><div id=3>").select("div");
@@ -597,5 +599,12 @@ public class SelectorTest {
         assertEquals("div", containers.get(0).tagName());
         assertEquals("li", containers.get(1).tagName());
         assertEquals("123", containers.get(1).text());
+    }
+
+    @Test public void selectSupplementaryCharacter() {
+        String s = new String(Character.toChars(135361));
+        Document doc = Jsoup.parse("<div k" + s + "='" + s + "'>^" + s +"$/div>");
+        assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
+        assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
     }
 }

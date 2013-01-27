@@ -80,14 +80,20 @@ public class Entities {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         Map<Character, String> map = escapeMode.getMap();
 
-        for (int pos = 0; pos < string.length(); pos++) {
-            Character c = string.charAt(pos);
-            if (map.containsKey(c))
-                accum.append('&').append(map.get(c)).append(';');
-            else if (encoder.canEncode(c))
-                accum.append(c.charValue());
+        //@see "http://stackoverflow.com/questions/1527856/how-can-i-iterate-through-the-unicode-codepoints-of-a-java-string"
+        final int length = string.length();
+        for (int offset = 0; offset < length; ) {
+            final int codePoint = string.codePointAt(offset);
+            char[] chars = Character.toChars(codePoint);
+
+            if (chars.length==1 && map.containsKey(chars[0]))
+                accum.append('&').append(map.get(chars[0])).append(';');
+            else if (encoder.canEncode(new String(chars)))
+                accum.append(new String(chars));
             else
-                accum.append("&#").append((int) c).append(';');
+                accum.append("&#").append(codePoint).append(';');
+
+            offset += Character.charCount(codePoint);
         }
 
         return accum.toString();

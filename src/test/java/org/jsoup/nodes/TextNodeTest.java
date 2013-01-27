@@ -66,4 +66,10 @@ public class TextNodeTest {
 
         assertEquals("Hello <b>there</b>", TextUtil.stripNewlines(div.html())); // not great that we get \n<b>there there... must correct
     }
+
+    @Test public void testWithSupplementaryCharacter(){
+        Document doc = Jsoup.parse(new String(Character.toChars(135361)));
+        TextNode t = doc.body().textNodes().get(0);
+        assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
+    }
 }
