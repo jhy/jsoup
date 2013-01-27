@@ -200,7 +200,7 @@ public class Tag {
             "html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame",
             "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5", "h6",
             "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
-            "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
+            "del", "s", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
             "td", "video", "audio", "canvas", "details", "menu", "plaintext"
     };
     private static final String[] inlineTags = {
@@ -215,7 +215,8 @@ public class Tag {
             "device"
     };
     private static final String[] formatAsInlineTags = {
-            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style"
+            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
+            "ins", "del", "s"
     };
     private static final String[] preserveWhitespaceTags = {"pre", "plaintext", "title", "textarea"};
 
