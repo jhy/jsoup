@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.7.2 [PENDING]
+ * Added support for supplementary characters outside of the Basic Multilingual Plane.
+   <https://github.com/jhy/jsoup/issues/288> <https://github.com/jhy/jsoup/pull/289>
+
  * Added a maximum body response size to Jsoup.Connection, to prevent running out of memory when trying to read
    extremely large documents.
 
