@@ -104,7 +104,7 @@ public class ParseTest {
         assertEquals("<title>百度一下，你就知道      </title>", doc.select("title").outerHtml());
 
         doc.outputSettings().charset("ascii");
-        assertEquals("<title>&#30334;&#24230;&#19968;&#19979;&#65292;&#20320;&#23601;&#30693;&#36947;      </title>",
+        assertEquals("<title>&x767e;&x5ea6;&x4e00;&x4e0b;&xff0c;&x4f60;&x5c31;&x77e5;&x9053;      </title>",
             doc.select("title").outerHtml());
     }
 

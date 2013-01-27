@@ -165,7 +165,7 @@ public class CleanerTest {
         os.charset("ASCII");
         os.escapeMode(Entities.EscapeMode.base);
         String customOut2 = Jsoup.clean(html, "http://foo.com/", Whitelist.relaxed(), os);
-        assertEquals("<div><p>&#8492;</p></div>", customOut2);
+        assertEquals("<div><p>&x212c;</p></div>", customOut2);
     }
 
     @Test public void handlesFramesets() {

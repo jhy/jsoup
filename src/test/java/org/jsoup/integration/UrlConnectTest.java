@@ -163,7 +163,7 @@ public class UrlConnectTest {
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
-        assertEquals("Not Found", doc.select("h1").first().text());
+        assertEquals("404 Not Found", doc.select("h1").first().text());
     }
 
     @Test

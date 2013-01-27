@@ -13,19 +13,21 @@ public class EntitiesTest {
         String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
         String escapedAsciiFull = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.extended);
         String escapedAsciiXhtml = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.xhtml);
-        String escapedUtf = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
+        String escapedUtfFull = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
+        String escapedUtfMin = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.xhtml);
 
-        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#960; &#26032; there &frac34; &copy;", escapedAscii);
-        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#26032; there &frac34; &copy;", escapedAsciiFull);
-        assertEquals("Hello &amp;&lt;&gt; &#197; &#229; &#960; &#26032; there &#190; &#169;", escapedAsciiXhtml);
-        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; π 新 there &frac34; &copy;", escapedUtf);
+        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &x3c0; &x65b0; there &frac34; &copy;", escapedAscii);
+        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &x65b0; there &frac34; &copy;", escapedAsciiFull);
+        assertEquals("Hello &amp;&lt;&gt; &xc5; &xe5; &x3c0; &x65b0; there &xbe; &xa9;", escapedAsciiXhtml);
+        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; π 新 there &frac34; &copy;", escapedUtfFull);
+        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ ©", escapedUtfMin);
         // odd that it's defined as aring in base but angst in full
     }
 
     @Test public void escapeSupplementaryCharacter(){
         String text = new String(Character.toChars(135361));
         String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
-        assertEquals("&#135361;", escapedAscii);
+        assertEquals("&x210c1;", escapedAscii);
         String escapedUtf = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
         assertEquals(text, escapedUtf);
     }
