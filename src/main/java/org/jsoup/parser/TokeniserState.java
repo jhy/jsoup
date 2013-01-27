@@ -971,7 +971,7 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    char[] ref = t.consumeCharacterReference('"', true);
+                    char[] ref = t.consumeCharacterReference('\'', true);
                     if (ref != null && ref.length>0)
                         t.tagPending.appendAttributeValue(new String(ref));
                     else
@@ -1005,7 +1005,7 @@ enum TokeniserState {
                     t.transition(BeforeAttributeName);
                     break;
                 case '&':
-                    char[] ref = t.consumeCharacterReference('"', true);
+                    char[] ref = t.consumeCharacterReference('>', true);
                     if (ref != null && ref.length>0)
                         t.tagPending.appendAttributeValue(new String(ref));
                     else
