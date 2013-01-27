@@ -92,13 +92,13 @@ public class Entities {
                 else if (encoder.canEncode(c))
                     accum.append(c);
                 else
-                    accum.append("&x").append(Integer.toHexString(codePoint)).append(';');
+                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
             } else {
                 final String c = new String(Character.toChars(codePoint));
                 if (encoder.canEncode(c))
                     accum.append(c);
                 else
-                    accum.append("&x").append(Integer.toHexString(codePoint)).append(';');
+                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
             }
 
             offset += Character.charCount(codePoint);

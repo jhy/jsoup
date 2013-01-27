@@ -45,7 +45,7 @@ public class DocumentTest {
 
         doc.outputSettings().charset("ascii");
         assertEquals(Entities.EscapeMode.base, doc.outputSettings().escapeMode());
-        assertEquals("<p title=\"&x3c0;\">&x3c0; &amp; &lt; &gt; </p>", doc.body().html());
+        assertEquals("<p title=\"&#x3c0;\">&#x3c0; &amp; &lt; &gt; </p>", doc.body().html());
 
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
         assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt; </p>", doc.body().html());
