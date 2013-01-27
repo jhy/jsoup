@@ -144,10 +144,11 @@ class HtmlTreeBuilder extends TreeBuilder {
 
     Element insert(Token.StartTag startTag) {
         // handle empty unknown tags
-        // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate fake end tag.
-        if (startTag.isSelfClosing() && !Tag.isKnownTag(startTag.name())) {
+        // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+        if (startTag.isSelfClosing()) {
             Element el = insertEmpty(startTag);
-            process(new Token.EndTag(el.tagName())); // ensure we get out of whatever state we are in
+            stack.add(el);
+            tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
             return el;
         }
         
@@ -172,9 +173,13 @@ class HtmlTreeBuilder extends TreeBuilder {
         Element el = new Element(tag, baseUri, startTag.attributes);
         insertNode(el);
         if (startTag.isSelfClosing()) {
-            tokeniser.acknowledgeSelfClosingFlag();
-            if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output
+            if (tag.isKnownTag()) {
+                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag(); // if not acked, promulagates error
+            } else {
+                // unknown tag, remember this is self closing for output
                 tag.setSelfClosing();
+                tokeniser.acknowledgeSelfClosingFlag(); // not an distinct error
+            }
         }
         return el;
     }
