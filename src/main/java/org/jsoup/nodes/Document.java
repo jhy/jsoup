@@ -211,6 +211,7 @@ public class Document extends Element {
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
+        private boolean forceAllElementAsBlock = false;
         private int indentAmount = 1;
 
         public OutputSettings() {}
@@ -291,6 +292,25 @@ public class Document extends Element {
          */
         public OutputSettings prettyPrint(boolean pretty) {
             prettyPrint = pretty;
+            return this;
+        }
+        
+        /**
+         * Get if forceAllElementAsBlock is enabled. Default is false. If enable, the HTML output methods will consider
+         * all tags as block.
+         * @return if pretty printing is enabled.
+         */
+        public boolean forceAllElementAsBlock() {
+            return forceAllElementAsBlock;
+        }
+        
+        /**
+         * force or unforce rendering all elements as block.
+         * @param forceBlock new forceAllElementAsBlock setting
+         * @return this, for chaining
+         */
+        public OutputSettings forceAllElementAsBlock(boolean forceBlock) {
+            forceAllElementAsBlock = forceBlock;
             return this;
         }
 
