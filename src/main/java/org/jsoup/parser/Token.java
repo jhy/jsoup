@@ -114,11 +114,23 @@ abstract class Token {
         }
 
         void appendAttributeValue(String append) {
-            pendingAttributeValue = pendingAttributeValue == null ? new StringBuilder(append) : pendingAttributeValue.append(append);
+            ensureAttributeValue();
+            pendingAttributeValue.append(append);
         }
 
         void appendAttributeValue(char append) {
-            appendAttributeValue(String.valueOf(append));
+            ensureAttributeValue();
+            pendingAttributeValue.append(append);
+        }
+
+        void appendAttributeValue(char[] append) {
+            ensureAttributeValue();
+            pendingAttributeValue.append(append);
+        }
+
+        private final void ensureAttributeValue() {
+            if (pendingAttributeValue == null)
+                pendingAttributeValue = new StringBuilder();
         }
     }
 
