@@ -31,11 +31,11 @@ enum TokeniserState {
     CharacterReferenceInData {
         // from & in data
         void read(Tokeniser t, CharacterReader r) {
-            Character c = t.consumeCharacterReference(null, false);
-            if (c == null)
+            char[] c = t.consumeCharacterReference(null, false);
+            if (c == null||c.length==0)
                 t.emit('&');
             else
-                t.emit(c);
+                t.emit(new String(c));
             t.transition(Data);
         }
     },
@@ -66,11 +66,11 @@ enum TokeniserState {
     },
     CharacterReferenceInRcdata {
         void read(Tokeniser t, CharacterReader r) {
-            Character c = t.consumeCharacterReference(null, false);
-            if (c == null)
+            char[] c = t.consumeCharacterReference(null, false);
+            if (c == null||c.length==0)
                 t.emit('&');
             else
-                t.emit(c);
+                t.emit(new String(c));
             t.transition(Rcdata);
         }
     },
@@ -206,7 +206,7 @@ enum TokeniserState {
                 case eof: // should emit pending tag?
                     t.eofError(this);
                     t.transition(Data);
-                // no default, as covered with above consumeToAny
+                    // no default, as covered with above consumeToAny
             }
         }
     },
@@ -589,7 +589,7 @@ enum TokeniserState {
                 anythingElse(t, r);
             }
         }
-        
+
         private void anythingElse(Tokeniser t, CharacterReader r) {
             t.emit("</" + t.dataBuffer.toString());
             t.transition(ScriptDataEscaped);
@@ -832,7 +832,7 @@ enum TokeniserState {
                 case '<':
                     t.error(this);
                     t.tagPending.appendAttributeName(c);
-                // no default, as covered in consumeToAny
+                    // no default, as covered in consumeToAny
             }
         }
     },
@@ -941,9 +941,9 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    Character ref = t.consumeCharacterReference('"', true);
-                    if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                    char[] ref = t.consumeCharacterReference('"', true);
+                    if (ref != null && ref.length>0)
+                        t.tagPending.appendAttributeValue(new String(ref));
                     else
                         t.tagPending.appendAttributeValue('&');
                     break;
@@ -971,9 +971,9 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    Character ref = t.consumeCharacterReference('\'', true);
-                    if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                    char[] ref = t.consumeCharacterReference('\'', true);
+                    if (ref != null && ref.length>0)
+                        t.tagPending.appendAttributeValue(new String(ref));
                     else
                         t.tagPending.appendAttributeValue('&');
                     break;
@@ -1005,9 +1005,9 @@ enum TokeniserState {
                     t.transition(BeforeAttributeName);
                     break;
                 case '&':
-                    Character ref = t.consumeCharacterReference('>', true);
-                    if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                    char[] ref = t.consumeCharacterReference('>', true);
+                    if (ref != null && ref.length>0)
+                        t.tagPending.appendAttributeValue(new String(ref));
                     else
                         t.tagPending.appendAttributeValue('&');
                     break;
