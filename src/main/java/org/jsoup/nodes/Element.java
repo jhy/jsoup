@@ -1067,7 +1067,7 @@ public class Element extends Node {
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        if (accum.length() > 0 && out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.forceAllElementAsBlock()) )
+        if (accum.length() > 0 && out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline()) )
             indent(accum, depth, out);
         accum
                 .append("<")
@@ -1082,7 +1082,9 @@ public class Element extends Node {
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
-            if (out.prettyPrint() && (!childNodes.isEmpty() && (tag.formatAsBlock() || (out.forceAllElementAsBlock() && childNodes.size()>1) || (out.forceAllElementAsBlock() && childNodes.size()==1 && !(childNodes.iterator().next() instanceof TextNode) ) )))
+            if (out.prettyPrint() && (!childNodes.isEmpty() && (
+                    tag.formatAsBlock() || (out.outline() && childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode)))
+            )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append(">");
         }
@@ -1102,7 +1104,7 @@ public class Element extends Node {
     }
 
     private void html(StringBuilder accum) {
-        for (Node node : childNodes) 
+        for (Node node : childNodes)
             node.outerHtml(accum);
     }
     

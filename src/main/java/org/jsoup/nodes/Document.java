@@ -211,7 +211,7 @@ public class Document extends Element {
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
-        private boolean forceAllElementAsBlock = false;
+        private boolean outline = false;
         private int indentAmount = 1;
 
         public OutputSettings() {}
@@ -296,21 +296,21 @@ public class Document extends Element {
         }
         
         /**
-         * Get if forceAllElementAsBlock is enabled. Default is false. If enable, the HTML output methods will consider
+         * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
          * all tags as block.
-         * @return if pretty printing is enabled.
+         * @return if outline mode is enabled.
          */
-        public boolean forceAllElementAsBlock() {
-            return forceAllElementAsBlock;
+        public boolean outline() {
+            return outline;
         }
         
         /**
-         * force or unforce rendering all elements as block.
-         * @param forceBlock new forceAllElementAsBlock setting
+         * Enable or disable HTML outline mode.
+         * @param outlineMode new outline setting
          * @return this, for chaining
          */
-        public OutputSettings forceAllElementAsBlock(boolean forceBlock) {
-            forceAllElementAsBlock = forceBlock;
+        public OutputSettings outline(boolean outlineMode) {
+            outline = outlineMode;
             return this;
         }
 
