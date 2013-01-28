@@ -1,14 +1,15 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.DescendableLinkedList;
-import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.jsoup.helper.DescendableLinkedList;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
+import org.jsoup.nodes.*;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -20,7 +21,7 @@ class HtmlTreeBuilder extends TreeBuilder {
 
     private boolean baseUriSetFromDoc = false;
     private Element headElement; // the current head element
-    private Element formElement; // the current form element
+    private FormElement formElement; // the current form element
     private Element contextElement; // fragment parse context -- could be null even if fragment parsing
     private DescendableLinkedList<Element> formattingElements = new DescendableLinkedList<Element>(); // active (open) formatting elements
     private List<Token.Character> pendingTableCharacters = new ArrayList<Token.Character>(); // chars in table to be shifted out
@@ -152,7 +153,13 @@ class HtmlTreeBuilder extends TreeBuilder {
             return el;
         }
         
-        Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+        Element el;
+        if(startTag.tagName.equals("form")){
+        	el = new FormElement(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+        }
+        else{
+        	el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+        }
         insert(el);
         return el;
     }
@@ -481,11 +488,11 @@ class HtmlTreeBuilder extends TreeBuilder {
         this.fosterInserts = fosterInserts;
     }
 
-    Element getFormElement() {
+    FormElement getFormElement() {
         return formElement;
     }
 
-    void setFormElement(Element formElement) {
+    void setFormElement(FormElement formElement) {
         this.formElement = formElement;
     }
 
