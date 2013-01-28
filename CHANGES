@@ -4,6 +4,10 @@ jsoup changelog
  * Added support for supplementary characters outside of the Basic Multilingual Plane.
    <https://github.com/jhy/jsoup/issues/288> <https://github.com/jhy/jsoup/pull/289>
 
+ * Added support for structural pseudo CSS selectors, including :first-child, :last-child, :nth-child, :nth-last-child,
+   :first-of-type, :last-of-type, :nth-of-type, :nth-last-of-type, :only-child, :only-of-type, :empty, and :root
+   <https://github.com/jhy/jsoup/pull/208>
+
  * Added a maximum body response size to Jsoup.Connection, to prevent running out of memory when trying to read
    extremely large documents.
 
