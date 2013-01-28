@@ -9,7 +9,7 @@ jsoup changelog
    <https://github.com/jhy/jsoup/pull/208>
 
  * Added a maximum body response size to Jsoup.Connection, to prevent running out of memory when trying to read
-   extremely large documents.
+   extremely large documents. The default is 1MB.
 
  * Refactored the Cleaner to traverse rather than recurse child nodes, to avoid the risk of overflowing the stack.
    <https://github.com/jhy/jsoup/issues/246>
