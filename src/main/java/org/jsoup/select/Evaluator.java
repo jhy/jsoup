@@ -1,7 +1,12 @@
 package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.XmlDeclaration;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -351,6 +356,248 @@ public abstract class Evaluator {
             return String.format(":eq(%d)", index);
         }
 
+    }
+    
+    /**
+     * Evaluator for matching the last sibling (css :last-child)
+     */
+    public static final class IsLastChild extends Evaluator {
+		@Override
+		public boolean matches(Element root, Element element) {
+			final Element p = element.parent();
+			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
+		}
+    	
+		@Override
+		public String toString() {
+			return ":last-child";
+		}
+    }
+    
+    public static final class IsFirstOfType extends IsNthOfType {
+		public IsFirstOfType() {
+			super(0,1);
+		}
+		@Override
+		public String toString() {
+			return ":first-of-type";
+		}
+    }
+    
+    public static final class IsLastOfType extends IsNthLastOfType {
+		public IsLastOfType() {
+			super(0,1);
+		}
+		@Override
+		public String toString() {
+			return ":last-of-type";
+		}
+    }
+
+    
+    public static abstract class CssNthEvaluator extends Evaluator {
+    	protected final int a, b;
+    	
+    	public CssNthEvaluator(int a, int b) {
+    		this.a = a;
+    		this.b = b;
+    	}
+    	public CssNthEvaluator(int b) {
+    		this(0,b);
+    	}
+    	
+    	@Override
+    	public boolean matches(Element root, Element element) {
+    		final Element p = element.parent();
+    		if (p == null || (p instanceof Document)) return false;
+    		
+    		final int pos = calculatePosition(root, element);
+    		if (a == 0) return pos == b;
+    		
+    		return (pos-b)*a >= 0 && (pos-b)%a==0;
+    	}
+    	
+		@Override
+		public String toString() {
+			if (a == 0)
+				return String.format(":%s(%d)",getPseudoClass(), b);
+			if (b == 0)
+				return String.format(":%s(%dn)",getPseudoClass(), a);
+			return String.format(":%s(%dn%+d)", getPseudoClass(),a, b);
+		}
+    	
+		protected abstract String getPseudoClass();
+		protected abstract int calculatePosition(Element root, Element element);
+    }
+    
+    
+    /**
+     * css-compatible Evaluator for :eq (css :nth-child)
+     * 
+     * @see IndexEquals
+     */
+    public static final class IsNthChild extends CssNthEvaluator {
+
+    	public IsNthChild(int a, int b) {
+    		super(a,b);
+		}
+
+		protected int calculatePosition(Element root, Element element) {
+			return element.elementSiblingIndex()+1;
+		}
+
+		
+		protected String getPseudoClass() {
+			return "nth-child";
+		}
+    }
+    
+    /**
+     * css pseudo class :nth-last-child)
+     * 
+     * @see IndexEquals
+     */
+    public static final class IsNthLastChild extends CssNthEvaluator {
+    	public IsNthLastChild(int a, int b) {
+    		super(a,b);
+    	}
+
+        @Override
+        protected int calculatePosition(Element root, Element element) {
+        	return element.parent().children().size() - element.elementSiblingIndex();
+        }
+        
+		@Override
+		protected String getPseudoClass() {
+			return "nth-last-child";
+		}
+    }
+    
+    /**
+     * css pseudo class nth-of-type
+     * 
+     */
+    public static class IsNthOfType extends CssNthEvaluator {
+    	public IsNthOfType(int a, int b) {
+    		super(a,b);
+    	}
+
+		protected int calculatePosition(Element root, Element element) {
+			int pos = 0;
+        	Elements family = element.parent().children();
+        	for (int i = 0; i < family.size(); i++) {
+        		if (family.get(i).tag() == element.tag()) pos++;
+        		if (family.get(i) == element) break;
+        	}
+			return pos;
+		}
+
+		@Override
+		protected String getPseudoClass() {
+			return "nth-of-type";
+		}
+    }
+    
+    public static class IsNthLastOfType extends CssNthEvaluator {
+
+		public IsNthLastOfType(int a, int b) {
+			super(a, b);
+		}
+		
+		@Override
+		protected int calculatePosition(Element root, Element element) {
+			int pos = 0;
+        	Elements family = element.parent().children();
+        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
+        		if (family.get(i).tag() == element.tag()) pos++;
+        	}
+			return pos;
+		}
+
+		@Override
+		protected String getPseudoClass() {
+			return "nth-last-of-type";
+		}
+    }
+
+    /**
+     * Evaluator for matching the first sibling (css :first-child)
+     */
+    public static final class IsFirstChild extends Evaluator {
+    	@Override
+    	public boolean matches(Element root, Element element) {
+    		final Element p = element.parent();
+    		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
+    	}
+    	
+    	@Override
+    	public String toString() {
+    		return ":first-child";
+    	}
+    }
+    
+    /**
+     * css3 pseudo-class :root
+     * @see <a href="http://www.w3.org/TR/selectors/#root-pseudo">:root selector</a>
+     *
+     */
+    public static final class IsRoot extends Evaluator {
+    	@Override
+    	public boolean matches(Element root, Element element) {
+    		final Element r = root instanceof Document?root.child(0):root;
+    		return element == r;
+    	}
+    	@Override
+    	public String toString() {
+    		return ":root";
+    	}
+    }
+
+    public static final class IsOnlyChild extends Evaluator {
+		@Override
+		public boolean matches(Element root, Element element) {
+			final Element p = element.parent();
+			return p!=null && !(p instanceof Document) && element.siblingElements().size() == 0;
+		}
+    	@Override
+    	public String toString() {
+    		return ":only-child";
+    	}
+    }
+
+    public static final class IsOnlyOfType extends Evaluator {
+		@Override
+		public boolean matches(Element root, Element element) {
+			final Element p = element.parent();
+			if (p==null || p instanceof Document) return false;
+			
+			int pos = 0;
+        	Elements family = p.children();
+        	for (int i = 0; i < family.size(); i++) {
+        		if (family.get(i).tag().equals(element.tag())) pos++;
+        	}
+        	return pos == 1;
+		}
+    	@Override
+    	public String toString() {
+    		return ":only-of-type";
+    	}
+    }
+
+    public static final class IsEmpty extends Evaluator {
+		@Override
+		public boolean matches(Element root, Element element) {
+        	List<Node> family = element.childNodes();
+        	for (int i = 0; i < family.size(); i++) {
+        		Node n = family.get(i);
+        		if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType)) return false; 
+        	}
+        	return true;
+		}
+    	@Override
+    	public String toString() {
+    		return ":empty";
+    	}
     }
 
     /**
