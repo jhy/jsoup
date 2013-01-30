@@ -98,6 +98,21 @@ public class NodeTest {
         assertEquals("file://localhost/etc/password", one.absUrl("href"));
     }
 
+    @Test
+    public void handlesAbsOnProtocolessAbsoluteUris() {
+        Document doc1 = Jsoup.parse("<a href='//example.net/foo'>One</a>", "http://example.com/");
+        Document doc2 = Jsoup.parse("<a href='//example.net/foo'>One</a>", "https://example.com/");
+
+        Element one = doc1.select("a").first();
+        Element two = doc2.select("a").first();
+
+        assertEquals("http://example.net/foo", one.absUrl("href"));
+        assertEquals("https://example.net/foo", two.absUrl("href"));
+
+        Document doc3 = Jsoup.parse("<img src=//www.google.com/images/errors/logo_sm.gif alt=Google>", "https://google.com");
+        assertEquals("https://www.google.com/images/errors/logo_sm.gif", doc3.select("img").attr("abs:src"));
+    }
+
     /*
     Test for an issue with Java's abs URL handler.
      */
