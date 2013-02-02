@@ -492,32 +492,7 @@ enum TokeniserState {
     },
     ScriptDataDoubleEscapeStart {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                String name = r.consumeLetterSequence();
-                t.dataBuffer.append(name.toLowerCase());
-                t.emit(name);
-                return;
-            }
-
-            char c = r.consume();
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\r':
-                case '\f':
-                case ' ':
-                case '/':
-                case '>':
-                    if (t.dataBuffer.toString().equals("script"))
-                        t.transition(ScriptDataDoubleEscaped);
-                    else
-                        t.transition(ScriptDataEscaped);
-                    t.emit(c);
-                    break;
-                default:
-                    r.unconsume();
-                    t.transition(ScriptDataEscaped);
-            }
+            handleDataDoubleEscapeTag(t, r, ScriptDataDoubleEscaped, ScriptDataEscaped);
         }
     },
     ScriptDataDoubleEscaped {
@@ -617,32 +592,7 @@ enum TokeniserState {
     },
     ScriptDataDoubleEscapeEnd {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                String name = r.consumeLetterSequence();
-                t.dataBuffer.append(name.toLowerCase());
-                t.emit(name);
-                return;
-            }
-
-            char c = r.consume();
-            switch (c) {
-                case '\t':
-                case '\n':
-                case '\r':
-                case '\f':
-                case ' ':
-                case '/':
-                case '>':
-                    if (t.dataBuffer.toString().equals("script"))
-                        t.transition(ScriptDataEscaped);
-                    else
-                        t.transition(ScriptDataDoubleEscaped);
-                    t.emit(c);
-                    break;
-                default:
-                    r.unconsume();
-                    t.transition(ScriptDataDoubleEscaped);
-            }
+            handleDataDoubleEscapeTag(t,r, ScriptDataEscaped, ScriptDataDoubleEscaped);
         }
     },
     BeforeAttributeName {
@@ -1737,6 +1687,35 @@ enum TokeniserState {
         if (needsExitTransition) {
             t.emit("</" + t.dataBuffer.toString());
             t.transition(elseTransition);
+        }
+    }
+
+    private static final void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
+        if (r.matchesLetter()) {
+            String name = r.consumeLetterSequence();
+            t.dataBuffer.append(name.toLowerCase());
+            t.emit(name);
+            return;
+        }
+
+        char c = r.consume();
+        switch (c) {
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\f':
+            case ' ':
+            case '/':
+            case '>':
+                if (t.dataBuffer.toString().equals("script"))
+                    t.transition(primary);
+                else
+                    t.transition(fallback);
+                t.emit(c);
+                break;
+            default:
+                r.unconsume();
+                t.transition(fallback);
         }
     }
 }
