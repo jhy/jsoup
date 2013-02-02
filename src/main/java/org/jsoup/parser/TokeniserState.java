@@ -312,41 +312,7 @@ enum TokeniserState {
     },
     RawtextEndTagName {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                String name = r.consumeLetterSequence();
-                t.tagPending.appendTagName(name.toLowerCase());
-                t.dataBuffer.append(name);
-                return;
-            }
-
-            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
-                char c = r.consume();
-                switch (c) {
-                    case '\t':
-                    case '\n':
-                    case '\r':
-                    case '\f':
-                    case ' ':
-                        t.transition(BeforeAttributeName);
-                        break;
-                    case '/':
-                        t.transition(SelfClosingStartTag);
-                        break;
-                    case '>':
-                        t.emitTagPending();
-                        t.transition(Data);
-                        break;
-                    default:
-                        t.dataBuffer.append(c);
-                        anythingElse(t, r);
-                }
-            } else
-                anythingElse(t, r);
-        }
-
-        private void anythingElse(Tokeniser t, CharacterReader r) {
-            t.emit("</" + t.dataBuffer.toString());
-            t.transition(Rawtext);
+            handleDataEndTag(t, r, Rawtext);
         }
     },
     ScriptDataLessthanSign {
@@ -381,42 +347,7 @@ enum TokeniserState {
     },
     ScriptDataEndTagName {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                String name = r.consumeLetterSequence();
-                t.tagPending.appendTagName(name.toLowerCase());
-                t.dataBuffer.append(name);
-                return;
-            }
-
-            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
-                char c = r.consume();
-                switch (c) {
-                    case '\t':
-                    case '\n':
-                    case '\r':
-                    case '\f':
-                    case ' ':
-                        t.transition(BeforeAttributeName);
-                        break;
-                    case '/':
-                        t.transition(SelfClosingStartTag);
-                        break;
-                    case '>':
-                        t.emitTagPending();
-                        t.transition(Data);
-                        break;
-                    default:
-                        t.dataBuffer.append(c);
-                        anythingElse(t, r);
-                }
-            } else {
-                anythingElse(t, r);
-            }
-        }
-
-        private void anythingElse(Tokeniser t, CharacterReader r) {
-            t.emit("</" + t.dataBuffer.toString());
-            t.transition(ScriptData);
+            handleDataEndTag(t, r, ScriptData);
         }
     },
     ScriptDataEscapeStart {
@@ -556,43 +487,7 @@ enum TokeniserState {
     },
     ScriptDataEscapedEndTagName {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                String name = r.consumeLetterSequence();
-                t.tagPending.appendTagName(name.toLowerCase());
-                t.dataBuffer.append(name);
-                return;
-            }
-
-            if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
-                char c = r.consume();
-                switch (c) {
-                    case '\t':
-                    case '\n':
-                    case '\r':
-                    case '\f':
-                    case ' ':
-                        t.transition(BeforeAttributeName);
-                        break;
-                    case '/':
-                        t.transition(SelfClosingStartTag);
-                        break;
-                    case '>':
-                        t.emitTagPending();
-                        t.transition(Data);
-                        break;
-                    default:
-                        t.dataBuffer.append(c);
-                        anythingElse(t, r);
-                        break;
-                }
-            } else {
-                anythingElse(t, r);
-            }
-        }
-
-        private void anythingElse(Tokeniser t, CharacterReader r) {
-            t.emit("</" + t.dataBuffer.toString());
-            t.transition(ScriptDataEscaped);
+            handleDataEndTag(t, r, ScriptDataEscaped);
         }
     },
     ScriptDataDoubleEscapeStart {
@@ -1800,4 +1695,48 @@ enum TokeniserState {
     private static final char replacementChar = Tokeniser.replacementChar;
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
     private static final char eof = CharacterReader.EOF;
+
+    /**
+     * Handles RawtextEndTagName, ScriptDataEndTagName, and ScriptDataEscapedEndTagName. Same body impl, just
+     * different else exit transitions.
+     */
+    private static final void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
+        if (r.matchesLetter()) {
+            String name = r.consumeLetterSequence();
+            t.tagPending.appendTagName(name.toLowerCase());
+            t.dataBuffer.append(name);
+            return;
+        }
+
+        boolean needsExitTransition = false;
+        if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
+            char c = r.consume();
+            switch (c) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                    t.transition(BeforeAttributeName);
+                    break;
+                case '/':
+                    t.transition(SelfClosingStartTag);
+                    break;
+                case '>':
+                    t.emitTagPending();
+                    t.transition(Data);
+                    break;
+                default:
+                    t.dataBuffer.append(c);
+                    needsExitTransition = true;
+            }
+        } else {
+            needsExitTransition = true;
+        }
+
+        if (needsExitTransition) {
+            t.emit("</" + t.dataBuffer.toString());
+            t.transition(elseTransition);
+        }
+    }
 }
