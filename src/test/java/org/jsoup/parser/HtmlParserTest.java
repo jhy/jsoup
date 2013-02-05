@@ -742,4 +742,21 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<!--?xml encoding='UTF-8' ?--> <html> <head></head> <body> One </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
+    
+    @Test public void parsesFormWithinTable() {
+        String html = "<html><body><table>" +
+            "<form action=\"/hello.php\" method=\"post\">" +
+            "<tr><td>User:</td><td>" +
+            "<input type=\"text\" name=\"user\" /></td></tr>" +
+            "<tr><td>Password:</td><td>" +
+            "<input type=\"password\" name=\"pass\" /></td></tr>" +
+            "<tr><td><input type=\"submit\" value=\"login\" /></td></tr>" +
+            "<tr><td><textarea/></td></tr>" +
+            "<tr><td><select></select></td></tr>" +
+            "</form></table> </body> </html>";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement)doc.select("form").get(0);
+        Elements inputs = form.getElements();
+        assertEquals(inputs.size(), 5);
+    }
 }

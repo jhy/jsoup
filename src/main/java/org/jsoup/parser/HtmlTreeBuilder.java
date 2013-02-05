@@ -142,6 +142,13 @@ class HtmlTreeBuilder extends TreeBuilder {
         if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
+    
+    void addToForm(Element el){
+    	FormElement fe = getFormElement();
+    	if(fe != null){
+    		fe.addElement(el);
+    	}
+    }
 
     Element insert(Token.StartTag startTag) {
         // handle empty unknown tags

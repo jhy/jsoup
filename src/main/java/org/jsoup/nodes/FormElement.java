@@ -1,11 +1,10 @@
 package org.jsoup.nodes;
 
-import java.util.ArrayList;
-
 import org.jsoup.parser.Tag;
+import org.jsoup.select.Elements;
 
 public class FormElement extends Element {
-	private ArrayList<Element> formElements = new ArrayList<Element>();
+	private Elements formElements = new Elements();
 	public FormElement(Tag tag, String baseUri, Attributes attributes) {
         super(tag, baseUri, attributes);
 			// TODO Auto-generated constructor stub
@@ -15,7 +14,7 @@ public class FormElement extends Element {
 		formElements.add(element);
 	}
 	
-	public ArrayList<Element> getElements(){
+	public Elements getElements(){
 		return formElements;
 	}	
 }

@@ -395,7 +395,8 @@ enum HtmlTreeBuilderState {
                             tb.process(startTag);
                         } else {
                             tb.reconstructFormattingElements();
-                            tb.insert(startTag);
+                            Element el = tb.insert(startTag);
+                            tb.addToForm(el);
                             tb.framesetOk(false);
                         }
                     } else if (name.equals("a")) {
@@ -446,13 +447,7 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("input")) {
                         tb.reconstructFormattingElements();
                         Element el = tb.insertEmpty(startTag);
-                        
-                        FormElement fe = tb.getFormElement();
-                        if(fe != null)
-                        {
-                        	fe.addElement(el);
-                        }
-                        
+                        tb.addToForm(el);                        
                         if (!el.attr("type").equalsIgnoreCase("hidden"))
                             tb.framesetOk(false);
                     } else if (StringUtil.in(name, "param", "source", "track")) {
@@ -500,7 +495,8 @@ enum HtmlTreeBuilderState {
                         tb.process(new Token.StartTag("hr"));
                         tb.process(new Token.EndTag("form"));
                     } else if (name.equals("textarea")) {
-                        tb.insert(startTag);
+                        Element el = tb.insert(startTag);
+                        tb.addToForm(el);
                         // todo: If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
                         tb.tokeniser.transition(TokeniserState.Rcdata);
                         tb.markInsertionMode();
@@ -521,7 +517,8 @@ enum HtmlTreeBuilderState {
                         handleRawtext(startTag, tb);
                     } else if (name.equals("select")) {
                         tb.reconstructFormattingElements();
-                        tb.insert(startTag);
+                        Element el = tb.insert(startTag);
+                        tb.addToForm(el);
                         tb.framesetOk(false);
 
                         HtmlTreeBuilderState state = tb.state();
@@ -855,12 +852,7 @@ enum HtmlTreeBuilderState {
                     if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
                         return anythingElse(t, tb);
                     } else {
-                        Element el = tb.insertEmpty(startTag);
-                        FormElement fe = tb.getFormElement();
-                        if(fe != null)
-                        {
-                        	fe.addElement(el);
-                        }
+                        tb.insertEmpty(startTag);
                     }
                 } else if (name.equals("form")) {
                     tb.error(this);
