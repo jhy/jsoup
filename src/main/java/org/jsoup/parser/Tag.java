@@ -248,7 +248,7 @@ public class Tag {
             "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
     private static final String[] formSubmitTags = {
-            "button", "input", "keygen", "object", "select", "textarea"
+            "input", "keygen", "object", "select", "textarea"
     };
 
     static {
