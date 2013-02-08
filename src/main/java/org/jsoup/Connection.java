@@ -116,6 +116,13 @@ public interface Connection {
 
     /**
      * Adds all of the supplied data to the request data parameters
+     * @param data collection of data parameters
+     * @return this Connection, for chaining
+     */
+    public Connection data(Collection<KeyVal> data);
+
+    /**
+     * Adds all of the supplied data to the request data parameters
      * @param data map of data parameters
      * @return this Connection, for chaining
      */

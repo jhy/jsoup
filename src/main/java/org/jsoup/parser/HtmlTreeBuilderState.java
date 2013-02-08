@@ -346,8 +346,7 @@ enum HtmlTreeBuilderState {
                         if (tb.inButtonScope("p")) {
                             tb.process(new Token.EndTag("p"));
                         }
-                        Element form = tb.insert(startTag);
-                        tb.setFormElement(form);
+                        tb.insertForm(startTag, true);
                     } else if (name.equals("li")) {
                         tb.framesetOk(false);
                         LinkedList<Element> stack = tb.getStack();
@@ -856,12 +855,12 @@ enum HtmlTreeBuilderState {
                     if (tb.getFormElement() != null)
                         return false;
                     else {
-                        Element form = tb.insertEmpty(startTag);
-                        tb.setFormElement(form);
+                        tb.insertForm(startTag, false);
                     }
                 } else {
                     return anythingElse(t, tb);
                 }
+                return true; // todo: check if should return processed http://www.whatwg.org/specs/web-apps/current-work/multipage/tree-construction.html#parsing-main-intable
             } else if (t.isEndTag()) {
                 Token.EndTag endTag = t.asEndTag();
                 String name = endTag.name();
@@ -881,6 +880,7 @@ enum HtmlTreeBuilderState {
                 } else {
                     return anythingElse(t, tb);
                 }
+                return true; // todo: as above todo
             } else if (t.isEOF()) {
                 if (tb.currentElement().nodeName().equals("html"))
                     tb.error(this);

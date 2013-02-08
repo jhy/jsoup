@@ -743,4 +743,34 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<textarea>&lt;p&gt;Jsoup&lt;/p&gt;</textarea>", doc.body().html());
     }
+
+    // form tests
+    @Test public void createsFormElements() {
+        String html = "<body><form><input id=1><input id=2></form></body>";
+        Document doc = Jsoup.parse(html);
+        Element el = doc.select("form").first();
+
+        assertTrue("Is form element", el instanceof FormElement);
+        FormElement form = (FormElement) el;
+        Elements controls = form.elements();
+        assertEquals(2, controls.size());
+        assertEquals("1", controls.get(0).id());
+        assertEquals("2", controls.get(1).id());
+    }
+
+    @Test public void associatedFormControlsWithDisjointForms() {
+        // form gets closed, isn't parent of controls
+        String html = "<table><tr><form><input type=hidden id=1><td><input type=text id=2></td><tr></table>";
+        Document doc = Jsoup.parse(html);
+        Element el = doc.select("form").first();
+
+        assertTrue("Is form element", el instanceof FormElement);
+        FormElement form = (FormElement) el;
+        Elements controls = form.elements();
+        assertEquals(2, controls.size());
+        assertEquals("1", controls.get(0).id());
+        assertEquals("2", controls.get(1).id());
+
+        assertEquals("<table><tbody><tr><form></form><input type=\"hidden\" id=\"1\" /><td><input type=\"text\" id=\"2\" /></td></tr><tr></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }

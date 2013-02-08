@@ -21,6 +21,8 @@ public class Tag {
     private boolean empty = false; // can hold nothing; e.g. img
     private boolean selfClosing = false; // can self close (<foo />). used for unknown tags that self close, without forcing them as empty.
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
+    private boolean formList = false; // a control that appears in forms: input, textarea, output etc
+    private boolean formSubmit = false; // a control that can be submitted in a form: input etc
 
     private Tag(String tagName) {
         this.tagName = tagName.toLowerCase();
@@ -153,6 +155,22 @@ public class Tag {
         return preserveWhitespace;
     }
 
+    /**
+     * Get if this tag represents a control associated with a form. E.g. input, textarea, output
+     * @return if associated with a form
+     */
+    public boolean isFormListed() {
+        return formList;
+    }
+
+    /**
+     * Get if this tag represents an element that should be submitted with a form. E.g. input, option
+     * @return if submittable with a form
+     */
+    public boolean isFormSubmittable() {
+        return formSubmit;
+    }
+
     Tag setSelfClosing() {
         selfClosing = true;
         return this;
@@ -172,6 +190,8 @@ public class Tag {
         if (isBlock != tag.isBlock) return false;
         if (preserveWhitespace != tag.preserveWhitespace) return false;
         if (selfClosing != tag.selfClosing) return false;
+        if (formList != tag.formList) return false;
+        if (formSubmit != tag.formSubmit) return false;
         if (!tagName.equals(tag.tagName)) return false;
 
         return true;
@@ -187,6 +207,8 @@ public class Tag {
         result = 31 * result + (empty ? 1 : 0);
         result = 31 * result + (selfClosing ? 1 : 0);
         result = 31 * result + (preserveWhitespace ? 1 : 0);
+        result = 31 * result + (formList ? 1 : 0);
+        result = 31 * result + (formSubmit ? 1 : 0);
         return result;
     }
 
@@ -218,7 +240,16 @@ public class Tag {
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
             "ins", "del", "s"
     };
-    private static final String[] preserveWhitespaceTags = {"pre", "plaintext", "title", "textarea"};
+    private static final String[] preserveWhitespaceTags = {
+            "pre", "plaintext", "title", "textarea"
+    };
+    // todo: I think we just need submit tags, and can scrub listed
+    private static final String[] formListedTags = {
+            "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
+    };
+    private static final String[] formSubmitTags = {
+            "button", "input", "keygen", "object", "select", "textarea"
+    };
 
     static {
         // creates
@@ -253,6 +284,18 @@ public class Tag {
             Tag tag = tags.get(tagName);
             Validate.notNull(tag);
             tag.preserveWhitespace = true;
+        }
+
+        for (String tagName : formListedTags) {
+            Tag tag = tags.get(tagName);
+            Validate.notNull(tag);
+            tag.formList = true;
+        }
+
+        for (String tagName : formSubmitTags) {
+            Tag tag = tags.get(tagName);
+            Validate.notNull(tag);
+            tag.formSubmit = true;
         }
     }
 

@@ -125,6 +125,14 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection data(Collection<Connection.KeyVal> data) {
+        Validate.notNull(data, "Data collection must not be null");
+        for (Connection.KeyVal entry: data) {
+            req.data(entry);
+        }
+        return this;
+    }
+
     public Connection header(String name, String value) {
         req.header(name, value);
         return this;
