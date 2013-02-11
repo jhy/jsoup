@@ -1240,7 +1240,8 @@ enum HtmlTreeBuilderState {
                         tb.insert(start);
                     } else if (name.equals("select")) {
                         tb.error(this);
-                        return tb.process(new Token.EndTag("select"));
+                        return tb.process(start, InSelect);
+                        // return tb.process(new Token.EndTag("select"));
                     } else if (StringUtil.in(name, "input", "keygen", "textarea")) {
                         tb.error(this);
                         if (!tb.inSelectScope("select"))
