@@ -1230,7 +1230,8 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html"))
                         return tb.process(start, InBody);
                     else if (name.equals("option")) {
-                        tb.process(new Token.EndTag("option"));
+                        // issue 294: nesting of options inside a select isn't allowed, comment out to fix!
+                        // tb.process(new Token.EndTag("option"));
                         tb.insert(start);
                     } else if (name.equals("optgroup")) {
                         if (tb.currentElement().nodeName().equals("option"))
@@ -1240,8 +1241,7 @@ enum HtmlTreeBuilderState {
                         tb.insert(start);
                     } else if (name.equals("select")) {
                         tb.error(this);
-                        return tb.process(start, InSelect);
-                        // return tb.process(new Token.EndTag("select"));
+                        return tb.process(new Token.EndTag("select"));
                     } else if (StringUtil.in(name, "input", "keygen", "textarea")) {
                         tb.error(this);
                         if (!tb.inSelectScope("select"))
