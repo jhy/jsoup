@@ -29,9 +29,12 @@ public class StringUtilTest {
         assertTrue(StringUtil.isBlank(""));
         assertTrue(StringUtil.isBlank("      "));
         assertTrue(StringUtil.isBlank("   \r\n  "));
+        assertTrue(StringUtil.isBlank("\u3000"));
+        assertTrue(StringUtil.isBlank("\u3000 \u3000"));
 
         assertFalse(StringUtil.isBlank("hello"));
         assertFalse(StringUtil.isBlank("   hello   "));
+        assertFalse(StringUtil.isBlank("\u3000hello"));
     }
 
     @Test public void isNumeric() {

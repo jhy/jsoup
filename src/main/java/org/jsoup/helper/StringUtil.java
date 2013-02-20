@@ -61,7 +61,7 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a string is blank: null, emtpy, or only whitespace (" ", \r\n, \t, etc)
+     * Tests if a string is blank: null, empty, or only whitespace (" ", \r\n, \t, Unicode whitespace etc)
      * @param string string to test
      * @return if string is blank
      */
@@ -71,7 +71,7 @@ public final class StringUtil {
 
         int l = string.length();
         for (int i = 0; i < l; i++) {
-            if (!StringUtil.isWhitespace(string.codePointAt(i)))
+            if (!Character.isWhitespace(string.codePointAt(i)))
                 return false;
         }
         return true;
