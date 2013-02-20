@@ -1460,7 +1460,7 @@ enum HtmlTreeBuilderState {
             // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
             for (int i = 0; i < data.length(); i++) {
                 char c = data.charAt(i);
-                if (!StringUtil.isWhitespace(c))
+                if (!StringUtil.isHTMLWhitespace(c))
                     return false;
             }
             return true;

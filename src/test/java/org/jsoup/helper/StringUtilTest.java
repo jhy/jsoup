@@ -48,16 +48,16 @@ public class StringUtilTest {
         assertTrue(StringUtil.isNumeric("1234"));
     }
 
-    @Test public void isWhitespace() {
-        assertTrue(StringUtil.isWhitespace('\t'));
-        assertTrue(StringUtil.isWhitespace('\n'));
-        assertTrue(StringUtil.isWhitespace('\r'));
-        assertTrue(StringUtil.isWhitespace('\f'));
-        assertTrue(StringUtil.isWhitespace(' '));
+    @Test public void isHTMLWhitespace() {
+        assertTrue(StringUtil.isHTMLWhitespace('\t'));
+        assertTrue(StringUtil.isHTMLWhitespace('\n'));
+        assertTrue(StringUtil.isHTMLWhitespace('\r'));
+        assertTrue(StringUtil.isHTMLWhitespace('\f'));
+        assertTrue(StringUtil.isHTMLWhitespace(' '));
         
-        assertFalse(StringUtil.isWhitespace('\u00a0'));
-        assertFalse(StringUtil.isWhitespace('\u2000'));
-        assertFalse(StringUtil.isWhitespace('\u3000'));
+        assertFalse(StringUtil.isHTMLWhitespace('\u00a0'));
+        assertFalse(StringUtil.isHTMLWhitespace('\u2000'));
+        assertFalse(StringUtil.isHTMLWhitespace('\u3000'));
     }
 
     @Test public void normaliseWhiteSpace() {

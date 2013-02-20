@@ -99,7 +99,7 @@ public final class StringUtil {
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
-    public static boolean isWhitespace(int c){
+    public static boolean isHTMLWhitespace(int c){
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
 
@@ -113,7 +113,7 @@ public final class StringUtil {
         int c;
         for (int i = 0; i < l; i+= Character.charCount(c)) {
             c = string.codePointAt(i);
-            if (isWhitespace(c)) {
+            if (isHTMLWhitespace(c)) {
                 if (lastWasWhite) {
                     modified = true;
                     continue;
