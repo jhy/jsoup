@@ -17,6 +17,7 @@ import java.util.List;
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
     private QuirksMode quirksMode = QuirksMode.noQuirks;
+    private String sourceUri;
 
     /**
      Create a new, empty Document.
@@ -26,6 +27,7 @@ public class Document extends Element {
      */
     public Document(String baseUri) {
         super(Tag.valueOf("#root"), baseUri);
+        this.sourceUri = baseUri;
     }
 
     /**
@@ -44,6 +46,15 @@ public class Document extends Element {
         return doc;
     }
 
+    /**
+     * Accessor to the final URI this Document was parsed from. If the starting URL is a redirect, 
+     * this will return the final URI from which the document was served up.  
+     * @return sourceUri
+     */
+    public String sourceUri() {
+     return sourceUri;
+    }
+    
     /**
      Accessor to the document's {@code head} element.
      @return {@code head}
