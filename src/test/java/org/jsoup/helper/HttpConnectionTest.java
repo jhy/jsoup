@@ -132,6 +132,15 @@ public class HttpConnectionTest {
         assertEquals("bar", two.value());
     }
 
+    @Test public void rawdata() {
+    	Connection con = HttpConnection.connect("http://example.com/");
+    	con.rawData("Foo");
+    	assertEquals("Foo", con.request().rawData());
+    	assertTrue(con.request().isRawData());
+    	con.rawData(null);
+    	assertFalse(con.request().isRawData());
+    }
+
     @Test public void cookie() {
         Connection con = HttpConnection.connect("http://example.com/");
         con.cookie("Name", "Val");

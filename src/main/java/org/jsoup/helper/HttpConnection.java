@@ -133,6 +133,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection rawData(String rawdata) {
+		req.rawData(rawdata);
+		return this;
+	}
+
     public Connection header(String name, String value) {
         req.header(name, value);
         return this;
@@ -312,6 +317,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+		private String rawData;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -388,6 +394,19 @@ public class HttpConnection implements Connection {
         public Parser parser() {
             return parser;
         }
+
+		public boolean isRawData() {
+			return rawData != null;
+		}
+
+		public Request rawData(String value) {
+			rawData = value;
+			return this;
+		}
+
+		public String rawData() {
+			return rawData;
+		}
     }
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
@@ -431,8 +450,13 @@ public class HttpConnection implements Connection {
             Response res;
             try {
                 conn.connect();
-                if (req.method() == Connection.Method.POST)
-                    writePost(req.data(), conn.getOutputStream());
+                if (req.method() == Connection.Method.POST){
+                	if(req.isRawData()){
+                		writeRawPost(req.rawData(), conn.getOutputStream());
+                	}else{
+                		writePost(req.data(), conn.getOutputStream());
+                	}
+                }
 
                 int status = conn.getResponseCode();
                 boolean needsRedirect = false;
@@ -589,6 +613,12 @@ public class HttpConnection implements Connection {
                         header(name, values.get(0));
                 }
             }
+        }
+
+        private static void writeRawPost(String data, OutputStream outputStream) throws IOException {
+        	OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
+        	w.write(data);
+        	w.close();
         }
 
         private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
