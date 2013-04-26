@@ -120,7 +120,7 @@ public class DataUtil {
         int read;
         int remaining = maxSize;
 
-        while (true) {
+        while (inStream.available() > 0) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
