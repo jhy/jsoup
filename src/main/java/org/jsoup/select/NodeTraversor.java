@@ -25,22 +25,26 @@ public class NodeTraversor {
     public void traverse(Node root) {
         Node node = root;
         int depth = 0;
-        
+
         while (node != null) {
+            Node parent = node.parent();
+            Node nextSibling = node.nextSibling();
             visitor.head(node, depth);
-            if (node.childNodeSize() > 0) {
+            if (node.childNodes().size() > 0 && (node.parent() != null || node == root)) {
                 node = node.childNode(0);
                 depth++;
             } else {
-                while (node.nextSibling() == null && depth > 0) {
+                while (nextSibling == null && node != null && depth > 0) {
                     visitor.tail(node, depth);
-                    node = node.parent();
+                    node = node.parent() == null? parent : node.parent();
+                    parent = null;
+                    nextSibling = node == null? null : node.nextSibling();
                     depth--;
                 }
                 visitor.tail(node, depth);
                 if (node == root)
                     break;
-                node = node.nextSibling();
+                node = nextSibling;
             }
         }
     }
