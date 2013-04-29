@@ -156,7 +156,9 @@ class QueryParser {
         else if (tq.matchChomp(":eq("))
             indexEquals();
         else if (tq.matches(":has("))
-            has();
+            has(false);
+        else if (tq.matches(":hasOwn("))
+            has(true);
         else if (tq.matches(":contains("))
             contains(false);
         else if (tq.matches(":containsOwn("))
@@ -314,11 +316,14 @@ class QueryParser {
     }
 
     // pseudo selector :has(el)
-    private void has() {
-        tq.consume(":has");
+    private void has(boolean own) {
+        tq.consume(own ? ":hasOwn" : ":has");
         String subQuery = tq.chompBalanced('(', ')');
         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
-        evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+        if(own)
+            evals.add(new StructuralEvaluator.HasOwn(parse(subQuery)));
+        else
+            evals.add(new StructuralEvaluator.Has(parse(subQuery)));
     }
 
     // pseudo selector :contains(text), containsOwn(text)

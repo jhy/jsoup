@@ -464,6 +464,13 @@ public class SelectorTest {
         assertEquals("Two", divs.first().text());
     }
 
+    @Test public void testHasOwn() {
+        Document doc = Jsoup.parse("<div><p><span>One</span></p></div> <div><span>Two</span></div>");
+        Elements divs = doc.select("div:hasOwn(span)");
+        assertEquals(1, divs.size());
+        assertEquals("Two", divs.first().text());
+    }
+
     @Test public void testPseudoContains() {
         Document doc = Jsoup.parse("<div><p>The Rain.</p> <p class=light>The <i>rain</i>.</p> <p>Rain, the.</p></div>");
 

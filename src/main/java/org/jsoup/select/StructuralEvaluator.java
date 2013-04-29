@@ -32,6 +32,24 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
+    static class HasOwn extends StructuralEvaluator {
+        public HasOwn(Evaluator evaluator) {
+            this.evaluator = evaluator;
+        }
+
+        public boolean matches(Element root, Element element) {
+            for (Element e : element.children()) {
+                if (e != element && evaluator.matches(root, e))
+                    return true;
+            }
+            return false;
+        }
+
+        public String toString() {
+            return String.format(":hasOwn(%s)", evaluator);
+        }
+    }
+
     static class Not extends StructuralEvaluator {
         public Not(Evaluator evaluator) {
             this.evaluator = evaluator;
