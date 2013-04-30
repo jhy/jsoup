@@ -4,12 +4,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import static org.junit.Assert.*;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
+
+import static org.junit.Assert.*;
 
 /**
  * Integration test: parses from real-world example HTML.
@@ -22,9 +22,9 @@ public class ParseTest {
     public void testSmhBizArticle() throws IOException {
         File in = getFile("/htmltests/smh-biz-article-1.html");
         Document doc = Jsoup.parse(in, "UTF-8",
-            "http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html");
+                "http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html");
         assertEquals("The board’s next fear: the female quota",
-            doc.title()); // note that the apos in the source is a literal ’ (8217), not escaped or '
+                doc.title()); // note that the apos in the source is a literal ’ (8217), not escaped or '
         assertEquals("en", doc.select("html").attr("xml:lang"));
 
         Elements articleBody = doc.select(".articleBody > *");
@@ -46,8 +46,8 @@ public class ParseTest {
 
         Element hs = doc.select("a[href*=naughty-corners-are-a-bad-idea]").first();
         assertEquals(
-            "http://www.heraldsun.com.au/news/naughty-corners-are-a-bad-idea-for-kids/story-e6frf7jo-1225817899003",
-            hs.attr("href"));
+                "http://www.heraldsun.com.au/news/naughty-corners-are-a-bad-idea-for-kids/story-e6frf7jo-1225817899003",
+                hs.attr("href"));
         assertEquals(hs.attr("href"), hs.attr("abs:href"));
     }
 
@@ -59,10 +59,10 @@ public class ParseTest {
         Elements results = doc.select("h3.r > a");
         assertEquals(12, results.size());
         assertEquals(
-            "http://news.google.com/news?hl=en&q=ipod&um=1&ie=UTF-8&ei=uYlKS4SbBoGg6gPf-5XXCw&sa=X&oi=news_group&ct=title&resnum=1&ved=0CCIQsQQwAA",
-            results.get(0).attr("href"));
+                "http://news.google.com/news?hl=en&q=ipod&um=1&ie=UTF-8&ei=uYlKS4SbBoGg6gPf-5XXCw&sa=X&oi=news_group&ct=title&resnum=1&ved=0CCIQsQQwAA",
+                results.get(0).attr("href"));
         assertEquals("http://www.apple.com/itunes/",
-            results.get(1).attr("href"));
+                results.get(1).attr("href"));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ParseTest {
         assertEquals("Yahoo! JAPAN", doc.title());
         Element a = doc.select("a[href=t/2322m2]").first();
         assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/t/2322m2",
-            a.attr("abs:href")); // session put into <base>
+                a.attr("abs:href")); // session put into <base>
         assertEquals("全国、人気の駅ランキング", a.text());
     }
 
@@ -89,7 +89,7 @@ public class ParseTest {
         // tests <meta http-equiv="Content-Type" content="text/html;charset=gb2312">
         File in = getFile("/htmltests/baidu-cn-home.html");
         Document doc = Jsoup.parse(in, null,
-            "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
+                "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
         Element submit = doc.select("#su").first();
         assertEquals("百度一下", submit.attr("value"));
 
@@ -105,7 +105,7 @@ public class ParseTest {
 
         doc.outputSettings().charset("ascii");
         assertEquals("<title>&#x767e;&#x5ea6;&#x4e00;&#x4e0b;&#xff0c;&#x4f60;&#x5c31;&#x77e5;&#x9053;      </title>",
-            doc.select("title").outerHtml());
+                doc.select("title").outerHtml());
     }
 
     @Test
@@ -113,7 +113,7 @@ public class ParseTest {
         // tests <meta charset> when preceded by another <meta>
         File in = getFile("/htmltests/baidu-variant.html");
         Document doc = Jsoup.parse(in, null,
-            "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
+                "http://www.baidu.com/"); // http charset is gb2312, but NOT specifying it, to test http-equiv parse
         // check auto-detect from meta
         assertEquals("GB2312", doc.outputSettings().charset().displayName());
         assertEquals("<title>百度一下，你就知道</title>", doc.select("title").outerHtml());
@@ -141,6 +141,16 @@ public class ParseTest {
     }
 
     @Test
+    public void testBrokenHtml5CharsetWithASingleDoubleQuote() throws IOException {
+        InputStream in = inputStreamFrom("<html>\n" +
+                "<head><meta charset=UTF-8\"></head>\n" +
+                "<body></body>\n" +
+                "</html>");
+        Document doc = Jsoup.parse(in, null, "http://example.com/");
+        assertEquals("UTF-8", doc.outputSettings().charset().displayName());
+    }
+
+    @Test
     public void testNytArticle() throws IOException {
         // has tags like <nyt_text>
         File in = getFile("/htmltests/nyt-article-1.html");
@@ -149,7 +159,7 @@ public class ParseTest {
         Element headline = doc.select("nyt_headline[version=1.0]").first();
         assertEquals("As BP Lays Out Future, It Will Not Include Hayward", headline.text());
     }
-    
+
     @Test
     public void testYahooArticle() throws IOException {
         File in = getFile("/htmltests/yahoo-article-1.html");
@@ -162,9 +172,17 @@ public class ParseTest {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());
             return file;
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }
     }
+
+    private InputStream inputStreamFrom(String s) {
+        try {
+            return new ByteArrayInputStream(s.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

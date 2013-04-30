@@ -263,5 +263,11 @@ public class UrlConnectTest {
         assertEquals("ISO-8859-1", res.charset());
     }
 
+    @Test
+    public void shouldParseBrokenHtml5MetaCharsetTagCorrectly() throws IOException {
+        Connection.Response res = Jsoup.connect("http://9kuhkep.net").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("UTF-8", res.charset());
+    }
 
 }
