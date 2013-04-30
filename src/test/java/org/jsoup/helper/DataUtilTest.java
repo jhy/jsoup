@@ -40,4 +40,9 @@ public class DataUtilTest {
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset="));
     }
 
+    @Test
+    public void shouldSelectFirstCharsetOnWeirdMultileCharsetsInMetaTags() {
+        assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1, charset=1251"));
+    }
+
 }

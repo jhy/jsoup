@@ -256,4 +256,12 @@ public class UrlConnectTest {
         assertEquals("UTF-8", res.charset());
     }
 
+    @Test
+    public void shouldSelectFirstCharsetOnWeirdMultileCharsetsInMetaTags() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aamo.info/").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("ISO-8859-1", res.charset());
+    }
+
+
 }
