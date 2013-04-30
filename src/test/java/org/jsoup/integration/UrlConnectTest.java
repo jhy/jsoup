@@ -143,6 +143,13 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void gracefullyHandleBrokenLocationRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://aag-ye.com"); // has Location: http:/temp/AAG_New/en/index.php
+        con.get(); // would throw exception on error
+        assertTrue(true);
+    }
+
+    @Test
     public void throwsExceptionOnError() {
         String url = "http://direct.infohound.net/tools/404";
         Connection con = Jsoup.connect(url);
@@ -276,5 +283,6 @@ public class UrlConnectTest {
         res.parse(); // would throw an error if charset unsupported
         assertEquals("UTF-8", res.charset());
     }
+
 
 }
