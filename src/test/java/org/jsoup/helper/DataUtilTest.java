@@ -1,13 +1,13 @@
 package org.jsoup.helper;
 
-import static org.junit.Assert.assertEquals;
-
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+
+import static org.junit.Assert.assertEquals;
 
 public class DataUtilTest {
     @Test
@@ -25,6 +25,7 @@ public class DataUtilTest {
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html;charset=\"UTF-8\""));
         assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=\"ISO-8859-1\""));
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=\"Unsupported\""));
+        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
     
     @Test public void discardsSpuriousByteOrderMark() {
