@@ -256,6 +256,10 @@ public class UrlConnectTest {
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
     }
 
+    // The following tests were added to test specific domains if they work. All code paths
+    // which make the following test green are tested in other unit or integration tests, so the following lines
+    // could be deleted
+
     @Test
     public void shouldNotFailOnEmptyCharsetInMetaTags() throws IOException {
         Connection.Response res = Jsoup.connect("http://aawdc.net/").execute();
@@ -282,6 +286,13 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect("http://aastmultimedia.com").execute();
         res.parse(); // would throw an error if charset unsupported
         assertEquals("UTF-8", res.charset());
+    }
+
+    @Test
+    public void shouldEmptyMetaCharsetCasdasorrectly() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aaptsdassn.org").execute();
+        Document doc = res.parse(); // would throw an error if charset unsupported
+        assertEquals("ISO-8859-1", res.charset());
     }
 
 

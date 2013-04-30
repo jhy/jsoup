@@ -152,6 +152,7 @@ public class DataUtil {
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
             String charset = m.group(1).trim();
+            charset = charset.replace("charset=", "");
             if (charset.isEmpty()) return null;
             if (Charset.isSupported(charset)) return charset;
             charset = charset.toUpperCase(Locale.ENGLISH);

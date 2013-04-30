@@ -45,4 +45,9 @@ public class DataUtilTest {
         assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1, charset=1251"));
     }
 
+    @Test
+    public void shouldCorrectCharsetForDuplicateCharsetString() {
+        assertEquals("iso-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=charset=iso-8859-1"));
+    }
+
 }
