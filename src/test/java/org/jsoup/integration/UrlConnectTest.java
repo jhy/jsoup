@@ -1,18 +1,20 @@
 package org.jsoup.integration;
 
-import org.jsoup.HttpStatusException;
-import org.jsoup.UnsupportedMimeTypeException;
-import org.junit.Test;
-import org.junit.Ignore;
-import static org.junit.Assert.*;
-import org.jsoup.nodes.Document;
-import org.jsoup.Jsoup;
 import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Document;
+import org.junit.Ignore;
+import org.junit.Test;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.io.IOException;
 import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
@@ -246,4 +248,12 @@ public class UrlConnectTest {
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
     }
+
+    @Test
+    public void shouldNotFailOnEmptyCharsetInMetaTags() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aawdc.net/").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("UTF-8", res.charset());
+    }
+
 }
