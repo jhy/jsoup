@@ -289,11 +289,10 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void shouldEmptyMetaCharsetCasdasorrectly() throws IOException {
+    public void shouldWorkForDuplicateCharsetInTag() throws IOException {
         Connection.Response res = Jsoup.connect("http://aaptsdassn.org").execute();
         Document doc = res.parse(); // would throw an error if charset unsupported
         assertEquals("ISO-8859-1", res.charset());
     }
-
 
 }
