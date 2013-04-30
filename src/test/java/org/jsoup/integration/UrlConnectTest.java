@@ -270,4 +270,11 @@ public class UrlConnectTest {
         assertEquals("UTF-8", res.charset());
     }
 
+    @Test
+    public void shouldEmptyMetaCharsetCorrectly() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aastmultimedia.com").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("UTF-8", res.charset());
+    }
+
 }
