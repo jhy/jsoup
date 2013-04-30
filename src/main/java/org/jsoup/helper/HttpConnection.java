@@ -452,7 +452,6 @@ public class HttpConnection implements Connection {
                         location = location.substring(6);
 
                     req.url(new URL(req.url(), location));
-                    System.out.println(req.url());
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
                     }
