@@ -38,6 +38,7 @@ public class DataUtilTest {
     @Test
     public void shouldNotThrowExceptionOnEmptyCharset() {
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset="));
+        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=;"));
     }
 
     @Test
