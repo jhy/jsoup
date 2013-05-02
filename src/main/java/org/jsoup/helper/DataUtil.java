@@ -7,6 +7,7 @@ import org.jsoup.parser.Parser;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Locale;
@@ -154,9 +155,14 @@ public class DataUtil {
             String charset = m.group(1).trim();
             charset = charset.replace("charset=", "");
             if (charset.isEmpty()) return null;
-            if (Charset.isSupported(charset)) return charset;
-            charset = charset.toUpperCase(Locale.ENGLISH);
-            if (Charset.isSupported(charset)) return charset;
+            try {
+                if (Charset.isSupported(charset)) return charset;
+                charset = charset.toUpperCase(Locale.ENGLISH);
+                if (Charset.isSupported(charset)) return charset;
+            } catch (IllegalCharsetNameException e) {
+                // if our advanced charset matching fails.... we just take the default
+                return null;
+            }
         }
         return null;
     }

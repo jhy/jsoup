@@ -51,4 +51,9 @@ public class DataUtilTest {
         assertEquals("iso-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=charset=iso-8859-1"));
     }
 
+    @Test
+    public void shouldReturnNullForIllegalCharsetNames() {
+        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
+    }
+
 }
