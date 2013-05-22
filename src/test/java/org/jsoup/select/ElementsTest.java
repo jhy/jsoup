@@ -3,8 +3,12 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.junit.Test;
+
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -251,5 +255,18 @@ public class ElementsTest {
             }
         });
         assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString());
+    }
+
+    @Test public void forms() {
+        Document doc = Jsoup.parse("<form id=1><input name=q></form><div /><form id=2><input name=f></form>");
+        Elements els = doc.select("*");
+        assertEquals(9, els.size());
+
+        List<FormElement> forms = els.forms();
+        assertEquals(2, forms.size());
+        assertTrue(forms.get(0) != null);
+        assertTrue(forms.get(1) != null);
+        assertEquals("1", forms.get(0).id());
+        assertEquals("2", forms.get(1).id());
     }
 }
