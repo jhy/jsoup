@@ -849,6 +849,7 @@ enum HtmlTreeBuilderState {
                         return anythingElse(t, tb);
                     } else {
                         tb.insertEmpty(startTag);
+                        return true;
                     }
                 } else if (name.equals("form")) {
                     tb.error(this);
