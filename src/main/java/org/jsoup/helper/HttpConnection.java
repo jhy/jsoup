@@ -447,7 +447,7 @@ public class HttpConnection implements Connection {
                 if (needsRedirect && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
-                    req.url(new URL(req.url(), res.header("Location")));
+                    req.url(new URL(req.url(), res.header("Location").split("#")[0]));
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
                     }
