@@ -28,6 +28,12 @@ public interface Connection {
     }
 
     /**
+     * Setter to disable\enable SSL certificates checks during https connection
+     * @param value
+     */
+    Connection setSecure (boolean value);
+
+    /**
      * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
      * @param url URL to connect to
      * @return this Connection, for chaining
@@ -343,6 +349,8 @@ public interface Connection {
      * Represents a HTTP request.
      */
     public interface Request extends Base<Request> {
+
+
         /**
          * Get the request timeout, in milliseconds.
          * @return the timeout in milliseconds.
@@ -434,6 +442,19 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+
+        /**
+         * get current state of security enabling\disabling feature
+         *
+         * @return
+         */
+        boolean isSecure();
+
+        /**
+         * Disable SSL certificates checks.
+         * @param value
+         */
+        void setSecure(boolean value);
     }
 
     /**
