@@ -54,7 +54,9 @@ public class DocumentTest {
     @Test public void testXhtmlReferences() {
         Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
         doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-        assertEquals("&lt; &gt; &amp; &quot; &apos; ×", doc.body().html());
+        assertEquals("&lt; &gt; &amp; &quot; ' ×", doc.body().html());
+        // NB: &apos; is not preserved so as to be backwards compatible with HTML 4 user agents.
+        // See http://www.w3.org/TR/xhtml1/#C_16
     }
 
     @Test public void testNormalisesStructure() {
