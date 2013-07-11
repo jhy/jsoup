@@ -1,13 +1,15 @@
 package org.jsoup.nodes;
 
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
-import java.util.*;
-import java.util.regex.Matcher;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.regex.Pattern;
+
+import org.jsoup.parser.Parser;
 
 /**
  * HTML entities, and escape routines.
@@ -18,6 +20,11 @@ public class Entities {
     public enum EscapeMode {
         /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
         xhtml(xhtmlByVal),
+        /**
+         * Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only.
+         * In text nodes, single and double quotes are not encoded.
+         */
+        xhtml_minimal(xhtmlByVal),
         /** Default HTML output entities. */
         base(baseByVal),
         /** Complete HTML entities. */
@@ -36,6 +43,7 @@ public class Entities {
 
     private static final Map<String, Character> full;
     private static final Map<Character, String> xhtmlByVal;
+    private static final Map<Character, String> xhtmlByValMinimal;
     private static final Map<String, Character> base;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
@@ -71,14 +79,18 @@ public class Entities {
     public static Character getCharacterByName(String name) {
         return full.get(name);
     }
-    
-    static String escape(String string, Document.OutputSettings out) {
-        return escape(string, out.encoder(), out.escapeMode());
+
+    static String escape(String string, Class<?> nodeType, Document.OutputSettings out) {
+        return escape(string, nodeType, out.encoder(), out.escapeMode());
     }
 
-    static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
+    static String escape(String string, Class<?> nodeType, CharsetEncoder encoder, EscapeMode escapeMode) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         Map<Character, String> map = escapeMode.getMap();
+
+        if (escapeMode == EscapeMode.xhtml_minimal && nodeType == TextNode.class) {
+            map = xhtmlByValMinimal;
+        }
 
         final int length = string.length();
         for (int offset = 0; offset < length; ) {
@@ -130,8 +142,15 @@ public class Entities {
             {"gt", 0x0003E}
     };
 
+    private static final Object[][] xhtmlArrayMinimal = {
+            {"amp", 0x00026},
+            {"lt", 0x0003C},
+            {"gt", 0x0003E}
+    };
+
     static {
         xhtmlByVal = new HashMap<Character, String>();
+        xhtmlByValMinimal = new HashMap<Character, String>();
         base = loadEntities("entities-base.properties");  // most common / default
         baseByVal = toCharacterKey(base);
         full = loadEntities("entities-full.properties"); // extended and overblown.
@@ -140,6 +159,11 @@ public class Entities {
         for (Object[] entity : xhtmlArray) {
             Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
             xhtmlByVal.put(c, ((String) entity[0]));
+        }
+
+        for (Object[] entity : xhtmlArrayMinimal) {
+            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
+            xhtmlByValMinimal.put(c, ((String) entity[0]));
         }
     }
 
