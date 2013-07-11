@@ -1,8 +1,8 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.Validate;
-
 import java.util.Map;
+
+import org.jsoup.helper.Validate;
 
 /**
  A single key + value attribute. Keys are trimmed and normalised to lower-case.
@@ -66,14 +66,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return HTML
      */
     public String html() {
-        return key + "=\"" + Entities.escape(value, (new Document("")).outputSettings()) + "\"";
+        return key + "=\"" + Entities.escape(value, Attribute.class, (new Document("")).outputSettings()) + "\"";
     }
-    
+
     protected void html(StringBuilder accum, Document.OutputSettings out) {
         accum
             .append(key)
             .append("=\"")
-            .append(Entities.escape(value, out))
+            .append(Entities.escape(value, Attribute.class, out))
             .append("\"");
     }
 
@@ -81,6 +81,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Get the string representation of this attribute, implemented as {@link #html()}.
      @return string
      */
+    @Override
     public String toString() {
         return html();
     }

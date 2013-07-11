@@ -28,10 +28,11 @@ public class TextNode extends Node {
         this.text = text;
     }
 
+    @Override
     public String nodeName() {
         return "#text";
     }
-    
+
     /**
      * Get the text content of this text node.
      * @return Unencoded, normalised text.
@@ -40,7 +41,7 @@ public class TextNode extends Node {
     public String text() {
         return normaliseWhitespace(getWholeText());
     }
-    
+
     /**
      * Set the text content of this text node.
      * @param text unencoded text
@@ -89,9 +90,10 @@ public class TextNode extends Node {
         return tailNode;
     }
 
+    @Override
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        String html = Entities.escape(getWholeText(), out);
-        if (out.prettyPrint() && parent() instanceof Element && !Element.preserveWhitespace((Element) parent())) {
+        String html = Entities.escape(getWholeText(), TextNode.class, out);
+        if (out.prettyPrint() && parent() instanceof Element && !Element.preserveWhitespace(parent())) {
             html = normaliseWhitespace(html);
         }
 
@@ -100,8 +102,10 @@ public class TextNode extends Node {
         accum.append(html);
     }
 
+    @Override
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
+    @Override
     public String toString() {
         return outerHtml();
     }
