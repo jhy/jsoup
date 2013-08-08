@@ -154,6 +154,7 @@ public class Whitelist {
 
                 .addProtocols("a", "href", "ftp", "http", "https", "mailto")
                 .addProtocols("blockquote", "cite", "http", "https")
+                .addProtocols("cite", "cite", "http", "https")
                 .addProtocols("img", "src", "http", "https")
                 .addProtocols("q", "cite", "http", "https")
                 ;
