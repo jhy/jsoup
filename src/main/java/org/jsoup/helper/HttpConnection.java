@@ -1,5 +1,7 @@
 package org.jsoup.helper;
 
+import static org.hamcrest.CoreMatchers.nullValue;
+
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UnsupportedMimeTypeException;
@@ -35,6 +37,8 @@ public class HttpConnection implements Connection {
     }
 
 	private static String encodeUrl(String url) {
+		if(url == null)
+			return null;
     	return url.replaceAll(" ", "%20");
 	}
 
