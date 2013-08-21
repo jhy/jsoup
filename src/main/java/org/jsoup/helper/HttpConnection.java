@@ -34,6 +34,12 @@ public class HttpConnection implements Connection {
         return con;
     }
 
+	private static String encodeUrl(String url) {
+		if(url == null)
+			return null;
+    	return url.replaceAll(" ", "%20");
+	}
+
     private Connection.Request req;
     private Connection.Response res;
 
@@ -50,7 +56,7 @@ public class HttpConnection implements Connection {
     public Connection url(String url) {
         Validate.notEmpty(url, "Must supply a valid URL");
         try {
-            req.url(new URL(url));
+            req.url(new URL(encodeUrl(url)));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Malformed URL: " + url, e);
         }
@@ -447,7 +453,7 @@ public class HttpConnection implements Connection {
                 if (needsRedirect && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
-                    req.url(new URL(req.url(), res.header("Location")));
+                    req.url(new URL(req.url(), encodeUrl(res.header("Location"))));
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
                     }
