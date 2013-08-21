@@ -1,5 +1,7 @@
 package org.jsoup.helper;
 
+import static org.hamcrest.CoreMatchers.nullValue;
+
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UnsupportedMimeTypeException;
@@ -24,7 +26,7 @@ import java.util.zip.GZIPInputStream;
 public class HttpConnection implements Connection {
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
-        con.url(encodeUrl(url));
+        con.url(url);
         return con;
     }
 
@@ -35,6 +37,8 @@ public class HttpConnection implements Connection {
     }
 
 	private static String encodeUrl(String url) {
+		if(url == null)
+			return null;
     	return url.replaceAll(" ", "%20");
 	}
 
@@ -54,7 +58,7 @@ public class HttpConnection implements Connection {
     public Connection url(String url) {
         Validate.notEmpty(url, "Must supply a valid URL");
         try {
-            req.url(new URL(url));
+            req.url(new URL(encodeUrl(url)));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Malformed URL: " + url, e);
         }
