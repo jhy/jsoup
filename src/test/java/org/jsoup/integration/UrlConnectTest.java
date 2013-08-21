@@ -30,6 +30,13 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void fetchURIWithWihtespace() throws IOException {
+        Connection con = Jsoup.connect("http://try.jsoup.org/#with whitespaces");
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup"));
+    }
+
+    @Test
     public void fetchBaidu() throws IOException {
         Connection.Response res = Jsoup.connect("http://www.baidu.com/").timeout(10*1000).execute();
         Document doc = res.parse();
@@ -138,6 +145,13 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to ./ - /tools/
         Document doc = con.post();
         assertTrue(doc.title().contains("HTML Tidy Online"));
+    }
+
+    @Test
+    public void followsRedirectsWithWithespaces() throws IOException {
+        Connection con = Jsoup.connect("http://tinyurl.com/kgofxl8"); // to http://www.google.com/?q=white spaces
+        Document doc = con.get();
+        assertTrue(doc.title().contains("Google"));
     }
 
     @Test

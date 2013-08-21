@@ -24,7 +24,7 @@ import java.util.zip.GZIPInputStream;
 public class HttpConnection implements Connection {
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
-        con.url(url);
+        con.url(encodeUrl(url));
         return con;
     }
 
@@ -33,6 +33,10 @@ public class HttpConnection implements Connection {
         con.url(url);
         return con;
     }
+
+	private static String encodeUrl(String url) {
+    	return url.replaceAll(" ", "%20");
+	}
 
     private Connection.Request req;
     private Connection.Response res;
@@ -447,7 +451,7 @@ public class HttpConnection implements Connection {
                 if (needsRedirect && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
-                    req.url(new URL(req.url(), res.header("Location")));
+                    req.url(new URL(req.url(), encodeUrl(res.header("Location"))));
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
                     }
