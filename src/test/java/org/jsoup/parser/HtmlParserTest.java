@@ -522,6 +522,13 @@ public class HtmlParserTest {
         assertEquals(want, doc.html());
     }
 
+    @Test public void handlesUnclosedAnchors() {
+        String h = "<a href='http://example.com/'>Link<p>Error link</a>";
+        Document doc = Jsoup.parse(h);
+        String want = "<a href=\"http://example.com/\">Link</a>\n<p><a href=\"http://example.com/\">Error link</a></p>";
+        assertEquals(want, doc.body().html());
+    }
+
     @Test public void reconstructFormattingElements() {
         // tests attributes and multi b
         String h = "<p><b class=one>One <i>Two <b>Three</p><p>Hello</p>";
