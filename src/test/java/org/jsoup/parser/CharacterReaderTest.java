@@ -95,6 +95,11 @@ public class CharacterReaderTest {
         assertEquals(-1, r.nextIndexOf("Two"));
     }
 
+    @Test public void nextIndexOfUnmatched() {
+        CharacterReader r = new CharacterReader("<[[one]]");
+        assertEquals(-1, r.nextIndexOf("]]>"));
+    }
+
     @Test public void consumeToChar() {
         CharacterReader r = new CharacterReader("One Two Three");
         assertEquals("One ", r.consumeTo('T'));

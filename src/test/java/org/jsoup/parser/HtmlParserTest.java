@@ -287,6 +287,13 @@ public class HtmlParserTest {
         assertEquals(1, div.childNodeSize()); // no elements, one text node
     }
 
+    @Test public void handlesUnclosedCdataAtEOF() {
+        // https://github.com/jhy/jsoup/issues/349 would crash, as character reader would try to seek past EOF
+        String h = "<![CDATA[]]";
+        Document doc = Jsoup.parse(h);
+        assertEquals(1, doc.body().childNodeSize());
+    }
+
     @Test public void handlesInvalidStartTags() {
         String h = "<div>Hello < There <&amp;></div>"; // parse to <div {#text=Hello < There <&>}>
         Document doc = Jsoup.parse(h);
