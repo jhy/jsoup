@@ -127,10 +127,11 @@ enum HtmlTreeBuilderState {
                         tb.transition(InHeadNoscript);
                     } else if (name.equals("script")) {
                         // skips some script rules as won't execute them
-                        tb.insert(start);
+
                         tb.tokeniser.transition(TokeniserState.ScriptData);
                         tb.markInsertionMode();
                         tb.transition(Text);
+                        tb.insert(start);
                     } else if (name.equals("head")) {
                         tb.error(this);
                         return false;

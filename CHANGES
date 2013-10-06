@@ -4,6 +4,9 @@ jsoup changelog
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
 
+ * Fixed support for self-closing script tags.
+   <https://github.com/jhy/jsoup/issues/305>
+
 *** Release 1.7.2 [2013-Jan-27]
  * Added support for supplementary characters outside of the Basic Multilingual Plane.
    <https://github.com/jhy/jsoup/issues/288> <https://github.com/jhy/jsoup/pull/289>
