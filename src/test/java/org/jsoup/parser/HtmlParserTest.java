@@ -787,4 +787,16 @@ public class HtmlParserTest {
 
         assertEquals("<table><tbody><tr><form></form><input type=\"hidden\" id=\"1\" /><td><input type=\"text\" id=\"2\" /></td></tr><tr></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test public void handlesInputInTable() {
+        String h = "<body>\n" +
+                "<input type=\"hidden\" name=\"a\" value=\"\">\n" +
+                "<table>\n" +
+                "<input type=\"hidden\" name=\"b\" value=\"\" />\n" +
+                "</table>\n" +
+                "</body>";
+        Document doc = Jsoup.parse(h);
+        assertEquals(1, doc.select("table input").size());
+        assertEquals(2, doc.select("input").size());
+    }
 }
