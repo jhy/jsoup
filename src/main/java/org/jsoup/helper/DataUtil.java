@@ -7,6 +7,7 @@ import org.jsoup.parser.Parser;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Locale;
@@ -16,7 +17,7 @@ import java.util.Locale;
  *
  */
 public class DataUtil {
-    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*\"?([^\\s;\"]*)");
+    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int bufferSize = 0x20000; // ~130K.
 
@@ -80,8 +81,25 @@ public class DataUtil {
             doc = parser.parseInput(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
-                String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : meta.attr("charset");
+
+                String foundCharset;
+                if (meta.hasAttr("http-equiv")) {
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                    if (foundCharset == null && meta.hasAttr("charset")) {
+                        try {
+                            if (Charset.isSupported(meta.attr("charset"))) {
+                                foundCharset = meta.attr("charset");
+                            }
+                        } catch (IllegalCharsetNameException e) {
+                            foundCharset = null;
+                        }
+                    }
+                } else {
+                    foundCharset = meta.attr("charset");
+                }
+
                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+                    foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                     charsetName = foundCharset;
                     byteData.rewind();
                     docData = Charset.forName(foundCharset).decode(byteData).toString();
@@ -151,9 +169,16 @@ public class DataUtil {
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
             String charset = m.group(1).trim();
-            if (Charset.isSupported(charset)) return charset;
-            charset = charset.toUpperCase(Locale.ENGLISH);
-            if (Charset.isSupported(charset)) return charset;
+            charset = charset.replace("charset=", "");
+            if (charset.isEmpty()) return null;
+            try {
+                if (Charset.isSupported(charset)) return charset;
+                charset = charset.toUpperCase(Locale.ENGLISH);
+                if (Charset.isSupported(charset)) return charset;
+            } catch (IllegalCharsetNameException e) {
+                // if our advanced charset matching fails.... we just take the default
+                return null;
+            }
         }
         return null;
     }

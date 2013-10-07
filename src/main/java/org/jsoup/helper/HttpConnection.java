@@ -447,7 +447,11 @@ public class HttpConnection implements Connection {
                 if (needsRedirect && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
-                    req.url(new URL(req.url(), res.header("Location")));
+                    String location = res.header("Location");
+                    if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                        location = location.substring(6);
+
+                    req.url(new URL(req.url(), location));
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
                     }
