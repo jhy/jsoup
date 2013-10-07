@@ -13,6 +13,9 @@ jsoup changelog
  * Fixed an issue where elements added via the adoption agency algorithm did not preserve their attributes.
    <https://github.com/jhy/jsoup/issues/313>
 
+ * Fixed an issue when cloning a document with extremely nested elements that could cause a stack-overflow.
+   <https://github.com/jhy/jsoup/issues/290>
+
 *** Release 1.7.2 [2013-Jan-27]
  * Added support for supplementary characters outside of the Basic Multilingual Plane.
    <https://github.com/jhy/jsoup/issues/288> <https://github.com/jhy/jsoup/pull/289>
