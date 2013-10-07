@@ -42,13 +42,20 @@ public class Elements implements List<Element>, Cloneable {
      */
     @Override
 	public Elements clone() {
+        Elements clone;
+        try {
+            clone = (Elements) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     	List<Element> elements = new ArrayList<Element>();
+        clone.contents = elements;
     	
     	for(Element e : contents)
     		elements.add(e.clone());
 		
     	
-    	return new Elements(elements);
+    	return clone;
 	}
 
 	// attribute methods
