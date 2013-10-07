@@ -129,7 +129,7 @@ public class TokenQueue {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return !isEmpty() && StringUtil.isWhitespace(queue.charAt(pos));
+        return !isEmpty() && StringUtil.isHTMLWhitespace(queue.charAt(pos));
     }
 
     /**
