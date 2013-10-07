@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import static org.junit.Assert.*;
 
@@ -82,4 +83,16 @@ public class DocumentTest {
                 TextUtil.stripNewlines(clone.html()));
     }
 
+    // Ignored since this test can take awhile to run.
+    @Ignore
+    @Test public void testOverflowClone() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 100000; i++) {
+            builder.insert(0, "<i>");
+            builder.append("</i>");
+        }
+
+        Document doc = Jsoup.parse(builder.toString());
+        doc.clone();
+    }
 }
