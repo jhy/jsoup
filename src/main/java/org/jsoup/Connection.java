@@ -21,10 +21,10 @@ import java.io.IOException;
 public interface Connection {
 
     /**
-     * GET and POST http methods.
+     * GET, POST, PUT, DELETE, OPTIONS http methods.
      */
     public enum Method {
-        GET, POST
+        GET, POST, PUT, DELETE, OPTIONS
     }
 
     /**
