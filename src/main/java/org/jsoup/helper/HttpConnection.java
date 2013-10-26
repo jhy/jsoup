@@ -68,6 +68,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection charset(String charset) {
+        req.charset(charset);
+        return this;
+    }
+
     public Connection maxBodySize(int bytes) {
         req.maxBodySize(bytes);
         return this;
@@ -312,6 +317,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+        private String reqCharset;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -321,6 +327,7 @@ public class HttpConnection implements Connection {
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+            reqCharset = DataUtil.defaultCharset;
         }
 
         public int timeout() {
@@ -330,6 +337,15 @@ public class HttpConnection implements Connection {
         public Request timeout(int millis) {
             Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
             timeoutMilliseconds = millis;
+            return this;
+        }
+
+        public String charset() {
+            return reqCharset;
+        }
+
+        public Connection.Request charset(String charset) {
+            this.reqCharset = charset;
             return this;
         }
 
@@ -592,7 +608,11 @@ public class HttpConnection implements Connection {
         }
 
         private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
-            OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
+            writePost( data, outputStream, DataUtil.defaultCharset );
+        }
+
+        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream, String charset ) throws IOException {
+            OutputStreamWriter w = new OutputStreamWriter(outputStream, charset);
             boolean first = true;
             for (Connection.KeyVal keyVal : data) {
                 if (!first) 
@@ -600,9 +620,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 
-                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                w.write(URLEncoder.encode(keyVal.key(), charset));
                 w.write('=');
-                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                w.write(URLEncoder.encode(keyVal.value(), charset));
             }
             w.close();
         }

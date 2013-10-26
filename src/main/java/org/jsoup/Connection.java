@@ -57,6 +57,13 @@ public interface Connection {
     public Connection timeout(int millis);
 
     /**
+     * Add a request charset. By default it is set to UTF-8
+     * @param charset charset
+     * @return this Connection, for chaining
+     */
+    public Connection charset(String charset);
+
+    /**
      * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
      * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
      * only by your patience and the memory available on your machine).
@@ -355,6 +362,19 @@ public interface Connection {
          * @return this Request, for chaining
          */
         public Request timeout(int millis);
+
+        /**
+         * Get the request charset
+         * @return the charset (UTF-8 by default)
+         */
+        public String charset();
+
+        /**
+         * Update the charset
+         * @param charset Charset
+         * @return this Request, for chaining
+         */
+        public Request charset(String charset);
 
         /**
          * Get the maximum body size, in milliseconds.
