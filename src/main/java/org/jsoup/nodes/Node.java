@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -593,11 +594,32 @@ public abstract class Node implements Cloneable {
      */
     @Override
     public Node clone() {
-        return doClone(null); // splits for orphan
+        Node thisClone = doClone(null); // splits for orphan
+
+        // Queue up nodes that need their children cloned (BFS).
+        LinkedList<Node> nodesToProcess = new LinkedList<Node>();
+        nodesToProcess.add(thisClone);
+
+        while (!nodesToProcess.isEmpty()) {
+            Node currParent = nodesToProcess.remove();
+
+            for (int i = 0; i < currParent.childNodes.size(); i++) {
+                Node childClone = currParent.childNodes.get(i).doClone(currParent);
+                currParent.childNodes.set(i, childClone);
+                nodesToProcess.add(childClone);
+            }
+        }
+
+        return thisClone;
     }
 
+    /*
+     * Return a clone of the node using the given parent (which can be null).
+     * Not a deep copy of children.
+     */
     protected Node doClone(Node parent) {
         Node clone;
+
         try {
             clone = (Node) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -609,8 +631,9 @@ public abstract class Node implements Cloneable {
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
         clone.childNodes = new ArrayList<Node>(childNodes.size());
+
         for (Node child: childNodes)
-            clone.childNodes.add(child.doClone(clone)); // clone() creates orphans, doClone() keeps parent
+            clone.childNodes.add(child);
 
         return clone;
     }

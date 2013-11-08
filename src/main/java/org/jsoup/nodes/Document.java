@@ -379,5 +379,10 @@ public class Document extends Element {
         this.quirksMode = quirksMode;
         return this;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }
 

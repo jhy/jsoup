@@ -287,6 +287,13 @@ public class HtmlParserTest {
         assertEquals(1, div.childNodeSize()); // no elements, one text node
     }
 
+    @Test public void handlesUnclosedCdataAtEOF() {
+        // https://github.com/jhy/jsoup/issues/349 would crash, as character reader would try to seek past EOF
+        String h = "<![CDATA[]]";
+        Document doc = Jsoup.parse(h);
+        assertEquals(1, doc.body().childNodeSize());
+    }
+
     @Test public void handlesInvalidStartTags() {
         String h = "<div>Hello < There <&amp;></div>"; // parse to <div {#text=Hello < There <&>}>
         Document doc = Jsoup.parse(h);
@@ -326,9 +333,9 @@ public class HtmlParserTest {
 
     @Test public void handlesKnownEmptyBlocks() {
         // if a known tag, allow self closing outside of spec, but force an end tag. unknown tags can be self closing.
-        String h = "<div id='1' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
+        String h = "<div id='1' /><script src='/foo' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
         Document doc = Jsoup.parse(h);
-        assertEquals("<div id=\"1\"></div><div id=\"2\"><img /><img /></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr /> hr text <hr /> hr text two", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img /><img /></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr /> hr text <hr /> hr text two", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesSolidusAtAttributeEnd() {
@@ -513,6 +520,13 @@ public class HtmlParserTest {
                 "</body>\n" +
                 "</html>";
         assertEquals(want, doc.html());
+    }
+
+    @Test public void handlesUnclosedAnchors() {
+        String h = "<a href='http://example.com/'>Link<p>Error link</a>";
+        Document doc = Jsoup.parse(h);
+        String want = "<a href=\"http://example.com/\">Link</a>\n<p><a href=\"http://example.com/\">Error link</a></p>";
+        assertEquals(want, doc.body().html());
     }
 
     @Test public void reconstructFormattingElements() {
@@ -772,5 +786,17 @@ public class HtmlParserTest {
         assertEquals("2", controls.get(1).id());
 
         assertEquals("<table><tbody><tr><form></form><input type=\"hidden\" id=\"1\" /><td><input type=\"text\" id=\"2\" /></td></tr><tr></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void handlesInputInTable() {
+        String h = "<body>\n" +
+                "<input type=\"hidden\" name=\"a\" value=\"\">\n" +
+                "<table>\n" +
+                "<input type=\"hidden\" name=\"b\" value=\"\" />\n" +
+                "</table>\n" +
+                "</body>";
+        Document doc = Jsoup.parse(h);
+        assertEquals(1, doc.select("table input").size());
+        assertEquals(2, doc.select("input").size());
     }
 }

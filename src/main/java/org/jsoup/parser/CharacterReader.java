@@ -86,9 +86,9 @@ class CharacterReader {
             // scan to first instance of startchar:
             if (startChar != input[offset])
                 while(++offset < length && startChar != input[offset]);
-            if (offset < length) {
-                int i = offset + 1;
-                int last = i + seq.length()-1;
+            int i = offset + 1;
+            int last = i + seq.length()-1;
+            if (offset < length && last <= length) {
                 for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
                 if (i == last) // found full sequence
                     return offset - pos;

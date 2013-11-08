@@ -159,6 +159,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         if (startTag.isSelfClosing()) {
             Element el = insertEmpty(startTag);
             stack.add(el);
+            tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
             tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
             return el;
         }
