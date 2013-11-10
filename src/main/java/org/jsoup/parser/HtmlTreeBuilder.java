@@ -15,6 +15,22 @@ import java.util.List;
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 class HtmlTreeBuilder extends TreeBuilder {
+    // tag searches
+    private static final String[] TagsScriptStyle = new String[]{"script", "style"};
+    public static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
+    private static final String[] TagSearchList = new String[]{"ol", "ul"};
+    private static final String[] TagSearchButton = new String[]{"button"};
+    private static final String[] TagSearchTableScope = new String[]{"html", "table"};
+    private static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
+    private static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"};
+    private static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
+            "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
+            "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
+            "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
+            "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
+            "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
+            "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
+            "title", "tr", "ul", "wbr", "xmp"};
 
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
@@ -214,7 +230,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
-        if (StringUtil.in(currentElement().tagName(), "script", "style"))
+        if (StringUtil.in(currentElement().tagName(), TagsScriptStyle))
             node = new DataNode(characterToken.getData(), baseUri);
         else
             node = new TextNode(characterToken.getData(), baseUri);
@@ -454,7 +470,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean inScope(String[] targetNames) {
-        return inSpecificScope(targetNames, new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"}, null);
+        return inSpecificScope(targetNames, TagsSearchInScope, null);
     }
 
     boolean inScope(String targetName) {
@@ -462,21 +478,21 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean inScope(String targetName, String[] extras) {
-        return inSpecificScope(targetName, new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"}, extras);
+        return inSpecificScope(targetName, TagsSearchInScope , extras);
         // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
         // todo: in svg namespace: forignOjbect, desc, title
     }
 
     boolean inListItemScope(String targetName) {
-        return inScope(targetName, new String[]{"ol", "ul"});
+        return inScope(targetName, TagSearchList);
     }
 
     boolean inButtonScope(String targetName) {
-        return inScope(targetName, new String[]{"button"});
+        return inScope(targetName, TagSearchButton);
     }
 
     boolean inTableScope(String targetName) {
-        return inSpecificScope(targetName, new String[]{"html", "table"}, null);
+        return inSpecificScope(targetName, TagSearchTableScope, null);
     }
 
     boolean inSelectScope(String targetName) {
@@ -486,7 +502,7 @@ class HtmlTreeBuilder extends TreeBuilder {
             String elName = el.nodeName();
             if (elName.equals(targetName))
                 return true;
-            if (!StringUtil.in(elName, "optgroup", "option")) // all elements except
+            if (!StringUtil.in(elName, TagSearchSelectScope)) // all elements except
                 return false;
         }
         Validate.fail("Should not be reachable");
@@ -540,7 +556,7 @@ class HtmlTreeBuilder extends TreeBuilder {
      */
     void generateImpliedEndTags(String excludeTag) {
         while ((excludeTag != null && !currentElement().nodeName().equals(excludeTag)) &&
-                StringUtil.in(currentElement().nodeName(), "dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"))
+                StringUtil.in(currentElement().nodeName(), TagSearchEndTags))
             pop();
     }
 
@@ -552,14 +568,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         // todo: mathml's mi, mo, mn
         // todo: svg's foreigObject, desc, title
         String name = el.nodeName();
-        return StringUtil.in(name, "address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
-                "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
-                "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
-                "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
-                "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
-                "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
-                "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
-                "title", "tr", "ul", "wbr", "xmp");
+        return StringUtil.in(name, TagSearchSpecial);
     }
 
     // active formatting elements
