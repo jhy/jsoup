@@ -12,7 +12,8 @@ import java.util.List;
  * Base combining (and, or) evaluator.
  */
 abstract class CombiningEvaluator extends Evaluator {
-    final List<Evaluator> evaluators;
+    final ArrayList<Evaluator> evaluators;
+    int num = 0;
 
     CombiningEvaluator() {
         super();
@@ -22,14 +23,20 @@ abstract class CombiningEvaluator extends Evaluator {
     CombiningEvaluator(Collection<Evaluator> evaluators) {
         this();
         this.evaluators.addAll(evaluators);
+        updateNumEvaluators();
     }
 
     Evaluator rightMostEvaluator() {
-        return evaluators.size() > 0 ? evaluators.get(evaluators.size() - 1) : null;
+        return num > 0 ? evaluators.get(num - 1) : null;
     }
     
     void replaceRightMostEvaluator(Evaluator replacement) {
-        evaluators.set(evaluators.size() - 1, replacement);
+        evaluators.set(num - 1, replacement);
+    }
+
+    void updateNumEvaluators() {
+        // used so we don't need to bash on size() for every match test
+        num = evaluators.size();
     }
 
     static final class And extends CombiningEvaluator {
@@ -43,7 +50,7 @@ abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (int i = 0; i < evaluators.size(); i++) {
+            for (int i = 0; i < num; i++) {
                 Evaluator s = evaluators.get(i);
                 if (!s.matches(root, node))
                     return false;
@@ -64,10 +71,11 @@ abstract class CombiningEvaluator extends Evaluator {
          */
         Or(Collection<Evaluator> evaluators) {
             super();
-            if (evaluators.size() > 1)
+            if (num > 1)
                 this.evaluators.add(new And(evaluators));
             else // 0 or 1
                 this.evaluators.addAll(evaluators);
+            updateNumEvaluators();
         }
 
         Or() {
@@ -76,11 +84,12 @@ abstract class CombiningEvaluator extends Evaluator {
 
         public void add(Evaluator e) {
             evaluators.add(e);
+            updateNumEvaluators();
         }
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (int i = 0; i < evaluators.size(); i++) {
+            for (int i = 0; i < num; i++) {
                 Evaluator s = evaluators.get(i);
                 if (s.matches(root, node))
                     return true;
