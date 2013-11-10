@@ -666,7 +666,8 @@ enum HtmlTreeBuilderState {
                             LinkedList<Element> stack = tb.getStack();
                             // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
                             // run-aways
-                            for (int si = 0; si < stack.size() && si < 64; si++) {
+                            final int stackSize = stack.size();
+                            for (int si = 0; si < stackSize && si < 64; si++) {
                                 Element el = stack.get(si);
                                 if (el == formatEl) {
                                     commonAncestor = stack.get(si - 1);
