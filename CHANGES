@@ -11,6 +11,9 @@ jsoup changelog
  * Improved HTTP character set detection.
    <https://github.com/jhy/jsoup/pull/325> <https://github.com/jhy/jsoup/issues/321>
 
+ * Added Document.location, to get the URL the document was retrieved from. Helpful if connection was redirected.
+   <https://github.com/jhy/jsoup/pull/306>
+
  * Fixed support for self-closing script tags.
    <https://github.com/jhy/jsoup/issues/305>
 
