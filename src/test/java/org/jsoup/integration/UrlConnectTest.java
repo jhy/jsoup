@@ -20,7 +20,7 @@ import java.util.Map;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
- // ignored by default so tests don't require network access. comment out to enable.
+@Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
@@ -249,12 +249,20 @@ public class UrlConnectTest {
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
     }
 
+    /**
+     * Verify that security disabling feature works properly.
+     *
+     * 1. try to hit url with invalid certificate and evaluate that exception is thrown
+     * 2. disable security checks and call the same url to verify that content is consumed correctly
+     *
+     * @throws Exception
+     */
     @Test
     public void testUnsafe() throws Exception {
         String url = "https://certs.cac.washington.edu/CAtest/";
 
         try {
-            Connection.Response defaultRes = Jsoup.connect(url).execute();
+            Jsoup.connect(url).execute();
         } catch (IOException e) {
 //          that's expected exception
         }
