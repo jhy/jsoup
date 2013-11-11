@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.7.3 [PENDING]
+*** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
 

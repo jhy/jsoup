@@ -49,7 +49,7 @@ public class Document extends Element {
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
-     * @return sourceUri
+     * @return location
      */
     public String location() {
      return location;
