@@ -4,6 +4,10 @@ jsoup changelog
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
 
+ * Reduced GC impact during HTML parsing, with 17% fewer objects created, and 3% faster parses.
+
+ * Reduced CSS selection time by 26% for common queries.
+
  * Fixed support for self-closing script tags.
    <https://github.com/jhy/jsoup/issues/305>
 
