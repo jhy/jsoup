@@ -1,7 +1,11 @@
 package org.jsoup.nodes;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.integration.ParseTest;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -81,6 +85,22 @@ public class DocumentTest {
         assertEquals(doc.html(), clone.html());
         assertEquals("<!DOCTYPE html><html><head><title>Doctype test</title></head><body></body></html>",
                 TextUtil.stripNewlines(clone.html()));
+    }
+    
+    @Test public void testLocation() throws IOException {
+    	File in = new ParseTest().getFile("/htmltests/yahoo-jp.html");
+        Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html");
+        String location = doc.location();
+        String baseUri = doc.baseUri();
+        assertEquals("http://www.yahoo.co.jp/index.html",location);
+        assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/",baseUri);
+        in = new ParseTest().getFile("/htmltests/nyt-article-1.html");
+        doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
+        location = doc.location();
+        baseUri = doc.baseUri();
+        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",location);
+        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",baseUri);
+        
     }
 
     // Ignored since this test can take awhile to run.
