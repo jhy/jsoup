@@ -20,6 +20,9 @@ jsoup changelog
  * Fixed an issue when cloning a document with extremely nested elements that could cause a stack-overflow.
    <https://github.com/jhy/jsoup/issues/290>
 
+ * Fixed an issue when connecting or redirecting to a URL that contains a space.
+   <https://github.com/jhy/jsoup/pull/354> <https://github.com/jhy/jsoup/issues/114>
+
 *** Release 1.7.2 [2013-Jan-27]
  * Added support for supplementary characters outside of the Basic Multilingual Plane.
    <https://github.com/jhy/jsoup/issues/288> <https://github.com/jhy/jsoup/pull/289>
