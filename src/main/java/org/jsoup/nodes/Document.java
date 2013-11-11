@@ -47,8 +47,8 @@ public class Document extends Element {
     }
 
     /**
-     * Accessor to the final URI this Document was parsed from. If the starting URL is a redirect, 
-     * this will return the final URI from which the document was served up.  
+     * Get the URL this Document was parsed from. If the starting URL is a redirect,
+     * this will return the final URL from which the document was served from.
      * @return sourceUri
      */
     public String location() {
