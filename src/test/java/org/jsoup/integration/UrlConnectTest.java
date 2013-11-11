@@ -4,6 +4,8 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.junit.Test;
 import org.junit.Ignore;
+
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.Jsoup;
@@ -18,7 +20,7 @@ import java.util.Map;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-@Ignore // ignored by default so tests don't require network access. comment out to enable.
+ // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
@@ -245,5 +247,18 @@ public class UrlConnectTest {
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
+    }
+
+    @Test
+    public void testUnsafe() throws Exception {
+        String url = "https://certs.cac.washington.edu/CAtest/";
+
+        try {
+            Connection.Response defaultRes = Jsoup.connect(url).execute();
+        } catch (IOException e) {
+//          that's expected exception
+        }
+        Connection.Response  defaultRes = Jsoup.connect(url).setSecure(false).execute();
+        assertThat(defaultRes.statusCode(),is(200));
     }
 }
