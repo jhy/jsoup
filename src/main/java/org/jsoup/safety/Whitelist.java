@@ -336,7 +336,7 @@ public class Whitelist {
      * @param attr attribute under test
      * @return true if allowed
      */
-    boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
+    protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
