@@ -8,6 +8,9 @@ jsoup changelog
 
  * Reduced CSS selection time by 26% for common queries.
 
+ * Improved HTTP character set detection.
+   <https://github.com/jhy/jsoup/pull/325> <https://github.com/jhy/jsoup/issues/321>
+
  * Fixed support for self-closing script tags.
    <https://github.com/jhy/jsoup/issues/305>
 
