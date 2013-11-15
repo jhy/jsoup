@@ -357,14 +357,14 @@ public interface Connection {
         public Request timeout(int millis);
 
         /**
-         * Get the maximum body size, in milliseconds.
-         * @return the maximum body size, in milliseconds.
+         * Get the maximum body size, in bytes.
+         * @return the maximum body size, in bytes.
          */
         public int maxBodySize();
 
         /**
-         * Update the maximum body size, in milliseconds.
-         * @param bytes maximum body size, in milliseconds.
+         * Update the maximum body size, in bytes.
+         * @param bytes maximum body size, in bytes.
          * @return this Request, for chaining
          */
         public Request maxBodySize(int bytes);
