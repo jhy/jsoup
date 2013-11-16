@@ -867,12 +867,10 @@ public class Element extends Node {
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
 
-        if (!preserveWhitespace(textNode.parent())) {
-            text = TextNode.normaliseWhitespace(text);
-            if (TextNode.lastCharIsWhitespace(accum))
-                text = TextNode.stripLeadingWhitespace(text);
-        }
-        accum.append(text);
+        if (preserveWhitespace(textNode.parentNode))
+            accum.append(text);
+        else
+            StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
     }
 
     private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
