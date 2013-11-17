@@ -242,6 +242,7 @@ public class Tag {
     };
     private static final String[] preserveWhitespaceTags = {
             "pre", "plaintext", "title", "textarea"
+            // script is not here as it is a data node, which always preserve whitespace
     };
     // todo: I think we just need submit tags, and can scrub listed
     private static final String[] formListedTags = {
