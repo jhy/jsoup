@@ -452,9 +452,10 @@ enum HtmlTreeBuilderState {
                         tb.insertEmpty(startTag);
                         tb.framesetOk(false);
                     } else if (name.equals("image")) {
-                        // we're not supposed to ask.
-                        startTag.name("img");
-                        return tb.process(startTag);
+                        if (tb.getFromStack("svg") == null)
+                            return tb.process(startTag.name("img")); // change <image> to <img>, unless in svg
+                        else
+                            tb.insert(startTag);
                     } else if (name.equals("isindex")) {
                         // how much do we care about the early 90s?
                         tb.error(this);
