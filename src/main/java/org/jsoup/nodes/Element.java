@@ -1097,8 +1097,8 @@ public class Element extends Node {
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
-        html(accum); 
-        return accum.toString().trim();
+        html(accum);
+        return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
     }
 
     private void html(StringBuilder accum) {

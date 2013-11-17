@@ -557,7 +557,7 @@ public abstract class Node implements Cloneable {
     }
 
     // if this node has no document (or parent), retrieve the default output settings
-    private Document.OutputSettings getOutputSettings() {
+    Document.OutputSettings getOutputSettings() {
         return ownerDocument() != null ? ownerDocument().outputSettings() : (new Document("")).outputSettings();
     }
 

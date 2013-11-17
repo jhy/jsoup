@@ -3,6 +3,8 @@ jsoup changelog
 *** Release 1.7.4 [PENDING]
  * Improved the performance of Element.text() by 2.2x
 
+ * If pretty-print is disabled, don't trim outer whitespace in Element.html()
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.

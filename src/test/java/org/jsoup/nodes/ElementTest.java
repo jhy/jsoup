@@ -217,7 +217,7 @@ public class ElementTest {
     }
 
     @Test public void testInnerHtml() {
-        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
+        Document doc = Jsoup.parse("<div>\n <p>Hello</p> </div>");
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
@@ -239,9 +239,12 @@ public class ElementTest {
     }
 
     @Test public void testNotPretty() {
-        Document doc = Jsoup.parse("<div>   \n<p>Hello\n there</p></div>");
+        Document doc = Jsoup.parse("<div>   \n<p>Hello\n there\n</p></div>");
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<html><head></head><body><div>   \n<p>Hello\n there</p></div></body></html>", doc.html());
+        assertEquals("<html><head></head><body><div>   \n<p>Hello\n there\n</p></div></body></html>", doc.html());
+
+        Element div = doc.select("div").first();
+        assertEquals("   \n<p>Hello\n there\n</p>", div.html());
     }
     
     @Test public void testEmptyElementFormatHtml() {
