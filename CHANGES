@@ -19,6 +19,11 @@ jsoup changelog
  * Fixed an issue where <svg><img/></svg> was parsed as <svg><image/></svg>
    <https://github.com/jhy/jsoup/issues/364>
 
+ * Fixed an issue where a UTF-8 BOM character was not detected if the HTTP response did not specify a charset, and
+   the HTML body did, leading to the head contents incorrectly being parsed into the body. Changed the behavior so that
+   when the UTF-8 BOM is detected, it will take precedence for determining the charset to decode with.
+   <https://github.com/jhy/jsoup/issues/348>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
