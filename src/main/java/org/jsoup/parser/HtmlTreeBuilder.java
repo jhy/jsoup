@@ -230,7 +230,8 @@ class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
-        if (StringUtil.in(currentElement().tagName(), TagsScriptStyle))
+        String tagName = currentElement().tagName();
+        if (tagName.equals("script") || tagName.equals("style"))
             node = new DataNode(characterToken.getData(), baseUri);
         else
             node = new TextNode(characterToken.getData(), baseUri);

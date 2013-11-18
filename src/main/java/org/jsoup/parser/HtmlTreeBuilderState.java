@@ -252,7 +252,7 @@ enum HtmlTreeBuilderState {
                         // todo confirm that check
                         tb.error(this);
                         return false;
-                    } else if (isWhitespace(c)) {
+                    } else if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed
                         tb.reconstructFormattingElements();
                         tb.insert(c);
                     } else {
