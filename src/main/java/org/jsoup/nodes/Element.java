@@ -1072,8 +1072,13 @@ public class Element extends Node {
                 .append(tagName());
         attributes.html(accum, out);
 
-        if (childNodes.isEmpty() && tag.isSelfClosing())
-            accum.append(" />");
+        // selfclosing includes unknown tags, isEmpty defines tags that are always empty
+        if (childNodes.isEmpty() && tag.isSelfClosing()) {
+            if (out.syntax() == Document.OutputSettings.Syntax.html && tag.isEmpty())
+                accum.append('>');
+            else
+                accum.append(" />"); // <img> in html, <img /> in xml
+        }
         else
             accum.append(">");
     }

@@ -1,7 +1,17 @@
 jsoup changelog
 
-*** Release 1.7.4 [PENDING]
- * Improved the performance of Element.text() by 2.2x
+*** Release 1.8.1 [PENDING]
+ * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
+   output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
+   Document.OutputSettings.syntax() method.
+
+ * Improved the performance of Element.text() by 3.2x
+
+ * Improved the performance of Element.html() by 1.7x
+
+ * Tightened the scope of what characters are escaped in attributes and textnodes, to align with the spec. Also, when
+   using the extended escape entities map, only escape a character if the current output charset does not support it.
+   This produces smaller, more legible HTML, with greated control over the output (by setting charset and escape mode).
 
  * If pretty-print is disabled, don't trim outer whitespace in Element.html()
    <https://github.com/jhy/jsoup/issues/368>

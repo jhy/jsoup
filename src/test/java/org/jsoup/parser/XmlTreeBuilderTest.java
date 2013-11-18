@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
@@ -90,9 +91,9 @@ public class XmlTreeBuilderTest {
 
     @Test
     public void testDoesNotForceSelfClosingKnownTags() {
-        // html will force "<br>one</br>" to "<br />One<br />". XML should be stay "<br>one</br> -- don't recognise tag.
+        // html will force "<br>one</br>" to logically "<br />One<br />". XML should be stay "<br>one</br> -- don't recognise tag.
         Document htmlDoc = Jsoup.parse("<br>one</br>");
-        assertEquals("<br />one\n<br />", htmlDoc.body().html());
+        assertEquals("<br>one\n<br>", htmlDoc.body().html());
 
         Document xmlDoc = Jsoup.parse("<br>one</br>", "", Parser.xmlParser());
         assertEquals("<br>one</br>", xmlDoc.html());
@@ -115,5 +116,10 @@ public class XmlTreeBuilderTest {
         assertEquals("http://example.com/foo/", nodes.get(0).absUrl("src"));
         assertEquals("one", nodes.get(0).nodeName());
         assertEquals("Two", ((TextNode)nodes.get(1)).text());
+    }
+
+    @Test public void xmlParseDefaultsToHtmlOutputSyntax() {
+        Document doc = Jsoup.parse("x", "", Parser.xmlParser());
+        assertEquals(Syntax.xml, doc.outputSettings().syntax());
     }
 }

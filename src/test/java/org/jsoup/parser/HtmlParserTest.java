@@ -234,7 +234,7 @@ public class HtmlParserTest {
     @Test public void handlesWhatWgExpensesTableExample() {
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#examples-0
         Document doc = Jsoup.parse("<table> <colgroup> <col> <colgroup> <col> <col> <col> <thead> <tr> <th> <th>2008 <th>2007 <th>2006 <tbody> <tr> <th scope=rowgroup> Research and development <td> $ 1,109 <td> $ 782 <td> $ 712 <tr> <th scope=row> Percentage of net sales <td> 3.4% <td> 3.3% <td> 3.7% <tbody> <tr> <th scope=rowgroup> Selling, general, and administrative <td> $ 3,761 <td> $ 2,963 <td> $ 2,433 <tr> <th scope=row> Percentage of net sales <td> 11.6% <td> 12.3% <td> 12.6% </table>");
-        assertEquals("<table> <colgroup> <col /> </colgroup><colgroup> <col /> <col /> <col /> </colgroup><thead> <tr> <th> </th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody> <tr> <th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody> <tr> <th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table> <colgroup> <col> </colgroup><colgroup> <col> <col> <col> </colgroup><thead> <tr> <th> </th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody> <tr> <th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody> <tr> <th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesTbodyTable() {
@@ -335,7 +335,7 @@ public class HtmlParserTest {
         // if a known tag, allow self closing outside of spec, but force an end tag. unknown tags can be self closing.
         String h = "<div id='1' /><script src='/foo' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
         Document doc = Jsoup.parse(h);
-        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img /><img /></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr /> hr text <hr /> hr text two", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesSolidusAtAttributeEnd() {
@@ -375,7 +375,7 @@ public class HtmlParserTest {
     @Test public void handlesFrames() {
         String h = "<html><head><script></script><noscript></noscript></head><frameset><frame src=foo></frame><frame src=foo></frameset></html>";
         Document doc = Jsoup.parse(h);
-        assertEquals("<html><head><script></script><noscript></noscript></head><frameset><frame src=\"foo\" /><frame src=\"foo\" /></frameset></html>",
+        assertEquals("<html><head><script></script><noscript></noscript></head><frameset><frame src=\"foo\"><frame src=\"foo\"></frameset></html>",
                 TextUtil.stripNewlines(doc.html()));
         // no body auto vivification
     }
@@ -383,7 +383,7 @@ public class HtmlParserTest {
     @Test public void ignoresContentAfterFrameset() {
         String h = "<html><head><title>One</title></head><frameset><frame /><frame /></frameset><table></table></html>";
         Document doc = Jsoup.parse(h);
-        assertEquals("<html><head><title>One</title></head><frameset><frame /><frame /></frameset></html>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<html><head><title>One</title></head><frameset><frame><frame></frameset></html>", TextUtil.stripNewlines(doc.html()));
         // no body, no table. No crash!
     }
 
@@ -407,7 +407,7 @@ public class HtmlParserTest {
     @Test public void normalisesDocument() {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
-        assertEquals("<!DOCTYPE html><html><head></head><body>OneTwoThree<link />FourFive Six Seven </body></html>",
+        assertEquals("<!DOCTYPE html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
                 TextUtil.stripNewlines(doc.html()));
     }
 
@@ -462,7 +462,7 @@ public class HtmlParserTest {
     @Test public void testNoImagesInNoScriptInHead() {
         // jsoup used to allow, but against spec if parsing with noscript
         Document doc = Jsoup.parse("<html><head><noscript><img src='foo'></noscript></head><body><p>Hello</p></body></html>");
-        assertEquals("<html><head><noscript></noscript></head><body><img src=\"foo\" /><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<html><head><noscript></noscript></head><body><img src=\"foo\"><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void testAFlowContents() {
@@ -742,8 +742,8 @@ public class HtmlParserTest {
         // extended entities need a ; at the end to match, base does not
         String html = "&amp &quot &reg &icy &hopf &icy; &hopf;";
         Document doc = Jsoup.parse(html);
-        doc.outputSettings().escapeMode(Entities.EscapeMode.extended); // modifies output only to clarify test
-        assertEquals(StringUtil.normaliseWhitespace("&amp; &quot; &reg; &amp;icy &amp;hopf &icy; &hopf;"), doc.body().html());
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended).charset("ascii"); // modifies output only to clarify test
+        assertEquals("&amp; \" &reg; &amp;icy &amp;hopf &icy; &hopf;", doc.body().html());
     }
 
     @Test public void handlesXmlDeclarationAsBogusComment() {
@@ -785,7 +785,7 @@ public class HtmlParserTest {
         assertEquals("1", controls.get(0).id());
         assertEquals("2", controls.get(1).id());
 
-        assertEquals("<table><tbody><tr><form></form><input type=\"hidden\" id=\"1\" /><td><input type=\"text\" id=\"2\" /></td></tr><tr></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><form></form><input type=\"hidden\" id=\"1\"><td><input type=\"text\" id=\"2\"></td></tr><tr></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesInputInTable() {
@@ -804,6 +804,6 @@ public class HtmlParserTest {
         // image to img, unless in a svg. old html cruft.
         String h = "<body><image><svg><image /></svg></body>";
         Document doc = Jsoup.parse(h);
-        assertEquals("<img />\n<svg>\n <image />\n</svg>", doc.body().html());
+        assertEquals("<img>\n<svg>\n <image />\n</svg>", doc.body().html());
     }
 }

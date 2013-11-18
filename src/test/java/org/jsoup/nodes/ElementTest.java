@@ -212,7 +212,7 @@ public class ElementTest {
 
     @Test public void testOuterHtml() {
         Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
-        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
+        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\"><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
                 TextUtil.stripNewlines(doc.outerHtml()));
     }
 
@@ -457,10 +457,10 @@ public class ElementTest {
     @Test public void parentlessToString() {
         Document doc = Jsoup.parse("<img src='foo'>");
         Element img = doc.select("img").first();
-        assertEquals("<img src=\"foo\" />", img.toString());
+        assertEquals("<img src=\"foo\">", img.toString());
 
         img.remove(); // lost its parent
-        assertEquals("<img src=\"foo\" />", img.toString());
+        assertEquals("<img src=\"foo\">", img.toString());
     }
 
     @Test public void testClone() {

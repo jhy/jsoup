@@ -7,6 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Use the {@code XmlTreeBuilder} when you want to parse XML without any of the HTML DOM rules being applied to the
+ * document.
+ * <p>Usage example: {@code Document xmlDoc = Jsoup.parse(html, baseUrl, Parser.xmlParser());}</p>
+ *
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
@@ -14,6 +18,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
         super.initialiseParse(input, baseUri, errors);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
     }
 
     @Override

@@ -218,12 +218,18 @@ public class Document extends Element {
      * A Document's output settings control the form of the text() and html() methods.
      */
     public static class OutputSettings implements Cloneable {
+        /**
+         * The output serialization syntax.
+         */
+        public enum Syntax {html, xml}
+
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
         private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
+        private Syntax syntax = Syntax.html;
 
         public OutputSettings() {}
 
@@ -240,7 +246,8 @@ public class Document extends Element {
         }
 
         /**
-         * Set the document's escape mode
+         * Set the document's escape mode, which determines how characters are escaped when the output character set
+         * does not support a given character:- using either a named or a numbered escape.
          * @param escapeMode the new escape mode to use
          * @return the document's output settings, for chaining
          */
@@ -285,6 +292,25 @@ public class Document extends Element {
 
         CharsetEncoder encoder() {
             return charsetEncoder;
+        }
+
+        /**
+         * Get the document's current output syntax.
+         * @return current syntax
+         */
+        public Syntax syntax() {
+            return syntax;
+        }
+
+        /**
+         * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
+         * {@code xml}, with self-closing tags.
+         * @param syntax serialization syntax
+         * @return the document's output settings, for chaining
+         */
+        public OutputSettings syntax(Syntax syntax) {
+            this.syntax = syntax;
+            return this;
         }
 
         /**
