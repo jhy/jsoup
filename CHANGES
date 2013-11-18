@@ -9,6 +9,9 @@ jsoup changelog
 
  * Improved the performance of Element.html() by 1.7x
 
+ * Improved file read time by 2x, giving around a 10% speed improvement to file parses.
+   <https://github.com/jhy/jsoup/issues/248>
+
  * Tightened the scope of what characters are escaped in attributes and textnodes, to align with the spec. Also, when
    using the extended escape entities map, only escape a character if the current output charset does not support it.
    This produces smaller, more legible HTML, with greated control over the output (by setting charset and escape mode).

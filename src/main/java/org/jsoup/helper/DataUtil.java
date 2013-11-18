@@ -32,15 +32,8 @@ public class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(File in, String charsetName, String baseUri) throws IOException {
-        FileInputStream inStream = null;
-        try {
-            inStream = new FileInputStream(in);
-            ByteBuffer byteData = readToByteBuffer(inStream);
-            return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
-        } finally {
-            if (inStream != null)
-                inStream.close();
-        }
+        ByteBuffer byteData = readFileToByteBuffer(in);
+        return parseByteData(byteData, charsetName, baseUri, Parser.htmlParser());
     }
 
     /**
@@ -158,6 +151,19 @@ public class DataUtil {
 
     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
         return readToByteBuffer(inStream, 0);
+    }
+
+    static ByteBuffer readFileToByteBuffer(File file) throws IOException {
+        RandomAccessFile randomAccessFile = null;
+        try {
+            randomAccessFile = new RandomAccessFile(file, "r");
+            byte[] bytes = new byte[(int) randomAccessFile.length()];
+            randomAccessFile.readFully(bytes);
+            return ByteBuffer.wrap(bytes);
+        } finally {
+            if (randomAccessFile != null)
+                randomAccessFile.close();
+        }
     }
 
     /**
