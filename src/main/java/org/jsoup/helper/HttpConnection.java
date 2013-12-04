@@ -283,7 +283,7 @@ public class HttpConnection implements Connection {
         }
 
         public String cookie(String name) {
-            Validate.notNull(name, "Cookie name must not be null");
+            Validate.notEmpty(name, "Cookie name must not be empty");
             return cookies.get(name);
         }
 
@@ -295,12 +295,12 @@ public class HttpConnection implements Connection {
         }
 
         public boolean hasCookie(String name) {
-            Validate.notEmpty("Cookie name must not be empty");
+            Validate.notEmpty(name, "Cookie name must not be empty");
             return cookies.containsKey(name);
         }
 
         public T removeCookie(String name) {
-            Validate.notEmpty("Cookie name must not be empty");
+            Validate.notEmpty(name, "Cookie name must not be empty");
             cookies.remove(name);
             return (T) this;
         }
