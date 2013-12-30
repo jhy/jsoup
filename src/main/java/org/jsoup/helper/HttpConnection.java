@@ -83,6 +83,11 @@ public class HttpConnection implements Connection {
         req.followRedirects(followRedirects);
         return this;
     }
+    
+    public Connection useCache(boolean useCache) {
+    	req.useCache(useCache);
+    	return this;
+    }
 
     public Connection referrer(String referrer) {
         Validate.notNull(referrer, "Referrer must not be null");
@@ -314,6 +319,7 @@ public class HttpConnection implements Connection {
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
+        private boolean useCache;
         private Collection<Connection.KeyVal> data;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
@@ -323,6 +329,7 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = 3000;
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
+            useCache = false;
             data = new ArrayList<Connection.KeyVal>();
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
@@ -356,6 +363,15 @@ public class HttpConnection implements Connection {
         public Connection.Request followRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
             return this;
+        }
+        
+        public boolean useCache() {
+        	return useCache;
+        }
+        
+        public Connection.Request useCache(boolean useCache) {
+        	this.useCache = useCache;
+        	return this;
         }
 
         public boolean ignoreHttpErrors() {
@@ -436,7 +452,8 @@ public class HttpConnection implements Connection {
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
-                conn.connect();
+                conn.setUseCaches(req.useCache());
+            	conn.connect();
                 if (req.method() == Connection.Method.POST)
                     writePost(req.data(), conn.getOutputStream());
 

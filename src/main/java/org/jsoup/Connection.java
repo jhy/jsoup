@@ -80,6 +80,13 @@ public interface Connection {
     public Connection followRedirects(boolean followRedirects);
 
     /**
+     * Configures the connection to (not) use URL cache. By default this is <b>false</b>.
+     * @param useCache true if cache should be used.
+     * @return this Connection, for chaining
+     */
+    public Connection useCache(boolean useCache);
+    
+    /**
      * Set the request method to use, GET or POST. Default is GET.
      * @param method HTTP request method
      * @return this Connection, for chaining
@@ -383,6 +390,20 @@ public interface Connection {
          */
         public Request followRedirects(boolean followRedirects);
 
+        /**
+         * Get the current useCache configuration.
+         * @return true if useCache is enabled.
+         */
+        public boolean useCache();
+        
+        /**
+         * Configures the request to (not) use system URL cache. By default this is <b>false</b>.
+         *
+         * @param useCache true if system URL cache should be used.
+         * @return this Request, for chaining
+         */
+        public Request useCache(boolean useCache);
+        
         /**
          * Get the current ignoreHttpErrors configuration.
          * @return true if errors will be ignored; false (default) if HTTP errors will cause an IOException to be thrown.
