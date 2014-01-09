@@ -111,8 +111,28 @@ public class Selector {
         return new Elements(elements);
     }
 
+    /**
+     * Tests if the supplied element matches the selector
+     * <p>
+     * :root not supported
+     * @param query CSS selector
+     * @param element the element to test
+     * @return true if the specified element matches the selector
+     */
+    public static boolean matches(String query, Element element) {
+        Validate.notEmpty(query);
+        Validate.notNull(element);
+
+        return new Selector(query, element).match();
+    }
+
     private Elements select() {
         return Collector.collect(evaluator, root);
+    }
+
+    private boolean match() {
+        // root acts as the element here
+        return this.evaluator.matches(null, this.root);
     }
 
     // exclude set. package open so that Elements can implement .not() selector.
