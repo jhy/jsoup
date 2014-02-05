@@ -10,11 +10,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import java.util.*;
 
 /**
  Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
@@ -42,7 +38,7 @@ import java.util.Set;
  elements as appropriate.
  <p/>
  If you are going to extend a whitelist, please be very careful. Make sure you understand what attributes may lead to
- XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See 
+ XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See
  http://ha.ckers.org/xss.html for some XSS attack examples.
 
  @author Jonathan Hedley
@@ -122,7 +118,7 @@ public class Whitelist {
 
     /**
      This whitelist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
-     code, col, colgroup, dd, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, strike, strong, sub,
+     code, col, colgroup, dd, div, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, strike, strong, sub,
      sup, table, tbody, td, tfoot, th, thead, tr, u, ul</code>
      <p/>
      Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
@@ -363,7 +359,7 @@ public class Whitelist {
             value = attr.getValue(); // if it could not be made abs, run as-is to allow custom unknown protocols
         if (!preserveRelativeLinks)
             attr.setValue(value);
-        
+
         for (Protocol protocol : protocols) {
             String prot = protocol.toString() + ":";
             if (value.toLowerCase().startsWith(prot)) {
@@ -384,7 +380,12 @@ public class Whitelist {
         }
         return attrs;
     }
-    
+
+    /** Returns unmodifiable map of tag name -> attribute name set. */
+    public Map<TagName, Set<AttributeKey>> getAttributes() {
+        return Collections.unmodifiableMap(attributes);
+    }
+
     // named types for config. All just hold strings, but here for my sanity.
 
     static class TagName extends TypedValue {
