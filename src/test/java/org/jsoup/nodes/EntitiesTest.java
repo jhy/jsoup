@@ -9,18 +9,18 @@ import java.nio.charset.Charset;
 
 public class EntitiesTest {
     @Test public void escape() {
-        String text = "Hello &<> Å å π 新 there ¾ ©";
+        String text = "Hello &<> Å å π 新 there ¾ © '";
         String escapedAscii = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.base);
         String escapedAsciiFull = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.extended);
         String escapedAsciiXhtml = Entities.escape(text, Charset.forName("ascii").newEncoder(), Entities.EscapeMode.xhtml);
         String escapedUtfFull = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.base);
         String escapedUtfMin = Entities.escape(text, Charset.forName("UTF-8").newEncoder(), Entities.EscapeMode.xhtml);
 
-        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy;", escapedAscii);
-        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#x65b0; there &frac34; &copy;", escapedAsciiFull);
-        assertEquals("Hello &amp;&lt;&gt; &#xc5; &#xe5; &#x3c0; &#x65b0; there &#xbe; &#xa9;", escapedAsciiXhtml);
-        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; π 新 there &frac34; &copy;", escapedUtfFull);
-        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ ©", escapedUtfMin);
+        assertEquals("ascii base", "Hello &amp;&lt;&gt; &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy; '", escapedAscii);
+        assertEquals("ascii extended", "Hello &amp;&lt;&gt; &angst; &aring; &pi; &#x65b0; there &frac34; &copy; &apos;", escapedAsciiFull);
+        assertEquals("ascii xhtml", "Hello &amp;&lt;&gt; &#xc5; &#xe5; &#x3c0; &#x65b0; there &#xbe; &#xa9; &#39;", escapedAsciiXhtml);
+        assertEquals("utf-8 base", "Hello &amp;&lt;&gt; &Aring; &aring; π 新 there &frac34; &copy; '", escapedUtfFull);
+        assertEquals("utf-8 xhtml", "Hello &amp;&lt;&gt; Å å π 新 there ¾ © &#39;", escapedUtfMin);
         // odd that it's defined as aring in base but angst in full
 
         // round trip

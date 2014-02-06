@@ -59,7 +59,7 @@ public class DocumentTest {
     @Test public void testXhtmlReferences() {
         Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
         doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-        assertEquals("&lt; &gt; &amp; &quot; &apos; ×", doc.body().html());
+        assertEquals("&lt; &gt; &amp; &quot; &#39; ×", doc.body().html());
     }
 
     @Test public void testNormalisesStructure() {

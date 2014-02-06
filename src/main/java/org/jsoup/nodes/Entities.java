@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class Entities {
     public enum EscapeMode {
-        /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
+        /** Restricted entities suitable for XHTML output: lt, gt, amp, apostrophe as #39, and quot only. */
         xhtml(xhtmlByVal),
         /** Default HTML output entities. */
         base(baseByVal),
@@ -125,7 +125,7 @@ public class Entities {
     private static final Object[][] xhtmlArray = {
             {"quot", 0x00022},
             {"amp", 0x00026},
-            {"apos", 0x00027},
+            {"#39", 0x00027},
             {"lt", 0x0003C},
             {"gt", 0x0003E}
     };
