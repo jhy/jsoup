@@ -212,12 +212,12 @@ public class ElementTest {
 
     @Test public void testOuterHtml() {
         Document doc = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there");
-        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\" /><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
+        assertEquals("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\"><p><!-- comment -->Hello</p><p>there</p></div></body></html>",
                 TextUtil.stripNewlines(doc.outerHtml()));
     }
 
     @Test public void testInnerHtml() {
-        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
+        Document doc = Jsoup.parse("<div>\n <p>Hello</p> </div>");
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
@@ -239,9 +239,12 @@ public class ElementTest {
     }
 
     @Test public void testNotPretty() {
-        Document doc = Jsoup.parse("<div>   \n<p>Hello\n there</p></div>");
+        Document doc = Jsoup.parse("<div>   \n<p>Hello\n there\n</p></div>");
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<html><head></head><body><div>   \n<p>Hello\n there</p></div></body></html>", doc.html());
+        assertEquals("<html><head></head><body><div>   \n<p>Hello\n there\n</p></div></body></html>", doc.html());
+
+        Element div = doc.select("div").first();
+        assertEquals("   \n<p>Hello\n there\n</p>", div.html());
     }
     
     @Test public void testEmptyElementFormatHtml() {
@@ -454,10 +457,10 @@ public class ElementTest {
     @Test public void parentlessToString() {
         Document doc = Jsoup.parse("<img src='foo'>");
         Element img = doc.select("img").first();
-        assertEquals("<img src=\"foo\" />", img.toString());
+        assertEquals("<img src=\"foo\">", img.toString());
 
         img.remove(); // lost its parent
-        assertEquals("<img src=\"foo\" />", img.toString());
+        assertEquals("<img src=\"foo\">", img.toString());
     }
 
     @Test public void testClone() {

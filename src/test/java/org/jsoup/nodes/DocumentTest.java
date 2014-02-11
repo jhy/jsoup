@@ -1,10 +1,15 @@
 package org.jsoup.nodes;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.integration.ParseTest;
 import org.junit.Test;
 import org.junit.Ignore;
 
+import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 import static org.junit.Assert.*;
 
 /**
@@ -55,7 +60,7 @@ public class DocumentTest {
     @Test public void testXhtmlReferences() {
         Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
         doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-        assertEquals("&lt; &gt; &amp; &quot; &apos; ×", doc.body().html());
+        assertEquals("&lt; &gt; &amp; \" ' ×", doc.body().html());
     }
 
     @Test public void testNormalisesStructure() {
@@ -81,6 +86,51 @@ public class DocumentTest {
         assertEquals(doc.html(), clone.html());
         assertEquals("<!DOCTYPE html><html><head><title>Doctype test</title></head><body></body></html>",
                 TextUtil.stripNewlines(clone.html()));
+    }
+    
+    @Test public void testLocation() throws IOException {
+    	File in = new ParseTest().getFile("/htmltests/yahoo-jp.html");
+        Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html");
+        String location = doc.location();
+        String baseUri = doc.baseUri();
+        assertEquals("http://www.yahoo.co.jp/index.html",location);
+        assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/",baseUri);
+        in = new ParseTest().getFile("/htmltests/nyt-article-1.html");
+        doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
+        location = doc.location();
+        baseUri = doc.baseUri();
+        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",location);
+        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",baseUri);
+    }
+
+    @Test public void testHtmlAndXmlSyntax() {
+        String h = "<!DOCTYPE html><body><img async checked='checked' src='&<>\"'>&lt;&gt;&amp;&quot;<foo />bar";
+        Document doc = Jsoup.parse(h);
+
+        doc.outputSettings().syntax(Syntax.html);
+        assertEquals("<!DOCTYPE html>\n" +
+                "<html>\n" +
+                " <head></head>\n" +
+                " <body>\n" +
+                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"\n" +
+                "  <foo />bar\n" +
+                " </body>\n" +
+                "</html>", doc.html());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<!DOCTYPE html>\n" +
+                "<html>\n" +
+                " <head></head>\n" +
+                " <body>\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"\n" +
+                "  <foo />bar\n" +
+                " </body>\n" +
+                "</html>", doc.html());
+    }
+
+    @Test public void htmlParseDefaultsToHtmlOutputSyntax() {
+        Document doc = Jsoup.parse("x");
+        assertEquals(Syntax.html, doc.outputSettings().syntax());
     }
 
     // Ignored since this test can take awhile to run.

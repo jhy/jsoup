@@ -30,11 +30,11 @@ class CharacterReader {
     }
 
     char current() {
-        return isEmpty() ? EOF : input[pos];
+        return pos >= length ? EOF : input[pos];
     }
 
     char consume() {
-        char val = isEmpty() ? EOF : input[pos];
+        char val = pos >= length ? EOF : input[pos];
         pos++;
         return val;
     }

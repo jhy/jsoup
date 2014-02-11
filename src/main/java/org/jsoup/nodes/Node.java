@@ -105,7 +105,7 @@ public abstract class Node implements Cloneable {
     public boolean hasAttr(String attributeKey) {
         Validate.notNull(attributeKey);
 
-        if (attributeKey.toLowerCase().startsWith("abs:")) {
+        if (attributeKey.startsWith("abs:")) {
             String key = attributeKey.substring("abs:".length());
             if (attributes.hasKey(key) && !absUrl(key).equals(""))
                 return true;
@@ -244,6 +244,14 @@ public abstract class Node implements Cloneable {
      @return parent node; or null if no parent.
      */
     public Node parent() {
+        return parentNode;
+    }
+
+    /**
+     Gets this node's parent node. Node overridable by extending classes, so useful if you really just need the Node type.
+     @return parent node; or null if no parent.
+     */
+    public final Node parentNode() {
         return parentNode;
     }
     
@@ -549,7 +557,7 @@ public abstract class Node implements Cloneable {
     }
 
     // if this node has no document (or parent), retrieve the default output settings
-    private Document.OutputSettings getOutputSettings() {
+    Document.OutputSettings getOutputSettings() {
         return ownerDocument() != null ? ownerDocument().outputSettings() : (new Document("")).outputSettings();
     }
 

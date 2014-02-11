@@ -230,11 +230,11 @@ public class Tag {
             "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "a", "img", "br", "wbr", "map", "q",
             "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
-            "summary", "command", "device"
+            "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
     };
     private static final String[] emptyTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
-            "device"
+            "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
     };
     private static final String[] formatAsInlineTags = {
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
@@ -242,6 +242,7 @@ public class Tag {
     };
     private static final String[] preserveWhitespaceTags = {
             "pre", "plaintext", "title", "textarea"
+            // script is not here as it is a data node, which always preserve whitespace
     };
     // todo: I think we just need submit tags, and can scrub listed
     private static final String[] formListedTags = {

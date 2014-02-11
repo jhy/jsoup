@@ -1,20 +1,20 @@
 package org.jsoup.integration;
 
+import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
-import org.junit.Test;
+import org.jsoup.nodes.Document;
 import org.junit.Ignore;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import org.jsoup.nodes.Document;
-import org.jsoup.Jsoup;
-import org.jsoup.Connection;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.io.IOException;
-import java.util.Map;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
@@ -29,6 +29,13 @@ public class UrlConnectTest {
         String url = "http://www.google.com"; // no trailing / to force redir
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("Google"));
+    }
+
+    @Test
+    public void fetchURIWithWihtespace() throws IOException {
+        Connection con = Jsoup.connect("http://try.jsoup.org/#with whitespaces");
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
@@ -140,6 +147,20 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to ./ - /tools/
         Document doc = con.post();
         assertTrue(doc.title().contains("HTML Tidy Online"));
+    }
+
+    @Test
+    public void followsRedirectsWithWithespaces() throws IOException {
+        Connection con = Jsoup.connect("http://tinyurl.com/kgofxl8"); // to http://www.google.com/?q=white spaces
+        Document doc = con.get();
+        assertTrue(doc.title().contains("Google"));
+    }
+
+    @Test
+    public void gracefullyHandleBrokenLocationRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://aag-ye.com"); // has Location: http:/temp/AAG_New/en/index.php
+        con.get(); // would throw exception on error
+        assertTrue(true);
     }
 
     @Test
@@ -268,5 +289,44 @@ public class UrlConnectTest {
         }
         Connection.Response  defaultRes = Jsoup.connect(url).setSecure(false).execute();
         assertThat(defaultRes.statusCode(),is(200));
+    }
+
+    @Test
+    public void shouldWorkForCharsetInExtraAttribute() throws IOException {
+        Connection.Response res = Jsoup.connect("https://www.creditmutuel.com/groupe/fr/").execute();
+        Document doc = res.parse(); // would throw an error if charset unsupported
+        assertEquals("ISO-8859-1", res.charset());
+    }
+
+    // The following tests were added to test specific domains if they work. All code paths
+    // which make the following test green are tested in other unit or integration tests, so the following lines
+    // could be deleted
+
+    @Test
+    public void shouldSelectFirstCharsetOnWeirdMultileCharsetsInMetaTags() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aamo.info/").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("ISO-8859-1", res.charset());
+    }
+
+    @Test
+    public void shouldParseBrokenHtml5MetaCharsetTagCorrectly() throws IOException {
+        Connection.Response res = Jsoup.connect("http://9kuhkep.net").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("UTF-8", res.charset());
+    }
+
+    @Test
+    public void shouldEmptyMetaCharsetCorrectly() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aastmultimedia.com").execute();
+        res.parse(); // would throw an error if charset unsupported
+        assertEquals("UTF-8", res.charset());
+    }
+
+    @Test
+    public void shouldWorkForDuplicateCharsetInTag() throws IOException {
+        Connection.Response res = Jsoup.connect("http://aaptsdassn.org").execute();
+        Document doc = res.parse(); // would throw an error if charset unsupported
+        assertEquals("ISO-8859-1", res.charset());
     }
 }

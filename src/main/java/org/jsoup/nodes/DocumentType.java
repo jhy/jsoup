@@ -34,9 +34,9 @@ public class DocumentType extends Node {
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
         accum.append("<!DOCTYPE ").append(attr("name"));
         if (!StringUtil.isBlank(attr("publicId")))
-            accum.append(" PUBLIC \"").append(attr("publicId")).append("\"");
+            accum.append(" PUBLIC \"").append(attr("publicId")).append('"');
         if (!StringUtil.isBlank(attr("systemId")))
-            accum.append(" \"").append(attr("systemId")).append("\"");
+            accum.append(" \"").append(attr("systemId")).append('"');
         accum.append('>');
     }
 

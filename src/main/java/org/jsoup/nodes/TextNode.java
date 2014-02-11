@@ -90,14 +90,12 @@ public class TextNode extends Node {
     }
 
     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        String html = Entities.escape(getWholeText(), out);
-        if (out.prettyPrint() && parent() instanceof Element && !Element.preserveWhitespace((Element) parent())) {
-            html = normaliseWhitespace(html);
-        }
-
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
-        accum.append(html);
+
+        boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
+                && !Element.preserveWhitespace((Element) parent());
+        Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
     }
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
