@@ -178,7 +178,7 @@ public class DataUtil {
         if (m.find()) {
             String charset = m.group(1).trim();
             charset = charset.replace("charset=", "");
-            if (charset.isEmpty()) return null;
+            if (isCharsetEmpty(charset)) return null;
             try {
                 if (Charset.isSupported(charset)) return charset;
                 charset = charset.toUpperCase(Locale.ENGLISH);
@@ -190,6 +190,12 @@ public class DataUtil {
         }
         return null;
     }
+    static boolean isCharsetEmpty(String charset){
+		if(charset==null || charset.length()==0)
+			return true;
+		else
+			return false;
+	}
     
     
 }
