@@ -29,6 +29,7 @@ public class CssTest {
 			sb.append(String.format("<p>%d</p>",i));
 			sb.append(String.format("<span>%d</span>",i));
 			sb.append(String.format("<em>%d</em>",i));
+            sb.append(String.format("<svg>%d</svg>",i));
 		}
 		sb.append("</div>");
 
@@ -67,6 +68,12 @@ public class CssTest {
 		}
 	}
 
+    @Test
+    public void nthOfType_unknownTag() {
+        for(int i = 1; i <=10; i++) {
+            check(html.select(String.format("#type svg:nth-of-type(%d)", i)), String.valueOf(i));
+        }
+    }
 
 	@Test
 	public void nthLastChild_simple() {
@@ -85,7 +92,7 @@ public class CssTest {
 	@Test
 	public void nthLastOfType_simple() {
 		for(int i = 1; i <=10; i++) {
-			check(html.select(String.format("#type :nth-last-of-type(%d)", i)), String.valueOf(11-i),String.valueOf(11-i),String.valueOf(11-i));
+			check(html.select(String.format("#type :nth-last-of-type(%d)", i)), String.valueOf(11-i),String.valueOf(11-i),String.valueOf(11-i),String.valueOf(11-i));
 		}
 	}
 
@@ -114,7 +121,7 @@ public class CssTest {
 		check(html.select("#type p:nth-of-type(2n)"), "2", "4", "6", "8", "10");
 		check(html.select("#type p:nth-of-type(3n-1)"), "2", "5", "8");
 		check(html.select("#type p:nth-of-type(-2n+5)"), "1", "3", "5");
-		check(html.select("#type :nth-of-type(+5)"), "5", "5", "5");
+		check(html.select("#type :nth-of-type(+5)"), "5", "5", "5", "5");
 	}
 
 	
@@ -145,17 +152,17 @@ public class CssTest {
 		check(html.select("#type p:nth-last-of-type(3n-1)"), "3", "6", "9");
 
 		check(html.select("#type span:nth-last-of-type(-2n+5)"), "6", "8", "10");
-		check(html.select("#type :nth-last-of-type(+5)"), "6", "6", "6");
+		check(html.select("#type :nth-last-of-type(+5)"), "6", "6", "6", "6");
 	}
 	
 	@Test
 	public void firstOfType() {
-		check(html.select("div:not(#only) :first-of-type"), "1", "1", "1", "1");
+		check(html.select("div:not(#only) :first-of-type"), "1", "1", "1", "1", "1");
 	}
 
 	@Test
 	public void lastOfType() {
-		check(html.select("div:not(#only) :last-of-type"), "10", "10", "10", "10");
+		check(html.select("div:not(#only) :last-of-type"), "10", "10", "10", "10", "10");
 	}
 
 	@Test
