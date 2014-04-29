@@ -26,10 +26,10 @@ public class ListLinks {
         for (Element src : media) {
             if (src.tagName().equals("img"))
                 print(" * %s: <%s> %sx%s (%s)",
-                        src.tagName(), src.attr("abs:src"), src.attr("width"), src.attr("height"),
+                        src.tagName(), src.attr("src"), src.attr("width"), src.attr("height"),
                         trim(src.attr("alt"), 20));
             else
-                print(" * %s: <%s>", src.tagName(), src.attr("abs:src"));
+                print(" * %s: <%s>", src.tagName(), src.attr("src"));
         }
 
         print("\nImports: (%d)", imports.size());
