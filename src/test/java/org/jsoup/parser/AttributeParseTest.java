@@ -30,6 +30,12 @@ public class AttributeParseTest {
         assertEquals("18", attr.get("mux"));
     }
 
+    @Test public void testHandlesQuotesInAttributes() {
+      String html = "<img alt=\"Here \\\"we\\\" go\" />";
+      Element el = Jsoup.parse(html).select("img").first();
+      assertEquals("Here \\\"we\\\" go", el.attr("alt"));
+    }
+
     @Test public void handlesNewLinesAndReturns() {
         String html = "<a\r\nfoo='bar\r\nqux'\r\nbar\r\n=\r\ntwo>One</a>";
         Element el = Jsoup.parse(html).select("a").first();

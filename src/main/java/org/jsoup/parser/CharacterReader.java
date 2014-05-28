@@ -124,7 +124,7 @@ class CharacterReader {
 
         OUTER: while (pos < length) {
             for (int i = 0; i < chars.length; i++) {
-                if (input[pos] == chars[i])
+                if (input[pos] == chars[i] && input[pos - 1] != '\\') // handle quotation
                     break OUTER;
             }
             pos++;
