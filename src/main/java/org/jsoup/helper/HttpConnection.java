@@ -1,21 +1,34 @@
 package org.jsoup.helper;
 
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-import org.jsoup.parser.TokenQueue;
-
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
+
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
+import org.jsoup.parser.TokenQueue;
 
 /**
  * Implementation of {@link Connection}.
@@ -585,15 +598,13 @@ public class HttpConnection implements Connection {
                     for (String value : values) {
                         if (value == null)
                             continue;
-                        TokenQueue cd = new TokenQueue(value);
-                        String cookieName = cd.chompTo("=").trim();
-                        String cookieVal = cd.consumeTo(";").trim();
-                        if (cookieVal == null)
-                            cookieVal = "";
-                        // ignores path, date, domain, secure et al. req'd?
-                        // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
-                            cookie(cookieName, cookieVal);
+                        
+                        List<HttpCookie> parse = HttpCookie.parse(value);
+                        for (HttpCookie httpCookie : parse) {
+							if (httpCookie.getName() != null && httpCookie.getName().length() > 0 && !httpCookie.hasExpired()) {
+								cookie(httpCookie.getName(), httpCookie.getValue());
+							}
+						}
                     }
                 } else { // only take the first instance of each header
                     if (!values.isEmpty())
