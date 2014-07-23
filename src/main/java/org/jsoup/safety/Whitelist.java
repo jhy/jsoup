@@ -365,12 +365,27 @@ public class Whitelist {
             attr.setValue(value);
         
         for (Protocol protocol : protocols) {
-            String prot = protocol.toString() + ":";
+            String prot = protocol.toString();
+
+            if (prot.equals("#")) {
+                if (isValidAnchor(value)) {
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+
+            prot += ":";
+
             if (value.toLowerCase().startsWith(prot)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isValidAnchor(String value) {
+        return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 
     Attributes getEnforcedAttributes(String tagName) {
