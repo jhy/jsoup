@@ -288,6 +288,9 @@ public class HttpConnection implements Connection {
         }
 
         public T cookie(String name, String value) {
+            if(value.length() == 0 && cookies.containsKey(name)){
+                return (T) this;
+            }
             Validate.notEmpty(name, "Cookie name must not be empty");
             Validate.notNull(value, "Cookie value must not be null");
             cookies.put(name, value);
