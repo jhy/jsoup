@@ -468,7 +468,13 @@ public class HttpConnection implements Connection {
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
-                if (contentType != null && !req.ignoreContentType() && (!(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+                if (contentType != null && !req.ignoreContentType()
+                        && (!(contentType.startsWith("text/")
+                            || contentType.startsWith("application/xml")
+                            || contentType.startsWith("application/xhtml+xml")
+                            || (contentType.startsWith("application/") && contentType.endsWith("+xml"))
+                            ))
+                        )
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
 
