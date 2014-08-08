@@ -663,9 +663,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                    .append(URLEncoder.encode(keyVal.key(), req.charset()))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    .append(URLEncoder.encode(keyVal.value(), req.charset()));
             }
             req.url(new URL(url.toString()));
             req.data().clear(); // moved into url as get params
