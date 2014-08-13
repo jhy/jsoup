@@ -36,6 +36,14 @@ import java.util.Set;
  <li>{@link #addProtocols}
  </ul>
  <p/>
+ If you need to allow less through, tweak a base whitelist with:
+ <ul>
+ <li>{@link #removeTags}
+ <li>{@link #removeAttributes}
+ <li>{@link #removeEnforcedAttribute}
+ <li>{@link #removeProtocols}
+ </ul>
+ <p/>
  The cleaner and these whitelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
  document HTML around the cleaned body HTML, or create a whitelist that allows <code>html</code> and <code>head</code>
