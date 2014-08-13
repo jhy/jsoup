@@ -277,7 +277,7 @@ public class Whitelist {
             Set<AttributeKey> currentSet = attributes.get(tagName);
             currentSet.removeAll(attributeSet);
 
-            if(currentSet.size() == 0) // Remove tag from attribute map if no attributes are allowed for tag
+            if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                 attributes.remove(tagName);
         }
         if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
@@ -285,7 +285,7 @@ public class Whitelist {
                 Set<AttributeKey> currentSet = attributes.get(name);
                 currentSet.removeAll(attributeSet);
 
-                if(currentSet.size() == 0) // Remove tag from attribute map if no attributes are allowed for tag
+                if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                     attributes.remove(name);
             }
         return this;
@@ -341,9 +341,10 @@ public class Whitelist {
             Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.get(tagName);
             attrMap.remove(attrKey);
 
-            if(attrMap.size() == 0) // Remove tag from enforced attribute map if no enforced attributes are present
+            if(attrMap.isEmpty()) // Remove tag from enforced attribute map if no enforced attributes are present
                 enforcedAttributes.remove(tagName);
         }
+        return this;
     }
 
     /**
