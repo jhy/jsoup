@@ -325,6 +325,28 @@ public class Whitelist {
     }
 
     /**
+     Remove a previously configured enforced attribute from a tag.
+
+     @param tag   The tag the enforced attribute is for.
+     @param key   The attribute key
+     @return this (for chaining)
+     */
+    public Whitelist removeEnforcedAttribute(String tag, String key) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+
+        TagName tagName = TagName.valueOf(tag);
+        if(tagNames.contains(tagName) && enforcedAttributes.containsKey(tagName)) {
+            AttributeKey attrKey = AttributeKey.valueOf(key);
+            Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.get(tagName);
+            attrMap.remove(attrKey);
+
+            if(attrMap.size() == 0) // Remove tag from enforced attribute map if no enforced attributes are present
+                enforcedAttributes.remove(tagName);
+        }
+    }
+
+    /**
      * Configure this Whitelist to preserve relative links in an element's URL attribute, or convert them to absolute
      * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
      * e.g. {@code http://}.
