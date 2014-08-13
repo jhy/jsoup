@@ -407,6 +407,44 @@ public class Whitelist {
     }
 
     /**
+     Remove allowed URL protocols for an element's URL attribute.
+     <p/>
+     E.g.: <code>removeProtocols("a", "href", "ftp")</code>
+
+     @param tag       Tag the URL protocol is for
+     @param key       Attribute key
+     @param protocols List of invalid protocols
+     @return this, for chaining
+     */
+    public Whitelist removeProtocols(String tag, String key, String... protocols) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+        Validate.notNull(protocols);
+
+        TagName tagName = TagName.valueOf(tag);
+        AttributeKey attrKey = AttributeKey.valueOf(key);
+
+        if(this.protocols.containsKey(tagName)) {
+            Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.get(tagName);
+            if(attrMap.containsKey(attrKey)) {
+                Set<Protocol> protSet = attrMap.get(attrKey);
+                for (String protocol : protocols) {
+                    Validate.notEmpty(protocol);
+                    Protocol prot = Protocol.valueOf(protocol);
+                    protSet.remove(prot);
+                }
+
+                if(protSet.isEmpty()) { // Remove protocol set if empty
+                    attrMap.remove(attrKey);
+                    if(attrMap.isEmpty()) // Remove entry for tag if empty
+                        this.protocols.remove(tagName);
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
      * Test if the supplied tag is allowed by this whitelist
      * @param tag test tag
      * @return true if allowed
