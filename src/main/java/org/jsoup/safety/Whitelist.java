@@ -193,6 +193,28 @@ public class Whitelist {
     }
 
     /**
+     Remove a list of allowed elements from a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
+
+     @param tags tag names to disallow
+     @return this (for chaining)
+     */
+    public Whitelist removeTags(String... tags) {
+        Validate.notNull(tags);
+
+        for(String tag: tags) {
+            Validate.notEmpty(tag);
+            TagName tagName = TagName.valueOf(tag);
+
+            if(tagNames.remove(tagName)) { // Only look in sub-maps if tag was allowed
+                attributes.remove(tagName);
+                enforcedAttributes.remove(tagName);
+                protocols.remove(tagName);
+            }
+        }
+        return this;
+    }
+
+    /**
      Add a list of allowed attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p/>
      E.g.: <code>addAttributes("a", "href", "class")</code> allows <code>href</code> and <code>class</code> attributes
