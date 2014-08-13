@@ -250,6 +250,48 @@ public class Whitelist {
     }
 
     /**
+     Remove a list of allowed attributes from a tag. (If an attribute is not allowed on an element, it will be removed.)
+     <p/>
+     E.g.: <code>removeAttributes("a", "href", "class")</code> disallows <code>href</code> and <code>class</code>
+     attributes on <code>a</code> tags.
+     <p/>
+     To make an attribute invalid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
+     <code>removeAttributes(":all", "class")</code>.
+
+     @param tag  The tag the attributes are for.
+     @param keys List of invalid attributes for the tag
+     @return this (for chaining)
+     */
+    public Whitelist removeAttributes(String tag, String... keys) {
+        Validate.notEmpty(tag);
+        Validate.notNull(keys);
+        Validate.isTrue(keys.length > 0, "No attributes supplied.");
+
+        TagName tagName = TagName.valueOf(tag);
+        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        for (String key : keys) {
+            Validate.notEmpty(key);
+            attributeSet.add(AttributeKey.valueOf(key));
+        }
+        if(tagNames.contains(tagName) && attributes.containsKey(tagName)) { // Only look in sub-maps if tag was allowed
+            Set<AttributeKey> currentSet = attributes.get(tagName);
+            currentSet.removeAll(attributeSet);
+
+            if(currentSet.size() == 0) // Remove tag from attribute map if no attributes are allowed for tag
+                attributes.remove(tagName);
+        }
+        if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
+            for(TagName name: attributes.keySet()) {
+                Set<AttributeKey> currentSet = attributes.get(name);
+                currentSet.removeAll(attributeSet);
+
+                if(currentSet.size() == 0) // Remove tag from attribute map if no attributes are allowed for tag
+                    attributes.remove(name);
+            }
+        return this;
+    }
+
+    /**
      Add an enforced attribute to a tag. An enforced attribute will always be added to the element. If the element
      already has the attribute set, it will be overridden.
      <p/>
