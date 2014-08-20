@@ -27,6 +27,9 @@ jsoup changelog
    when the UTF-8 BOM is detected, it will take precedence for determining the charset to decode with.
    <https://github.com/jhy/jsoup/issues/348>
 
+ * Added support proxy [HTTP/SOCKET].
+
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.

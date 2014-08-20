@@ -8,10 +8,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
+import java.net.*;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -162,7 +160,17 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Document get() throws IOException {
+	public Connection proxy(Proxy proxy) {
+		req.proxy(proxy);
+		return this;
+	}
+
+	public Connection proxy(Proxy.Type type, String host, int port) {
+		req.proxy(new Proxy(type, new InetSocketAddress(host, port)));
+		return this;
+	}
+
+	public Document get() throws IOException {
         req.method(Method.GET);
         execute();
         return res.parse();
@@ -318,6 +326,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+	    private Proxy proxy;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -327,6 +336,7 @@ public class HttpConnection implements Connection {
             method = Connection.Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+	        proxy = Proxy.NO_PROXY;
         }
 
         public int timeout() {
@@ -376,6 +386,15 @@ public class HttpConnection implements Connection {
             return this;
         }
 
+	    public Proxy proxy() {
+		    return proxy;
+	    }
+
+	    public Proxy proxy(Proxy proxy) {
+		    this.proxy = proxy;
+		    return proxy;
+	    }
+
         public Request data(Connection.KeyVal keyval) {
             Validate.notNull(keyval, "Key val must not be null");
             data.add(keyval);
@@ -398,7 +417,7 @@ public class HttpConnection implements Connection {
 
     public static class Response extends Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
-        private int statusCode;
+	    private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
         private String charset;
@@ -539,7 +558,7 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection(req.proxy());
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
