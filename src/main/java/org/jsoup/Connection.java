@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import java.net.Proxy;
 import java.net.URL;
 import java.util.Map;
 import java.util.Collection;
@@ -167,6 +168,27 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection parser(Parser parser);
+
+
+	/**
+	 * Provide a proxy setting.
+	 * @param proxy HTTP request method
+	 * @return this Connection, for chaining
+	 * @see java.net.Proxy
+	 */
+	public Connection proxy(Proxy proxy);
+
+
+	/**
+	 * Provide a proxy setting.
+	 * @param type the <code>Type</code> of the proxy
+	 * @param host the Host name
+	 * @param port The port number
+	 * @return this Connection, for chaining
+	 * @see java.net.Proxy
+	 * @see java.net.InetSocketAddress
+	 */
+	public Connection proxy(Proxy.Type type, String host, int port);
 
     /**
      * Execute the request as a GET, and parse the result.
@@ -408,6 +430,21 @@ public interface Connection {
          * @return this Request, for chaining
     	 */
         public Request ignoreContentType(boolean ignoreContentType);
+
+
+	    /**
+	     * get the proxy setting.
+	     * @return the proxy
+	     * @see java.net.Proxy
+	     */
+	    public Proxy proxy();
+
+	    /**
+	     * add a proxy setting to the request.
+	     * @return the proxy
+	     * @see java.net.Proxy
+	     */
+	    public Proxy proxy(Proxy proxy);
 
         /**
          * Add a data parameter to the request
