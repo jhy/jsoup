@@ -680,4 +680,16 @@ public class ElementTest {
         assertEquals("<div id=\"1\">Text <p>One</p> Text <p>Two</p></div><div id=\"2\"><p>One cloned</p><p>Two</p></div>",
             TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test
+    public void testCssPath() {
+        Document doc = Jsoup.parse("<div id=\"id1\">A</div><div>B</div><div class=\"c1 c2\">C</div>");
+        Element divA = doc.select("div").get(0);
+        Element divB = doc.select("div").get(1);
+        Element divC = doc.select("div").get(2);
+        assertEquals(divA.cssPath(), "#id1");
+        assertEquals(divB.cssPath(), "#root > html > body > div:nth-child(2)");
+        assertEquals(divC.cssPath(), "#root > html > body > div.c1.c2");
+    }
+
 }

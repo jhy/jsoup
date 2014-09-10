@@ -445,6 +445,32 @@ public class Element extends Node {
     }
 
     /**
+     * Get this element's CSS Path. If the element has an id, returns #id,
+     * Otherwise it returns the parent (if any) css path followed by '>',
+     * followed by an unique selector for the element (tag.class.class:nth-child(n)).
+     * @return the CSS Path that can be used to retrieve the element in a selector.
+     */
+    public String cssPath() {
+        if (!id().isEmpty())
+            return "#" + id();
+
+        StringBuilder selector = new StringBuilder(tagName());
+        String classes = StringUtil.join(classNames(), ".");
+        if (!classes.isEmpty())
+            selector.append('.').append(classes);
+
+        if (parent() == null)
+            return selector.toString();
+
+        selector.insert(0, " > ");
+        if (parent().select(selector.toString()).size() > 1)
+            selector.append(String.format(
+                ":nth-child(%d)", elementSiblingIndex() + 1));
+
+        return parent().cssPath() + selector.toString();
+    }
+
+    /**
      * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
      * of itself, so will not be included in the returned list.
      * @return sibling elements
