@@ -28,7 +28,8 @@ public class HttpConnectionTest {
     }
 
     @Test public void caseInsensitiveHeaders() {
-        Connection.Response res = new HttpConnection.Response();
+
+        Connection.Response res = new HttpConnection().response();
         Map<String, String> headers = res.headers();
         headers.put("Accept-Encoding", "gzip");
         headers.put("content-type", "text/html");
@@ -54,8 +55,9 @@ public class HttpConnectionTest {
         // prep http response header map
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
         headers.put("Set-Cookie", Collections.<String>emptyList());
-        HttpConnection.Response res = new HttpConnection.Response();
-        res.processResponseHeaders(headers);
+        HttpConnection connection = new HttpConnection();
+        Connection.Response res = connection.response();
+        connection.processResponseHeaders(res, headers);
         assertEquals(0, res.cookies().size());
     }
 
@@ -71,8 +73,9 @@ public class HttpConnectionTest {
         cookieStrings.add("four=data; Domain=.example.com; Path=/");
 
         headers.put("Set-Cookie", cookieStrings);
-        HttpConnection.Response res = new HttpConnection.Response();
-        res.processResponseHeaders(headers);
+        HttpConnection connection = new HttpConnection();
+        Connection.Response res = connection.response();
+        connection.processResponseHeaders(res, headers);
         assertEquals(4, res.cookies().size());
         assertEquals("", res.cookie("one"));
         assertEquals("", res.cookie("two"));

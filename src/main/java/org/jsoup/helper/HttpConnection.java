@@ -22,6 +22,7 @@ import java.util.zip.GZIPInputStream;
  * @see org.jsoup.Jsoup#connect(String) 
  */
 public class HttpConnection implements Connection {
+
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
         con.url(url);
@@ -43,7 +44,7 @@ public class HttpConnection implements Connection {
     private Connection.Request req;
     private Connection.Response res;
 
-	private HttpConnection() {
+	HttpConnection() {
         req = new Request();
         res = new Response();
     }
@@ -175,7 +176,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection.Response execute() throws IOException {
-        res = Response.execute(req);
+        res = execute(req);
         return res;
     }
 
@@ -197,8 +198,190 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    protected Response execute(Connection.Request req) throws IOException {
+        return execute(req, null);
+    }
+
+    protected Response execute(Connection.Request req, Response previousResponse) throws IOException {
+        Validate.notNull(req, "Request must not be null");
+        String protocol = req.url().getProtocol();
+        if (!protocol.equals("http") && !protocol.equals("https"))
+            throw new MalformedURLException("Only http & https protocols supported");
+
+        // set up the request for execution
+        if (req.method() == Connection.Method.GET && req.data().size() > 0)
+            serialiseRequestUrl(req); // appends query string
+        HttpURLConnection conn = createConnection(req);
+        Response res;
+        try {
+            conn.connect();
+            if (req.method() == Connection.Method.POST)
+                writePost(req.data(), conn.getOutputStream());
+
+            int status = conn.getResponseCode();
+            boolean needsRedirect = false;
+            if (status != HttpURLConnection.HTTP_OK) {
+                if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
+                    needsRedirect = true;
+                else if (!req.ignoreHttpErrors())
+                    throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+            }
+            res = new Response(previousResponse);
+            res.setupFromConnection(conn, previousResponse);
+            if (needsRedirect && req.followRedirects()) {
+                req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                req.data().clear();
+
+                String location = res.header("Location");
+                if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                    location = location.substring(6);
+                req.url(new URL(req.url(), encodeUrl(location)));
+
+                for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
+                    req.cookie(cookie.getKey(), cookie.getValue());
+                }
+                return execute(req, res);
+            }
+            res.req = req;
+
+            // check that we can handle the returned content type; if not, abort before fetching it
+            String contentType = res.contentType();
+            if (contentType != null && !req.ignoreContentType() && (!(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+                throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
+                    contentType, req.url().toString());
+
+            InputStream bodyStream = null;
+            InputStream dataStream = null;
+            try {
+                dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
+                    new BufferedInputStream(new GZIPInputStream(dataStream)) :
+                    new BufferedInputStream(dataStream);
+
+                res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+            } finally {
+                if (bodyStream != null) bodyStream.close();
+                if (dataStream != null) dataStream.close();
+            }
+        } finally {
+            // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
+            // connection errors will not be released quickly enough and can cause a too many open files error.
+            conn.disconnect();
+        }
+
+        res.executed = true;
+        return res;
+    }
+
+    // set up connection defaults, and details from request
+    protected HttpURLConnection createConnection(Connection.Request req) throws IOException {
+        HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+        conn.setRequestMethod(req.method().name());
+        conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
+        conn.setConnectTimeout(req.timeout());
+        conn.setReadTimeout(req.timeout());
+        if (req.method() == Method.POST)
+            conn.setDoOutput(true);
+        if (req.cookies().size() > 0)
+            conn.addRequestProperty("Cookie", getRequestCookieString(req));
+        for (Map.Entry<String, String> header : req.headers().entrySet()) {
+            conn.addRequestProperty(header.getKey(), header.getValue());
+        }
+        return conn;
+    }
+
+    protected void processResponseHeaders(Connection.Response response, Map<String, List<String>> resHeaders) {
+        for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+            String name = entry.getKey();
+            if (name == null)
+                continue; // http/1.1 line
+
+            List<String> values = entry.getValue();
+            if (name.equalsIgnoreCase("Set-Cookie")) {
+                for (String value : values) {
+                    if (value == null)
+                        continue;
+                    TokenQueue cd = new TokenQueue(value);
+                    String cookieName = cd.chompTo("=").trim();
+                    String cookieVal = cd.consumeTo(";").trim();
+                    if (cookieVal == null)
+                        cookieVal = "";
+                    // ignores path, date, domain, secure et al. req'd?
+                    // name not blank, value not null
+                    if (cookieName != null && cookieName.length() > 0)
+                        response.cookie(cookieName, cookieVal);
+                }
+            } else { // only take the first instance of each header
+                if (!values.isEmpty())
+                    response.header(name, values.get(0));
+            }
+        }
+    }
+
+    private void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
+        OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
+        boolean first = true;
+        for (Connection.KeyVal keyVal : data) {
+            if (!first)
+                w.append('&');
+            else
+                first = false;
+
+            w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+            w.write('=');
+            w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+        }
+        w.close();
+    }
+
+    private String getRequestCookieString(Connection.Request req) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
+            if (!first)
+                sb.append("; ");
+            else
+                first = false;
+            sb.append(cookie.getKey()).append('=').append(cookie.getValue());
+            // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
+        }
+        return sb.toString();
+    }
+
+    // for get url reqs, serialise the data map into the url
+    private void serialiseRequestUrl(Connection.Request req) throws IOException {
+        URL in = req.url();
+        StringBuilder url = new StringBuilder();
+        boolean first = true;
+        // reconstitute the query, ready for appends
+        url
+            .append(in.getProtocol())
+            .append("://")
+            .append(in.getAuthority()) // includes host, port
+            .append(in.getPath())
+            .append("?");
+        if (in.getQuery() != null) {
+            url.append(in.getQuery());
+            first = false;
+        }
+        for (Connection.KeyVal keyVal : req.data()) {
+            if (!first)
+                url.append('&');
+            else
+                first = false;
+            url
+                .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                .append('=')
+                .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+        }
+        req.url(new URL(url.toString()));
+        req.data().clear(); // moved into url as get params
+    }
+
     @SuppressWarnings({"unchecked"})
-    private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
+    private abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
+
         URL url;
         Method method;
         Map<String, String> headers;
@@ -310,7 +493,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Request extends Base<Connection.Request> implements Connection.Request {
+    public class Request extends Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -396,7 +579,8 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Response extends Base<Connection.Response> implements Connection.Response {
+    public class Response extends Base<Connection.Response> implements Connection.Response {
+
         private static final int MAX_REDIRECTS = 20;
         private int statusCode;
         private String statusMessage;
@@ -418,82 +602,6 @@ public class HttpConnection implements Connection {
                 if (numRedirects >= MAX_REDIRECTS)
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
-        }
-        
-        static Response execute(Connection.Request req) throws IOException {
-            return execute(req, null);
-        }
-
-        static Response execute(Connection.Request req, Response previousResponse) throws IOException {
-            Validate.notNull(req, "Request must not be null");
-            String protocol = req.url().getProtocol();
-            if (!protocol.equals("http") && !protocol.equals("https"))
-                throw new MalformedURLException("Only http & https protocols supported");
-
-            // set up the request for execution
-            if (req.method() == Connection.Method.GET && req.data().size() > 0)
-                serialiseRequestUrl(req); // appends query string
-            HttpURLConnection conn = createConnection(req);
-            Response res;
-            try {
-                conn.connect();
-                if (req.method() == Connection.Method.POST)
-                    writePost(req.data(), conn.getOutputStream());
-
-                int status = conn.getResponseCode();
-                boolean needsRedirect = false;
-                if (status != HttpURLConnection.HTTP_OK) {
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
-                        needsRedirect = true;
-                    else if (!req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
-                }
-                res = new Response(previousResponse);
-                res.setupFromConnection(conn, previousResponse);
-                if (needsRedirect && req.followRedirects()) {
-                    req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
-                    req.data().clear();
-
-                    String location = res.header("Location");
-                    if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
-                        location = location.substring(6);
-                    req.url(new URL(req.url(), encodeUrl(location)));
-
-                    for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
-                        req.cookie(cookie.getKey(), cookie.getValue());
-                    }
-                    return execute(req, res);
-                }
-                res.req = req;
-
-                // check that we can handle the returned content type; if not, abort before fetching it
-                String contentType = res.contentType();
-                if (contentType != null && !req.ignoreContentType() && (!(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
-                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
-                            contentType, req.url().toString());
-
-                InputStream bodyStream = null;
-                InputStream dataStream = null;
-                try {
-                    dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
-                            new BufferedInputStream(new GZIPInputStream(dataStream)) :
-                            new BufferedInputStream(dataStream);
-
-                    res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
-                    res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
-                } finally {
-                    if (bodyStream != null) bodyStream.close();
-                    if (dataStream != null) dataStream.close();
-                }
-            } finally {
-                // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
-                // connection errors will not be released quickly enough and can cause a too many open files error.
-                conn.disconnect();
-            }
-
-            res.executed = true;
-            return res;
         }
 
         public int statusCode() {
@@ -537,23 +645,6 @@ public class HttpConnection implements Connection {
             return byteData.array();
         }
 
-        // set up connection defaults, and details from request
-        private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
-            conn.setRequestMethod(req.method().name());
-            conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
-            conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(req.timeout());
-            if (req.method() == Method.POST)
-                conn.setDoOutput(true);
-            if (req.cookies().size() > 0)
-                conn.addRequestProperty("Cookie", getRequestCookieString(req));
-            for (Map.Entry<String, String> header : req.headers().entrySet()) {
-                conn.addRequestProperty(header.getKey(), header.getValue());
-            }
-            return conn;
-        }
-
         // set up url, method, header, cookies
         private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
             method = Connection.Method.valueOf(conn.getRequestMethod());
@@ -563,7 +654,7 @@ public class HttpConnection implements Connection {
             contentType = conn.getContentType();
 
             Map<String, List<String>> resHeaders = conn.getHeaderFields();
-            processResponseHeaders(resHeaders);
+            processResponseHeaders(this, resHeaders);
 
             // if from a redirect, map previous response cookies into this response
             if (previousResponse != null) {
@@ -574,93 +665,6 @@ public class HttpConnection implements Connection {
             }
         }
 
-        void processResponseHeaders(Map<String, List<String>> resHeaders) {
-            for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
-                String name = entry.getKey();
-                if (name == null)
-                    continue; // http/1.1 line
-
-                List<String> values = entry.getValue();
-                if (name.equalsIgnoreCase("Set-Cookie")) {
-                    for (String value : values) {
-                        if (value == null)
-                            continue;
-                        TokenQueue cd = new TokenQueue(value);
-                        String cookieName = cd.chompTo("=").trim();
-                        String cookieVal = cd.consumeTo(";").trim();
-                        if (cookieVal == null)
-                            cookieVal = "";
-                        // ignores path, date, domain, secure et al. req'd?
-                        // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
-                            cookie(cookieName, cookieVal);
-                    }
-                } else { // only take the first instance of each header
-                    if (!values.isEmpty())
-                        header(name, values.get(0));
-                }
-            }
-        }
-
-        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
-            OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
-            boolean first = true;
-            for (Connection.KeyVal keyVal : data) {
-                if (!first) 
-                    w.append('&');
-                else
-                    first = false;
-                
-                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
-                w.write('=');
-                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
-            }
-            w.close();
-        }
-        
-        private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = new StringBuilder();
-            boolean first = true;
-            for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
-                if (!first)
-                    sb.append("; ");
-                else
-                    first = false;
-                sb.append(cookie.getKey()).append('=').append(cookie.getValue());
-                // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
-            }
-            return sb.toString();
-        }
-
-        // for get url reqs, serialise the data map into the url
-        private static void serialiseRequestUrl(Connection.Request req) throws IOException {
-            URL in = req.url();
-            StringBuilder url = new StringBuilder();
-            boolean first = true;
-            // reconstitute the query, ready for appends
-            url
-                .append(in.getProtocol())
-                .append("://")
-                .append(in.getAuthority()) // includes host, port
-                .append(in.getPath())
-                .append("?");
-            if (in.getQuery() != null) {
-                url.append(in.getQuery());
-                first = false;
-            }
-            for (Connection.KeyVal keyVal : req.data()) {
-                if (!first)
-                    url.append('&');
-                else
-                    first = false;
-                url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
-                    .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
-            }
-            req.url(new URL(url.toString()));
-            req.data().clear(); // moved into url as get params
-        }
     }
 
     public static class KeyVal implements Connection.KeyVal {
