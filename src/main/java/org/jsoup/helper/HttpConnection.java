@@ -22,6 +22,8 @@ import java.util.zip.GZIPInputStream;
  * @see org.jsoup.Jsoup#connect(String) 
  */
 public class HttpConnection implements Connection {
+    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
+
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
         con.url(url);
@@ -443,7 +445,7 @@ public class HttpConnection implements Connection {
                 int status = conn.getResponseCode();
                 boolean needsRedirect = false;
                 if (status != HttpURLConnection.HTTP_OK) {
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
+                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER || status == HTTP_TEMP_REDIR)
                         needsRedirect = true;
                     else if (!req.ignoreHttpErrors())
                         throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());

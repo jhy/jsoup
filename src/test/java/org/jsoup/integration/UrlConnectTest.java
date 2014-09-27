@@ -125,6 +125,14 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void followsNewTempRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/307.pl"); // http://jsoup.org
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup"));
+        assertEquals("http://jsoup.org", con.response().url().toString());
+    }
+
+    @Test
     public void postRedirectsFetchWithGet() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl")
                 .data("Argument", "Riposte")
