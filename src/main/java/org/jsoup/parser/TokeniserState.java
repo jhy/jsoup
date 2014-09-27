@@ -1137,6 +1137,9 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
+                    // note: fall through to > case
+                case '>': // catch invalid <!DOCTYPE>
+                    t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.forceQuirks = true;
                     t.emitDoctypePending();
@@ -1165,6 +1168,7 @@ enum TokeniserState {
                     break; // ignore whitespace
                 case nullChar:
                     t.error(this);
+                    t.createDoctypePending();
                     t.doctypePending.name.append(replacementChar);
                     t.transition(DoctypeName);
                     break;
