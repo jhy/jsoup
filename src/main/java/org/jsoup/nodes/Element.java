@@ -806,9 +806,9 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the combined text of this element and all its children.
+     * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
      * <p>
-     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
+     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
      * @return unencoded text, or empty string if none.
      * @see #ownText()
