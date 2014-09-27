@@ -309,4 +309,12 @@ public class UrlConnectTest {
         assertEquals("ISO-8859-1", res.charset());
     }
 
+    @Test
+    public void baseHrefCorrectAfterHttpEquiv() throws IOException {
+        // https://github.com/jhy/jsoup/issues/440
+        Connection.Response res = Jsoup.connect("http://direct.infohound.net/tools/charset-base.html").execute();
+        Document doc = res.parse();
+        assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
+    }
+
 }

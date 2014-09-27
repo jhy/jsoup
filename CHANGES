@@ -30,6 +30,9 @@ jsoup changelog
  * Relaxed doctype validation, allowing doctypes to not specify a name.
    <https://github.com/jhy/jsoup/issues/460>
 
+ * Fixed an issue in parsing a base URI when loading a URL containing a http-equiv element.
+   <https://github.com/jhy/jsoup/issues/440>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
