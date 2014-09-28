@@ -21,6 +21,9 @@ jsoup changelog
 
  * In the HTML Cleaner, allow span tags in the basic whitelist, and span and div tags in the relaxed whitelist.
 
+  * Added Element.cssSelector(), which returns a unique CSS selector/path for an element.
+    <https://github.com/jhy/jsoup/pull/459>
+
  * Fixed an issue where <svg><img/></svg> was parsed as <svg><image/></svg>
    <https://github.com/jhy/jsoup/issues/364>
 

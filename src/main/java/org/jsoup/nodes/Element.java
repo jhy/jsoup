@@ -445,6 +445,34 @@ public class Element extends Node {
     }
 
     /**
+     * Get a CSS selector that will uniquely select this element.
+     * <p/>If the element has an ID, returns #id;
+     * otherwise returns the parent (if any) CSS selector, followed by '>',
+     * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     *
+     * @return the CSS Path that can be used to retrieve the element in a selector.
+     */
+    public String cssSelector() {
+        if (!id().isEmpty())
+            return "#" + id();
+
+        StringBuilder selector = new StringBuilder(tagName());
+        String classes = StringUtil.join(classNames(), ".");
+        if (!classes.isEmpty())
+            selector.append('.').append(classes);
+
+        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
+            return selector.toString();
+
+        selector.insert(0, " > ");
+        if (parent().select(selector.toString()).size() > 1)
+            selector.append(String.format(
+                ":nth-child(%d)", elementSiblingIndex() + 1));
+
+        return parent().cssSelector() + selector.toString();
+    }
+
+    /**
      * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
      * of itself, so will not be included in the returned list.
      * @return sibling elements
