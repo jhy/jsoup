@@ -19,6 +19,8 @@ jsoup changelog
  * If pretty-print is disabled, don't trim outer whitespace in Element.html()
    <https://github.com/jhy/jsoup/issues/368>
 
+ * In the HTML Cleaner, allow span tags in the basic whitelist, and span and div tags in the relaxed whitelist.
+
  * Fixed an issue where <svg><img/></svg> was parsed as <svg><image/></svg>
    <https://github.com/jhy/jsoup/issues/364>
 
