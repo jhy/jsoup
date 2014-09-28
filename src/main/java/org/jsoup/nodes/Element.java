@@ -453,12 +453,12 @@ public class Element extends Node {
      * @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        if (!id().isEmpty())
+        if (id().length() > 0)
             return "#" + id();
 
         StringBuilder selector = new StringBuilder(tagName());
         String classes = StringUtil.join(classNames(), ".");
-        if (!classes.isEmpty())
+        if (classes.length() > 0)
             selector.append('.').append(classes);
 
         if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
