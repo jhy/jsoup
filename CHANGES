@@ -45,6 +45,9 @@ jsoup changelog
  * Fixed an issue that would throw an NPE when trying to set invalid HTML into a title element.
    <https://github.com/jhy/jsoup/pull/410>
 
+ * Added support for quoted attribute values in CSS Selectors
+   <https://github.com/jhy/jsoup/pull/400>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
