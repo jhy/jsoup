@@ -11,18 +11,18 @@ import java.nio.charset.Charset;
 
 public class EntitiesTest {
     @Test public void escape() {
-        String text = "Hello &<> Å å π 新 there ¾ ©";
+        String text = "Hello &<> Å å π 新 there ¾ © »";
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         String escapedAsciiFull = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(extended));
         String escapedAsciiXhtml = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(xhtml));
         String escapedUtfFull = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(base));
         String escapedUtfMin = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(xhtml));
 
-        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy;", escapedAscii);
-        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#x65b0; there &frac34; &copy;", escapedAsciiFull);
-        assertEquals("Hello &amp;&lt;&gt; &#xc5; &#xe5; &#x3c0; &#x65b0; there &#xbe; &#xa9;", escapedAsciiXhtml);
-        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ ©", escapedUtfFull);
-        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ ©", escapedUtfMin);
+        assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy; &raquo;", escapedAscii);
+        assertEquals("Hello &amp;&lt;&gt; &angst; &aring; &pi; &#x65b0; there &frac34; &copy; &raquo;", escapedAsciiFull);
+        assertEquals("Hello &amp;&lt;&gt; &#xc5; &#xe5; &#x3c0; &#x65b0; there &#xbe; &#xa9; &#xbb;", escapedAsciiXhtml);
+        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »", escapedUtfFull);
+        assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »", escapedUtfMin);
         // odd that it's defined as aring in base but angst in full
 
         // round trip
