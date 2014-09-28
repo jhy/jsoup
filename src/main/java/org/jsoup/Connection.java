@@ -3,10 +3,11 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
-import java.net.URL;
-import java.util.Map;
-import java.util.Collection;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.IllegalCharsetNameException;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -272,7 +273,7 @@ public interface Connection {
         public String header(String name);
 
         /**
-         * Set a header. This method will overwrite any existing header with the same case insensitive name. 
+         * Set a header. This method will overwrite any existing header with the same case insensitive name.
          * @param name Name of header
          * @param value Value of header
          * @return this, for chaining
@@ -434,13 +435,27 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+
+        /**
+         * Set the request's charset to encode data
+         * @param charset charset use to encode GET or POST data
+         * @return this Request, for chaining
+         * @throws java.nio.charset.IllegalCharsetNameException if the charset not support
+         */
+        public Request charset(String charset) throws IllegalCharsetNameException;
+
+        /**
+         * Get the charset use to encode data
+         * @return character set name
+         */
+        public String charset();
     }
 
     /**
      * Represents a HTTP response.
      */
     public interface Response extends Base<Response> {
-    	
+
     	/**
          * Get the status code of the response.
          * @return status code

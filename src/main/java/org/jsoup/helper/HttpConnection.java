@@ -14,12 +14,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 /**
  * Implementation of {@link Connection}.
- * @see org.jsoup.Jsoup#connect(String) 
+ * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
@@ -312,7 +313,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Request extends Base<Connection.Request> implements Connection.Request {
+    public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -320,6 +321,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+        private String charset=DataUtil.defaultCharset;
 
       	private Request() {
             timeoutMilliseconds = 3000;
@@ -387,18 +389,28 @@ public class HttpConnection implements Connection {
         public Collection<Connection.KeyVal> data() {
             return data;
         }
-        
+
         public Request parser(Parser parser) {
             this.parser = parser;
             return this;
         }
-        
+
         public Parser parser() {
             return parser;
         }
+
+        public Request charset(String charset) throws IllegalCharsetNameException{
+          Charset.isSupported(charset);
+          this.charset=charset;
+          return this;
+        }
+
+        public String charset() {
+          return charset;
+        }
     }
 
-    public static class Response extends Base<Connection.Response> implements Connection.Response {
+    public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private int statusCode;
         private String statusMessage;
@@ -421,7 +433,7 @@ public class HttpConnection implements Connection {
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
-        
+
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -434,13 +446,13 @@ public class HttpConnection implements Connection {
 
             // set up the request for execution
             if (req.method() == Connection.Method.GET && req.data().size() > 0)
-                serialiseRequestUrl(req); // appends query string
+                serialiseRequestUrl(req,req.charset()); // appends query string
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
                 conn.connect();
                 if (req.method() == Connection.Method.POST)
-                    writePost(req.data(), conn.getOutputStream());
+                    writePost(req.data(), conn.getOutputStream(),req.charset());
 
                 int status = conn.getResponseCode();
                 boolean needsRedirect = false;
@@ -604,22 +616,22 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
-            OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
+        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream,String charset) throws IOException {
+            OutputStreamWriter w = new OutputStreamWriter(outputStream, charset);
             boolean first = true;
             for (Connection.KeyVal keyVal : data) {
-                if (!first) 
+                if (!first)
                     w.append('&');
                 else
                     first = false;
-                
-                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+
+                w.write(URLEncoder.encode(keyVal.key(), charset));
                 w.write('=');
-                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                w.write(URLEncoder.encode(keyVal.value(), charset));
             }
             w.close();
         }
-        
+
         private static String getRequestCookieString(Connection.Request req) {
             StringBuilder sb = new StringBuilder();
             boolean first = true;
@@ -635,7 +647,7 @@ public class HttpConnection implements Connection {
         }
 
         // for get url reqs, serialise the data map into the url
-        private static void serialiseRequestUrl(Connection.Request req) throws IOException {
+        private static void serialiseRequestUrl(Connection.Request req,String charset) throws IOException {
             URL in = req.url();
             StringBuilder url = new StringBuilder();
             boolean first = true;
@@ -656,9 +668,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                    .append(URLEncoder.encode(keyVal.key(), charset))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    .append(URLEncoder.encode(keyVal.value(), charset));
             }
             req.url(new URL(url.toString()));
             req.data().clear(); // moved into url as get params
@@ -703,6 +715,6 @@ public class HttpConnection implements Connection {
         @Override
         public String toString() {
             return key + "=" + value;
-        }      
+        }
     }
 }
