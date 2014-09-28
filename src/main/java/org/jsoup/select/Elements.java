@@ -8,9 +8,9 @@ import org.jsoup.nodes.Node;
 import java.util.*;
 
 /**
- A list of {@link Element Elements}, with methods that act on every element in the list.
+ A list of {@link Element}s, with methods that act on every element in the list.
  <p/>
- To get an Elements object, use the {@link Element#select(String)} method.
+ To get an {@code Elements} object, use the {@link Element#select(String)} method.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Elements implements List<Element>, Cloneable {
@@ -497,7 +497,7 @@ public class Elements implements List<Element>, Cloneable {
 
     /**
      * Get the {@link FormElement} forms from the selected elements, if any.
-     * @return a list of FormElements pulled from the matched elements. The list will be empty if the elements contain
+     * @return a list of {@link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
      * no forms.
      */
     public List<FormElement> forms() {

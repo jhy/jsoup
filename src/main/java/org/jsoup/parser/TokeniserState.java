@@ -216,7 +216,7 @@ enum TokeniserState {
             if (r.matches('/')) {
                 t.createTempBuffer();
                 t.advanceTransition(RCDATAEndTagOpen);
-            } else if (r.matchesLetter() && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
+            } else if (r.matchesLetter() && t.appropriateEndTagName() != null && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
                 // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
                 // consuming to EOF; break out here
                 t.tagPending = new Token.EndTag(t.appropriateEndTagName());
@@ -1137,6 +1137,9 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
+                    // note: fall through to > case
+                case '>': // catch invalid <!DOCTYPE>
+                    t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.forceQuirks = true;
                     t.emitDoctypePending();
@@ -1165,6 +1168,7 @@ enum TokeniserState {
                     break; // ignore whitespace
                 case nullChar:
                     t.error(this);
+                    t.createDoctypePending();
                     t.doctypePending.name.append(replacementChar);
                     t.transition(DoctypeName);
                     break;
