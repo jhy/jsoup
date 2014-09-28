@@ -370,6 +370,20 @@ public class ElementTest {
         assertEquals("<p>there</p><p>now</p>", TextUtil.stripNewlines(div.html()));
     }
 
+    @Test public void testSetHtmlTitle() {
+        Document doc = Jsoup.parse("<html><head id=2><title id=1></title></head></html>");
+
+        Element title = doc.getElementById("1");
+        title.html("good");
+        assertEquals("good", title.html());
+        title.html("<i>bad</i>");
+        assertEquals("&lt;i&gt;bad&lt;/i&gt;", title.html());
+
+        Element head = doc.getElementById("2");
+        head.html("<title><i>bad</i></title>");
+        assertEquals("<title>&lt;i&gt;bad&lt;/i&gt;</title>", head.html());
+    }
+
     @Test public void testWrap() {
         Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
         Element p = doc.select("p").first();
