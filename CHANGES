@@ -54,6 +54,10 @@ jsoup changelog
  * Added support for 'application/*+xml' mimetypes.
    <https://github.com/jhy/jsoup/pull/444>
 
+ * Fixed support for allowing script tags in cleaner whitelists.
+   <https://github.com/jhy/jsoup/issues/299>
+   <https://github.com/jhy/jsoup/issues/388>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
