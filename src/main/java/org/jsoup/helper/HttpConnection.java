@@ -15,13 +15,16 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 /**
  * Implementation of {@link Connection}.
- * @see org.jsoup.Jsoup#connect(String) 
+ * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
+    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
+
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
         con.url(url);
@@ -388,12 +391,12 @@ public class HttpConnection implements Connection {
         public Collection<Connection.KeyVal> data() {
             return data;
         }
-        
+
         public Request parser(Parser parser) {
             this.parser = parser;
             return this;
         }
-        
+
         public Parser parser() {
             return parser;
         }
@@ -410,6 +413,13 @@ public class HttpConnection implements Connection {
         private int numRedirects = 0;
         private Connection.Request req;
 
+        /*
+         * For example {@code application/atom+xml;charset=utf-8}.
+         * Stepping through it: start with {@code "application/"}, follow with word
+         * characters up to a {@code "+xml"}, and then maybe more ({@code .*}).
+         */
+        private static final Pattern xmlContentTypeRxp = Pattern.compile("application/\\w+\\+xml.*");
+
         Response() {
             super();
         }
@@ -422,7 +432,7 @@ public class HttpConnection implements Connection {
                     throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
-        
+
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
@@ -446,7 +456,7 @@ public class HttpConnection implements Connection {
                 int status = conn.getResponseCode();
                 boolean needsRedirect = false;
                 if (status != HttpURLConnection.HTTP_OK) {
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER)
+                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER || status == HTTP_TEMP_REDIR)
                         needsRedirect = true;
                     else if (!req.ignoreHttpErrors())
                         throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
@@ -471,7 +481,12 @@ public class HttpConnection implements Connection {
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
-                if (contentType != null && !req.ignoreContentType() && (!(contentType.startsWith("text/") || contentType.startsWith("application/xml") || contentType.startsWith("application/xhtml+xml"))))
+                if (contentType != null
+                        && !req.ignoreContentType()
+                        && !contentType.startsWith("text/")
+                        && !contentType.startsWith("application/xml")
+                        && !xmlContentTypeRxp.matcher(contentType).matches()
+                        )
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
 
@@ -609,18 +624,18 @@ public class HttpConnection implements Connection {
             OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
             boolean first = true;
             for (Connection.KeyVal keyVal : data) {
-                if (!first) 
+                if (!first)
                     w.append('&');
                 else
                     first = false;
-                
+
                 w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
                 w.write('=');
                 w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
             }
             w.close();
         }
-        
+
         private static String getRequestCookieString(Connection.Request req) {
             StringBuilder sb = new StringBuilder();
             boolean first = true;
@@ -704,6 +719,6 @@ public class HttpConnection implements Connection {
         @Override
         public String toString() {
             return key + "=" + value;
-        }      
+        }
     }
 }

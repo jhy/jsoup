@@ -181,7 +181,7 @@ public class Element extends Node {
      */
     public Elements children() {
         // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
-        List<Element> elements = new ArrayList<Element>();
+        List<Element> elements = new ArrayList<Element>(childNodes.size());
         for (Node node : childNodes) {
             if (node instanceof Element)
                 elements.add((Element) node);
@@ -442,6 +442,34 @@ public class Element extends Node {
     @Override
     public Element wrap(String html) {
         return (Element) super.wrap(html);
+    }
+
+    /**
+     * Get a CSS selector that will uniquely select this element.
+     * <p/>If the element has an ID, returns #id;
+     * otherwise returns the parent (if any) CSS selector, followed by '>',
+     * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     *
+     * @return the CSS Path that can be used to retrieve the element in a selector.
+     */
+    public String cssSelector() {
+        if (id().length() > 0)
+            return "#" + id();
+
+        StringBuilder selector = new StringBuilder(tagName());
+        String classes = StringUtil.join(classNames(), ".");
+        if (classes.length() > 0)
+            selector.append('.').append(classes);
+
+        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
+            return selector.toString();
+
+        selector.insert(0, " > ");
+        if (parent().select(selector.toString()).size() > 1)
+            selector.append(String.format(
+                ":nth-child(%d)", elementSiblingIndex() + 1));
+
+        return parent().cssSelector() + selector.toString();
     }
 
     /**
@@ -806,9 +834,9 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the combined text of this element and all its children.
+     * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
      * <p>
-     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
+     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
      * @return unencoded text, or empty string if none.
      * @see #ownText()

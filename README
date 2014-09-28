@@ -12,4 +12,6 @@ jsoup implements the WHATWG HTML5 specification (http://whatwg.org/html), and pa
 
 jsoup is designed to deal with all varieties of HTML found in the wild; from pristine and validating, to invalid tag-soup; jsoup will create a sensible parse tree.
 
+jsoup runs on Java 1.5 and up.
+
 See http://jsoup.org/ for downloads and documentation.

@@ -10,8 +10,8 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, http://jonathanhedley.com/
  */
 public class DocumentTypeTest {
-    @Test(expected = IllegalArgumentException.class)
-    public void constructorValidationThrowsExceptionOnBlankName() {
+    @Test
+    public void constructorValidationOkWithBlankName() {
         DocumentType fail = new DocumentType("","", "", "");
     }
 

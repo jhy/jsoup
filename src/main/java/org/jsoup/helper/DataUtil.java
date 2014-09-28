@@ -178,7 +178,7 @@ public class DataUtil {
         if (m.find()) {
             String charset = m.group(1).trim();
             charset = charset.replace("charset=", "");
-            if (charset.isEmpty()) return null;
+            if (charset.length() == 0) return null;
             try {
                 if (Charset.isSupported(charset)) return charset;
                 charset = charset.toUpperCase(Locale.ENGLISH);

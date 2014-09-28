@@ -51,6 +51,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     @Override
     Document parse(String input, String baseUri, ParseErrorList errors) {
         state = HtmlTreeBuilderState.Initial;
+        baseUriSetFromDoc = false;
         return super.parse(input, baseUri, errors);
     }
 

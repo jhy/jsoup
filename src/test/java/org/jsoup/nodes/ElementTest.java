@@ -370,6 +370,20 @@ public class ElementTest {
         assertEquals("<p>there</p><p>now</p>", TextUtil.stripNewlines(div.html()));
     }
 
+    @Test public void testSetHtmlTitle() {
+        Document doc = Jsoup.parse("<html><head id=2><title id=1></title></head></html>");
+
+        Element title = doc.getElementById("1");
+        title.html("good");
+        assertEquals("good", title.html());
+        title.html("<i>bad</i>");
+        assertEquals("&lt;i&gt;bad&lt;/i&gt;", title.html());
+
+        Element head = doc.getElementById("2");
+        head.html("<title><i>bad</i></title>");
+        assertEquals("<title>&lt;i&gt;bad&lt;/i&gt;</title>", head.html());
+    }
+
     @Test public void testWrap() {
         Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
         Element p = doc.select("p").first();
@@ -680,4 +694,20 @@ public class ElementTest {
         assertEquals("<div id=\"1\">Text <p>One</p> Text <p>Two</p></div><div id=\"2\"><p>One cloned</p><p>Two</p></div>",
             TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test
+    public void testCssPath() {
+        Document doc = Jsoup.parse("<div id=\"id1\">A</div><div>B</div><div class=\"c1 c2\">C</div>");
+        Element divA = doc.select("div").get(0);
+        Element divB = doc.select("div").get(1);
+        Element divC = doc.select("div").get(2);
+        assertEquals(divA.cssSelector(), "#id1");
+        assertEquals(divB.cssSelector(), "html > body > div:nth-child(2)");
+        assertEquals(divC.cssSelector(), "html > body > div.c1.c2");
+
+        assertTrue(divA == doc.select(divA.cssSelector()).first());
+        assertTrue(divB == doc.select(divB.cssSelector()).first());
+        assertTrue(divC == doc.select(divC.cssSelector()).first());
+    }
+
 }

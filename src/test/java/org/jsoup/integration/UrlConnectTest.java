@@ -125,6 +125,14 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void followsNewTempRedirect() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/307.pl"); // http://jsoup.org
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup"));
+        assertEquals("http://jsoup.org", con.response().url().toString());
+    }
+
+    @Test
     public void postRedirectsFetchWithGet() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl")
                 .data("Argument", "Riposte")
@@ -307,6 +315,14 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect("http://aaptsdassn.org").execute();
         Document doc = res.parse(); // would throw an error if charset unsupported
         assertEquals("ISO-8859-1", res.charset());
+    }
+
+    @Test
+    public void baseHrefCorrectAfterHttpEquiv() throws IOException {
+        // https://github.com/jhy/jsoup/issues/440
+        Connection.Response res = Jsoup.connect("http://direct.infohound.net/tools/charset-base.html").execute();
+        Document doc = res.parse();
+        assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
     }
 
 }

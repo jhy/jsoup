@@ -48,7 +48,8 @@ public class SelectorTest {
     }
 
     @Test public void testByAttribute() {
-        String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM /><div />";
+        String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM />" +
+                "<div data-name='with spaces'/>";
         Document doc = Jsoup.parse(h);
 
         Elements withTitle = doc.select("[title]");
@@ -56,6 +57,16 @@ public class SelectorTest {
 
         Elements foo = doc.select("[title=foo]");
         assertEquals(1, foo.size());
+
+        Elements foo2 = doc.select("[title=\"foo\"]");
+        assertEquals(1, foo2.size());
+
+        Elements foo3 = doc.select("[title=\"Foo\"]");
+        assertEquals(1, foo3.size());
+
+        Elements dataName = doc.select("[data-name=\"with spaces\"]");
+        assertEquals(1, dataName.size());
+        assertEquals("with spaces", dataName.first().attr("data-name"));
 
         Elements not = doc.select("div[title!=bar]");
         assertEquals(5, not.size());
