@@ -410,12 +410,12 @@ public class HttpConnection implements Connection {
         private int numRedirects = 0;
         private Connection.Request req;
 
-        /**
+        /*
          * For example {@code application/atom+xml;charset=utf-8}.
          * Stepping through it: start with {@code "application/"}, follow with word
          * characters up to a {@code "+xml"}, and then maybe more ({@code .*}).
          */
-        public static final Pattern xmlContentTypeRxp = Pattern.compile("application/\\w+\\+xml.*");
+        private static final Pattern xmlContentTypeRxp = Pattern.compile("application/\\w+\\+xml.*");
 
         Response() {
             super();

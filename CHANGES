@@ -51,6 +51,9 @@ jsoup changelog
  * Fixed support for nth-of-type selectors with unknown tags.
    <https://github.com/jhy/jsoup/pull/402>
 
+ * Added support for 'application/*+xml' mimetypes.
+   <https://github.com/jhy/jsoup/pull/444>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
