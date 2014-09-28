@@ -14,7 +14,7 @@ jsoup changelog
 
  * Tightened the scope of what characters are escaped in attributes and textnodes, to align with the spec. Also, when
    using the extended escape entities map, only escape a character if the current output charset does not support it.
-   This produces smaller, more legible HTML, with greated control over the output (by setting charset and escape mode).
+   This produces smaller, more legible HTML, with greater control over the output (by setting charset and escape mode).
 
  * If pretty-print is disabled, don't trim outer whitespace in Element.html()
    <https://github.com/jhy/jsoup/issues/368>
