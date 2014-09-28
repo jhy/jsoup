@@ -445,12 +445,14 @@ public class Element extends Node {
     }
 
     /**
-     * Get this element's CSS Path. If the element has an id, returns #id,
-     * Otherwise it returns the parent (if any) css path followed by '>',
-     * followed by an unique selector for the element (tag.class.class:nth-child(n)).
+     * Get a CSS selector that will uniquely select this element.
+     * <p/>If the element has an ID, returns #id;
+     * otherwise returns the parent (if any) CSS selector, followed by '>',
+     * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     *
      * @return the CSS Path that can be used to retrieve the element in a selector.
      */
-    public String cssPath() {
+    public String cssSelector() {
         if (!id().isEmpty())
             return "#" + id();
 
@@ -459,7 +461,7 @@ public class Element extends Node {
         if (!classes.isEmpty())
             selector.append('.').append(classes);
 
-        if (parent() == null)
+        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
             return selector.toString();
 
         selector.insert(0, " > ");
@@ -467,7 +469,7 @@ public class Element extends Node {
             selector.append(String.format(
                 ":nth-child(%d)", elementSiblingIndex() + 1));
 
-        return parent().cssPath() + selector.toString();
+        return parent().cssSelector() + selector.toString();
     }
 
     /**

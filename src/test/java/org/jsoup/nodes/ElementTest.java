@@ -687,9 +687,13 @@ public class ElementTest {
         Element divA = doc.select("div").get(0);
         Element divB = doc.select("div").get(1);
         Element divC = doc.select("div").get(2);
-        assertEquals(divA.cssPath(), "#id1");
-        assertEquals(divB.cssPath(), "#root > html > body > div:nth-child(2)");
-        assertEquals(divC.cssPath(), "#root > html > body > div.c1.c2");
+        assertEquals(divA.cssSelector(), "#id1");
+        assertEquals(divB.cssSelector(), "html > body > div:nth-child(2)");
+        assertEquals(divC.cssSelector(), "html > body > div.c1.c2");
+
+        assertTrue(divA == doc.select(divA.cssSelector()).first());
+        assertTrue(divB == doc.select(divB.cssSelector()).first());
+        assertTrue(divC == doc.select(divC.cssSelector()).first());
     }
 
 }
