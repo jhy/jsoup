@@ -596,7 +596,7 @@ public class HttpConnection implements Connection {
                 List<String> values = entry.getValue();
                 if (name.equalsIgnoreCase("Set-Cookie")) {
                     for (String value : values) {
-                        if (value == null)
+                        if (value == null || value.isEmpty())
                             continue;
                         
                         List<HttpCookie> parse = HttpCookie.parse(value);
