@@ -73,7 +73,7 @@ public class HttpConnectionTest {
         headers.put("Set-Cookie", cookieStrings);
         HttpConnection.Response res = new HttpConnection.Response();
         res.processResponseHeaders(headers);
-        assertEquals(4, res.cookies().size());
+        assertEquals(3, res.cookies().size());
 //        assertEquals("", res.cookie("one"));
         assertEquals("", res.cookie("two"));
         assertEquals("", res.cookie("three"));
