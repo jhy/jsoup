@@ -181,7 +181,7 @@ public class Element extends Node {
      */
     public Elements children() {
         // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
-        List<Element> elements = new ArrayList<Element>();
+        List<Element> elements = new ArrayList<Element>(childNodes.size());
         for (Node node : childNodes) {
             if (node instanceof Element)
                 elements.add((Element) node);
