@@ -38,8 +38,12 @@ jsoup changelog
  * Fixed an issue in parsing a base URI when loading a URL containing a http-equiv element.
    <https://github.com/jhy/jsoup/issues/440>
 
- * Fixed an issue for Java 1.5 / Android 2.2 compatibility
+ * Fixed an issue for Java 1.5 / Android 2.2 compatibility, and verify it doesn't regress.
    <https://github.com/jhy/jsoup/issues/375>
+   <https://github.com/jhy/jsoup/pull/403>
+
+ * Fixed an issue that would throw an NPE when trying to set invalid HTML into a title element.
+   <https://github.com/jhy/jsoup/pull/410>
 
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
