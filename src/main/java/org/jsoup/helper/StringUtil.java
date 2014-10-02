@@ -120,7 +120,6 @@ public final class StringUtil {
      * @param accum builder to append to
      * @param string string to normalize whitespace within
      * @param stripLeading set to true if you wish to remove any leading whitespace
-     * @return
      */
     public static void appendNormalisedWhitespace(StringBuilder accum, String string, boolean stripLeading) {
         boolean lastWasWhite = false;
