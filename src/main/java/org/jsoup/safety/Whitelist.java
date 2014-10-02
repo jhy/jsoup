@@ -36,7 +36,7 @@ import java.util.Set;
  <li>{@link #addProtocols}
  </ul>
  <p/>
- If you need to allow less through, tweak a base whitelist with:
+ You can remove any setting from an existing whitelist with:
  <ul>
  <li>{@link #removeTags}
  <li>{@link #removeAttributes}
