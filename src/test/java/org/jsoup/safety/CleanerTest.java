@@ -106,6 +106,28 @@ public class CleanerTest {
         assertEquals("<a>XSS</a>", cleanHtml);
     }
 
+    @Test public void testCleanAnchorProtocol() {
+        String validAnchor = "<a href=\"#valid\">Valid anchor</a>";
+        String invalidAnchor = "<a href=\"#anchor with spaces\">Invalid anchor</a>";
+
+        // A Whitelist that does not allow anchors will strip them out.
+        String cleanHtml = Jsoup.clean(validAnchor, Whitelist.relaxed());
+        assertEquals("<a>Valid anchor</a>", cleanHtml);
+
+        cleanHtml = Jsoup.clean(invalidAnchor, Whitelist.relaxed());
+        assertEquals("<a>Invalid anchor</a>", cleanHtml);
+
+        // A Whitelist that allows them will keep them.
+        Whitelist relaxedWithAnchor = Whitelist.relaxed().addProtocols("a", "href", "#");
+
+        cleanHtml = Jsoup.clean(validAnchor, relaxedWithAnchor);
+        assertEquals(validAnchor, cleanHtml);
+
+        // An invalid anchor is never valid.
+        cleanHtml = Jsoup.clean(invalidAnchor, relaxedWithAnchor);
+        assertEquals("<a>Invalid anchor</a>", cleanHtml);
+    }
+
     @Test public void testDropsUnknownTags() {
         String h = "<p><custom foo=true>Test</custom></p>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());

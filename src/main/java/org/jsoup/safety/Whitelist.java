@@ -379,6 +379,9 @@ public class Whitelist {
      URLs with the defined protocol.
      <p/>
      E.g.: <code>addProtocols("a", "href", "ftp", "http", "https")</code>
+     <p/>
+     To allow a link to an in-page URL anchor (i.e. <code>&lt;a href="#anchor"&gt;</code>, add a <code>#</code>:<br>
+     E.g.: <code>addProtocols("a", "href", "#")</code>
 
      @param tag       Tag the URL protocol is for
      @param key       Attribute key
@@ -498,12 +501,27 @@ public class Whitelist {
             attr.setValue(value);
         
         for (Protocol protocol : protocols) {
-            String prot = protocol.toString() + ":";
+            String prot = protocol.toString();
+
+            if (prot.equals("#")) { // allows anchor links
+                if (isValidAnchor(value)) {
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+
+            prot += ":";
+
             if (value.toLowerCase().startsWith(prot)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean isValidAnchor(String value) {
+        return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 
     Attributes getEnforcedAttributes(String tagName) {
