@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.8.2 [PENDING]
+ * Added ability to further tweak the canned Cleaner Whitelists by removing existing settings.
+   <https://github.com/jhy/jsoup/pull/449>
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
