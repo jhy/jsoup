@@ -36,6 +36,14 @@ import java.util.Set;
  <li>{@link #addProtocols}
  </ul>
  <p/>
+ You can remove any setting from an existing whitelist with:
+ <ul>
+ <li>{@link #removeTags}
+ <li>{@link #removeAttributes}
+ <li>{@link #removeEnforcedAttribute}
+ <li>{@link #removeProtocols}
+ </ul>
+ <p/>
  The cleaner and these whitelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
  document HTML around the cleaned body HTML, or create a whitelist that allows <code>html</code> and <code>head</code>
@@ -193,6 +201,28 @@ public class Whitelist {
     }
 
     /**
+     Remove a list of allowed elements from a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
+
+     @param tags tag names to disallow
+     @return this (for chaining)
+     */
+    public Whitelist removeTags(String... tags) {
+        Validate.notNull(tags);
+
+        for(String tag: tags) {
+            Validate.notEmpty(tag);
+            TagName tagName = TagName.valueOf(tag);
+
+            if(tagNames.remove(tagName)) { // Only look in sub-maps if tag was allowed
+                attributes.remove(tagName);
+                enforcedAttributes.remove(tagName);
+                protocols.remove(tagName);
+            }
+        }
+        return this;
+    }
+
+    /**
      Add a list of allowed attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p/>
      E.g.: <code>addAttributes("a", "href", "class")</code> allows <code>href</code> and <code>class</code> attributes
@@ -228,6 +258,48 @@ public class Whitelist {
     }
 
     /**
+     Remove a list of allowed attributes from a tag. (If an attribute is not allowed on an element, it will be removed.)
+     <p/>
+     E.g.: <code>removeAttributes("a", "href", "class")</code> disallows <code>href</code> and <code>class</code>
+     attributes on <code>a</code> tags.
+     <p/>
+     To make an attribute invalid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
+     <code>removeAttributes(":all", "class")</code>.
+
+     @param tag  The tag the attributes are for.
+     @param keys List of invalid attributes for the tag
+     @return this (for chaining)
+     */
+    public Whitelist removeAttributes(String tag, String... keys) {
+        Validate.notEmpty(tag);
+        Validate.notNull(keys);
+        Validate.isTrue(keys.length > 0, "No attributes supplied.");
+
+        TagName tagName = TagName.valueOf(tag);
+        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        for (String key : keys) {
+            Validate.notEmpty(key);
+            attributeSet.add(AttributeKey.valueOf(key));
+        }
+        if(tagNames.contains(tagName) && attributes.containsKey(tagName)) { // Only look in sub-maps if tag was allowed
+            Set<AttributeKey> currentSet = attributes.get(tagName);
+            currentSet.removeAll(attributeSet);
+
+            if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
+                attributes.remove(tagName);
+        }
+        if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
+            for(TagName name: attributes.keySet()) {
+                Set<AttributeKey> currentSet = attributes.get(name);
+                currentSet.removeAll(attributeSet);
+
+                if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
+                    attributes.remove(name);
+            }
+        return this;
+    }
+
+    /**
      Add an enforced attribute to a tag. An enforced attribute will always be added to the element. If the element
      already has the attribute set, it will be overridden.
      <p/>
@@ -256,6 +328,29 @@ public class Whitelist {
             Map<AttributeKey, AttributeValue> attrMap = new HashMap<AttributeKey, AttributeValue>();
             attrMap.put(attrKey, attrVal);
             enforcedAttributes.put(tagName, attrMap);
+        }
+        return this;
+    }
+
+    /**
+     Remove a previously configured enforced attribute from a tag.
+
+     @param tag   The tag the enforced attribute is for.
+     @param key   The attribute key
+     @return this (for chaining)
+     */
+    public Whitelist removeEnforcedAttribute(String tag, String key) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+
+        TagName tagName = TagName.valueOf(tag);
+        if(tagNames.contains(tagName) && enforcedAttributes.containsKey(tagName)) {
+            AttributeKey attrKey = AttributeKey.valueOf(key);
+            Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.get(tagName);
+            attrMap.remove(attrKey);
+
+            if(attrMap.isEmpty()) // Remove tag from enforced attribute map if no enforced attributes are present
+                enforcedAttributes.remove(tagName);
         }
         return this;
     }
@@ -316,6 +411,44 @@ public class Whitelist {
             Validate.notEmpty(protocol);
             Protocol prot = Protocol.valueOf(protocol);
             protSet.add(prot);
+        }
+        return this;
+    }
+
+    /**
+     Remove allowed URL protocols for an element's URL attribute.
+     <p/>
+     E.g.: <code>removeProtocols("a", "href", "ftp")</code>
+
+     @param tag       Tag the URL protocol is for
+     @param key       Attribute key
+     @param protocols List of invalid protocols
+     @return this, for chaining
+     */
+    public Whitelist removeProtocols(String tag, String key, String... protocols) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+        Validate.notNull(protocols);
+
+        TagName tagName = TagName.valueOf(tag);
+        AttributeKey attrKey = AttributeKey.valueOf(key);
+
+        if(this.protocols.containsKey(tagName)) {
+            Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.get(tagName);
+            if(attrMap.containsKey(attrKey)) {
+                Set<Protocol> protSet = attrMap.get(attrKey);
+                for (String protocol : protocols) {
+                    Validate.notEmpty(protocol);
+                    Protocol prot = Protocol.valueOf(protocol);
+                    protSet.remove(prot);
+                }
+
+                if(protSet.isEmpty()) { // Remove protocol set if empty
+                    attrMap.remove(attrKey);
+                    if(attrMap.isEmpty()) // Remove entry for tag if empty
+                        this.protocols.remove(tagName);
+                }
+            }
         }
         return this;
     }

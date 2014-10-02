@@ -45,6 +45,36 @@ public class CleanerTest {
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
     }
+
+    @Test public void testRemoveTags() {
+        String h = "<div><p><A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeTags("a"));
+
+        assertEquals("<p>Nice</p><blockquote>Hello</blockquote>", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveAttributes() {
+        String h = "<div><p>Nice</p><blockquote cite='http://example.com/quotations'>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeAttributes("blockquote", "cite"));
+
+        assertEquals("<p>Nice</p><blockquote>Hello</blockquote>", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveEnforcedAttributes() {
+        String h = "<div><p><A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeEnforcedAttribute("a", "rel"));
+
+        assertEquals("<p><a href=\"http://nice.com\">Nice</a></p><blockquote>Hello</blockquote>",
+                TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveProtocols() {
+        String h = "<p>Contact me <a href='mailto:info@example.com'>here</a></p>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeProtocols("a", "href", "ftp", "mailto"));
+
+        assertEquals("<p>Contact me <a rel=\"nofollow\">here</a></p>",
+                TextUtil.stripNewlines(cleanHtml));
+    }
     
     @Test public void testDropComments() {
         String h = "<p>Hello<!-- no --></p>";
