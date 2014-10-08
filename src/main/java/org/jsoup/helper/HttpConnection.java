@@ -610,6 +610,7 @@ public class HttpConnection implements Connection {
                 if (!req.isValidateSSLCertificates()) {
                     initUnSecureSSL();
                     ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
+                    ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
                 }
             }
 
@@ -621,6 +622,22 @@ public class HttpConnection implements Connection {
                 conn.addRequestProperty(header.getKey(), header.getValue());
             }
             return conn;
+        }
+
+        /**
+         * Instantiate Hostname Verifier that does nothing.
+         * This is used for connections with disabled SSL certificates validation.
+         *
+         *
+         * @return Hostname Verifier that does nothing and accepts all hostnames
+         */
+        private static HostnameVerifier getInsecureVerifier() {
+            HostnameVerifier hv = new HostnameVerifier() {
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return true;
+                }
+            };
+            return hv;
         }
 
         /**

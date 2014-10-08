@@ -8,7 +8,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.internal.runners.statements.ExpectException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,9 +23,10 @@ import static org.junit.Assert.*;
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-@Ignore // ignored by default so tests don't require network access. comment out to enable.
+//@Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
+    private static final String WEBSITE_WITH_SNI = "https://sni.velox.ch/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
     @Test
@@ -294,6 +294,38 @@ public class UrlConnectTest {
     public void testUnsafeFail() throws Exception {
         String url = WEBSITE_WITH_INVALID_CERTIFICATE;
         Jsoup.connect(url).execute();
+    }
+
+
+    /**
+     * Verify that requests to websites with SNI fail on jdk 1.6
+     * <p/>
+     * read for more details:
+     * http://en.wikipedia.org/wiki/Server_Name_Indication
+     *
+     * Test is ignored independent from others as it requires JDK 1.6
+     * @throws Exception
+     */
+    @Test(expected = IOException.class)
+    @Ignore
+    public void testSNIFail() throws Exception {
+        String url = WEBSITE_WITH_SNI;
+        Jsoup.connect(url).execute();
+    }
+
+    /**
+     * Verify that requests to websites with SNI pass
+     * <p/>
+     * <b>NB!</b> this test is FAILING right now on jdk 1.6
+     *
+     * @throws Exception
+     */
+    @Test
+    @Ignore
+    public void testSNIPass() throws Exception {
+        String url = WEBSITE_WITH_SNI;
+        Connection.Response defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
+        assertThat(defaultRes.statusCode(), is(200));
     }
 
     /**
