@@ -609,9 +609,8 @@ public class HttpConnection implements Connection {
             if (conn instanceof HttpsURLConnection) {
                 if (!req.isValidateSSLCertificates()) {
                     initUnSecureSSL();
+                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
                 }
-
-                ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
             }
 
             if (req.method() == Method.POST)
@@ -634,26 +633,26 @@ public class HttpConnection implements Connection {
          * @throws IOException
          */
         private static synchronized void initUnSecureSSL() throws IOException {
-            if ( sslSocketFactory == null) {
+            if (sslSocketFactory == null) {
                 // Create a trust manager that does not validate certificate chains
-                final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
 
-                    public void checkClientTrusted( final X509Certificate[] chain, final String authType ) {
+                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
                     }
 
-                    public void checkServerTrusted( final X509Certificate[] chain, final String authType ) {
+                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
                     }
 
                     public X509Certificate[] getAcceptedIssuers() {
                         return null;
                     }
-                } };
+                }};
 
                 // Install the all-trusting trust manager
                 final SSLContext sslContext;
                 try {
                     sslContext = SSLContext.getInstance("SSL");
-                    sslContext.init( null, trustAllCerts, new java.security.SecureRandom() );
+                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                     // Create an ssl socket factory with our all-trusting manager
                     sslSocketFactory = sslContext.getSocketFactory();
                 } catch (NoSuchAlgorithmException e) {

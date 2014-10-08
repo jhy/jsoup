@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.internal.runners.statements.ExpectException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,7 @@ import static org.junit.Assert.*;
  @author Jonathan Hedley, jonathan@hedley.net */
 @Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
+    private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
     @Test
@@ -283,23 +285,29 @@ public class UrlConnectTest {
 
     /**
      * Verify that security disabling feature works properly.
-     *
+     * <p/>
      * 1. try to hit url with invalid certificate and evaluate that exception is thrown
-     * 2. disable security checks and call the same url to verify that content is consumed correctly
+     *
+     * @throws Exception
+     */
+    @Test(expected = IOException.class)
+    public void testUnsafeFail() throws Exception {
+        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
+        Jsoup.connect(url).execute();
+    }
+
+    /**
+     * Verify that security disabling feature works properly.
+     * <p/>
+     * 1. disable security checks and call the same url to verify that content is consumed correctly
      *
      * @throws Exception
      */
     @Test
-    public void testUnsafe() throws Exception {
-        String url = "https://certs.cac.washington.edu/CAtest/";
-
-        try {
-            Jsoup.connect(url).execute();
-        } catch (IOException e) {
-//          that's expected exception
-        }
-        Connection.Response  defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
-        assertThat(defaultRes.statusCode(),is(200));
+    public void testUnsafePass() throws Exception {
+        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
+        Connection.Response defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
+        assertThat(defaultRes.statusCode(), is(200));
     }
 
     @Test
