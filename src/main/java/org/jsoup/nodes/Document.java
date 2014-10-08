@@ -206,6 +206,18 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Appendable> T serialize(T appendable) {
+    	 // Exclude outer wrapper tag.
+    	for (Node node : childNodes)
+            node.outerHtml(appendable);
+    	
+    	return appendable;
+    }
 
     @Override
     public Document clone() {

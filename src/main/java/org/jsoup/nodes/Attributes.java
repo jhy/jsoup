@@ -1,8 +1,18 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.Validate;
+import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import java.util.*;
+import org.jsoup.SerializationException;
+import org.jsoup.helper.Validate;
 
 /**
  * The attributes of an Element.
@@ -132,6 +142,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      Get the HTML representation of these attributes.
      @return HTML
+     @throws SerializationException if the HTML representation of the attributes cannot be constructed.
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
@@ -139,18 +150,23 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return accum.toString();
     }
     
-    void html(StringBuilder accum, Document.OutputSettings out) {
+    void html(Appendable accum, Document.OutputSettings out) {
         if (attributes == null)
             return;
         
-        for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
-            Attribute attribute = entry.getValue();
-            accum.append(" ");
-            attribute.html(accum, out);
+        try {
+        	for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
+                Attribute attribute = entry.getValue();
+                accum.append(" ");
+                attribute.html(accum, out);
+            }
+        } catch(IOException exception) {
+        	throw new SerializationException("Attribute serialization failed!", exception);
         }
     }
     
-    public String toString() {
+    @Override
+	public String toString() {
         return html();
     }
     

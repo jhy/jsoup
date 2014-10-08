@@ -1,11 +1,14 @@
 package org.jsoup.nodes;
 
+import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -552,7 +555,7 @@ public abstract class Node implements Cloneable {
         return accum.toString();
     }
 
-    protected void outerHtml(StringBuilder accum) {
+    protected void outerHtml(Appendable accum) {
         new NodeTraversor(new OuterHtmlVisitor(accum, getOutputSettings())).traverse(this);
     }
 
@@ -564,16 +567,29 @@ public abstract class Node implements Cloneable {
     /**
      Get the outer HTML of this node.
      @param accum accumulator to place HTML into
+     @throws IOException if appending to the given accumulator fails.
      */
-    abstract void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out);
+    abstract void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException;
 
-    abstract void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out);
+    abstract void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException;
 
-    public String toString() {
+    /**
+     * Recursively serializes this node to the given {@link Appendable} and returns the resulting <code>Appendable</code> instance.
+     *   
+     * @param appendable the {@link Appendable} that should hold the content of this node and all its child nodes.
+     * @return the given {@link Appendable}, now containing this node and all child nodes.
+     */
+    public <T extends Appendable> T serialize(T appendable) {
+    	outerHtml(appendable);
+    	return appendable;
+    }
+    
+    @Override
+	public String toString() {
         return outerHtml();
     }
 
-    protected void indent(StringBuilder accum, int depth, Document.OutputSettings out) {
+    protected void indent(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
     }
 
@@ -647,21 +663,30 @@ public abstract class Node implements Cloneable {
     }
 
     private static class OuterHtmlVisitor implements NodeVisitor {
-        private StringBuilder accum;
+        private Appendable accum;
         private Document.OutputSettings out;
 
-        OuterHtmlVisitor(StringBuilder accum, Document.OutputSettings out) {
+        OuterHtmlVisitor(Appendable accum, Document.OutputSettings out) {
             this.accum = accum;
             this.out = out;
         }
 
         public void head(Node node, int depth) {
-            node.outerHtmlHead(accum, depth, out);
+            try {
+				node.outerHtmlHead(accum, depth, out);
+			} catch (IOException exception) {
+				throw new SerializationException("Node head serialization failed!", exception);
+			}
         }
 
         public void tail(Node node, int depth) {
-            if (!node.nodeName().equals("#text")) // saves a void hit.
-                node.outerHtmlTail(accum, depth, out);
+            if (!node.nodeName().equals("#text")) {
+				try {
+					node.outerHtmlTail(accum, depth, out);
+				} catch (IOException exception) {
+					throw new SerializationException("Node tail serialization failed!", exception);
+				}
+            }
         }
     }
 }

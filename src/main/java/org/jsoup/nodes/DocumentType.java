@@ -1,7 +1,8 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+
 import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
 
 /**
  * A {@code <!DOCTYPE>} node.
@@ -30,7 +31,7 @@ public class DocumentType extends Node {
     }
 
     @Override
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum.append("<!DOCTYPE");
         if (!StringUtil.isBlank(attr("name")))
             accum.append(" ").append(attr("name"));
@@ -42,6 +43,6 @@ public class DocumentType extends Node {
     }
 
     @Override
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
     }
 }

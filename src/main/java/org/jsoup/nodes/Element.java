@@ -1,14 +1,27 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.*;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import org.jsoup.select.Collector;
+import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
+import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Selector;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -1091,13 +1104,18 @@ public class Element extends Node {
             attr("value", value);
         return this;
     }
-
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        if (accum.length() > 0 && out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline()) )
-            indent(accum, depth, out);
-        accum
-                .append("<")
-                .append(tagName());
+    
+    @Override
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    	if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
+    		if(accum instanceof StringBuilder) {
+    			if(((StringBuilder)accum).length() > 0)
+    				indent(accum, depth, out);
+    		} else {
+    			indent(accum, depth, out);
+    		}
+    	}
+        accum.append("<").append(tagName());
         attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
@@ -1111,7 +1129,8 @@ public class Element extends Node {
             accum.append(">");
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
+    @Override
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
@@ -1151,7 +1170,8 @@ public class Element extends Node {
         return this;
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         return outerHtml();
     }
 

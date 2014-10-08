@@ -1,14 +1,15 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.StringUtil;
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
+
+import org.jsoup.helper.StringUtil;
+import org.jsoup.parser.Parser;
 
 /**
  * HTML entities, and escape routines.
@@ -71,15 +72,15 @@ public class Entities {
         return full.get(name);
     }
     
-    static String escape(String string, Document.OutputSettings out) {
+    static String escape(String string, Document.OutputSettings out) throws IOException {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         escape(accum, string, out, false, false, false);
         return accum.toString();
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
-    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
-                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+    static void escape(Appendable accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
 
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;

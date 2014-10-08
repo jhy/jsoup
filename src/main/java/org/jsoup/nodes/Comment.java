@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+
 /**
  A comment node.
 
@@ -17,7 +19,8 @@ public class Comment extends Node {
         attributes.put(COMMENT_KEY, data);
     }
 
-    public String nodeName() {
+    @Override
+	public String nodeName() {
         return "#comment";
     }
 
@@ -29,18 +32,19 @@ public class Comment extends Node {
         return attributes.get(COMMENT_KEY);
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+    @Override
+	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint())
             indent(accum, depth, out);
-        accum
-                .append("<!--")
-                .append(getData())
-                .append("-->");
+        
+        accum.append("<!--").append(getData()).append("-->");
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
+    @Override
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    public String toString() {
+    @Override
+	public String toString() {
         return outerHtml();
     }
 }

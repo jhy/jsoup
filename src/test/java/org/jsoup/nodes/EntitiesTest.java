@@ -7,10 +7,11 @@ import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 public class EntitiesTest {
-    @Test public void escape() {
+    @Test public void escape() throws IOException {
         String text = "Hello &<> Å å π 新 there ¾ © »";
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         String escapedAsciiFull = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(extended));
@@ -33,7 +34,7 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
-    @Test public void escapeSupplementaryCharacter(){
+    @Test public void escapeSupplementaryCharacter() throws IOException{
         String text = new String(Character.toChars(135361));
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         assertEquals("&#x210c1;", escapedAscii);
@@ -56,7 +57,7 @@ public class EntitiesTest {
     }
 
     
-    @Test public void caseSensitive() {
+    @Test public void caseSensitive() throws IOException {
         String unescaped = "Ü ü & &";
         assertEquals("&Uuml; &uuml; &amp; &amp;",
                 Entities.escape(unescaped, new OutputSettings().charset("ascii").escapeMode(extended)));
