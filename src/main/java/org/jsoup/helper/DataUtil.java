@@ -215,7 +215,7 @@ public final class DataUtil {
     static String mimeBoundary() {
         final StringBuilder mime = new StringBuilder(boundaryLength);
         final Random rand = new Random();
-        for (int i = 0; i < boundaryLength -2; i++) {
+        for (int i = 0; i < boundaryLength; i++) {
             mime.append(mimeBoundaryChars[rand.nextInt(mimeBoundaryChars.length)]);
         }
         return mime.toString();

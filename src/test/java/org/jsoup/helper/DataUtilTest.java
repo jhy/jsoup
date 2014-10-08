@@ -72,7 +72,6 @@ public class DataUtilTest {
         assertEquals(DataUtil.boundaryLength, m1.length());
         assertEquals(DataUtil.boundaryLength, m2.length());
         assertNotSame(m1, m2);
-        assertTrue(m1.startsWith("--"));
     }
 
 }
