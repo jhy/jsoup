@@ -24,6 +24,9 @@ import java.util.zip.GZIPInputStream;
  */
 public class HttpConnection implements Connection {
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
+    public static final String  CONTENT_ENCODING = "Content-Encoding";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String MULTIPART_FORM_DATA = "multipart/form-data";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -42,6 +45,12 @@ public class HttpConnection implements Connection {
 			return null;
     	return url.replaceAll(" ", "%20");
 	}
+
+    private static String encodeMimeName(String val) {
+        if (val == null)
+            return null;
+        return val.replaceAll("\"", "%22");
+    }
 
     private Connection.Request req;
     private Connection.Response res;
@@ -110,6 +119,11 @@ public class HttpConnection implements Connection {
 
     public Connection data(String key, String value) {
         req.data(KeyVal.create(key, value));
+        return this;
+    }
+
+    public Connection data(String key, String filename, InputStream inputStream) {
+        req.data(KeyVal.create(key, filename, inputStream));
         return this;
     }
 
@@ -250,6 +264,13 @@ public class HttpConnection implements Connection {
             return getHeaderCaseInsensitive(name) != null;
         }
 
+        /**
+         * Test if the request has a header with this value (case insensitive).
+         */
+        public boolean hasHeaderWithValue(String name, String value) {
+            return hasHeader(name) && header(name).equalsIgnoreCase(value);
+        }
+
         public T removeHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
             Map.Entry<String, String> entry = scanHeaders(name); // remove is case insensitive too
@@ -313,7 +334,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Request extends Base<Connection.Request> implements Connection.Request {
+    public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -399,7 +420,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Response extends Base<Connection.Response> implements Connection.Response {
+    public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private int statusCode;
         private String statusMessage;
@@ -441,14 +462,18 @@ public class HttpConnection implements Connection {
                 throw new MalformedURLException("Only http & https protocols supported");
 
             // set up the request for execution
-            if (req.method() == Connection.Method.GET && req.data().size() > 0)
+            String mimeBoundary = null;
+            if (req.method() == Connection.Method.GET && req.data().size() > 0) {
                 serialiseRequestUrl(req); // appends query string
+            } else {
+                mimeBoundary = setupMultipartModeIfNeeded(req);
+            }
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
                 conn.connect();
                 if (req.method() == Connection.Method.POST)
-                    writePost(req.data(), conn.getOutputStream());
+                    writePost(req, conn.getOutputStream(), mimeBoundary);
 
                 int status = conn.getResponseCode();
                 boolean needsRedirect = false;
@@ -491,7 +516,7 @@ public class HttpConnection implements Connection {
                 InputStream dataStream = null;
                 try {
                     dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    bodyStream = res.hasHeader("Content-Encoding") && res.header("Content-Encoding").equalsIgnoreCase("gzip") ?
+                    bodyStream = res.hasHeaderWithValue(CONTENT_ENCODING, "gzip") ?
                             new BufferedInputStream(new GZIPInputStream(dataStream)) :
                             new BufferedInputStream(dataStream);
 
@@ -617,18 +642,65 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static void writePost(Collection<Connection.KeyVal> data, OutputStream outputStream) throws IOException {
-            OutputStreamWriter w = new OutputStreamWriter(outputStream, DataUtil.defaultCharset);
-            boolean first = true;
-            for (Connection.KeyVal keyVal : data) {
-                if (!first)
-                    w.append('&');
-                else
-                    first = false;
+        private static String setupMultipartModeIfNeeded(final Connection.Request req) {
+            // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
+            boolean needsMulti = false;
+            for (Connection.KeyVal keyVal : req.data()) {
+                if (keyVal.hasInputStream()) {
+                    needsMulti = true;
+                    break;
+                }
+            }
+            if (needsMulti) {
+                final String bound = DataUtil.mimeBoundary();
+                req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
+                return bound;
+            }
+            return null;
+        }
 
-                w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
-                w.write('=');
-                w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+        private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {
+            final Collection<Connection.KeyVal> data = req.data();
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, DataUtil.defaultCharset));
+
+            if (bound != null) {
+                // boundary will be set if we're in multipart mode
+                for (Connection.KeyVal keyVal : data) {
+                    w.write("--");
+                    w.write(bound);
+                    w.write("\r\n");
+                    w.write("Content-Disposition: form-data; name=\"");
+                    w.write(encodeMimeName(keyVal.key())); // encodes " to %22
+                    w.write("\"");
+                    if (keyVal.hasInputStream()) {
+                        w.write("; filename=\"");
+                        w.write(encodeMimeName(keyVal.value()));
+                        w.write("\"\r\nContent-Type: application/octet-stream\r\n\r\n");
+                        w.flush(); // flush
+                        DataUtil.crossStreams(keyVal.inputStream(), outputStream);
+                        outputStream.flush();
+                    } else {
+                        w.write("\r\n\r\n");
+                        w.write(keyVal.value());
+                    }
+                    w.write("\r\n");
+                }
+                w.write("--");
+                w.write(bound);
+                w.write("--");
+            } else {
+                // regular form data (application/x-www-form-urlencoded)
+                boolean first = true;
+                for (Connection.KeyVal keyVal : data) {
+                    if (!first)
+                        w.append('&');
+                    else
+                        first = false;
+
+                    w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                    w.write('=');
+                    w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                }
             }
             w.close();
         }
@@ -681,17 +753,17 @@ public class HttpConnection implements Connection {
     public static class KeyVal implements Connection.KeyVal {
         private String key;
         private String value;
+        private InputStream stream;
 
         public static KeyVal create(String key, String value) {
-            Validate.notEmpty(key, "Data key must not be empty");
-            Validate.notNull(value, "Data value must not be null");
-            return new KeyVal(key, value);
+            return new KeyVal().key(key).value(value);
         }
 
-        private KeyVal(String key, String value) {
-            this.key = key;
-            this.value = value;
+        public static KeyVal create(String key, String filename, InputStream stream) {
+            return new KeyVal().key(key).value(filename).inputStream(stream);
         }
+
+        private KeyVal() {}
 
         public KeyVal key(String key) {
             Validate.notEmpty(key, "Data key must not be empty");
@@ -711,6 +783,20 @@ public class HttpConnection implements Connection {
 
         public String value() {
             return value;
+        }
+
+        public KeyVal inputStream(InputStream inputStream) {
+            Validate.notNull(value, "Data input stream must not be null");
+            this.stream = inputStream;
+            return this;
+        }
+
+        public InputStream inputStream() {
+            return stream;
+        }
+
+        public boolean hasInputStream() {
+            return stream != null;
         }
 
         @Override

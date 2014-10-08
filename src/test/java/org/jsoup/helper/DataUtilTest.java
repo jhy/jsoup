@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class DataUtilTest {
     @Test
@@ -62,6 +62,17 @@ public class DataUtilTest {
     @Test
     public void shouldReturnNullForIllegalCharsetNames() {
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
+    }
+
+    @Test
+    public void generatesMimeBoundaries() {
+        String m1 = DataUtil.mimeBoundary();
+        String m2 = DataUtil.mimeBoundary();
+
+        assertEquals(DataUtil.boundaryLength, m1.length());
+        assertEquals(DataUtil.boundaryLength, m2.length());
+        assertNotSame(m1, m2);
+        assertTrue(m1.startsWith("--"));
     }
 
 }

@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Locale;
@@ -16,10 +17,13 @@ import java.util.Locale;
  * Internal static utilities for handling data.
  *
  */
-public class DataUtil {
+public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int bufferSize = 0x20000; // ~130K.
+    private static final char[] mimeBoundaryChars =
+            "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    static final int boundaryLength = 32;
 
     private DataUtil() {}
 
@@ -61,6 +65,20 @@ public class DataUtil {
     public static Document load(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
         ByteBuffer byteData = readToByteBuffer(in);
         return parseByteData(byteData, charsetName, baseUri, parser);
+    }
+
+    /**
+     * Writes the input stream to the output stream. Doesn't close them.
+     * @param in input stream to read from
+     * @param out output stream to write to
+     * @throws IOException on IO error
+     */
+    static void crossStreams(final InputStream in, final OutputStream out) throws IOException {
+        final byte[] buffer = new byte[bufferSize];
+        int len;
+        while ((len = in.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
     }
 
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
@@ -190,6 +208,16 @@ public class DataUtil {
         }
         return null;
     }
-    
-    
+
+    /**
+     * Creates a random string, suitable for use as a mime boundary
+     */
+    static String mimeBoundary() {
+        final StringBuilder mime = new StringBuilder(boundaryLength);
+        final Random rand = new Random();
+        for (int i = 0; i < boundaryLength -2; i++) {
+            mime.append(mimeBoundaryChars[rand.nextInt(mimeBoundaryChars.length)]);
+        }
+        return mime.toString();
+    }
 }
