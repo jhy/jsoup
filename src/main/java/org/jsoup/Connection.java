@@ -30,9 +30,16 @@ public interface Connection {
 
     /**
      * Setter to disable\enable SSL certificates checks during https connection
+     * <p/>
+     * By default all connections over HTTPS perform normal validation of certificates.
+     * <b>NB!</b>Use this feature at your own risk.
+     * <p/>
+     * Some websites use self generated certificates to sign data, which sometimes are expired,
+     * by default request to those websites would fail, this feature allows to communicate to them.
+     *
      * @param value
      */
-    Connection setSecure (boolean value);
+    Connection setValidateSSLCertificates(boolean value);
 
     /**
      * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
@@ -468,13 +475,13 @@ public interface Connection {
          *
          * @return
          */
-        boolean isSecure();
+        boolean isValidateSSLCertificates();
 
         /**
          * Disable SSL certificates checks.
          * @param value
          */
-        void setSecure(boolean value);
+        void setValidateSSLCertificates(boolean value);
     }
 
     /**

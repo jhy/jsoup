@@ -64,8 +64,8 @@ public class HttpConnection implements Connection {
         res = new Response();
     }
 
-    public Connection setSecure(boolean value) {
-        req.setSecure(value);
+    public Connection setValidateSSLCertificates(boolean value) {
+        req.setValidateSSLCertificates(value);
         return this;
     }
 
@@ -351,8 +351,8 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
-//      always default to secure connections in https
-        private boolean secure = true;
+//      always default to validateSSLCertificates connections in https
+        private boolean validateSSLCertificates = true;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -430,12 +430,12 @@ public class HttpConnection implements Connection {
             return parser;
         }
 
-        public boolean isSecure() {
-            return secure;
+        public boolean isValidateSSLCertificates() {
+            return validateSSLCertificates;
         }
 
-        public void setSecure(boolean value) {
-            secure = value;
+        public void setValidateSSLCertificates(boolean value) {
+            validateSSLCertificates = value;
         }
     }
 
@@ -605,7 +605,7 @@ public class HttpConnection implements Connection {
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
-            if (!req.isSecure()) {
+            if (!req.isValidateSSLCertificates()) {
                 initUnSecureSSL();
                 if (conn instanceof HttpsURLConnection) {
                     ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
@@ -695,7 +695,7 @@ public class HttpConnection implements Connection {
                         String cookieVal = cd.consumeTo(";").trim();
                         if (cookieVal == null)
                             cookieVal = "";
-                        // ignores path, date, domain, secure et al. req'd?
+                        // ignores path, date, domain, validateSSLCertificates et al. req'd?
                         // name not blank, value not null
                         if (cookieName != null && cookieName.length() > 0)
                             cookie(cookieName, cookieVal);

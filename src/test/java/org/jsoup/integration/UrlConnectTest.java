@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -299,7 +298,7 @@ public class UrlConnectTest {
         } catch (IOException e) {
 //          that's expected exception
         }
-        Connection.Response  defaultRes = Jsoup.connect(url).setSecure(false).execute();
+        Connection.Response  defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
         assertThat(defaultRes.statusCode(),is(200));
     }
 
