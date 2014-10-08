@@ -605,12 +605,15 @@ public class HttpConnection implements Connection {
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
-            if (!req.isValidateSSLCertificates()) {
-                initUnSecureSSL();
-                if (conn instanceof HttpsURLConnection) {
-                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
+
+            if (conn instanceof HttpsURLConnection) {
+                if (!req.isValidateSSLCertificates()) {
+                    initUnSecureSSL();
                 }
+
+                ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
             }
+
             if (req.method() == Method.POST)
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
@@ -624,10 +627,13 @@ public class HttpConnection implements Connection {
         /**
          * Initialise Trust manager that does not validate certificate chains and
          * add it to current SSLContext.
+         * <p/>
+         * please not that this method will only perform action if sslSocketFactory is not yet
+         * instantiated.
          *
          * @throws IOException
          */
-        private static void initUnSecureSSL() throws IOException {
+        private static synchronized void initUnSecureSSL() throws IOException {
             if ( sslSocketFactory == null) {
                 // Create a trust manager that does not validate certificate chains
                 final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
