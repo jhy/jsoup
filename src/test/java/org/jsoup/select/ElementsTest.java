@@ -269,4 +269,11 @@ public class ElementsTest {
         assertEquals("1", forms.get(0).id());
         assertEquals("2", forms.get(1).id());
     }
+
+    @Test public void classWithHyphen() {
+        Document doc = Jsoup.parse("<p class='tab-nav'>Check</p>");
+        Elements els = doc.getElementsByClass("tab-nav");
+        assertEquals(1, els.size());
+        assertEquals("Check", els.text());
+    }
 }

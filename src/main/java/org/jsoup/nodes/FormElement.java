@@ -82,8 +82,15 @@ public class FormElement extends Element {
 
             if ("select".equals(el.tagName())) {
                 Elements options = el.select("option[selected]");
+                boolean set = false;
                 for (Element option: options) {
                     data.add(HttpConnection.KeyVal.create(name, option.val()));
+                    set = true;
+                }
+                if (!set) {
+                    Element option = el.select("option").first();
+                    if (option != null)
+                        data.add(HttpConnection.KeyVal.create(name, option.val()));
                 }
             } else {
                 data.add(HttpConnection.KeyVal.create(name, el.val()));

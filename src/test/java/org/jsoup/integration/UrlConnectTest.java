@@ -5,9 +5,13 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.FormElement;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -344,6 +348,52 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect("http://direct.infohound.net/tools/charset-base.html").execute();
         Document doc = res.parse();
         assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
+    }
+
+    /**
+     * Test fetching a form, and submitting it with a file attached.
+     */
+    @Test
+    public void postHtmlFile() throws IOException {
+        Document index = Jsoup.connect("http://direct.infohound.net/tidy/").get();
+        FormElement form = index.select("[name=tidy]").forms().get(0);
+        Connection post = form.submit();
+
+        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html");
+        FileInputStream stream = new FileInputStream(uploadFile);
+
+        // todo: need to add a better way to get an existing data field
+        for (Connection.KeyVal keyVal : post.request().data()) {
+            if (keyVal.key().equals("_file")) {
+                keyVal.value("check.html");
+                keyVal.inputStream(stream);
+            }
+        }
+
+        Connection.Response res;
+        try {
+            res = post.execute();
+        } finally {
+            stream.close();
+        }
+
+        Document out = res.parse();
+        assertTrue(out.text().contains("HTML Tidy Complete"));
+    }
+
+    /**
+     * Tests upload of binary content to a remote service.
+     */
+    @Test
+    public void postJpeg() throws IOException {
+        File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
+        Document result = Jsoup
+                .connect("http://regex.info/exif.cgi")
+                .data("f", thumb.getName(), new FileInputStream(thumb))
+                .post();
+
+        assertEquals("Baseline DCT, Huffman coding", result.select("td:contains(Process) + td").text());
+
     }
 
 }

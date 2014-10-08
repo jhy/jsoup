@@ -1,5 +1,21 @@
 jsoup changelog
 
+*** Release 1.8.2 [PENDING]
+ * File upload support. Added the ability to specify input streams for POST data, which will upload content in
+   MIME multipart/form-data encoding.
+
+ * Added ability to further tweak the canned Cleaner Whitelists by removing existing settings.
+   <https://github.com/jhy/jsoup/pull/449>
+
+ * Added option in Cleaner Whitelist to allow linking to in-page anchors (#)
+   <https://github.com/jhy/jsoup/pull/441>
+
+ * Fixed validation of cookie names in HttpConnection cookie methods.
+   <https://github.com/jhy/jsoup/pull/377>
+
+ * Fixed an issue where <option> tags would be missed when preparing a form for submission if missing a selected
+    attribute.
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
