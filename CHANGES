@@ -10,6 +10,8 @@ jsoup changelog
  * Added option in Cleaner Whitelist to allow linking to in-page anchors (#)
    <https://github.com/jhy/jsoup/pull/441>
 
+ * Use a lowercase doctype tag for HTML5 documents.
+
  * Fixed validation of cookie names in HttpConnection cookie methods.
    <https://github.com/jhy/jsoup/pull/377>
 

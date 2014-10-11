@@ -84,7 +84,7 @@ public class DocumentTest {
         Document clone = doc.clone();
 
         assertEquals(doc.html(), clone.html());
-        assertEquals("<!DOCTYPE html><html><head><title>Doctype test</title></head><body></body></html>",
+        assertEquals("<!doctype html><html><head><title>Doctype test</title></head><body></body></html>",
                 TextUtil.stripNewlines(clone.html()));
     }
     
@@ -108,7 +108,7 @@ public class DocumentTest {
         Document doc = Jsoup.parse(h);
 
         doc.outputSettings().syntax(Syntax.html);
-        assertEquals("<!DOCTYPE html>\n" +
+        assertEquals("<!doctype html>\n" +
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
