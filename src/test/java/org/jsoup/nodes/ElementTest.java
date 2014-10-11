@@ -182,7 +182,7 @@ public class ElementTest {
     }
     
     @Test public void testClassDomMethods() {
-        Document doc = Jsoup.parse("<div><span class='mellow yellow'>Hello <b>Yellow</b></span></div>");
+        Document doc = Jsoup.parse("<div><span class=' mellow yellow '>Hello <b>Yellow</b></span></div>");
         List<Element> els = doc.getElementsByAttribute("class");
         Element span = els.get(0);
         assertEquals("mellow yellow", span.className());
@@ -194,6 +194,8 @@ public class ElementTest {
         assertTrue(classes.contains("yellow"));
 
         assertEquals("", doc.className());
+        classes = doc.classNames();
+        assertEquals(0, classes.size());
         assertFalse(doc.hasClass("mellow"));
     }
 

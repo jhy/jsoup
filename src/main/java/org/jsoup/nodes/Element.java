@@ -978,7 +978,7 @@ public class Element extends Node {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attr("class");
+        return attr("class").trim();
     }
 
     /**
@@ -991,6 +991,7 @@ public class Element extends Node {
         if (classNames == null) {
             String[] names = className().split("\\s+");
             classNames = new LinkedHashSet<String>(Arrays.asList(names));
+            classNames.remove(""); // if classNames() was empty, would include an empty class
         }
         return classNames;
     }
