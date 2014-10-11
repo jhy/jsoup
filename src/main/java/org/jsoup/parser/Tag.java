@@ -183,6 +183,7 @@ public class Tag {
 
         Tag tag = (Tag) o;
 
+        if (!tagName.equals(tag.tagName)) return false;
         if (canContainBlock != tag.canContainBlock) return false;
         if (canContainInline != tag.canContainInline) return false;
         if (empty != tag.empty) return false;
@@ -192,7 +193,6 @@ public class Tag {
         if (selfClosing != tag.selfClosing) return false;
         if (formList != tag.formList) return false;
         if (formSubmit != tag.formSubmit) return false;
-        if (!tagName.equals(tag.tagName)) return false;
 
         return true;
     }
