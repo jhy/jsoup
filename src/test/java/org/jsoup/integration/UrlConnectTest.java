@@ -372,7 +372,12 @@ public class UrlConnectTest {
                 .post();
 
         assertEquals("Baseline DCT, Huffman coding", result.select("td:contains(Process) + td").text());
+    }
 
+    @Test
+    public void handles201Created() throws IOException {
+        Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
+        assertEquals("http://jsoup.org", doc.location());
     }
 
 }

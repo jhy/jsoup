@@ -12,6 +12,10 @@ jsoup changelog
 
  * Use a lowercase doctype tag for HTML5 documents.
 
+ * Add support for 201 Created with redirect, and other status codes. Treats any HTTP status code 2xx or 3xx as an OK
+   response, and follow redirects whenever there is a Location header.
+   <https://github.com/jhy/jsoup/issues/312>
+
  * Fixed validation of cookie names in HttpConnection cookie methods.
    <https://github.com/jhy/jsoup/pull/377>
 

@@ -23,7 +23,6 @@ import java.util.zip.GZIPInputStream;
  * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
-    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     public static final String  CONTENT_ENCODING = "Content-Encoding";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
@@ -422,6 +421,7 @@ public class HttpConnection implements Connection {
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
+        private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
@@ -476,20 +476,16 @@ public class HttpConnection implements Connection {
                     writePost(req, conn.getOutputStream(), mimeBoundary);
 
                 int status = conn.getResponseCode();
-                boolean needsRedirect = false;
-                if (status != HttpURLConnection.HTTP_OK) {
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER || status == HTTP_TEMP_REDIR)
-                        needsRedirect = true;
-                    else if (!req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
-                }
                 res = new Response(previousResponse);
                 res.setupFromConnection(conn, previousResponse);
-                if (needsRedirect && req.followRedirects()) {
+                res.req = req;
+
+                // redirect if there's a location header (from 3xx, or 201 etc)
+                if (res.hasHeader(LOCATION) && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
 
-                    String location = res.header("Location");
+                    String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     req.url(new URL(req.url(), encodeUrl(location)));
@@ -499,7 +495,8 @@ public class HttpConnection implements Connection {
                     }
                     return execute(req, res);
                 }
-                res.req = req;
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
+                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
