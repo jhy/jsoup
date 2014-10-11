@@ -14,6 +14,14 @@ public class TagTest {
         assertEquals(p1, p2);
     }
 
+    @Test public void isCaseInsensitiveForNonHtml() {
+        Tag p1 = Tag.valueOf("sometag");
+        Tag p2 = Tag.valueOf("someTag");
+        Tag p3 = Tag.valueOf("SOMETAG");
+        assertEquals(p1, p2);
+        assertEquals(p1, p3);
+    }
+
     @Test public void trims() {
         Tag p1 = Tag.valueOf("p");
         Tag p2 = Tag.valueOf(" p ");

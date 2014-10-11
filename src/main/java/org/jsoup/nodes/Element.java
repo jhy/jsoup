@@ -57,12 +57,21 @@ public class Element extends Node {
     }
 
     /**
-     * Get the name of the tag for this element. E.g. {@code div}
+     * Get the name of the tag for this element, all lower-case. E.g. {@code div}
      * 
      * @return the tag name
      */
     public String tagName() {
         return tag.getName();
+    }
+    /**
+     * Get the name of the tag for this element. E.g. {@code div}
+     *
+     * @param preserveCase if true, return the tag name as it was originally parsed; otherwise, return it all lower-case
+     * @return the tag name
+     */
+    public String tagName(boolean preserveCase) {
+        return tag.getName(preserveCase);
     }
 
     /**
@@ -1137,7 +1146,7 @@ public class Element extends Node {
             indent(accum, depth, out);
         accum
                 .append("<")
-                .append(tagName());
+                .append(tagName(out.preserveCase()));
         attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
@@ -1157,7 +1166,7 @@ public class Element extends Node {
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
             )))
                 indent(accum, depth, out);
-            accum.append("</").append(tagName()).append(">");
+            accum.append("</").append(tagName(out.preserveCase())).append(">");
         }
     }
 

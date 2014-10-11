@@ -3,7 +3,9 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.Ignore;
@@ -122,8 +124,62 @@ public class XmlTreeBuilderTest {
         assertEquals(Syntax.xml, doc.outputSettings().syntax());
     }
 
-    @Test
-    public void testDoesHandleEOFInTag() {
+    @Test public void testJsoupXmlCamelCase() {
+        String xml = "<rootNode attributeName=\"someValue\"><subNode /><SUBNODE /><dIv>with HTML tags</DiV></ROOTNODE>";
+        XmlTreeBuilder tb = new XmlTreeBuilder();
+        Document doc = tb.parse(xml, "");
+        doc.outputSettings().prettyPrint(false);
+        Element root = doc.getElementsByTag("rootNode").get(0);
+        Element subnode1 = doc.getElementsByTag("subnode").get(0);
+        Element subnode2 = doc.getElementsByTag("subnode").get(1);
+        Element div = doc.getElementsByTag("div").get(0);
+        Attribute first = root.attributes().asList().get(0);
+
+        assertEquals("rootnode", root.tagName());
+        assertEquals("rootNode", root.tagName(true));
+        assertEquals("someValue", first.getValue());
+        assertEquals("attributename", first.getKey());
+        assertEquals("attributeName", first.getKey(true));
+        assertEquals("subnode", subnode1.tagName());
+        assertEquals("subNode", subnode1.tagName(true));
+        assertEquals("subnode", subnode2.tagName());
+        assertEquals("SUBNODE", subnode2.tagName(true));
+        assertEquals("div", div.tagName());
+        assertEquals("dIv", div.tagName(true));
+        assertEquals("<rootnode attributename=\"someValue\"><subnode /><subnode /><div>with HTML tags</div></rootnode>", doc.html());
+        doc.outputSettings().preserveCase(true);
+        assertEquals("<rootNode attributeName=\"someValue\"><subNode /><SUBNODE /><dIv>with HTML tags</dIv></rootNode>", doc.html());
+    }
+
+    @Test public void testJsoupXmlWithNamespacesCamelCase() {
+        String xml = "<rootNode attributeName=\"someValue\"><x:subNode /><X:SUBNODE /><Z:dIv>with HTML tags</z:DiV></ROOTNODE>";
+        XmlTreeBuilder tb = new XmlTreeBuilder();
+        Document doc = tb.parse(xml, "");
+        doc.outputSettings().prettyPrint(false);
+
+        Element root = doc.getElementsByTag("rootNode").get(0);
+        Element subnode1 = doc.select("x|subnode").get(0);
+        Element subnode2 = doc.select("x|subnode").get(1);
+        Element div = doc.select("z|div").get(0);
+        Attribute first = root.attributes().asList().get(0);
+
+        assertEquals("rootnode", root.tagName());
+        assertEquals("rootNode", root.tagName(true));
+        assertEquals("someValue", first.getValue());
+        assertEquals("attributename", first.getKey());
+        assertEquals("attributeName", first.getKey(true));
+        assertEquals("x:subnode", subnode1.tagName());
+        assertEquals("x:subNode", subnode1.tagName(true));
+        assertEquals("x:subnode", subnode2.tagName());
+        assertEquals("X:SUBNODE", subnode2.tagName(true));
+        assertEquals("z:div", div.tagName());
+        assertEquals("Z:dIv", div.tagName(true));
+        assertEquals("<rootnode attributename=\"someValue\"><x:subnode /><x:subnode /><z:div>with HTML tags</z:div></rootnode>", doc.html());
+        doc.outputSettings().preserveCase(true);
+        assertEquals("<rootNode attributeName=\"someValue\"><x:subNode /><X:SUBNODE /><Z:dIv>with HTML tags</Z:dIv></rootNode>", doc.html());
+    }
+
+    @Test public void testDoesHandleEOFInTag() {
         String html = "<img src=asdf onerror=\"alert(1)\" x=";
         Document xmlDoc = Jsoup.parse(html, "", Parser.xmlParser());
         assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\" />", xmlDoc.html());

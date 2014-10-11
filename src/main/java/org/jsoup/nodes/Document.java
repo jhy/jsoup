@@ -375,6 +375,7 @@ public class Document extends Element {
         private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
         private boolean outline = false;
+        private boolean preserveCase = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
@@ -494,6 +495,25 @@ public class Document extends Element {
          */
         public OutputSettings outline(boolean outlineMode) {
             outline = outlineMode;
+            return this;
+        }
+
+        /**
+         * Get if preserve-case mode is enabled. Default is false. If enabled, the HTML output methods will
+         * try to maintain the case of tags and attributes as originally parsed.
+         * @return if preserve-case mode is enabled.
+         */
+        public boolean preserveCase() {
+            return preserveCase;
+        }
+
+        /**
+         * Enable or disable HTML preserve-case mode.
+         * @param preserveCaseMode new preserve-case setting
+         * @return this, for chaining
+         */
+        public OutputSettings preserveCase(boolean preserveCaseMode) {
+            preserveCase = preserveCaseMode;
             return this;
         }
 

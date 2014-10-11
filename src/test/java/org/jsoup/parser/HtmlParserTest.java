@@ -834,25 +834,52 @@ public class HtmlParserTest {
                 "<!doctype �> <html> <head></head> <body></body> </html>",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
-    
+
     @Test public void handlesManyChildren() {
         // Arrange
         StringBuilder longBody = new StringBuilder(500000);
         for (int i = 0; i < 25000; i++) {
             longBody.append(i).append("<br>");
         }
-        
+
         // Act
         long start = System.currentTimeMillis();
         Document doc = Parser.parseBodyFragment(longBody.toString(), "");
-        
+
         // Assert
         assertEquals(50000, doc.body().childNodeSize());
         assertTrue(System.currentTimeMillis() - start < 1000);
     }
 
-    @Test
-    public void testInvalidTableContents() throws IOException {
+    @Test public void testJsoupMixedCase() {
+        String html = "<html><head><TITLE>camelCase</TITLE></head><bODy ID='SOME-ID' iD='otherId'><nonHTMLtag>someText</nonHTMLTAG><NONhtmlTAG/></body></html>";
+        Document doc = Jsoup.parse(html);
+        Element title = doc.select("title").get(0);
+        Element body = doc.select("body").get(0);
+        Attribute id = body.attributes().asList().get(0);
+        Element othertag1 = doc.select("nonhtmltag").get(0);
+        Element othertag2 = doc.select("nonhtmltag").get(1);
+        doc.outputSettings().prettyPrint(false);
+
+        assertEquals("title", title.tagName());
+        assertEquals("TITLE", title.tagName(true));
+        assertEquals("body", body.tagName());
+        assertEquals("bODy", body.tagName(true));
+        assertEquals("otherId", id.getValue());
+        assertEquals("id", id.getKey());
+        assertEquals("iD", id.getKey(true));
+        assertEquals("nonhtmltag", othertag1.tagName());
+        assertEquals("nonHTMLtag", othertag1.tagName(true));
+        assertEquals("someText", othertag1.text());
+        assertEquals("nonhtmltag", othertag2.tagName());
+        assertEquals("NONhtmlTAG", othertag2.tagName(true));
+        assertEquals("", othertag2.text());
+        assertEquals("<html><head><title>camelCase</title></head><body id=\"otherId\"><nonhtmltag>someText</nonhtmltag><nonhtmltag /></body></html>", doc.html());
+        doc.outputSettings().preserveCase(true);
+        assertEquals("<html><head><TITLE>camelCase</TITLE></head><bODy iD=\"otherId\"><nonHTMLtag>someText</nonHTMLtag><NONhtmlTAG /></bODy></html>", doc.html());
+    }
+
+    @Test public void testInvalidTableContents() throws IOException {
         File in = ParseTest.getFile("/htmltests/table-invalid-elements.html");
         Document doc = Jsoup.parse(in, "UTF-8");
         doc.outputSettings().prettyPrint(true);

@@ -179,7 +179,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             return el;
         }
         
-        Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+        Element el = new Element(Tag.valueOf(startTag.name(true)), baseUri, startTag.attributes);
         insert(el);
         return el;
     }
@@ -196,7 +196,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
-        Tag tag = Tag.valueOf(startTag.name());
+        Tag tag = Tag.valueOf(startTag.name(true));
         Element el = new Element(tag, baseUri, startTag.attributes);
         insertNode(el);
         if (startTag.isSelfClosing()) {
@@ -212,7 +212,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack) {
-        Tag tag = Tag.valueOf(startTag.name());
+        Tag tag = Tag.valueOf(startTag.name(true));
         FormElement el = new FormElement(tag, baseUri, startTag.attributes);
         setFormElement(el);
         insertNode(el);

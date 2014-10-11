@@ -68,6 +68,7 @@ abstract class Token {
 
     static abstract class Tag extends Token {
         protected String tagName;
+        protected String tagNameOrig;
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
         private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
@@ -78,6 +79,7 @@ abstract class Token {
         @Override
         Tag reset() {
             tagName = null;
+            tagNameOrig = null;
             pendingAttributeName = null;
             reset(pendingAttributeValue);
             hasEmptyAttributeValue = false;
@@ -116,12 +118,20 @@ abstract class Token {
         }
 
         final String name() {
+            return name(false);
+        }
+        final String name(boolean preserveCase) {
             Validate.isFalse(tagName == null || tagName.length() == 0);
-            return tagName;
+            if (preserveCase) {
+                return tagNameOrig;
+            } else {
+                return tagName;
+            }
         }
 
         final Tag name(String name) {
-            tagName = name;
+            tagNameOrig = name;
+            tagName = name.toLowerCase();
             return this;
         }
 
@@ -136,7 +146,8 @@ abstract class Token {
 
         // these appenders are rarely hit in not null state-- caused by null chars.
         final void appendTagName(String append) {
-            tagName = tagName == null ? append : tagName.concat(append);
+            tagNameOrig = tagNameOrig == null ? append : tagNameOrig.concat(append);
+            tagName = tagNameOrig.toLowerCase();
         }
 
         final void appendTagName(char append) {
@@ -191,7 +202,8 @@ abstract class Token {
         }
 
         StartTag nameAttr(String name, Attributes attributes) {
-            this.tagName = name;
+            this.tagNameOrig = name;
+            this.tagName = name.toLowerCase();
             this.attributes = attributes;
             return this;
         }
