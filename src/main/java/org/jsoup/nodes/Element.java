@@ -991,7 +991,7 @@ public class Element extends Node {
         if (classNames == null) {
             String[] names = className().split("\\s+");
             classNames = new LinkedHashSet<String>(Arrays.asList(names));
-            classNames.remove("");
+            classNames.remove(""); // if classNames() was empty, would include an empty class
         }
         return classNames;
     }
