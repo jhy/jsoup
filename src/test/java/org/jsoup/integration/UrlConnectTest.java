@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.helper.W3CDom;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.junit.Ignore;
@@ -393,6 +394,18 @@ public class UrlConnectTest {
     public void handles201Created() throws IOException {
         Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
         assertEquals("http://jsoup.org", doc.location());
+    }
+
+    @Test
+    public void fetchToW3c() throws IOException {
+        String url = "http://jsoup.org";
+        Document doc = Jsoup.connect(url).get();
+
+        W3CDom dom = new W3CDom();
+        org.w3c.dom.Document wDoc = dom.fromJsoup(doc);
+        assertEquals(url, wDoc.getDocumentURI());
+        String html = dom.asString(wDoc);
+        assertTrue(html.contains("jsoup"));
     }
 
 }
