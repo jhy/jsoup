@@ -18,6 +18,8 @@ jsoup changelog
 
  * Added support for HTTP method verbs PUT, DELETE, and PATCH.
 
+ * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
+
  * Fixed validation of cookie names in HttpConnection cookie methods.
    <https://github.com/jhy/jsoup/pull/377>
 
