@@ -25,7 +25,21 @@ public interface Connection {
      * GET and POST http methods.
      */
     public enum Method {
-        GET, POST
+        GET(false), POST(true), PUT(true), DELETE(false), PATCH(true);
+
+        private final boolean hasBody;
+
+        private Method(boolean hasBody) {
+            this.hasBody = hasBody;
+        }
+
+        /**
+         * Check if this HTTP method has/needs a request body
+         * @return if body needed
+         */
+        public final boolean hasBody() {
+            return hasBody;
+        }
     }
 
     /**

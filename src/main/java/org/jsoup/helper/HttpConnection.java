@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static org.jsoup.Connection.Method;
+
 /**
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
@@ -26,6 +28,7 @@ public class HttpConnection implements Connection {
     public static final String  CONTENT_ENCODING = "Content-Encoding";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
+    private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -347,7 +350,7 @@ public class HttpConnection implements Connection {
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
-            method = Connection.Method.GET;
+            method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
         }
@@ -463,16 +466,16 @@ public class HttpConnection implements Connection {
 
             // set up the request for execution
             String mimeBoundary = null;
-            if (req.method() == Connection.Method.GET && req.data().size() > 0) {
+            if (!req.method().hasBody() && req.data().size() > 0) {
                 serialiseRequestUrl(req); // appends query string
-            } else {
-                mimeBoundary = setupMultipartModeIfNeeded(req);
+            } else if (req.method().hasBody()) {
+                mimeBoundary = setOutputContentType(req);
             }
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
                 conn.connect();
-                if (req.method() == Connection.Method.POST)
+                if (conn.getDoOutput())
                     writePost(req, conn.getOutputStream(), mimeBoundary);
 
                 int status = conn.getResponseCode();
@@ -581,7 +584,7 @@ public class HttpConnection implements Connection {
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
-            if (req.method() == Method.POST)
+            if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
                 conn.addRequestProperty("Cookie", getRequestCookieString(req));
@@ -593,7 +596,7 @@ public class HttpConnection implements Connection {
 
         // set up url, method, header, cookies
         private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
-            method = Connection.Method.valueOf(conn.getRequestMethod());
+            method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
             statusMessage = conn.getResponseMessage();
@@ -639,7 +642,7 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static String setupMultipartModeIfNeeded(final Connection.Request req) {
+        private static String setOutputContentType(final Connection.Request req) {
             // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
             boolean needsMulti = false;
             for (Connection.KeyVal keyVal : req.data()) {
@@ -648,12 +651,14 @@ public class HttpConnection implements Connection {
                     break;
                 }
             }
+            String bound = null;
             if (needsMulti) {
-                final String bound = DataUtil.mimeBoundary();
+                bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
-                return bound;
+            } else {
+                req.header(CONTENT_TYPE, FORM_URL_ENCODED);
             }
-            return null;
+            return bound;
         }
 
         private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {

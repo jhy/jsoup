@@ -30,9 +30,9 @@ public class UrlConnectTest {
 
     @Test
     public void fetchURl() throws IOException {
-        String url = "http://www.google.com"; // no trailing / to force redir
+        String url = "http://jsoup.org"; // no trailing / to force redir
         Document doc = Jsoup.parse(new URL(url), 10*1000);
-        assertTrue(doc.title().contains("Google"));
+        assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
@@ -116,6 +116,21 @@ public class UrlConnectTest {
         assertEquals("Mozilla", ihVal("HTTP_USER_AGENT", doc));
         assertEquals("http://example.com", ihVal("HTTP_REFERER", doc));
     }
+
+    @Test
+    public void doesPut() throws IOException {
+        Connection.Response res = Jsoup.connect(echoURL)
+                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
+                .cookie("auth", "token")
+                .method(Connection.Method.PUT)
+                .execute();
+
+        Document doc = res.parse();
+        assertEquals("PUT", ihVal("REQUEST_METHOD", doc));
+        //assertEquals("gzip", ihVal("HTTP_ACCEPT_ENCODING", doc)); // current proxy removes gzip on post
+        assertEquals("auth=token", ihVal("HTTP_COOKIE", doc));
+    }
+
 
     private static String ihVal(String key, Document doc) {
         return doc.select("th:contains("+key+") + td").first().text();
