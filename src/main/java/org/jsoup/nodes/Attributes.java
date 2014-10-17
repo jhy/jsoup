@@ -162,9 +162,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         
         Attributes that = (Attributes) o;
         
-        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) return false;
-        
-        return true;
+        return !(attributes != null ? !attributes.equals(that.attributes) : that.attributes != null);
     }
     
     @Override
