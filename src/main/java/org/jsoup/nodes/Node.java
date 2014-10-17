@@ -569,6 +569,7 @@ public abstract class Node implements Cloneable {
 
     abstract void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out);
 
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -579,9 +580,9 @@ public abstract class Node implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         // todo: have nodes hold a child index, compare against that and parent (not children)
-        return false;
+
+        return this == o;
     }
 
     @Override
