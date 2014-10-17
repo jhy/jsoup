@@ -115,6 +115,8 @@ public class W3CDom {
 
     /**
      * Serialize a W3C document to a String.
+     * @param doc Document
+     * @return Document as string
      */
     public String asString(Document doc) {
         try {
