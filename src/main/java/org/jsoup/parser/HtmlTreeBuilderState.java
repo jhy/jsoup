@@ -885,7 +885,7 @@ enum HtmlTreeBuilderState {
 
         boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            boolean processed = true;
+            boolean processed;
             if (StringUtil.in(tb.currentElement().nodeName(), "table", "tbody", "tfoot", "thead", "tr")) {
                 tb.setFosterInserts(true);
                 processed = tb.process(t, InBody);

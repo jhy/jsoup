@@ -389,6 +389,7 @@ public class TokenQueue {
         return remainder;
     }
     
+    @Override
     public String toString() {
         return queue.substring(pos);
     }

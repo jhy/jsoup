@@ -212,6 +212,7 @@ public class Tag {
         return result;
     }
 
+    @Override
     public String toString() {
         return tagName;
     }
