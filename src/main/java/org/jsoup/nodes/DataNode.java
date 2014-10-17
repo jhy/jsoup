@@ -45,6 +45,7 @@ public class DataNode extends Node{
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
+    @Override
     public String toString() {
         return outerHtml();
     }

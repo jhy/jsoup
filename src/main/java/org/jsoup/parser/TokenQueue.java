@@ -307,6 +307,7 @@ public class TokenQueue {
 
     /**
      * Pulls the next run of whitespace characters of the queue.
+     * @return Whether consuming whitespace or not
      */
     public boolean consumeWhitespace() {
         boolean seen = false;
@@ -389,6 +390,7 @@ public class TokenQueue {
         return remainder;
     }
     
+    @Override
     public String toString() {
         return queue.substring(pos);
     }

@@ -100,7 +100,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         }
 
         runParser();
-        if (context != null)
+        if (context != null && root != null)
             return root.childNodes();
         else
             return doc.childNodes();
@@ -684,7 +684,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insertInFosterParent(Node in) {
-        Element fosterParent = null;
+        Element fosterParent;
         Element lastTable = getFromStack("table");
         boolean isLastTableParent = false;
         if (lastTable != null) {

@@ -102,6 +102,7 @@ public class HtmlToPlainText {
             }
         }
 
+        @Override
         public String toString() {
             return accum.toString();
         }

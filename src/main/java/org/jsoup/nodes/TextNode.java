@@ -100,6 +100,7 @@ public class TextNode extends Node {
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -107,6 +108,7 @@ public class TextNode extends Node {
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
+     * @param baseUri Base uri
      * @return TextNode containing unencoded data (e.g. &lt;)
      */
     public static TextNode createFromEncoded(String encodedText, String baseUri) {

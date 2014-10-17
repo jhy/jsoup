@@ -92,6 +92,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Get the string representation of this attribute, implemented as {@link #html()}.
      @return string
      */
+    @Override
     public String toString() {
         return html();
     }
