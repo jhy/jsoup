@@ -10,6 +10,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -712,4 +713,40 @@ public class ElementTest {
         assertTrue(divC == doc.select(divC.cssSelector()).first());
     }
 
+
+    @Test
+    public void testClassNames() {
+        Document doc = Jsoup.parse("<div class=\"c1 c2\">C</div>");
+        Element div = doc.select("div").get(0);
+
+        assertEquals("c1 c2", div.className());
+
+        final Set<String> set1 = div.classNames();
+        final Object[] arr1 = set1.toArray();
+        assertTrue(arr1.length==2);
+        assertEquals("c1", arr1[0]);
+        assertEquals("c2", arr1[1]);
+
+        // Changes to the set should not be reflected in the Elements getters
+       	set1.add("c3");
+        assertTrue(2==div.classNames().size());
+        assertEquals("c1 c2", div.className());
+
+        // Update the class names to a fresh set
+        final Set<String> newSet = new LinkedHashSet<String>(3);
+        newSet.addAll(set1);
+        newSet.add("c3");
+        
+        div.classNames(newSet);
+
+        
+        assertEquals("c1 c2 c3", div.className());
+
+        final Set<String> set2 = div.classNames();
+        final Object[] arr2 = set2.toArray();
+        assertTrue(arr2.length==3);
+        assertEquals("c1", arr2[0]);
+        assertEquals("c2", arr2[1]);
+        assertEquals("c3", arr2[2]);
+    }
 }
