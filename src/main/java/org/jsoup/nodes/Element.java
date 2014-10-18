@@ -20,8 +20,6 @@ import java.util.regex.PatternSyntaxException;
  */
 public class Element extends Node {
     private Tag tag;
-    private Set<String> classNames;
-    
     /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
@@ -988,11 +986,10 @@ public class Element extends Node {
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
-        if (classNames == null) {
-            String[] names = className().split("\\s+");
-            classNames = new LinkedHashSet<String>(Arrays.asList(names));
-            classNames.remove(""); // if classNames() was empty, would include an empty class
-        }
+    	String[] names = className().split("\\s+");
+    	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
+    	classNames.remove(""); // if classNames() was empty, would include an empty class
+
         return classNames;
     }
 
@@ -1172,7 +1169,6 @@ public class Element extends Node {
     @Override
     public Element clone() {
         Element clone = (Element) super.clone();
-        clone.classNames = null; // derived on first hit, otherwise gets a pointer to source classnames
         return clone;
     }
 }
