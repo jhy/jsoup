@@ -20,6 +20,9 @@ jsoup changelog
 
  * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
 
+ * In the HtmlToPlainText example program, added the ability to filter using a CSS selector. Also clarified
+   the usage documentation.
+
  * Fixed validation of cookie names in HttpConnection cookie methods.
    <https://github.com/jhy/jsoup/pull/377>
 
