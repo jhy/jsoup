@@ -211,7 +211,7 @@ public class Document extends Element {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Appendable> T serialize(T appendable) {
+    public <T extends Appendable> T html(T appendable) {
     	 // Exclude outer wrapper tag.
     	for (Node node : childNodes)
             node.outerHtml(appendable);

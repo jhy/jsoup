@@ -1,18 +1,10 @@
 package org.jsoup.nodes;
 
-import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * The attributes of an Element.
@@ -165,8 +157,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
     }
     
-    @Override
-	public String toString() {
+    public String toString() {
         return html();
     }
     

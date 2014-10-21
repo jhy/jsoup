@@ -1,21 +1,15 @@
 package org.jsoup.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
+
+import java.io.*;
+import java.net.URISyntaxException;
+
+import static org.junit.Assert.*;
 
 /**
  * Integration test: parses from real-world example HTML.
@@ -177,7 +171,6 @@ public class ParseTest {
     public File getFile(String resourceName) {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());
-            
             return file;
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);

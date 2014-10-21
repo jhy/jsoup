@@ -19,8 +19,7 @@ public class Comment extends Node {
         attributes.put(COMMENT_KEY, data);
     }
 
-    @Override
-	public String nodeName() {
+    public String nodeName() {
         return "#comment";
     }
 
@@ -32,19 +31,18 @@ public class Comment extends Node {
         return attributes.get(COMMENT_KEY);
     }
 
-    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint())
             indent(accum, depth, out);
-        
-        accum.append("<!--").append(getData()).append("-->");
+        accum
+                .append("<!--")
+                .append(getData())
+                .append("-->");
     }
 
-    @Override
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    @Override
-	public String toString() {
+    public String toString() {
         return outerHtml();
     }
 }

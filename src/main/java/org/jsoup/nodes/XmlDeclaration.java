@@ -34,7 +34,6 @@ public class XmlDeclaration extends Node {
         return attributes.get(DECL_KEY);
     }
 
-    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum
                 .append("<")
@@ -43,10 +42,8 @@ public class XmlDeclaration extends Node {
                 .append(">");
     }
 
-    @Override
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    @Override
 	public String toString() {
         return outerHtml();
     }

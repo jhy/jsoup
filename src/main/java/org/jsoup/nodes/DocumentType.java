@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import java.io.IOException;
 
 import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 
 /**
  * A {@code <!DOCTYPE>} node.

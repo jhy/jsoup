@@ -1,15 +1,14 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.StringUtil;
+import org.jsoup.parser.Parser;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Properties;
-
-import org.jsoup.helper.StringUtil;
-import org.jsoup.parser.Parser;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * HTML entities, and escape routines.

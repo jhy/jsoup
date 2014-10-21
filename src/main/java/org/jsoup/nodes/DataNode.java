@@ -41,16 +41,13 @@ public class DataNode extends Node{
         return this;
     }
 
-    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
 
-    @Override
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    @Override
-	public String toString() {
+    public String toString() {
         return outerHtml();
     }
 

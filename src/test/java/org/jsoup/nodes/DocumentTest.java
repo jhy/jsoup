@@ -2,10 +2,12 @@ package org.jsoup.nodes;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
+import org.jsoup.nodes.Document.OutputSettings;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -131,6 +133,16 @@ public class DocumentTest {
     @Test public void htmlParseDefaultsToHtmlOutputSyntax() {
         Document doc = Jsoup.parse("x");
         assertEquals(Syntax.html, doc.outputSettings().syntax());
+    }
+    
+    @Test public void testHtmlAppendable() {
+    	String htmlContent = "<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>";
+    	Document document = Jsoup.parse(htmlContent);
+    	OutputSettings outputSettings = new OutputSettings();
+    	
+    	outputSettings.prettyPrint(false);
+    	document.outputSettings(outputSettings);
+    	assertEquals(htmlContent, document.html(new StringWriter()).toString());
     }
 
     // Ignored since this test can take awhile to run.

@@ -1,27 +1,15 @@
 package org.jsoup.nodes;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.Collector;
-import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.NodeTraversor;
-import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.Selector;
+import org.jsoup.select.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -1105,7 +1093,6 @@ public class Element extends Node {
         return this;
     }
     
-    @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
     	if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
     		if(accum instanceof StringBuilder) {
@@ -1115,7 +1102,9 @@ public class Element extends Node {
     			indent(accum, depth, out);
     		}
     	}
-        accum.append("<").append(tagName());
+    	accum
+        		.append("<")
+        		.append(tagName());
         attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
@@ -1129,7 +1118,6 @@ public class Element extends Node {
             accum.append(">");
     }
 
-    @Override
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
@@ -1170,7 +1158,6 @@ public class Element extends Node {
         return this;
     }
 
-    @Override
 	public String toString() {
         return outerHtml();
     }

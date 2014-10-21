@@ -8,7 +8,6 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -579,12 +578,11 @@ public abstract class Node implements Cloneable {
      * @param appendable the {@link Appendable} that should hold the content of this node and all its child nodes.
      * @return the given {@link Appendable}, now containing this node and all child nodes.
      */
-    public <T extends Appendable> T serialize(T appendable) {
+    public <T extends Appendable> T html(T appendable) {
     	outerHtml(appendable);
     	return appendable;
     }
     
-    @Override
 	public String toString() {
         return outerHtml();
     }
@@ -680,7 +678,7 @@ public abstract class Node implements Cloneable {
         }
 
         public void tail(Node node, int depth) {
-            if (!node.nodeName().equals("#text")) {
+            if (!node.nodeName().equals("#text")) { // saves a void hit.
 				try {
 					node.outerHtmlTail(accum, depth, out);
 				} catch (IOException exception) {

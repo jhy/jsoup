@@ -88,7 +88,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     
     protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
         accum.append(key);
-        
         if (!shouldCollapseAttribute(out)) {
             accum.append("=\"");
             Entities.escape(accum, value, out, true, false, false);

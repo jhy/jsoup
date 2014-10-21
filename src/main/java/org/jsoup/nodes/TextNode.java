@@ -30,7 +30,6 @@ public class TextNode extends Node {
         this.text = text;
     }
 
-    @Override
 	public String nodeName() {
         return "#text";
     }
@@ -92,7 +91,6 @@ public class TextNode extends Node {
         return tailNode;
     }
 
-    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
@@ -102,10 +100,8 @@ public class TextNode extends Node {
         Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
     }
 
-    @Override
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    @Override
 	public String toString() {
         return outerHtml();
     }
