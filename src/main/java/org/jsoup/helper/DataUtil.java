@@ -198,7 +198,11 @@ public final class DataUtil {
             charset = charset.replace("charset=", "");
             if (charset.length() == 0) return null;
             try {
-                if (Charset.isSupported(charset)) return charset;
+                if (Charset.isSupported(charset)) {
+                if ("gb2312".equals(charset)||"gbk".equals(charset)) {
+                		charset="gb18030";
+				}
+                return charset;}
                 charset = charset.toUpperCase(Locale.ENGLISH);
                 if (Charset.isSupported(charset)) return charset;
             } catch (IllegalCharsetNameException e) {
