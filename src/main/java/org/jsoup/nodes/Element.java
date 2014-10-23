@@ -1155,7 +1155,7 @@ public class Element extends Node {
 
     @Override
     public boolean equals(Object o) {
-        return this == o;
+        return o instanceof Element && html().equals(((Element)o).html());
     }
 
     @Override
