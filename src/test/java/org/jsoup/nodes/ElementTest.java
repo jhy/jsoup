@@ -728,7 +728,7 @@ public class ElementTest {
         assertEquals("c2", arr1[1]);
 
         // Changes to the set should not be reflected in the Elements getters
-       	set1.add("c3");
+        set1.add("c3");
         assertTrue(2==div.classNames().size());
         assertEquals("c1 c2", div.className());
 
@@ -748,5 +748,22 @@ public class ElementTest {
         assertEquals("c1", arr2[0]);
         assertEquals("c2", arr2[1]);
         assertEquals("c3", arr2[2]);
+    }
+
+    @Test
+    public void testElementEquality() {
+        Document doc1 = Jsoup.parse(reference);
+        Document doc2 = Jsoup.parse(reference);
+
+        assertEquals(doc1, doc2);
+
+        List<Element> elements1 = doc1.getElementsByTag("div");
+        List<Element> elements2 = doc2.getElementsByTag("div");
+
+        assertEquals(elements1.size(), elements2.size());
+
+        for(int i = 0; i < elements1.size(); i++) {
+            assertEquals(elements1.get(i), elements2.get(i));
+        }
     }
 }
