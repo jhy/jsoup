@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * Readers the input stream into tokens.
  */
-class Tokeniser {
+final class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
     private static final char[] notCharRefCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '<', '&'};
 
@@ -22,7 +22,8 @@ class Tokeniser {
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
     private boolean isEmitPending = false;
-    private StringBuilder charBuffer = new StringBuilder(); // buffers characters to output as one token
+    private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
+    private StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     StringBuilder dataBuffer; // buffers data looking for </script>
 
     Token.Tag tagPending; // tag we are building up
@@ -46,10 +47,15 @@ class Tokeniser {
             state.read(this, reader);
 
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
-        if (charBuffer.length() > 0) {
-            String str = charBuffer.toString();
-            charBuffer.delete(0, charBuffer.length());
+        if (charsBuilder.length() > 0) {
+            String str = charsBuilder.toString();
+            charsBuilder.delete(0, charsBuilder.length());
+            charsString = null;
             return new Token.Character(str);
+        } else if (charsString != null) {
+            Token token = new Token.Character(charsString);
+            charsString = null;
+            return token;
         } else {
             isEmitPending = false;
             return emitPending;
@@ -74,18 +80,26 @@ class Tokeniser {
         }
     }
 
-    void emit(String str) {
+    void emit(final String str) {
         // buffer strings up until last string token found, to emit only one token for a run of character refs etc.
         // does not set isEmitPending; read checks that
-        charBuffer.append(str);
+        if (charsString == null) {
+            charsString = str;
+        }
+        else {
+            if (charsBuilder.length() == 0) { // switching to string builder as more than one emit before read
+                charsBuilder.append(charsString);
+            }
+            charsBuilder.append(str);
+        }
     }
 
     void emit(char[] chars) {
-        charBuffer.append(chars);
+        emit(String.valueOf(chars));
     }
 
     void emit(char c) {
-        charBuffer.append(c);
+        emit(String.valueOf(c));
     }
 
     TokeniserState getState() {
