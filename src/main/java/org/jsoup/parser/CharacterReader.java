@@ -382,11 +382,10 @@ final class CharacterReader {
     boolean rangeEquals(final int start, int count, final String cached) {
         if (count == cached.length()) {
             char one[] = input;
-            char two[] = cached.toCharArray();
             int i = start;
             int j = 0;
             while (count-- != 0) {
-                if (one[i++] != two[j++])
+                if (one[i++] != cached.charAt(j++))
                     return false;
             }
             return true;
