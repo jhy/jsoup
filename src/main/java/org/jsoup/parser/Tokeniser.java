@@ -3,12 +3,18 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Entities;
 
+import java.util.Arrays;
 
 /**
  * Readers the input stream into tokens.
  */
 class Tokeniser {
     static final char replacementChar = '\uFFFD'; // replaces null character
+    private static final char[] notCharRefCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '<', '&'};
+
+    static {
+        Arrays.sort(notCharRefCharsSorted);
+    }
 
     private CharacterReader reader; // html input
     private ParseErrorList errors; // errors found while tokenising
@@ -104,7 +110,7 @@ class Tokeniser {
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
-        if (reader.matchesAny('\t', '\n', '\r', '\f', ' ', '<', '&'))
+        if (reader.matchesAnySorted(notCharRefCharsSorted))
             return null;
 
         reader.mark();
