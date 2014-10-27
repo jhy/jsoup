@@ -148,8 +148,7 @@ public class DocumentTest {
     }
     
     @Test
-    public void testMetaCharsetUpdate()
-    {
+    public void testMetaCharsetUpdate() {
         Document doc = Document.createShell("");
         doc.head().appendElement("meta").attr("charset", "changeThis");
         doc.body().appendElement("div").text("aaa");
