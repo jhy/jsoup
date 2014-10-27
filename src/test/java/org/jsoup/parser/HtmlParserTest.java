@@ -415,7 +415,7 @@ public class HtmlParserTest {
     @Test public void normalisesDocument() {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
-        assertEquals("<!DOCTYPE html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
+        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
                 TextUtil.stripNewlines(doc.html()));
     }
 
@@ -517,7 +517,7 @@ public class HtmlParserTest {
                 "<p></b></b></b></b></b></b>X";
         Document doc = Jsoup.parse(h);
         doc.outputSettings().indentAmount(0);
-        String want = "<!DOCTYPE html>\n" +
+        String want = "<!doctype html>\n" +
                 "<html>\n" +
                 "<head></head>\n" +
                 "<body>\n" +
@@ -819,17 +819,17 @@ public class HtmlParserTest {
         // would previously throw invalid name exception on empty doctype
         Document doc = Jsoup.parse("<!DOCTYPE>");
         assertEquals(
-                "<!DOCTYPE> <html> <head></head> <body></body> </html>",
+                "<!doctype> <html> <head></head> <body></body> </html>",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
 
         doc = Jsoup.parse("<!DOCTYPE><html><p>Foo</p></html>");
         assertEquals(
-                "<!DOCTYPE> <html> <head></head> <body> <p>Foo</p> </body> </html>",
+                "<!doctype> <html> <head></head> <body> <p>Foo</p> </body> </html>",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
 
         doc = Jsoup.parse("<!DOCTYPE \u0000>");
         assertEquals(
-                "<!DOCTYPE �> <html> <head></head> <body></body> </html>",
+                "<!doctype �> <html> <head></head> <body></body> </html>",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 }

@@ -22,15 +22,17 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static org.jsoup.Connection.Method;
+
 /**
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
-    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     public static final String  CONTENT_ENCODING = "Content-Encoding";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
+    private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -359,7 +361,7 @@ public class HttpConnection implements Connection {
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
-            method = Connection.Method.GET;
+            method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
         }
@@ -442,6 +444,7 @@ public class HttpConnection implements Connection {
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private static SSLSocketFactory sslSocketFactory;
+        private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
@@ -483,33 +486,29 @@ public class HttpConnection implements Connection {
 
             // set up the request for execution
             String mimeBoundary = null;
-            if (req.method() == Connection.Method.GET && req.data().size() > 0) {
+            if (!req.method().hasBody() && req.data().size() > 0) {
                 serialiseRequestUrl(req); // appends query string
-            } else {
-                mimeBoundary = setupMultipartModeIfNeeded(req);
+            } else if (req.method().hasBody()) {
+                mimeBoundary = setOutputContentType(req);
             }
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
                 conn.connect();
-                if (req.method() == Connection.Method.POST)
+                if (conn.getDoOutput())
                     writePost(req, conn.getOutputStream(), mimeBoundary);
 
                 int status = conn.getResponseCode();
-                boolean needsRedirect = false;
-                if (status != HttpURLConnection.HTTP_OK) {
-                    if (status == HttpURLConnection.HTTP_MOVED_TEMP || status == HttpURLConnection.HTTP_MOVED_PERM || status == HttpURLConnection.HTTP_SEE_OTHER || status == HTTP_TEMP_REDIR)
-                        needsRedirect = true;
-                    else if (!req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
-                }
                 res = new Response(previousResponse);
                 res.setupFromConnection(conn, previousResponse);
-                if (needsRedirect && req.followRedirects()) {
+                res.req = req;
+
+                // redirect if there's a location header (from 3xx, or 201 etc)
+                if (res.hasHeader(LOCATION) && req.followRedirects()) {
                     req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                     req.data().clear();
 
-                    String location = res.header("Location");
+                    String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     req.url(new URL(req.url(), encodeUrl(location)));
@@ -519,7 +518,8 @@ public class HttpConnection implements Connection {
                     }
                     return execute(req, res);
                 }
-                res.req = req;
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
+                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
@@ -614,7 +614,7 @@ public class HttpConnection implements Connection {
                 }
             }
 
-            if (req.method() == Method.POST)
+            if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
                 conn.addRequestProperty("Cookie", getRequestCookieString(req));
@@ -683,7 +683,7 @@ public class HttpConnection implements Connection {
 
         // set up url, method, header, cookies
         private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
-            method = Connection.Method.valueOf(conn.getRequestMethod());
+            method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
             statusMessage = conn.getResponseMessage();
@@ -729,7 +729,7 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static String setupMultipartModeIfNeeded(final Connection.Request req) {
+        private static String setOutputContentType(final Connection.Request req) {
             // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
             boolean needsMulti = false;
             for (Connection.KeyVal keyVal : req.data()) {
@@ -738,12 +738,14 @@ public class HttpConnection implements Connection {
                     break;
                 }
             }
+            String bound = null;
             if (needsMulti) {
-                final String bound = DataUtil.mimeBoundary();
+                bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
-                return bound;
+            } else {
+                req.header(CONTENT_TYPE, FORM_URL_ENCODED);
             }
-            return null;
+            return bound;
         }
 
         private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {

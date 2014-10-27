@@ -10,11 +10,28 @@ jsoup changelog
  * Added option in Cleaner Whitelist to allow linking to in-page anchors (#)
    <https://github.com/jhy/jsoup/pull/441>
 
+ * Use a lowercase doctype tag for HTML5 documents.
+
+ * Add support for 201 Created with redirect, and other status codes. Treats any HTTP status code 2xx or 3xx as an OK
+   response, and follow redirects whenever there is a Location header.
+   <https://github.com/jhy/jsoup/issues/312>
+
+ * Added support for HTTP method verbs PUT, DELETE, and PATCH.
+
+ * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
+
+ * In the HtmlToPlainText example program, added the ability to filter using a CSS selector. Also clarified
+   the usage documentation.
+
  * Fixed validation of cookie names in HttpConnection cookie methods.
    <https://github.com/jhy/jsoup/pull/377>
 
  * Fixed an issue where <option> tags would be missed when preparing a form for submission if missing a selected
     attribute.
+
+ * Fixed an issue where Element.classNames() would return a set containing an empty class; and may have extraneous
+   whitespace.
+    <https://github.com/jhy/jsoup/pull/469>
 
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are

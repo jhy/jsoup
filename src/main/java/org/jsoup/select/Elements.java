@@ -248,6 +248,7 @@ public class Elements implements List<Element>, Cloneable {
      * @see #text()
      * @see #html()
      */
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -537,8 +538,10 @@ public class Elements implements List<Element>, Cloneable {
 
     public void clear() {contents.clear();}
 
+    @Override
     public boolean equals(Object o) {return contents.equals(o);}
 
+    @Override
     public int hashCode() {return contents.hashCode();}
 
     public Element get(int index) {return contents.get(index);}
