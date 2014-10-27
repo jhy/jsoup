@@ -3,7 +3,6 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -100,9 +99,8 @@ public class XmlTreeBuilder extends TreeBuilder {
         String elName = endTag.name();
         Element firstFound = null;
 
-        Iterator<Element> it = stack.descendingIterator();
-        while (it.hasNext()) {
-            Element next = it.next();
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
+            Element next = stack.get(pos);
             if (next.nodeName().equals(elName)) {
                 firstFound = next;
                 break;
@@ -111,15 +109,11 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (firstFound == null)
             return; // not found, skip
 
-        it = stack.descendingIterator();
-        while (it.hasNext()) {
-            Element next = it.next();
-            if (next == firstFound) {
-                it.remove();
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
+            Element next = stack.get(pos);
+            stack.remove(pos);
+            if (next == firstFound)
                 break;
-            } else {
-                it.remove();
-            }
         }
     }
 

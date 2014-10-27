@@ -1,11 +1,9 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.*;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 /**
  * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
@@ -276,7 +274,7 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html")) {
                         tb.error(this);
                         // merge attributes onto real html
-                        Element html = tb.getStack().getFirst();
+                        Element html = tb.getStack().get(0);
                         for (Attribute attribute : startTag.getAttributes()) {
                             if (!html.hasAttr(attribute.getKey()))
                                 html.attributes().put(attribute);
@@ -285,7 +283,7 @@ enum HtmlTreeBuilderState {
                         return tb.process(t, InHead);
                     } else if (name.equals("body")) {
                         tb.error(this);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
                             // only in fragment case
                             return false; // ignore
@@ -299,7 +297,7 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (name.equals("frameset")) {
                         tb.error(this);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
                             // only in fragment case
                             return false; // ignore
@@ -311,7 +309,7 @@ enum HtmlTreeBuilderState {
                                 second.remove();
                             // pop up to html element
                             while (stack.size() > 1)
-                                stack.removeLast();
+                                stack.remove(stack.size()-1);
                             tb.insert(startTag);
                             tb.transition(InFrameset);
                         }
@@ -347,7 +345,7 @@ enum HtmlTreeBuilderState {
                         tb.insertForm(startTag, true);
                     } else if (name.equals("li")) {
                         tb.framesetOk(false);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         for (int i = stack.size() - 1; i > 0; i--) {
                             Element el = stack.get(i);
                             if (el.nodeName().equals("li")) {
@@ -363,7 +361,7 @@ enum HtmlTreeBuilderState {
                         tb.insert(startTag);
                     } else if (StringUtil.in(name, Constants.DdDt)) {
                         tb.framesetOk(false);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         for (int i = stack.size() - 1; i > 0; i--) {
                             Element el = stack.get(i);
                             if (StringUtil.in(el.nodeName(), Constants.DdDt)) {
@@ -654,7 +652,7 @@ enum HtmlTreeBuilderState {
                             Element furthestBlock = null;
                             Element commonAncestor = null;
                             boolean seenFormattingElement = false;
-                            LinkedList<Element> stack = tb.getStack();
+                            ArrayList<Element> stack = tb.getStack();
                             // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
                             // run-aways
                             final int stackSize = stack.size();
@@ -757,10 +755,9 @@ enum HtmlTreeBuilderState {
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             String name = t.asEndTag().name();
-            DescendableLinkedList<Element> stack = tb.getStack();
-            Iterator<Element> it = stack.descendingIterator();
-            while (it.hasNext()) {
-                Element node = it.next();
+            ArrayList<Element> stack = tb.getStack();
+            for (int pos = stack.size() -1; pos >= 0; pos--) {
+                Element node = stack.get(pos);
                 if (node.nodeName().equals(name)) {
                     tb.generateImpliedEndTags(name);
                     if (!name.equals(tb.currentElement().nodeName()))
