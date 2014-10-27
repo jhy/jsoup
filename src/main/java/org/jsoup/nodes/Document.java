@@ -15,7 +15,7 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
-    private OutputSettings outputSettings = new OutputSettings();
+    private OutputSettings outputSettings = new OutputSettings(this);
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
 
@@ -230,8 +230,15 @@ public class Document extends Element {
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
+        private Document document;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            this(null);
+        }
+        
+        OutputSettings(Document doc) {
+            this.document = doc;
+        }
 
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -274,7 +281,14 @@ public class Document extends Element {
          * @return the document's output settings, for chaining
          */
         public OutputSettings charset(Charset charset) {
-            // todo: this should probably update the doc's meta charset
+            if( document != null ) {
+                Element meta = document.select("meta[charset]").first();
+                
+                if( meta != null ) {
+                    meta.attr("charset", charset.displayName());
+                }
+            }
+            
             this.charset = charset;
             charsetEncoder = charset.newEncoder();
             return this;
