@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 
 import java.util.Arrays;
@@ -24,12 +25,15 @@ final class Tokeniser {
     private boolean isEmitPending = false;
     private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
     private StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
-    StringBuilder dataBuffer; // buffers data looking for </script>
+    StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
     Token.Tag tagPending; // tag we are building up
-    Token.Doctype doctypePending; // doctype building up
-    Token.Comment commentPending; // comment building up
-    private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
+    Token.StartTag startPending = new Token.StartTag();
+    Token.EndTag endPending = new Token.EndTag();
+    Token.Character charPending = new Token.Character();
+    Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
+    Token.Comment commentPending = new Token.Comment(); // comment building up
+    private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     private boolean selfClosingFlagAcknowledged = true;
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
@@ -51,9 +55,9 @@ final class Tokeniser {
             String str = charsBuilder.toString();
             charsBuilder.delete(0, charsBuilder.length());
             charsString = null;
-            return new Token.Character(str);
+            return charPending.data(str);
         } else if (charsString != null) {
-            Token token = new Token.Character(charsString);
+            Token token = charPending.data(charsString);
             charsString = null;
             return token;
         } else {
@@ -70,7 +74,7 @@ final class Tokeniser {
 
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
-            lastStartTag = startTag;
+            lastStartTag = startTag.tagName;
             if (startTag.selfClosing)
                 selfClosingFlagAcknowledged = false;
         } else if (token.type == Token.TokenType.EndTag) {
@@ -177,7 +181,7 @@ final class Tokeniser {
     }
 
     Token.Tag createTagPending(boolean start) {
-        tagPending = start ? new Token.StartTag() : new Token.EndTag();
+        tagPending = start ? startPending.reset() : endPending.reset();
         return tagPending;
     }
 
@@ -187,7 +191,7 @@ final class Tokeniser {
     }
 
     void createCommentPending() {
-        commentPending = new Token.Comment();
+        commentPending.reset();
     }
 
     void emitCommentPending() {
@@ -195,7 +199,7 @@ final class Tokeniser {
     }
 
     void createDoctypePending() {
-        doctypePending = new Token.Doctype();
+        doctypePending.reset();
     }
 
     void emitDoctypePending() {
@@ -203,19 +207,17 @@ final class Tokeniser {
     }
 
     void createTempBuffer() {
-        dataBuffer = new StringBuilder();
+        Token.reset(dataBuffer);
     }
 
     boolean isAppropriateEndTagToken() {
-        if (lastStartTag == null)
-            return false;
-        return tagPending.tagName.equals(lastStartTag.tagName);
+        return lastStartTag != null && tagPending.tagName.equals(lastStartTag);
     }
 
     String appropriateEndTagName() {
         if (lastStartTag == null)
             return null;
-        return lastStartTag.tagName;
+        return lastStartTag;
     }
 
     void error(TokeniserState state) {

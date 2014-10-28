@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -17,6 +18,9 @@ abstract class TreeBuilder {
     protected String baseUri; // current base uri, for creating new elements
     protected Token currentToken; // currentToken is used only for error tracking.
     protected ParseErrorList errors; // null when not tracking errors
+
+    private Token.StartTag start = new Token.StartTag(); // start tag to process
+    private Token.EndTag end  = new Token.EndTag();
 
     protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
         Validate.notNull(input, "String input must not be null");
@@ -44,6 +48,7 @@ abstract class TreeBuilder {
         while (true) {
             Token token = tokeniser.read();
             process(token);
+            token.reset();
 
             if (token.type == Token.TokenType.EOF)
                 break;
@@ -51,6 +56,21 @@ abstract class TreeBuilder {
     }
 
     protected abstract boolean process(Token token);
+
+    protected boolean processStartTag(String name) {
+        return process(start.reset().name(name));
+    }
+
+    public boolean processStartTag(String name, Attributes attrs) {
+        start.reset();
+        start.nameAttr(name, attrs);
+        return process(start);
+    }
+
+    protected boolean processEndTag(String name) {
+        return process(end.reset().name(name));
+    }
+
 
     protected Element currentElement() {
         int size = stack.size();
