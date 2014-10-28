@@ -428,8 +428,11 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     // todo: tidy up in specific scope methods
+    private String[] specificScopeTarget = {null};
+
     private boolean inSpecificScope(String targetName, String[] baseTypes, String[] extraTypes) {
-        return inSpecificScope(new String[]{targetName}, baseTypes, extraTypes);
+        specificScopeTarget[0] = targetName;
+        return inSpecificScope(specificScopeTarget, baseTypes, extraTypes);
     }
 
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, String[] extraTypes) {
@@ -456,7 +459,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean inScope(String targetName, String[] extras) {
-        return inSpecificScope(targetName, TagsSearchInScope , extras);
+        return inSpecificScope(targetName, TagsSearchInScope, extras);
         // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
         // todo: in svg namespace: forignOjbect, desc, title
     }
