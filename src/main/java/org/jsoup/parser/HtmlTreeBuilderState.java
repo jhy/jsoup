@@ -56,7 +56,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            tb.insert("html");
+            tb.insertStartTag("html");
             tb.transition(BeforeHead);
             return tb.process(t);
         }

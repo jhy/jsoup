@@ -184,7 +184,7 @@ class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    Element insert(String startTagName) {
+    Element insertStartTag(String startTagName) {
         Element el = new Element(Tag.valueOf(startTagName), baseUri);
         insert(el);
         return el;
@@ -616,7 +616,7 @@ class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = insert(entry.nodeName()); // todo: avoid fostering here?
+            Element newEl = insertStartTag(entry.nodeName()); // todo: avoid fostering here?
             // newEl.namespace(entry.namespace()); // todo: namespaces
             newEl.attributes().addAll(entry.attributes());
 
