@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 @Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
-    private static final String WEBSITE_WITH_SNI = "https://sni.velox.ch/";
+    private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
     @Test
@@ -323,7 +323,6 @@ public class UrlConnectTest {
      * @throws Exception
      */
     @Test(expected = IOException.class)
-    @Ignore
     public void testSNIFail() throws Exception {
         String url = WEBSITE_WITH_SNI;
         Jsoup.connect(url).execute();
@@ -337,10 +336,9 @@ public class UrlConnectTest {
      * @throws Exception
      */
     @Test
-    @Ignore
     public void testSNIPass() throws Exception {
         String url = WEBSITE_WITH_SNI;
-        Connection.Response defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
+        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
         assertThat(defaultRes.statusCode(), is(200));
     }
 
@@ -354,7 +352,7 @@ public class UrlConnectTest {
     @Test
     public void testUnsafePass() throws Exception {
         String url = WEBSITE_WITH_INVALID_CERTIFICATE;
-        Connection.Response defaultRes = Jsoup.connect(url).setValidateSSLCertificates(false).execute();
+        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
         assertThat(defaultRes.statusCode(), is(200));
     }
 

@@ -43,19 +43,6 @@ public interface Connection {
     }
 
     /**
-     * Setter to disable\enable SSL certificates checks during https connection
-     * <p/>
-     * By default all connections over HTTPS perform normal validation of certificates.
-     * <b>NB!</b>Use this feature at your own risk.
-     * <p/>
-     * Some websites use self generated certificates to sign data, which sometimes are expired,
-     * by default request to those websites would fail, this feature allows to communicate to them.
-     *
-     * @param value
-     */
-    Connection setValidateSSLCertificates(boolean value);
-
-    /**
      * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
      * @param url URL to connect to
      * @return this Connection, for chaining
@@ -132,6 +119,21 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection ignoreContentType(boolean ignoreContentType);
+
+    /**
+     * Disable/enable TSL certificates validation for HTTPS requests.
+     * <p/>
+     * By default this is <b>true</b>; all
+     * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
+     * certificate does not validate.
+     * <p/>
+     * Some servers use expired, self-generated certificates; or your JDK may not
+     * support SNI hosts. In which case, you may want to enable this setting.
+     * <p/> <b>Be careful</b> and understand why you need to disable these validations.
+     * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
+     * @return this Connection, for chaining
+     */
+    Connection validateTLSCertificates(boolean value);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -459,6 +461,18 @@ public interface Connection {
         public Request ignoreContentType(boolean ignoreContentType);
 
         /**
+         * Get the current state of TLS (SSL) certificate validation.
+         * @return true if TLS cert validation enabled
+         */
+        boolean validateTLSCertificates();
+
+        /**
+         * Set TLS certificate validation.
+         * @param value set false to ignore TLS (SSL) certificates
+         */
+        void validateTLSCertificates(boolean value);
+
+        /**
          * Add a data parameter to the request
          * @param keyval data to add.
          * @return this Request, for chaining
@@ -483,19 +497,6 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
-
-        /**
-         * get current state of security enabling\disabling feature
-         *
-         * @return
-         */
-        boolean isValidateSSLCertificates();
-
-        /**
-         * Disable SSL certificates checks.
-         * @param value
-         */
-        void setValidateSSLCertificates(boolean value);
     }
 
     /**

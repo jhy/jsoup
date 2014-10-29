@@ -22,8 +22,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import static org.jsoup.Connection.Method;
-
 /**
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
@@ -64,11 +62,6 @@ public class HttpConnection implements Connection {
 	private HttpConnection() {
         req = new Request();
         res = new Response();
-    }
-
-    public Connection setValidateSSLCertificates(boolean value) {
-        req.setValidateSSLCertificates(value);
-        return this;
     }
 
     public Connection url(URL url) {
@@ -125,6 +118,11 @@ public class HttpConnection implements Connection {
 
     public Connection ignoreContentType(boolean ignoreContentType) {
         req.ignoreContentType(ignoreContentType);
+        return this;
+    }
+
+    public Connection validateTLSCertificates(boolean value) {
+        req.validateTLSCertificates(value);
         return this;
     }
 
@@ -353,8 +351,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
-//      always default to validateSSLCertificates connections in https
-        private boolean validateSSLCertificates = true;
+        private boolean validateTSLCertificates = true;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -399,6 +396,14 @@ public class HttpConnection implements Connection {
             return ignoreHttpErrors;
         }
 
+        public boolean validateTLSCertificates() {
+            return validateTSLCertificates;
+        }
+
+        public void validateTLSCertificates(boolean value) {
+            validateTSLCertificates = value;
+        }
+
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
             this.ignoreHttpErrors = ignoreHttpErrors;
             return this;
@@ -430,14 +435,6 @@ public class HttpConnection implements Connection {
 
         public Parser parser() {
             return parser;
-        }
-
-        public boolean isValidateSSLCertificates() {
-            return validateSSLCertificates;
-        }
-
-        public void setValidateSSLCertificates(boolean value) {
-            validateSSLCertificates = value;
         }
     }
 
@@ -607,8 +604,8 @@ public class HttpConnection implements Connection {
             conn.setReadTimeout(req.timeout());
 
             if (conn instanceof HttpsURLConnection) {
-                if (!req.isValidateSSLCertificates()) {
-                    initUnSecureSSL();
+                if (!req.validateTLSCertificates()) {
+                    initUnSecureTSL();
                     ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
                     ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
                 }
@@ -632,12 +629,11 @@ public class HttpConnection implements Connection {
          * @return Hostname Verifier that does nothing and accepts all hostnames
          */
         private static HostnameVerifier getInsecureVerifier() {
-            HostnameVerifier hv = new HostnameVerifier() {
+            return new HostnameVerifier() {
                 public boolean verify(String urlHostName, SSLSession session) {
                     return true;
                 }
             };
-            return hv;
         }
 
         /**
@@ -649,7 +645,7 @@ public class HttpConnection implements Connection {
          *
          * @throws IOException
          */
-        private static synchronized void initUnSecureSSL() throws IOException {
+        private static synchronized void initUnSecureTSL() throws IOException {
             if (sslSocketFactory == null) {
                 // Create a trust manager that does not validate certificate chains
                 final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
@@ -717,7 +713,7 @@ public class HttpConnection implements Connection {
                         String cookieVal = cd.consumeTo(";").trim();
                         if (cookieVal == null)
                             cookieVal = "";
-                        // ignores path, date, domain, validateSSLCertificates et al. req'd?
+                        // ignores path, date, domain, validateTLSCertificates et al. req'd?
                         // name not blank, value not null
                         if (cookieName != null && cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
