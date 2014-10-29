@@ -18,6 +18,7 @@ public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
+    private boolean updateMetaCharset = false;
 
     /**
      Create a new, empty Document.
@@ -187,12 +188,6 @@ public class Document extends Element {
     }
 
     @Override
-    public String html() {
-        ensureMetaCharset();
-        return super.html();
-    }
-
-    @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
     }
@@ -212,6 +207,23 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
+    
+    public void charset(Charset charset) {
+        outputSettings.charset(charset);
+        ensureMetaCharset();
+    }
+    
+    public Charset charset() {
+        return outputSettings.charset();
+    }
+    
+    public void updateMetaCharset(boolean update) {
+        this.updateMetaCharset = true;
+    }
+    
+    public boolean updateMetaCharset() {
+        return updateMetaCharset;
+    }
 
     @Override
     public Document clone() {
@@ -221,7 +233,7 @@ public class Document extends Element {
     }
     
     private void ensureMetaCharset() {
-        if( outputSettings.updateMetaCharset() ) {
+        if( updateMetaCharset == true ) {
             Element metaCharset = select("meta[charset]").first();
             
             if( metaCharset != null ) {
@@ -255,7 +267,6 @@ public class Document extends Element {
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
-        private boolean updateMetaCharset = false;
 
         public OutputSettings() {}
         
@@ -393,15 +404,6 @@ public class Document extends Element {
         public OutputSettings indentAmount(int indentAmount) {
             Validate.isTrue(indentAmount >= 0);
             this.indentAmount = indentAmount;
-            return this;
-        }
-        
-        public boolean updateMetaCharset() {
-            return updateMetaCharset;
-        }
-        
-        public OutputSettings updateMetaCharset(boolean updateMetaCharset) {
-            this.updateMetaCharset = updateMetaCharset;
             return this;
         }
 

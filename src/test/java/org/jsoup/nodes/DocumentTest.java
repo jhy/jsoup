@@ -149,26 +149,84 @@ public class DocumentTest {
     
     @Test
     public void testMetaCharsetUpdate() {
-        Document doc = Document.createShell("");
-        doc.head().appendElement("meta").attr("charset", "changeThis");
-        doc.body().appendElement("div").text("aaa");
-        
+        // Existing meta charset tag
+        final Document doc = Document.createShell("");
+        doc.updateMetaCharset(true);
+        doc.head().appendElement("meta").attr("charset", "changeThis");        
         
         final String charsetUtf8 = "UTF-8";
-        doc.outputSettings().charset(charsetUtf8);
+        doc.charset(Charset.forName(charsetUtf8));
         Element metaCharset = doc.select("meta[charset]").first();
         
-        assertNotNull(metaCharset);
-        assertEquals(doc.outputSettings().charset().displayName(), charsetUtf8);
-        assertEquals(metaCharset.attr("charset"), charsetUtf8);
+        final String htmlCharsetUTF8 = "<html>\n" +
+                                        " <head>\n" +
+                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        " </head>\n" +
+                                        " <body></body>\n" +
+                                        "</html>";
         
+        assertNotNull(metaCharset);
+        assertEquals(charsetUtf8, doc.charset().displayName());
+        assertEquals(charsetUtf8, metaCharset.attr("charset"));
+        assertEquals(htmlCharsetUTF8, doc.toString());
+        assertEquals(doc.charset(), doc.outputSettings().charset());
         
         final String charsetIso8859 = "ISO-8859-1";
-        doc.outputSettings().charset(Charset.forName(charsetIso8859));
+        doc.charset(Charset.forName(charsetIso8859));
         metaCharset = doc.select("meta[charset]").first();
         
+        final String htmlCharsetISO = "<html>\n" +
+                                        " <head>\n" +
+                                        "  <meta charset=\"" + charsetIso8859 + "\">\n" +
+                                        " </head>\n" +
+                                        " <body></body>\n" +
+                                        "</html>";
+        
         assertNotNull(metaCharset);
-        assertEquals(doc.outputSettings().charset().displayName(), charsetIso8859);
-        assertEquals(metaCharset.attr("charset"), charsetIso8859);
+        assertEquals(charsetIso8859, doc.charset().displayName());
+        assertEquals(charsetIso8859, metaCharset.attr("charset"));
+        assertEquals(htmlCharsetISO, doc.toString());
+        assertEquals(doc.charset(), doc.outputSettings().charset());
+        
+        
+        // No meta charset tag
+        final Document docNoCharset = Document.createShell("");
+        docNoCharset.updateMetaCharset(true);
+        doc.charset(Charset.forName(charsetUtf8));
+        
+        assertEquals(charsetUtf8, doc.select("meta[charset]").first().attr("charset"));
+        assertEquals(htmlCharsetUTF8, doc.toString());
+        
+        
+        // Disabled update of meta charset tag
+        final Document docDisabled = Document.createShell("");
+        assertFalse(docDisabled.updateMetaCharset());
+        
+        final String htmlNoCharset = "<html>\n" +
+                                        " <head></head>\n" +
+                                        " <body></body>\n" +
+                                        "</html>";
+        
+        assertEquals(htmlNoCharset, docDisabled.toString());
+        assertNull(docDisabled.select("meta[charset]").first());
+        
+        final String htmlCharset = "<html>\n" +
+                                    " <head>\n" +
+                                    "  <meta charset=\"dontTouch\">\n" +
+                                    " </head>\n" +
+                                    " <body></body>\n" +
+                                    "</html>";
+        
+        docDisabled.head().appendElement("meta").attr("charset", "dontTouch");
+        assertEquals(htmlCharset, docDisabled.toString());
+        
+        metaCharset = docDisabled.select("meta[charset]").first();
+        assertNotNull(metaCharset);
+        assertEquals("dontTouch", metaCharset.attr("charset"));
+        
+        doc.charset(Charset.forName(charsetUtf8));
+        metaCharset = docDisabled.select("meta[charset]").first();
+        assertNotNull(metaCharset);
+        assertEquals("dontTouch", metaCharset.attr("charset"));
     }
 }
