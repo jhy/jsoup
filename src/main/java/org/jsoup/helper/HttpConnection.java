@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -14,11 +15,12 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
-
-import static org.jsoup.Connection.Method;
 
 /**
  * Implementation of {@link Connection}.
@@ -116,6 +118,11 @@ public class HttpConnection implements Connection {
 
     public Connection ignoreContentType(boolean ignoreContentType) {
         req.ignoreContentType(ignoreContentType);
+        return this;
+    }
+
+    public Connection validateTLSCertificates(boolean value) {
+        req.validateTLSCertificates(value);
         return this;
     }
 
@@ -344,8 +351,9 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+        private boolean validateTSLCertificates = true;
 
-      	private Request() {
+        private Request() {
             timeoutMilliseconds = 3000;
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
@@ -388,6 +396,14 @@ public class HttpConnection implements Connection {
             return ignoreHttpErrors;
         }
 
+        public boolean validateTLSCertificates() {
+            return validateTSLCertificates;
+        }
+
+        public void validateTLSCertificates(boolean value) {
+            validateTSLCertificates = value;
+        }
+
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
             this.ignoreHttpErrors = ignoreHttpErrors;
             return this;
@@ -424,6 +440,7 @@ public class HttpConnection implements Connection {
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
+        private static SSLSocketFactory sslSocketFactory;
         private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
@@ -580,10 +597,20 @@ public class HttpConnection implements Connection {
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
             HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout());
+
+            if (conn instanceof HttpsURLConnection) {
+                if (!req.validateTLSCertificates()) {
+                    initUnSecureTSL();
+                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
+                    ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
+                }
+            }
+
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
@@ -592,6 +619,62 @@ public class HttpConnection implements Connection {
                 conn.addRequestProperty(header.getKey(), header.getValue());
             }
             return conn;
+        }
+
+        /**
+         * Instantiate Hostname Verifier that does nothing.
+         * This is used for connections with disabled SSL certificates validation.
+         *
+         *
+         * @return Hostname Verifier that does nothing and accepts all hostnames
+         */
+        private static HostnameVerifier getInsecureVerifier() {
+            return new HostnameVerifier() {
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return true;
+                }
+            };
+        }
+
+        /**
+         * Initialise Trust manager that does not validate certificate chains and
+         * add it to current SSLContext.
+         * <p/>
+         * please not that this method will only perform action if sslSocketFactory is not yet
+         * instantiated.
+         *
+         * @throws IOException
+         */
+        private static synchronized void initUnSecureTSL() throws IOException {
+            if (sslSocketFactory == null) {
+                // Create a trust manager that does not validate certificate chains
+                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+
+                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+                    }
+
+                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
+                    }
+
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                }};
+
+                // Install the all-trusting trust manager
+                final SSLContext sslContext;
+                try {
+                    sslContext = SSLContext.getInstance("SSL");
+                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                    // Create an ssl socket factory with our all-trusting manager
+                    sslSocketFactory = sslContext.getSocketFactory();
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IOException("Can't create unsecure trust manager");
+                } catch (KeyManagementException e) {
+                    throw new IOException("Can't create unsecure trust manager");
+                }
+            }
+
         }
 
         // set up url, method, header, cookies
@@ -630,7 +713,7 @@ public class HttpConnection implements Connection {
                         String cookieVal = cd.consumeTo(";").trim();
                         if (cookieVal == null)
                             cookieVal = "";
-                        // ignores path, date, domain, secure et al. req'd?
+                        // ignores path, date, domain, validateTLSCertificates et al. req'd?
                         // name not blank, value not null
                         if (cookieName != null && cookieName.length() > 0)
                             cookie(cookieName, cookieVal);

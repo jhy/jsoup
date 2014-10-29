@@ -121,6 +121,21 @@ public interface Connection {
     public Connection ignoreContentType(boolean ignoreContentType);
 
     /**
+     * Disable/enable TSL certificates validation for HTTPS requests.
+     * <p/>
+     * By default this is <b>true</b>; all
+     * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
+     * certificate does not validate.
+     * <p/>
+     * Some servers use expired, self-generated certificates; or your JDK may not
+     * support SNI hosts. In which case, you may want to enable this setting.
+     * <p/> <b>Be careful</b> and understand why you need to disable these validations.
+     * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
+     * @return this Connection, for chaining
+     */
+    Connection validateTLSCertificates(boolean value);
+
+    /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
      * request body for POSTs. A request may have multiple values of the same name.
      * @param key data key
@@ -376,6 +391,8 @@ public interface Connection {
      * Represents a HTTP request.
      */
     public interface Request extends Base<Request> {
+
+
         /**
          * Get the request timeout, in milliseconds.
          * @return the timeout in milliseconds.
@@ -442,6 +459,18 @@ public interface Connection {
          * @return this Request, for chaining
          */
         public Request ignoreContentType(boolean ignoreContentType);
+
+        /**
+         * Get the current state of TLS (SSL) certificate validation.
+         * @return true if TLS cert validation enabled
+         */
+        boolean validateTLSCertificates();
+
+        /**
+         * Set TLS certificate validation.
+         * @param value set false to ignore TLS (SSL) certificates
+         */
+        void validateTLSCertificates(boolean value);
 
         /**
          * Add a data parameter to the request
