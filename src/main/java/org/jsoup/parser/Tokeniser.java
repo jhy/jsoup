@@ -123,6 +123,7 @@ final class Tokeniser {
         selfClosingFlagAcknowledged = true;
     }
 
+    final private char[] charRefHolder = new char[1]; // holder to not have to keep creating arrays
     char[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
@@ -131,6 +132,7 @@ final class Tokeniser {
         if (reader.matchesAnySorted(notCharRefCharsSorted))
             return null;
 
+        final char[] charRef = charRefHolder;
         reader.mark();
         if (reader.matchConsume("#")) { // numbered
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
@@ -150,10 +152,15 @@ final class Tokeniser {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
-                return new char[]{replacementChar};
+                charRef[0] = replacementChar;
+                return charRef;
             } else {
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
+                if (charval < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                    charRef[0] = (char) charval;
+                    return charRef;
+                } else
                 return Character.toChars(charval);
             }
         } else { // named
@@ -176,7 +183,8 @@ final class Tokeniser {
             }
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
-            return new char[]{Entities.getCharacterByName(nameRef)};
+            charRef[0] = Entities.getCharacterByName(nameRef);
+            return charRef;
         }
     }
 
