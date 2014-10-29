@@ -5,7 +5,6 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 
 /**
@@ -25,19 +24,10 @@ abstract class TreeBuilder {
 
     protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
         Validate.notNull(input, "String input must not be null");
-        reader = new CharacterReader(input);
-        init(baseUri, errors);
-    }
-
-    protected void initialiseParse(CharBuffer input, String baseUri, ParseErrorList errors) {
-        Validate.notNull(input, "Input buffer must not be null");
-        reader = new CharacterReader(input);
-        init(baseUri, errors);
-    }
-
-    protected void init(String baseUri, ParseErrorList errors) {
         Validate.notNull(baseUri, "BaseURI must not be null");
+
         doc = new Document(baseUri);
+        reader = new CharacterReader(input);
         this.errors = errors;
         tokeniser = new Tokeniser(reader, errors);
         stack = new ArrayList<Element>(32);
@@ -49,10 +39,6 @@ abstract class TreeBuilder {
     }
 
     Document parse(String input, String baseUri, ParseErrorList errors) {
-        return parse(CharBuffer.wrap(input), baseUri, errors);
-    }
-
-    Document parse(CharBuffer input, String baseUri, ParseErrorList errors) {
         initialiseParse(input, baseUri, errors);
         runParser();
         return doc;
