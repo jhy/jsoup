@@ -156,7 +156,7 @@ public class DocumentTest {
         
         final String charsetUtf8 = "UTF-8";
         doc.charset(Charset.forName(charsetUtf8));
-        Element metaCharset = doc.select("meta[charset]").first();
+        Element selectedElement = doc.select("meta[charset]").first();
         
         final String htmlCharsetUTF8 = "<html>\n" +
                                         " <head>\n" +
@@ -165,15 +165,15 @@ public class DocumentTest {
                                         " <body></body>\n" +
                                         "</html>";
         
-        assertNotNull(metaCharset);
+        assertNotNull(selectedElement);
         assertEquals(charsetUtf8, doc.charset().displayName());
-        assertEquals(charsetUtf8, metaCharset.attr("charset"));
+        assertEquals(charsetUtf8, selectedElement.attr("charset"));
         assertEquals(htmlCharsetUTF8, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
         
         final String charsetIso8859 = "ISO-8859-1";
         doc.charset(Charset.forName(charsetIso8859));
-        metaCharset = doc.select("meta[charset]").first();
+        selectedElement = doc.select("meta[charset]").first();
         
         final String htmlCharsetISO = "<html>\n" +
                                         " <head>\n" +
@@ -182,9 +182,9 @@ public class DocumentTest {
                                         " <body></body>\n" +
                                         "</html>";
         
-        assertNotNull(metaCharset);
+        assertNotNull(selectedElement);
         assertEquals(charsetIso8859, doc.charset().displayName());
-        assertEquals(charsetIso8859, metaCharset.attr("charset"));
+        assertEquals(charsetIso8859, selectedElement.attr("charset"));
         assertEquals(htmlCharsetISO, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
         
@@ -213,20 +213,38 @@ public class DocumentTest {
         final String htmlCharset = "<html>\n" +
                                     " <head>\n" +
                                     "  <meta charset=\"dontTouch\">\n" +
+                                    "  <meta name=\"charset\" content=\"dontTouch\">\n" +
                                     " </head>\n" +
                                     " <body></body>\n" +
                                     "</html>";
         
         docDisabled.head().appendElement("meta").attr("charset", "dontTouch");
+        docDisabled.head().appendElement("meta").attr("name", "charset").attr("content", "dontTouch");
+        
         assertEquals(htmlCharset, docDisabled.toString());
         
-        metaCharset = docDisabled.select("meta[charset]").first();
-        assertNotNull(metaCharset);
-        assertEquals("dontTouch", metaCharset.attr("charset"));
+        selectedElement = docDisabled.select("meta[charset]").first();
+        assertNotNull(selectedElement);
+        assertEquals("dontTouch", selectedElement.attr("charset"));
+        selectedElement = docDisabled.select("meta[name=charset]").first();
+        assertNotNull(selectedElement);
+        assertEquals("dontTouch", selectedElement.attr("content"));
         
         doc.charset(Charset.forName(charsetUtf8));
-        metaCharset = docDisabled.select("meta[charset]").first();
-        assertNotNull(metaCharset);
-        assertEquals("dontTouch", metaCharset.attr("charset"));
+        selectedElement = docDisabled.select("meta[charset]").first();
+        assertNotNull(selectedElement);
+        assertEquals("dontTouch", selectedElement.attr("charset"));
+        selectedElement = docDisabled.select("meta[name=charset]").first();
+        assertNotNull(selectedElement);
+        assertEquals("dontTouch", selectedElement.attr("content"));
+        
+        
+        // Remove obsolete charset definitions
+        final Document docCleanup = Document.createShell("");
+        docCleanup.updateMetaCharset(true);
+        docCleanup.head().appendElement("meta").attr("charset", "dontTouch");
+        docCleanup.head().appendElement("meta").attr("name", "charset").attr("content", "dontTouch");
+        
+        assertEquals(htmlCharsetUTF8, doc.toString());
     }
 }

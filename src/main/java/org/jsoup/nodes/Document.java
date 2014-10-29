@@ -238,7 +238,6 @@ public class Document extends Element {
             
             if( metaCharset != null ) {
                 metaCharset.attr("charset", outputSettings.charset().displayName());
-                // TODO: Remove other charset tags / handle duplicates (?)
             }
             else {
                 Element head = head();
@@ -247,6 +246,9 @@ public class Document extends Element {
                     head.appendElement("meta").attr("charset", outputSettings.charset().displayName());
                 }
             }
+            
+            // Remove obsolete elements
+            select("meta[name=charset]").remove();
         }
     }
     
