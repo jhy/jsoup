@@ -187,6 +187,12 @@ public class Document extends Element {
     }
 
     @Override
+    public String html() {
+        ensureMetaCharset();
+        return super.html();
+    }
+
+    @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
     }
@@ -213,6 +219,25 @@ public class Document extends Element {
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
+    
+    private void ensureMetaCharset() {
+        if( outputSettings.updateMetaCharset() ) {
+            Element metaCharset = select("meta[charset]").first();
+            
+            if( metaCharset != null ) {
+                metaCharset.attr("charset", outputSettings.charset().displayName());
+                // TODO: Remove other charset tags / handle duplicates (?)
+            }
+            else {
+                Element head = head();
+                
+                if( head != null ) {
+                    head.appendElement("meta").attr("charset", outputSettings.charset().displayName());
+                }
+            }
+        }
+    }
+    
 
     /**
      * A Document's output settings control the form of the text() and html() methods.
@@ -230,6 +255,7 @@ public class Document extends Element {
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
+        private boolean updateMetaCharset = false;
 
         public OutputSettings() {}
 
@@ -367,6 +393,15 @@ public class Document extends Element {
         public OutputSettings indentAmount(int indentAmount) {
             Validate.isTrue(indentAmount >= 0);
             this.indentAmount = indentAmount;
+            return this;
+        }
+        
+        public boolean updateMetaCharset() {
+            return updateMetaCharset;
+        }
+        
+        public OutputSettings updateMetaCharset(boolean updateMetaCharset) {
+            this.updateMetaCharset = updateMetaCharset;
             return this;
         }
 
