@@ -4,6 +4,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.nio.CharBuffer;
 import java.util.List;
 
 /**
@@ -26,6 +27,12 @@ public class Parser {
     }
     
     public Document parseInput(String html, String baseUri) {
+        errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
+        Document doc = treeBuilder.parse(html, baseUri, errors);
+        return doc;
+    }
+
+    public Document parseInput(CharBuffer html, String baseUri) {
         errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
         Document doc = treeBuilder.parse(html, baseUri, errors);
         return doc;

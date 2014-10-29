@@ -14,8 +14,8 @@ import java.util.List;
  */
 public class XmlTreeBuilder extends TreeBuilder {
     @Override
-    protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
-        super.initialiseParse(input, baseUri, errors);
+    protected void init(String baseUri, ParseErrorList errors) {
+        super.init(baseUri, errors);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
     }

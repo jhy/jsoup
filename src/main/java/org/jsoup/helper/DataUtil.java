@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.util.Random;
@@ -86,11 +87,11 @@ public final class DataUtil {
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
     // todo - this is getting gnarly. needs a rewrite.
     static Document parseByteData(ByteBuffer byteData, String charsetName, String baseUri, Parser parser) {
-        String docData;
+        CharBuffer docData;
         Document doc = null;
         if (charsetName == null) { // determine from meta. safe parse as UTF-8
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+            docData = Charset.forName(defaultCharset).decode(byteData);
             doc = parser.parseInput(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
@@ -114,19 +115,19 @@ public final class DataUtil {
                     foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                     charsetName = foundCharset;
                     byteData.rewind();
-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+                    docData = Charset.forName(foundCharset).decode(byteData);
                     doc = null;
                 }
             }
         } else { // specified by content type header (or by user on file load)
             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
-            docData = Charset.forName(charsetName).decode(byteData).toString();
+            docData = Charset.forName(charsetName).decode(byteData);
         }
         // UTF-8 BOM indicator. takes precedence over everything else. rarely used. re-decodes incase above decoded incorrectly
         if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
             byteData.rewind();
-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
-            docData = docData.substring(1);
+            docData = Charset.forName(defaultCharset).decode(byteData);
+            docData.get(); // advance the pos by one, to skip the BOM
             charsetName = defaultCharset;
             doc = null;
         }

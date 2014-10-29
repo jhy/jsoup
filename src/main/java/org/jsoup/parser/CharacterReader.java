@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 
+import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -21,6 +22,18 @@ final class CharacterReader {
     CharacterReader(String input) {
         Validate.notNull(input);
         this.input = input.toCharArray();
+        this.length = this.input.length;
+    }
+
+    CharacterReader(CharBuffer input) {
+        Validate.notNull(input);
+        if (input.hasArray()) {
+            this.input = input.array();
+            this.pos = input.position();
+        } else {
+            // yuck -- can't get the backing array. read it into a string and get its array
+            this.input = input.toString().toCharArray();
+        }
         this.length = this.input.length;
     }
 
