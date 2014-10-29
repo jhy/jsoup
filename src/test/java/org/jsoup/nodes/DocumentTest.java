@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
@@ -144,5 +145,30 @@ public class DocumentTest {
 
         Document doc = Jsoup.parse(builder.toString());
         doc.clone();
+    }
+    
+    @Test
+    public void testMetaCharsetUpdate() {
+        Document doc = Document.createShell("");
+        doc.head().appendElement("meta").attr("charset", "changeThis");
+        doc.body().appendElement("div").text("aaa");
+        
+        
+        final String charsetUtf8 = "UTF-8";
+        doc.outputSettings().charset(charsetUtf8);
+        Element metaCharset = doc.select("meta[charset]").first();
+        
+        assertNotNull(metaCharset);
+        assertEquals(doc.outputSettings().charset().displayName(), charsetUtf8);
+        assertEquals(metaCharset.attr("charset"), charsetUtf8);
+        
+        
+        final String charsetIso8859 = "ISO-8859-1";
+        doc.outputSettings().charset(Charset.forName(charsetIso8859));
+        metaCharset = doc.select("meta[charset]").first();
+        
+        assertNotNull(metaCharset);
+        assertEquals(doc.outputSettings().charset().displayName(), charsetIso8859);
+        assertEquals(metaCharset.attr("charset"), charsetIso8859);
     }
 }

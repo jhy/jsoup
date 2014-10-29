@@ -258,7 +258,7 @@ public class Document extends Element {
         private boolean updateMetaCharset = false;
 
         public OutputSettings() {}
-
+        
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
          * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
