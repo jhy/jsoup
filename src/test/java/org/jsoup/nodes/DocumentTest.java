@@ -192,10 +192,10 @@ public class DocumentTest {
         // No meta charset tag
         final Document docNoCharset = Document.createShell("");
         docNoCharset.updateMetaCharset(true);
-        doc.charset(Charset.forName(charsetUtf8));
+        docNoCharset.charset(Charset.forName(charsetUtf8));
         
-        assertEquals(charsetUtf8, doc.select("meta[charset]").first().attr("charset"));
-        assertEquals(htmlCharsetUTF8, doc.toString());
+        assertEquals(charsetUtf8, docNoCharset.select("meta[charset]").first().attr("charset"));
+        assertEquals(htmlCharsetUTF8, docNoCharset.toString());
         
         
         // Disabled update of meta charset tag
@@ -230,7 +230,7 @@ public class DocumentTest {
         assertNotNull(selectedElement);
         assertEquals("dontTouch", selectedElement.attr("content"));
         
-        doc.charset(Charset.forName(charsetUtf8));
+        docDisabled.charset(Charset.forName(charsetUtf8));
         selectedElement = docDisabled.select("meta[charset]").first();
         assertNotNull(selectedElement);
         assertEquals("dontTouch", selectedElement.attr("charset"));
@@ -244,7 +244,107 @@ public class DocumentTest {
         docCleanup.updateMetaCharset(true);
         docCleanup.head().appendElement("meta").attr("charset", "dontTouch");
         docCleanup.head().appendElement("meta").attr("name", "charset").attr("content", "dontTouch");
+        docCleanup.charset(Charset.forName(charsetUtf8));
         
-        assertEquals(htmlCharsetUTF8, doc.toString());
+        assertEquals(htmlCharsetUTF8, docCleanup.toString());
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateXml() {
+        // Existing encoding definition
+        final Document doc = new Document("");
+        doc.appendElement("root").text("node");
+        doc.outputSettings().syntax(Syntax.xml);
+        doc.updateMetaCharset(true);
+        
+        XmlDeclaration decl = new XmlDeclaration("xml", "", false);
+        decl.attr("version", "1.0");
+        decl.attr("encoding", "changeThis");
+        doc.prependChild(decl);
+        
+        final String charsetUtf8 = "UTF-8";
+        doc.charset(Charset.forName(charsetUtf8));
+        
+        Node declNode = doc.childNode(0);
+        assertTrue(declNode instanceof XmlDeclaration);
+        XmlDeclaration selectedNode = (XmlDeclaration) declNode;
+        
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
+                                        "<root>\n" +
+                                        " node\n" +
+                                        "</root>";
+
+        assertNotNull(declNode);
+        assertEquals(charsetUtf8, doc.charset().displayName());
+        assertEquals(charsetUtf8, selectedNode.attr("encoding"));
+        assertEquals("1.0", selectedNode.attr("version"));
+        assertEquals(xmlCharsetUTF8, doc.toString());
+        assertEquals(doc.charset(), doc.outputSettings().charset());
+        
+        final String charsetIso8859 = "ISO-8859-1";
+        doc.charset(Charset.forName(charsetIso8859));
+        
+        declNode = doc.childNode(0);
+        assertTrue(declNode instanceof XmlDeclaration);
+        selectedNode = (XmlDeclaration) declNode;
+        
+        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\">\n" +
+                                        "<root>\n" +
+                                        " node\n" +
+                                        "</root>";
+        
+        assertNotNull(declNode);
+        assertEquals(charsetIso8859, doc.charset().displayName());
+        assertEquals(charsetIso8859, selectedNode.attr("encoding"));
+        assertEquals("1.0", selectedNode.attr("version"));
+        assertEquals(xmlCharsetISO, doc.toString());
+        assertEquals(doc.charset(), doc.outputSettings().charset());
+        
+        
+        // No encoding definition
+        final Document docNoCharset = new Document("");
+        docNoCharset.appendElement("root").text("node");
+        docNoCharset.outputSettings().syntax(Syntax.xml);
+        docNoCharset.updateMetaCharset(true);
+        docNoCharset.charset(Charset.forName(charsetUtf8));
+        
+        declNode = docNoCharset.childNode(0);
+        assertTrue(declNode instanceof XmlDeclaration);
+        selectedNode = (XmlDeclaration) declNode;
+        
+        assertEquals(charsetUtf8, selectedNode.attr("encoding"));
+        assertEquals(xmlCharsetUTF8, docNoCharset.toString());
+        
+        
+        // Disabled update of encoding definition
+        final Document docDisabled = new Document("");
+        docDisabled.appendElement("root").text("node");
+        docDisabled.outputSettings().syntax(Syntax.xml);
+        assertFalse(docDisabled.updateMetaCharset());
+        
+        final String xmlNoCharset = "<root>\n" +
+                                    " node\n" +
+                                    "</root>";
+        
+        assertEquals(xmlNoCharset, docDisabled.toString());
+        
+        decl = new XmlDeclaration("xml", "", false);
+        decl.attr("version", "dontTouch");
+        decl.attr("encoding", "dontTouch");
+        docDisabled.prependChild(decl);
+        
+        final String xmlCharset = "<?xml version=\"dontTouch\" encoding=\"dontTouch\">\n" +
+                                    "<root>\n" +
+                                    " node\n" +
+                                    "</root>";
+        
+        assertEquals(xmlCharset, docDisabled.toString());
+        
+        declNode = docDisabled.childNode(0);
+        assertTrue(declNode instanceof XmlDeclaration);
+        selectedNode = (XmlDeclaration) declNode;
+        
+        assertEquals("dontTouch", selectedNode.attr("encoding"));
+        assertEquals("dontTouch", selectedNode.attr("version"));
     }
 }

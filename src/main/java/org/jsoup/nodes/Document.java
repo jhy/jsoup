@@ -129,6 +129,8 @@ public class Document extends Element {
         normaliseStructure("head", htmlEl);
         normaliseStructure("body", htmlEl);
         
+        ensureMetaCharset();
+        
         return this;
     }
 
@@ -234,21 +236,59 @@ public class Document extends Element {
     
     private void ensureMetaCharset() {
         if( updateMetaCharset == true ) {
-            Element metaCharset = select("meta[charset]").first();
+            OutputSettings.Syntax syntax = outputSettings().syntax();
             
-            if( metaCharset != null ) {
-                metaCharset.attr("charset", outputSettings.charset().displayName());
+            if( syntax == OutputSettings.Syntax.html ) {
+                Element metaCharset = select("meta[charset]").first();
+
+                if( metaCharset != null ) {
+                    metaCharset.attr("charset", charset().displayName());
+                }
+                else {
+                    Element head = head();
+
+                    if( head != null ) {
+                        head.appendElement("meta").attr("charset", charset().displayName());
+                    }
+                }
+
+                // Remove obsolete elements
+                select("meta[name=charset]").remove();
             }
-            else {
-                Element head = head();
+            else if( syntax == OutputSettings.Syntax.xml ) {
+                Node node = childNodes().get(0);
                 
-                if( head != null ) {
-                    head.appendElement("meta").attr("charset", outputSettings.charset().displayName());
+                if( node instanceof XmlDeclaration ) {
+                    XmlDeclaration decl = (XmlDeclaration) node;
+                    
+                    if( decl.attr(XmlDeclaration.DECL_KEY).equals("xml") ) {
+                        decl.attr("encoding", charset().displayName());
+
+                        final String version = decl.attr("version");
+
+                        if( version != null ) {
+                            decl.attr("version", "1.0");
+                        }
+                    }
+                    else {
+                        decl = new XmlDeclaration("xml", baseUri, false);
+                        decl.attr("version", "1.0");
+                        decl.attr("encoding", charset().displayName());
+                        
+                        prependChild(decl);
+                    }
+                }
+                else {
+                    XmlDeclaration decl = new XmlDeclaration("xml", baseUri, false);
+                    decl.attr("version", "1.0");
+                    decl.attr("encoding", charset().displayName());
+                    
+                    prependChild(decl);
                 }
             }
-            
-            // Remove obsolete elements
-            select("meta[name=charset]").remove();
+            else {
+                // Unsupported syntax - nothing to do yet
+            }
         }
     }
     
