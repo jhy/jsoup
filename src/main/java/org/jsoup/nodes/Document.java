@@ -210,19 +210,75 @@ public class Document extends Element {
         return "#document";
     }
     
+    /**
+     * Sets the charset used in this document. This method is equivalent
+     * to {@link OutputSettings#charset(java.nio.charset.Charset)
+     * OutputSettings.charset(Charset)} but in addition it updates the
+     * charset / encoding element within the document.
+     * 
+     * <p>This only applies if {@link #updateMetaCharset(boolean)
+     * updateMetaCharset} set to <tt>true</tt>; otherwise there are no elements
+     * changed and the new value is delegated to
+     * {@link OutputSettings#charset(java.nio.charset.Charset) 
+     * OutputSettings.charset(Charset)} only.</p>
+     * 
+     * <p>If there's no element with charset / encoding information yet it will
+     * be created. Obsolete charset / encoding definitions are removed!</p>
+     * 
+     * <p><b>Elements used:</b></p>
+     * 
+     * <ul>
+     * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
+     * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
+     * </ul>
+     * 
+     * @param charset Charset
+     * 
+     * @see #updateMetaCharset(boolean) 
+     * @see OutputSettings#charset(java.nio.charset.Charset) 
+     */
     public void charset(Charset charset) {
         outputSettings.charset(charset);
         ensureMetaCharset();
     }
     
+    /**
+     * Returns the charset used in this document. This method is equivalent
+     * to {@link OutputSettings#charset()}.
+     * 
+     * @return Current Charset
+     * 
+     * @see OutputSettings#charset() 
+     */
     public Charset charset() {
         return outputSettings.charset();
     }
     
+    /**
+     * Sets whether the element with charset information in this document is
+     * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * Document.charset(Charset)} or not.
+     * 
+     * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
+     * modified.</p>
+     * 
+     * @param update If <tt>true</tt> the element updated on charset
+     * changes, <tt>false</tt> if not
+     * 
+     * @see #charset(java.nio.charset.Charset) 
+     */
     public void updateMetaCharset(boolean update) {
         this.updateMetaCharset = true;
     }
     
+    /**
+     * Returns whether the element with charset information in this document is
+     * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * Document.charset(Charset)} or not.
+     * 
+     * @return Returns <tt>true</tt> if the element is updated on charset
+     * changes, <tt>false</tt> if not
+     */
     public boolean updateMetaCharset() {
         return updateMetaCharset;
     }
@@ -234,6 +290,25 @@ public class Document extends Element {
         return clone;
     }
     
+    /**
+     * Ensures a meta charset (html) or xml declaration (xml) with the current
+     * encoding used. This only applies with {@link #updateMetaCharset(boolean)
+     * updateMetaCharset} set to <tt>true</tt>, otherwise this method does
+     * nothing.
+     * 
+     * <ul>
+     * <li>An exsiting element gets updated with the current charset</li>
+     * <li>If there's no element yet it will be inserted</li>
+     * <li>Obsolete elements are removed</li>
+     * </ul>
+     * 
+     * <p><b>Elements used:</b></p>
+     * 
+     * <ul>
+     * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
+     * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
+     * </ul>
+     */
     private void ensureMetaCharset() {
         if( updateMetaCharset == true ) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
@@ -353,7 +428,6 @@ public class Document extends Element {
          * @return the document's output settings, for chaining
          */
         public OutputSettings charset(Charset charset) {
-            // todo: this should probably update the doc's meta charset
             this.charset = charset;
             charsetEncoder = charset.newEncoder();
             return this;
