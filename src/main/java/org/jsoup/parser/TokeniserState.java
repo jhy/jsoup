@@ -1,5 +1,7 @@
 package org.jsoup.parser;
 
+import java.util.Arrays;
+
 /**
  * States and transition activations for the Tokeniser.
  */
@@ -22,7 +24,7 @@ enum TokeniserState {
                     t.emit(new Token.EOF());
                     break;
                 default:
-                    String data = r.consumeToAny('&', '<', nullChar);
+                    String data = r.consumeData();
                     t.emit(data);
                     break;
             }
@@ -182,7 +184,8 @@ enum TokeniserState {
         // from < or </ in data, will have start or end tag pending
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
-            String tagName = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '/', '>', nullChar).toLowerCase();
+            //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
+            String tagName = r.consumeTagName().toLowerCase();
             t.tagPending.appendTagName(tagName);
 
             switch (r.consume()) {
@@ -219,7 +222,7 @@ enum TokeniserState {
             } else if (r.matchesLetter() && t.appropriateEndTagName() != null && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
                 // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
                 // consuming to EOF; break out here
-                t.tagPending = new Token.EndTag(t.appropriateEndTagName());
+                t.tagPending = t.createTagPending(false).name(t.appropriateEndTagName());
                 t.emitTagPending();
                 r.unconsume(); // undo "<"
                 t.transition(Data);
@@ -642,7 +645,7 @@ enum TokeniserState {
     AttributeName {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
-            String name = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<');
+            String name = r.consumeToAnySorted(attributeNameCharsSorted);
             t.tagPending.appendAttributeName(name.toLowerCase());
 
             char c = r.consume();
@@ -776,7 +779,7 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny('"', '&', nullChar);
+            String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
 
@@ -806,7 +809,7 @@ enum TokeniserState {
     },
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny('\'', '&', nullChar);
+            String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
 
@@ -1645,16 +1648,26 @@ enum TokeniserState {
 
     abstract void read(Tokeniser t, CharacterReader r);
 
-    private static final char nullChar = '\u0000';
+    static final char nullChar = '\u0000';
+    private static final char[] attributeSingleValueCharsSorted = new char[]{'\'', '&', nullChar};
+    private static final char[] attributeDoubleValueCharsSorted = new char[]{'"', '&', nullChar};
+    private static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<'};
+
     private static final char replacementChar = Tokeniser.replacementChar;
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
     private static final char eof = CharacterReader.EOF;
+
+    static {
+        Arrays.sort(attributeSingleValueCharsSorted);
+        Arrays.sort(attributeDoubleValueCharsSorted);
+        Arrays.sort(attributeNameCharsSorted);
+    }
 
     /**
      * Handles RawtextEndTagName, ScriptDataEndTagName, and ScriptDataEscapedEndTagName. Same body impl, just
      * different else exit transitions.
      */
-    private static final void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
+    private static void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
         if (r.matchesLetter()) {
             String name = r.consumeLetterSequence();
             t.tagPending.appendTagName(name.toLowerCase());
@@ -1694,7 +1707,7 @@ enum TokeniserState {
         }
     }
 
-    private static final void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
+    private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
         if (r.matchesLetter()) {
             String name = r.consumeLetterSequence();
             t.dataBuffer.append(name.toLowerCase());

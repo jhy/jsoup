@@ -12,14 +12,13 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.*;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
@@ -27,6 +26,8 @@ import static org.junit.Assert.assertTrue;
  @author Jonathan Hedley, jonathan@hedley.net */
 @Ignore // ignored by default so tests don't require network access. comment out to enable.
 public class UrlConnectTest {
+    private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
+    private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
 
     @Test
@@ -296,6 +297,63 @@ public class UrlConnectTest {
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
+    }
+
+    /**
+     * Verify that security disabling feature works properly.
+     * <p/>
+     * 1. try to hit url with invalid certificate and evaluate that exception is thrown
+     *
+     * @throws Exception
+     */
+    @Test(expected = IOException.class)
+    public void testUnsafeFail() throws Exception {
+        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
+        Jsoup.connect(url).execute();
+    }
+
+
+    /**
+     * Verify that requests to websites with SNI fail on jdk 1.6
+     * <p/>
+     * read for more details:
+     * http://en.wikipedia.org/wiki/Server_Name_Indication
+     *
+     * Test is ignored independent from others as it requires JDK 1.6
+     * @throws Exception
+     */
+    @Test(expected = IOException.class)
+    public void testSNIFail() throws Exception {
+        String url = WEBSITE_WITH_SNI;
+        Jsoup.connect(url).execute();
+    }
+
+    /**
+     * Verify that requests to websites with SNI pass
+     * <p/>
+     * <b>NB!</b> this test is FAILING right now on jdk 1.6
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSNIPass() throws Exception {
+        String url = WEBSITE_WITH_SNI;
+        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
+        assertThat(defaultRes.statusCode(), is(200));
+    }
+
+    /**
+     * Verify that security disabling feature works properly.
+     * <p/>
+     * 1. disable security checks and call the same url to verify that content is consumed correctly
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testUnsafePass() throws Exception {
+        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
+        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
+        assertThat(defaultRes.statusCode(), is(200));
     }
 
     @Test

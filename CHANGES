@@ -1,8 +1,15 @@
 jsoup changelog
 
 *** Release 1.8.2 [PENDING]
+ * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
+   speed increase. For non-Android JREs, around 1.1x to 1.2x.
+
  * File upload support. Added the ability to specify input streams for POST data, which will upload content in
    MIME multipart/form-data encoding.
+
+ * Added ability to disable TLS (SSL) certificate validation. Helpful if you're hitting a host with a bad cert,
+   or your JDK doesn't support SNI.
+   <https://github.com/jhy/jsoup/pull/343>
 
  * Added ability to further tweak the canned Cleaner Whitelists by removing existing settings.
    <https://github.com/jhy/jsoup/pull/449>

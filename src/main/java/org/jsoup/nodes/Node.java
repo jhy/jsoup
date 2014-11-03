@@ -453,7 +453,7 @@ public abstract class Node implements Cloneable {
         reindexChildren();
     }
 
-    private void reparentChild(Node child) {
+    protected void reparentChild(Node child) {
         if (child.parentNode != null)
             child.parentNode.removeChild(child);
         child.setParentNode(this);

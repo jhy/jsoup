@@ -258,8 +258,11 @@ public class Element extends Node {
      */
     public Element appendChild(Node child) {
         Validate.notNull(child);
-        
-        addChildren(child);
+
+        // was - Node#addChildren(child). short-circuits an array create and a loop.
+        reparentChild(child);
+        childNodes.add(child);
+        child.setSiblingIndex(childNodes.size()-1);
         return this;
     }
 
