@@ -211,6 +211,13 @@ public interface Connection {
     public Connection parser(Parser parser);
 
     /**
+     * Sets the default post data character set for x-www-form-urlencoded post data
+     * @param charset character set to encode post data
+     * @return this Connection, for chaining
+     */
+    public Connection postDataCharset(String charset);
+
+    /**
      * Execute the request as a GET, and parse the result.
      * @return parsed Document
      * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
@@ -497,6 +504,20 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+
+        /**
+         * Sets the post data character set for x-www-form-urlencoded post data
+         * @param charset character set to encode post data
+         * @return this Request, for chaining
+         */
+        public Request postDataCharset(String charset);
+
+        /**
+         * Gets the post data character set for x-www-form-urlencoded post data
+         * @return character set to encode post data
+         */
+        public String postDataCharset();
+
     }
 
     /**
