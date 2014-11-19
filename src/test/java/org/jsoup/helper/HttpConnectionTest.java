@@ -5,8 +5,10 @@ import static org.junit.Assert.*;
 import org.jsoup.integration.ParseTest;
 import org.junit.Test;
 import org.jsoup.Connection;
+import org.jsoup.nodes.*;
 
 import java.io.IOException;
+import java.net.Proxy;
 import java.util.*;
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -150,5 +152,34 @@ public class HttpConnectionTest {
         assertEquals("one", kv.key());
         assertEquals("two", kv.value());
         assertFalse(kv.hasInputStream());
+    }
+
+    @Test public void proxyOn() throws IOException {
+        Connection con = HttpConnection.connect("http://www.whatsmyip.org/");
+
+        Document doc = con.get();
+        String ipAddressWithoutProxy = doc.select("#ip").text();
+
+        con.proxy(Proxy.Type.HTTP, "151.200.170.146", 80, null, null);
+
+        doc = con.get();
+        String ipAddressFromProxy = doc.select("#ip").text();
+
+        assertNotSame(ipAddressFromProxy, ipAddressWithoutProxy);
+    }
+
+    @Test public void proxyOff() throws IOException {
+        Connection con = HttpConnection.connect("http://www.whatsmyip.org/");
+
+        con.proxy(Proxy.Type.HTTP, "151.200.170.146", 80, null, null);
+
+        Document doc = con.get();
+        String ipAddressFromProxy = doc.select("#ip").text();
+
+        con.proxy(Proxy.NO_PROXY, null, null);
+        doc = con.get();
+        String ipAddressWithoutProxy = doc.select("#ip").text();
+
+        assertNotSame(ipAddressFromProxy, ipAddressWithoutProxy);
     }
 }
