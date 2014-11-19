@@ -9,10 +9,7 @@ import org.jsoup.parser.TokenQueue;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.KeyManagementException;
@@ -21,6 +18,7 @@ import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.net.Proxy;
 
 /**
  * Implementation of {@link Connection}.
@@ -188,6 +186,16 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection proxy(Proxy proxy, String username, String password) {
+        req.proxy(proxy, username, password);
+        return this;
+    }
+
+    public Connection proxy(Proxy.Type type, String host, int port, String username, String password) {
+        req.proxy(new Proxy(type, new InetSocketAddress(host, port)), username, password);
+        return this;
+    }
+
     public Document get() throws IOException {
         req.method(Method.GET);
         execute();
@@ -352,6 +360,9 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean validateTSLCertificates = true;
+        private Proxy proxy;
+        private String proxyUsername;
+        private String proxyPassword;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -361,6 +372,7 @@ public class HttpConnection implements Connection {
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+            proxy = Proxy.NO_PROXY;
         }
 
         public int timeout() {
@@ -416,6 +428,39 @@ public class HttpConnection implements Connection {
         public Connection.Request ignoreContentType(boolean ignoreContentType) {
             this.ignoreContentType = ignoreContentType;
             return this;
+        }
+
+        public Proxy proxy() {
+            return proxy;
+        }
+
+        public Proxy proxy(Proxy proxy, String username, String password) {
+            this.proxy = proxy;
+            this.proxyUsername = username;
+            this.proxyPassword = password;
+
+            if(proxy != Proxy.NO_PROXY && !StringUtil.isBlank(username)){
+                Authenticator.setDefault(
+                        new Authenticator() {
+                            public PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(proxyUsername, proxyPassword.toCharArray());
+                            }
+                        }
+                );
+            }
+            else{
+                Authenticator.setDefault(null);
+            }
+
+            return proxy;
+        }
+
+        public String proxyUsername(){
+            return proxyUsername;
+        }
+
+        public String proxyPassword(){
+            return proxyPassword;
         }
 
         public Request data(Connection.KeyVal keyval) {
@@ -596,7 +641,7 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection(req.proxy());
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support

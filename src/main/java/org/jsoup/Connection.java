@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.net.Proxy;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -209,6 +210,30 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection parser(Parser parser);
+
+    /**
+     * Provide a proxy setting.
+     * @param proxy proxy to be used
+     * @param username Username for authentication when applicable
+     * @param password Password for authentication when applicable
+     * @return this Connection, for chaining
+     * @see java.net.Proxy
+     */
+    public Connection proxy(Proxy proxy, String username, String password);
+
+
+    /**
+     * Provide a proxy setting.
+     * @param type the <code>Type</code> of the proxy
+     * @param host the Host name
+     * @param port The port number
+     * @param username Username for authentication when applicable
+     * @param password Password for authentication when applicable
+     * @return this Connection, for chaining
+     * @see java.net.Proxy
+     * @see java.net.InetSocketAddress
+     */
+    public Connection proxy(Proxy.Type type, String host, int port, String username, String password);
 
     /**
      * Execute the request as a GET, and parse the result.
@@ -497,6 +522,32 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+
+        /**
+         * Get the current proxy to use when connecting.
+         * @return current Proxy
+         */
+        public Proxy proxy() ;
+
+        /**
+         * Sets the current proxy to use when connecting.
+         * @param username Username for authentication when applicable
+         * @param password Password for authentication when applicable
+         * @return current Proxy
+         */
+        public Proxy proxy(Proxy proxy, String username, String password);
+
+        /**
+         * Get the current proxy username to use when connecting.
+         * @return Username for proxy authentication when applicable
+         */
+        public String proxyUsername();
+
+        /**
+         * Get the current proxy password to use when connecting.
+         * @return Password for proxy authentication when applicable
+         */
+        public String proxyPassword();
     }
 
     /**
