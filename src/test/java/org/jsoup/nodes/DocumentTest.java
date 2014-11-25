@@ -60,7 +60,7 @@ public class DocumentTest {
     @Test public void testXhtmlReferences() {
         Document doc = Jsoup.parse("&lt; &gt; &amp; &quot; &apos; &times;");
         doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-        assertEquals("&lt; &gt; &amp; \" ' ×", doc.body().html());
+        assertEquals("&lt; &gt; &amp; &quot; ' ×", doc.body().html());
     }
 
     @Test public void testNormalisesStructure() {
@@ -112,7 +112,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"\n" +
+                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;&quot;\n" +
                 "  <foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
@@ -122,7 +122,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;&quot;\n" +
                 "  <foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
