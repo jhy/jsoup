@@ -430,7 +430,7 @@ public abstract class Node implements Cloneable {
         Validate.isTrue(out.parentNode == this);
         int index = out.siblingIndex();
         childNodes.remove(index);
-        reindexChildren();
+        reindexChildren(index);
         out.parentNode = null;
     }
 
@@ -450,7 +450,7 @@ public abstract class Node implements Cloneable {
             reparentChild(in);
             childNodes.add(index, in);
         }
-        reindexChildren();
+        reindexChildren(index);
     }
 
     protected void reparentChild(Node child) {
@@ -459,8 +459,8 @@ public abstract class Node implements Cloneable {
         child.setParentNode(this);
     }
     
-    private void reindexChildren() {
-        for (int i = 0; i < childNodes.size(); i++) {
+    private void reindexChildren(int start) {
+        for (int i = start; i < childNodes.size(); i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
