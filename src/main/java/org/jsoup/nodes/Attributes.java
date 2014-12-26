@@ -194,6 +194,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 attributes = new LinkedHashMap<String, Attribute>(2);
         }
 
+        @Override
         public Set<Entry<String, String>> entrySet() {
             return new EntrySet();
         }
@@ -208,10 +209,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
 
         private class EntrySet extends AbstractSet<Map.Entry<String, String>> {
+
+            @Override
             public Iterator<Map.Entry<String, String>> iterator() {
                 return new DatasetIterator();
             }
 
+           @Override
             public int size() {
                 int count = 0;
                 Iterator iter = new DatasetIterator();
