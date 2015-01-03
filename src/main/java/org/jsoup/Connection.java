@@ -11,13 +11,15 @@ import java.util.Map;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
- * <p/>
+ * <p>
  * To get a new Connection, use {@link org.jsoup.Jsoup#connect(String)}. Connections contain {@link Connection.Request}
  * and {@link Connection.Response} objects. The request objects are reusable as prototype requests.
- * <p/>
+ * </p>
+ * <p>
  * Request configuration can be made using either the shortcut methods in Connection (e.g. {@link #userAgent(String)}),
  * or by methods in the Connection.Request object directly. All request configuration must be made before the request is
  * executed.
+ * </p>
  */
 public interface Connection {
 
@@ -122,14 +124,18 @@ public interface Connection {
 
     /**
      * Disable/enable TSL certificates validation for HTTPS requests.
-     * <p/>
+     * <p>
      * By default this is <b>true</b>; all
      * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
      * certificate does not validate.
-     * <p/>
+     * </p>
+     * <p>
      * Some servers use expired, self-generated certificates; or your JDK may not
      * support SNI hosts. In which case, you may want to enable this setting.
-     * <p/> <b>Be careful</b> and understand why you need to disable these validations.
+     * </p>
+     * <p>
+     * <b>Be careful</b> and understand why you need to disable these validations.
+     * </p>
      * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
      * @return this Connection, for chaining
      */
@@ -173,7 +179,7 @@ public interface Connection {
     /**
      * Add a number of request data parameters. Multiple parameters may be set at once, e.g.: <code>.data("name",
      * "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
-     * <code>?name=jsoup&language=Java&language=English</code>
+     * <code>{@literal ?name=jsoup&language=Java&language=English}</code>
      * @param keyvals a set of key value pairs.
      * @return this Connection, for chaining
      */
@@ -198,7 +204,7 @@ public interface Connection {
 
     /**
      * Adds each of the supplied cookies to the request.
-     * @param cookies map of cookie name -> value pairs
+     * @param cookies map of cookie name {@literal ->} value pairs
      * @return this Connection, for chaining
      */
     public Connection cookies(Map<String, String> cookies);
@@ -303,8 +309,9 @@ public interface Connection {
 
         /**
          * Get the value of a header. This is a simplified header model, where a header may only have one value.
-         * <p/>
+         * <p>
          * Header names are case insensitive.
+         * </p>
          * @param name name of header (case insensitive)
          * @return value of header, or null if not set.
          * @see #hasHeader(String)
@@ -350,9 +357,10 @@ public interface Connection {
 
         /**
          * Get a cookie value by name from this request/response.
-         * <p/>
+         * <p>
          * Response objects have a simplified cookie model. Each cookie set in the response is added to the response
          * object's cookie key=value map. The cookie's path, domain, and expiry date are ignored.
+         * </p>
          * @param name name of cookie to retrieve.
          * @return value of cookie, or null if not set
          */

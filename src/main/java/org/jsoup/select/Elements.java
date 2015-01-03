@@ -9,8 +9,9 @@ import java.util.*;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
- <p/>
+ <p>
  To get an {@code Elements} object, use the {@link Element#select(String)} method.
+ </p>
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Elements implements List<Element>, Cloneable {
@@ -352,12 +353,13 @@ public class Elements implements List<Element>, Cloneable {
     /**
      * Removes the matched elements from the DOM, and moves their children up into their parents. This has the effect of
      * dropping the elements but keeping their children.
-     * <p/>
+     * <p>
      * This is useful for e.g removing unwanted formatting elements but keeping their contents.
-     * <p/>
-     * E.g. with HTML: {@code <div><font>One</font> <font><a href="/">Two</a></font></div>}<br/>
-     * {@code doc.select("font").unwrap();}<br/>
-     * HTML = {@code <div>One <a href="/">Two</a></div>}
+     * </p>
+     * 
+     * E.g. with HTML: <p>{@code <div><font>One</font> <font><a href="/">Two</a></font></div>}</p>
+     * <p>{@code doc.select("font").unwrap();}</p>
+     * <p>HTML = {@code <div>One <a href="/">Two</a></div>}</p>
      *
      * @return this (for chaining)
      * @see Node#unwrap

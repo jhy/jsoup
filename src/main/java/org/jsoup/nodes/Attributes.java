@@ -6,11 +6,13 @@ import java.util.*;
 
 /**
  * The attributes of an Element.
- * <p/>
+ * <p>
  * Attributes are treated as a map: there can be only one value associated with an attribute key.
- * <p/>
+ * </p>
+ * <p>
  * Attribute key and value comparisons are done case insensitively, and keys are normalised to
  * lower-case.
+ * </p>
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
