@@ -497,6 +497,27 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+        
+         /**
+         * Specify the http proxy hostname and port to use when connect the url.
+         * @param hostname proxy hostname to use.
+         * @param port proxy port to use.
+         * @return this Request, for chaining
+         */
+        public abstract Request proxy(String hostname,int port);
+        
+         /**
+         * Specify the proxy to use when connect the url.
+         * @param proxy proxy to use.
+         * @return this Request, for chaining
+         */
+        public abstract Request proxy(Proxy proxy);
+        
+        /**
+         * Get the current proxy to use when connect the url.
+         * @return current Proxy
+         */
+        public abstract Proxy proxy();
     }
 
     /**
