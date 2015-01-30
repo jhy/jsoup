@@ -370,6 +370,7 @@ public class HttpConnection implements Connection {
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+            proxy = Proxy.NO_PROXY;
         }
 
         public int timeout() {
@@ -619,7 +620,7 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection(req.proxy());
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
