@@ -10,9 +10,12 @@ import org.jsoup.parser.TokenQueue;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.net.Proxy.Type;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.KeyManagementException;
@@ -187,6 +190,11 @@ public class HttpConnection implements Connection {
         req.parser(parser);
         return this;
     }
+    
+    public Connection proxy(String porxyServerIp, int port) {
+    	req.proxy(porxyServerIp,port);
+    	return this;
+	}
 
     public Document get() throws IOException {
         req.method(Method.GET);
@@ -352,6 +360,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean validateTSLCertificates = true;
+		private Proxy proxy;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -436,6 +445,20 @@ public class HttpConnection implements Connection {
         public Parser parser() {
             return parser;
         }
+
+		public Request proxy(String hostname, int port) {
+			this.proxy = new Proxy(Type.HTTP,new InetSocketAddress(hostname,port));
+			return this;
+		}
+
+		public Request proxy(Proxy proxy) {
+			this.proxy =proxy;
+			return this;
+		}
+
+		public Proxy proxy() {
+			return this.proxy;
+		}
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
@@ -889,4 +912,5 @@ public class HttpConnection implements Connection {
             return key + "=" + value;
         }
     }
+	
 }

@@ -1,13 +1,14 @@
 package org.jsoup;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -209,6 +210,14 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection parser(Parser parser);
+    
+    /**
+     * Provide an Proxy  to use when connect to url.
+     * @param porxyServerIp  proxy  server ip
+     * @param porxyServerIp  proxy  server port  
+     * @return this Connection, for chaining
+     */
+    public Connection proxy(String porxyServerIp, int port);
 
     /**
      * Execute the request as a GET, and parse the result.
