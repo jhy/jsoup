@@ -195,6 +195,16 @@ public class HttpConnection implements Connection {
     	req.proxy(porxyServerIp,port);
     	return this;
 	}
+    public Proxy proxy() {
+    	return req.proxy();
+    }
+    
+    
+    public Connection proxy(Proxy proxy) {
+    	req.proxy(proxy);
+    	return this;
+    }
+    
 
     public Document get() throws IOException {
         req.method(Method.GET);

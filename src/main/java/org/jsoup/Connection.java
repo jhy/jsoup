@@ -220,6 +220,20 @@ public interface Connection {
     public Connection proxy(String porxyServerIp, int port);
 
     /**
+     * Specify the proxy to use when connect the url.
+     * @param proxy proxy to use.
+     * @return this Request, for chaining
+     */
+    public Connection proxy(Proxy proxy);
+    
+    /**
+     * Get the current proxy to use when connect the url.
+     * @return current Proxy
+     */
+    public abstract Proxy proxy();
+    
+    
+    /**
      * Execute the request as a GET, and parse the result.
      * @return parsed Document
      * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
