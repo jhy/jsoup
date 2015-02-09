@@ -1,5 +1,8 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
+import org.jsoup.JsoupOptions;
+
 import java.util.Arrays;
 
 /**
@@ -646,7 +649,11 @@ enum TokeniserState {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
             String name = r.consumeToAnySorted(attributeNameCharsSorted);
-            t.tagPending.appendAttributeName(name.toLowerCase());
+
+            if (Jsoup.options().shouldNormalizeAttributes()) {
+              name = name.toLowerCase();
+            }
+            t.tagPending.appendAttributeName(name);
 
             char c = r.consume();
             switch (c) {
