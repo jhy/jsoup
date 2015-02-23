@@ -798,9 +798,9 @@ public class HttpConnection implements Connection {
                     else
                         first = false;
 
-                    w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.key(), req.charset()));
                     w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.value(), req.charset()));
                 }
             }
             w.close();
