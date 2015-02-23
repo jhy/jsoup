@@ -6,7 +6,6 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import java.util.List;
 
 /**
  The whitelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
@@ -97,6 +96,10 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
                 destination.appendChild(destText);
+            } else if (source instanceof DataNode && whitelist.isSafeTag(source.parent().nodeName())) {
+              DataNode sourceData = (DataNode) source;
+              DataNode destData = new DataNode(sourceData.getWholeData(), source.baseUri());
+              destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
                 numDiscarded++;
             }

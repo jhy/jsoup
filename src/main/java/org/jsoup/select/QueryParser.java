@@ -14,6 +14,7 @@ import org.jsoup.parser.TokenQueue;
  */
 class QueryParser {
     private final static String[] combinators = {",", ">", "+", "~", " "};
+    private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
     private TokenQueue tq;
     private String query;
@@ -221,7 +222,7 @@ class QueryParser {
 
     private void byAttribute() {
         TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
-        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
+        String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key);
         cq.consumeWhitespace();
 

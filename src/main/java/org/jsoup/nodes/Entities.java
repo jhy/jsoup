@@ -1,13 +1,12 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharsetEncoder;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * HTML entities, and escape routines.
@@ -16,7 +15,7 @@ import java.util.regex.Pattern;
  */
 public class Entities {
     public enum EscapeMode {
-        /** Restricted entities suitable for XHTML output: lt, gt, amp, apos, and quot only. */
+        /** Restricted entities suitable for XHTML output: lt, gt, amp, and quot only. */
         xhtml(xhtmlByVal),
         /** Default HTML output entities. */
         base(baseByVal),
@@ -39,8 +38,6 @@ public class Entities {
     private static final Map<String, Character> base;
     private static final Map<Character, String> baseByVal;
     private static final Map<Character, String> fullByVal;
-    private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
-    private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
 
     private Entities() {}
 
@@ -73,26 +70,78 @@ public class Entities {
     }
     
     static String escape(String string, Document.OutputSettings out) {
-        return escape(string, out.encoder(), out.escapeMode());
+        StringBuilder accum = new StringBuilder(string.length() * 2);
+        escape(accum, string, out, false, false, false);
+        return accum.toString();
     }
 
-    static String escape(String string, CharsetEncoder encoder, EscapeMode escapeMode) {
-        StringBuilder accum = new StringBuilder(string.length() * 2);
+    // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        EscapeMode escapeMode = out.escapeMode();
+        CharsetEncoder encoder = out.encoder();
         Map<Character, String> map = escapeMode.getMap();
-
         final int length = string.length();
-        for (int offset = 0; offset < length; ) {
-            final int codePoint = string.codePointAt(offset);
 
+        int codePoint;
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                        continue;
+                    accum.append(' ');
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
                 final char c = (char) codePoint;
-                if (map.containsKey(c))
-                    accum.append('&').append(map.get(c)).append(';');
-                else if (encoder.canEncode(c))
-                    accum.append(c);
-                else
-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                // html specific and required escapes:
+                switch (c) {
+                    case '&':
+                        accum.append("&amp;");
+                        break;
+                    case 0xA0:
+                        if (escapeMode != EscapeMode.xhtml)
+                            accum.append("&nbsp;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '<':
+                        if (!inAttribute)
+                            accum.append("&lt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '>':
+                        if (!inAttribute)
+                            accum.append("&gt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '"':
+                        if (inAttribute)
+                            accum.append("&quot;");
+                        else
+                            accum.append(c);
+                        break;
+                    default:
+                        if (encoder.canEncode(c))
+                            accum.append(c);
+                        else if (map.containsKey(c))
+                            accum.append('&').append(map.get(c)).append(';');
+                        else
+                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                }
             } else {
                 final String c = new String(Character.toChars(codePoint));
                 if (encoder.canEncode(c))
@@ -100,11 +149,7 @@ public class Entities {
                 else
                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
             }
-
-            offset += Character.charCount(codePoint);
         }
-
-        return accum.toString();
     }
 
     static String unescape(String string) {
@@ -121,11 +166,11 @@ public class Entities {
         return Parser.unescapeEntities(string, strict);
     }
 
+
     // xhtml has restricted entities
     private static final Object[][] xhtmlArray = {
             {"quot", 0x00022},
             {"amp", 0x00026},
-            {"apos", 0x00027},
             {"lt", 0x0003C},
             {"gt", 0x0003E}
     };

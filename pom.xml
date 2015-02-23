@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.7.3-SNAPSHOT</version>
+  <version>1.8.2-SNAPSHOT</version>
   <description>jsoup HTML parser</description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -16,7 +16,7 @@
   <licenses>
   	<license>
   		<name>The MIT License</name>
-  		<url>http://jsoup.com/license</url>
+  		<url>http://jsoup.org/license</url>
   		<distribution>repo</distribution>
   	</license>  
   </licenses>
@@ -41,6 +41,28 @@
           <target>1.5</target>
           <encoding>UTF-8</encoding>
         </configuration>
+      </plugin>
+      <plugin>
+      	<!-- this plugin allows us to ensure Java 5 API compatibility -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.9</version>
+        <executions>
+          <execution>
+            <id>animal-sniffer</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <signature>
+                <groupId>org.codehaus.mojo.signature</groupId>
+                <artifactId>java15</artifactId>
+                <version>1.0</version>
+              </signature>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -123,12 +145,12 @@
     <snapshotRepository>
       <id>sonatype-nexus-snapshots</id>
       <name>Sonatype Nexus Snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <repository>
       <id>sonatype-nexus-staging</id>
       <name>Nexus Release Repository</name>
-      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
 

@@ -278,6 +278,9 @@ public abstract class Evaluator {
             Validate.notEmpty(value);
 
             this.key = key.trim().toLowerCase();
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length()-1);
+            }
             this.value = value.trim().toLowerCase();
         }
     }
@@ -486,7 +489,7 @@ public abstract class Evaluator {
 			int pos = 0;
         	Elements family = element.parent().children();
         	for (int i = 0; i < family.size(); i++) {
-        		if (family.get(i).tag() == element.tag()) pos++;
+        		if (family.get(i).tag().equals(element.tag())) pos++;
         		if (family.get(i) == element) break;
         	}
 			return pos;
@@ -509,7 +512,7 @@ public abstract class Evaluator {
 			int pos = 0;
         	Elements family = element.parent().children();
         	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
-        		if (family.get(i).tag() == element.tag()) pos++;
+        		if (family.get(i).tag().equals(element.tag())) pos++;
         	}
 			return pos;
 		}

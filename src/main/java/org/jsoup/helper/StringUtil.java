@@ -103,32 +103,44 @@ public final class StringUtil {
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
 
+    /**
+     * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
+     * (e.g. newline, tab) convert to a simple space
+     * @param string content to normalise
+     * @return normalised string
+     */
     public static String normaliseWhitespace(String string) {
         StringBuilder sb = new StringBuilder(string.length());
+        appendNormalisedWhitespace(sb, string, false);
+        return sb.toString();
+    }
 
+    /**
+     * After normalizing the whitespace within a string, appends it to a string builder.
+     * @param accum builder to append to
+     * @param string string to normalize whitespace within
+     * @param stripLeading set to true if you wish to remove any leading whitespace
+     */
+    public static void appendNormalisedWhitespace(StringBuilder accum, String string, boolean stripLeading) {
         boolean lastWasWhite = false;
-        boolean modified = false;
+        boolean reachedNonWhite = false;
 
-        int l = string.length();
+        int len = string.length();
         int c;
-        for (int i = 0; i < l; i+= Character.charCount(c)) {
+        for (int i = 0; i < len; i+= Character.charCount(c)) {
             c = string.codePointAt(i);
             if (isWhitespace(c)) {
-                if (lastWasWhite) {
-                    modified = true;
+                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
                     continue;
-                }
-                if (c != ' ')
-                    modified = true;
-                sb.append(' ');
+                accum.append(' ');
                 lastWasWhite = true;
             }
             else {
-                sb.appendCodePoint(c);
+                accum.appendCodePoint(c);
                 lastWasWhite = false;
+                reachedNonWhite = true;
             }
         }
-        return modified ? sb.toString() : string;
     }
 
     public static boolean in(String needle, String... haystack) {

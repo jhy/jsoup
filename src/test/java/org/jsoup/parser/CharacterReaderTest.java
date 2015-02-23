@@ -204,4 +204,45 @@ public class CharacterReaderTest {
         assertFalse(r.matchesAny(scan));
     }
 
+    @Test public void cachesStrings() {
+        CharacterReader r = new CharacterReader("Check\tCheck\tCheck\tCHOKE\tA string that is longer than 16 chars");
+        String one = r.consumeTo('\t');
+        r.consume();
+        String two = r.consumeTo('\t');
+        r.consume();
+        String three = r.consumeTo('\t');
+        r.consume();
+        String four = r.consumeTo('\t');
+        r.consume();
+        String five = r.consumeTo('\t');
+
+        assertEquals("Check", one);
+        assertEquals("Check", two);
+        assertEquals("Check", three);
+        assertEquals("CHOKE", four);
+        assertTrue(one == two);
+        assertTrue(two == three);
+        assertTrue(three != four);
+        assertTrue(four != five);
+        assertEquals(five, "A string that is longer than 16 chars");
+    }
+
+    @Test
+    public void rangeEquals() {
+        CharacterReader r = new CharacterReader("Check\tCheck\tCheck\tCHOKE");
+        assertTrue(r.rangeEquals(0, 5, "Check"));
+        assertFalse(r.rangeEquals(0, 5, "CHOKE"));
+        assertFalse(r.rangeEquals(0, 5, "Chec"));
+
+        assertTrue(r.rangeEquals(6, 5, "Check"));
+        assertFalse(r.rangeEquals(6, 5, "Chuck"));
+
+        assertTrue(r.rangeEquals(12, 5, "Check"));
+        assertFalse(r.rangeEquals(12, 5, "Cheeky"));
+
+        assertTrue(r.rangeEquals(18, 5, "CHOKE"));
+        assertFalse(r.rangeEquals(18, 5, "CHIKE"));
+    }
+
+
 }

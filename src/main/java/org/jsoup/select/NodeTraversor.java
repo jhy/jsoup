@@ -34,7 +34,7 @@ public class NodeTraversor {
             } else {
                 while (node.nextSibling() == null && depth > 0) {
                     visitor.tail(node, depth);
-                    node = node.parent();
+                    node = node.parentNode();
                     depth--;
                 }
                 visitor.tail(node, depth);

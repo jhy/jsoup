@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -9,6 +10,13 @@ import java.util.Map;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Attribute implements Map.Entry<String, String>, Cloneable  {
+    private static final String[] booleanAttributes = {
+            "allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled",
+            "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize",
+            "noshade", "novalidate", "nowrap", "open", "readonly", "required", "reversed", "seamless", "selected",
+            "sortable", "truespeed", "typemustmatch"
+    };
+
     private String key;
     private String value;
 
@@ -66,21 +74,25 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return HTML
      */
     public String html() {
-        return key + "=\"" + Entities.escape(value, (new Document("")).outputSettings()) + "\"";
+        StringBuilder accum = new StringBuilder();
+        html(accum, (new Document("")).outputSettings());
+        return accum.toString();
     }
     
     protected void html(StringBuilder accum, Document.OutputSettings out) {
-        accum
-            .append(key)
-            .append("=\"")
-            .append(Entities.escape(value, out))
-            .append("\"");
+        accum.append(key);
+        if (!shouldCollapseAttribute(out)) {
+            accum.append("=\"");
+            Entities.escape(accum, value, out, true, false, false);
+            accum.append('"');
+        }
     }
 
     /**
      Get the string representation of this attribute, implemented as {@link #html()}.
      @return string
      */
+    @Override
     public String toString() {
         return html();
     }
@@ -98,6 +110,15 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     protected boolean isDataAttribute() {
         return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
+    }
+
+    /**
+     * Collapsible if it's a boolean attribute and value is empty or same as name
+     */
+    protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {
+        return ("".equals(value) || value.equalsIgnoreCase(key))
+                && out.syntax() == Document.OutputSettings.Syntax.html
+                && Arrays.binarySearch(booleanAttributes, key) >= 0;
     }
 
     @Override

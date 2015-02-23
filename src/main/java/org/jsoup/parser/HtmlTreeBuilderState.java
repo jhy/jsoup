@@ -1,11 +1,9 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.DescendableLinkedList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.*;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 /**
  * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
@@ -58,7 +56,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            tb.insert("html");
+            tb.insertStartTag("html");
             tb.transition(BeforeHead);
             return tb.process(t);
         }
@@ -79,13 +77,13 @@ enum HtmlTreeBuilderState {
                 tb.setHeadElement(head);
                 tb.transition(InHead);
             } else if (t.isEndTag() && (StringUtil.in(t.asEndTag().name(), "head", "body", "html", "br"))) {
-                tb.process(new Token.StartTag("head"));
+                tb.processStartTag("head");
                 return tb.process(t);
             } else if (t.isEndTag()) {
                 tb.error(this);
                 return false;
             } else {
-                tb.process(new Token.StartTag("head"));
+                tb.processStartTag("head");
                 return tb.process(t);
             }
             return true;
@@ -159,7 +157,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, TreeBuilder tb) {
-            tb.process(new Token.EndTag("head"));
+            tb.processEndTag("head");
             return tb.process(t);
         }
     },
@@ -188,7 +186,7 @@ enum HtmlTreeBuilderState {
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            tb.process(new Token.EndTag("noscript"));
+            tb.processEndTag("noscript");
             return tb.process(t);
         }
     },
@@ -238,7 +236,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            tb.process(new Token.StartTag("body"));
+            tb.processStartTag("body");
             tb.framesetOk(true);
             return tb.process(t);
         }
@@ -252,7 +250,7 @@ enum HtmlTreeBuilderState {
                         // todo confirm that check
                         tb.error(this);
                         return false;
-                    } else if (isWhitespace(c)) {
+                    } else if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed
                         tb.reconstructFormattingElements();
                         tb.insert(c);
                     } else {
@@ -276,16 +274,16 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html")) {
                         tb.error(this);
                         // merge attributes onto real html
-                        Element html = tb.getStack().getFirst();
+                        Element html = tb.getStack().get(0);
                         for (Attribute attribute : startTag.getAttributes()) {
                             if (!html.hasAttr(attribute.getKey()))
                                 html.attributes().put(attribute);
                         }
-                    } else if (StringUtil.in(name, "base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "title")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartToHead)) {
                         return tb.process(t, InHead);
                     } else if (name.equals("body")) {
                         tb.error(this);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
                             // only in fragment case
                             return false; // ignore
@@ -299,7 +297,7 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (name.equals("frameset")) {
                         tb.error(this);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
                             // only in fragment case
                             return false; // ignore
@@ -311,30 +309,27 @@ enum HtmlTreeBuilderState {
                                 second.remove();
                             // pop up to html element
                             while (stack.size() > 1)
-                                stack.removeLast();
+                                stack.remove(stack.size()-1);
                             tb.insert(startTag);
                             tb.transition(InFrameset);
                         }
-                    } else if (StringUtil.in(name,
-                            "address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
-                            "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
-                            "p", "section", "summary", "ul")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
-                    } else if (StringUtil.in(name, "h1", "h2", "h3", "h4", "h5", "h6")) {
+                    } else if (StringUtil.in(name, Constants.Headings)) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
-                        if (StringUtil.in(tb.currentElement().nodeName(), "h1", "h2", "h3", "h4", "h5", "h6")) {
+                        if (StringUtil.in(tb.currentElement().nodeName(), Constants.Headings)) {
                             tb.error(this);
                             tb.pop();
                         }
                         tb.insert(startTag);
-                    } else if (StringUtil.in(name, "pre", "listing")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartPreListing)) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
                         // todo: ignore LF if next token
@@ -345,44 +340,44 @@ enum HtmlTreeBuilderState {
                             return false;
                         }
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insertForm(startTag, true);
                     } else if (name.equals("li")) {
                         tb.framesetOk(false);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         for (int i = stack.size() - 1; i > 0; i--) {
                             Element el = stack.get(i);
                             if (el.nodeName().equals("li")) {
-                                tb.process(new Token.EndTag("li"));
+                                tb.processEndTag("li");
                                 break;
                             }
-                            if (tb.isSpecial(el) && !StringUtil.in(el.nodeName(), "address", "div", "p"))
+                            if (tb.isSpecial(el) && !StringUtil.in(el.nodeName(), Constants.InBodyStartLiBreakers))
                                 break;
                         }
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
-                    } else if (StringUtil.in(name, "dd", "dt")) {
+                    } else if (StringUtil.in(name, Constants.DdDt)) {
                         tb.framesetOk(false);
-                        LinkedList<Element> stack = tb.getStack();
+                        ArrayList<Element> stack = tb.getStack();
                         for (int i = stack.size() - 1; i > 0; i--) {
                             Element el = stack.get(i);
-                            if (StringUtil.in(el.nodeName(), "dd", "dt")) {
-                                tb.process(new Token.EndTag(el.nodeName()));
+                            if (StringUtil.in(el.nodeName(), Constants.DdDt)) {
+                                tb.processEndTag(el.nodeName());
                                 break;
                             }
-                            if (tb.isSpecial(el) && !StringUtil.in(el.nodeName(), "address", "div", "p"))
+                            if (tb.isSpecial(el) && !StringUtil.in(el.nodeName(), Constants.InBodyStartLiBreakers))
                                 break;
                         }
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
                     } else if (name.equals("plaintext")) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
                         tb.tokeniser.transition(TokeniserState.PLAINTEXT); // once in, never gets out
@@ -390,7 +385,7 @@ enum HtmlTreeBuilderState {
                         if (tb.inButtonScope("button")) {
                             // close and reprocess
                             tb.error(this);
-                            tb.process(new Token.EndTag("button"));
+                            tb.processEndTag("button");
                             tb.process(startTag);
                         } else {
                             tb.reconstructFormattingElements();
@@ -400,7 +395,7 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("a")) {
                         if (tb.getActiveFormattingElement("a") != null) {
                             tb.error(this);
-                            tb.process(new Token.EndTag("a"));
+                            tb.processEndTag("a");
 
                             // still on stack?
                             Element remainingA = tb.getFromStack("a");
@@ -412,8 +407,7 @@ enum HtmlTreeBuilderState {
                         tb.reconstructFormattingElements();
                         Element a = tb.insert(startTag);
                         tb.pushActiveFormattingElements(a);
-                    } else if (StringUtil.in(name,
-                            "b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u")) {
+                    } else if (StringUtil.in(name, Constants.Formatters)) {
                         tb.reconstructFormattingElements();
                         Element el = tb.insert(startTag);
                         tb.pushActiveFormattingElements(el);
@@ -421,24 +415,24 @@ enum HtmlTreeBuilderState {
                         tb.reconstructFormattingElements();
                         if (tb.inScope("nobr")) {
                             tb.error(this);
-                            tb.process(new Token.EndTag("nobr"));
+                            tb.processEndTag("nobr");
                             tb.reconstructFormattingElements();
                         }
                         Element el = tb.insert(startTag);
                         tb.pushActiveFormattingElements(el);
-                    } else if (StringUtil.in(name, "applet", "marquee", "object")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartApplets)) {
                         tb.reconstructFormattingElements();
                         tb.insert(startTag);
                         tb.insertMarkerToFormattingElements();
                         tb.framesetOk(false);
                     } else if (name.equals("table")) {
                         if (tb.getDocument().quirksMode() != Document.QuirksMode.quirks && tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insert(startTag);
                         tb.framesetOk(false);
                         tb.transition(InTable);
-                    } else if (StringUtil.in(name, "area", "br", "embed", "img", "keygen", "wbr")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartEmptyFormatters)) {
                         tb.reconstructFormattingElements();
                         tb.insertEmpty(startTag);
                         tb.framesetOk(false);
@@ -447,18 +441,19 @@ enum HtmlTreeBuilderState {
                         Element el = tb.insertEmpty(startTag);
                         if (!el.attr("type").equalsIgnoreCase("hidden"))
                             tb.framesetOk(false);
-                    } else if (StringUtil.in(name, "param", "source", "track")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartMedia)) {
                         tb.insertEmpty(startTag);
                     } else if (name.equals("hr")) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.insertEmpty(startTag);
                         tb.framesetOk(false);
                     } else if (name.equals("image")) {
-                        // we're not supposed to ask.
-                        startTag.name("img");
-                        return tb.process(startTag);
+                        if (tb.getFromStack("svg") == null)
+                            return tb.process(startTag.name("img")); // change <image> to <img>, unless in svg
+                        else
+                            tb.insert(startTag);
                     } else if (name.equals("isindex")) {
                         // how much do we care about the early 90s?
                         tb.error(this);
@@ -466,31 +461,31 @@ enum HtmlTreeBuilderState {
                             return false;
 
                         tb.tokeniser.acknowledgeSelfClosingFlag();
-                        tb.process(new Token.StartTag("form"));
+                        tb.processStartTag("form");
                         if (startTag.attributes.hasKey("action")) {
                             Element form = tb.getFormElement();
                             form.attr("action", startTag.attributes.get("action"));
                         }
-                        tb.process(new Token.StartTag("hr"));
-                        tb.process(new Token.StartTag("label"));
+                        tb.processStartTag("hr");
+                        tb.processStartTag("label");
                         // hope you like english.
                         String prompt = startTag.attributes.hasKey("prompt") ?
                                 startTag.attributes.get("prompt") :
                                 "This is a searchable index. Enter search keywords: ";
 
-                        tb.process(new Token.Character(prompt));
+                        tb.process(new Token.Character().data(prompt));
 
                         // input
                         Attributes inputAttribs = new Attributes();
                         for (Attribute attr : startTag.attributes) {
-                            if (!StringUtil.in(attr.getKey(), "name", "action", "prompt"))
+                            if (!StringUtil.in(attr.getKey(), Constants.InBodyStartInputAttribs))
                                 inputAttribs.put(attr);
                         }
                         inputAttribs.put("name", "isindex");
-                        tb.process(new Token.StartTag("input", inputAttribs));
-                        tb.process(new Token.EndTag("label"));
-                        tb.process(new Token.StartTag("hr"));
-                        tb.process(new Token.EndTag("form"));
+                        tb.processStartTag("input", inputAttribs);
+                        tb.processEndTag("label");
+                        tb.processStartTag("hr");
+                        tb.processEndTag("form");
                     } else if (name.equals("textarea")) {
                         tb.insert(startTag);
                         // todo: If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
@@ -500,7 +495,7 @@ enum HtmlTreeBuilderState {
                         tb.transition(Text);
                     } else if (name.equals("xmp")) {
                         if (tb.inButtonScope("p")) {
-                            tb.process(new Token.EndTag("p"));
+                            tb.processEndTag("p");
                         }
                         tb.reconstructFormattingElements();
                         tb.framesetOk(false);
@@ -521,12 +516,12 @@ enum HtmlTreeBuilderState {
                             tb.transition(InSelectInTable);
                         else
                             tb.transition(InSelect);
-                    } else if (StringUtil.in("optgroup", "option")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartOptions)) {
                         if (tb.currentElement().nodeName().equals("option"))
-                            tb.process(new Token.EndTag("option"));
+                            tb.processEndTag("option");
                         tb.reconstructFormattingElements();
                         tb.insert(startTag);
-                    } else if (StringUtil.in("rp", "rt")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartRuby)) {
                         if (tb.inScope("ruby")) {
                             tb.generateImpliedEndTags();
                             if (!tb.currentElement().nodeName().equals("ruby")) {
@@ -545,8 +540,7 @@ enum HtmlTreeBuilderState {
                         // todo: handle A start tag whose tag name is "svg" (xlink, svg)
                         tb.insert(startTag);
                         tb.tokeniser.acknowledgeSelfClosingFlag();
-                    } else if (StringUtil.in(name,
-                            "caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartDrop)) {
                         tb.error(this);
                         return false;
                     } else {
@@ -567,14 +561,10 @@ enum HtmlTreeBuilderState {
                             tb.transition(AfterBody);
                         }
                     } else if (name.equals("html")) {
-                        boolean notIgnored = tb.process(new Token.EndTag("body"));
+                        boolean notIgnored = tb.processEndTag("body");
                         if (notIgnored)
                             return tb.process(endTag);
-                    } else if (StringUtil.in(name,
-                            "address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
-                            "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
-                            "nav", "ol", "pre", "section", "summary", "ul")) {
-                        // todo: refactor these lookups
+                    } else if (StringUtil.in(name, Constants.InBodyEndClosers)) {
                         if (!tb.inScope(name)) {
                             // nothing to close
                             tb.error(this);
@@ -601,7 +591,7 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("p")) {
                         if (!tb.inButtonScope(name)) {
                             tb.error(this);
-                            tb.process(new Token.StartTag(name)); // if no p to close, creates an empty <p></p>
+                            tb.processStartTag(name); // if no p to close, creates an empty <p></p>
                             return tb.process(endTag);
                         } else {
                             tb.generateImpliedEndTags(name);
@@ -619,7 +609,7 @@ enum HtmlTreeBuilderState {
                                 tb.error(this);
                             tb.popStackToClose(name);
                         }
-                    } else if (StringUtil.in(name, "dd", "dt")) {
+                    } else if (StringUtil.in(name, Constants.DdDt)) {
                         if (!tb.inScope(name)) {
                             tb.error(this);
                             return false;
@@ -629,21 +619,20 @@ enum HtmlTreeBuilderState {
                                 tb.error(this);
                             tb.popStackToClose(name);
                         }
-                    } else if (StringUtil.in(name, "h1", "h2", "h3", "h4", "h5", "h6")) {
-                        if (!tb.inScope(new String[]{"h1", "h2", "h3", "h4", "h5", "h6"})) {
+                    } else if (StringUtil.in(name, Constants.Headings)) {
+                        if (!tb.inScope(Constants.Headings)) {
                             tb.error(this);
                             return false;
                         } else {
                             tb.generateImpliedEndTags(name);
                             if (!tb.currentElement().nodeName().equals(name))
                                 tb.error(this);
-                            tb.popStackToClose("h1", "h2", "h3", "h4", "h5", "h6");
+                            tb.popStackToClose(Constants.Headings);
                         }
                     } else if (name.equals("sarcasm")) {
                         // *sigh*
                         return anyOtherEndTag(t, tb);
-                    } else if (StringUtil.in(name,
-                            "a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u")) {
+                    } else if (StringUtil.in(name, Constants.InBodyEndAdoptionFormatters)) {
                         // Adoption Agency Algorithm.
                         OUTER:
                         for (int i = 0; i < 8; i++) {
@@ -663,10 +652,11 @@ enum HtmlTreeBuilderState {
                             Element furthestBlock = null;
                             Element commonAncestor = null;
                             boolean seenFormattingElement = false;
-                            LinkedList<Element> stack = tb.getStack();
+                            ArrayList<Element> stack = tb.getStack();
                             // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
                             // run-aways
-                            for (int si = 0; si < stack.size() && si < 64; si++) {
+                            final int stackSize = stack.size();
+                            for (int si = 0; si < stackSize && si < 64; si++) {
                                 Element el = stack.get(si);
                                 if (el == formatEl) {
                                     commonAncestor = stack.get(si - 1);
@@ -712,7 +702,7 @@ enum HtmlTreeBuilderState {
                                 lastNode = node;
                             }
 
-                            if (StringUtil.in(commonAncestor.nodeName(), "table", "tbody", "tfoot", "thead", "tr")) {
+                            if (StringUtil.in(commonAncestor.nodeName(), Constants.InBodyEndTableFosters)) {
                                 if (lastNode.parent() != null)
                                     lastNode.remove();
                                 tb.insertInFosterParent(lastNode);
@@ -734,7 +724,7 @@ enum HtmlTreeBuilderState {
                             tb.removeFromStack(formatEl);
                             tb.insertOnStackAfter(furthestBlock, adopter);
                         }
-                    } else if (StringUtil.in(name, "applet", "marquee", "object")) {
+                    } else if (StringUtil.in(name, Constants.InBodyStartApplets)) {
                         if (!tb.inScope("name")) {
                             if (!tb.inScope(name)) {
                                 tb.error(this);
@@ -748,7 +738,7 @@ enum HtmlTreeBuilderState {
                         }
                     } else if (name.equals("br")) {
                         tb.error(this);
-                        tb.process(new Token.StartTag("br"));
+                        tb.processStartTag("br");
                         return false;
                     } else {
                         return anyOtherEndTag(t, tb);
@@ -765,10 +755,9 @@ enum HtmlTreeBuilderState {
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             String name = t.asEndTag().name();
-            DescendableLinkedList<Element> stack = tb.getStack();
-            Iterator<Element> it = stack.descendingIterator();
-            while (it.hasNext()) {
-                Element node = it.next();
+            ArrayList<Element> stack = tb.getStack();
+            for (int pos = stack.size() -1; pos >= 0; pos--) {
+                Element node = stack.get(pos);
                 if (node.nodeName().equals(name)) {
                     tb.generateImpliedEndTags(name);
                     if (!name.equals(tb.currentElement().nodeName()))
@@ -830,18 +819,18 @@ enum HtmlTreeBuilderState {
                     tb.insert(startTag);
                     tb.transition(InColumnGroup);
                 } else if (name.equals("col")) {
-                    tb.process(new Token.StartTag("colgroup"));
+                    tb.processStartTag("colgroup");
                     return tb.process(t);
                 } else if (StringUtil.in(name, "tbody", "tfoot", "thead")) {
                     tb.clearStackToTableContext();
                     tb.insert(startTag);
                     tb.transition(InTableBody);
                 } else if (StringUtil.in(name, "td", "th", "tr")) {
-                    tb.process(new Token.StartTag("tbody"));
+                    tb.processStartTag("tbody");
                     return tb.process(t);
                 } else if (name.equals("table")) {
                     tb.error(this);
-                    boolean processed = tb.process(new Token.EndTag("table"));
+                    boolean processed = tb.processEndTag("table");
                     if (processed) // only ignored if in fragment
                         return tb.process(t);
                 } else if (StringUtil.in(name, "style", "script")) {
@@ -893,7 +882,7 @@ enum HtmlTreeBuilderState {
 
         boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            boolean processed = true;
+            boolean processed;
             if (StringUtil.in(tb.currentElement().nodeName(), "table", "tbody", "tfoot", "thead", "tr")) {
                 tb.setFosterInserts(true);
                 processed = tb.process(t, InBody);
@@ -913,24 +902,25 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     } else {
-                        tb.getPendingTableCharacters().add(c);
+                        tb.getPendingTableCharacters().add(c.getData());
                     }
                     break;
                 default:
+                    // todo - don't really like the way these table character data lists are built
                     if (tb.getPendingTableCharacters().size() > 0) {
-                        for (Token.Character character : tb.getPendingTableCharacters()) {
+                        for (String character : tb.getPendingTableCharacters()) {
                             if (!isWhitespace(character)) {
                                 // InTable anything else section:
                                 tb.error(this);
                                 if (StringUtil.in(tb.currentElement().nodeName(), "table", "tbody", "tfoot", "thead", "tr")) {
                                     tb.setFosterInserts(true);
-                                    tb.process(character, InBody);
+                                    tb.process(new Token.Character().data(character), InBody);
                                     tb.setFosterInserts(false);
                                 } else {
-                                    tb.process(character, InBody);
+                                    tb.process(new Token.Character().data(character), InBody);
                                 }
                             } else
-                                tb.insert(character);
+                                tb.insert(new Token.Character().data(character));
                         }
                         tb.newPendingTableCharacters();
                     }
@@ -962,7 +952,7 @@ enum HtmlTreeBuilderState {
                             t.isEndTag() && t.asEndTag().name().equals("table"))
                     ) {
                 tb.error(this);
-                boolean processed = tb.process(new Token.EndTag("caption"));
+                boolean processed = tb.processEndTag("caption");
                 if (processed)
                     return tb.process(t);
             } else if (t.isEndTag() && StringUtil.in(t.asEndTag().name(),
@@ -1024,7 +1014,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, TreeBuilder tb) {
-            boolean processed = tb.process(new Token.EndTag("colgroup"));
+            boolean processed = tb.processEndTag("colgroup");
             if (processed) // only ignored in frag case
                 return tb.process(t);
             return true;
@@ -1042,7 +1032,7 @@ enum HtmlTreeBuilderState {
                         tb.transition(InRow);
                     } else if (StringUtil.in(name, "th", "td")) {
                         tb.error(this);
-                        tb.process(new Token.StartTag("tr"));
+                        tb.processStartTag("tr");
                         return tb.process(startTag);
                     } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead")) {
                         return exitTableBody(t, tb);
@@ -1082,7 +1072,7 @@ enum HtmlTreeBuilderState {
                 return false;
             }
             tb.clearStackToTableBodyContext();
-            tb.process(new Token.EndTag(tb.currentElement().nodeName())); // tbody, tfoot, thead
+            tb.processEndTag(tb.currentElement().nodeName()); // tbody, tfoot, thead
             return tb.process(t);
         }
 
@@ -1125,7 +1115,7 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     }
-                    tb.process(new Token.EndTag("tr"));
+                    tb.processEndTag("tr");
                     return tb.process(t);
                 } else if (StringUtil.in(name, "body", "caption", "col", "colgroup", "html", "td", "th")) {
                     tb.error(this);
@@ -1144,7 +1134,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean handleMissingTr(Token t, TreeBuilder tb) {
-            boolean processed = tb.process(new Token.EndTag("tr"));
+            boolean processed = tb.processEndTag("tr");
             if (processed)
                 return tb.process(t);
             else
@@ -1203,9 +1193,9 @@ enum HtmlTreeBuilderState {
 
         private void closeCell(HtmlTreeBuilder tb) {
             if (tb.inTableScope("td"))
-                tb.process(new Token.EndTag("td"));
+                tb.processEndTag("td");
             else
-                tb.process(new Token.EndTag("th")); // only here if th or td in scope
+                tb.processEndTag("th"); // only here if th or td in scope
         }
     },
     InSelect {
@@ -1232,22 +1222,22 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html"))
                         return tb.process(start, InBody);
                     else if (name.equals("option")) {
-                        tb.process(new Token.EndTag("option"));
+                        tb.processEndTag("option");
                         tb.insert(start);
                     } else if (name.equals("optgroup")) {
                         if (tb.currentElement().nodeName().equals("option"))
-                            tb.process(new Token.EndTag("option"));
+                            tb.processEndTag("option");
                         else if (tb.currentElement().nodeName().equals("optgroup"))
-                            tb.process(new Token.EndTag("optgroup"));
+                            tb.processEndTag("optgroup");
                         tb.insert(start);
                     } else if (name.equals("select")) {
                         tb.error(this);
-                        return tb.process(new Token.EndTag("select"));
+                        return tb.processEndTag("select");
                     } else if (StringUtil.in(name, "input", "keygen", "textarea")) {
                         tb.error(this);
                         if (!tb.inSelectScope("select"))
                             return false; // frag
-                        tb.process(new Token.EndTag("select"));
+                        tb.processEndTag("select");
                         return tb.process(start);
                     } else if (name.equals("script")) {
                         return tb.process(t, InHead);
@@ -1260,7 +1250,7 @@ enum HtmlTreeBuilderState {
                     name = end.name();
                     if (name.equals("optgroup")) {
                         if (tb.currentElement().nodeName().equals("option") && tb.aboveOnStack(tb.currentElement()) != null && tb.aboveOnStack(tb.currentElement()).nodeName().equals("optgroup"))
-                            tb.process(new Token.EndTag("option"));
+                            tb.processEndTag("option");
                         if (tb.currentElement().nodeName().equals("optgroup"))
                             tb.pop();
                         else
@@ -1300,12 +1290,12 @@ enum HtmlTreeBuilderState {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag() && StringUtil.in(t.asStartTag().name(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
-                tb.process(new Token.EndTag("select"));
+                tb.processEndTag("select");
                 return tb.process(t);
             } else if (t.isEndTag() && StringUtil.in(t.asEndTag().name(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
                 if (tb.inTableScope(t.asEndTag().name())) {
-                    tb.process(new Token.EndTag("select"));
+                    tb.processEndTag("select");
                     return (tb.process(t));
                 } else
                     return false;
@@ -1459,15 +1449,19 @@ enum HtmlTreeBuilderState {
     private static boolean isWhitespace(Token t) {
         if (t.isCharacter()) {
             String data = t.asCharacter().getData();
-            // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
-            for (int i = 0; i < data.length(); i++) {
-                char c = data.charAt(i);
-                if (!StringUtil.isWhitespace(c))
-                    return false;
-            }
-            return true;
+            return isWhitespace(data);
         }
         return false;
+    }
+
+    private static boolean isWhitespace(String data) {
+        // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
+        for (int i = 0; i < data.length(); i++) {
+            char c = data.charAt(i);
+            if (!StringUtil.isWhitespace(c))
+                return false;
+        }
+        return true;
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
@@ -1482,5 +1476,31 @@ enum HtmlTreeBuilderState {
         tb.tokeniser.transition(TokeniserState.Rawtext);
         tb.markInsertionMode();
         tb.transition(Text);
+    }
+
+    // lists of tags to search through. A little harder to read here, but causes less GC than dynamic varargs.
+    // was contributing around 10% of parse GC load.
+    private static final class Constants {
+        private static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "title"};
+        private static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
+                "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
+                "p", "section", "summary", "ul"};
+        private static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
+        private static final String[] InBodyStartPreListing = new String[]{"pre", "listing"};
+        private static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
+        private static final String[] DdDt = new String[]{"dd", "dt"};
+        private static final String[] Formatters = new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"};
+        private static final String[] InBodyStartApplets = new String[]{"applet", "marquee", "object"};
+        private static final String[] InBodyStartEmptyFormatters = new String[]{"area", "br", "embed", "img", "keygen", "wbr"};
+        private static final String[] InBodyStartMedia = new String[]{"param", "source", "track"};
+        private static final String[] InBodyStartInputAttribs = new String[]{"name", "action", "prompt"};
+        private static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
+        private static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
+        private static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
+        private static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
+                "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
+                "nav", "ol", "pre", "section", "summary", "ul"};
+        private static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
+        private static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
     }
 }

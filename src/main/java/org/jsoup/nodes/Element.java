@@ -20,8 +20,6 @@ import java.util.regex.PatternSyntaxException;
  */
 public class Element extends Node {
     private Tag tag;
-    private Set<String> classNames;
-    
     /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
@@ -181,7 +179,7 @@ public class Element extends Node {
      */
     public Elements children() {
         // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
-        List<Element> elements = new ArrayList<Element>();
+        List<Element> elements = new ArrayList<Element>(childNodes.size());
         for (Node node : childNodes) {
             if (node instanceof Element)
                 elements.add((Element) node);
@@ -260,8 +258,11 @@ public class Element extends Node {
      */
     public Element appendChild(Node child) {
         Validate.notNull(child);
-        
-        addChildren(child);
+
+        // was - Node#addChildren(child). short-circuits an array create and a loop.
+        reparentChild(child);
+        childNodes.add(child);
+        child.setSiblingIndex(childNodes.size()-1);
         return this;
     }
 
@@ -442,6 +443,34 @@ public class Element extends Node {
     @Override
     public Element wrap(String html) {
         return (Element) super.wrap(html);
+    }
+
+    /**
+     * Get a CSS selector that will uniquely select this element.
+     * <p/>If the element has an ID, returns #id;
+     * otherwise returns the parent (if any) CSS selector, followed by '>',
+     * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     *
+     * @return the CSS Path that can be used to retrieve the element in a selector.
+     */
+    public String cssSelector() {
+        if (id().length() > 0)
+            return "#" + id();
+
+        StringBuilder selector = new StringBuilder(tagName());
+        String classes = StringUtil.join(classNames(), ".");
+        if (classes.length() > 0)
+            selector.append('.').append(classes);
+
+        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
+            return selector.toString();
+
+        selector.insert(0, " > ");
+        if (parent().select(selector.toString()).size() > 1)
+            selector.append(String.format(
+                ":nth-child(%d)", elementSiblingIndex() + 1));
+
+        return parent().cssSelector() + selector.toString();
     }
 
     /**
@@ -806,9 +835,9 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the combined text of this element and all its children.
+     * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
      * <p>
-     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.text()} returns {@code "Hello there now!"}
+     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
      * @return unencoded text, or empty string if none.
      * @see #ownText()
@@ -867,12 +896,10 @@ public class Element extends Node {
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
 
-        if (!preserveWhitespace(textNode.parent())) {
-            text = TextNode.normaliseWhitespace(text);
-            if (TextNode.lastCharIsWhitespace(accum))
-                text = TextNode.stripLeadingWhitespace(text);
-        }
-        accum.append(text);
+        if (preserveWhitespace(textNode.parentNode))
+            accum.append(text);
+        else
+            StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
     }
 
     private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
@@ -952,7 +979,7 @@ public class Element extends Node {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attr("class");
+        return attr("class").trim();
     }
 
     /**
@@ -962,10 +989,10 @@ public class Element extends Node {
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
-        if (classNames == null) {
-            String[] names = className().split("\\s+");
-            classNames = new LinkedHashSet<String>(Arrays.asList(names));
-        }
+    	String[] names = className().split("\\s+");
+    	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
+    	classNames.remove(""); // if classNames() was empty, would include an empty class
+
         return classNames;
     }
 
@@ -1074,8 +1101,13 @@ public class Element extends Node {
                 .append(tagName());
         attributes.html(accum, out);
 
-        if (childNodes.isEmpty() && tag.isSelfClosing())
-            accum.append(" />");
+        // selfclosing includes unknown tags, isEmpty defines tags that are always empty
+        if (childNodes.isEmpty() && tag.isSelfClosing()) {
+            if (out.syntax() == Document.OutputSettings.Syntax.html && tag.isEmpty())
+                accum.append('>');
+            else
+                accum.append(" />"); // <img> in html, <img /> in xml
+        }
         else
             accum.append(">");
     }
@@ -1099,8 +1131,8 @@ public class Element extends Node {
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
-        html(accum); 
-        return accum.toString().trim();
+        html(accum);
+        return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
     }
 
     private void html(StringBuilder accum) {
@@ -1140,7 +1172,6 @@ public class Element extends Node {
     @Override
     public Element clone() {
         Element clone = (Element) super.clone();
-        clone.classNames = null; // derived on first hit, otherwise gets a pointer to source classnames
         return clone;
     }
 }
