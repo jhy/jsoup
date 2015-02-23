@@ -762,7 +762,7 @@ public class HttpConnection implements Connection {
 
         private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
-            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, DataUtil.defaultCharset));
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.charset()));
 
             if (bound != null) {
                 // boundary will be set if we're in multipart mode
