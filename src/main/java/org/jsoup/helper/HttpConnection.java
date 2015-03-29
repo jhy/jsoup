@@ -15,6 +15,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -223,6 +224,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection postDataCharset(String charset) {
+        req.postDataCharset(charset);
+        return this;
+    }
+
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
@@ -352,6 +358,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean validateTSLCertificates = true;
+        private String postDataCharset = DataUtil.defaultCharset;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -435,6 +442,17 @@ public class HttpConnection implements Connection {
 
         public Parser parser() {
             return parser;
+        }
+
+        public Connection.Request postDataCharset(String charset) {
+            Validate.notNull(charset, "Charset must not be null");
+            if (!Charset.isSupported(charset)) throw new IllegalCharsetNameException(charset);
+            this.postDataCharset = charset;
+            return this;
+        }
+
+        public String postDataCharset() {
+            return postDataCharset;
         }
     }
 
@@ -737,7 +755,7 @@ public class HttpConnection implements Connection {
                 bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
             } else {
-                req.header(CONTENT_TYPE, FORM_URL_ENCODED);
+                req.header(CONTENT_TYPE, FORM_URL_ENCODED + "; charset=" + req.postDataCharset());
             }
             return bound;
         }
@@ -780,9 +798,9 @@ public class HttpConnection implements Connection {
                     else
                         first = false;
 
-                    w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
                     w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
                 }
             }
             w.close();
