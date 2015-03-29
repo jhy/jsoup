@@ -41,7 +41,10 @@ jsoup changelog
 
  * Fixed an issue where Element.classNames() would return a set containing an empty class; and may have extraneous
    whitespace.
-    <https://github.com/jhy/jsoup/pull/469>
+   <https://github.com/jhy/jsoup/pull/469>
+
+ * Fixed an issue where attributes selected by value were not correctly space normalized.
+   <https://github.com/jhy/jsoup/pull/526>
 
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
