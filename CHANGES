@@ -34,7 +34,10 @@ jsoup changelog
    <https://github.com/jhy/jsoup/pull/377>
 
  * Fixed an issue where <option> tags would be missed when preparing a form for submission if missing a selected
-    attribute.
+   attribute.
+
+ * Fixed an issue where submitting a form would incorrectly include radio and checkbox values without the checked
+   attribute.
 
  * Fixed an issue where Element.classNames() would return a set containing an empty class; and may have extraneous
    whitespace.
