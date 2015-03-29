@@ -186,8 +186,8 @@ enum HtmlTreeBuilderState {
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            tb.processEndTag("noscript");
-            return tb.process(t);
+            tb.insert(new Token.Character().data(t.toString()));
+            return true;
         }
     },
     AfterHead {
