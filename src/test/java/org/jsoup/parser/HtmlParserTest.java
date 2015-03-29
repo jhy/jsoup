@@ -831,4 +831,20 @@ public class HtmlParserTest {
                 "<!doctype �> <html> <head></head> <body></body> </html>",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
+    
+    @Test public void handlesManyChildren() {
+        // Arrange
+        StringBuilder longBody = new StringBuilder(500000);
+        for (int i = 0; i < 25000; i++) {
+            longBody.append(i).append("<br>");
+        }
+        
+        // Act
+        long start = System.currentTimeMillis();
+        Document doc = Parser.parseBodyFragment(longBody.toString(), "");
+        
+        // Assert
+        assertEquals(50000, doc.body().childNodeSize());
+        assertTrue(System.currentTimeMillis() - start < 1000);
+    }
 }
