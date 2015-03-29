@@ -58,10 +58,13 @@ public abstract class Node implements Cloneable {
 
     /**
      * Get an attribute's value by its key.
-     * <p/>
+     * <p>
      * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
-     * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * </p>
+     * E.g.:
+     * <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * 
      * @param attributeKey The attribute key.
      * @return The attribute, or empty string if not present (to avoid nulls).
      * @see #attributes()
@@ -150,19 +153,22 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href></code> or
-     * <code>&lt;img src></code>).
-     * <p/>
+     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href&gt;</code> or
+     * <code>&lt;img src&gt;</code>).
+     * <p>
      * E.g.: <code>String absUrl = linkEl.absUrl("href");</code>
-     * <p/>
+     * </p>
+     * <p>
      * If the attribute value is already absolute (i.e. it starts with a protocol, like
      * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
      * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
      * absolute using that.
-     * <p/>
+     * </p>
+     * <p>
      * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix, e.g.:
      * <code>String absUrl = linkEl.attr("abs:href");</code>
-     *
+     * </p>
+     * 
      * @param attributeKey The attribute key
      * @return An absolute URL if one could be made, or an empty string (not null) if the attribute was missing or
      * could not be made successfully into a URL.
@@ -368,12 +374,14 @@ public abstract class Node implements Cloneable {
     /**
      * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
      * the node but keeping its children.
-     * <p/>
-     * For example, with the input html:<br/>
-     * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
-     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
-     * {@code <div>One Two <b>Three</b></div>}<br/>
+     * <p>
+     * For example, with the input html:
+     * </p>
+     * <p>{@code <div>One <span>Two <b>Three</b></span></div>}</p>
+     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:
+     * <p>{@code <div>One Two <b>Three</b></div>}</p>
      * and the {@code "Two "} {@link TextNode} being returned.
+     * 
      * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
      * @see #remove()
      * @see #wrap(String)

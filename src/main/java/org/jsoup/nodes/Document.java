@@ -361,7 +361,7 @@ public class Document extends Element {
 
         /**
          * Set the indent amount for pretty printing
-         * @param indentAmount number of spaces to use for indenting each level. Must be >= 0.
+         * @param indentAmount number of spaces to use for indenting each level. Must be {@literal >=} 0.
          * @return this, for chaining
          */
         public OutputSettings indentAmount(int indentAmount) {
