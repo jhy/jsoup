@@ -711,11 +711,9 @@ public class HttpConnection implements Connection {
                         TokenQueue cd = new TokenQueue(value);
                         String cookieName = cd.chompTo("=").trim();
                         String cookieVal = cd.consumeTo(";").trim();
-                        if (cookieVal == null)
-                            cookieVal = "";
                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
                         // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
+                        if (cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
                 } else { // only take the first instance of each header

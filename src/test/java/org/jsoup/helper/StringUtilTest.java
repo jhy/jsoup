@@ -12,9 +12,9 @@ import static org.junit.Assert.assertTrue;
 public class StringUtilTest {
 
     @Test public void join() {
-        assertEquals("", StringUtil.join(Arrays.<String>asList(""), " "));
-        assertEquals("one", StringUtil.join(Arrays.<String>asList("one"), " "));
-        assertEquals("one two three", StringUtil.join(Arrays.<String>asList("one", "two", "three"), " "));
+        assertEquals("", StringUtil.join(Arrays.asList(""), " "));
+        assertEquals("one", StringUtil.join(Arrays.asList("one"), " "));
+        assertEquals("one two three", StringUtil.join(Arrays.asList("one", "two", "three"), " "));
     }
 
     @Test public void padding() {

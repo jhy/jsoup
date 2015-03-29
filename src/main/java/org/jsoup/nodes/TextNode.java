@@ -94,7 +94,7 @@ public class TextNode extends Node {
             indent(accum, depth, out);
 
         boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
-                && !Element.preserveWhitespace((Element) parent());
+                && !Element.preserveWhitespace(parent());
         Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
     }
 
