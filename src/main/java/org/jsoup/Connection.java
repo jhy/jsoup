@@ -1,13 +1,14 @@
 package org.jsoup;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -209,7 +210,29 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     public Connection parser(Parser parser);
+    
+    /**
+     * Provide an Proxy  to use when connect to url.
+     * @param porxyServerIp  proxy  server ip
+     * @param porxyServerIp  proxy  server port  
+     * @return this Connection, for chaining
+     */
+    public Connection proxy(String porxyServerIp, int port);
 
+    /**
+     * Specify the proxy to use when connect the url.
+     * @param proxy proxy to use.
+     * @return this Request, for chaining
+     */
+    public Connection proxy(Proxy proxy);
+    
+    /**
+     * Get the current proxy to use when connect the url.
+     * @return current Proxy
+     */
+    public abstract Proxy proxy();
+    
+    
     /**
      * Execute the request as a GET, and parse the result.
      * @return parsed Document
@@ -497,6 +520,27 @@ public interface Connection {
          * @return current Parser
          */
         public Parser parser();
+        
+         /**
+         * Specify the http proxy hostname and port to use when connect the url.
+         * @param hostname proxy hostname to use.
+         * @param port proxy port to use.
+         * @return this Request, for chaining
+         */
+        public abstract Request proxy(String hostname,int port);
+        
+         /**
+         * Specify the proxy to use when connect the url.
+         * @param proxy proxy to use.
+         * @return this Request, for chaining
+         */
+        public abstract Request proxy(Proxy proxy);
+        
+        /**
+         * Get the current proxy to use when connect the url.
+         * @return current Proxy
+         */
+        public abstract Proxy proxy();
     }
 
     /**
