@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.jsoup.helper.Validate;
 
 import java.util.Arrays;
@@ -29,7 +30,11 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     public Attribute(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        this.key = key.trim().toLowerCase();
+        if (Jsoup.options().shouldNormalizeAttributes()) {
+          this.key = key.trim().toLowerCase();
+        } else {
+          this.key = key.trim();
+        }
         this.value = value;
     }
 
@@ -47,7 +52,11 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      */
     public void setKey(String key) {
         Validate.notEmpty(key);
-        this.key = key.trim().toLowerCase();
+        if (Jsoup.options().shouldNormalizeAttributes()) {
+          this.key = key.trim().toLowerCase();
+        } else {
+          this.key = key.trim();
+        }
     }
 
     /**
@@ -78,7 +87,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         html(accum, (new Document("")).outputSettings());
         return accum.toString();
     }
-    
+
     protected void html(StringBuilder accum, Document.OutputSettings out) {
         accum.append(key);
         if (!shouldCollapseAttribute(out)) {

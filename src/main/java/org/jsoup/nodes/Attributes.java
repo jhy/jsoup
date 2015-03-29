@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
+import org.jsoup.JsoupOptions;
 import org.jsoup.helper.Validate;
 
 import java.util.*;
@@ -11,12 +13,12 @@ import java.util.*;
  * <p/>
  * Attribute key and value comparisons are done case insensitively, and keys are normalised to
  * lower-case.
- * 
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute>, Cloneable {
     protected static final String dataPrefix = "data-";
-    
+
     private LinkedHashMap<String, Attribute> attributes = null;
     // linked hash map to preserve insertion order.
     // null be default as so many elements have no attributes -- saves a good chunk of memory
@@ -33,7 +35,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (attributes == null)
             return "";
 
-        Attribute attr = attributes.get(key.toLowerCase());
+        if (Jsoup.options().shouldNormalizeAttributes()) {
+          key = key.toLowerCase();
+        }
+        Attribute attr = attributes.get(key);
         return attr != null ? attr.getValue() : "";
     }
 
@@ -66,7 +71,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         Validate.notEmpty(key);
         if (attributes == null)
             return;
-        attributes.remove(key.toLowerCase());
+
+        if (Jsoup.options().shouldNormalizeAttributes()) {
+          key = key.toLowerCase();
+        }
+        attributes.remove(key);
     }
 
     /**
@@ -75,7 +84,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @return true if key exists, false otherwise
      */
     public boolean hasKey(String key) {
-        return attributes != null && attributes.containsKey(key.toLowerCase());
+        if (Jsoup.options().shouldNormalizeAttributes()) {
+          key = key.toLowerCase();
+        }
+        return attributes != null && attributes.containsKey(key);
     }
 
     /**
@@ -99,7 +111,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             attributes = new LinkedHashMap<String, Attribute>(incoming.size());
         attributes.putAll(incoming.attributes);
     }
-    
+
     public Iterator<Attribute> iterator() {
         return asList().iterator();
     }
@@ -138,33 +150,33 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         html(accum, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
         return accum.toString();
     }
-    
+
     void html(StringBuilder accum, Document.OutputSettings out) {
         if (attributes == null)
             return;
-        
+
         for (Map.Entry<String, Attribute> entry : attributes.entrySet()) {
             Attribute attribute = entry.getValue();
             accum.append(" ");
             attribute.html(accum, out);
         }
     }
-    
+
     @Override
     public String toString() {
         return html();
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Attributes)) return false;
-        
+
         Attributes that = (Attributes) o;
-        
+
         return !(attributes != null ? !attributes.equals(that.attributes) : that.attributes != null);
     }
-    
+
     @Override
     public int hashCode() {
         return attributes != null ? attributes.hashCode() : 0;

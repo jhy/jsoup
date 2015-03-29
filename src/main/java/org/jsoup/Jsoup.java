@@ -1,11 +1,11 @@
 package org.jsoup;
 
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
-import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.HttpConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -241,12 +241,37 @@ public class Jsoup {
      @param bodyHtml HTML to test
      @param whitelist whitelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist) 
+     @see #clean(String, org.jsoup.safety.Whitelist)
      */
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         Document dirty = parseBodyFragment(bodyHtml, "");
         Cleaner cleaner = new Cleaner(whitelist);
         return cleaner.isValid(dirty);
     }
-    
+
+    private static Object lock = new Object();
+    private static JsoupOptions options;
+
+    /**
+     * Get the current active options for Jsoup, see: {@link JsoupOptions}.
+     * @return options object.
+     */
+    public static JsoupOptions options() {
+      synchronized (lock) {
+        if (options == null) {
+          return JsoupOptions.DEFAULT_OPTIONS;
+        }
+        return options;
+      }
+    }
+
+    /**
+     * Change the current active options object that Jsoup uses.
+     * @param jsoupOptions the new options object to use
+     */
+    public static void options(JsoupOptions jsoupOptions) {
+      synchronized (lock) {
+        options = jsoupOptions;
+      }
+    }
 }
