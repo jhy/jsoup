@@ -25,6 +25,9 @@ jsoup changelog
 
  * Added support for HTTP method verbs PUT, DELETE, and PATCH.
 
+ * Added support for overriding the default POST character of UFT-8
+   <https://github.com/jhy/jsoup/pull/491>
+
  * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
 
  * In the HtmlToPlainText example program, added the ability to filter using a CSS selector. Also clarified
