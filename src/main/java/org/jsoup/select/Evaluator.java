@@ -152,7 +152,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
+            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim());
         }
 
         @Override
