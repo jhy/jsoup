@@ -55,6 +55,10 @@ jsoup changelog
  * Fixed performance issue when parsing HTML with elements with many children that need re-parenting.
    <https://github.com/jhy/jsoup/pull/506>
 
+ * Fixed an issue where a server returning an unsupport character set response would cause a runtime
+   UnsupportedCharsetException, instead of falling back to the default UTF-8 charset.
+   <https://github.com/jhy/jsoup/pull/509>
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
