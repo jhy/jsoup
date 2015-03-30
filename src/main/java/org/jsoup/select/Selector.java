@@ -85,12 +85,20 @@ public class Selector {
         this.root = root;
     }
 
+    private Selector(Evaluator evaluator, Element root) {
+        Validate.notNull(evaluator);
+        Validate.notNull(root);
+
+        this.evaluator = evaluator;
+        this.root = root;
+    }
+
     /**
      * Find elements matching selector.
      *
      * @param query CSS selector
      * @param root  root element to descend into
-     * @return matching elements, empty if not
+     * @return matching elements, empty if none
      */
     public static Elements select(String query, Element root) {
         return new Selector(query, root).select();
@@ -99,17 +107,29 @@ public class Selector {
     /**
      * Find elements matching selector.
      *
+     * @param evaluator CSS selector
+     * @param root root element to descend into
+     * @return matching elements, empty if none
+     */
+    public static Elements select(Evaluator evaluator, Element root) {
+        return new Selector(evaluator, root).select();
+    }
+
+    /**
+     * Find elements matching selector.
+     *
      * @param query CSS selector
      * @param roots root elements to descend into
-     * @return matching elements, empty if not
+     * @return matching elements, empty if none
      */
     public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
         Validate.notNull(roots);
+        Evaluator evaluator = QueryParser.parse(query);
         LinkedHashSet<Element> elements = new LinkedHashSet<Element>();
 
         for (Element root : roots) {
-            elements.addAll(select(query, root));
+            elements.addAll(select(evaluator, root));
         }
         return new Elements(elements);
     }

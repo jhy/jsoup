@@ -65,6 +65,9 @@ jsoup changelog
  * Improved the equals() and hashcode() methods in Node, to consider all their child content, for DOM tree comparisons.
    <https://github.com/jhy/jsoup/issues/537>
 
+ * Improved performance in Selector when searching multiple roots.
+   <https://github.com/jhy/jsoup/issues/518>
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
