@@ -183,6 +183,10 @@ public final class DataUtil {
         }
     }
 
+    static ByteBuffer emptyByteBuffer() {
+        return ByteBuffer.allocate(0);
+    }
+
     /**
      * Parse out a charset from a content type header. If the charset is not supported, returns null (so the default
      * will kick in.)

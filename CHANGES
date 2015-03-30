@@ -59,6 +59,9 @@ jsoup changelog
    UnsupportedCharsetException, instead of falling back to the default UTF-8 charset.
    <https://github.com/jhy/jsoup/pull/509>
 
+ * Fixed an issue where Jsoup.Connection would throw an IO Exception when reading a page with zero content-length.
+   <https://github.com/jhy/jsoup/issues/538>
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
@@ -146,7 +149,7 @@ jsoup changelog
  * Fixed an issue when connecting or redirecting to a URL that contains a space.
    <https://github.com/jhy/jsoup/pull/354> <https://github.com/jhy/jsoup/issues/114>
 
- * Added support for the HTTP/1.1 Tempory Redirect (307) status code.
+ * Added support for the HTTP/1.1 Temporary Redirect (307) status code.
    <https://github.com/jhy/jsoup/issues/452>
 
 *** Release 1.7.2 [2013-Jan-27]
