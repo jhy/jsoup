@@ -156,7 +156,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     public String toString() {
         return html();
     }
-    
+
+    /**
+     * Checks if these attributes are equal to another set of attributes, by comparing the two sets
+     * @param o attributes to compare with
+     * @return if both sets of attributes have the same content
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -166,7 +171,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         
         return !(attributes != null ? !attributes.equals(that.attributes) : that.attributes != null);
     }
-    
+
+    /**
+     * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
+     * @return calculated hashcode
+     */
     @Override
     public int hashCode() {
         return attributes != null ? attributes.hashCode() : 0;

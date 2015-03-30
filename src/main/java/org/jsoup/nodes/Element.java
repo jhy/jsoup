@@ -267,7 +267,7 @@ public class Element extends Node {
         // was - Node#addChildren(child). short-circuits an array create and a loop.
         reparentChild(child);
         childNodes.add(child);
-        child.setSiblingIndex(childNodes.size()-1);
+        child.setSiblingIndex(childNodes.size() - 1);
         return this;
     }
 
@@ -1166,12 +1166,17 @@ public class Element extends Node {
 
     @Override
     public boolean equals(Object o) {
-        return this == o;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Element element = (Element) o;
+
+        return tag.equals(element.tag);
     }
 
     @Override
     public int hashCode() {
-        // todo: fixup, not very useful
         int result = super.hashCode();
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         return result;
@@ -1179,7 +1184,6 @@ public class Element extends Node {
 
     @Override
     public Element clone() {
-        Element clone = (Element) super.clone();
-        return clone;
+        return (Element) super.clone();
     }
 }

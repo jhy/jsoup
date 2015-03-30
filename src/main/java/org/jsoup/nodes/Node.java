@@ -314,7 +314,7 @@ public abstract class Node implements Cloneable {
      * @see #before(String)
      */
     public Node after(String html) {
-        addSiblingHtml(siblingIndex()+1, html);
+        addSiblingHtml(siblingIndex() + 1, html);
         return this;
     }
 
@@ -328,7 +328,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex()+1, node);
+        parentNode.addChildren(siblingIndex() + 1, node);
         return this;
     }
 
@@ -586,17 +586,33 @@ public abstract class Node implements Cloneable {
         accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
     }
 
+    /**
+     * Check if this node is equal to another node. A node is considered equal if its attributes and content equal the
+     * other node; particularly its position in the tree does not influence its equality.
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     */
     @Override
     public boolean equals(Object o) {
-        // todo: have nodes hold a child index, compare against that and parent (not children)
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        return this == o;
+        Node node = (Node) o;
+
+        if (childNodes != null ? !childNodes.equals(node.childNodes) : node.childNodes != null) return false;
+        return !(attributes != null ? !attributes.equals(node.attributes) : node.attributes != null);
     }
 
+    /**
+     * Calculates a hash code for this node, which includes iterating all its attributes, and recursing into any child
+     * nodes. This means that a node's hashcode is based on it and its child content, and not its parent or place in the
+     * tree. So two nodes with the same content, regardless of their position in the tree, will have the same hashcode.
+     * @return the calculated hashcode
+     * @see Node#equals(Object)
+     */
     @Override
     public int hashCode() {
-        int result = parentNode != null ? parentNode.hashCode() : 0;
-        // not children, or will block stack as they go back up to parent)
+        int result = childNodes != null ? childNodes.hashCode() : 0;
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
     }

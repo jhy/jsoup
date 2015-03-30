@@ -172,4 +172,22 @@ public class TextNode extends Node {
         ensureAttributes();
         return super.absUrl(attributeKey);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        TextNode textNode = (TextNode) o;
+
+        return !(text != null ? !text.equals(textNode.text) : textNode.text != null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (text != null ? text.hashCode() : 0);
+        return result;
+    }
 }

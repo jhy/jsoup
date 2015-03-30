@@ -62,6 +62,9 @@ jsoup changelog
  * Fixed an issue where Jsoup.Connection would throw an IO Exception when reading a page with zero content-length.
    <https://github.com/jhy/jsoup/issues/538>
 
+ * Improved the equals() and hashcode() methods in Node, to consider all their child content, for DOM tree comparisons.
+   <https://github.com/jhy/jsoup/issues/537>
+
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
