@@ -18,6 +18,10 @@ import static org.junit.Assert.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class DocumentTest {
+    private static final String charsetUtf8 = "UTF-8";
+    private static final String charsetIso8859 = "ISO-8859-1";
+    
+    
     @Test public void setTextPreservesDocumentStructure() {
         Document doc = Jsoup.parse("<p>Hello</p>");
         doc.text("Replaced");
@@ -148,15 +152,10 @@ public class DocumentTest {
     }
     
     @Test
-    public void testMetaCharsetUpdate() {
-        // Existing meta charset tag
-        final Document doc = Document.createShell("");
+    public void testMetaCharsetUpdateUtf8() {
+        final Document doc = createHtmlDocument("changeThis");
         doc.updateMetaCharset(true);
-        doc.head().appendElement("meta").attr("charset", "changeThis");        
-        
-        final String charsetUtf8 = "UTF-8";
         doc.charset(Charset.forName(charsetUtf8));
-        Element selectedElement = doc.select("meta[charset]").first();
         
         final String htmlCharsetUTF8 = "<html>\n" +
                                         " <head>\n" +
@@ -164,16 +163,19 @@ public class DocumentTest {
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
+        assertEquals(htmlCharsetUTF8, doc.toString());
         
-        assertNotNull(selectedElement);
+        Element selectedElement = doc.select("meta[charset]").first();
         assertEquals(charsetUtf8, doc.charset().displayName());
         assertEquals(charsetUtf8, selectedElement.attr("charset"));
-        assertEquals(htmlCharsetUTF8, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
-        
-        final String charsetIso8859 = "ISO-8859-1";
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateIso8859() {
+        final Document doc = createHtmlDocument("changeThis");
+        doc.updateMetaCharset(true);
         doc.charset(Charset.forName(charsetIso8859));
-        selectedElement = doc.select("meta[charset]").first();
         
         final String htmlCharsetISO = "<html>\n" +
                                         " <head>\n" +
@@ -181,34 +183,46 @@ public class DocumentTest {
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
+        assertEquals(htmlCharsetISO, doc.toString());
         
-        assertNotNull(selectedElement);
+        Element selectedElement = doc.select("meta[charset]").first();
         assertEquals(charsetIso8859, doc.charset().displayName());
         assertEquals(charsetIso8859, selectedElement.attr("charset"));
-        assertEquals(htmlCharsetISO, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
-        
-        
-        // No meta charset tag
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateNoCharset() {
         final Document docNoCharset = Document.createShell("");
         docNoCharset.updateMetaCharset(true);
         docNoCharset.charset(Charset.forName(charsetUtf8));
         
         assertEquals(charsetUtf8, docNoCharset.select("meta[charset]").first().attr("charset"));
-        assertEquals(htmlCharsetUTF8, docNoCharset.toString());
         
-        
-        // Disabled update of meta charset tag
+        final String htmlCharsetUTF8 = "<html>\n" +
+                                        " <head>\n" +
+                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        " </head>\n" +
+                                        " <body></body>\n" +
+                                        "</html>";
+        assertEquals(htmlCharsetUTF8, docNoCharset.toString()); 
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateDisabled() {
         final Document docDisabled = Document.createShell("");
-        assertFalse(docDisabled.updateMetaCharset());
         
         final String htmlNoCharset = "<html>\n" +
                                         " <head></head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
-        
         assertEquals(htmlNoCharset, docDisabled.toString());
         assertNull(docDisabled.select("meta[charset]").first());
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateDisabledNoChanges() {
+        final Document doc = createHtmlDocument("dontTouch");
         
         final String htmlCharset = "<html>\n" +
                                     " <head>\n" +
@@ -217,134 +231,148 @@ public class DocumentTest {
                                     " </head>\n" +
                                     " <body></body>\n" +
                                     "</html>";
+        assertEquals(htmlCharset, doc.toString());
         
-        docDisabled.head().appendElement("meta").attr("charset", "dontTouch");
-        docDisabled.head().appendElement("meta").attr("name", "charset").attr("content", "dontTouch");
-        
-        assertEquals(htmlCharset, docDisabled.toString());
-        
-        selectedElement = docDisabled.select("meta[charset]").first();
+        Element selectedElement = doc.select("meta[charset]").first();
         assertNotNull(selectedElement);
         assertEquals("dontTouch", selectedElement.attr("charset"));
-        selectedElement = docDisabled.select("meta[name=charset]").first();
+        
+        selectedElement = doc.select("meta[name=charset]").first();
         assertNotNull(selectedElement);
         assertEquals("dontTouch", selectedElement.attr("content"));
-        
-        docDisabled.charset(Charset.forName(charsetUtf8));
-        selectedElement = docDisabled.select("meta[charset]").first();
-        assertNotNull(selectedElement);
-        assertEquals("dontTouch", selectedElement.attr("charset"));
-        selectedElement = docDisabled.select("meta[name=charset]").first();
-        assertNotNull(selectedElement);
-        assertEquals("dontTouch", selectedElement.attr("content"));
-        
-        
-        // Remove obsolete charset definitions
-        final Document docCleanup = Document.createShell("");
-        docCleanup.updateMetaCharset(true);
-        docCleanup.head().appendElement("meta").attr("charset", "dontTouch");
-        docCleanup.head().appendElement("meta").attr("name", "charset").attr("content", "dontTouch");
-        docCleanup.charset(Charset.forName(charsetUtf8));
-        
-        assertEquals(htmlCharsetUTF8, docCleanup.toString());
     }
     
     @Test
-    public void testMetaCharsetUpdateXml() {
-        // Existing encoding definition
-        final Document doc = new Document("");
-        doc.appendElement("root").text("node");
-        doc.outputSettings().syntax(Syntax.xml);
-        doc.updateMetaCharset(true);
-        
-        XmlDeclaration decl = new XmlDeclaration("xml", "", false);
-        decl.attr("version", "1.0");
-        decl.attr("encoding", "changeThis");
-        doc.prependChild(decl);
-        
-        final String charsetUtf8 = "UTF-8";
+    public void testMetaCharsetUpdateDisabledNoChangesAfterUpdate() {
+        final Document doc = createHtmlDocument("dontTouch");
         doc.charset(Charset.forName(charsetUtf8));
         
-        Node declNode = doc.childNode(0);
-        assertTrue(declNode instanceof XmlDeclaration);
-        XmlDeclaration selectedNode = (XmlDeclaration) declNode;
+        Element selectedElement = doc.select("meta[charset]").first();
+        assertEquals("dontTouch", selectedElement.attr("charset"));
+        
+        selectedElement = doc.select("meta[name=charset]").first();
+        assertEquals("dontTouch", selectedElement.attr("content"));
+    }
+            
+    @Test
+    public void testMetaCharsetUpdateCleanup() {
+        final Document doc = createHtmlDocument("dontTouch");
+        doc.updateMetaCharset(true);
+        doc.charset(Charset.forName(charsetUtf8));
+        
+        final String htmlCharsetUTF8 = "<html>\n" +
+                                        " <head>\n" +
+                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        " </head>\n" +
+                                        " <body></body>\n" +
+                                        "</html>";
+        
+        assertEquals(htmlCharsetUTF8, doc.toString());
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateXmlUtf8() {
+        final Document doc = createXmlDocument("1.0", "changeThis", true);
+        doc.updateMetaCharset(true);
+        doc.charset(Charset.forName(charsetUtf8));
         
         final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
+        assertEquals(xmlCharsetUTF8, doc.toString());
 
-        assertNotNull(declNode);
+        XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
         assertEquals(charsetUtf8, doc.charset().displayName());
         assertEquals(charsetUtf8, selectedNode.attr("encoding"));
-        assertEquals("1.0", selectedNode.attr("version"));
-        assertEquals(xmlCharsetUTF8, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
-        
-        final String charsetIso8859 = "ISO-8859-1";
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateXmlIso8859() {
+        final Document doc = createXmlDocument("1.0", "changeThis", true);
+        doc.updateMetaCharset(true);
         doc.charset(Charset.forName(charsetIso8859));
-        
-        declNode = doc.childNode(0);
-        assertTrue(declNode instanceof XmlDeclaration);
-        selectedNode = (XmlDeclaration) declNode;
         
         final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\">\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
+        assertEquals(xmlCharsetISO, doc.toString());
         
-        assertNotNull(declNode);
+        XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
         assertEquals(charsetIso8859, doc.charset().displayName());
         assertEquals(charsetIso8859, selectedNode.attr("encoding"));
-        assertEquals("1.0", selectedNode.attr("version"));
-        assertEquals(xmlCharsetISO, doc.toString());
         assertEquals(doc.charset(), doc.outputSettings().charset());
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateXmlNoCharset() {
+        final Document doc = createXmlDocument("1.0", "none", false);
+        doc.updateMetaCharset(true);
+        doc.charset(Charset.forName(charsetUtf8));
         
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
+                                        "<root>\n" +
+                                        " node\n" +
+                                        "</root>";
+        assertEquals(xmlCharsetUTF8, doc.toString());
         
-        // No encoding definition
-        final Document docNoCharset = new Document("");
-        docNoCharset.appendElement("root").text("node");
-        docNoCharset.outputSettings().syntax(Syntax.xml);
-        docNoCharset.updateMetaCharset(true);
-        docNoCharset.charset(Charset.forName(charsetUtf8));
-        
-        declNode = docNoCharset.childNode(0);
-        assertTrue(declNode instanceof XmlDeclaration);
-        selectedNode = (XmlDeclaration) declNode;
-        
+        XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
         assertEquals(charsetUtf8, selectedNode.attr("encoding"));
-        assertEquals(xmlCharsetUTF8, docNoCharset.toString());
-        
-        
-        // Disabled update of encoding definition
-        final Document docDisabled = new Document("");
-        docDisabled.appendElement("root").text("node");
-        docDisabled.outputSettings().syntax(Syntax.xml);
-        assertFalse(docDisabled.updateMetaCharset());
+    }
+    
+    @Test
+    public void testMetaCharsetUpdateXmlDisabled() {
+        final Document doc = createXmlDocument("none", "none", false);
         
         final String xmlNoCharset = "<root>\n" +
                                     " node\n" +
                                     "</root>";
-        
-        assertEquals(xmlNoCharset, docDisabled.toString());
-        
-        decl = new XmlDeclaration("xml", "", false);
-        decl.attr("version", "dontTouch");
-        decl.attr("encoding", "dontTouch");
-        docDisabled.prependChild(decl);
+        assertEquals(xmlNoCharset, doc.toString());
+    }
+
+    @Test
+    public void testMetaCharsetUpdateXmlDisabledNoChanges() {
+        final Document doc = createXmlDocument("dontTouch", "dontTouch", true);
         
         final String xmlCharset = "<?xml version=\"dontTouch\" encoding=\"dontTouch\">\n" +
                                     "<root>\n" +
                                     " node\n" +
                                     "</root>";
+        assertEquals(xmlCharset, doc.toString());
         
-        assertEquals(xmlCharset, docDisabled.toString());
-        
-        declNode = docDisabled.childNode(0);
-        assertTrue(declNode instanceof XmlDeclaration);
-        selectedNode = (XmlDeclaration) declNode;
-        
+        XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
         assertEquals("dontTouch", selectedNode.attr("encoding"));
         assertEquals("dontTouch", selectedNode.attr("version"));
+    }
+    
+    @Test
+    public void testMetaCharsetUpdatedDisabledPerDefault() {
+        final Document doc = createHtmlDocument("none");
+        assertFalse(doc.updateMetaCharset());
+    }
+    
+    private Document createHtmlDocument(String charset) {
+        final Document doc = Document.createShell("");
+        doc.head().appendElement("meta").attr("charset", charset);
+        doc.head().appendElement("meta").attr("name", "charset").attr("content", charset);
+        
+        return doc;
+    }
+    
+    private Document createXmlDocument(String version, String charset, boolean addDecl) {
+        final Document doc = new Document("");
+        doc.appendElement("root").text("node");
+        doc.outputSettings().syntax(Syntax.xml);
+        
+        if( addDecl == true ) {
+            XmlDeclaration decl = new XmlDeclaration("xml", "", false);
+            decl.attr("version", version);
+            decl.attr("encoding", charset);
+            doc.prependChild(decl);
+        }
+        
+        return doc;
     }
 }
