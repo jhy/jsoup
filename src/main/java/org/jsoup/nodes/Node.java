@@ -58,10 +58,13 @@ public abstract class Node implements Cloneable {
 
     /**
      * Get an attribute's value by its key.
-     * <p/>
+     * <p>
      * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
-     * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * </p>
+     * E.g.:
+     * <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * 
      * @param attributeKey The attribute key.
      * @return The attribute, or empty string if not present (to avoid nulls).
      * @see #attributes()
@@ -150,19 +153,22 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href></code> or
-     * <code>&lt;img src></code>).
-     * <p/>
+     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href&gt;</code> or
+     * <code>&lt;img src&gt;</code>).
+     * <p>
      * E.g.: <code>String absUrl = linkEl.absUrl("href");</code>
-     * <p/>
+     * </p>
+     * <p>
      * If the attribute value is already absolute (i.e. it starts with a protocol, like
      * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
      * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
      * absolute using that.
-     * <p/>
+     * </p>
+     * <p>
      * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix, e.g.:
      * <code>String absUrl = linkEl.attr("abs:href");</code>
-     *
+     * </p>
+     * 
      * @param attributeKey The attribute key
      * @return An absolute URL if one could be made, or an empty string (not null) if the attribute was missing or
      * could not be made successfully into a URL.
@@ -308,7 +314,7 @@ public abstract class Node implements Cloneable {
      * @see #before(String)
      */
     public Node after(String html) {
-        addSiblingHtml(siblingIndex()+1, html);
+        addSiblingHtml(siblingIndex() + 1, html);
         return this;
     }
 
@@ -322,7 +328,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex()+1, node);
+        parentNode.addChildren(siblingIndex() + 1, node);
         return this;
     }
 
@@ -368,12 +374,14 @@ public abstract class Node implements Cloneable {
     /**
      * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
      * the node but keeping its children.
-     * <p/>
-     * For example, with the input html:<br/>
-     * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
-     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
-     * {@code <div>One Two <b>Three</b></div>}<br/>
+     * <p>
+     * For example, with the input html:
+     * </p>
+     * <p>{@code <div>One <span>Two <b>Three</b></span></div>}</p>
+     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:
+     * <p>{@code <div>One Two <b>Three</b></div>}</p>
      * and the {@code "Two "} {@link TextNode} being returned.
+     * 
      * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
      * @see #remove()
      * @see #wrap(String)
@@ -430,7 +438,7 @@ public abstract class Node implements Cloneable {
         Validate.isTrue(out.parentNode == this);
         int index = out.siblingIndex();
         childNodes.remove(index);
-        reindexChildren();
+        reindexChildren(index);
         out.parentNode = null;
     }
 
@@ -450,7 +458,7 @@ public abstract class Node implements Cloneable {
             reparentChild(in);
             childNodes.add(index, in);
         }
-        reindexChildren();
+        reindexChildren(index);
     }
 
     protected void reparentChild(Node child) {
@@ -459,8 +467,8 @@ public abstract class Node implements Cloneable {
         child.setParentNode(this);
     }
     
-    private void reindexChildren() {
-        for (int i = 0; i < childNodes.size(); i++) {
+    private void reindexChildren(int start) {
+        for (int i = start; i < childNodes.size(); i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
@@ -578,17 +586,33 @@ public abstract class Node implements Cloneable {
         accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
     }
 
+    /**
+     * Check if this node is equal to another node. A node is considered equal if its attributes and content equal the
+     * other node; particularly its position in the tree does not influence its equality.
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     */
     @Override
     public boolean equals(Object o) {
-        // todo: have nodes hold a child index, compare against that and parent (not children)
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        return this == o;
+        Node node = (Node) o;
+
+        if (childNodes != null ? !childNodes.equals(node.childNodes) : node.childNodes != null) return false;
+        return !(attributes != null ? !attributes.equals(node.attributes) : node.attributes != null);
     }
 
+    /**
+     * Calculates a hash code for this node, which includes iterating all its attributes, and recursing into any child
+     * nodes. This means that a node's hashcode is based on it and its child content, and not its parent or place in the
+     * tree. So two nodes with the same content, regardless of their position in the tree, will have the same hashcode.
+     * @return the calculated hashcode
+     * @see Node#equals(Object)
+     */
     @Override
     public int hashCode() {
-        int result = parentNode != null ? parentNode.hashCode() : 0;
-        // not children, or will block stack as they go back up to parent)
+        int result = childNodes != null ? childNodes.hashCode() : 0;
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
     }

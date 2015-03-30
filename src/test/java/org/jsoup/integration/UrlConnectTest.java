@@ -57,13 +57,13 @@ public class UrlConnectTest {
     
     @Test
     public void exceptOnUnknownContentType() {
-        String url = "http://jsoup.org/rez/osi_logo.png"; // not text/* but image/png, should throw
+        String url = "http://direct.jsoup.org/rez/osi_logo.png"; // not text/* but image/png, should throw
         boolean threw = false;
         try {
             Document doc = Jsoup.parse(new URL(url), 3000);
         } catch (UnsupportedMimeTypeException e) {
             threw = true;
-            assertEquals("org.jsoup.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://jsoup.org/rez/osi_logo.png", e.toString());
+            assertEquals("org.jsoup.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://direct.jsoup.org/rez/osi_logo.png", e.toString());
             assertEquals(url, e.getUrl());
             assertEquals("image/png", e.getMimeType());
         } catch (IOException e) {
@@ -216,6 +216,34 @@ public class UrlConnectTest {
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
         assertEquals("404 Not Found", doc.select("h1").first().text());
+    }
+
+    @Test
+    public void ignores500tExceptionIfSoConfigured() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/500.pl").ignoreHttpErrors(true);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(500, res.statusCode());
+        assertEquals("Application Error", res.statusMessage());
+        assertEquals("Woops", doc.select("h1").first().text());
+    }
+
+    @Test
+    public void ignores500NoWithContentExceptionIfSoConfigured() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/500-no-content.pl").ignoreHttpErrors(true);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(500, res.statusCode());
+        assertEquals("Application Error", res.statusMessage());
+    }
+
+    @Test
+    public void ignores200NoWithContentExceptionIfSoConfigured() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/200-no-content.pl").ignoreHttpErrors(true);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(200, res.statusCode());
+        assertEquals("All Good", res.statusMessage());
     }
 
     @Test

@@ -8,6 +8,8 @@ import org.w3c.dom.Document;
 import java.io.File;
 import java.io.IOException;
 
+import static org.jsoup.TextUtil.LE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -21,18 +23,18 @@ public class W3CDomTest {
         Document wDoc = w3c.fromJsoup(doc);
         String out = w3c.asString(wDoc);
         assertEquals(
-                "<html>\n" +
-                        "<head>\n" +
-                        "<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
-                        "<title>W3c</title>\n" +
-                        "</head>\n" +
-                        "<body>\n" +
-                        "<p class=\"one\" id=\"12\">Text</p>\n" +
-                        "<!-- comment -->\n" +
-                        "<invalid>What<script>alert('!')</script>\n" +
-                        "</invalid>\n" +
-                        "</body>\n" +
-                        "</html>\n"
+                "<html>" + LE +
+                        "<head>" + LE +
+                        "<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">" + LE +
+                        "<title>W3c</title>" + LE +
+                        "</head>" + LE +
+                        "<body>" + LE +
+                        "<p class=\"one\" id=\"12\">Text</p>" + LE +
+                        "<!-- comment -->" + LE +
+                        "<invalid>What<script>alert('!')</script>" + LE +
+                        "</invalid>" + LE +
+                        "</body>" + LE +
+                        "</html>" + LE
                 , out);
     }
 

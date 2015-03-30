@@ -7,7 +7,6 @@ import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
 import static org.junit.Assert.*;
 
-import java.nio.charset.Charset;
 
 public class EntitiesTest {
     @Test public void escape() {

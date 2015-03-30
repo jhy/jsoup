@@ -618,4 +618,26 @@ public class SelectorTest {
         assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
         assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
     }
+    
+    @Test
+    public void selectClassWithSpace() {
+        final String html = "<div class=\"value\">class without space</div>\n"
+                          + "<div class=\"value \">class with space</div>";
+        
+        Document doc = Jsoup.parse(html);
+        
+        Elements found = doc.select("div[class=value ]");
+        assertEquals(2, found.size());
+        assertEquals("class without space", found.get(0).text());
+        assertEquals("class with space", found.get(1).text());
+        
+        found = doc.select("div[class=\"value \"]");
+        assertEquals(2, found.size());
+        assertEquals("class without space", found.get(0).text());
+        assertEquals("class with space", found.get(1).text());
+        
+        found = doc.select("div[class=\"value\\ \"]");
+        assertEquals(0, found.size());
+    }
+    
 }

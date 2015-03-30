@@ -94,20 +94,18 @@ public final class DataUtil {
             doc = parser.parseInput(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
-                String foundCharset;
+                String foundCharset = null;
                 if (meta.hasAttr("http-equiv")) {
                     foundCharset = getCharsetFromContentType(meta.attr("content"));
-                    if (foundCharset == null && meta.hasAttr("charset")) {
-                        try {
-                            if (Charset.isSupported(meta.attr("charset"))) {
-                                foundCharset = meta.attr("charset");
-                            }
-                        } catch (IllegalCharsetNameException e) {
-                            foundCharset = null;
+                }
+                if (foundCharset == null && meta.hasAttr("charset")) {
+                    try {
+                        if (Charset.isSupported(meta.attr("charset"))) {
+                            foundCharset = meta.attr("charset");
                         }
+                    } catch (IllegalCharsetNameException e) {
+                        foundCharset = null;
                     }
-                } else {
-                    foundCharset = meta.attr("charset");
                 }
 
                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
@@ -183,6 +181,10 @@ public final class DataUtil {
             if (randomAccessFile != null)
                 randomAccessFile.close();
         }
+    }
+
+    static ByteBuffer emptyByteBuffer() {
+        return ByteBuffer.allocate(0);
     }
 
     /**
