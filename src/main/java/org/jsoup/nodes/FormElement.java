@@ -79,6 +79,7 @@ public class FormElement extends Element {
             if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
             String name = el.attr("name");
             if (name.length() == 0) continue;
+            String type = el.attr("type");
 
             if ("select".equals(el.tagName())) {
                 Elements options = el.select("option[selected]");
@@ -92,6 +93,10 @@ public class FormElement extends Element {
                     if (option != null)
                         data.add(HttpConnection.KeyVal.create(name, option.val()));
                 }
+            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                // only add checkbox or radio if they have the checked attribute
+                if (el.hasAttr("checked"))
+                    data.add(HttpConnection.KeyVal.create(name, el.val()));
             } else {
                 data.add(HttpConnection.KeyVal.create(name, el.val()));
             }

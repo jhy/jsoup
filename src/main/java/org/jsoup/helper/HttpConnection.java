@@ -15,6 +15,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -223,6 +224,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection postDataCharset(String charset) {
+        req.postDataCharset(charset);
+        return this;
+    }
+
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
@@ -352,6 +358,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean validateTSLCertificates = true;
+        private String postDataCharset = DataUtil.defaultCharset;
 
         private Request() {
             timeoutMilliseconds = 3000;
@@ -435,6 +442,17 @@ public class HttpConnection implements Connection {
 
         public Parser parser() {
             return parser;
+        }
+
+        public Connection.Request postDataCharset(String charset) {
+            Validate.notNull(charset, "Charset must not be null");
+            if (!Charset.isSupported(charset)) throw new IllegalCharsetNameException(charset);
+            this.postDataCharset = charset;
+            return this;
+        }
+
+        public String postDataCharset() {
+            return postDataCharset;
         }
     }
 
@@ -529,19 +547,23 @@ public class HttpConnection implements Connection {
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
 
-                InputStream bodyStream = null;
-                InputStream dataStream = null;
-                try {
-                    dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    bodyStream = res.hasHeaderWithValue(CONTENT_ENCODING, "gzip") ?
-                            new BufferedInputStream(new GZIPInputStream(dataStream)) :
-                            new BufferedInputStream(dataStream);
+                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+                if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
+                    InputStream bodyStream = null;
+                    InputStream dataStream = null;
+                    try {
+                        dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                        bodyStream = res.hasHeaderWithValue(CONTENT_ENCODING, "gzip") ?
+                                new BufferedInputStream(new GZIPInputStream(dataStream)) :
+                                new BufferedInputStream(dataStream);
 
-                    res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
-                    res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
-                } finally {
-                    if (bodyStream != null) bodyStream.close();
-                    if (dataStream != null) dataStream.close();
+                        res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                    } finally {
+                        if (bodyStream != null) bodyStream.close();
+                        if (dataStream != null) dataStream.close();
+                    }
+                } else {
+                    res.byteData = DataUtil.emptyByteBuffer();
                 }
             } finally {
                 // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
@@ -711,11 +733,9 @@ public class HttpConnection implements Connection {
                         TokenQueue cd = new TokenQueue(value);
                         String cookieName = cd.chompTo("=").trim();
                         String cookieVal = cd.consumeTo(";").trim();
-                        if (cookieVal == null)
-                            cookieVal = "";
                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
                         // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
+                        if (cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
                 } else { // only take the first instance of each header
@@ -739,7 +759,7 @@ public class HttpConnection implements Connection {
                 bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
             } else {
-                req.header(CONTENT_TYPE, FORM_URL_ENCODED);
+                req.header(CONTENT_TYPE, FORM_URL_ENCODED + "; charset=" + req.postDataCharset());
             }
             return bound;
         }
@@ -782,9 +802,9 @@ public class HttpConnection implements Connection {
                     else
                         first = false;
 
-                    w.write(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
                     w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
                 }
             }
             w.close();

@@ -130,6 +130,9 @@ public class Parser {
         Element body = doc.body();
         List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
         Node[] nodes = nodeList.toArray(new Node[nodeList.size()]); // the node list gets modified when re-parented
+        for (int i = nodes.length - 1; i > 0; i--) {
+            nodes[i].remove();
+        }
         for (Node node : nodes) {
             body.appendChild(node);
         }

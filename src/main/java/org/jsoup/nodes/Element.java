@@ -157,9 +157,10 @@ public class Element extends Node {
 
     /**
      * Get a child element of this element, by its 0-based index number.
-     * <p/>
+     * <p>
      * Note that an element can have both mixed Nodes and Elements as children. This method inspects
      * a filtered list of children that are elements, and the index is based on that filtered list.
+     * </p>
      * 
      * @param index the index number of the element to retrieve
      * @return the child element, if it exists, otherwise throws an {@code IndexOutOfBoundsException}
@@ -171,8 +172,9 @@ public class Element extends Node {
 
     /**
      * Get this element's child elements.
-     * <p/>
+     * <p>
      * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+     * </p>
      * @return child elements. If this element has no children, returns an
      * empty list.
      * @see #childNodes()
@@ -189,11 +191,11 @@ public class Element extends Node {
 
     /**
      * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
-     * <p/>
+     * <p>
      * This is effectively a filter on {@link #childNodes()} to get Text nodes.
      * @return child text nodes. If this element has no text nodes, returns an
      * empty list.
-     * <p/>
+     * </p>
      * For example, with the input HTML: {@code <p>One <span>Two</span> Three <br> Four</p>} with the {@code p} element selected:
      * <ul>
      *     <li>{@code p.text()} = {@code "One Two Three Four"}</li>
@@ -214,8 +216,9 @@ public class Element extends Node {
 
     /**
      * Get this element's child data nodes. The list is unmodifiable but the data nodes may be manipulated.
-     * <p/>
+     * <p>
      * This is effectively a filter on {@link #childNodes()} to get Data nodes.
+     * </p>
      * @return child data nodes. If this element has no data nodes, returns an
      * empty list.
      * @see #data()
@@ -232,16 +235,18 @@ public class Element extends Node {
     /**
      * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
      * may include this element, or any of its children.
-     * <p/>
+     * <p>
      * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined, e.g.:
+     * </p>
      * <ul>
      * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
      * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
      * </ul>
-     * <p/>
+     * <p>
      * See the query syntax documentation in {@link org.jsoup.select.Selector}.
-     *
+     * </p>
+     * 
      * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector
@@ -262,7 +267,7 @@ public class Element extends Node {
         // was - Node#addChildren(child). short-circuits an array create and a loop.
         reparentChild(child);
         childNodes.add(child);
-        child.setSiblingIndex(childNodes.size()-1);
+        child.setSiblingIndex(childNodes.size() - 1);
         return this;
     }
 
@@ -447,9 +452,11 @@ public class Element extends Node {
 
     /**
      * Get a CSS selector that will uniquely select this element.
-     * <p/>If the element has an ID, returns #id;
-     * otherwise returns the parent (if any) CSS selector, followed by '>',
+     * <p>
+     * If the element has an ID, returns #id;
+     * otherwise returns the parent (if any) CSS selector, followed by {@literal '>'},
      * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     * </p>
      *
      * @return the CSS Path that can be used to retrieve the element in a selector.
      */
@@ -493,8 +500,9 @@ public class Element extends Node {
     /**
      * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s, 
      * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
-     * <p/>
+     * <p>
      * This is similar to {@link #nextSibling()}, but specifically finds only Elements
+     * </p>
      * @return the next element, or null if there is no next element
      * @see #previousElementSibling()
      */
@@ -975,7 +983,7 @@ public class Element extends Node {
 
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
-     * separated. (E.g. on <code>&lt;div class="header gray"></code> returns, "<code>header gray</code>")
+     * separated. (E.g. on <code>&lt;div class="header gray"&gt;</code> returns, "<code>header gray</code>")
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
@@ -983,7 +991,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
+     * Get all of the element's class names. E.g. on element {@code <div class="header gray">},
      * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
      * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
@@ -1158,12 +1166,17 @@ public class Element extends Node {
 
     @Override
     public boolean equals(Object o) {
-        return this == o;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Element element = (Element) o;
+
+        return tag.equals(element.tag);
     }
 
     @Override
     public int hashCode() {
-        // todo: fixup, not very useful
         int result = super.hashCode();
         result = 31 * result + (tag != null ? tag.hashCode() : 0);
         return result;
@@ -1171,7 +1184,6 @@ public class Element extends Node {
 
     @Override
     public Element clone() {
-        Element clone = (Element) super.clone();
-        return clone;
+        return (Element) super.clone();
     }
 }

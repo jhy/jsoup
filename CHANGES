@@ -25,6 +25,9 @@ jsoup changelog
 
  * Added support for HTTP method verbs PUT, DELETE, and PATCH.
 
+ * Added support for overriding the default POST character of UTF-8
+   <https://github.com/jhy/jsoup/pull/491>
+
  * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
 
  * In the HtmlToPlainText example program, added the ability to filter using a CSS selector. Also clarified
@@ -34,11 +37,36 @@ jsoup changelog
    <https://github.com/jhy/jsoup/pull/377>
 
  * Fixed an issue where <option> tags would be missed when preparing a form for submission if missing a selected
-    attribute.
+   attribute.
+
+ * Fixed an issue where submitting a form would incorrectly include radio and checkbox values without the checked
+   attribute.
 
  * Fixed an issue where Element.classNames() would return a set containing an empty class; and may have extraneous
    whitespace.
-    <https://github.com/jhy/jsoup/pull/469>
+   <https://github.com/jhy/jsoup/pull/469>
+
+ * Fixed an issue where attributes selected by value were not correctly space normalized.
+   <https://github.com/jhy/jsoup/pull/526>
+
+ * In head+noscript elements, treat content as character data, instead of jumping out of head parsing.
+   <https://github.com/jhy/jsoup/pull/540>
+
+ * Fixed performance issue when parsing HTML with elements with many children that need re-parenting.
+   <https://github.com/jhy/jsoup/pull/506>
+
+ * Fixed an issue where a server returning an unsupport character set response would cause a runtime
+   UnsupportedCharsetException, instead of falling back to the default UTF-8 charset.
+   <https://github.com/jhy/jsoup/pull/509>
+
+ * Fixed an issue where Jsoup.Connection would throw an IO Exception when reading a page with zero content-length.
+   <https://github.com/jhy/jsoup/issues/538>
+
+ * Improved the equals() and hashcode() methods in Node, to consider all their child content, for DOM tree comparisons.
+   <https://github.com/jhy/jsoup/issues/537>
+
+ * Improved performance in Selector when searching multiple roots.
+   <https://github.com/jhy/jsoup/issues/518>
 
 *** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
@@ -127,7 +155,7 @@ jsoup changelog
  * Fixed an issue when connecting or redirecting to a URL that contains a space.
    <https://github.com/jhy/jsoup/pull/354> <https://github.com/jhy/jsoup/issues/114>
 
- * Added support for the HTTP/1.1 Tempory Redirect (307) status code.
+ * Added support for the HTTP/1.1 Temporary Redirect (307) status code.
    <https://github.com/jhy/jsoup/issues/452>
 
 *** Release 1.7.2 [2013-Jan-27]

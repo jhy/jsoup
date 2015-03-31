@@ -17,12 +17,14 @@ import java.io.IOException;
  * HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
  * plain-text. That is divergent from the general goal of jsoup's .text() methods, which is to get clean data from a
  * scrape.
- * <p/>
+ * <p>
  * Note that this is a fairly simplistic formatter -- for real world use you'll want to embrace and extend.
- * <p/>
- * To invoke from the command line, assuming you've downloaded the jsoup jar to your current directory:<br/>
- * <code>java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]</code><br/>
+ * </p>
+ * <p>
+ * To invoke from the command line, assuming you've downloaded the jsoup jar to your current directory:</p>
+ * <p><code>java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]</code></p>
  * where <i>url</i> is the URL to fetch, and <i>selector</i> is an optional CSS selector.
+ * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class HtmlToPlainText {

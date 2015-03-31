@@ -186,8 +186,8 @@ enum HtmlTreeBuilderState {
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            tb.processEndTag("noscript");
-            return tb.process(t);
+            tb.insert(new Token.Character().data(t.toString()));
+            return true;
         }
     },
     AfterHead {
@@ -634,7 +634,6 @@ enum HtmlTreeBuilderState {
                         return anyOtherEndTag(t, tb);
                     } else if (StringUtil.in(name, Constants.InBodyEndAdoptionFormatters)) {
                         // Adoption Agency Algorithm.
-                        OUTER:
                         for (int i = 0; i < 8; i++) {
                             Element formatEl = tb.getActiveFormattingElement(name);
                             if (formatEl == null)
@@ -676,15 +675,14 @@ enum HtmlTreeBuilderState {
                             // does that mean: int pos of format el in list?
                             Element node = furthestBlock;
                             Element lastNode = furthestBlock;
-                            INNER:
                             for (int j = 0; j < 3; j++) {
                                 if (tb.onStack(node))
                                     node = tb.aboveOnStack(node);
                                 if (!tb.isInActiveFormattingElements(node)) { // note no bookmark check
                                     tb.removeFromStack(node);
-                                    continue INNER;
+                                    continue;
                                 } else if (node == formatEl)
-                                    break INNER;
+                                    break;
 
                                 Element replacement = new Element(Tag.valueOf(node.nodeName()), tb.getBaseUri());
                                 tb.replaceActiveFormattingElement(node, replacement);
