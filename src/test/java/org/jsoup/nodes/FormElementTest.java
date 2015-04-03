@@ -29,6 +29,7 @@ public class FormElementTest {
                 "<option value='four' selected><option value='five' selected><textarea name=six>seven</textarea>" +
                 "<input name='seven' type='radio' value='on' checked><input name='seven' type='radio' value='off'>" +
                 "<input name='eight' type='checkbox' checked><input name='nine' type='checkbox' value='unset'>" +
+                "<input name='ten' value='text' disabled>" +
                 "</form>";
         Document doc = Jsoup.parse(html);
         FormElement form = (FormElement) doc.select("form").first();
@@ -39,8 +40,10 @@ public class FormElementTest {
         assertEquals("three=four", data.get(1).toString());
         assertEquals("three=five", data.get(2).toString());
         assertEquals("six=seven", data.get(3).toString());
-        assertEquals("seven=on", data.get(4).toString());
-        assertEquals("eight=", data.get(5).toString());
+        assertEquals("seven=on", data.get(4).toString()); // set
+        assertEquals("eight=on", data.get(5).toString()); // default
+        // nine should not appear, not checked checkbox
+        // ten should not appear, disabled
     }
 
     @Test public void createsSubmitableConnection() {
@@ -110,5 +113,13 @@ public class FormElementTest {
 
         List<Connection.KeyVal> data = form.formData();
         assertEquals("foo=bar", data.get(0).toString());
+    }
+
+    @Test public void usesOnForCheckboxValueIfNoValueSet() {
+        Document doc = Jsoup.parse("<form><input type=checkbox checked name=foo></form>");
+        FormElement form = (FormElement) doc.select("form").first();
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals("on", data.get(0).value());
+        assertEquals("foo", data.get(0).key());
     }
 }
