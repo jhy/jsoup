@@ -126,6 +126,9 @@ jsoup changelog
    <https://github.com/jhy/jsoup/issues/299>
    <https://github.com/jhy/jsoup/issues/388>
 
+ * In FormElements, don't submit disabled inputs, and use 'on' as checkbox value default.
+   <https://github.com/jhy/jsoup/issues/489>
+
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
    with Jsoup.Connect.
