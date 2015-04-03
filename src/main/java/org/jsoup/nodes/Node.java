@@ -499,10 +499,9 @@ public abstract class Node implements Cloneable {
             return null; // root
         
         List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
-        if (siblings.size() > index+1)
-            return siblings.get(index+1);
+        int index = siblingIndex();
+        if (siblings.size() > ++index)
+            return siblings.get(index);
         else
             return null;
     }
@@ -516,8 +515,7 @@ public abstract class Node implements Cloneable {
             return null; // root
 
         List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
+        int index = siblingIndex();
         if (index > 0)
             return siblings.get(index-1);
         else
@@ -555,7 +553,11 @@ public abstract class Node implements Cloneable {
      @return HTML
      */
     public String outerHtml() {
-        StringBuilder accum = new StringBuilder(128);
+        return outerHtml(128);
+    }
+
+    public String outerHtml(int initLength) {
+        StringBuilder accum = new StringBuilder(initLength);
         outerHtml(accum);
         return accum.toString();
     }
