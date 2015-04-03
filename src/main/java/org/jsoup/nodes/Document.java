@@ -191,6 +191,11 @@ public class Document extends Element {
         return super.html(); // no outer wrapper tag
     }
 
+    @Override
+    public String outerHtml(int initLength) {
+        return super.html(initLength);
+    }
+
     /**
      Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
      @param text unencoded text
