@@ -83,6 +83,7 @@ public class Entities {
         boolean reachedNonWhite = false;
         EscapeMode escapeMode = out.escapeMode();
         CharsetEncoder encoder = out.encoder();
+        boolean encIsUnicode = encoder.charset().name().toUpperCase().startsWith("UTF-");
         Map<Character, String> map = escapeMode.getMap();
         final int length = string.length();
 
@@ -135,7 +136,7 @@ public class Entities {
                             accum.append(c);
                         break;
                     default:
-                        if (encoder.canEncode(c))
+                        if (encIsUnicode || encoder.canEncode(c))
                             accum.append(c);
                         else if (map.containsKey(c))
                             accum.append('&').append(map.get(c)).append(';');
@@ -144,7 +145,7 @@ public class Entities {
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));
-                if (encoder.canEncode(c))
+                if (encIsUnicode || encoder.canEncode(c))
                     accum.append(c);
                 else
                     accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
