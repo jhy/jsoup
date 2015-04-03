@@ -1143,6 +1143,12 @@ public class Element extends Node {
         return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
     }
 
+    public String html(int initLength) {
+        StringBuilder accum = new StringBuilder(initLength);
+        html(accum);
+        return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
+    }
+
     private void html(StringBuilder accum) {
         for (Node node : childNodes)
             node.outerHtml(accum);
