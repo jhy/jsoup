@@ -103,8 +103,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        String id = attr("id");
-        return id == null ? "" : id;
+        return attributes.get("id");
     }
 
     /**
