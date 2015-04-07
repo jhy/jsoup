@@ -20,6 +20,9 @@ import java.util.regex.PatternSyntaxException;
  */
 public class Element extends Node {
     private Tag tag;
+
+    private static final Pattern classSplit = Pattern.compile("\\s+");
+
     /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
@@ -100,8 +103,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        String id = attr("id");
-        return id == null ? "" : id;
+        return attributes.get("id");
     }
 
     /**
@@ -997,7 +999,7 @@ public class Element extends Node {
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
-    	String[] names = className().split("\\s+");
+    	String[] names = classSplit.split(className());
     	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
     	classNames.remove(""); // if classNames() was empty, would include an empty class
 
@@ -1020,12 +1022,25 @@ public class Element extends Node {
      * @param className name of class to check for
      * @return true if it does, false if not
      */
+    /*
+    Used by common .class selector, so perf tweaked to reduce object creation vs hitting classnames().
+
+    Wiki: 71, 13 (5.4x)
+    CNN: 227, 91 (2.5x)
+    Alterslash: 59, 4 (14.8x)
+    Jsoup: 14, 1 (14x)
+    */
     public boolean hasClass(String className) {
-        Set<String> classNames = classNames();
-        for (String name : classNames) {
+        String classAttr = attributes.get("class");
+        if (classAttr.equals("") || classAttr.length() < className.length())
+            return false;
+
+        final String[] classes = classSplit.split(classAttr);
+        for (String name : classes) {
             if (className.equalsIgnoreCase(name))
                 return true;
         }
+
         return false;
     }
 

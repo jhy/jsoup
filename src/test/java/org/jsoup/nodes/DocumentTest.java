@@ -3,15 +3,16 @@ package org.jsoup.nodes;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
-import org.junit.Test;
+import org.jsoup.nodes.Document.OutputSettings.Syntax;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import org.junit.Ignore;
-
-import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  Tests for Document.
@@ -149,6 +150,17 @@ public class DocumentTest {
 
         Document doc = Jsoup.parse(builder.toString());
         doc.clone();
+    }
+
+    @Test public void DocumentsWithSameContentAreEqual() throws Exception {
+        Document docA = Jsoup.parse("<div/>One");
+        Document docB = Jsoup.parse("<div/>One");
+        Document docC = Jsoup.parse("<div/>Two");
+
+        assertEquals(docA, docB);
+        assertFalse(docA.equals(docC));
+        assertEquals(docA.hashCode(), docB.hashCode());
+        assertFalse(docA.hashCode() == docC.hashCode());
     }
     
     @Test

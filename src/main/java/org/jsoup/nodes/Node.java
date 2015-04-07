@@ -289,7 +289,7 @@ public abstract class Node implements Cloneable {
      * @see #after(String)
      */
     public Node before(String html) {
-        addSiblingHtml(siblingIndex(), html);
+        addSiblingHtml(siblingIndex, html);
         return this;
     }
 
@@ -303,7 +303,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex(), node);
+        parentNode.addChildren(siblingIndex, node);
         return this;
     }
 
@@ -314,7 +314,7 @@ public abstract class Node implements Cloneable {
      * @see #before(String)
      */
     public Node after(String html) {
-        addSiblingHtml(siblingIndex() + 1, html);
+        addSiblingHtml(siblingIndex + 1, html);
         return this;
     }
 
@@ -328,7 +328,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex() + 1, node);
+        parentNode.addChildren(siblingIndex + 1, node);
         return this;
     }
 
@@ -389,9 +389,8 @@ public abstract class Node implements Cloneable {
     public Node unwrap() {
         Validate.notNull(parentNode);
 
-        int index = siblingIndex;
         Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
-        parentNode.addChildren(index, this.childNodesAsArray());
+        parentNode.addChildren(siblingIndex, this.childNodesAsArray());
         this.remove();
 
         return firstChild;
@@ -427,7 +426,7 @@ public abstract class Node implements Cloneable {
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
         
-        Integer index = out.siblingIndex();
+        final int index = out.siblingIndex;
         childNodes.set(index, in);
         in.parentNode = this;
         in.setSiblingIndex(index);
@@ -436,7 +435,7 @@ public abstract class Node implements Cloneable {
 
     protected void removeChild(Node out) {
         Validate.isTrue(out.parentNode == this);
-        int index = out.siblingIndex();
+        final int index = out.siblingIndex;
         childNodes.remove(index);
         reindexChildren(index);
         out.parentNode = null;
@@ -498,11 +497,10 @@ public abstract class Node implements Cloneable {
         if (parentNode == null)
             return null; // root
         
-        List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
-        if (siblings.size() > index+1)
-            return siblings.get(index+1);
+        final List<Node> siblings = parentNode.childNodes;
+        final int index = siblingIndex+1;
+        if (siblings.size() > index)
+            return siblings.get(index);
         else
             return null;
     }
@@ -515,11 +513,8 @@ public abstract class Node implements Cloneable {
         if (parentNode == null)
             return null; // root
 
-        List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
-        if (index > 0)
-            return siblings.get(index-1);
+        if (siblingIndex > 0)
+            return parentNode.childNodes.get(siblingIndex-1);
         else
             return null;
     }

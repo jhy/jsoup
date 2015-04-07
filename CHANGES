@@ -4,6 +4,13 @@ jsoup changelog
  * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
    speed increase. For non-Android JREs, around 1.1x to 1.2x.
 
+ * Dramatic performance improvement in HTML serialization on Android (KitKat and later), of 115x. Improvement by working
+   around a character set encoding speed regression in Android.
+   <https://github.com/jhy/jsoup/issues/383>
+
+ * Performance improvement for the class name selector on Android (.class) of 2.5x to 14x. Around 1.2x
+   on non-Android JREs.
+
  * File upload support. Added the ability to specify input streams for POST data, which will upload content in
    MIME multipart/form-data encoding.
 
@@ -125,6 +132,9 @@ jsoup changelog
  * Fixed support for allowing script tags in cleaner whitelists.
    <https://github.com/jhy/jsoup/issues/299>
    <https://github.com/jhy/jsoup/issues/388>
+
+ * In FormElements, don't submit disabled inputs, and use 'on' as checkbox value default.
+   <https://github.com/jhy/jsoup/issues/489>
 
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
