@@ -310,58 +310,53 @@ public class Document extends Element {
      * </ul>
      */
     private void ensureMetaCharset() {
-        if( updateMetaCharset == true ) {
+        if (updateMetaCharset == true) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
-            
-            if( syntax == OutputSettings.Syntax.html ) {
+
+            if (syntax == OutputSettings.Syntax.html) {
                 Element metaCharset = select("meta[charset]").first();
 
-                if( metaCharset != null ) {
+                if (metaCharset != null) {
                     metaCharset.attr("charset", charset().displayName());
-                }
-                else {
+                } else {
                     Element head = head();
 
-                    if( head != null ) {
+                    if (head != null) {
                         head.appendElement("meta").attr("charset", charset().displayName());
                     }
                 }
 
                 // Remove obsolete elements
                 select("meta[name=charset]").remove();
-            }
-            else if( syntax == OutputSettings.Syntax.xml ) {
+            } else if (syntax == OutputSettings.Syntax.xml) {
                 Node node = childNodes().get(0);
-                
-                if( node instanceof XmlDeclaration ) {
+
+                if (node instanceof XmlDeclaration) {
                     XmlDeclaration decl = (XmlDeclaration) node;
-                    
-                    if( decl.attr(XmlDeclaration.DECL_KEY).equals("xml") ) {
+
+                    if (decl.attr(XmlDeclaration.DECL_KEY).equals("xml")) {
                         decl.attr("encoding", charset().displayName());
 
                         final String version = decl.attr("version");
 
-                        if( version != null ) {
+                        if (version != null) {
                             decl.attr("version", "1.0");
                         }
-                    }
-                    else {
+                    } else {
                         decl = new XmlDeclaration("xml", baseUri, false);
                         decl.attr("version", "1.0");
                         decl.attr("encoding", charset().displayName());
-                        
+
                         prependChild(decl);
                     }
-                }
-                else {
+                } else {
                     XmlDeclaration decl = new XmlDeclaration("xml", baseUri, false);
                     decl.attr("version", "1.0");
                     decl.attr("encoding", charset().displayName());
-                    
+
                     prependChild(decl);
                 }
-            }
-            else {
+            } else {
                 // Unsupported syntax - nothing to do yet
             }
         }
