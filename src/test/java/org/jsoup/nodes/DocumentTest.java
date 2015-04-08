@@ -53,7 +53,7 @@ public class DocumentTest {
         Document doc = Jsoup.parse("<p title=π>π & < > </p>");
         // default is utf-8
         assertEquals("<p title=\"π\">π &amp; &lt; &gt; </p>", doc.body().html());
-        assertEquals("UTF-8", doc.outputSettings().charset().displayName());
+        assertEquals("UTF-8", doc.outputSettings().charset().name());
 
         doc.outputSettings().charset("ascii");
         assertEquals(Entities.EscapeMode.base, doc.outputSettings().escapeMode());
