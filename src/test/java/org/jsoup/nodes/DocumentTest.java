@@ -178,7 +178,7 @@ public class DocumentTest {
         assertEquals(htmlCharsetUTF8, doc.toString());
         
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals(charsetUtf8, doc.charset().displayName());
+        assertEquals(charsetUtf8, doc.charset().name());
         assertEquals(charsetUtf8, selectedElement.attr("charset"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
@@ -198,7 +198,7 @@ public class DocumentTest {
         assertEquals(htmlCharsetISO, doc.toString());
         
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals(charsetIso8859, doc.charset().displayName());
+        assertEquals(charsetIso8859, doc.charset().name());
         assertEquals(charsetIso8859, selectedElement.attr("charset"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
@@ -295,7 +295,7 @@ public class DocumentTest {
         assertEquals(xmlCharsetUTF8, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
-        assertEquals(charsetUtf8, doc.charset().displayName());
+        assertEquals(charsetUtf8, doc.charset().name());
         assertEquals(charsetUtf8, selectedNode.attr("encoding"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
@@ -313,7 +313,7 @@ public class DocumentTest {
         assertEquals(xmlCharsetISO, doc.toString());
         
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
-        assertEquals(charsetIso8859, doc.charset().displayName());
+        assertEquals(charsetIso8859, doc.charset().name());
         assertEquals(charsetIso8859, selectedNode.attr("encoding"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
