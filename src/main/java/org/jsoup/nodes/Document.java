@@ -129,7 +129,7 @@ public class Document extends Element {
         normaliseStructure("head", htmlEl);
         normaliseStructure("body", htmlEl);
         
-        ensureMetaCharset();
+        ensureMetaCharsetElement();
         
         return this;
     }
@@ -217,7 +217,7 @@ public class Document extends Element {
      * charset / encoding element within the document.
      * 
      * <p>This enables
-     * {@link #updateMetaCharset(boolean) meta charset update}.</p>
+     * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
      * 
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
@@ -231,13 +231,13 @@ public class Document extends Element {
      * 
      * @param charset Charset
      * 
-     * @see #updateMetaCharset(boolean) 
+     * @see #updateMetaCharsetElement(boolean) 
      * @see OutputSettings#charset(java.nio.charset.Charset) 
      */
     public void charset(Charset charset) {
-        updateMetaCharset(true);
+        Document.this.updateMetaCharsetElement(true);
         outputSettings.charset(charset);
-        ensureMetaCharset();
+        ensureMetaCharsetElement();
     }
     
     /**
@@ -265,7 +265,7 @@ public class Document extends Element {
      * 
      * @see #charset(java.nio.charset.Charset) 
      */
-    public void updateMetaCharset(boolean update) {
+    public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = true;
     }
     
@@ -277,7 +277,7 @@ public class Document extends Element {
      * @return Returns <tt>true</tt> if the element is updated on charset
      * changes, <tt>false</tt> if not
      */
-    public boolean updateMetaCharset() {
+    public boolean updateMetaCharsetElement() {
         return updateMetaCharset;
     }
 
@@ -290,9 +290,9 @@ public class Document extends Element {
     
     /**
      * Ensures a meta charset (html) or xml declaration (xml) with the current
-     * encoding used. This only applies with {@link #updateMetaCharset(boolean)
-     * updateMetaCharset} set to <tt>true</tt>, otherwise this method does
-     * nothing.
+     * encoding used. This only applies with
+     * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
+     * <tt>true</tt>, otherwise this method does nothing.
      * 
      * <ul>
      * <li>An exsiting element gets updated with the current charset</li>
@@ -307,7 +307,7 @@ public class Document extends Element {
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
      * </ul>
      */
-    private void ensureMetaCharset() {
+    private void ensureMetaCharsetElement() {
         if (updateMetaCharset == true) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
 

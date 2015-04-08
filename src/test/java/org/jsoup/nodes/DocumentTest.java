@@ -163,7 +163,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateUtf8() {
         final Document doc = createHtmlDocument("changeThis");
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
         final String htmlCharsetUTF8 = "<html>\n" +
@@ -183,7 +183,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateIso8859() {
         final Document doc = createHtmlDocument("changeThis");
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetIso8859));
         
         final String htmlCharsetISO = "<html>\n" +
@@ -203,7 +203,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateNoCharset() {
         final Document docNoCharset = Document.createShell("");
-        docNoCharset.updateMetaCharset(true);
+        docNoCharset.updateMetaCharsetElement(true);
         docNoCharset.charset(Charset.forName(charsetUtf8));
         
         assertEquals(charsetUtf8, docNoCharset.select("meta[charset]").first().attr("charset"));
@@ -264,7 +264,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateCleanup() {
         final Document doc = createHtmlDocument("dontTouch");
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
         final String htmlCharsetUTF8 = "<html>\n" +
@@ -280,7 +280,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateXmlUtf8() {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
         final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
@@ -298,7 +298,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateXmlIso8859() {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetIso8859));
         
         final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\">\n" +
@@ -316,7 +316,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateXmlNoCharset() {
         final Document doc = createXmlDocument("1.0", "none", false);
-        doc.updateMetaCharset(true);
+        doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
         final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
@@ -357,7 +357,7 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdatedDisabledPerDefault() {
         final Document doc = createHtmlDocument("none");
-        assertFalse(doc.updateMetaCharset());
+        assertFalse(doc.updateMetaCharsetElement());
     }
     
     private Document createHtmlDocument(String charset) {
