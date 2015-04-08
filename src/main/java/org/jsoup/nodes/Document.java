@@ -216,11 +216,8 @@ public class Document extends Element {
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
      * 
-     * <p>This only applies if {@link #updateMetaCharset(boolean)
-     * updateMetaCharset} set to <tt>true</tt>; otherwise there are no elements
-     * changed and the new value is delegated to
-     * {@link OutputSettings#charset(java.nio.charset.Charset) 
-     * OutputSettings.charset(Charset)} only.</p>
+     * <p>This enables
+     * {@link #updateMetaCharset(boolean) meta charset update}.</p>
      * 
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
@@ -238,6 +235,7 @@ public class Document extends Element {
      * @see OutputSettings#charset(java.nio.charset.Charset) 
      */
     public void charset(Charset charset) {
+        updateMetaCharset(true);
         outputSettings.charset(charset);
         ensureMetaCharset();
     }

@@ -7,10 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -255,15 +252,13 @@ public class DocumentTest {
     }
     
     @Test
-    public void testMetaCharsetUpdateDisabledNoChangesAfterUpdate() {
+    public void testMetaCharsetUpdateEnabledAfterCharsetChange() {
         final Document doc = createHtmlDocument("dontTouch");
         doc.charset(Charset.forName(charsetUtf8));
         
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals("dontTouch", selectedElement.attr("charset"));
-        
-        selectedElement = doc.select("meta[name=charset]").first();
-        assertEquals("dontTouch", selectedElement.attr("content"));
+        assertEquals(charsetUtf8, selectedElement.attr("charset"));
+        assertTrue(doc.select("meta[name=charset]").isEmpty());
     }
             
     @Test
