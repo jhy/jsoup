@@ -235,7 +235,7 @@ public class Document extends Element {
      * @see OutputSettings#charset(java.nio.charset.Charset) 
      */
     public void charset(Charset charset) {
-        Document.this.updateMetaCharsetElement(true);
+        updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
