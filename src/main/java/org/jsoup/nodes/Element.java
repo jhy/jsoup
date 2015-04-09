@@ -252,6 +252,7 @@ public class Element extends Node {
      * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector
+     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public Elements select(String cssQuery) {
         return Selector.select(cssQuery, this);
