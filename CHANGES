@@ -14,6 +14,10 @@ jsoup changelog
  * File upload support. Added the ability to specify input streams for POST data, which will upload content in
    MIME multipart/form-data encoding.
 
+ * Add a meta-charset element to documents when setting the character set, so that the document's charset is
+   unambiguous.
+   <https://github.com/jhy/jsoup/pull/486>
+
  * Added ability to disable TLS (SSL) certificate validation. Helpful if you're hitting a host with a bad cert,
    or your JDK doesn't support SNI.
    <https://github.com/jhy/jsoup/pull/343>
