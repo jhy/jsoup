@@ -17,18 +17,6 @@ abstract class Token {
         return this.getClass().getSimpleName();
     }
 
-    /**
-     * Reset the data represent by this token, for reuse. Prevents the need to create transfer objects for every
-     * piece of data, which immediately get GCed.
-     */
-    abstract Token reset();
-
-    static void reset(StringBuilder sb) {
-        if (sb != null) {
-            sb.delete(0, sb.length());
-        }
-    }
-
     static final class Doctype extends Token {
         final StringBuilder name = new StringBuilder();
         final StringBuilder publicIdentifier = new StringBuilder();
@@ -37,15 +25,6 @@ abstract class Token {
 
         Doctype() {
             type = TokenType.Doctype;
-        }
-
-        @Override
-        Token reset() {
-            reset(name);
-            reset(publicIdentifier);
-            reset(systemIdentifier);
-            forceQuirks = false;
-            return this;
         }
 
         String getName() {
@@ -68,21 +47,10 @@ abstract class Token {
     static abstract class Tag extends Token {
         protected String tagName;
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
-        private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
-        private boolean hasPendingAttributeValue = false;
+        private StringBuilder pendingAttributeValue; // but values are accumulated, from e.g. & in hrefs
+
         boolean selfClosing = false;
         Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
-
-        @Override
-        Tag reset() {
-            tagName = null;
-            pendingAttributeName = null;
-            reset(pendingAttributeValue);
-            hasPendingAttributeValue = false;
-            selfClosing = false;
-            attributes = null;
-            return this;
-        }
 
         final void newAttribute() {
             if (attributes == null)
@@ -90,14 +58,15 @@ abstract class Token {
 
             if (pendingAttributeName != null) {
                 Attribute attribute;
-                if (!hasPendingAttributeValue)
+                if (pendingAttributeValue == null)
                     attribute = new Attribute(pendingAttributeName, "");
                 else
                     attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
-            reset(pendingAttributeValue);
+            if (pendingAttributeValue != null)
+                pendingAttributeValue.delete(0, pendingAttributeValue.length());
         }
 
         final void finaliseTag() {
@@ -160,7 +129,8 @@ abstract class Token {
         }
 
         private void ensureAttributeValue() {
-            hasPendingAttributeValue = true;
+            if (pendingAttributeValue == null)
+                pendingAttributeValue = new StringBuilder();
         }
     }
 
@@ -171,18 +141,15 @@ abstract class Token {
             type = TokenType.StartTag;
         }
 
-        @Override
-        Tag reset() {
-            super.reset();
-            attributes = new Attributes();
-            // todo - would prefer these to be null, but need to check Element assertions
-            return this;
+        StartTag(String name) {
+            this();
+            this.tagName = name;
         }
 
-        StartTag nameAttr(String name, Attributes attributes) {
+        StartTag(String name, Attributes attributes) {
+            this();
             this.tagName = name;
             this.attributes = attributes;
-            return this;
         }
 
         @Override
@@ -200,6 +167,11 @@ abstract class Token {
             type = TokenType.EndTag;
         }
 
+        EndTag(String name) {
+            this();
+            this.tagName = name;
+        }
+
         @Override
         public String toString() {
             return "</" + name() + ">";
@@ -209,13 +181,6 @@ abstract class Token {
     final static class Comment extends Token {
         final StringBuilder data = new StringBuilder();
         boolean bogus = false;
-
-        @Override
-        Token reset() {
-            reset(data);
-            bogus = false;
-            return this;
-        }
 
         Comment() {
             type = TokenType.Comment;
@@ -232,22 +197,11 @@ abstract class Token {
     }
 
     final static class Character extends Token {
-        private String data;
+        private final String data;
 
-        Character() {
-            super();
+        Character(String data) {
             type = TokenType.Character;
-        }
-
-        @Override
-        Token reset() {
-            data = null;
-            return this;
-        }
-
-        Character data(String data) {
             this.data = data;
-            return this;
         }
 
         String getData() {
@@ -263,11 +217,6 @@ abstract class Token {
     final static class EOF extends Token {
         EOF() {
             type = Token.TokenType.EOF;
-        }
-
-        @Override
-        Token reset() {
-            return this;
         }
     }
 

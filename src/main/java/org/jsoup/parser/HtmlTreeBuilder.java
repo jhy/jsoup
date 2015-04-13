@@ -37,8 +37,7 @@ class HtmlTreeBuilder extends TreeBuilder {
     private FormElement formElement; // the current form element
     private Element contextElement; // fragment parse context -- could be null even if fragment parsing
     private ArrayList<Element> formattingElements = new ArrayList<Element>(); // active (open) formatting elements
-    private List<String> pendingTableCharacters = new ArrayList<String>(); // chars in table to be shifted out
-    private Token.EndTag emptyEnd = new Token.EndTag(); // reused empty end tag
+    private List<Token.Character> pendingTableCharacters = new ArrayList<Token.Character>(); // chars in table to be shifted out
 
     private boolean framesetOk = true; // if ok to go into frameset
     private boolean fosterInserts = false; // if next inserts should be fostered
@@ -175,7 +174,7 @@ class HtmlTreeBuilder extends TreeBuilder {
             Element el = insertEmpty(startTag);
             stack.add(el);
             tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
-            tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+            tokeniser.emit(new Token.EndTag(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
             return el;
         }
         
@@ -515,14 +514,14 @@ class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void newPendingTableCharacters() {
-        pendingTableCharacters = new ArrayList<String>();
+        pendingTableCharacters = new ArrayList<Token.Character>();
     }
 
-    List<String> getPendingTableCharacters() {
+    List<Token.Character> getPendingTableCharacters() {
         return pendingTableCharacters;
     }
 
-    void setPendingTableCharacters(List<String> pendingTableCharacters) {
+    void setPendingTableCharacters(List<Token.Character> pendingTableCharacters) {
         this.pendingTableCharacters = pendingTableCharacters;
     }
 
