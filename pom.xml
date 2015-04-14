@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.8.2</version>
   <description>jsoup HTML parser</description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
