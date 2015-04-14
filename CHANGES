@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.8.2 [PENDING]
+*** Release 1.8.2 [2015-Apr-13]
  * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
    speed increase. For non-Android JREs, around 1.1x to 1.2x.
 
