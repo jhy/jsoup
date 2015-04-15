@@ -21,6 +21,8 @@ import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -473,6 +475,8 @@ public class HttpConnection implements Connection {
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
+        private static final SimpleDateFormat EXPIRES_DATE_FORMAT = new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss 'GMT'",Locale.ENGLISH);
+		static{EXPIRES_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));}
         private static final int MAX_REDIRECTS = 20;
         private static SSLSocketFactory sslSocketFactory;
         private static final String LOCATION = "Location";
@@ -748,8 +752,22 @@ public class HttpConnection implements Connection {
                         if (cookieVal == null)
                             cookieVal = "";
                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
-                        // name not blank, value not null
-                        if (cookieName != null && cookieName.length() > 0)
+                        boolean isTimeout = false;
+                        //sessionhash=f5705ed70568da64daafbba58c7521d6; expires=Tue, 12-May-2015 08:22:26 GMT; path=/; domain=.liba.com
+                       
+                        if(Pattern.compile("(;|)\\s?expires\\s?=").matcher(value).find()){
+                        	 cd.chompTo("expires");
+                        	 cd.chompTo("=");
+                        	 String expiresDateStr = cd.chompTo(";");
+                        	 try {
+								Date expiresDate = EXPIRES_DATE_FORMAT.parse(expiresDateStr);
+								//过期 的时间就不保存..
+								isTimeout = expiresDate.before(new Date());
+                        	} catch (Exception e) {}
+                        }
+                        
+                        // date not timeout,name not blank, value not null
+                        if (!isTimeout && cookieName != null && cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
                 } else { // only take the first instance of each header
