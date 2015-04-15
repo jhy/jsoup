@@ -758,7 +758,7 @@ public class HttpConnection implements Connection {
                         if(Pattern.compile("(;|)\\s?expires\\s?=").matcher(value).find()){
                         	 cd.chompTo("expires");
                         	 cd.chompTo("=");
-                        	 String expiresDateStr = cd.chompTo(";");
+                        	 String expiresDateStr = cd.chompTo(";").trim();
                         	 try {
 								Date expiresDate = EXPIRES_DATE_FORMAT.parse(expiresDateStr);
 								//过期 的时间就不保存..
