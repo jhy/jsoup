@@ -308,7 +308,7 @@ public class Document extends Element {
      * </ul>
      */
     private void ensureMetaCharsetElement() {
-        if (updateMetaCharset == true) {
+        if (updateMetaCharset) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
 
             if (syntax == OutputSettings.Syntax.html) {
