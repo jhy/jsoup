@@ -266,7 +266,7 @@ public class Document extends Element {
      * @see #charset(java.nio.charset.Charset) 
      */
     public void updateMetaCharsetElement(boolean update) {
-        this.updateMetaCharset = true;
+        this.updateMetaCharset = update;
     }
     
     /**
@@ -562,10 +562,4 @@ public class Document extends Element {
         this.quirksMode = quirksMode;
         return this;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        return super.equals(o);
-    }
 }
-
