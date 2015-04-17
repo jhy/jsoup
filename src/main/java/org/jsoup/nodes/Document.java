@@ -551,7 +551,7 @@ public class Document extends Element {
     }
 
     public enum QuirksMode {
-        noQuirks, quirks, limitedQuirks;
+        noQuirks, quirks, limitedQuirks
     }
 
     public QuirksMode quirksMode() {
