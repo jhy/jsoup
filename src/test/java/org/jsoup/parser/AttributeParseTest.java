@@ -66,4 +66,16 @@ public class AttributeParseTest {
         Elements els = Jsoup.parse(html).select("a");
         assertEquals("&wr_id=123&mid-size=true&ok=&wr", els.first().attr("href"));
     }
+    
+    @Test public void parsesBooleanAttributes() {
+        String html = "<a normal=\"123\" boolean empty=\"\"></a>";
+        Element el = Jsoup.parse(html).select("a").first();
+        
+        assertEquals("123", el.attr("normal"));
+        assertEquals("", el.attr("boolean"));
+        assertEquals("", el.attr("empty"));
+        
+        assertEquals(html, el.outerHtml());
+    }
+    
 }

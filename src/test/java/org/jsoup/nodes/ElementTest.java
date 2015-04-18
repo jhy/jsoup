@@ -294,6 +294,22 @@ public class ElementTest {
             assertEquals(i, ps.get(i).siblingIndex);
         }
     }
+    
+    @Test public void testAddBooleanAttribute() {
+        Element div = new Element(Tag.valueOf("div"), "");
+        
+        div.attr("true", true);
+        
+        div.attr("false", "value");
+        div.attr("false", false);
+        
+        assertTrue(div.hasAttr("true"));
+        assertEquals("", div.attr("true"));
+        
+        assertFalse(div.hasAttr("false"));
+ 
+        assertEquals("<div true></div>", div.outerHtml());
+    }    
 
     @Test public void testAppendRowToTable() {
         Document doc = Jsoup.parse("<table><tr><td>1</td></tr></table>");
