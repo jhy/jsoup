@@ -132,7 +132,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         Attribute attribute = (Attribute) o;
 
         if (key != null ? !key.equals(attribute.key) : attribute.key != null) return false;
-        return !(value != null ? !value.equals(attribute.value) : attribute.value != null);
+        if (value != null ? !value.equals(attribute.value) : attribute.value != null) return false;
+
+        return true;
     }
 
     @Override

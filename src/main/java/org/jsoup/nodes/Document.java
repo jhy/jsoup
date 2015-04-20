@@ -266,7 +266,7 @@ public class Document extends Element {
      * @see #charset(java.nio.charset.Charset) 
      */
     public void updateMetaCharsetElement(boolean update) {
-        this.updateMetaCharset = update;
+        this.updateMetaCharset = true;
     }
     
     /**
@@ -308,7 +308,7 @@ public class Document extends Element {
      * </ul>
      */
     private void ensureMetaCharsetElement() {
-        if (updateMetaCharset) {
+        if (updateMetaCharset == true) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
 
             if (syntax == OutputSettings.Syntax.html) {
@@ -551,7 +551,7 @@ public class Document extends Element {
     }
 
     public enum QuirksMode {
-        noQuirks, quirks, limitedQuirks
+        noQuirks, quirks, limitedQuirks;
     }
 
     public QuirksMode quirksMode() {
@@ -562,4 +562,10 @@ public class Document extends Element {
         this.quirksMode = quirksMode;
         return this;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
 }
+

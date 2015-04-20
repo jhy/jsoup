@@ -315,7 +315,7 @@ abstract class Token {
         return type == TokenType.EOF;
     }
 
-    enum TokenType {
+    static enum TokenType {
         Doctype,
         StartTag,
         EndTag,
