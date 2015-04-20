@@ -6,12 +6,15 @@
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
   <version>1.8.2</version>
-  <description>jsoup HTML parser</description>
+  <description>
+  	jsoup HTML parser.
+  	Knowings maintenance branch forked from tag 1.8.2.
+  </description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
   <issueManagement>
   	<system>GitHub</system>
-  	<url>http://github.com/jhy/jsoup/issues</url>
+  	<url>http://github.com/KnowingsRD/jsoup/issues</url>
   </issueManagement>
   <licenses>
   	<license>
@@ -21,13 +24,13 @@
   	</license>  
   </licenses>
   <scm>
-  	<url>http://github.com/jhy/jsoup</url>
-    <connection>scm:git:http://github.com/jhy/jsoup.git</connection>
-    <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
+  	<url>https://github.com/KnowingsRD/jsoup</url>
+    <connection>scm:git:https://github.com/KnowingsRD/jsoup.git</connection>
+    <developerConnection>scm:git:https://github.com/KnowingsRD/jsoup.git</developerConnection>
   </scm>
   <organization>
-  	<name>Jonathan Hedley</name>
-  	<url>http://jonathanhedley.com/</url>
+  	<name>Knowings</name>
+  	<url>http://knowings.com/</url>
   </organization>
 
   <build>
@@ -141,19 +144,6 @@
     </resources>
   </build>
 
-  <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-    <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-
   <profiles>
     <profile>
       <id>release-sign-artifacts</id>
@@ -213,6 +203,12 @@
         <role>Lead Developer</role>
       </roles>
       <timezone>+11</timezone>
+    </developer>
+    <developer>
+      <id>knowings</id>
+      <name>Knowings R &amp; D</name>
+      <email>developers@knowings.com</email>
+      <timezone>+1</timezone>
     </developer>
   </developers>
 
