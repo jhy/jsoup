@@ -5,15 +5,19 @@ package org.jsoup.safety;
     this whitelist configuration, and the initial defaults.
  */
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -60,12 +64,17 @@ import java.util.Set;
  </p>
 
  @author Jonathan Hedley
+ @author knowings
  */
 public class Whitelist {
+	private static final AttributeKey HREF_ATTR = AttributeKey.valueOf("href");
+	private static final AttributeKey SRC_ATTR = AttributeKey.valueOf("src");
+	
     private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
+    private Map<TagName,Map<AttributeKey, Set<UrlDomain>>> domains; // allowed URL domains for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
@@ -192,6 +201,7 @@ public class Whitelist {
         attributes = new HashMap<TagName, Set<AttributeKey>>();
         enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
         protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
+        domains = new HashMap<TagName,Map<AttributeKey, Set<UrlDomain>>>();
         preserveRelativeLinks = false;
     }
 
@@ -438,6 +448,48 @@ public class Whitelist {
     }
 
     /**
+    Add allowed URL domain for an element's URL attribute. This restricts the possible values of the attribute to
+    URLs with the defined protocol.
+    <p>
+    E.g.: <code>addDomains("a", "href", "knowings.fr")</code>
+    </p>
+
+    @param tag       Tag the URL domain is for
+    @param key       Attribute key
+    @param domains List of valid domains
+    @return this, for chaining
+    */
+    public Whitelist addDomains(String tag, String key, String... domains) {
+    	Validate.notEmpty(tag);
+    	Validate.notEmpty(key);
+    	Validate.notNull(domains);
+
+    	TagName tagName = TagName.valueOf(tag);
+    	AttributeKey attrKey = AttributeKey.valueOf(key);
+    	Map<AttributeKey, Set<UrlDomain>> attrMap;
+    	Set<UrlDomain> domainSet;
+
+    	if (this.domains.containsKey(tagName)) {
+    		attrMap = this.domains.get(tagName);
+    	} else {
+    		attrMap = new HashMap<AttributeKey, Set<UrlDomain>>();
+    		this.domains.put(tagName, attrMap);
+    	}
+    	if (attrMap.containsKey(attrKey)) {
+    		domainSet = attrMap.get(attrKey);
+    	} else {
+    		domainSet = new HashSet<UrlDomain>();
+    		attrMap.put(attrKey, domainSet);
+    	}
+    	for (String domain : domains) {
+    		Validate.notEmpty(domain);
+    		UrlDomain urlDomain = UrlDomain.valueOf(domain);
+    		domainSet.add(urlDomain);
+    	}
+    	return this;
+   	}
+    
+    /**
      Remove allowed URL protocols for an element's URL attribute.
      <p>
      E.g.: <code>removeProtocols("a", "href", "ftp")</code>
@@ -475,6 +527,45 @@ public class Whitelist {
         }
         return this;
     }
+    
+    /**
+     Remove allowed URL protocols for an element's URL attribute.
+     <p>
+     E.g.: <code>removeDomains("a", "href", "knowings.fr")</code>
+     </p>
+
+     @param tag       Tag the URL protocol is for
+     @param key       Attribute key
+     @param domains List of invalid protocols
+     @return this, for chaining
+     */
+    public Whitelist removeDomains(String tag, String key, String... domains) {
+    	Validate.notEmpty(tag);
+    	Validate.notEmpty(key);
+    	Validate.notNull(domains);
+    	
+    	TagName tagName = TagName.valueOf(tag);
+    	AttributeKey attrKey = AttributeKey.valueOf(key);
+    	
+    	if(this.domains.containsKey(tagName)) {
+    		Map<AttributeKey, Set<UrlDomain>> attrMap = this.domains.get(tagName);
+    		if(attrMap.containsKey(attrKey)) {
+    			Set<UrlDomain> domainSet = attrMap.get(attrKey);
+    			for (String urlDomain : domains) {
+    				Validate.notEmpty(urlDomain);
+    				UrlDomain domain = UrlDomain.valueOf(urlDomain);
+    				domainSet.remove(domain);
+    			}
+    			
+    			if(domainSet.isEmpty()) { // Remove protocol set if empty
+    				attrMap.remove(attrKey);
+    				if(attrMap.isEmpty()) // Remove entry for tag if empty
+    					this.domains.remove(tagName);
+    			}
+    		}
+    	}
+    	return this;
+    }
 
     /**
      * Test if the supplied tag is allowed by this whitelist
@@ -483,6 +574,31 @@ public class Whitelist {
      */
     protected boolean isSafeTag(String tag) {
         return tagNames.contains(TagName.valueOf(tag));
+    }
+    
+    /**
+     * Test if the supplied tag is allowed by this whitelist
+     * @param tagElement test tag
+     * @return true if allowed
+     */
+    protected boolean isSafeTag(Element tagElement) {
+    	boolean isSafe = false;
+    	if (tagElement != null) {
+    		TagName tag = TagName.valueOf(tagElement.tagName());
+			if (tagNames.contains(tag)) {
+				isSafe = true;
+				if (domains.containsKey(tag)) {
+					Map<AttributeKey,Set<UrlDomain>> attrDomains = domains.get(tag);
+					if (tagElement.hasAttr(HREF_ATTR.toString()) && attrDomains.containsKey(HREF_ATTR)) {
+						isSafe = testValidDomain(tagElement, HREF_ATTR, attrDomains.get(HREF_ATTR));
+					}
+					else if (tagElement.hasAttr(SRC_ATTR.toString()) && attrDomains.containsKey(SRC_ATTR)) {
+						isSafe = testValidDomain(tagElement, SRC_ATTR, attrDomains.get(SRC_ATTR));
+					}
+				}
+			}
+		}
+    	return isSafe;
     }
 
     /**
@@ -539,7 +655,45 @@ public class Whitelist {
         }
         return false;
     }
-
+    
+    private boolean testValidDomain(Element el, AttributeKey attrKey, Set<UrlDomain> domains) {
+    	if (domains == null || domains.isEmpty()) {
+    		return true;
+    	}
+    	String _url = el.attr(attrKey.toString());
+    	if (StringUtil.isBlank(_url)) {
+    		return false;
+    	}
+    	if (_url.startsWith("#")) {
+    		return isValidAnchor(_url);
+    	}
+    	_url = el.absUrl(attrKey.toString());
+    	if (_url.length() == 0) {
+    		_url = el.attr(attrKey.toString());
+    		if (_url.startsWith("//")) {
+    			_url = "http:" + _url; 
+    		} else {
+    			_url = "http://" + _url;
+    		}
+    	}
+    	try {
+    		URL url = new URL(_url);
+    		String host = url.getHost();
+    		if (host != null) {
+    			Iterator<UrlDomain> it = domains.iterator();
+    			boolean isValid = false;
+    			while (it.hasNext() && !isValid) {
+    				UrlDomain domain = it.next();
+    				isValid = host.toLowerCase().endsWith(domain.toString().toLowerCase()); 
+    			}
+    			return isValid;
+    		}
+    	} catch(MalformedURLException ex) {
+    		// Can't get enough intel on the supplied url, it should return false.
+    	}
+    	return false;
+    }
+    
     private boolean isValidAnchor(String value) {
         return value.startsWith("#") && !value.matches(".*\\s.*");
     }
@@ -596,6 +750,16 @@ public class Whitelist {
         static Protocol valueOf(String value) {
             return new Protocol(value);
         }
+    }
+    
+    static class UrlDomain extends TypedValue {
+    	UrlDomain(String value) {
+    		super(value);
+    	}
+    	
+    	static UrlDomain valueOf(String value) {
+    		return new UrlDomain(value);
+    	}
     }
 
     abstract static class TypedValue {
