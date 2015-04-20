@@ -86,7 +86,7 @@ public class Cleaner {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
-                if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
+                if (whitelist.isSafeTag(sourceEl)) { // safe, clone and copy safe attrs
                     ElementMeta meta = createSafeElement(sourceEl);
                     Element destChild = meta.el;
                     destination.appendChild(destChild);
@@ -110,7 +110,7 @@ public class Cleaner {
         }
 
         public void tail(Node source, int depth) {
-            if (source instanceof Element && whitelist.isSafeTag(source.nodeName())) {
+            if (source instanceof Element && whitelist.isSafeTag((Element)source)) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
         }
