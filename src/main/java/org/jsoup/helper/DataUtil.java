@@ -162,8 +162,7 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
-        ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
-        return byteData;
+        return ByteBuffer.wrap(outStream.toByteArray());
     }
 
     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {

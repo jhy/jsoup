@@ -193,9 +193,7 @@ public class Tag {
         if (preserveWhitespace != tag.preserveWhitespace) return false;
         if (selfClosing != tag.selfClosing) return false;
         if (formList != tag.formList) return false;
-        if (formSubmit != tag.formSubmit) return false;
-
-        return true;
+        return formSubmit == tag.formSubmit;
     }
 
     @Override

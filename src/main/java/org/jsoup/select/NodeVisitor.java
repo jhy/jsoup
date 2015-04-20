@@ -18,7 +18,7 @@ public interface NodeVisitor {
      * @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node
      * of that will have depth 1.
      */
-    public void head(Node node, int depth);
+    void head(Node node, int depth);
 
     /**
      * Callback for when a node is last visited, after all of its descendants have been visited.
@@ -27,5 +27,5 @@ public interface NodeVisitor {
      * @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node
      * of that will have depth 1.
      */
-    public void tail(Node node, int depth);
+    void tail(Node node, int depth);
 }
