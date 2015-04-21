@@ -17,6 +17,7 @@ import java.util.regex.PatternSyntaxException;
  * From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
+ * @author sravan953
  */
 public class Element extends Node {
     private Tag tag;
@@ -185,6 +186,27 @@ public class Element extends Node {
         // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
         List<Element> elements = new ArrayList<Element>(childNodes.size());
         for (Node node : childNodes) {
+            if (node instanceof Element)
+                elements.add((Element) node);
+        }
+        return new Elements(elements);
+    }
+
+    /**
+     * Get a limited number of this element's child elements.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+     * </p>
+     * @param limit the number of Elements needed
+     * @return child elements. If this element has no children, returns an
+     * empty list.
+     * @see #childNodes()
+     */
+    public Elements children(int limit) {
+        // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
+        List<Element> elements = new ArrayList<Element>(limit);
+        for(int x = 0; x<limit; x++) {
+            Node node = childNodes.get(x);
             if (node instanceof Element)
                 elements.add((Element) node);
         }
