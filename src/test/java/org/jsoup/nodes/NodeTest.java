@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
 import org.junit.Test;
@@ -101,15 +102,18 @@ public class NodeTest {
     public void handlesAbsOnProtocolessAbsoluteUris() {
         Document doc1 = Jsoup.parse("<a href='//example.net/foo'>One</a>", "http://example.com/");
         Document doc2 = Jsoup.parse("<a href='//example.net/foo'>One</a>", "https://example.com/");
-
+        Document doc3 = Jsoup.parse("<a href='//example.net/foo'>One</a>");
+        
         Element one = doc1.select("a").first();
         Element two = doc2.select("a").first();
-
+        Element three = doc3.select("a").first();
+        
         assertEquals("http://example.net/foo", one.absUrl("href"));
         assertEquals("https://example.net/foo", two.absUrl("href"));
-
-        Document doc3 = Jsoup.parse("<img src=//www.google.com/images/errors/logo_sm.gif alt=Google>", "https://google.com");
-        assertEquals("https://www.google.com/images/errors/logo_sm.gif", doc3.select("img").attr("abs:src"));
+        assertTrue(StringUtil.isBlank(three.absUrl("href")));
+        
+        Document doc4 = Jsoup.parse("<img src=//www.google.com/images/errors/logo_sm.gif alt=Google>", "https://google.com");
+        assertEquals("https://www.google.com/images/errors/logo_sm.gif", doc4.select("img").attr("abs:src"));
     }
 
     /*

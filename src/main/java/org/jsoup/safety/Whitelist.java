@@ -451,10 +451,10 @@ public class Whitelist {
     Add allowed URL domain for an element's URL attribute. This restricts the possible values of the attribute to
     URLs with the defined protocol.
     <p>
-    E.g.: <code>addDomains("a", "href", "knowings.fr")</code>
+    E.g.: <code>addDomains("a", "href", "jsoup.org")</code>
     </p>
 
-    @param tag       Tag the URL domain is for
+    @param tag       Tag the allowed domain is for
     @param key       Attribute key
     @param domains List of valid domains
     @return this, for chaining
@@ -529,7 +529,7 @@ public class Whitelist {
     }
     
     /**
-     Remove allowed URL protocols for an element's URL attribute.
+     Remove allowed domains for an element's URL attribute.
      <p>
      E.g.: <code>removeDomains("a", "href", "knowings.fr")</code>
      </p>
@@ -670,21 +670,18 @@ public class Whitelist {
     	_url = el.absUrl(attrKey.toString());
     	if (_url.length() == 0) {
     		_url = el.attr(attrKey.toString());
-    		if (_url.startsWith("//")) {
-    			_url = "http:" + _url; 
-    		} else {
-    			_url = "http://" + _url;
-    		}
+    		_url = ((_url.startsWith("//"))? "http:" : "http://"  ) + _url;
     	}
     	try {
     		URL url = new URL(_url);
     		String host = url.getHost();
-    		if (host != null) {
+    		if (!StringUtil.isBlank(host)) {
+    			host = host.toLowerCase();
     			Iterator<UrlDomain> it = domains.iterator();
     			boolean isValid = false;
     			while (it.hasNext() && !isValid) {
-    				UrlDomain domain = it.next();
-    				isValid = host.toLowerCase().endsWith(domain.toString().toLowerCase()); 
+    				String domain = it.next().toString().toLowerCase();
+    				isValid = host.equals(domain) || host.endsWith("."+domain); 
     			}
     			return isValid;
     		}
