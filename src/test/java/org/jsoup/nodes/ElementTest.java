@@ -117,6 +117,18 @@ public class ElementTest {
         assertEquals("element", p.lastElementSibling().text());
     }
 
+    @Test public void testGetSiblingsWithDuplicateContent() {
+        Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>this<p>is<p>an<p id=last>element</div>");
+        Element p = doc.getElementById("1");
+        assertEquals("there", p.text());
+        assertEquals("Hello", p.previousElementSibling().text());
+        assertEquals("this", p.nextElementSibling().text());
+        assertEquals("this", p.nextElementSibling().nextElementSibling().text());
+        assertEquals("is", p.nextElementSibling().nextElementSibling().nextElementSibling().text());
+        assertEquals("Hello", p.firstElementSibling().text());
+        assertEquals("element", p.lastElementSibling().text());
+    }
+
     @Test public void testGetParents() {
         Document doc = Jsoup.parse("<div><p>Hello <span>there</span></div>");
         Element span = doc.select("span").first();
@@ -131,6 +143,14 @@ public class ElementTest {
     
     @Test public void testElementSiblingIndex() {
         Document doc = Jsoup.parse("<div><p>One</p>...<p>Two</p>...<p>Three</p>");
+        Elements ps = doc.select("p");
+        assertTrue(0 == ps.get(0).elementSiblingIndex());
+        assertTrue(1 == ps.get(1).elementSiblingIndex());
+        assertTrue(2 == ps.get(2).elementSiblingIndex());
+    }
+
+    @Test public void testElementSiblingIndexSameContent() {
+        Document doc = Jsoup.parse("<div><p>One</p>...<p>One</p>...<p>One</p>");
         Elements ps = doc.select("p");
         assertTrue(0 == ps.get(0).elementSiblingIndex());
         assertTrue(1 == ps.get(1).elementSiblingIndex());
