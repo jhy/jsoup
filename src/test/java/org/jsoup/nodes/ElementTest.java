@@ -107,6 +107,14 @@ public class ElementTest {
         assertEquals("Hello there", doc.text());
     }
 
+    @Test public void testGetWholeText() {
+        Document doc = Jsoup.parse("<p>Hello\nthere</p>");
+        assertEquals("Hello\nthere", doc.getWholeText());
+
+        doc = Jsoup.parse("<p>Hello  \n  there</p>");
+        assertEquals("Hello  \n  there", doc.getWholeText());
+    }
+
     @Test public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");
         Element p = doc.getElementById("1");

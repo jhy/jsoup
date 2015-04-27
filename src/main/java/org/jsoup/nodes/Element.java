@@ -877,6 +877,27 @@ public class Element extends Node {
     }
 
     /**
+     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the original.
+     *
+     * @return text
+     */
+    public String getWholeText(){
+        final StringBuilder accum = new StringBuilder();
+        new NodeTraversor(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    accum.append(textNode.getWholeText());
+                }
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        }).traverse(this);
+        return accum.toString().trim();
+    }
+
+    /**
      * Gets the text owned by this element only; does not get the combined text of all children.
      * <p>
      * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
