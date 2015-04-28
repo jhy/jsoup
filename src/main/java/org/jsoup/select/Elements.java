@@ -13,7 +13,8 @@ import java.util.*;
  To get an {@code Elements} object, use the {@link Element#select(String)} method.
  </p>
 
- @author Jonathan Hedley, jonathan@hedley.net */
+ @author Jonathan Hedley, jonathan@hedley.net
+ @author sravan953 */
 public class Elements extends ArrayList<Element> {
     public Elements() {
     }
@@ -394,6 +395,17 @@ public class Elements extends ArrayList<Element> {
         for (Element element : this) {
             element.remove();
         }
+        return this;
+    }
+
+    /**
+     * Modifies the size of the list, retaining only the first {@param limit} elements
+     * @param limit the size of the desired list
+     */
+    public Elements limit(int limit) {
+        int endIndex = this.size() - 1;
+        if(limit<this.size())
+            removeRange(limit, endIndex);
         return this;
     }
     
