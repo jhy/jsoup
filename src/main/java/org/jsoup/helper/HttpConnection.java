@@ -11,6 +11,7 @@ import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -77,6 +78,11 @@ public class HttpConnection implements Connection {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Malformed URL: " + url, e);
         }
+        return this;
+    }
+
+    public Connection proxy(Proxy proxy) {
+        req.proxy(proxy);
         return this;
     }
 
@@ -350,6 +356,7 @@ public class HttpConnection implements Connection {
     }
 
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+        private Proxy proxy;
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -370,6 +377,15 @@ public class HttpConnection implements Connection {
             parser = Parser.htmlParser();
         }
 
+        public Proxy proxy() {
+            return proxy;
+        }
+
+        public Request proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+        
         public int timeout() {
             return timeoutMilliseconds;
         }
@@ -618,7 +634,9 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection(
+                    req.proxy()==null?Proxy.NO_PROXY:req.proxy()
+            	);
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
