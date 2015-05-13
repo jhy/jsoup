@@ -547,6 +547,9 @@ public class HttpConnection implements Connection {
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
 
+                if (contentType.startsWith("application/xml") || xmlContentTypeRxp.matcher(contentType).matches())
+                       req.parser(Parser.xmlParser());
+
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     InputStream bodyStream = null;
