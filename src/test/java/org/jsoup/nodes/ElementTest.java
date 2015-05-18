@@ -306,6 +306,10 @@ public class ElementTest {
         assertTrue(div.hasAttr("true"));
         assertEquals("", div.attr("true"));
         
+        List<Attribute> attributes = div.attributes().asList();
+        assertEquals("There should be one attribute", 1, attributes.size());
+		assertTrue("Attribute should be boolean", attributes.get(0) instanceof BooleanAttribute);
+        
         assertFalse(div.hasAttr("false"));
  
         assertEquals("<div true></div>", div.outerHtml());
