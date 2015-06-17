@@ -828,7 +828,7 @@ enum HtmlTreeBuilderState {
                     return tb.process(t);
                 } else if (name.equals("table")) {
                     tb.error(this);
-                    boolean processed = tb.processEndTag("table");
+                    boolean processed = tb.process(new Token.EndTag().name("table"));
                     if (processed) // only ignored if in fragment
                         return tb.process(t);
                 } else if (StringUtil.in(name, "style", "script")) {
@@ -950,7 +950,7 @@ enum HtmlTreeBuilderState {
                             t.isEndTag() && t.asEndTag().name().equals("table"))
                     ) {
                 tb.error(this);
-                boolean processed = tb.processEndTag("caption");
+                boolean processed = tb.process(new Token.EndTag().name("caption"));
                 if (processed)
                     return tb.process(t);
             } else if (t.isEndTag() && StringUtil.in(t.asEndTag().name(),
@@ -1012,7 +1012,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, TreeBuilder tb) {
-            boolean processed = tb.processEndTag("colgroup");
+            boolean processed = tb.process(new Token.EndTag().name("colgroup"));
             if (processed) // only ignored in frag case
                 return tb.process(t);
             return true;
@@ -1070,7 +1070,7 @@ enum HtmlTreeBuilderState {
                 return false;
             }
             tb.clearStackToTableBodyContext();
-            tb.processEndTag(tb.currentElement().nodeName()); // tbody, tfoot, thead
+            tb.process(new Token.EndTag().name(tb.currentElement().nodeName())); // tbody, tfoot, thead
             return tb.process(t);
         }
 
@@ -1113,7 +1113,7 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     }
-                    tb.processEndTag("tr");
+                    tb.process(new Token.EndTag().name("tr"));
                     return tb.process(t);
                 } else if (StringUtil.in(name, "body", "caption", "col", "colgroup", "html", "td", "th")) {
                     tb.error(this);
@@ -1132,7 +1132,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean handleMissingTr(Token t, TreeBuilder tb) {
-            boolean processed = tb.processEndTag("tr");
+            boolean processed = tb.process(new Token.EndTag().name("tr"));
             if (processed)
                 return tb.process(t);
             else
@@ -1288,12 +1288,12 @@ enum HtmlTreeBuilderState {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag() && StringUtil.in(t.asStartTag().name(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
-                tb.processEndTag("select");
+                tb.process(new Token.EndTag().name("select"));
                 return tb.process(t);
             } else if (t.isEndTag() && StringUtil.in(t.asEndTag().name(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
                 if (tb.inTableScope(t.asEndTag().name())) {
-                    tb.processEndTag("select");
+                    tb.process(new Token.EndTag().name("select"));
                     return (tb.process(t));
                 } else
                     return false;
