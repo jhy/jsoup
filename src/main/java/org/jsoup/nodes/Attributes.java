@@ -48,6 +48,18 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         Attribute attr = new Attribute(key, value);
         put(attr);
     }
+    
+    /**
+    Set a new boolean attribute, remove attribute if value is false.
+    @param key attribute key
+    @param value attribute value
+    */
+    public void put(String key, boolean value) {
+        if (value)
+            put(new BooleanAttribute(key));
+        else
+            remove(key);
+    }
 
     /**
      Set a new attribute, or replace an existing one by key.

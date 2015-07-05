@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.BooleanAttribute;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -69,6 +70,7 @@ abstract class Token {
         protected String tagName;
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
+        private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
         private boolean hasPendingAttributeValue = false;
         boolean selfClosing = false;
         Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
@@ -78,6 +80,7 @@ abstract class Token {
             tagName = null;
             pendingAttributeName = null;
             reset(pendingAttributeValue);
+            hasEmptyAttributeValue = false;
             hasPendingAttributeValue = false;
             selfClosing = false;
             attributes = null;
@@ -90,13 +93,17 @@ abstract class Token {
 
             if (pendingAttributeName != null) {
                 Attribute attribute;
-                if (!hasPendingAttributeValue)
+                if (hasPendingAttributeValue)
+                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
+                else if (hasEmptyAttributeValue)
                     attribute = new Attribute(pendingAttributeName, "");
                 else
-                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
+                    attribute = new BooleanAttribute(pendingAttributeName);
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
+            hasEmptyAttributeValue = false;
+            hasPendingAttributeValue = false;
             reset(pendingAttributeValue);
         }
 
@@ -157,6 +164,10 @@ abstract class Token {
         final void appendAttributeValue(char[] append) {
             ensureAttributeValue();
             pendingAttributeValue.append(append);
+        }
+        
+        final void setEmptyAttributeValue() {
+            hasEmptyAttributeValue = true;
         }
 
         private void ensureAttributeValue() {

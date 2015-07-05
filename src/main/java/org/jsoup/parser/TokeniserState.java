@@ -783,6 +783,8 @@ enum TokeniserState {
             String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
+            else
+                t.tagPending.setEmptyAttributeValue();
 
             char c = r.consume();
             switch (c) {
@@ -813,6 +815,8 @@ enum TokeniserState {
             String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
+            else
+                t.tagPending.setEmptyAttributeValue();
 
             char c = r.consume();
             switch (c) {

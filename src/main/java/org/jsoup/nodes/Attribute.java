@@ -121,7 +121,11 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {
         return ("".equals(value) || value.equalsIgnoreCase(key))
                 && out.syntax() == Document.OutputSettings.Syntax.html
-                && Arrays.binarySearch(booleanAttributes, key) >= 0;
+                && isBooleanAttribute();
+    }
+
+    protected boolean isBooleanAttribute() {
+        return Arrays.binarySearch(booleanAttributes, key) >= 0;
     }
 
     @Override

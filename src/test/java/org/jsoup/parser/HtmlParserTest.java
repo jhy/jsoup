@@ -46,11 +46,11 @@ public class HtmlParserTest {
         String html = "<p =a>One<a <p>Something</p>Else";
         // this gets a <p> with attr '=a' and an <a tag with an attribue named '<p'; and then auto-recreated
         Document doc = Jsoup.parse(html);
-        assertEquals("<p =a=\"\">One<a <p=\"\">Something</a></p>\n" +
-                "<a <p=\"\">Else</a>", doc.body().html());
+        assertEquals("<p =a>One<a <p>Something</a></p>\n" +
+                "<a <p>Else</a>", doc.body().html());
 
         doc = Jsoup.parse("<p .....>");
-        assertEquals("<p .....=\"\"></p>", doc.body().html());
+        assertEquals("<p .....></p>", doc.body().html());
     }
 
     @Test public void parsesComments() {
