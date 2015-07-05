@@ -757,6 +757,7 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
+                    t.emitTagPending();
                     t.transition(Data);
                     break;
                 case '>':

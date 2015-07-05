@@ -121,4 +121,11 @@ public class XmlTreeBuilderTest {
         Document doc = Jsoup.parse("x", "", Parser.xmlParser());
         assertEquals(Syntax.xml, doc.outputSettings().syntax());
     }
+
+    @Test
+    public void testDoesHandleEOFInTag() {
+        String html = "<img src=asdf onerror=\"alert(1)\" x=";
+        Document xmlDoc = Jsoup.parse(html, "", Parser.xmlParser());
+        assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\" />", xmlDoc.html());
+    }
 }
