@@ -3,10 +3,13 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -846,5 +849,25 @@ public class HtmlParserTest {
         // Assert
         assertEquals(50000, doc.body().childNodeSize());
         assertTrue(System.currentTimeMillis() - start < 1000);
+    }
+
+    @Test
+    public void testInvalidTableContents() throws IOException {
+        File in = ParseTest.getFile("/htmltests/table-invalid-elements.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        doc.outputSettings().prettyPrint(true);
+        String rendered = doc.toString();
+        int endOfEmail = rendered.indexOf("Comment");
+        int guarantee = rendered.indexOf("Why am I here?");
+        assertTrue("Comment not found", endOfEmail > -1);
+        assertTrue("Search text not found", guarantee > -1);
+        assertTrue("Search text did not come after comment", guarantee > endOfEmail);
+    }
+
+    @Test public void testNormalisesIsIndex() {
+        Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
+        String html = doc.outerHtml();
+        assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
+                StringUtil.normaliseWhitespace(doc.body().html()));
     }
 }

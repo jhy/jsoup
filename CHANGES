@@ -1,9 +1,13 @@
 jsoup changelog
 
 *** Release 1.8.3 [PENDING]
- * Fix an issue in Element.getElementSiblingIndex (and related methods) where sibling elements with the same content
+ * Fixed an issue in Element.getElementSiblingIndex (and related methods) where sibling elements with the same content
    would incorrectly have the same sibling index.
    <https://github.com/jhy/jsoup/issues/554>
+
+ * Fixed an issue where unexpected elements in a badly nested table could be moved to the wrong location in the
+   document.
+   <https://github.com/jhy/jsoup/issues/552>
 
 *** Release 1.8.2 [2015-Apr-13]
  * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
