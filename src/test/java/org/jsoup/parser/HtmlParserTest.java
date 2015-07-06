@@ -870,4 +870,10 @@ public class HtmlParserTest {
         assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
                 StringUtil.normaliseWhitespace(doc.body().html()));
     }
+
+    @Test public void testReinsertionModeForThCelss() {
+        String body = "<body> <table> <tr> <th> <table><tr><td></td></tr></table> <div> <table><tr><td></td></tr></table> </div> <div></div> <div></div> <div></div> </th> </tr> </table> </body>";
+        Document doc = Jsoup.parse(body);
+        assertEquals(1, doc.body().children().size());
+    }
 }

@@ -391,7 +391,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if ("select".equals(name)) {
                 transition(HtmlTreeBuilderState.InSelect);
                 break; // frag
-            } else if (("td".equals(name) || "td".equals(name) && !last)) {
+            } else if (("td".equals(name) || "th".equals(name) && !last)) {
                 transition(HtmlTreeBuilderState.InCell);
                 break;
             } else if ("tr".equals(name)) {
