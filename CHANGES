@@ -18,6 +18,11 @@ jsoup changelog
  * Fixed an issue where a table nested within a TH cell would parse to an incorrect tree.
    <https://github.com/jhy/jsoup/issues/575>
 
+ * When serializing a document using the XHTML encoding entities, if the character set did not support &nbsp; chars
+   (such as Shit_JIS), the character would be skipped. For visibility, will now always output &xa0; when using XHTML
+   encoding entities (as &nbsp; is not defined), regardless of the output character set.
+   <https://github.com/jhy/jsoup/issues/523>
+
 *** Release 1.8.2 [2015-Apr-13]
  * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
    speed increase. For non-Android JREs, around 1.1x to 1.2x.
