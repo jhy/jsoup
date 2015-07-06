@@ -177,9 +177,17 @@ public class UrlConnectTest {
 
     @Test
     public void followsRelativeRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to ./ - /tools/
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to /tidy/
         Document doc = con.post();
         assertTrue(doc.title().contains("HTML Tidy Online"));
+    }
+
+    @Test
+    public void followsRelativeDotRedirect() throws IOException {
+        // redirects to "./ok.html", should resolve to http://direct.infohound.net/tools/ok.html
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel-dot.pl"); // to ./ok.html
+        Document doc = con.post();
+        assertTrue(doc.title().contains("OK"));
     }
 
     @Test
