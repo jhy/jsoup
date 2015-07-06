@@ -122,4 +122,26 @@ public class FormElementTest {
         assertEquals("on", data.get(0).value());
         assertEquals("foo", data.get(0).key());
     }
+
+    @Test public void adoptedFormsRetainInputs() {
+        // test for https://github.com/jhy/jsoup/issues/249
+        String html = "<html>\n" +
+                "<body>  \n" +
+                "  <table>\n" +
+                "      <form action=\"/hello.php\" method=\"post\">\n" +
+                "      <tr><td>User:</td><td> <input type=\"text\" name=\"user\" /></td></tr>\n" +
+                "      <tr><td>Password:</td><td> <input type=\"password\" name=\"pass\" /></td></tr>\n" +
+                "      <tr><td><input type=\"submit\" name=\"login\" value=\"login\" /></td></tr>\n" +
+                "   </form>\n" +
+                "  </table>\n" +
+                "</body>\n" +
+                "</html>";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement) doc.select("form").first();
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals(3, data.size());
+        assertEquals("user", data.get(0).key());
+        assertEquals("pass", data.get(1).key());
+        assertEquals("login", data.get(2).key());
+    }
 }
