@@ -838,4 +838,16 @@ public class ElementTest {
         assertFalse(e0.hashCode() == (e6).hashCode());
         assertFalse(e0.hashCode() == (e7).hashCode());
     }
+
+    @Test public void testRelativeUrls() {
+        String html = "<body><a href='./one.html'>One</a> <a href='two.html'>two</a> <a href='../three.html'>Three</a> <a href='//example2.com/four/'>Four</a> <a href='https://example2.com/five/'>Five</a>";
+        Document doc = Jsoup.parse(html, "http://example.com/bar/");
+        Elements els = doc.select("a");
+
+        assertEquals("http://example.com/bar/one.html", els.get(0).absUrl("href"));
+        assertEquals("http://example.com/bar/two.html", els.get(1).absUrl("href"));
+        assertEquals("http://example.com/three.html", els.get(2).absUrl("href"));
+        assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
+        assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
+    }
 }
