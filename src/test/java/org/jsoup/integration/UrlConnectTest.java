@@ -4,9 +4,13 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
+import org.jsoup.parser.HtmlTreeBuilder;
+import org.jsoup.parser.Parser;
+import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -492,6 +496,28 @@ public class UrlConnectTest {
         assertEquals(url, wDoc.getDocumentURI());
         String html = dom.asString(wDoc);
         assertTrue(html.contains("jsoup"));
+    }
+
+    @Test
+    public void fetchHandlesXml() throws IOException {
+        // should auto-detect xml and use XML parser, unless explicitly requested the html parser
+        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
+        Connection con = Jsoup.connect(xmlUrl);
+        Document doc = con.get();
+        Connection.Request req = con.request();
+        assertTrue(req.parser().getTreeBuilder() instanceof XmlTreeBuilder);
+        assertEquals("<xml> <link> one </link> <table> Two </table> </xml>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test
+    public void fetchHandlesXmlAsHtmlWhenParserSet() throws IOException {
+        // should auto-detect xml and use XML parser, unless explicitly requested the html parser
+        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
+        Connection con = Jsoup.connect(xmlUrl).parser(Parser.htmlParser());
+        Document doc = con.get();
+        Connection.Request req = con.request();
+        assertTrue(req.parser().getTreeBuilder() instanceof HtmlTreeBuilder);
+        assertEquals("<html> <head></head> <body> <xml> <link>one <table> Two </table> </xml> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 
 }

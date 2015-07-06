@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
  */
-class HtmlTreeBuilder extends TreeBuilder {
+public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches
     private static final String[] TagsScriptStyle = new String[]{"script", "style"};
     public static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
