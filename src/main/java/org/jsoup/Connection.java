@@ -1,6 +1,7 @@
 package org.jsoup;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 
 import java.io.IOException;
@@ -210,7 +211,8 @@ public interface Connection {
     Connection cookies(Map<String, String> cookies);
 
     /**
-     * Provide an alternate parser to use when parsing the response to a Document.
+     * Provide an alternate parser to use when parsing the response to a Document. If not set, defaults to the HTML
+     * parser, unless the response content-type is XML, in which case the XML parser is used.
      * @param parser alternate parser
      * @return this Connection, for chaining
      */

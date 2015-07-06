@@ -3,6 +3,9 @@ jsoup changelog
 *** Release 1.8.3 [PENDING]
  * Added support for custom boolean attributes.
    <https://github.com/jhy/jsoup/pull/555>
+
+ * When fetching XML URLs, automatically switch to the XML parser instead of the HTML parser.
+   <https://github.com/jhy/jsoup/pull/574>
    
  * Fixed an issue in Element.getElementSiblingIndex (and related methods) where sibling elements with the same content
    would incorrectly have the same sibling index.

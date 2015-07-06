@@ -357,6 +357,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
+        private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
 
@@ -437,6 +438,7 @@ public class HttpConnection implements Connection {
 
         public Request parser(Parser parser) {
             this.parser = parser;
+            parserDefined = true;
             return this;
         }
 
@@ -470,11 +472,9 @@ public class HttpConnection implements Connection {
         private Connection.Request req;
 
         /*
-         * For example {@code application/atom+xml;charset=utf-8}.
-         * Stepping through it: start with {@code "application/"}, follow with word
-         * characters up to a {@code "+xml"}, and then maybe more ({@code .*}).
+         * Matches XML content types (like text/xml, application/xhtml+xml;charset=UTF8, etc)
          */
-        private static final Pattern xmlContentTypeRxp = Pattern.compile("application/\\w+\\+xml.*");
+        private static final Pattern xmlContentTypeRxp = Pattern.compile("(application|text)/\\w*\\+?xml.*");
 
         Response() {
             super();
@@ -541,11 +541,18 @@ public class HttpConnection implements Connection {
                 if (contentType != null
                         && !req.ignoreContentType()
                         && !contentType.startsWith("text/")
-                        && !contentType.startsWith("application/xml")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
                         )
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
+
+                // switch to the XML parser if content type is xml and not parser not explicitly set
+                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
+                    // only flip it if a HttpConnection.Request (i.e. don't presume other impls want it):
+                    if (req instanceof HttpConnection.Request && !((Request) req).parserDefined) {
+                        req.parser(Parser.xmlParser());
+                    }
+                }
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
