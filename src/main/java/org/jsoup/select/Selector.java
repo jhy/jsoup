@@ -5,6 +5,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
@@ -127,7 +128,7 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         Evaluator evaluator = QueryParser.parse(query);
-        LinkedHashSet<Element> elements = new LinkedHashSet<Element>();
+        LinkedList<Element> elements = new LinkedList<Element>();
 
         for (Element root : roots) {
             elements.addAll(select(evaluator, root));
