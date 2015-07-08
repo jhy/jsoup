@@ -184,8 +184,8 @@ public class UrlConnectTest {
 
     @Test
     public void followsRelativeDotRedirect() throws IOException {
-        // redirects to "./ok.html", should resolve to http://direct.infohound.net/tools/ok.html
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel-dot.pl"); // to ./ok.html
+        //redirects to "esportspenedes.cat/./ep/index.php", should resolve to "esportspenedes.cat/ep/index.php"
+        Connection con = Jsoup.connect("http://esportspenedes.cat"); // to /tidy/
         Document doc = con.post();
         assertTrue(doc.title().contains("OK"));
     }
