@@ -60,7 +60,10 @@ public class TokenQueue {
         queue = seq + queue.substring(pos);
         pos = 0;
     }
-
+    public boolean matchesCssSpecialChars(){
+        //todo: full css special chars support
+        return matchesAny("\\:");
+    }
     /**
      * Tests if the next characters on the queue match the sequence. Case insensitive.
      * @param seq String to check queue for.
@@ -354,16 +357,22 @@ public class TokenQueue {
     }
 
     /**
-     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
+     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _, \:)
      http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
      @return identifier
      */
     public String consumeCssIdentifier() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
+        boolean matchSpecialChar=false;
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_') || (matchSpecialChar=matchesCssSpecialChars()))) {
             pos++;
+            if (matchSpecialChar) {
+                pos++;
+                matchSpecialChar = false;
+            }
+        }
 
-        return queue.substring(start, pos);
+        return queue.substring(start, pos).replace("\\","");
     }
 
     /**

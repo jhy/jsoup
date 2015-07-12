@@ -1,13 +1,15 @@
 package org.jsoup.parser;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
  * Token queue tests.
  */
 public class TokenQueueTest {
-    @Test public void chompBalanced() {
+    @Test
+    public void chompBalanced() {
         TokenQueue tq = new TokenQueue(":contains(one (two) three) four");
         String pre = tq.consumeTo("(");
         String guts = tq.chompBalanced('(', ')');
@@ -17,8 +19,9 @@ public class TokenQueueTest {
         assertEquals("one (two) three", guts);
         assertEquals(" four", remainder);
     }
-    
-    @Test public void chompEscapedBalanced() {
+
+    @Test
+    public void chompEscapedBalanced() {
         TokenQueue tq = new TokenQueue(":contains(one (two) \\( \\) \\) three) four");
         String pre = tq.consumeTo("(");
         String guts = tq.chompBalanced('(', ')');
@@ -30,32 +33,46 @@ public class TokenQueueTest {
         assertEquals(" four", remainder);
     }
 
-    @Test public void chompBalancedMatchesAsMuchAsPossible() {
+    @Test
+    public void chompBalancedMatchesAsMuchAsPossible() {
         TokenQueue tq = new TokenQueue("unbalanced(something(or another");
         tq.consumeTo("(");
         String match = tq.chompBalanced('(', ')');
         assertEquals("something(or another", match);
     }
-    
-    @Test public void unescape() {
+
+    @Test
+    public void unescape() {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
-    
-    @Test public void chompToIgnoreCase() {
+
+    @Test
+    public void chompToIgnoreCase() {
         String t = "<textarea>one < two </TEXTarea>";
         TokenQueue tq = new TokenQueue(t);
         String data = tq.chompToIgnoreCase("</textarea");
         assertEquals("<textarea>one < two ", data);
-        
+
         tq = new TokenQueue("<textarea> one two < three </oops>");
         data = tq.chompToIgnoreCase("</textarea");
         assertEquals("<textarea> one two < three </oops>", data);
     }
 
-    @Test public void addFirst() {
+    @Test
+    public void addFirst() {
         TokenQueue tq = new TokenQueue("One Two");
         tq.consumeWord();
         tq.addFirst("Three");
         assertEquals("Three Two", tq.remainder());
+    }
+
+    @Test
+    public void testconsumeCssIdentifier() throws Exception {
+        TokenQueue tq = new TokenQueue("#resultTable\\:0\\:resultListTableColumnTitle");
+        String cssIdentifier = tq.consumeCssIdentifier();
+        assertEquals(0, cssIdentifier.length());
+        tq = new TokenQueue("div#resultTable\\:0\\:resultListTableColumnTitle");
+        cssIdentifier = tq.consumeCssIdentifier();
+        assertEquals("div", cssIdentifier);
     }
 }

@@ -1,7 +1,9 @@
 package org.jsoup.select;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for the Selector Query Parser.
@@ -38,5 +40,13 @@ public class QueryParserTest {
         assertEquals(2, andLeft.evaluators.size());
         assertEquals("li :prevli :ImmediateParentol", andRight.toString());
         assertEquals(2, andLeft.evaluators.size());
+    }
+
+    @Test
+    public void testParseSpecialChar() throws Exception {
+        Evaluator eval = QueryParser.parse("#resultTable\\:0\\:resultListTableColumnTitle");
+        assertTrue(eval instanceof Evaluator.Id);
+        Evaluator.Id id = (Evaluator.Id)eval;
+        assertEquals("#resultTable:0:resultListTableColumnTitle", id.toString());
     }
 }
