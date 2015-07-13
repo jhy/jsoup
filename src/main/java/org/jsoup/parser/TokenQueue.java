@@ -60,9 +60,16 @@ public class TokenQueue {
         queue = seq + queue.substring(pos);
         pos = 0;
     }
+
+    /**
+     * match css identifier special chars <br>
+     * see <a href=http://mathiasbynens.be/notes/css-escapes>css escape</a>
+     * @return  true if the css identifier special chars match
+     */
     public boolean matchesCssSpecialChars(){
-        //todo: full css special chars support
-        return matchesAny("\\:");
+        //!"#$%&'()*+,./:;<=>?@[\]^`{|}~
+        return matchesAny("\\:","\\#","\\!","\\\"","\\$","\\%","\\&","\\'","\\(","\\)","\\*","\\+","\\,","\\.","\\/","\\;","\\<","\\=","\\>","\\?","\\@",
+                "\\[","\\]","\\^","\\`","\\{","\\|","\\}","\\~");
     }
     /**
      * Tests if the next characters on the queue match the sequence. Case insensitive.

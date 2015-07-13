@@ -74,5 +74,13 @@ public class TokenQueueTest {
         tq = new TokenQueue("div#resultTable\\:0\\:resultListTableColumnTitle");
         cssIdentifier = tq.consumeCssIdentifier();
         assertEquals("div", cssIdentifier);
+
+        tq = new TokenQueue("div#\\#fake-id");
+                cssIdentifier = tq.consumeCssIdentifier();
+                assertEquals("div", cssIdentifier);
+        tq = new TokenQueue("div#\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\]\\^\\`\\{\\|\\}\\~");
+                        cssIdentifier = tq.consumeCssIdentifier();
+                        assertEquals("div", cssIdentifier);
+
     }
 }

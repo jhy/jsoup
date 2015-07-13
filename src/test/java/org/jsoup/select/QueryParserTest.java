@@ -11,14 +11,15 @@ import static org.junit.Assert.assertTrue;
  * @author Jonathan Hedley
  */
 public class QueryParserTest {
-    @Test public void testOrGetsCorrectPrecedence() {
+    @Test
+    public void testOrGetsCorrectPrecedence() {
         // tests that a selector "a b, c d, e f" evals to (a AND b) OR (c AND d) OR (e AND f)"
         // top level or, three child ands
         Evaluator eval = QueryParser.parse("a b, c d, e f");
         assertTrue(eval instanceof CombiningEvaluator.Or);
         CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
         assertEquals(3, or.evaluators.size());
-        for (Evaluator innerEval: or.evaluators) {
+        for (Evaluator innerEval : or.evaluators) {
             assertTrue(innerEval instanceof CombiningEvaluator.And);
             CombiningEvaluator.And and = (CombiningEvaluator.And) innerEval;
             assertEquals(2, and.evaluators.size());
@@ -27,7 +28,8 @@ public class QueryParserTest {
         }
     }
 
-    @Test public void testParsesMultiCorrectly() {
+    @Test
+    public void testParsesMultiCorrectly() {
         Evaluator eval = QueryParser.parse(".foo > ol, ol > li + li");
         assertTrue(eval instanceof CombiningEvaluator.Or);
         CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
@@ -46,7 +48,24 @@ public class QueryParserTest {
     public void testParseSpecialChar() throws Exception {
         Evaluator eval = QueryParser.parse("#resultTable\\:0\\:resultListTableColumnTitle");
         assertTrue(eval instanceof Evaluator.Id);
-        Evaluator.Id id = (Evaluator.Id)eval;
+        Evaluator.Id id = (Evaluator.Id) eval;
         assertEquals("#resultTable:0:resultListTableColumnTitle", id.toString());
+        String specialQuery = "\\!\\\"\\#\\$\\%\\&\\'\\(\\)\\*\\+\\,\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\]\\^\\`\\{\\|\\}\\~";
+        eval = QueryParser.parse("#" + specialQuery);
+        assertTrue(eval instanceof Evaluator.Id);
+        id = (Evaluator.Id) eval;
+        String expected = "!\"#$%&'()*+,./:;<=>?@[]^`{|}~";
+        assertEquals("#" + expected, id.toString());
+        eval = QueryParser.parse("." + specialQuery);
+        assertTrue(eval instanceof Evaluator.Class);
+        assertEquals("." + expected, eval.toString());
+
+        eval = QueryParser.parse("div#" + specialQuery);
+        assertTrue(eval instanceof CombiningEvaluator);
+        assertEquals("div #" + expected, eval.toString());
+        eval = QueryParser.parse("div." + specialQuery);
+        assertTrue(eval instanceof CombiningEvaluator);
+        assertEquals("div ." + expected, eval.toString());
+
     }
 }
