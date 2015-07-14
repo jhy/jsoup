@@ -526,7 +526,7 @@ public class HttpConnection implements Connection {
                     String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
-                    req.url(new URL(req.url(), encodeUrl(location)));
+                    req.url(StringUtil.resolve(req.url(), encodeUrl(location)));
 
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());

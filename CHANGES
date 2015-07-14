@@ -23,6 +23,11 @@ jsoup changelog
    encoding entities (as &nbsp; is not defined), regardless of the output character set.
    <https://github.com/jhy/jsoup/issues/523>
 
+ * Fixed an issue when resolving URLs, if the absolute URL had no path, the relative URL was not normalized correctly.
+   Also fixed an issue where connections that were redirected to a relative URL did not have the same normalization
+   rules as a URL read from Nodes.absUrl(String).
+   <https://github.com/jhy/jsoup/issues/585>
+
 *** Release 1.8.2 [2015-Apr-13]
  * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
    speed increase. For non-Android JREs, around 1.1x to 1.2x.

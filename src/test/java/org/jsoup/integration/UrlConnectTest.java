@@ -188,6 +188,16 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel-dot.pl"); // to ./ok.html
         Document doc = con.post();
         assertTrue(doc.title().contains("OK"));
+        assertEquals(doc.location(), "http://direct.infohound.net/tools/ok.html");
+    }
+
+    @Test
+    public void followsRelativeDotRedirect2() throws IOException {
+        //redirects to "esportspenedes.cat/./ep/index.php", should resolve to "esportspenedes.cat/ep/index.php"
+        Connection con = Jsoup.connect("http://esportspenedes.cat")  // note lack of trailing / - server should redir to / first, then to ./ep/...; but doesn't'
+                .timeout(10000);
+        Document doc = con.post();
+        assertEquals(doc.location(), "http://esportspenedes.cat/ep/index.php");
     }
 
     @Test

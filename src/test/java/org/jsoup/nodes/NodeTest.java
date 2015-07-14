@@ -124,6 +124,12 @@ public class NodeTest {
         Element a2 = doc.select("a").get(1);
         assertEquals("http://jsoup.org/path/bar.html?foo", a2.absUrl("href"));
     }
+
+    @Test public void absHandlesDotFromIndex() {
+        Document doc = Jsoup.parse("<a href='./one/two.html'>One</a>", "http://example.com");
+        Element a1 = doc.select("a").first();
+        assertEquals("http://example.com/one/two.html", a1.absUrl("href"));
+    }
     
     @Test public void testRemove() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
