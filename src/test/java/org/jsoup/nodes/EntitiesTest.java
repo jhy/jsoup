@@ -14,7 +14,7 @@ public class EntitiesTest {
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         String escapedAsciiFull = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(extended));
         String escapedAsciiXhtml = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(xhtml));
-        String escapedUtfFull = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(base));
+        String escapedUtfFull = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(extended));
         String escapedUtfMin = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(xhtml));
 
         assertEquals("Hello &amp;&lt;&gt; &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy; &raquo;", escapedAscii);
@@ -85,5 +85,20 @@ public class EntitiesTest {
     @Test public void noSpuriousDecodes() {
         String string = "http://www.foo.com?a=1&num_rooms=1&children=0&int=VA&b=2";
         assertEquals(string, Entities.unescape(string));
+    }
+
+    @Test public void escapesGtInXmlAttributesButNotInHtml() {
+        // https://github.com/jhy/jsoup/issues/528 - < is OK in HTML attribute values, but not in XML
+
+
+        String docHtml = "<a title='<p>One</p>'>One</a>";
+        Document doc = Jsoup.parse(docHtml);
+        Element element = doc.select("a").first();
+
+        doc.outputSettings().escapeMode(base);
+        assertEquals("<a title=\"<p>One</p>\">One</a>", element.outerHtml());
+
+        doc.outputSettings().escapeMode(xhtml);
+        assertEquals("<a title=\"&lt;p>One&lt;/p>\">One</a>", element.outerHtml());
     }
 }
