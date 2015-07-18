@@ -142,16 +142,16 @@
   </build>
 
   <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
     <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>novacloud-releases</id>
+      <name>NovaCloud Release Repository</name>
+      <url>http://maven.novacloud.com/nexus/content/repositories/releases/</url>
     </repository>
+    <snapshotRepository>
+      <id>novacloud-snapshots</id>
+      <name>NovaCloud Snapshot Repository</name>
+      <url>http://maven.novacloud.com/nexus/content/repositories/snapshots/</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <profiles>
