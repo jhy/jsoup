@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.8.3-SNAPSHOT</version>
+  <version>1.8.3</version>
   <description>jsoup HTML parser</description>
   <url>http://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -24,7 +24,7 @@
   	<url>http://github.com/jhy/jsoup</url>
     <connection>scm:git:http://github.com/jhy/jsoup.git</connection>
     <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
-    <tag>HEAD</tag>
+    <tag>jsoup-1.8.3a</tag>
   </scm>
   <organization>
   	<name>Jonathan Hedley</name>
