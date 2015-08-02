@@ -6,6 +6,10 @@ jsoup changelog
 
  * When fetching XML URLs, automatically switch to the XML parser instead of the HTML parser.
    <https://github.com/jhy/jsoup/pull/574>
+
+ * Performance improvement on parsing larger HTML pages. On Android KitKat, around 1.7x times faster. On Android
+   Lollipop, ~ 1.3x faster. Improvements largely from re-ordering the HtmlTreeBuilder methods based on analysis of
+   various websites; also from further memory reduction for nodes with no children, and other tweaks.
    
  * Fixed an issue in Element.getElementSiblingIndex (and related methods) where sibling elements with the same content
    would incorrectly have the same sibling index.

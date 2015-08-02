@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -151,6 +152,10 @@ public final class StringUtil {
             return true;
         }
         return false;
+    }
+
+    public static boolean inSorted(String needle, String[] haystack) {
+        return Arrays.binarySearch(haystack, needle) >= 0;
     }
 
     /**

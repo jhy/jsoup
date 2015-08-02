@@ -284,6 +284,7 @@ public class Element extends Node {
 
         // was - Node#addChildren(child). short-circuits an array create and a loop.
         reparentChild(child);
+        ensureChildNodes();
         childNodes.add(child);
         child.setSiblingIndex(childNodes.size() - 1);
         return this;

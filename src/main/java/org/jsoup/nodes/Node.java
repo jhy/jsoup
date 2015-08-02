@@ -18,6 +18,7 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
+    private static final List<Node> EMPTY_NODES = Collections.emptyList();
     Node parentNode;
     List<Node> childNodes;
     Attributes attributes;
@@ -33,7 +34,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(baseUri);
         Validate.notNull(attributes);
         
-        childNodes = new ArrayList<Node>(4);
+        childNodes = EMPTY_NODES;
         this.baseUri = baseUri.trim();
         this.attributes = attributes;
     }
@@ -46,7 +47,7 @@ public abstract class Node implements Cloneable {
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
      */
     protected Node() {
-        childNodes = Collections.emptyList();
+        childNodes = EMPTY_NODES;
         attributes = null;
     }
 
@@ -428,6 +429,7 @@ public abstract class Node implements Cloneable {
         //most used. short circuit addChildren(int), which hits reindex children and array copy
         for (Node child: children) {
             reparentChild(child);
+            ensureChildNodes();
             childNodes.add(child);
             child.setSiblingIndex(childNodes.size()-1);
         }
@@ -438,9 +440,16 @@ public abstract class Node implements Cloneable {
         for (int i = children.length - 1; i >= 0; i--) {
             Node in = children[i];
             reparentChild(in);
+            ensureChildNodes();
             childNodes.add(index, in);
         }
         reindexChildren(index);
+    }
+
+    protected void ensureChildNodes() {
+        if (childNodes == EMPTY_NODES) {
+            childNodes = new ArrayList<Node>(4);
+        }
     }
 
     protected void reparentChild(Node child) {
