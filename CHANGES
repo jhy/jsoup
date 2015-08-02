@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.8.3 [PENDING]
+*** Release 1.8.3 [2015-Aug-02]
  * Added support for custom boolean attributes.
    <https://github.com/jhy/jsoup/pull/555>
 
