@@ -375,6 +375,7 @@ public class Document extends Element {
         private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
         private boolean outline = false;
+        private boolean preserveQuote = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
@@ -494,6 +495,25 @@ public class Document extends Element {
          */
         public OutputSettings outline(boolean outlineMode) {
             outline = outlineMode;
+            return this;
+        }
+        
+        /**
+         * Get if Quote preserve Quote mode is enabled. Default is false. If enabled, the HTML output will keep attributes
+         * with original quotes.
+         * @return this, for chaining
+         */
+        public boolean preserveQuote() {
+            return preserveQuote;
+        }
+
+        /**
+         * Enable or disable HTML Quote preserve mode
+         * @param preserveQuote Keep same quotes
+         * @return this, for chaining
+         */
+        public OutputSettings preserveQuote(boolean preserveQuote) {
+            this.preserveQuote = preserveQuote;
             return this;
         }
 

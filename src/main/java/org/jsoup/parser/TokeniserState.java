@@ -790,6 +790,7 @@ enum TokeniserState {
             switch (c) {
                 case '"':
                     t.transition(AfterAttributeValue_quoted);
+                    t.tagPending.appendAttributeQuote('"');
                     break;
                 case '&':
                     char[] ref = t.consumeCharacterReference('"', true);
@@ -822,6 +823,7 @@ enum TokeniserState {
             switch (c) {
                 case '\'':
                     t.transition(AfterAttributeValue_quoted);
+                    t.tagPending.appendAttributeQuote('\'');
                     break;
                 case '&':
                     char[] ref = t.consumeCharacterReference('\'', true);

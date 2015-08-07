@@ -70,6 +70,7 @@ abstract class Token {
         protected String tagName;
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
+        private char pendingAttributeQuote;
         private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
         private boolean hasPendingAttributeValue = false;
         boolean selfClosing = false;
@@ -80,6 +81,7 @@ abstract class Token {
             tagName = null;
             pendingAttributeName = null;
             reset(pendingAttributeValue);
+            pendingAttributeQuote = '"';
             hasEmptyAttributeValue = false;
             hasPendingAttributeValue = false;
             selfClosing = false;
@@ -94,11 +96,11 @@ abstract class Token {
             if (pendingAttributeName != null) {
                 Attribute attribute;
                 if (hasPendingAttributeValue)
-                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
+                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString(), pendingAttributeQuote);
                 else if (hasEmptyAttributeValue)
-                    attribute = new Attribute(pendingAttributeName, "");
+                    attribute = new Attribute(pendingAttributeName, "", pendingAttributeQuote);
                 else
-                    attribute = new BooleanAttribute(pendingAttributeName);
+                    attribute = new BooleanAttribute(pendingAttributeName, pendingAttributeQuote);
                 attributes.put(attribute);
             }
             pendingAttributeName = null;
@@ -164,6 +166,10 @@ abstract class Token {
         final void appendAttributeValue(char[] append) {
             ensureAttributeValue();
             pendingAttributeValue.append(append);
+        }
+        
+        final void appendAttributeQuote(char quote) {
+            pendingAttributeQuote = quote;
         }
         
         final void setEmptyAttributeValue() {

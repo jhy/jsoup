@@ -19,6 +19,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     private String key;
     private String value;
+    private char quote = '"';
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
@@ -32,6 +33,21 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         this.key = key.trim().toLowerCase();
         this.value = value;
     }
+    
+    /**
+     * Create a new attribute from unencoded (raw) key and value.
+     * @param key attribute key
+     * @param value attribute value
+     * @param quote attribute quote
+     * @see #createFromEncoded
+     */
+    public Attribute(String key, String value, char quote) {
+        super();
+        this.key = key;
+        this.value = value;
+        this.quote = quote;
+    }
+
 
     /**
      Get the attribute key.
@@ -82,9 +98,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     protected void html(StringBuilder accum, Document.OutputSettings out) {
         accum.append(key);
         if (!shouldCollapseAttribute(out)) {
-            accum.append("=\"");
+            accum.append("=").append(quote);
             Entities.escape(accum, value, out, true, false, false);
-            accum.append('"');
+            accum.append(quote);
         }
     }
 

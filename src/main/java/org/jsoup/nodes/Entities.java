@@ -20,7 +20,9 @@ public class Entities {
         /** Default HTML output entities. */
         base(baseByVal),
         /** Complete HTML entities. */
-        extended(fullByVal);
+        extended(fullByVal),
+        /** No html entities */
+        none(null);
 
         private Map<Character, String> map;
 
@@ -79,9 +81,16 @@ public class Entities {
     static void escape(StringBuilder accum, String string, Document.OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
 
+        
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
+        
+        if (escapeMode == EscapeMode.none) {
+            accum.append(string);
+            return;
+        }
+        
         final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
         final Map<Character, String> map = escapeMode.getMap();
@@ -105,7 +114,8 @@ public class Entities {
             }
             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
-                final char c = (char) codePoint;
+
+                final char c = (char) codePoint;                
                 // html specific and required escapes:
                 switch (c) {
                     case '&':
