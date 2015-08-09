@@ -27,6 +27,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override
         public String toString() {
             return String.format(":has(%s)", evaluator);
         }
@@ -41,6 +42,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return !evaluator.matches(root, node);
         }
 
+        @Override
         public String toString() {
             return String.format(":not%s", evaluator);
         }
@@ -64,6 +66,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override
         public String toString() {
             return String.format(":parent%s", evaluator);
         }
@@ -82,6 +85,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return parent != null && evaluator.matches(root, parent);
         }
 
+        @Override
         public String toString() {
             return String.format(":ImmediateParent%s", evaluator);
         }
@@ -107,6 +111,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override
         public String toString() {
             return String.format(":prev*%s", evaluator);
         }
@@ -125,6 +130,7 @@ abstract class StructuralEvaluator extends Evaluator {
             return prev != null && evaluator.matches(root, prev);
         }
 
+        @Override
         public String toString() {
             return String.format(":prev%s", evaluator);
         }

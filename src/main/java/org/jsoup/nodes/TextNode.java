@@ -94,12 +94,13 @@ public class TextNode extends Node {
             indent(accum, depth, out);
 
         boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
-                && !Element.preserveWhitespace((Element) parent());
+                && !Element.preserveWhitespace(parent());
         Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
     }
 
     void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
 
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -107,6 +108,7 @@ public class TextNode extends Node {
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
+     * @param baseUri Base uri
      * @return TextNode containing unencoded data (e.g. &lt;)
      */
     public static TextNode createFromEncoded(String encodedText, String baseUri) {
@@ -169,5 +171,23 @@ public class TextNode extends Node {
     public String absUrl(String attributeKey) {
         ensureAttributes();
         return super.absUrl(attributeKey);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        TextNode textNode = (TextNode) o;
+
+        return !(text != null ? !text.equals(textNode.text) : textNode.text != null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (text != null ? text.hashCode() : 0);
+        return result;
     }
 }

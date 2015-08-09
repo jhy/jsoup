@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Locale;
@@ -16,10 +17,14 @@ import java.util.Locale;
  * Internal static utilities for handling data.
  *
  */
-public class DataUtil {
+public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int bufferSize = 0x20000; // ~130K.
+    private static final int UNICODE_BOM = 0xFEFF;
+    private static final char[] mimeBoundaryChars =
+            "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    static final int boundaryLength = 32;
 
     private DataUtil() {}
 
@@ -63,6 +68,20 @@ public class DataUtil {
         return parseByteData(byteData, charsetName, baseUri, parser);
     }
 
+    /**
+     * Writes the input stream to the output stream. Doesn't close them.
+     * @param in input stream to read from
+     * @param out output stream to write to
+     * @throws IOException on IO error
+     */
+    static void crossStreams(final InputStream in, final OutputStream out) throws IOException {
+        final byte[] buffer = new byte[bufferSize];
+        int len;
+        while ((len = in.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
+    }
+
     // reads bytes first into a buffer, then decodes with the appropriate charset. done this way to support
     // switching the chartset midstream when a meta http-equiv tag defines the charset.
     // todo - this is getting gnarly. needs a rewrite.
@@ -75,20 +94,18 @@ public class DataUtil {
             doc = parser.parseInput(docData, baseUri);
             Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
             if (meta != null) { // if not found, will keep utf-8 as best attempt
-                String foundCharset;
+                String foundCharset = null;
                 if (meta.hasAttr("http-equiv")) {
                     foundCharset = getCharsetFromContentType(meta.attr("content"));
-                    if (foundCharset == null && meta.hasAttr("charset")) {
-                        try {
-                            if (Charset.isSupported(meta.attr("charset"))) {
-                                foundCharset = meta.attr("charset");
-                            }
-                        } catch (IllegalCharsetNameException e) {
-                            foundCharset = null;
+                }
+                if (foundCharset == null && meta.hasAttr("charset")) {
+                    try {
+                        if (Charset.isSupported(meta.attr("charset"))) {
+                            foundCharset = meta.attr("charset");
                         }
+                    } catch (IllegalCharsetNameException e) {
+                        foundCharset = null;
                     }
-                } else {
-                    foundCharset = meta.attr("charset");
                 }
 
                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
@@ -104,7 +121,7 @@ public class DataUtil {
             docData = Charset.forName(charsetName).decode(byteData).toString();
         }
         // UTF-8 BOM indicator. takes precedence over everything else. rarely used. re-decodes incase above decoded incorrectly
-        if (docData.length() > 0 && docData.charAt(0) == 65279) {
+        if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
             byteData.rewind();
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
             docData = docData.substring(1);
@@ -145,8 +162,7 @@ public class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
-        ByteBuffer byteData = ByteBuffer.wrap(outStream.toByteArray());
-        return byteData;
+        return ByteBuffer.wrap(outStream.toByteArray());
     }
 
     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
@@ -166,6 +182,10 @@ public class DataUtil {
         }
     }
 
+    static ByteBuffer emptyByteBuffer() {
+        return ByteBuffer.allocate(0);
+    }
+
     /**
      * Parse out a charset from a content type header. If the charset is not supported, returns null (so the default
      * will kick in.)
@@ -178,7 +198,7 @@ public class DataUtil {
         if (m.find()) {
             String charset = m.group(1).trim();
             charset = charset.replace("charset=", "");
-            if (charset.isEmpty()) return null;
+            if (charset.length() == 0) return null;
             try {
                 if (Charset.isSupported(charset)) return charset;
                 charset = charset.toUpperCase(Locale.ENGLISH);
@@ -190,6 +210,16 @@ public class DataUtil {
         }
         return null;
     }
-    
-    
+
+    /**
+     * Creates a random string, suitable for use as a mime boundary
+     */
+    static String mimeBoundary() {
+        final StringBuilder mime = new StringBuilder(boundaryLength);
+        final Random rand = new Random();
+        for (int i = 0; i < boundaryLength; i++) {
+            mime.append(mimeBoundaryChars[rand.nextInt(mimeBoundaryChars.length)]);
+        }
+        return mime.toString();
+    }
 }

@@ -18,6 +18,7 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
+    private static final List<Node> EMPTY_NODES = Collections.emptyList();
     Node parentNode;
     List<Node> childNodes;
     Attributes attributes;
@@ -33,7 +34,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(baseUri);
         Validate.notNull(attributes);
         
-        childNodes = new ArrayList<Node>(4);
+        childNodes = EMPTY_NODES;
         this.baseUri = baseUri.trim();
         this.attributes = attributes;
     }
@@ -46,7 +47,7 @@ public abstract class Node implements Cloneable {
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
      */
     protected Node() {
-        childNodes = Collections.emptyList();
+        childNodes = EMPTY_NODES;
         attributes = null;
     }
 
@@ -58,10 +59,13 @@ public abstract class Node implements Cloneable {
 
     /**
      * Get an attribute's value by its key.
-     * <p/>
+     * <p>
      * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
-     * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * </p>
+     * E.g.:
+     * <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
+     * 
      * @param attributeKey The attribute key.
      * @return The attribute, or empty string if not present (to avoid nulls).
      * @see #attributes()
@@ -150,19 +154,22 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href></code> or
-     * <code>&lt;img src></code>).
-     * <p/>
+     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href&gt;</code> or
+     * <code>&lt;img src&gt;</code>).
+     * <p>
      * E.g.: <code>String absUrl = linkEl.absUrl("href");</code>
-     * <p/>
+     * </p>
+     * <p>
      * If the attribute value is already absolute (i.e. it starts with a protocol, like
      * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
      * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
      * absolute using that.
-     * <p/>
+     * </p>
+     * <p>
      * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix, e.g.:
      * <code>String absUrl = linkEl.attr("abs:href");</code>
-     *
+     * </p>
+     * 
      * @param attributeKey The attribute key
      * @return An absolute URL if one could be made, or an empty string (not null) if the attribute was missing or
      * could not be made successfully into a URL.
@@ -172,27 +179,10 @@ public abstract class Node implements Cloneable {
     public String absUrl(String attributeKey) {
         Validate.notEmpty(attributeKey);
 
-        String relUrl = attr(attributeKey);
         if (!hasAttr(attributeKey)) {
             return ""; // nothing to make absolute with
         } else {
-            URL base;
-            try {
-                try {
-                    base = new URL(baseUri);
-                } catch (MalformedURLException e) {
-                    // the base is unsuitable, but the attribute may be abs on its own, so try that
-                    URL abs = new URL(relUrl);
-                    return abs.toExternalForm();
-                }
-                // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
-                if (relUrl.startsWith("?"))
-                    relUrl = base.getPath() + relUrl;
-                URL abs = new URL(base, relUrl);
-                return abs.toExternalForm();
-            } catch (MalformedURLException e) {
-                return "";
-            }
+            return StringUtil.resolve(baseUri, attr(attributeKey));
         }
     }
 
@@ -283,7 +273,7 @@ public abstract class Node implements Cloneable {
      * @see #after(String)
      */
     public Node before(String html) {
-        addSiblingHtml(siblingIndex(), html);
+        addSiblingHtml(siblingIndex, html);
         return this;
     }
 
@@ -297,7 +287,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex(), node);
+        parentNode.addChildren(siblingIndex, node);
         return this;
     }
 
@@ -308,7 +298,7 @@ public abstract class Node implements Cloneable {
      * @see #before(String)
      */
     public Node after(String html) {
-        addSiblingHtml(siblingIndex()+1, html);
+        addSiblingHtml(siblingIndex + 1, html);
         return this;
     }
 
@@ -322,7 +312,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
-        parentNode.addChildren(siblingIndex()+1, node);
+        parentNode.addChildren(siblingIndex + 1, node);
         return this;
     }
 
@@ -368,12 +358,14 @@ public abstract class Node implements Cloneable {
     /**
      * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
      * the node but keeping its children.
-     * <p/>
-     * For example, with the input html:<br/>
-     * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
-     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
-     * {@code <div>One Two <b>Three</b></div>}<br/>
+     * <p>
+     * For example, with the input html:
+     * </p>
+     * <p>{@code <div>One <span>Two <b>Three</b></span></div>}</p>
+     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:
+     * <p>{@code <div>One Two <b>Three</b></div>}</p>
      * and the {@code "Two "} {@link TextNode} being returned.
+     * 
      * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
      * @see #remove()
      * @see #wrap(String)
@@ -381,9 +373,8 @@ public abstract class Node implements Cloneable {
     public Node unwrap() {
         Validate.notNull(parentNode);
 
-        int index = siblingIndex;
         Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
-        parentNode.addChildren(index, this.childNodesAsArray());
+        parentNode.addChildren(siblingIndex, this.childNodesAsArray());
         this.remove();
 
         return firstChild;
@@ -419,7 +410,7 @@ public abstract class Node implements Cloneable {
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
         
-        Integer index = out.siblingIndex();
+        final int index = out.siblingIndex;
         childNodes.set(index, in);
         in.parentNode = this;
         in.setSiblingIndex(index);
@@ -428,9 +419,9 @@ public abstract class Node implements Cloneable {
 
     protected void removeChild(Node out) {
         Validate.isTrue(out.parentNode == this);
-        int index = out.siblingIndex();
+        final int index = out.siblingIndex;
         childNodes.remove(index);
-        reindexChildren();
+        reindexChildren(index);
         out.parentNode = null;
     }
 
@@ -438,6 +429,7 @@ public abstract class Node implements Cloneable {
         //most used. short circuit addChildren(int), which hits reindex children and array copy
         for (Node child: children) {
             reparentChild(child);
+            ensureChildNodes();
             childNodes.add(child);
             child.setSiblingIndex(childNodes.size()-1);
         }
@@ -448,19 +440,26 @@ public abstract class Node implements Cloneable {
         for (int i = children.length - 1; i >= 0; i--) {
             Node in = children[i];
             reparentChild(in);
+            ensureChildNodes();
             childNodes.add(index, in);
         }
-        reindexChildren();
+        reindexChildren(index);
     }
 
-    private void reparentChild(Node child) {
+    protected void ensureChildNodes() {
+        if (childNodes == EMPTY_NODES) {
+            childNodes = new ArrayList<Node>(4);
+        }
+    }
+
+    protected void reparentChild(Node child) {
         if (child.parentNode != null)
             child.parentNode.removeChild(child);
         child.setParentNode(this);
     }
     
-    private void reindexChildren() {
-        for (int i = 0; i < childNodes.size(); i++) {
+    private void reindexChildren(int start) {
+        for (int i = start; i < childNodes.size(); i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
@@ -490,11 +489,10 @@ public abstract class Node implements Cloneable {
         if (parentNode == null)
             return null; // root
         
-        List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
-        if (siblings.size() > index+1)
-            return siblings.get(index+1);
+        final List<Node> siblings = parentNode.childNodes;
+        final int index = siblingIndex+1;
+        if (siblings.size() > index)
+            return siblings.get(index);
         else
             return null;
     }
@@ -507,11 +505,8 @@ public abstract class Node implements Cloneable {
         if (parentNode == null)
             return null; // root
 
-        List<Node> siblings = parentNode.childNodes;
-        Integer index = siblingIndex();
-        Validate.notNull(index);
-        if (index > 0)
-            return siblings.get(index-1);
+        if (siblingIndex > 0)
+            return parentNode.childNodes.get(siblingIndex-1);
         else
             return null;
     }
@@ -569,6 +564,7 @@ public abstract class Node implements Cloneable {
 
     abstract void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out);
 
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -577,17 +573,33 @@ public abstract class Node implements Cloneable {
         accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
     }
 
+    /**
+     * Check if this node is equal to another node. A node is considered equal if its attributes and content equal the
+     * other node; particularly its position in the tree does not influence its equality.
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        // todo: have nodes hold a child index, compare against that and parent (not children)
-        return false;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Node node = (Node) o;
+
+        if (childNodes != null ? !childNodes.equals(node.childNodes) : node.childNodes != null) return false;
+        return !(attributes != null ? !attributes.equals(node.attributes) : node.attributes != null);
     }
 
+    /**
+     * Calculates a hash code for this node, which includes iterating all its attributes, and recursing into any child
+     * nodes. This means that a node's hashcode is based on it and its child content, and not its parent or place in the
+     * tree. So two nodes with the same content, regardless of their position in the tree, will have the same hashcode.
+     * @return the calculated hashcode
+     * @see Node#equals(Object)
+     */
     @Override
     public int hashCode() {
-        int result = parentNode != null ? parentNode.hashCode() : 0;
-        // not children, or will block stack as they go back up to parent)
+        int result = childNodes != null ? childNodes.hashCode() : 0;
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         return result;
     }

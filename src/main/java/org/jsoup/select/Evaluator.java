@@ -25,6 +25,8 @@ public abstract class Evaluator {
      *
      * @param root    Root of the matching subtree
      * @param element tested element
+     * @return Returns <tt>true</tt> if the requirements are met or
+     * <tt>false</tt> otherwise
      */
     public abstract boolean matches(Element root, Element element);
 
@@ -152,7 +154,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
+            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim());
         }
 
         @Override
@@ -278,6 +280,9 @@ public abstract class Evaluator {
             Validate.notEmpty(value);
 
             this.key = key.trim().toLowerCase();
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length()-1);
+            }
             this.value = value.trim().toLowerCase();
         }
     }
@@ -299,7 +304,7 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching by sibling index number (e < idx)
+     * Evaluator for matching by sibling index number (e {@literal <} idx)
      */
     public static final class IndexLessThan extends IndexEvaluator {
         public IndexLessThan(int index) {
@@ -319,7 +324,7 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching by sibling index number (e > idx)
+     * Evaluator for matching by sibling index number (e {@literal >} idx)
      */
     public static final class IndexGreaterThan extends IndexEvaluator {
         public IndexGreaterThan(int index) {
@@ -486,7 +491,7 @@ public abstract class Evaluator {
 			int pos = 0;
         	Elements family = element.parent().children();
         	for (int i = 0; i < family.size(); i++) {
-        		if (family.get(i).tag() == element.tag()) pos++;
+        		if (family.get(i).tag().equals(element.tag())) pos++;
         		if (family.get(i) == element) break;
         	}
 			return pos;
@@ -509,7 +514,7 @@ public abstract class Evaluator {
 			int pos = 0;
         	Elements family = element.parent().children();
         	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
-        		if (family.get(i).tag() == element.tag()) pos++;
+        		if (family.get(i).tag().equals(element.tag())) pos++;
         	}
 			return pos;
 		}

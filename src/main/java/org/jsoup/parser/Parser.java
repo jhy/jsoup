@@ -27,8 +27,7 @@ public class Parser {
     
     public Document parseInput(String html, String baseUri) {
         errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
-        Document doc = treeBuilder.parse(html, baseUri, errors);
-        return doc;
+        return treeBuilder.parse(html, baseUri, errors);
     }
 
     // gets & sets
@@ -130,6 +129,9 @@ public class Parser {
         Element body = doc.body();
         List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
         Node[] nodes = nodeList.toArray(new Node[nodeList.size()]); // the node list gets modified when re-parented
+        for (int i = nodes.length - 1; i > 0; i--) {
+            nodes[i].remove();
+        }
         for (Node node : nodes) {
             body.appendChild(node);
         }

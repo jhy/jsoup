@@ -168,7 +168,7 @@ public class ParseTest {
         assertEquals("In July, GM said its electric Chevrolet Volt will be sold in the United States at $41,000 -- $8,000 more than its nearest competitor, the Nissan Leaf.", p.text());
     }
 
-    public File getFile(String resourceName) {
+    public static File getFile(String resourceName) {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());
             return file;
@@ -177,7 +177,7 @@ public class ParseTest {
         }
     }
 
-    private InputStream inputStreamFrom(String s) {
+    public static InputStream inputStreamFrom(String s) {
         try {
             return new ByteArrayInputStream(s.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {

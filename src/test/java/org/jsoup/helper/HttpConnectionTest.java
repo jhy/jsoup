@@ -1,6 +1,8 @@
 package org.jsoup.helper;
 
 import static org.junit.Assert.*;
+
+import org.jsoup.integration.ParseTest;
 import org.junit.Test;
 import org.jsoup.Connection;
 
@@ -136,5 +138,17 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.cookie("Name", "Val");
         assertEquals("Val", con.request().cookie("Name"));
+    }
+
+    @Test public void inputStream() {
+        Connection.KeyVal kv = HttpConnection.KeyVal.create("file", "thumb.jpg", ParseTest.inputStreamFrom("Check"));
+        assertEquals("file", kv.key());
+        assertEquals("thumb.jpg", kv.value());
+        assertTrue(kv.hasInputStream());
+
+        kv = HttpConnection.KeyVal.create("one", "two");
+        assertEquals("one", kv.key());
+        assertEquals("two", kv.value());
+        assertFalse(kv.hasInputStream());
     }
 }

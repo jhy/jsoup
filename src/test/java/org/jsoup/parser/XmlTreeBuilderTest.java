@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.Ignore;
@@ -18,8 +17,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.*;
 
 /**
  * Tests XmlTreeBuilder.
@@ -71,13 +69,16 @@ public class XmlTreeBuilderTest {
 
         // parse with both xml and html parser, ensure different
         Document xmlDoc = Jsoup.connect(xmlUrl).parser(Parser.xmlParser()).get();
-        Document htmlDoc = Jsoup.connect(xmlUrl).get();
+        Document htmlDoc = Jsoup.connect(xmlUrl).parser(Parser.htmlParser()).get();
+        Document autoXmlDoc = Jsoup.connect(xmlUrl).get(); // check connection auto detects xml, uses xml parser
 
         assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
                 TextUtil.stripNewlines(xmlDoc.html()));
-        assertNotSame(htmlDoc, xmlDoc);
+        assertFalse(htmlDoc.equals(xmlDoc));
+        assertEquals(xmlDoc, autoXmlDoc);
         assertEquals(1, htmlDoc.select("head").size()); // html parser normalises
         assertEquals(0, xmlDoc.select("head").size()); // xml parser does not
+        assertEquals(0, autoXmlDoc.select("head").size()); // xml parser does not
     }
 
     @Test
@@ -121,5 +122,12 @@ public class XmlTreeBuilderTest {
     @Test public void xmlParseDefaultsToHtmlOutputSyntax() {
         Document doc = Jsoup.parse("x", "", Parser.xmlParser());
         assertEquals(Syntax.xml, doc.outputSettings().syntax());
+    }
+
+    @Test
+    public void testDoesHandleEOFInTag() {
+        String html = "<img src=asdf onerror=\"alert(1)\" x=";
+        Document xmlDoc = Jsoup.parse(html, "", Parser.xmlParser());
+        assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\" />", xmlDoc.html());
     }
 }

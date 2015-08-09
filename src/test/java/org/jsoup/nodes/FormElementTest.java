@@ -4,8 +4,6 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -28,16 +26,24 @@ public class FormElementTest {
 
     @Test public void createsFormData() {
         String html = "<form><input name='one' value='two'><select name='three'><option value='not'>" +
-                "<option value='four' selected><option value='five' selected><textarea name=six>seven</textarea></form>";
+                "<option value='four' selected><option value='five' selected><textarea name=six>seven</textarea>" +
+                "<input name='seven' type='radio' value='on' checked><input name='seven' type='radio' value='off'>" +
+                "<input name='eight' type='checkbox' checked><input name='nine' type='checkbox' value='unset'>" +
+                "<input name='ten' value='text' disabled>" +
+                "</form>";
         Document doc = Jsoup.parse(html);
         FormElement form = (FormElement) doc.select("form").first();
         List<Connection.KeyVal> data = form.formData();
 
-        assertEquals(4, data.size());
+        assertEquals(6, data.size());
         assertEquals("one=two", data.get(0).toString());
         assertEquals("three=four", data.get(1).toString());
         assertEquals("three=five", data.get(2).toString());
         assertEquals("six=seven", data.get(3).toString());
+        assertEquals("seven=on", data.get(4).toString()); // set
+        assertEquals("eight=on", data.get(5).toString()); // default
+        // nine should not appear, not checked checkbox
+        // ten should not appear, disabled
     }
 
     @Test public void createsSubmitableConnection() {
@@ -107,5 +113,35 @@ public class FormElementTest {
 
         List<Connection.KeyVal> data = form.formData();
         assertEquals("foo=bar", data.get(0).toString());
+    }
+
+    @Test public void usesOnForCheckboxValueIfNoValueSet() {
+        Document doc = Jsoup.parse("<form><input type=checkbox checked name=foo></form>");
+        FormElement form = (FormElement) doc.select("form").first();
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals("on", data.get(0).value());
+        assertEquals("foo", data.get(0).key());
+    }
+
+    @Test public void adoptedFormsRetainInputs() {
+        // test for https://github.com/jhy/jsoup/issues/249
+        String html = "<html>\n" +
+                "<body>  \n" +
+                "  <table>\n" +
+                "      <form action=\"/hello.php\" method=\"post\">\n" +
+                "      <tr><td>User:</td><td> <input type=\"text\" name=\"user\" /></td></tr>\n" +
+                "      <tr><td>Password:</td><td> <input type=\"password\" name=\"pass\" /></td></tr>\n" +
+                "      <tr><td><input type=\"submit\" name=\"login\" value=\"login\" /></td></tr>\n" +
+                "   </form>\n" +
+                "  </table>\n" +
+                "</body>\n" +
+                "</html>";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement) doc.select("form").first();
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals(3, data.size());
+        assertEquals("user", data.get(0).key());
+        assertEquals("pass", data.get(1).key());
+        assertEquals("login", data.get(2).key());
     }
 }
