@@ -20,7 +20,9 @@ public class AttributeTest {
     
     @Test public void testPreserverQuote() {
         Attribute attr = new Attribute("key", "value &", '\'');
-        assertEquals("key='value &amp;'", attr.html());
+        StringBuilder accum = new StringBuilder();
+        attr.html(accum, new Document.OutputSettings().preserveQuote(true));
+        assertEquals("key='value &amp;'", accum.toString());
         assertEquals(attr.html(), attr.toString());
     }
 }

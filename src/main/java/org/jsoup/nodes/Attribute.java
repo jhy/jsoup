@@ -98,9 +98,16 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     protected void html(StringBuilder accum, Document.OutputSettings out) {
         accum.append(key);
         if (!shouldCollapseAttribute(out)) {
-            accum.append("=").append(quote);
+            accum.append("=");
+            if (out.preserveQuote()) 
+                accum.append(quote); 
+            else 
+                accum.append('"');
             Entities.escape(accum, value, out, true, false, false);
-            accum.append(quote);
+            if (out.preserveQuote()) 
+                accum.append(quote); 
+            else 
+                accum.append('"');
         }
     }
 
