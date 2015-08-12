@@ -85,6 +85,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return old;
     }
 
+    public char getQuote() {
+        return quote;
+    }
+
+    public void setQuote(char quote) {
+        this.quote = quote;
+    }
+
     /**
      Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
      @return HTML

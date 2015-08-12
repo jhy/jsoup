@@ -45,8 +45,17 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @param value attribute value
      */
     public void put(String key, String value) {
-        Attribute attr = new Attribute(key, value);
-        put(attr);
+        Attribute attr = null;
+        if (attributes != null && !attributes.isEmpty()) 
+            attr = attributes.get(key.toLowerCase());
+        
+        if (attr != null) {      
+            attr.setValue(value);
+            attr.setKey(key);
+        } else {
+            attr = new Attribute(key, value);
+            put(attr);
+        }
     }
     
     /**
@@ -60,7 +69,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         else
             remove(key);
     }
-
+    
     /**
      Set a new attribute, or replace an existing one by key.
      @param attribute attribute

@@ -6,8 +6,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -100,7 +98,6 @@ public abstract class Node implements Cloneable {
         attributes.put(attributeKey, attributeValue);
         return this;
     }
-
     /**
      * Test if this element has an attribute.
      * @param attributeKey The attribute key to check.
