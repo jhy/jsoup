@@ -2,18 +2,21 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
  CharacterReader consumes tokens off a string. To replace the old TokenQueue.
  */
-class CharacterReader {
+final class CharacterReader {
     static final char EOF = (char) -1;
+    private static final int maxCacheLen = 12;
 
     private final char[] input;
     private final int length;
     private int pos = 0;
     private int mark = 0;
+    private final String[] stringCache = new String[512]; // holds reused strings in this doc, to lessen garbage
 
     CharacterReader(String input) {
         Validate.notNull(input);
@@ -85,11 +88,11 @@ class CharacterReader {
         for (int offset = pos; offset < length; offset++) {
             // scan to first instance of startchar:
             if (startChar != input[offset])
-                while(++offset < length && startChar != input[offset]);
+                while(++offset < length && startChar != input[offset]) { /* empty */ }
             int i = offset + 1;
             int last = i + seq.length()-1;
             if (offset < length && last <= length) {
-                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++);
+                for (int j = 1; i < last && seq.charAt(j) == input[i]; i++, j++) { /* empty */ }
                 if (i == last) // found full sequence
                     return offset - pos;
             }
@@ -100,7 +103,7 @@ class CharacterReader {
     String consumeTo(char c) {
         int offset = nextIndexOf(c);
         if (offset != -1) {
-            String consumed = new String(input, pos, offset);
+            String consumed = cacheString(pos, offset);
             pos += offset;
             return consumed;
         } else {
@@ -111,7 +114,7 @@ class CharacterReader {
     String consumeTo(String seq) {
         int offset = nextIndexOf(seq);
         if (offset != -1) {
-            String consumed = new String(input, pos, offset);
+            String consumed = cacheString(pos, offset);
             pos += offset;
             return consumed;
         } else {
@@ -120,21 +123,68 @@ class CharacterReader {
     }
 
     String consumeToAny(final char... chars) {
-        int start = pos;
+        final int start = pos;
+        final int remaining = length;
 
-        OUTER: while (pos < length) {
-            for (int i = 0; i < chars.length; i++) {
-                if (input[pos] == chars[i])
+        OUTER: while (pos < remaining) {
+            for (char c : chars) {
+                if (input[pos] == c)
                     break OUTER;
             }
             pos++;
         }
 
-        return pos > start ? new String(input, start, pos-start) : "";
+        return pos > start ? cacheString(start, pos-start) : "";
+    }
+
+    String consumeToAnySorted(final char... chars) {
+        final int start = pos;
+        final int remaining = length;
+        final char[] val = input;
+
+        while (pos < remaining) {
+            if (Arrays.binarySearch(chars, val[pos]) >= 0)
+                break;
+            pos++;
+        }
+
+        return pos > start ? cacheString(start, pos-start) : "";
+    }
+
+    String consumeData() {
+        // &, <, null
+        final int start = pos;
+        final int remaining = length;
+        final char[] val = input;
+
+        while (pos < remaining) {
+            final char c = val[pos];
+            if (c == '&'|| c ==  '<' || c ==  TokeniserState.nullChar)
+                break;
+            pos++;
+        }
+
+        return pos > start ? cacheString(start, pos-start) : "";
+    }
+
+    String consumeTagName() {
+        // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
+        final int start = pos;
+        final int remaining = length;
+        final char[] val = input;
+
+        while (pos < remaining) {
+            final char c = val[pos];
+            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  TokeniserState.nullChar)
+                break;
+            pos++;
+        }
+
+        return pos > start ? cacheString(start, pos-start) : "";
     }
 
     String consumeToEnd() {
-        String data = new String(input, pos, length-pos);
+        String data = cacheString(pos, length-pos);
         pos = length;
         return data;
     }
@@ -149,7 +199,7 @@ class CharacterReader {
                 break;
         }
 
-        return new String(input, start, pos - start);
+        return cacheString(start, pos - start);
     }
 
     String consumeLetterThenDigitSequence() {
@@ -169,7 +219,7 @@ class CharacterReader {
                 break;
         }
 
-        return new String(input, start, pos - start);
+        return cacheString(start, pos - start);
     }
 
     String consumeHexSequence() {
@@ -181,7 +231,7 @@ class CharacterReader {
             else
                 break;
         }
-        return new String(input, start, pos - start);
+        return cacheString(start, pos - start);
     }
 
     String consumeDigitSequence() {
@@ -193,7 +243,7 @@ class CharacterReader {
             else
                 break;
         }
-        return new String(input, start, pos - start);
+        return cacheString(start, pos - start);
     }
 
     boolean matches(char c) {
@@ -238,6 +288,10 @@ class CharacterReader {
         return false;
     }
 
+    boolean matchesAnySorted(char[] seq) {
+        return !isEmpty() && Arrays.binarySearch(seq, input[pos]) >= 0;
+    }
+
     boolean matchesLetter() {
         if (isEmpty())
             return false;
@@ -280,5 +334,62 @@ class CharacterReader {
     @Override
     public String toString() {
         return new String(input, pos, length - pos);
+    }
+
+    /**
+     * Caches short strings, as a flywheel pattern, to reduce GC load. Just for this doc, to prevent leaks.
+     * <p />
+     * Simplistic, and on hash collisions just falls back to creating a new string, vs a full HashMap with Entry list.
+     * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
+     * some more duplicates.
+     */
+    private String cacheString(final int start, final int count) {
+        final char[] val = input;
+        final String[] cache = stringCache;
+
+        // limit (no cache):
+        if (count > maxCacheLen)
+            return new String(val, start, count);
+
+        // calculate hash:
+        int hash = 0;
+        int offset = start;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + val[offset++];
+        }
+
+        // get from cache
+        final int index = hash & cache.length - 1;
+        String cached = cache[index];
+
+        if (cached == null) { // miss, add
+            cached = new String(val, start, count);
+            cache[index] = cached;
+        } else { // hashcode hit, check equality
+            if (rangeEquals(start, count, cached)) {
+                // hit
+                return cached;
+            } else { // hashcode conflict
+                cached = new String(val, start, count);
+            }
+        }
+        return cached;
+    }
+
+    /**
+     * Check if the value of the provided range equals the string.
+     */
+    boolean rangeEquals(final int start, int count, final String cached) {
+        if (count == cached.length()) {
+            char one[] = input;
+            int i = start;
+            int j = 0;
+            while (count-- != 0) {
+                if (one[i++] != cached.charAt(j++))
+                    return false;
+            }
+            return true;
+        }
+        return false;
     }
 }

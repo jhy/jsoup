@@ -6,19 +6,21 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import java.util.List;
 
 /**
  The whitelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
- <p/>
+ <p>
  The HTML cleaner parses the input as HTML and then runs it through a white-list, so the output HTML can only contain
  HTML that is allowed by the whitelist.
- <p/>
+ </p>
+ <p>
  It is assumed that the input HTML is a body fragment; the clean methods only pull from the source's body, and the
  canned white-lists only allow body contained tags.
- <p/>
+ </p>
+ <p>
  Rather than interacting directly with a Cleaner object, generally see the {@code clean} methods in {@link org.jsoup.Jsoup}.
+ </p>
  */
 public class Cleaner {
     private Whitelist whitelist;
@@ -51,10 +53,11 @@ public class Cleaner {
     /**
      Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
      in the input HTML are allowed by the whitelist.
-     <p/>
+     <p>
      This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
      using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
      to ensure enforced attributes are set correctly, and that the output is tidied.
+     </p>
      @param dirtyDocument document to test
      @return true if no tags or attributes need to be removed; false if they do
      */
@@ -97,6 +100,10 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
                 destination.appendChild(destText);
+            } else if (source instanceof DataNode && whitelist.isSafeTag(source.parent().nodeName())) {
+              DataNode sourceData = (DataNode) source;
+              DataNode destData = new DataNode(sourceData.getWholeData(), source.baseUri());
+              destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
                 numDiscarded++;
             }

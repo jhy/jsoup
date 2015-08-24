@@ -3,14 +3,16 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -44,11 +46,11 @@ public class HtmlParserTest {
         String html = "<p =a>One<a <p>Something</p>Else";
         // this gets a <p> with attr '=a' and an <a tag with an attribue named '<p'; and then auto-recreated
         Document doc = Jsoup.parse(html);
-        assertEquals("<p =a=\"\">One<a <p=\"\">Something</a></p>\n" +
-                "<a <p=\"\">Else</a>", doc.body().html());
+        assertEquals("<p =a>One<a <p>Something</a></p>\n" +
+                "<a <p>Else</a>", doc.body().html());
 
         doc = Jsoup.parse("<p .....>");
-        assertEquals("<p .....=\"\"></p>", doc.body().html());
+        assertEquals("<p .....></p>", doc.body().html());
     }
 
     @Test public void parsesComments() {
@@ -277,6 +279,14 @@ public class HtmlParserTest {
         assertEquals("http://foo/4", anchors.get(2).absUrl("href"));
     }
 
+    @Test public void handlesProtocolRelativeUrl() {
+        String base = "https://example.com/";
+        String html = "<img src='//example.net/img.jpg'>";
+        Document doc = Jsoup.parse(html, base);
+        Element el = doc.select("img").first();
+        assertEquals("https://example.net/img.jpg", el.absUrl("src"));
+    }
+
     @Test public void handlesCdata() {
         // todo: as this is html namespace, should actually treat as bogus comment, not cdata. keep as cdata for now
         String h = "<div id=1><![CDATA[<html>\n<foo><&amp;]]></div>"; // the &amp; in there should remain literal
@@ -407,7 +417,7 @@ public class HtmlParserTest {
     @Test public void normalisesDocument() {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
-        assertEquals("<!DOCTYPE html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
+        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
                 TextUtil.stripNewlines(doc.html()));
     }
 
@@ -462,7 +472,7 @@ public class HtmlParserTest {
     @Test public void testNoImagesInNoScriptInHead() {
         // jsoup used to allow, but against spec if parsing with noscript
         Document doc = Jsoup.parse("<html><head><noscript><img src='foo'></noscript></head><body><p>Hello</p></body></html>");
-        assertEquals("<html><head><noscript></noscript></head><body><img src=\"foo\"><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<html><head><noscript>&lt;img src=\"foo\"&gt;</noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void testAFlowContents() {
@@ -509,7 +519,7 @@ public class HtmlParserTest {
                 "<p></b></b></b></b></b></b>X";
         Document doc = Jsoup.parse(h);
         doc.outputSettings().indentAmount(0);
-        String want = "<!DOCTYPE html>\n" +
+        String want = "<!doctype html>\n" +
                 "<html>\n" +
                 "<head></head>\n" +
                 "<body>\n" +
@@ -805,5 +815,65 @@ public class HtmlParserTest {
         String h = "<body><image><svg><image /></svg></body>";
         Document doc = Jsoup.parse(h);
         assertEquals("<img>\n<svg>\n <image />\n</svg>", doc.body().html());
+    }
+
+    @Test public void handlesInvalidDoctypes() {
+        // would previously throw invalid name exception on empty doctype
+        Document doc = Jsoup.parse("<!DOCTYPE>");
+        assertEquals(
+                "<!doctype> <html> <head></head> <body></body> </html>",
+                StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<!DOCTYPE><html><p>Foo</p></html>");
+        assertEquals(
+                "<!doctype> <html> <head></head> <body> <p>Foo</p> </body> </html>",
+                StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<!DOCTYPE \u0000>");
+        assertEquals(
+                "<!doctype �> <html> <head></head> <body></body> </html>",
+                StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+    
+    @Test public void handlesManyChildren() {
+        // Arrange
+        StringBuilder longBody = new StringBuilder(500000);
+        for (int i = 0; i < 25000; i++) {
+            longBody.append(i).append("<br>");
+        }
+        
+        // Act
+        long start = System.currentTimeMillis();
+        Document doc = Parser.parseBodyFragment(longBody.toString(), "");
+        
+        // Assert
+        assertEquals(50000, doc.body().childNodeSize());
+        assertTrue(System.currentTimeMillis() - start < 1000);
+    }
+
+    @Test
+    public void testInvalidTableContents() throws IOException {
+        File in = ParseTest.getFile("/htmltests/table-invalid-elements.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        doc.outputSettings().prettyPrint(true);
+        String rendered = doc.toString();
+        int endOfEmail = rendered.indexOf("Comment");
+        int guarantee = rendered.indexOf("Why am I here?");
+        assertTrue("Comment not found", endOfEmail > -1);
+        assertTrue("Search text not found", guarantee > -1);
+        assertTrue("Search text did not come after comment", guarantee > endOfEmail);
+    }
+
+    @Test public void testNormalisesIsIndex() {
+        Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
+        String html = doc.outerHtml();
+        assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
+                StringUtil.normaliseWhitespace(doc.body().html()));
+    }
+
+    @Test public void testReinsertionModeForThCelss() {
+        String body = "<body> <table> <tr> <th> <table><tr><td></td></tr></table> <div> <table><tr><td></td></tr></table> </div> <div></div> <div></div> <div></div> </th> </tr> </table> </body>";
+        Document doc = Jsoup.parse(body);
+        assertEquals(1, doc.body().children().size());
     }
 }

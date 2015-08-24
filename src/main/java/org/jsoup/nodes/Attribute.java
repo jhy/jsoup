@@ -92,6 +92,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Get the string representation of this attribute, implemented as {@link #html()}.
      @return string
      */
+    @Override
     public String toString() {
         return html();
     }
@@ -113,11 +114,18 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     /**
      * Collapsible if it's a boolean attribute and value is empty or same as name
+     * 
+     * @param out Outputsettings
+     * @return  Returns whether collapsible or not
      */
     protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {
         return ("".equals(value) || value.equalsIgnoreCase(key))
                 && out.syntax() == Document.OutputSettings.Syntax.html
-                && Arrays.binarySearch(booleanAttributes, key) >= 0;
+                && isBooleanAttribute();
+    }
+
+    protected boolean isBooleanAttribute() {
+        return Arrays.binarySearch(booleanAttributes, key) >= 0;
     }
 
     @Override
@@ -128,9 +136,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         Attribute attribute = (Attribute) o;
 
         if (key != null ? !key.equals(attribute.key) : attribute.key != null) return false;
-        if (value != null ? !value.equals(attribute.value) : attribute.value != null) return false;
-
-        return true;
+        return !(value != null ? !value.equals(attribute.value) : attribute.value != null);
     }
 
     @Override

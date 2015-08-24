@@ -1,7 +1,11 @@
 package org.jsoup.parser;
 
+import java.util.List;
+
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.BooleanAttribute;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
@@ -66,4 +70,24 @@ public class AttributeParseTest {
         Elements els = Jsoup.parse(html).select("a");
         assertEquals("&wr_id=123&mid-size=true&ok=&wr", els.first().attr("href"));
     }
+    
+    @Test public void parsesBooleanAttributes() {
+        String html = "<a normal=\"123\" boolean empty=\"\"></a>";
+        Element el = Jsoup.parse(html).select("a").first();
+        
+        assertEquals("123", el.attr("normal"));
+        assertEquals("", el.attr("boolean"));
+        assertEquals("", el.attr("empty"));
+        
+        List<Attribute> attributes = el.attributes().asList();
+        assertEquals("There should be 3 attribute present", 3, attributes.size());
+        
+        // Assuming the list order always follows the parsed html
+		assertFalse("'normal' attribute should not be boolean", attributes.get(0) instanceof BooleanAttribute);        
+		assertTrue("'boolean' attribute should be boolean", attributes.get(1) instanceof BooleanAttribute);        
+		assertFalse("'empty' attribute should not be boolean", attributes.get(2) instanceof BooleanAttribute);        
+        
+        assertEquals(html, el.outerHtml());
+    }
+    
 }

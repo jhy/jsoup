@@ -1,6 +1,120 @@
 jsoup changelog
 
-*** Release 1.8.1 [PENDING]
+*** Release 1.8.3 [2015-Aug-02]
+ * Added support for custom boolean attributes.
+   <https://github.com/jhy/jsoup/pull/555>
+
+ * When fetching XML URLs, automatically switch to the XML parser instead of the HTML parser.
+   <https://github.com/jhy/jsoup/pull/574>
+
+ * Performance improvement on parsing larger HTML pages. On Android KitKat, around 1.7x times faster. On Android
+   Lollipop, ~ 1.3x faster. Improvements largely from re-ordering the HtmlTreeBuilder methods based on analysis of
+   various websites; also from further memory reduction for nodes with no children, and other tweaks.
+   
+ * Fixed an issue in Element.getElementSiblingIndex (and related methods) where sibling elements with the same content
+   would incorrectly have the same sibling index.
+   <https://github.com/jhy/jsoup/issues/554>
+
+ * Fixed an issue where unexpected elements in a badly nested table could be moved to the wrong location in the
+   document.
+   <https://github.com/jhy/jsoup/issues/552>
+
+ * Fixed an issue where a table nested within a TH cell would parse to an incorrect tree.
+   <https://github.com/jhy/jsoup/issues/575>
+
+ * When serializing a document using the XHTML encoding entities, if the character set did not support &nbsp; chars
+   (such as Shift_JIS), the character would be skipped. For visibility, will now always output &xa0; when using XHTML
+   encoding entities (as &nbsp; is not defined), regardless of the output character set.
+   <https://github.com/jhy/jsoup/issues/523>
+
+ * Fixed an issue when resolving URLs, if the absolute URL had no path, the relative URL was not normalized correctly.
+   Also fixed an issue where connections that were redirected to a relative URL did not have the same normalization
+   rules as a URL read from Nodes.absUrl(String).
+   <https://github.com/jhy/jsoup/issues/585>
+
+ * When serialising XML, ensure that '<' characters in attributes are escaped, per spec. Not required in HTML.
+   <https://github.com/jhy/jsoup/issues/528>
+
+*** Release 1.8.2 [2015-Apr-13]
+ * Performance improvements for parsing HTML on Android, of 1.5x to 1.9x, with larger parses getting a bigger
+   speed increase. For non-Android JREs, around 1.1x to 1.2x.
+
+ * Dramatic performance improvement in HTML serialization on Android (KitKat and later), of 115x. Improvement by working
+   around a character set encoding speed regression in Android.
+   <https://github.com/jhy/jsoup/issues/383>
+
+ * Performance improvement for the class name selector on Android (.class) of 2.5x to 14x. Around 1.2x
+   on non-Android JREs.
+
+ * File upload support. Added the ability to specify input streams for POST data, which will upload content in
+   MIME multipart/form-data encoding.
+
+ * Add a meta-charset element to documents when setting the character set, so that the document's charset is
+   unambiguous.
+   <https://github.com/jhy/jsoup/pull/486>
+
+ * Added ability to disable TLS (SSL) certificate validation. Helpful if you're hitting a host with a bad cert,
+   or your JDK doesn't support SNI.
+   <https://github.com/jhy/jsoup/pull/343>
+
+ * Added ability to further tweak the canned Cleaner Whitelists by removing existing settings.
+   <https://github.com/jhy/jsoup/pull/449>
+
+ * Added option in Cleaner Whitelist to allow linking to in-page anchors (#)
+   <https://github.com/jhy/jsoup/pull/441>
+
+ * Use a lowercase doctype tag for HTML5 documents.
+
+ * Add support for 201 Created with redirect, and other status codes. Treats any HTTP status code 2xx or 3xx as an OK
+   response, and follow redirects whenever there is a Location header.
+   <https://github.com/jhy/jsoup/issues/312>
+
+ * Added support for HTTP method verbs PUT, DELETE, and PATCH.
+
+ * Added support for overriding the default POST character of UTF-8
+   <https://github.com/jhy/jsoup/pull/491>
+
+ * W3C DOM support: added ability to convert from a jsoup document to a W3C document, with the W3Dom helper class.
+
+ * In the HtmlToPlainText example program, added the ability to filter using a CSS selector. Also clarified
+   the usage documentation.
+
+ * Fixed validation of cookie names in HttpConnection cookie methods.
+   <https://github.com/jhy/jsoup/pull/377>
+
+ * Fixed an issue where <option> tags would be missed when preparing a form for submission if missing a selected
+   attribute.
+
+ * Fixed an issue where submitting a form would incorrectly include radio and checkbox values without the checked
+   attribute.
+
+ * Fixed an issue where Element.classNames() would return a set containing an empty class; and may have extraneous
+   whitespace.
+   <https://github.com/jhy/jsoup/pull/469>
+
+ * Fixed an issue where attributes selected by value were not correctly space normalized.
+   <https://github.com/jhy/jsoup/pull/526>
+
+ * In head+noscript elements, treat content as character data, instead of jumping out of head parsing.
+   <https://github.com/jhy/jsoup/pull/540>
+
+ * Fixed performance issue when parsing HTML with elements with many children that need re-parenting.
+   <https://github.com/jhy/jsoup/pull/506>
+
+ * Fixed an issue where a server returning an unsupport character set response would cause a runtime
+   UnsupportedCharsetException, instead of falling back to the default UTF-8 charset.
+   <https://github.com/jhy/jsoup/pull/509>
+
+ * Fixed an issue where Jsoup.Connection would throw an IO Exception when reading a page with zero content-length.
+   <https://github.com/jhy/jsoup/issues/538>
+
+ * Improved the equals() and hashcode() methods in Node, to consider all their child content, for DOM tree comparisons.
+   <https://github.com/jhy/jsoup/issues/537>
+
+ * Improved performance in Selector when searching multiple roots.
+   <https://github.com/jhy/jsoup/issues/518>
+
+*** Release 1.8.1 [2014-Sep-27]
  * Introduced the ability to chose between HTML and XML output, and made HTML the default. This means img tags are
    output as <img>, not <img />. XML is the default when using the XmlTreeBuilder. Control this with the
    Document.OutputSettings.syntax() method.
@@ -14,10 +128,15 @@ jsoup changelog
 
  * Tightened the scope of what characters are escaped in attributes and textnodes, to align with the spec. Also, when
    using the extended escape entities map, only escape a character if the current output charset does not support it.
-   This produces smaller, more legible HTML, with greated control over the output (by setting charset and escape mode).
+   This produces smaller, more legible HTML, with greater control over the output (by setting charset and escape mode).
 
  * If pretty-print is disabled, don't trim outer whitespace in Element.html()
    <https://github.com/jhy/jsoup/issues/368>
+
+ * In the HTML Cleaner, allow span tags in the basic whitelist, and span and div tags in the relaxed whitelist.
+
+  * Added Element.cssSelector(), which returns a unique CSS selector/path for an element.
+    <https://github.com/jhy/jsoup/pull/459>
 
  * Fixed an issue where <svg><img/></svg> was parsed as <svg><image/></svg>
    <https://github.com/jhy/jsoup/issues/364>
@@ -26,6 +145,35 @@ jsoup changelog
    the HTML body did, leading to the head contents incorrectly being parsed into the body. Changed the behavior so that
    when the UTF-8 BOM is detected, it will take precedence for determining the charset to decode with.
    <https://github.com/jhy/jsoup/issues/348>
+
+ * Relaxed doctype validation, allowing doctypes to not specify a name.
+   <https://github.com/jhy/jsoup/issues/460>
+
+ * Fixed an issue in parsing a base URI when loading a URL containing a http-equiv element.
+   <https://github.com/jhy/jsoup/issues/440>
+
+ * Fixed an issue for Java 1.5 / Android 2.2 compatibility, and verify it doesn't regress.
+   <https://github.com/jhy/jsoup/issues/375>
+   <https://github.com/jhy/jsoup/pull/403>
+
+ * Fixed an issue that would throw an NPE when trying to set invalid HTML into a title element.
+   <https://github.com/jhy/jsoup/pull/410>
+
+ * Added support for quoted attribute values in CSS Selectors
+   <https://github.com/jhy/jsoup/pull/400>
+
+ * Fixed support for nth-of-type selectors with unknown tags.
+   <https://github.com/jhy/jsoup/pull/402>
+
+ * Added support for 'application/*+xml' mimetypes.
+   <https://github.com/jhy/jsoup/pull/444>
+
+ * Fixed support for allowing script tags in cleaner whitelists.
+   <https://github.com/jhy/jsoup/issues/299>
+   <https://github.com/jhy/jsoup/issues/388>
+
+ * In FormElements, don't submit disabled inputs, and use 'on' as checkbox value default.
+   <https://github.com/jhy/jsoup/issues/489>
 
 *** Release 1.7.3 [2013-Nov-10]
  * Introduced FormElement, providing easy access to form controls and their data, and the ability to submit forms
@@ -55,6 +203,9 @@ jsoup changelog
 
  * Fixed an issue when connecting or redirecting to a URL that contains a space.
    <https://github.com/jhy/jsoup/pull/354> <https://github.com/jhy/jsoup/issues/114>
+
+ * Added support for the HTTP/1.1 Temporary Redirect (307) status code.
+   <https://github.com/jhy/jsoup/issues/452>
 
 *** Release 1.7.2 [2013-Jan-27]
  * Added support for supplementary characters outside of the Basic Multilingual Plane.

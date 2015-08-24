@@ -45,6 +45,36 @@ public class CleanerTest {
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
     }
+
+    @Test public void testRemoveTags() {
+        String h = "<div><p><A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeTags("a"));
+
+        assertEquals("<p>Nice</p><blockquote>Hello</blockquote>", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveAttributes() {
+        String h = "<div><p>Nice</p><blockquote cite='http://example.com/quotations'>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeAttributes("blockquote", "cite"));
+
+        assertEquals("<p>Nice</p><blockquote>Hello</blockquote>", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveEnforcedAttributes() {
+        String h = "<div><p><A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeEnforcedAttribute("a", "rel"));
+
+        assertEquals("<p><a href=\"http://nice.com\">Nice</a></p><blockquote>Hello</blockquote>",
+                TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testRemoveProtocols() {
+        String h = "<p>Contact me <a href='mailto:info@example.com'>here</a></p>";
+        String cleanHtml = Jsoup.clean(h, Whitelist.basic().removeProtocols("a", "href", "ftp", "mailto"));
+
+        assertEquals("<p>Contact me <a rel=\"nofollow\">here</a></p>",
+                TextUtil.stripNewlines(cleanHtml));
+    }
     
     @Test public void testDropComments() {
         String h = "<p>Hello<!-- no --></p>";
@@ -74,6 +104,28 @@ public class CleanerTest {
         String h = "<A HREF=\"javascript:document.location='http://www.google.com/'\">XSS</A>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
         assertEquals("<a>XSS</a>", cleanHtml);
+    }
+
+    @Test public void testCleanAnchorProtocol() {
+        String validAnchor = "<a href=\"#valid\">Valid anchor</a>";
+        String invalidAnchor = "<a href=\"#anchor with spaces\">Invalid anchor</a>";
+
+        // A Whitelist that does not allow anchors will strip them out.
+        String cleanHtml = Jsoup.clean(validAnchor, Whitelist.relaxed());
+        assertEquals("<a>Valid anchor</a>", cleanHtml);
+
+        cleanHtml = Jsoup.clean(invalidAnchor, Whitelist.relaxed());
+        assertEquals("<a>Invalid anchor</a>", cleanHtml);
+
+        // A Whitelist that allows them will keep them.
+        Whitelist relaxedWithAnchor = Whitelist.relaxed().addProtocols("a", "href", "#");
+
+        cleanHtml = Jsoup.clean(validAnchor, relaxedWithAnchor);
+        assertEquals(validAnchor, cleanHtml);
+
+        // An invalid anchor is never valid.
+        cleanHtml = Jsoup.clean(invalidAnchor, relaxedWithAnchor);
+        assertEquals("<a>Invalid anchor</a>", cleanHtml);
     }
 
     @Test public void testDropsUnknownTags() {
@@ -182,5 +234,12 @@ public class CleanerTest {
 
     @Test public void cleansInternationalText() {
         assertEquals("привет", Jsoup.clean("привет", Whitelist.none()));
+    }
+
+    @Test
+    public void testScriptTagInWhiteList() {
+        Whitelist whitelist = Whitelist.relaxed();
+        whitelist.addTags( "script" );
+        assertTrue( Jsoup.isValid("Hello<script>alert('Doh')</script>World !", whitelist ) );
     }
 }

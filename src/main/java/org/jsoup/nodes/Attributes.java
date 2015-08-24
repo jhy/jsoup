@@ -6,11 +6,13 @@ import java.util.*;
 
 /**
  * The attributes of an Element.
- * <p/>
+ * <p>
  * Attributes are treated as a map: there can be only one value associated with an attribute key.
- * <p/>
+ * </p>
+ * <p>
  * Attribute key and value comparisons are done case insensitively, and keys are normalised to
  * lower-case.
+ * </p>
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
@@ -45,6 +47,18 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     public void put(String key, String value) {
         Attribute attr = new Attribute(key, value);
         put(attr);
+    }
+    
+    /**
+    Set a new boolean attribute, remove attribute if value is false.
+    @param key attribute key
+    @param value attribute value
+    */
+    public void put(String key, boolean value) {
+        if (value)
+            put(new BooleanAttribute(key));
+        else
+            remove(key);
     }
 
     /**
@@ -150,10 +164,16 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
     }
     
+    @Override
     public String toString() {
         return html();
     }
-    
+
+    /**
+     * Checks if these attributes are equal to another set of attributes, by comparing the two sets
+     * @param o attributes to compare with
+     * @return if both sets of attributes have the same content
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -161,11 +181,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         
         Attributes that = (Attributes) o;
         
-        if (attributes != null ? !attributes.equals(that.attributes) : that.attributes != null) return false;
-        
-        return true;
+        return !(attributes != null ? !attributes.equals(that.attributes) : that.attributes != null);
     }
-    
+
+    /**
+     * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
+     * @return calculated hashcode
+     */
     @Override
     public int hashCode() {
         return attributes != null ? attributes.hashCode() : 0;
@@ -195,6 +217,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 attributes = new LinkedHashMap<String, Attribute>(2);
         }
 
+        @Override
         public Set<Entry<String, String>> entrySet() {
             return new EntrySet();
         }
@@ -209,10 +232,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
 
         private class EntrySet extends AbstractSet<Map.Entry<String, String>> {
+
+            @Override
             public Iterator<Map.Entry<String, String>> iterator() {
                 return new DatasetIterator();
             }
 
+           @Override
             public int size() {
                 int count = 0;
                 Iterator iter = new DatasetIterator();

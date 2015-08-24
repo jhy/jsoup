@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import java.io.UnsupportedEncodingException;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.Test;
@@ -7,7 +8,7 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class DataUtilTest {
     @Test
@@ -64,4 +65,34 @@ public class DataUtilTest {
         assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
     }
 
+    @Test
+    public void generatesMimeBoundaries() {
+        String m1 = DataUtil.mimeBoundary();
+        String m2 = DataUtil.mimeBoundary();
+
+        assertEquals(DataUtil.boundaryLength, m1.length());
+        assertEquals(DataUtil.boundaryLength, m2.length());
+        assertNotSame(m1, m2);
+    }
+    
+    @Test
+    public void wrongMetaCharsetFallback() {
+        try {
+            final byte[] input = "<html><head><meta charset=iso-8></head><body></body></html>".getBytes("UTF-8");
+            final ByteBuffer inBuffer = ByteBuffer.wrap(input);
+            
+            Document doc = DataUtil.parseByteData(inBuffer, null, "http://example.com", Parser.htmlParser());
+            
+            final String expected = "<html>\n" +
+                                    " <head>\n" +
+                                    "  <meta charset=\"iso-8\">\n" +
+                                    " </head>\n" +
+                                    " <body></body>\n" +
+                                    "</html>";
+            
+            assertEquals(expected, doc.toString());
+        } catch( UnsupportedEncodingException ex ) {
+            fail(ex.getMessage());
+        }
+    }
 }
