@@ -1,14 +1,25 @@
 package org.jsoup.nodes;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.*;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import org.jsoup.select.Collector;
+import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
+import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Selector;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -116,15 +127,15 @@ public class Element extends Node {
         super.attr(attributeKey, attributeValue);
         return this;
     }
-    
+
     /**
      * Set a boolean attribute value on this element. Setting to <code>true</code> sets the attribute value to "" and
      * marks the attribute as boolean so no value is written out. Setting to <code>false</code> removes the attribute
      * with the same key if it exists.
-     * 
+     *
      * @param attributeKey the attribute key
      * @param attributeValue the attribute value
-     * 
+     *
      * @return this element
      */
     public Element attr(String attributeKey, boolean attributeValue) {
@@ -178,7 +189,7 @@ public class Element extends Node {
      * Note that an element can have both mixed Nodes and Elements as children. This method inspects
      * a filtered list of children that are elements, and the index is based on that filtered list.
      * </p>
-     * 
+     *
      * @param index the index number of the element to retrieve
      * @return the child element, if it exists, otherwise throws an {@code IndexOutOfBoundsException}
      * @see #childNode(int)
@@ -354,7 +365,7 @@ public class Element extends Node {
      * <p>
      * See the query syntax documentation in {@link org.jsoup.select.Selector}.
      * </p>
-     * 
+     *
      * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector

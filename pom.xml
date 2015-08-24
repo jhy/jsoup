@@ -18,7 +18,7 @@
   		<name>The MIT License</name>
   		<url>http://jsoup.org/license</url>
   		<distribution>repo</distribution>
-  	</license>  
+  	</license>
   </licenses>
   <scm>
   	<url>http://github.com/jhy/jsoup</url>
@@ -70,6 +70,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.6.1</version>
         <configuration>
+            <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
         <executions>
           <execution>
@@ -187,7 +188,7 @@
       </build>
     </profile>
   </profiles>
- 
+
   <dependencies>
 
     <dependency>
@@ -199,7 +200,7 @@
     </dependency>
 
   </dependencies>
-    
+
   <dependencyManagement>
   	<dependencies>
   	</dependencies>
