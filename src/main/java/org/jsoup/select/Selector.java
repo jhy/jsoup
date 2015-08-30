@@ -3,8 +3,9 @@ package org.jsoup.select;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.IdentityHashMap;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
@@ -127,10 +128,18 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         Evaluator evaluator = QueryParser.parse(query);
-        LinkedHashSet<Element> elements = new LinkedHashSet<Element>();
+        ArrayList<Element> elements = new ArrayList<Element>();
+        IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<Element, Boolean>();
+        // dedupe elements by identity, not equality
 
         for (Element root : roots) {
-            elements.addAll(select(evaluator, root));
+            final Elements found = select(evaluator, root);
+            for (Element el : found) {
+                if (!seenElements.containsKey(el)) {
+                    elements.add(el);
+                    seenElements.put(el, Boolean.TRUE);
+                }
+            }
         }
         return new Elements(elements);
     }

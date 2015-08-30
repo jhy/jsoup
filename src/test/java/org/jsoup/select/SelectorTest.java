@@ -650,5 +650,15 @@ public class SelectorTest {
         found = doc.select("div[class=\"value\\ \"]");
         assertEquals(0, found.size());
     }
-    
+
+    @Test public void selectSameElements() {
+        final String html = "<div>one</div><div>one</div>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("div");
+        assertEquals(2, els.size());
+
+        Elements subSelect = els.select(":contains(one)");
+        assertEquals(2, subSelect.size());
+    }
 }
