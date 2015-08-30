@@ -850,4 +850,24 @@ public class ElementTest {
         assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
         assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
     }
+
+    @Test
+    public void selectIdenticalElements() {
+        final String html = "<div>word</div><div>word</div>";
+        Document doc = Jsoup.parse(html);
+        Elements first = doc.select("div");
+        assertEquals(2, first.size());
+        Elements second = first.select(":contains(word)");
+        assertEquals(2, second.size());
+    }
+
+    @Test
+    public void selectIdenticalElementsWithinElements() {
+        final String html = "<div><div class=\"test\">word</div></div><div><div class=\"test\">word</div></div>";
+        Document doc = Jsoup.parse(html);
+        Elements first = doc.select("div.test");
+        assertEquals(2, first.size());
+        Elements second = first.select(":contains(word)");
+        assertEquals(2, second.size());
+    }
 }
