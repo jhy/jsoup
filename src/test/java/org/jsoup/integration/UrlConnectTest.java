@@ -282,7 +282,7 @@ public class UrlConnectTest {
         Connection.Response res = con.execute();
         assertEquals("asdfg123", res.cookie("token")); // confirms that cookies set on 1st hit are presented in final result
         Document doc = res.parse();
-        assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc)); // confirms that redirected hit saw cookie
+        assertEquals("token=asdfg123; uid=jhy", ihVal("HTTP_COOKIE", doc)); // confirms that redirected hit saw cookie
     }
 
     @Test
@@ -309,7 +309,7 @@ public class UrlConnectTest {
 
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
-        assertEquals("uid=jhy; token=asdfg123", ihVal("HTTP_COOKIE", doc));
+        assertEquals("token=asdfg123; uid=jhy", ihVal("HTTP_COOKIE", doc));
     }
 
     @Test
@@ -536,6 +536,17 @@ public class UrlConnectTest {
         Connection.Request req = con.request();
         assertTrue(req.parser().getTreeBuilder() instanceof HtmlTreeBuilder);
         assertEquals("<html> <head></head> <body> <xml> <link>one <table> Two </table> </xml> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test
+    public void combinesSameHeadersWithComma() throws IOException {
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+        String url = "http://direct.infohound.net/tools/q.pl";
+        Connection con = Jsoup.connect(url);
+        con.get();
+
+        assertEquals("text/html", con.response().header("Content-Type"));
+        assertEquals("no-cache, no-store", con.response().header("Cache-Control"));
     }
 
 }

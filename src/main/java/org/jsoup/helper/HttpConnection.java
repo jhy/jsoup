@@ -714,7 +714,7 @@ public class HttpConnection implements Connection {
             statusMessage = conn.getResponseMessage();
             contentType = conn.getContentType();
 
-            Map<String, List<String>> resHeaders = conn.getHeaderFields();
+            Map<String, List<String>> resHeaders = createHeaderMap(conn);
             processResponseHeaders(resHeaders);
 
             // if from a redirect, map previous response cookies into this response
@@ -724,6 +724,30 @@ public class HttpConnection implements Connection {
                         cookie(prevCookie.getKey(), prevCookie.getValue());
                 }
             }
+        }
+
+        private static LinkedHashMap<String, List<String>> createHeaderMap(HttpURLConnection conn) {
+            // the default sun impl of conn.getHeaderFields() returns header values out of order
+            final LinkedHashMap<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+            int i = 0;
+            while (true) {
+                final String key = conn.getHeaderFieldKey(i);
+                final String val = conn.getHeaderField(i);
+                if (key == null && val == null)
+                    break;
+                i++;
+                if (key == null || val == null)
+                    continue; // skip http1.1 line
+
+                if (headers.containsKey(key))
+                    headers.get(key).add(val);
+                else {
+                    final ArrayList<String> vals = new ArrayList<String>();
+                    vals.add(val);
+                    headers.put(key, vals);
+                }
+            }
+            return headers;
         }
 
         void processResponseHeaders(Map<String, List<String>> resHeaders) {
@@ -745,9 +769,19 @@ public class HttpConnection implements Connection {
                         if (cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
-                } else { // only take the first instance of each header
-                    if (!values.isEmpty())
+                } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                    if (values.size() == 1)
                         header(name, values.get(0));
+                    else if (values.size() > 1) {
+                        StringBuilder accum = new StringBuilder();
+                        for (int i = 0; i < values.size(); i++) {
+                            final String val = values.get(i);
+                            if (i != 0)
+                                accum.append(", ");
+                            accum.append(val);
+                        }
+                        header(name, accum.toString());
+                    }
                 }
             }
         }

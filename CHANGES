@@ -1,6 +1,10 @@
 jsoup changelog
 
 *** Release 1.8.4 [PENDING]
+ * In Jsoup.Connect, if the same header key is seen multiple times, combine their values with a comma per the HTTP RFC,
+   instead of keeping just one value. Also fixes an issue where header values could be out of order.
+   <https://github.com/jhy/jsoup/issues/618>
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 
