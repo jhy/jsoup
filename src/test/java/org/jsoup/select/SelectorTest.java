@@ -200,17 +200,22 @@ public class SelectorTest {
     @Test public void descendant() {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
-        Elements els = doc.select(".head p");
+        Element root = doc.getElementsByClass("head").first();
+        
+        Elements els = root.select(".head p");
         assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
         assertEquals("There", els.get(1).text());
 
-        Elements p = doc.select("p.first");
+        Elements p = root.select("p.first");
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
 
-        Elements empty = doc.select("p .first"); // self, not descend, should not match
+        Elements empty = root.select("p .first"); // self, not descend, should not match
         assertEquals(0, empty.size());
+        
+        Elements aboveRoot = root.select("body div.head");
+        assertEquals(0, aboveRoot.size());
     }
 
     @Test public void and() {
@@ -236,10 +241,16 @@ public class SelectorTest {
 
     @Test public void deeperDescendant() {
         String h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>";
-        Elements els = Jsoup.parse(h).select("div p .first");
+        Document doc = Jsoup.parse(h);
+        Element root = doc.getElementsByClass("head").first();
+
+        Elements els = root.select("div p .first");
         assertEquals(1, els.size());
         assertEquals("Hello", els.first().text());
         assertEquals("span", els.first().tagName());
+
+        Elements aboveRoot = root.select("body p .first");
+        assertEquals(0, aboveRoot.size());
     }
 
     @Test public void parentChildElement() {
