@@ -61,8 +61,8 @@ abstract class StructuralEvaluator extends Evaluator {
             while (true) {
                 if (evaluator.matches(root, parent))
                     return true;
-                if( parent == root )
-                	break;
+                if (parent == root)
+                    break;
                 parent = parent.parent();
             }
             return false;

@@ -243,12 +243,12 @@ public class SelectorTest {
         String h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>";
         Document doc = Jsoup.parse(h);
         Element root = doc.getElementsByClass("head").first();
-        
-		Elements els = root.select("div p .first");
+
+        Elements els = root.select("div p .first");
         assertEquals(1, els.size());
         assertEquals("Hello", els.first().text());
         assertEquals("span", els.first().tagName());
-        
+
         Elements aboveRoot = root.select("body p .first");
         assertEquals(0, aboveRoot.size());
     }
