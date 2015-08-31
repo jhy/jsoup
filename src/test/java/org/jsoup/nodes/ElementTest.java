@@ -850,4 +850,15 @@ public class ElementTest {
         assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
         assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
     }
+    
+    @Test public void testMatches() {
+    	  String html = "<body><a href='./one.html'>One</a> <a href='two.html'>two</a> <a href='../three.html'>Three</a> <a href='//example2.com/four/'>Four</a> <a href='https://example2.com/five/'>Five</a>";
+        Document doc = Jsoup.parse(html, "http://example.com/bar/");
+        Elements els = doc.select("a");
+        Element el = els.get(1);
+        
+        assertTrue(el.matches("body a[href=two.html]"));
+        assertFalse(el.matches("div a"));
+    }
+
 }
