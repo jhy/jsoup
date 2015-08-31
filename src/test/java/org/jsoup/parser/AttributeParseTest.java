@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.BooleanAttribute;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
@@ -90,4 +91,10 @@ public class AttributeParseTest {
         assertEquals(html, el.outerHtml());
     }
     
+    @Test public void testPreserveQuotes() {
+        String html = "<a id=\"123\" class=\"baz = 'bar'\" style = 'border: 2px'qux zim foo = '12' mux=\"18\" />";
+        Document doc = Jsoup.parse(html, "http://uri.org", Parser.xmlParser());
+        doc.outputSettings().preserveQuote(true);
+        assertEquals("<a id=\"123\" class=\"baz = 'bar'\" style='border: 2px' qux='' zim='' foo='12' mux=\"18\"></a>", doc.toString());
+    }
 }

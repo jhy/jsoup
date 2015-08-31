@@ -17,4 +17,12 @@ public class AttributeTest {
         assertEquals(s + "=\"A" + s + "B\"", attr.html());
         assertEquals(attr.html(), attr.toString());
     }
+    
+    @Test public void testPreserverQuote() {
+        Attribute attr = new Attribute("key", "value &", '\'');
+        StringBuilder accum = new StringBuilder();
+        attr.html(accum, new Document.OutputSettings().preserveQuote(true));
+        assertEquals("key='value &amp;'", accum.toString());
+        assertEquals(attr.html(), attr.toString());
+    }
 }
