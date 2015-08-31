@@ -5,6 +5,9 @@ jsoup changelog
    instead of keeping just one value. Also fixes an issue where header values could be out of order.
    <https://github.com/jhy/jsoup/issues/618>
 
+ * Added support in Jsoup.Connect for HEAD, OPTIONS, TRACE.
+   <https://github.com/jhy/jsoup/issues/613>
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 

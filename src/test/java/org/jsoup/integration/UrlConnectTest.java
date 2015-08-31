@@ -549,4 +549,14 @@ public class UrlConnectTest {
         assertEquals("no-cache, no-store", con.response().header("Cache-Control"));
     }
 
+    @Test
+    public void sendHeadRequest() throws IOException {
+        String url = "http://direct.infohound.net/tools/parse-xml.xml";
+        Connection con = Jsoup.connect(url).method(Connection.Method.HEAD);
+        final Connection.Response response = con.execute();
+        assertEquals("text/xml", response.header("Content-Type"));
+        assertEquals("", response.body()); // head ought to have no body
+        Document doc = response.parse();
+        assertEquals("", doc.text());
+    }
 }
