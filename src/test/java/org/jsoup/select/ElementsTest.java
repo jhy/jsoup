@@ -182,6 +182,13 @@ public class ElementsTest {
         assertEquals("<a>One</a> Two Three <i>Four</i> Fix <i>Six</i>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void unwrapKeepsSpace() {
+        String h = "<p>One <span>two</span> <span>three</span> four</p>";
+        Document doc = Jsoup.parse(h);
+        doc.select("span").unwrap();
+        assertEquals("<p>One two three four</p>", doc.body().html());
+    }
+
     @Test public void empty() {
         Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> <p>now!</p></div>");
         doc.outputSettings().prettyPrint(false);
