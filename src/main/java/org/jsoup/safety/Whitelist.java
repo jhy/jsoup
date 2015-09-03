@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,9 +64,8 @@ import java.util.Set;
  */
 public class Whitelist {
     private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
-    private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
+    private Map<TagName, Map<AttributeKey, Set<ValueValidator>>> attributes; // allowed attributes for tag with optional validators[]
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
-    private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
@@ -189,9 +189,8 @@ public class Whitelist {
      */
     public Whitelist() {
         tagNames = new HashSet<TagName>();
-        attributes = new HashMap<TagName, Set<AttributeKey>>();
+        attributes = new HashMap<TagName, Map<AttributeKey, Set<ValueValidator>>>();
         enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
-        protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
         preserveRelativeLinks = false;
     }
 
@@ -227,7 +226,6 @@ public class Whitelist {
             if(tagNames.remove(tagName)) { // Only look in sub-maps if tag was allowed
                 attributes.remove(tagName);
                 enforcedAttributes.remove(tagName);
-                protocols.remove(tagName);
             }
         }
         return this;
@@ -261,12 +259,62 @@ public class Whitelist {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
         }
+        
+        final Map<AttributeKey, Set<ValueValidator>> currentSet;
         if (attributes.containsKey(tagName)) {
-            Set<AttributeKey> currentSet = attributes.get(tagName);
-            currentSet.addAll(attributeSet);
+            currentSet = attributes.get(tagName);
         } else {
-            attributes.put(tagName, attributeSet);
+            currentSet = new HashMap<Whitelist.AttributeKey, Set<ValueValidator>>();
+            attributes.put(tagName, currentSet);
         }
+        for(AttributeKey attribute: attributeSet) {
+            currentSet.put(attribute, new HashSet<ValueValidator>());
+        }
+        return this;
+    }
+
+    /**
+    Add a validator for an attribute. This allows the value of an attribute to be verified using one of a number of
+    built-in validators, or developers can implement their own by implementing {@link ValueValidator} or extending
+    {@link BaseValueValidator}. Generally an attribute is safe if it passes at least one validator but validators can be
+    marked as required in which case attributes must match all required validators.
+    <p>
+    E.g.: <code>addAttributeValidator("p", "class", new PatternValueValidator("^x-.*$"))</code> will ensure that
+    <code>p</code> tags only specify <code>class</code> attribute values that begin with "x-"
+    </p>
+
+    @param tag   The tag the attribute validator is for. The tag will be added to the allowed tag list if necessary.
+    @param key   The attribute key. The attribute will be added to the allowed list if necessary.
+    @param validator The attribute validator
+    @return this (for chaining)
+    */
+    public Whitelist addAttributeValidator(String tag, String key, ValueValidator validator) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+        Validate.notNull(validator);
+
+        TagName tagName = TagName.valueOf(tag);
+        if (!tagNames.contains(tagName))
+            tagNames.add(tagName);
+
+        final Map<AttributeKey, Set<ValueValidator>> currentSet;
+        if (attributes.containsKey(tagName)) {
+            currentSet = attributes.get(tagName);
+        } else {
+            currentSet = new HashMap<Whitelist.AttributeKey, Set<ValueValidator>>();
+            attributes.put(tagName, currentSet);
+        }
+
+        AttributeKey attribute = AttributeKey.valueOf(key);
+        final Set<ValueValidator> validators;
+        if (currentSet.containsKey(attribute)) {
+            validators = currentSet.get(attribute);
+        } else {
+            validators = new HashSet<ValueValidator>();
+            currentSet.put(attribute, validators);
+        }
+        validators.add(validator);
+
         return this;
     }
 
@@ -297,16 +345,20 @@ public class Whitelist {
             attributeSet.add(AttributeKey.valueOf(key));
         }
         if(tagNames.contains(tagName) && attributes.containsKey(tagName)) { // Only look in sub-maps if tag was allowed
-            Set<AttributeKey> currentSet = attributes.get(tagName);
-            currentSet.removeAll(attributeSet);
+            Map<AttributeKey, Set<ValueValidator>> currentSet = attributes.get(tagName);
+            for(AttributeKey attribute: attributeSet) {
+                currentSet.remove(attribute);
+            }
 
             if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                 attributes.remove(tagName);
         }
         if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
             for(TagName name: attributes.keySet()) {
-                Set<AttributeKey> currentSet = attributes.get(name);
-                currentSet.removeAll(attributeSet);
+                Map<AttributeKey, Set<ValueValidator>> currentSet = attributes.get(name);
+                for(AttributeKey attribute: attributeSet) {
+                    currentSet.remove(attribute);
+                }
 
                 if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                     attributes.remove(name);
@@ -414,25 +466,24 @@ public class Whitelist {
 
         TagName tagName = TagName.valueOf(tag);
         AttributeKey attrKey = AttributeKey.valueOf(key);
-        Map<AttributeKey, Set<Protocol>> attrMap;
-        Set<Protocol> protSet;
 
-        if (this.protocols.containsKey(tagName)) {
-            attrMap = this.protocols.get(tagName);
-        } else {
-            attrMap = new HashMap<AttributeKey, Set<Protocol>>();
-            this.protocols.put(tagName, attrMap);
-        }
-        if (attrMap.containsKey(attrKey)) {
-            protSet = attrMap.get(attrKey);
-        } else {
-            protSet = new HashSet<Protocol>();
-            attrMap.put(attrKey, protSet);
-        }
-        for (String protocol : protocols) {
-            Validate.notEmpty(protocol);
-            Protocol prot = Protocol.valueOf(protocol);
-            protSet.add(prot);
+        if (this.attributes.containsKey(tagName)) {
+            Map<AttributeKey, Set<ValueValidator>> attrMap = this.attributes.get(tagName);
+            if (attrMap.containsKey(attrKey)) {
+                ProtocolValidator protocolValidator = null;
+                Set<ValueValidator> validators = attrMap.get(attrKey);
+                for (ValueValidator validator : validators) {
+                    if (validator instanceof ProtocolValidator) {
+                        protocolValidator = (ProtocolValidator) validator;
+                        break;
+                    }
+                }
+                if (protocolValidator == null) {
+                    protocolValidator = new ProtocolValidator();
+                    validators.add(protocolValidator);
+                }
+                protocolValidator.addProtocols(protocols);
+            }
         }
         return this;
     }
@@ -456,20 +507,21 @@ public class Whitelist {
         TagName tagName = TagName.valueOf(tag);
         AttributeKey attrKey = AttributeKey.valueOf(key);
 
-        if(this.protocols.containsKey(tagName)) {
-            Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.get(tagName);
+        if (this.attributes.containsKey(tagName)) {
+            Map<AttributeKey, Set<ValueValidator>> attrMap = this.attributes.get(tagName);
             if(attrMap.containsKey(attrKey)) {
-                Set<Protocol> protSet = attrMap.get(attrKey);
-                for (String protocol : protocols) {
-                    Validate.notEmpty(protocol);
-                    Protocol prot = Protocol.valueOf(protocol);
-                    protSet.remove(prot);
-                }
-
-                if(protSet.isEmpty()) { // Remove protocol set if empty
-                    attrMap.remove(attrKey);
-                    if(attrMap.isEmpty()) // Remove entry for tag if empty
-                        this.protocols.remove(tagName);
+                Set<ValueValidator> attrValidators = attrMap.get(attrKey);
+                Iterator<ValueValidator> iter = attrValidators.iterator();
+                while (iter.hasNext()) {
+                    ValueValidator validator = iter.next();
+                    if (validator instanceof ProtocolValidator) {
+                        ProtocolValidator protocolValidator = (ProtocolValidator) validator;
+                        protocolValidator.removeProtocols(protocols);
+                        if (protocolValidator.isEmpty()) {
+                            iter.remove();
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -497,51 +549,27 @@ public class Whitelist {
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
         if (attributes.containsKey(tag)) {
-            if (attributes.get(tag).contains(key)) {
-                if (protocols.containsKey(tag)) {
-                    Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
-                    // ok if not defined protocol; otherwise test
-                    return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
-                } else { // attribute found, no protocols defined, so OK
+            Map<AttributeKey, Set<ValueValidator>> tagAttributes = attributes.get(tag);
+            if (tagAttributes.containsKey(key)) {
+                Set<ValueValidator> validators = tagAttributes.get(key);
+                if (validators.isEmpty()) {
                     return true;
                 }
+
+                boolean safe = false;
+                for (ValueValidator validator : validators) {
+                    boolean accept = validator.isSafe(el, attr);
+                    if (!accept && validator.isRequired()) {
+                        return false;
+                    }
+
+                    safe |= accept;
+                }
+                return safe;
             }
         }
         // no attributes defined for tag, try :all tag
         return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
-    }
-
-    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
-        // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
-        // rels without a baseuri get removed
-        String value = el.absUrl(attr.getKey());
-        if (value.length() == 0)
-            value = attr.getValue(); // if it could not be made abs, run as-is to allow custom unknown protocols
-        if (!preserveRelativeLinks)
-            attr.setValue(value);
-        
-        for (Protocol protocol : protocols) {
-            String prot = protocol.toString();
-
-            if (prot.equals("#")) { // allows anchor links
-                if (isValidAnchor(value)) {
-                    return true;
-                } else {
-                    continue;
-                }
-            }
-
-            prot += ":";
-
-            if (value.toLowerCase().startsWith(prot)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isValidAnchor(String value) {
-        return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 
     Attributes getEnforcedAttributes(String tagName) {
@@ -629,6 +657,67 @@ public class Whitelist {
         @Override
         public String toString() {
             return value;
+        }
+    }
+
+    final class ProtocolValidator implements ValueValidator {
+
+        private final Set<Protocol> protocols = new HashSet<Protocol>();
+
+        public boolean isRequired() {
+            return true;
+        }
+
+        public boolean isSafe(Element el, Attribute attr) {
+            // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
+            // rels without a baseuri get removed
+            String value = el.absUrl(attr.getKey());
+            if (value.length() == 0)
+                value = attr.getValue(); // if it could not be made abs, run as-is to allow custom unknown protocols
+            if (!preserveRelativeLinks)
+                attr.setValue(value);
+
+            for (Protocol protocol : protocols) {
+                String prot = protocol.toString();
+
+                if (prot.equals("#")) { // allows anchor links
+                    if (isValidAnchor(value)) {
+                        return true;
+                    } else {
+                        continue;
+                    }
+                }
+
+                prot += ":";
+
+                if (value.toLowerCase().startsWith(prot)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void addProtocols(String... protocols) {
+            for (String protocol : protocols) {
+                Validate.notEmpty(protocol);
+                Protocol prot = Protocol.valueOf(protocol);
+                this.protocols.add(prot);
+            }
+        }
+
+        private void removeProtocols(String... protocols) {
+            for (String protocol : protocols) {
+                Validate.notEmpty(protocol);
+                this.protocols.remove(Protocol.valueOf(protocol));
+            }
+        }
+
+        private boolean isEmpty() {
+            return protocols.isEmpty();
+        }
+
+        private boolean isValidAnchor(String value) {
+            return value.startsWith("#") && !value.matches(".*\\s.*");
         }
     }
 }
