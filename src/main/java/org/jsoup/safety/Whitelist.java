@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,6 +67,7 @@ public class Whitelist {
     private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
+    private Map<TagName, Map<AttributeKey, Set<ValueValidator>>> validators; // validators for attribute values
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
@@ -192,6 +194,7 @@ public class Whitelist {
         attributes = new HashMap<TagName, Set<AttributeKey>>();
         enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
         protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
+        validators = new HashMap<TagName, Map<AttributeKey, Set<ValueValidator>>>();
         preserveRelativeLinks = false;
     }
 
@@ -228,6 +231,7 @@ public class Whitelist {
                 attributes.remove(tagName);
                 enforcedAttributes.remove(tagName);
                 protocols.remove(tagName);
+                validators.remove(tagName);
             }
         }
         return this;
@@ -478,6 +482,47 @@ public class Whitelist {
     }
 
     /**
+     Add a validator for an attribute. This allows the value of an attribute to be verified using one of a number of
+     built-in validators, or developers can create their own by implementing {@link ValueValidator} or extending
+     {@link BaseValueValidator}. Generally an attribute is safe if it passes at least one validator but validators can be
+     marked as required in which case attributes must match all required validators.
+     <p>
+     E.g.: <code>addValidator("p", "class", new PatternValueValidator("x-.*"))</code> will ensure that
+     <code>p</code> tags only specify <code>class</code> attribute values that begin with "x-"
+     </p>
+
+     @param tag   The tag the attribute belongs to.
+     @param key   The attribute key.
+     @param validator The  validator
+     @return this (for chaining)
+    */
+    public Whitelist addValidator(String tag, String key, ValueValidator validator) {
+        Validate.notEmpty(tag);
+        Validate.notEmpty(key);
+        Validate.notNull(validator);
+
+        TagName tagName = TagName.valueOf(tag);
+        AttributeKey attrKey = AttributeKey.valueOf(key);
+        Map<AttributeKey, Set<ValueValidator>> attrMap;
+        Set<ValueValidator> validatorSet;
+
+        if (validators.containsKey(tagName)) {
+            attrMap = validators.get(tagName);
+        } else {
+            attrMap = new HashMap<AttributeKey, Set<ValueValidator>>();
+            validators.put(tagName, attrMap);
+        }
+        if (attrMap.containsKey(attrKey)) {
+            validatorSet = attrMap.get(attrKey);
+        } else {
+            validatorSet = new LinkedHashSet<ValueValidator>();
+            attrMap.put(attrKey, validatorSet);
+        }
+        validatorSet.add(validator);
+        return this;
+    }
+
+    /**
      * Test if the supplied tag is allowed by this whitelist
      * @param tag test tag
      * @return true if allowed
@@ -502,10 +547,20 @@ public class Whitelist {
             if (protocols.containsKey(tag)) {
                 Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
                 // ok if not defined protocol; otherwise test
-                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
-            } else { // attribute found, no protocols defined, so OK
-                return true;
+                if(attrProts.containsKey(key) && !testValidProtocol(el, attr, attrProts.get(key))) {
+                    return false;
+                }
             }
+
+            if(validators.containsKey(tag)) {
+                Map<AttributeKey, Set<ValueValidator>> attrValidators = validators.get(tag);
+                // ok if not defined validators; otherwise test
+                if(attrValidators.containsKey(key) && !testAttributeValid(el, attr, attrValidators.get(key))) {
+                    return false;
+                }
+            }
+                
+            return true;
         }
         // might be an enforced attribute?
         Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
@@ -518,6 +573,23 @@ public class Whitelist {
         }
         // no attributes defined for tag, try :all tag
         return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
+    }
+
+    private boolean testAttributeValid(Element el, Attribute attr, Set<ValueValidator> validators) {
+        if (validators == null || validators.isEmpty()) {
+            return true;
+        }
+
+        boolean safe = false;
+        for (ValueValidator validator : validators) {
+            boolean accept = validator.isSafe(el, attr);
+            if (!accept && validator.isRequired()) {
+                return false;
+            }
+
+            safe |= accept;
+        }
+        return safe;
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
