@@ -1,12 +1,13 @@
 package org.jsoup;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.Proxy;
+import java.net.PasswordAuthentication;
 import java.util.Collection;
 import java.util.Map;
 
@@ -141,6 +142,22 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     Connection validateTLSCertificates(boolean value);
+
+	/**
+	 * set the request proxy
+	 *
+	 * @param proxy
+	 * @return this Connection, for chaining
+	 */
+	Connection proxy(Proxy proxy);
+
+	/**
+	 * set the request proxy auth
+	 *
+	 * @param auth
+	 * @return this Connection, for chaining
+	 */
+	Connection proxyAuth(PasswordAuthentication auth);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -488,6 +505,28 @@ public interface Connection {
          * @param value set false to ignore TLS (SSL) certificates
          */
         void validateTLSCertificates(boolean value);
+
+        /**
+         * Set http proxy
+         * @param proxy proxy to add
+         * @return this Request, for chaining
+         */
+		Request proxy(Proxy proxy);
+
+		/**
+		 * Get connection proxy
+		 * @return
+		 */
+		Proxy proxy();
+
+		/**
+		 * Set proxy authentication
+		 * @param auth
+		 * @return  this Request, for chaining
+		 */
+		Request proxyAuth(PasswordAuthentication auth);
+
+		PasswordAuthentication proxyAuth();
 
         /**
          * Add a data parameter to the request

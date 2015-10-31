@@ -12,6 +12,10 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -28,10 +32,17 @@ import java.util.zip.GZIPInputStream;
  * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
+	private static final SocksAuthenticator AUTHENTICATOR;
+
     public static final String  CONTENT_ENCODING = "Content-Encoding";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+
+    static{
+		AUTHENTICATOR = new SocksAuthenticator(SocksAuthenticator.getDefaultAuthenticator());
+		Authenticator.setDefault(AUTHENTICATOR);
+	}
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -126,6 +137,16 @@ public class HttpConnection implements Connection {
         req.validateTLSCertificates(value);
         return this;
     }
+
+	public Connection proxy(Proxy proxy) {
+		req.proxy(proxy);
+		return this;
+	}
+
+	public Connection proxyAuth(PasswordAuthentication auth) {
+		req.proxyAuth(auth);
+		return this;
+	}
 
     public Connection data(String key, String value) {
         req.data(KeyVal.create(key, value));
@@ -354,6 +375,8 @@ public class HttpConnection implements Connection {
         private int maxBodySizeBytes;
         private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
+        private Proxy proxy;
+        private PasswordAuthentication auth;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
@@ -425,6 +448,28 @@ public class HttpConnection implements Connection {
             this.ignoreContentType = ignoreContentType;
             return this;
         }
+
+
+		public Request proxy(Proxy proxy) {
+			Validate.notNull(proxy, "proxy must not be null");
+			this.proxy = proxy;
+
+			return this;
+		}
+
+		public Proxy proxy() {
+			return proxy;
+		}
+
+		public Request proxyAuth(PasswordAuthentication auth) {
+			Validate.notNull(auth, "proxy auth must not be null");
+			this.auth = auth;
+			return this;
+		}
+
+		public PasswordAuthentication proxyAuth() {
+			return auth;
+		}
 
         public Request data(Connection.KeyVal keyval) {
             Validate.notNull(keyval, "Key val must not be null");
@@ -625,7 +670,11 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+        	if (req.proxy().type() == Type.SOCKS && req.proxyAuth() != null) {
+        		AUTHENTICATOR.addProxyAuth(req.proxy(), req.proxyAuth());
+        	}
+
+            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection(req.proxy());
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
@@ -647,6 +696,12 @@ public class HttpConnection implements Connection {
             for (Map.Entry<String, String> header : req.headers().entrySet()) {
                 conn.addRequestProperty(header.getKey(), header.getValue());
             }
+
+            if (req.proxy().type() == Type.HTTP && req.proxyAuth() != null) {
+            	String str = req.proxyAuth().getUserName() + ":" + new String(req.proxyAuth().getPassword());
+            	conn.addRequestProperty("Proxy-Authorization", "Basic "+new sun.misc.BASE64Encoder().encode(str.getBytes()));
+            }
+
             return conn;
         }
 
