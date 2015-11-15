@@ -280,7 +280,8 @@ public abstract class Evaluator {
             Validate.notEmpty(value);
 
             this.key = key.trim().toLowerCase();
-            if (value.startsWith("\"") && value.endsWith("\"")) {
+            if (value.startsWith("\"") && value.endsWith("\"")
+                    || value.startsWith("'") && value.endsWith("'")) {
                 value = value.substring(1, value.length()-1);
             }
             this.value = value.trim().toLowerCase();
