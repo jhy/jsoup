@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * HTML entities, and escape routines.
- * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
+ * Source: <a href="http://www.w3.org/TR/2011/WD-html5-20110113/named-character-references.html">W3C HTML
  * named character references</a>.
  */
 public class Entities {
@@ -68,7 +68,7 @@ public class Entities {
     public static Character getCharacterByName(String name) {
         return full.get(name);
     }
-    
+
     static String escape(String string, Document.OutputSettings out) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         escape(accum, string, out, false, false, false);
