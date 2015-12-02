@@ -41,6 +41,18 @@ If you prefer to manually install the library, click to download the JAR file,
 
 Also, make sure to visit the [download section](https://jsoup.org/download) to get the latest release version.
 
+## Documentation
+
+The officially generated API documentation for **jsoup** is located at [jsoup API page](https://jsoup.org/apidocs/).
+
+You can also generate the documentation from source using `javadoc`,
+
+```
+$ cd jsoup
+
+$ javadoc -d apidocs -sourcepath ./src/main/java -subpackages org.jsoup
+```
+
 ## References
 
 See http://jsoup.org/ for downloads and documentation.
