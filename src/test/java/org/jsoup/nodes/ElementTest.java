@@ -2,11 +2,12 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -850,4 +851,21 @@ public class ElementTest {
         assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
         assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
     }
+
+	@Test
+	public void testAppendTo() {
+		String parentHtml = "<div class='a'></div>";
+		String childHtml = "<div class='b'></div>";
+
+		Element parentElement = Jsoup.parse(parentHtml).getElementsByClass("a").first();
+		Element childElement = Jsoup.parse(childHtml).getElementsByClass("b").first();
+
+		childElement.attr("class", "test-class").appendTo(parentElement).attr("id", "testId");
+		assertEquals("test-class", childElement.attr("class"));
+		assertEquals("testId", childElement.attr("id"));
+		assertThat(parentElement.attr("id"), not(equalTo("testId")));
+		assertThat(parentElement.attr("class"), not(equalTo("test-class")));
+		assertSame(childElement, parentElement.children().first());
+		assertSame(parentElement, childElement.parent());
+	}
 }
