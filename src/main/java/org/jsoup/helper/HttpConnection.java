@@ -32,6 +32,7 @@ public class HttpConnection implements Connection {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -520,8 +521,10 @@ public class HttpConnection implements Connection {
 
                 // redirect if there's a location header (from 3xx, or 201 etc)
                 if (res.hasHeader(LOCATION) && req.followRedirects()) {
-                    req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
-                    req.data().clear();
+                    if (status != HTTP_TEMP_REDIR) {
+                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                        req.data().clear();
+                    }
 
                     String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
