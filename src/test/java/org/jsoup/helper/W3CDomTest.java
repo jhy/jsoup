@@ -48,5 +48,27 @@ public class W3CDomTest {
         String out = w3c.asString(wDoc);
         assertTrue(out.contains("ipod"));
     }
+    
+    @Test
+    public void namespacePreservation()
+    {
+    	File in = ParseTest.getFile("/htmltests/cover.xhtml");
+    	org.jsoup.nodes.Document jsoupDoc = null;
+    	Document doc = null;
+		try {
+			jsoupDoc = Jsoup.parse(in, "UTF-8");
+			//then, convert it back into a WC3 Dom document
+	    	org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
+	    	doc = jDom.fromJsoup(jsoupDoc);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	if (doc != null)
+    	{
+    		assertEquals(doc.getChildNodes().item(0).getNamespaceURI(), "http://www.w3.org/1999/xhtml");
+    		assertEquals(doc.getChildNodes().item(0).getLocalName(), "html");
+    	}
+    }
 }
 

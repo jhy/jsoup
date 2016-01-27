@@ -37,6 +37,8 @@ public class W3CDom {
         Validate.notNull(in);
         DocumentBuilder builder;
         try {
+        	//set the factory to be namespace-aware
+        	factory.setNamespaceAware(true);
             builder = factory.newDocumentBuilder();
             Document out = builder.newDocument();
             convert(in, out);
@@ -58,8 +60,15 @@ public class W3CDom {
             out.setDocumentURI(in.location());
 
         org.jsoup.nodes.Element rootEl = in.child(0); // skip the #root node
-        NodeTraversor traversor = new NodeTraversor(new W3CBuilder(out));
-        traversor.traverse(rootEl);
+        //check to see if the the root node has a namespace attribute
+        String namespace = rootEl.attr("xmlns");
+        NodeTraversor traversor = new NodeTraversor(new W3CBuilder(out, namespace));
+        if (namespace == null || namespace.equals("")) //maven build fails if using .isEmpty()
+        	traversor.traverse(rootEl);
+        else
+        {
+        	traversor.traverse(rootEl, namespace);
+        }
     }
 
     /**
@@ -68,15 +77,22 @@ public class W3CDom {
     protected class W3CBuilder implements NodeVisitor {
         private final Document doc;
         private Element dest;
+        private String namespace = null;
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
+        }
+        
+        public W3CBuilder(Document doc, String namespace) {
+            this.doc = doc;
+            if (namespace != null && !namespace.equals("")) //maven build fails if using .isEmpty()
+            	this.namespace = namespace;
         }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element) {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
-                Element el = doc.createElement(sourceEl.tagName());
+                Element el = doc.createElementNS(namespace, sourceEl.tagName());
                 copyAttributes(sourceEl, el);
                 if (dest == null) { // sets up the root
                     doc.appendChild(el);
