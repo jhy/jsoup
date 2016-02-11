@@ -64,4 +64,12 @@ public class TagTest {
     @Test(expected = IllegalArgumentException.class) public void valueOfChecksNotEmpty() {
         Tag.valueOf(" ");
     }
+
+    @Test public void selectSemantics() {
+        Tag select = Tag.valueOf("select");
+        assertTrue(select.isInline());
+        assertFalse(select.isBlock());
+        assertFalse(select.canContainBlock());
+        assertTrue(select.formatAsBlock());
+    }
 }

@@ -238,6 +238,9 @@ public class Tag {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
             "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
     };
+    private static final String[] formatAsBlockTags = {
+            "select"
+    };
     private static final String[] formatAsInlineTags = {
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
             "ins", "del", "s"
@@ -275,6 +278,12 @@ public class Tag {
             tag.canContainBlock = false;
             tag.canContainInline = false;
             tag.empty = true;
+        }
+
+        for (String tagName : formatAsBlockTags) {
+            Tag tag = tags.get(tagName);
+            Validate.notNull(tag);
+            tag.formatAsBlock = true;
         }
 
         for (String tagName : formatAsInlineTags) {
