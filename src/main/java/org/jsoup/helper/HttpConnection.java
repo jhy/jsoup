@@ -16,8 +16,12 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -672,38 +676,70 @@ public class HttpConnection implements Connection {
          * please not that this method will only perform action if sslSocketFactory is not yet
          * instantiated.
          *
-         * @throws IOException
+         * @throws IOException, GeneralSecurityException
          */
         private static synchronized void initUnSecureTSL() throws IOException {
             if (sslSocketFactory == null) {
-                // Create a trust manager that does not validate certificate chains
-                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-
-                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                }};
-
-                // Install the all-trusting trust manager
-                final SSLContext sslContext;
                 try {
-                    sslContext = SSLContext.getInstance("SSL");
-                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                    // Create an ssl socket factory with our all-trusting manager
-                    sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                } catch (KeyManagementException e) {
-                    throw new IOException("Can't create unsecure trust manager");
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                    // Initialise the TMF as you normally would, for example:
+                    tmf.init((KeyStore) null);
+
+
+                    TrustManager[] trustManagers = tmf.getTrustManagers();
+                    final X509TrustManager origTrustmanager = (X509TrustManager) trustManagers[0];
+
+                    TrustManager[] wrappedTrustManagers = new TrustManager[]{
+                            new X509TrustManager() {
+                                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                                    return origTrustmanager.getAcceptedIssuers();
+                                }
+
+                                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                                    // GKochaniak - no need to check this yet...
+                                    // origTrustmanager.checkClientTrusted(certs, authType);
+                                }
+
+                                public void checkServerTrusted(X509Certificate[] certs, String authType) throws CertificateException {
+                                    try {
+                                        origTrustmanager.checkServerTrusted(certs, authType);
+                                    } catch (CertificateExpiredException e) {
+                                    }
+                                }
+                            }
+                    };
+
+                    // Create a trust manager that does not validate certificate chains
+                    // GKochaniak - no longer acceptable by Google
+//                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+//
+//                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
+//                    }
+//
+//                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
+//                    }
+//
+//                    public X509Certificate[] getAcceptedIssuers() {
+//                        return null;
+//                    }
+//                }};
+
+                    // Install the all-trusting trust manager
+                    final SSLContext sslContext;
+                    try {
+                        sslContext = SSLContext.getInstance("SSL");
+                        sslContext.init(null, wrappedTrustManagers, new java.security.SecureRandom());
+                        // Create an ssl socket factory with our all-trusting manager
+                        sslSocketFactory = sslContext.getSocketFactory();
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new IOException("Can't create secure trust manager");
+                    } catch (KeyManagementException e) {
+                        throw new IOException("Can't create secure trust manager");
+                    }
+                } catch (GeneralSecurityException gse) {
+                    throw new IOException("Can't create secure trust manager");
                 }
             }
-
         }
 
         // set up url, method, header, cookies
