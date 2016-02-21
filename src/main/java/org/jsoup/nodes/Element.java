@@ -1068,15 +1068,10 @@ public class Element extends Node {
      * @return true if it does, false if not
      */
     public boolean hasClass(String classNames, boolean absoluteMatch) {
-        if(absoluteMatch){
-          String classAttr = attributes.get("class");
-          if (classAttr.equals("") || classAttr.length() < classNames.length())
-              return false;
-
-          if (classNames.equalsIgnoreCase(classAttr))
-              return true;
-        }
-
+        if(absoluteMatch)
+          if(this.className().equals(classNames))
+            return true;
+            
         return false;
     }
 
