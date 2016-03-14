@@ -3,6 +3,8 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.DetailedHtmlCleaner;
+import org.jsoup.safety.ValidationErrors;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
@@ -248,5 +250,18 @@ public class Jsoup {
         Cleaner cleaner = new Cleaner(whitelist);
         return cleaner.isValid(dirty);
     }
-    
+
+    /**
+     Validates the input HTML against tags and attributes allowed by the Whitelist. Useful for form validation. The input HTML should
+     still be run through the cleaner to set up enforced attributes, and to tidy the output.
+     @param bodyHtml HTML to test
+     @param whitelist whitelist to test against
+     @return {@link ValidationErrors} containing any errors encountered
+     @see #clean(String, org.jsoup.safety.Whitelist)
+     */
+    public static ValidationErrors validate(String bodyHtml, Whitelist whitelist) {
+        Document dirty = parseBodyFragment(bodyHtml, "");
+        DetailedHtmlCleaner cleaner = new DetailedHtmlCleaner(whitelist);
+        return cleaner.validate(dirty);
+    }
 }
