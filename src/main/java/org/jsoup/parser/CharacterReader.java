@@ -366,11 +366,11 @@ final class CharacterReader {
             cached = new String(val, start, count);
             cache[index] = cached;
         } else { // hashcode hit, check equality
-            if (rangeEquals(start, count, cached)) {
-                // hit
+            if (rangeEquals(start, count, cached)) { // hit
                 return cached;
             } else { // hashcode conflict
                 cached = new String(val, start, count);
+                cache[index] = cached; // update the cache, as recently used strings are more likely to show up again
             }
         }
         return cached;
