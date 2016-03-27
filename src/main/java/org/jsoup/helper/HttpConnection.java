@@ -557,17 +557,14 @@ public class HttpConnection implements Connection {
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     InputStream bodyStream = null;
-                    InputStream dataStream = null;
                     try {
-                        dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                        bodyStream = res.hasHeaderWithValue(CONTENT_ENCODING, "gzip") ?
-                                new BufferedInputStream(new GZIPInputStream(dataStream)) :
-                                new BufferedInputStream(dataStream);
+                        bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                        if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                            bodyStream = new GZIPInputStream(bodyStream);
 
                         res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
                     } finally {
                         if (bodyStream != null) bodyStream.close();
-                        if (dataStream != null) dataStream.close();
                     }
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
