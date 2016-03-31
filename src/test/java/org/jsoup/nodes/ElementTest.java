@@ -2,18 +2,14 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -22,6 +18,20 @@ import java.util.Map;
  */
 public class ElementTest {
     private String reference = "<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>";
+
+    @Test
+    public void selectNextElementSibling(){
+        Document doc = Jsoup.parse("<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>");
+        Element element = doc.getElementById("div1").child(0);
+        assertEquals(element.selectNextElementSibling("img").first().attr("src"),"foo.png");
+    }
+
+    @Test
+    public void selectPreviousElementSibling(){
+        Document doc = Jsoup.parse("<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>");
+        Element element = doc.getElementById("div1").child(2);
+        assertEquals(element.selectPreviousElementSibling("p:contains(hello)").first().text(),"Hello");
+    }
 
     @Test public void getElementsByTagName() {
         Document doc = Jsoup.parse(reference);

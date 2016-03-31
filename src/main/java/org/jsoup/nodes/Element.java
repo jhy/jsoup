@@ -537,6 +537,22 @@ public class Element extends Node {
     }
 
     /**
+     * Find elements that match the {@link Selector} CSS query, with this element's next siblings as the starting context.
+     * @return the found element, or null if there is no element meet the conditions
+     * @see #nextElementSibling()
+     */
+    public Elements selectNextElementSibling(String cssQuery){
+        Element nextElement = nextElementSibling();
+        Elements targetElements = new Elements();
+        while (nextElement!=null && targetElements.isEmpty()) {
+            targetElements = nextElement.select(cssQuery);
+            nextElement = nextElement.nextElementSibling();
+        }
+
+        return targetElements;
+    }
+
+    /**
      * Gets the previous element sibling of this element.
      * @return the previous element, or null if there is no previous element
      * @see #nextElementSibling()
@@ -550,6 +566,22 @@ public class Element extends Node {
             return siblings.get(index-1);
         else
             return null;
+    }
+
+    /**
+     * Find elements that match the {@link Selector} CSS query, with this element's previous siblings as the starting context.
+     * @return the found element, or null if there is no element meet the conditions
+     * @see #previousElementSibling()
+     */
+    public Elements selectPreviousElementSibling(String cssQuery){
+        Element prevElement = previousElementSibling();
+        Elements targetElements = new Elements();
+        while (prevElement!=null && targetElements.isEmpty()) {
+            targetElements = prevElement.select(cssQuery);
+            prevElement = prevElement.previousElementSibling();
+        }
+
+        return targetElements;
     }
 
     /**
