@@ -498,6 +498,15 @@ public class Element extends Node {
 
         return parent().cssSelector() + selector.toString();
     }
+    
+    /**
+     * Check if element matches the given CSS selector within the owner document.
+     *
+     * @return {@code true} if the element matches the selector, {@code false} otherwise
+     */
+    public boolean matches(String cssQuery) {
+        return QueryParser.parse(cssQuery).matches(ownerDocument(), this);
+    }
 
     /**
      * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling

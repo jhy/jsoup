@@ -12,7 +12,7 @@ import org.jsoup.parser.TokenQueue;
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
-class QueryParser {
+public class QueryParser {
     private final static String[] combinators = {",", ">", "+", "~", " "};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
