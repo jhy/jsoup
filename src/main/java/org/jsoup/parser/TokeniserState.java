@@ -780,7 +780,7 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
+            String value = r.consumeToAny(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -812,7 +812,7 @@ enum TokeniserState {
     },
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
+            String value = r.consumeToAny(attributeSingleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -844,7 +844,7 @@ enum TokeniserState {
     },
     AttributeValue_unquoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`');
+            String value = r.consumeToAnySorted(attributeValueUnquoted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
 
@@ -1657,6 +1657,7 @@ enum TokeniserState {
     private static final char[] attributeSingleValueCharsSorted = new char[]{'\'', '&', nullChar};
     private static final char[] attributeDoubleValueCharsSorted = new char[]{'"', '&', nullChar};
     private static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<'};
+    private static final char[] attributeValueUnquoted = new char[]{'\t', '\n', '\r', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`'};
 
     private static final char replacementChar = Tokeniser.replacementChar;
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
@@ -1666,6 +1667,7 @@ enum TokeniserState {
         Arrays.sort(attributeSingleValueCharsSorted);
         Arrays.sort(attributeDoubleValueCharsSorted);
         Arrays.sort(attributeNameCharsSorted);
+        Arrays.sort(attributeValueUnquoted);
     }
 
     /**
