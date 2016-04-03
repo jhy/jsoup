@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.8.4 [PENDING]
+ * Added support for HTTP and SOCKS request proxies, specifiable per connection.
+   <https://github.com/jhy/jsoup/pull/570>
+
  * In Jsoup.Connect, if the same header key is seen multiple times, combine their values with a comma per the HTTP RFC,
    instead of keeping just one value. Also fixes an issue where header values could be out of order.
    <https://github.com/jhy/jsoup/issues/618>

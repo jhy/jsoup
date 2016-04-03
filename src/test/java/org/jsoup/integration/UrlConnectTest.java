@@ -17,8 +17,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.util.Map;
 
 import static org.hamcrest.core.Is.is;
@@ -558,5 +557,49 @@ public class UrlConnectTest {
         assertEquals("", response.body()); // head ought to have no body
         Document doc = response.parse();
         assertEquals("", doc.text());
+    }
+
+
+    /*
+     Proxy tests. Assumes local proxy running on 8888, without system propery set (so that specifying it is required).
+     */
+
+    @Test
+    public void fetchViaHttpProxy() throws IOException {
+        String url = "http://jsoup.org";
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8888));
+        Document doc = Jsoup.connect(url).proxy(proxy).get();
+        assertTrue(doc.title().contains("jsoup"));
+    }
+
+    @Test
+    public void fetchViaHttpProxySetByArgument() throws IOException {
+        String url = "http://jsoup.org";
+        Document doc = Jsoup.connect(url).proxy("localhost", 8888).get();
+        assertTrue(doc.title().contains("jsoup"));
+    }
+
+    @Test
+    public void invalidProxyFails() throws IOException {
+        boolean caught = false;
+        String url = "http://jsoup.org";
+        try {
+            Document doc = Jsoup.connect(url).proxy("localhost", 8889).get();
+        } catch (IOException e) {
+            caught = e instanceof ConnectException;
+        }
+        assertTrue(caught);
+    }
+
+    @Test
+    public void proxyGetAndSet() throws IOException {
+        String url = "http://jsoup.org";
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8889)); // invalid
+        final Connection con = Jsoup.connect(url).proxy(proxy);
+
+        assert con.request().proxy() == proxy;
+        con.request().proxy(null); // disable
+        Document doc = con.get();
+        assertTrue(doc.title().contains("jsoup")); // would fail if actually went via proxy
     }
 }
