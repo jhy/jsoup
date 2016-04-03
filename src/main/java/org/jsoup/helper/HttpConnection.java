@@ -1,18 +1,13 @@
 package org.jsoup.helper;
 
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -77,6 +72,16 @@ public class HttpConnection implements Connection {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Malformed URL: " + url, e);
         }
+        return this;
+    }
+
+    public Connection proxy(Proxy proxy) {
+        req.proxy(proxy);
+        return this;
+    }
+
+    public Connection proxy(String host, int port) {
+        req.proxy(host, port);
         return this;
     }
 
@@ -350,6 +355,7 @@ public class HttpConnection implements Connection {
     }
 
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+        private Proxy proxy; // nullable
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -369,6 +375,20 @@ public class HttpConnection implements Connection {
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+        }
+
+        public Proxy proxy() {
+            return proxy;
+        }
+
+        public Request proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public Request proxy(String host, int port) {
+            this.proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved(host, port));
+            return this;
         }
 
         public int timeout() {
@@ -622,7 +642,11 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            final HttpURLConnection conn = (HttpURLConnection) (
+                req.proxy() == null ?
+                req.url().openConnection() :
+                req.url().openConnection(req.proxy())
+            );
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support

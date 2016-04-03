@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
@@ -58,6 +59,20 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     Connection url(String url);
+
+    /**
+     * Set the proxy to use for this request. Set to <code>null</code> to disable.
+     * @param proxy proxy to use
+     * @return this Connection, for chaining
+     */
+    Connection proxy(Proxy proxy);
+
+    /**
+     * Set the HTTP proxy to use for this request.
+     * @param proxy proxy to use
+     * @return this Connection, for chaining
+     */
+    Connection proxy(String host, int port);
 
     /**
      * Set the request user-agent header.
@@ -408,7 +423,25 @@ public interface Connection {
      * Represents a HTTP request.
      */
     interface Request extends Base<Request> {
+        /**
+         * Get the proxy used for this request.
+         * @return the proxy; <code>null</code> if not enabled.
+         */
+        Proxy proxy();
 
+        /**
+         * Update the proxy for this request.
+         * @param proxy the proxy ot use; <code>null</code> to disable.
+         * @return this Request, for chaining
+         */
+        Request proxy(Proxy proxy);
+
+        /**
+         * Set the HTTP proxy to use for this request.
+         * @param proxy proxy to use
+         * @return this Connection, for chaining
+         */
+        Request proxy(String host, int port);
 
         /**
          * Get the request timeout, in milliseconds.
