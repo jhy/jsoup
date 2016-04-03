@@ -10,6 +10,7 @@ import org.jsoup.helper.HttpConnection;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Proxy;
 import java.net.URL;
 
 /**
@@ -73,6 +74,17 @@ public class Jsoup {
         return HttpConnection.connect(url);
     }
 
+    /**
+     * Creates a new {@link Connection} to a URL using a Proxy. Use to fetch and parse a HTML page.
+     * 
+     * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
+     * @param proxy Proxy to use.
+     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     */
+    public static Connection connect(String url, Proxy proxy) {
+        return HttpConnection.connect(url).proxy(proxy);
+    }
+    
     /**
      Parse the contents of a file as HTML.
 
@@ -180,6 +192,31 @@ public class Jsoup {
     public static Document parse(URL url, int timeoutMillis) throws IOException {
         Connection con = HttpConnection.connect(url);
         con.timeout(timeoutMillis);
+        return con.get();
+    }
+
+    /**
+     Fetch a URL, and parse it as HTML. Provided for compatibility; in most cases use {@link #connect(String)} instead.
+     <p>
+     The encoding character set is determined by the content-type header or http-equiv meta tag, or falls back to {@code UTF-8}.
+
+     @param url           URL to fetch (with a GET). The protocol must be {@code http} or {@code https}.
+     @param timeoutMillis Connection and read timeout, in milliseconds. If exceeded, IOException is thrown.
+     @param proxy Proxy to use.
+     @return The parsed HTML.
+
+     @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
+     @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
+     @throws java.net.SocketTimeoutException if the connection times out
+     @throws IOException if a connection or read error occurs
+
+     @see #connect(String)
+     */
+    public static Document parse(URL url, int timeoutMillis, Proxy proxy) throws IOException {
+        Connection con = HttpConnection.connect(url);
+        con.timeout(timeoutMillis);
+        con.proxy(proxy);
         return con.get();
     }
 
