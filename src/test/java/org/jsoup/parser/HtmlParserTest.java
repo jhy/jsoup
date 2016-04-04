@@ -876,4 +876,11 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(body);
         assertEquals(1, doc.body().children().size());
     }
+
+    @Test public void testUsingSingleQuotesInQueries() {
+        String body = "<body> <div class='main'>hello</div></body>";
+        Document doc = Jsoup.parse(body);
+        Elements main = doc.select("div[class='main']");
+        assertEquals("hello", main.text());
+    }
 }
