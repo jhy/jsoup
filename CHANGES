@@ -11,6 +11,11 @@ jsoup changelog
  * Added support in Jsoup.Connect for HEAD, OPTIONS, TRACE.
    <https://github.com/jhy/jsoup/issues/613>
 
+ * Added support for HTTP 307 Temporary Redirect (replays posts, if applicable).
+   <https://github.com/jhy/jsoup/pull/666>
+
+ * Performance improvements when parsing HTML, particularly for Android Dalvik.
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 
