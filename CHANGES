@@ -25,6 +25,10 @@ jsoup changelog
  * Added not-null validators to Element.appendText() and Element.prependText()
    <https://github.com/jhy/jsoup/issues/690>
 
+ * Fixed an issue when moving moving nodes using Element.insert(index, children) where the sibling index would be set
+   incorrectly, leading to the original loads being lost.
+   <https://github.com/jhy/jsoup/issues/689>
+
 *** Release 1.8.3 [2015-Aug-02]
  * Added support for custom boolean attributes.
    <https://github.com/jhy/jsoup/pull/555>

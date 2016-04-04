@@ -2,18 +2,13 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import static org.junit.Assert.*;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -861,5 +856,26 @@ public class ElementTest {
         assertEquals("http://example.com/three.html", els.get(2).absUrl("href"));
         assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
         assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
+    }
+
+    @Test
+    public void appendMustCorrectlyMoveChildrenInsideOneParentElement() {
+        Document doc = new Document("");
+        Element body = doc.appendElement("body");
+        body.appendElement("div1");
+        body.appendElement("div2");
+        final Element div3 = body.appendElement("div3");
+        div3.text("Check");
+        final Element div4 = body.appendElement("div4");
+
+        ArrayList<Element> toMove = new ArrayList<Element>();
+        toMove.add(div3);
+        toMove.add(div4);
+
+        body.insertChildren(0, toMove);
+
+        String result = doc.toString().replaceAll("\\s+", "");
+        assertEquals("<body><div3>Check</div3><div4></div4><div1></div1><div2></div2></body>", result);
+
     }
 }
