@@ -379,6 +379,18 @@ public class ElementTest {
         assertEquals("there & now > Hello", div.text());
         assertEquals("there &amp; now &gt; <p>Hello</p>", TextUtil.stripNewlines(div.html()));
     }
+
+    @Test(expected = IllegalArgumentException.class) public void testThrowsOnAddNullText() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.appendText(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)  public void testThrowsOnPrependNullText() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element div = doc.getElementById("1");
+        div.prependText(null);
+    }
     
     @Test public void testAddNewHtml() {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");

@@ -358,6 +358,7 @@ public class Element extends Node {
      * @return this element
      */
     public Element appendText(String text) {
+        Validate.notNull(text);
         TextNode node = new TextNode(text, baseUri());
         appendChild(node);
         return this;
@@ -370,6 +371,7 @@ public class Element extends Node {
      * @return this element
      */
     public Element prependText(String text) {
+        Validate.notNull(text);
         TextNode node = new TextNode(text, baseUri());
         prependChild(node);
         return this;
