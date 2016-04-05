@@ -798,7 +798,9 @@ public class ElementTest {
     }
 
     @Test
-    public void testHashAndEquals() {
+    public void testHashAndEqualsAndValue() {
+        // .equals and hashcode are identity. value is content.
+
         String doc1 = "<div id=1><p class=one>One</p><p class=one>One</p><p class=one>Two</p><p class=two>One</p></div>" +
                 "<div id=2><p class=one>One</p><p class=one>One</p><p class=one>Two</p><p class=two>One</p></div>";
 
@@ -829,17 +831,17 @@ public class ElementTest {
         Element e6 = els.get(6);
         Element e7 = els.get(7);
 
-        assertEquals(e0, e1);
-        assertEquals(e0, e4);
-        assertEquals(e0, e5);
+        assertEquals(e0, e0);
+        assertTrue(e0.hasSameValue(e1));
+        assertTrue(e0.hasSameValue(e4));
+        assertTrue(e0.hasSameValue(e5));
         assertFalse(e0.equals(e2));
-        assertFalse(e0.equals(e3));
-        assertFalse(e0.equals(e6));
-        assertFalse(e0.equals(e7));
+        assertFalse(e0.hasSameValue(e2));
+        assertFalse(e0.hasSameValue(e3));
+        assertFalse(e0.hasSameValue(e6));
+        assertFalse(e0.hasSameValue(e7));
 
-        assertEquals(e0.hashCode(), e1.hashCode());
-        assertEquals(e0.hashCode(), e4.hashCode());
-        assertEquals(e0.hashCode(), e5.hashCode());
+        assertEquals(e0.hashCode(), e0.hashCode());
         assertFalse(e0.hashCode() == (e2.hashCode()));
         assertFalse(e0.hashCode() == (e3).hashCode());
         assertFalse(e0.hashCode() == (e6).hashCode());
@@ -876,6 +878,17 @@ public class ElementTest {
 
         String result = doc.toString().replaceAll("\\s+", "");
         assertEquals("<body><div3>Check</div3><div4></div4><div1></div1><div2></div2></body>", result);
+    }
 
+    @Test
+    public void testHashcodeIsStableWithContentChanges() {
+        Element root = new Element(Tag.valueOf("root"), "");
+
+        HashSet<Element> set = new HashSet<Element>();
+        // Add root node:
+        set.add(root);
+
+        root.appendChild(new Element(Tag.valueOf("a"), ""));
+        assertTrue(set.contains(root));
     }
 }

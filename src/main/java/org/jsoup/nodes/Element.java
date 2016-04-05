@@ -1199,24 +1199,6 @@ public class Element extends Node {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        Element element = (Element) o;
-
-        return tag.equals(element.tag);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (tag != null ? tag.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public Element clone() {
         return (Element) super.clone();
     }

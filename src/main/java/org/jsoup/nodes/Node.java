@@ -574,34 +574,30 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Check if this node is equal to another node. A node is considered equal if its attributes and content equal the
-     * other node; particularly its position in the tree does not influence its equality.
+     * Check if this node is the same instance of another (object identity test).
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other
+     * @see Node#hasSameValue(Object) to compare nodes by their value
      */
     @Override
     public boolean equals(Object o) {
+        // implemented just so that javadoc is clear this is an identity test
+        return this == o;
+    }
+
+    /**
+     * Check if this node is has the same content as another node. A node is considered the same if its name, attributes and content match the
+     * other node; particularly its position in the tree does not influence its similarity.
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     */
+
+    public boolean hasSameValue(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         Node node = (Node) o;
-
-        if (childNodes != null ? !childNodes.equals(node.childNodes) : node.childNodes != null) return false;
-        return !(attributes != null ? !attributes.equals(node.attributes) : node.attributes != null);
-    }
-
-    /**
-     * Calculates a hash code for this node, which includes iterating all its attributes, and recursing into any child
-     * nodes. This means that a node's hashcode is based on it and its child content, and not its parent or place in the
-     * tree. So two nodes with the same content, regardless of their position in the tree, will have the same hashcode.
-     * @return the calculated hashcode
-     * @see Node#equals(Object)
-     */
-    @Override
-    public int hashCode() {
-        int result = childNodes != null ? childNodes.hashCode() : 0;
-        result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
-        return result;
+        return this.outerHtml().equals(((Node) o).outerHtml());
     }
 
     /**

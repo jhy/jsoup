@@ -156,10 +156,19 @@ public class DocumentTest {
         Document docB = Jsoup.parse("<div/>One");
         Document docC = Jsoup.parse("<div/>Two");
 
-        assertEquals(docA, docB);
-        assertFalse(docA.equals(docC));
-        assertEquals(docA.hashCode(), docB.hashCode());
+        assertFalse(docA.equals(docB));
+        assertTrue(docA.equals(docA));
+        assertEquals(docA.hashCode(), docA.hashCode());
         assertFalse(docA.hashCode() == docC.hashCode());
+    }
+
+    @Test public void DocumentsWithSameContentAreVerifialbe() throws Exception {
+        Document docA = Jsoup.parse("<div/>One");
+        Document docB = Jsoup.parse("<div/>One");
+        Document docC = Jsoup.parse("<div/>Two");
+
+        assertTrue(docA.hasSameValue(docB));
+        assertFalse(docA.hasSameValue(docC));
     }
     
     @Test
