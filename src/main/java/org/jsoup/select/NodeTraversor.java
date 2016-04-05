@@ -22,8 +22,9 @@ public class NodeTraversor {
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param root the root node point to traverse.
+     * @param namespace the namespace of the document
      */
-    public void traverse(Node root) {
+    public void traverse(Node root, String namespace) {
         Node node = root;
         int depth = 0;
         
@@ -44,5 +45,10 @@ public class NodeTraversor {
                 node = node.nextSibling();
             }
         }
+    }
+    
+    public void traverse (Node root)
+    {
+    	traverse (root, null);
     }
 }

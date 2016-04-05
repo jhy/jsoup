@@ -16,6 +16,9 @@ jsoup changelog
 
  * Performance improvements when parsing HTML, particularly for Android Dalvik.
 
+ * Added support for XML namespaces when converting jsoup documents to W3C documents.
+   <https://github.com/jhy/jsoup/pull/672>
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 
