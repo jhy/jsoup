@@ -70,6 +70,7 @@ abstract class Token {
         protected String tagName;
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
+        private String pendingAttributeValueS; // try to get attr vals in one shot, vs Builder
         private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
         private boolean hasPendingAttributeValue = false;
         boolean selfClosing = false;
@@ -80,6 +81,7 @@ abstract class Token {
             tagName = null;
             pendingAttributeName = null;
             reset(pendingAttributeValue);
+            pendingAttributeValueS = null;
             hasEmptyAttributeValue = false;
             hasPendingAttributeValue = false;
             selfClosing = false;
@@ -94,7 +96,8 @@ abstract class Token {
             if (pendingAttributeName != null) {
                 Attribute attribute;
                 if (hasPendingAttributeValue)
-                    attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString());
+                    attribute = new Attribute(pendingAttributeName,
+                        pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS);
                 else if (hasEmptyAttributeValue)
                     attribute = new Attribute(pendingAttributeName, "");
                 else
@@ -105,6 +108,7 @@ abstract class Token {
             hasEmptyAttributeValue = false;
             hasPendingAttributeValue = false;
             reset(pendingAttributeValue);
+            pendingAttributeValueS = null;
         }
 
         final void finaliseTag() {
@@ -153,7 +157,11 @@ abstract class Token {
 
         final void appendAttributeValue(String append) {
             ensureAttributeValue();
-            pendingAttributeValue.append(append);
+            if (pendingAttributeValue.length() == 0) {
+                pendingAttributeValueS = append;
+            } else {
+                pendingAttributeValue.append(append);
+            }
         }
 
         final void appendAttributeValue(char append) {
@@ -172,6 +180,11 @@ abstract class Token {
 
         private void ensureAttributeValue() {
             hasPendingAttributeValue = true;
+            // if on second hit, we'll need to move to the builder
+            if (pendingAttributeValueS != null) {
+                pendingAttributeValue.append(pendingAttributeValueS);
+                pendingAttributeValueS = null;
+            }
         }
     }
 

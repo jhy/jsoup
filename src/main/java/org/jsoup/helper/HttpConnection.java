@@ -1,18 +1,13 @@
 package org.jsoup.helper;
 
-import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
-import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -32,6 +27,7 @@ public class HttpConnection implements Connection {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+    private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -77,6 +73,16 @@ public class HttpConnection implements Connection {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Malformed URL: " + url, e);
         }
+        return this;
+    }
+
+    public Connection proxy(Proxy proxy) {
+        req.proxy(proxy);
+        return this;
+    }
+
+    public Connection proxy(String host, int port) {
+        req.proxy(host, port);
         return this;
     }
 
@@ -350,6 +356,7 @@ public class HttpConnection implements Connection {
     }
 
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+        private Proxy proxy; // nullable
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
@@ -369,6 +376,20 @@ public class HttpConnection implements Connection {
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             parser = Parser.htmlParser();
+        }
+
+        public Proxy proxy() {
+            return proxy;
+        }
+
+        public Request proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public Request proxy(String host, int port) {
+            this.proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved(host, port));
+            return this;
         }
 
         public int timeout() {
@@ -520,8 +541,10 @@ public class HttpConnection implements Connection {
 
                 // redirect if there's a location header (from 3xx, or 201 etc)
                 if (res.hasHeader(LOCATION) && req.followRedirects()) {
-                    req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
-                    req.data().clear();
+                    if (status != HTTP_TEMP_REDIR) {
+                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                        req.data().clear();
+                    }
 
                     String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
@@ -557,17 +580,14 @@ public class HttpConnection implements Connection {
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     InputStream bodyStream = null;
-                    InputStream dataStream = null;
                     try {
-                        dataStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                        bodyStream = res.hasHeaderWithValue(CONTENT_ENCODING, "gzip") ?
-                                new BufferedInputStream(new GZIPInputStream(dataStream)) :
-                                new BufferedInputStream(dataStream);
+                        bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                        if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                            bodyStream = new GZIPInputStream(bodyStream);
 
                         res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
                     } finally {
                         if (bodyStream != null) bodyStream.close();
-                        if (dataStream != null) dataStream.close();
                     }
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
@@ -625,7 +645,11 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
-            HttpURLConnection conn = (HttpURLConnection) req.url().openConnection();
+            final HttpURLConnection conn = (HttpURLConnection) (
+                req.proxy() == null ?
+                req.url().openConnection() :
+                req.url().openConnection(req.proxy())
+            );
 
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support

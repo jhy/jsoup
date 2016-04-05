@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.8.4 [PENDING]
+ * Added support for HTTP and SOCKS request proxies, specifiable per connection.
+   <https://github.com/jhy/jsoup/pull/570>
+
  * In Jsoup.Connect, if the same header key is seen multiple times, combine their values with a comma per the HTTP RFC,
    instead of keeping just one value. Also fixes an issue where header values could be out of order.
    <https://github.com/jhy/jsoup/issues/618>
@@ -8,11 +11,23 @@ jsoup changelog
  * Added support in Jsoup.Connect for HEAD, OPTIONS, TRACE.
    <https://github.com/jhy/jsoup/issues/613>
 
+ * Added support for HTTP 307 Temporary Redirect (replays posts, if applicable).
+   <https://github.com/jhy/jsoup/pull/666>
+
+ * Performance improvements when parsing HTML, particularly for Android Dalvik.
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 
  * Fix an issue where elements.select(query) would not return every matching element if they had the same content.
    <https://github.com/jhy/jsoup/issues/614>
+
+ * Added not-null validators to Element.appendText() and Element.prependText()
+   <https://github.com/jhy/jsoup/issues/690>
+
+ * Fixed an issue when moving moving nodes using Element.insert(index, children) where the sibling index would be set
+   incorrectly, leading to the original loads being lost.
+   <https://github.com/jhy/jsoup/issues/689>
 
 *** Release 1.8.3 [2015-Aug-02]
  * Added support for custom boolean attributes.
