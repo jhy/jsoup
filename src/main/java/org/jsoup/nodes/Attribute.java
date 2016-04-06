@@ -18,10 +18,12 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     };
 
     private String key;
+    private String keyOrig;
     private String value;
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
+     *
      * @param key attribute key
      * @param value attribute value
      * @see #createFromEncoded
@@ -29,38 +31,57 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     public Attribute(String key, String value) {
         Validate.notEmpty(key);
         Validate.notNull(value);
-        this.key = key.trim().toLowerCase();
+        this.keyOrig = key.trim();
+        this.key = this.keyOrig.toLowerCase();
         this.value = value;
     }
 
     /**
-     Get the attribute key.
-     @return the attribute key
+     * Get the attribute key, all lower-case.
+     *
+     * @return the attribute key
      */
     public String getKey() {
-        return key;
+        return getKey(false);
+    }
+    /**
+     * Get the attribute key.
+     *
+     * @param preserveCase if true, return the attribute key as it was originally parsed; otherwise, return it all lower-case
+     * @return the attribute key
+     */
+    public String getKey(boolean preserveCase) {
+        if (preserveCase) {
+            return keyOrig;
+        } else {
+            return key;
+        }
     }
 
     /**
-     Set the attribute key. Gets normalised as per the constructor method.
-     @param key the new key; must not be null
+     * Set the attribute key. Gets normalised as per the constructor method.
+     *
+     * @param key the new key; must not be null
      */
     public void setKey(String key) {
         Validate.notEmpty(key);
-        this.key = key.trim().toLowerCase();
+        this.keyOrig = key.trim();
+        this.key = this.keyOrig.toLowerCase();
     }
 
     /**
-     Get the attribute value.
-     @return the attribute value
+     * Get the attribute value.
+     *
+     * @return the attribute value
      */
     public String getValue() {
         return value;
     }
 
     /**
-     Set the attribute value.
-     @param value the new attribute value; must not be null
+     * Set the attribute value.
+     *
+     * @param value the new attribute value; must not be null
      */
     public String setValue(String value) {
         Validate.notNull(value);
@@ -70,8 +91,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
-     @return HTML
+     * Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+     *
+     * @return HTML
      */
     public String html() {
         StringBuilder accum = new StringBuilder();
@@ -80,7 +102,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
     
     protected void html(StringBuilder accum, Document.OutputSettings out) {
-        accum.append(key);
+        accum.append(getKey(out.preserveCase()));
         if (!shouldCollapseAttribute(out)) {
             accum.append("=\"");
             Entities.escape(accum, value, out, true, false, false);
@@ -89,8 +111,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     Get the string representation of this attribute, implemented as {@link #html()}.
-     @return string
+     * Get the string representation of this attribute, implemented as {@link #html()}.
+     *
+     * @return string
      */
     @Override
     public String toString() {
@@ -99,6 +122,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     /**
      * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
+     *
      * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
      * @param encodedValue HTML attribute encoded value
      * @return attribute

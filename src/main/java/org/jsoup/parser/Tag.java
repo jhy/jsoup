@@ -10,10 +10,11 @@ import java.util.Map;
  *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
-public class Tag {
+public class Tag implements Cloneable {
     private static final Map<String, Tag> tags = new HashMap<String, Tag>(); // map of known tags
 
     private String tagName;
+    private String tagNameOrig;
     private boolean isBlock = true; // block or inline
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean canContainBlock = true; // Can this tag hold block level tags?
@@ -25,16 +26,30 @@ public class Tag {
     private boolean formSubmit = false; // a control that can be submitted in a form: input etc
 
     private Tag(String tagName) {
+        this.tagNameOrig = tagName;
         this.tagName = tagName.toLowerCase();
     }
 
     /**
-     * Get this tag's name.
+     * Get this tag's name, all lower-case.
      *
      * @return the tag's name
      */
     public String getName() {
-        return tagName;
+        return getName(false);
+    }
+    /**
+     * Get this tag's name.
+     *
+     * @param preserveCase if true, return the tag name as it was originally parsed; otherwise, return it all lower-case
+     * @return the tag's name
+     */
+    public String getName(boolean preserveCase) {
+        if (preserveCase) {
+            return tagNameOrig;
+        } else {
+            return tagName;
+        }
     }
 
     /**
@@ -48,18 +63,21 @@ public class Tag {
      */
     public static Tag valueOf(String tagName) {
         Validate.notNull(tagName);
+        tagName = tagName.trim();
+        Validate.notEmpty(tagName);
         Tag tag = tags.get(tagName);
 
         if (tag == null) {
-            tagName = tagName.trim().toLowerCase();
-            Validate.notEmpty(tagName);
-            tag = tags.get(tagName);
+            tag = tags.get(tagName.toLowerCase());
 
             if (tag == null) {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.isBlock = false;
                 tag.canContainBlock = true;
+            } else if (!tag.tagNameOrig.equals(tagName)) {
+                tag = tag.clone();
+                tag.tagNameOrig = tagName;
             }
         }
         return tag;
@@ -175,6 +193,15 @@ public class Tag {
     Tag setSelfClosing() {
         selfClosing = true;
         return this;
+    }
+
+    @Override
+    public Tag clone() {
+        try {
+            return (Tag) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

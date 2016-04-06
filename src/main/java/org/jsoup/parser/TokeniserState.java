@@ -185,7 +185,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
             //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
-            String tagName = r.consumeTagName().toLowerCase();
+            String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
 
             switch (r.consume()) {
@@ -646,7 +646,7 @@ enum TokeniserState {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
             String name = r.consumeToAnySorted(attributeNameCharsSorted);
-            t.tagPending.appendAttributeName(name.toLowerCase());
+            t.tagPending.appendAttributeName(name);
 
             char c = r.consume();
             switch (c) {

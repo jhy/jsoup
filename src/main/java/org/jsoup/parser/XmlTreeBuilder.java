@@ -52,7 +52,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     Element insert(Token.StartTag startTag) {
-        Tag tag = Tag.valueOf(startTag.name());
+        Tag tag = Tag.valueOf(startTag.name(true));
         // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         Element el = new Element(tag, baseUri, startTag.attributes);
         insertNode(el);
