@@ -885,9 +885,11 @@ public class HtmlParserTest {
     }
 
     @Test public void testSupportsNonAsciiTags() {
-        String body = "<進捗推移グラフ>Yes</進捗推移グラフ>";
+        String body = "<進捗推移グラフ>Yes</進捗推移グラフ><русский-тэг>Correct</<русский-тэг>";
         Document doc = Jsoup.parse(body);
         Elements els = doc.select("進捗推移グラフ");
         assertEquals("Yes", els.text());
+        els = doc.select("русский-тэг");
+        assertEquals("Correct", els.text());
     }
 }
