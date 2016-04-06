@@ -18,6 +18,9 @@ jsoup changelog
  * Added support for UTF-16 and UTF-32 character set detection from byte-order-marks (BOM).
    <https://github.com/jhy/jsoup/issues/695>
 
+ * Added support for tags with non-ascii (unicode) letters.
+   <https://github.com/jhy/jsoup/issues/667>
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 

@@ -297,7 +297,7 @@ final class CharacterReader {
         if (isEmpty())
             return false;
         char c = input[pos];
-        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c);
     }
 
     boolean matchesDigit() {
