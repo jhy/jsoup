@@ -109,6 +109,15 @@ public class UrlConnectTest {
     }
 
     @Test
+     public void doesPostWithRawdata() throws IOException {
+         Document doc = Jsoup.connect(echoURL)
+            .rawData("myRawData")
+            .header("Content-Type", "application/json")
+            .post();
+         assertEquals("myRawData", ihVal("POSTDATA", doc));
+     }
+
+    @Test
     public void doesGet() throws IOException {
         Connection con = Jsoup.connect(echoURL + "?what=the")
             .userAgent("Mozilla")
