@@ -7,7 +7,6 @@ import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
 import static org.junit.Assert.*;
 
-
 public class EntitiesTest {
     @Test public void escape() {
         String text = "Hello &<> Å å π 新 there ¾ © »";
@@ -32,7 +31,7 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
-    @Test public void escapeSupplementaryCharacter(){
+    @Test public void escapeSupplementaryCharacter() {
         String text = new String(Character.toChars(135361));
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         assertEquals("&#x210c1;", escapedAscii);

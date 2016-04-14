@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.*;
 
@@ -33,7 +35,7 @@ public class DocumentType extends Node {
     }
 
     @Override
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
@@ -50,7 +52,7 @@ public class DocumentType extends Node {
     }
 
     @Override
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
     }
 
     private boolean has(final String attribute) {

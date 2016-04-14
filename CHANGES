@@ -12,6 +12,9 @@ jsoup changelog
 
  * Performance improvements when parsing HTML, particularly for Android Dalvik.
 
+ * Added support for writing HTML into Appendable objects (like OutputStreamWriter), to enable stream serialization.
+   <https://github.com/jhy/jsoup/pull/470/>
+
  * Added support for XML namespaces when converting jsoup documents to W3C documents.
    <https://github.com/jhy/jsoup/pull/672>
 
