@@ -1,7 +1,6 @@
 package org.jsoup;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 
 import java.io.IOException;
@@ -69,7 +68,8 @@ public interface Connection {
 
     /**
      * Set the HTTP proxy to use for this request.
-     * @param proxy proxy to use
+     * @param host the proxy hostname
+     * @param port the proxy port
      * @return this Connection, for chaining
      */
     Connection proxy(String host, int port);
@@ -438,7 +438,8 @@ public interface Connection {
 
         /**
          * Set the HTTP proxy to use for this request.
-         * @param proxy proxy to use
+         * @param host the proxy hostname
+         * @param port the proxy port
          * @return this Connection, for chaining
          */
         Request proxy(String host, int port);
