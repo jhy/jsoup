@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Parser;
 
@@ -71,13 +72,17 @@ public class Entities {
     
     static String escape(String string, Document.OutputSettings out) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
-        escape(accum, string, out, false, false, false);
+        try {
+            escape(accum, string, out, false, false, false);
+        } catch (IOException e) {
+            throw new SerializationException(e); // doesn't happen
+        }
         return accum.toString();
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
-    static void escape(StringBuilder accum, String string, Document.OutputSettings out,
-                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) {
+    static void escape(Appendable accum, String string, Document.OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
 
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;

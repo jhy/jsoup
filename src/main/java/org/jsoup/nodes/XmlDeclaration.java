@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+
 /**
  An XML Declaration.
 
@@ -51,8 +53,8 @@ public class XmlDeclaration extends Node {
             return attributes.get(DECL_KEY);
         }
     }
-    
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+
+	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum
                 .append("<")
                 .append(isProcessingInstruction ? "!" : "?")
@@ -60,7 +62,7 @@ public class XmlDeclaration extends Node {
                 .append(">");
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public String toString() {
