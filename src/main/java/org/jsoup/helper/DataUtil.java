@@ -92,8 +92,10 @@ public final class DataUtil {
         // look for BOM - overrides any other header or input
         byteData.mark();
         byte[] bom = new byte[4];
-        byteData.get(bom);
-        byteData.rewind();
+        if (byteData.remaining() >= bom.length) {
+            byteData.get(bom);
+            byteData.rewind();
+        }
         if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
                 bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
             charsetName = "UTF-32"; // and I hope it's on your system

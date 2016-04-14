@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static org.jsoup.Connection.Method.HEAD;
+
 /**
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
@@ -169,6 +171,11 @@ public class HttpConnection implements Connection {
         for (Connection.KeyVal entry: data) {
             req.data(entry);
         }
+        return this;
+    }
+
+    public Connection requestBody(String body) {
+        req.requestBody(body);
         return this;
     }
 
@@ -361,6 +368,7 @@ public class HttpConnection implements Connection {
         private int maxBodySizeBytes;
         private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
+        private String body = null;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
@@ -457,6 +465,15 @@ public class HttpConnection implements Connection {
             return data;
         }
 
+        public Connection.Request requestBody(String body) {
+            this.body = body;
+            return this;
+        }
+
+        public String requestBody() {
+            return body;
+        }
+
         public Request parser(Parser parser) {
             this.parser = parser;
             parserDefined = true;
@@ -519,14 +536,18 @@ public class HttpConnection implements Connection {
             String protocol = req.url().getProtocol();
             if (!protocol.equals("http") && !protocol.equals("https"))
                 throw new MalformedURLException("Only http & https protocols supported");
+            final boolean methodHasBody = req.method().hasBody();
+            final boolean hasRequestBody = req.requestBody() != null;
+            if (!methodHasBody)
+                Validate.isFalse(hasRequestBody, "Cannot set a request body for HTTP method " + req.method());
 
             // set up the request for execution
             String mimeBoundary = null;
-            if (!req.method().hasBody() && req.data().size() > 0) {
-                serialiseRequestUrl(req); // appends query string
-            } else if (req.method().hasBody()) {
+            if (req.data().size() > 0 && (!methodHasBody || hasRequestBody))
+                serialiseRequestUrl(req);
+            else if (methodHasBody)
                 mimeBoundary = setOutputContentType(req);
-            }
+
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
@@ -578,7 +599,7 @@ public class HttpConnection implements Connection {
                 }
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
-                if (conn.getContentLength() != 0) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
+                if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     InputStream bodyStream = null;
                     try {
                         bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
@@ -811,16 +832,8 @@ public class HttpConnection implements Connection {
         }
 
         private static String setOutputContentType(final Connection.Request req) {
-            // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
-            boolean needsMulti = false;
-            for (Connection.KeyVal keyVal : req.data()) {
-                if (keyVal.hasInputStream()) {
-                    needsMulti = true;
-                    break;
-                }
-            }
             String bound = null;
-            if (needsMulti) {
+            if (needsMultipart(req)) {
                 bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
             } else {
@@ -831,7 +844,7 @@ public class HttpConnection implements Connection {
 
         private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
-            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, DataUtil.defaultCharset));
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
 
             if (bound != null) {
                 // boundary will be set if we're in multipart mode
@@ -858,7 +871,11 @@ public class HttpConnection implements Connection {
                 w.write("--");
                 w.write(bound);
                 w.write("--");
-            } else {
+            } else if (req.requestBody() != null) {
+                // data will be in query string, we're sending a plaintext body
+                w.write(req.requestBody());
+            }
+            else {
                 // regular form data (application/x-www-form-urlencoded)
                 boolean first = true;
                 for (Connection.KeyVal keyVal : data) {
@@ -906,6 +923,7 @@ public class HttpConnection implements Connection {
                 first = false;
             }
             for (Connection.KeyVal keyVal : req.data()) {
+                Validate.isFalse(keyVal.hasInputStream(), "InputStream data not supported in URL query string.");
                 if (!first)
                     url.append('&');
                 else
@@ -918,6 +936,18 @@ public class HttpConnection implements Connection {
             req.url(new URL(url.toString()));
             req.data().clear(); // moved into url as get params
         }
+    }
+
+    private static boolean needsMultipart(Connection.Request req) {
+        // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
+        boolean needsMulti = false;
+        for (Connection.KeyVal keyVal : req.data()) {
+            if (keyVal.hasInputStream()) {
+                needsMulti = true;
+                break;
+            }
+        }
+        return needsMulti;
     }
 
     public static class KeyVal implements Connection.KeyVal {

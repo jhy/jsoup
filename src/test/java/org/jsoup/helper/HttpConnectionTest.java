@@ -162,4 +162,10 @@ public class HttpConnectionTest {
         assertEquals("two", kv.value());
         assertFalse(kv.hasInputStream());
     }
+
+    @Test public void requestBody() {
+        Connection con = HttpConnection.connect("http://example.com/");
+        con.requestBody("foo");
+        assertEquals("foo", con.request().requestBody());
+    }
 }

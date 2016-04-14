@@ -202,6 +202,18 @@ public interface Connection {
     Connection data(String... keyvals);
 
     /**
+     * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
+     * encoded form key/value pairs. E.g.:
+     * <code><pre>Jsoup.connect(url)
+     * .requestBody(json)
+     * .header("Content-Type", "application/json")
+     * .post();</pre></code>
+     * If any data key/vals are supplied, they will be send as URL query params.
+     * @return this Request, for chaining
+     */
+    Connection requestBody(String body);
+
+    /**
      * Set a request header.
      * @param name header name
      * @param value header value
@@ -535,6 +547,24 @@ public interface Connection {
          * @return collection of keyvals
          */
         Collection<KeyVal> data();
+
+        /**
+         * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
+         * encoded form key/value pairs. E.g.:
+         * <code><pre>Jsoup.connect(url)
+         * .requestBody(json)
+         * .header("Content-Type", "application/json")
+         * .post();</pre></code>
+         * If any data key/vals are supplied, they will be send as URL query params.
+         * @return this Request, for chaining
+         */
+        Request requestBody(String body);
+
+        /**
+         * Get the current request body.
+         * @return null if not set.
+         */
+        String requestBody();
 
         /**
          * Specify the parser to use when parsing the document.

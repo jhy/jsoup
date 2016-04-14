@@ -4,6 +4,8 @@ jsoup changelog
  * Added support for HTTP and SOCKS request proxies, specifiable per connection.
    <https://github.com/jhy/jsoup/pull/570>
 
+ * Added support for sending plain HTTP request bodies in POST and PUT requests, with Connection.requestBody(String).
+
  * Added support in Jsoup.Connect for HEAD, OPTIONS, TRACE.
    <https://github.com/jhy/jsoup/issues/613>
 
