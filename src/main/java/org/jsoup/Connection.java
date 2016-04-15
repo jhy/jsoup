@@ -202,6 +202,13 @@ public interface Connection {
     Connection data(String... keyvals);
 
     /**
+     * Get the data KeyVal for this key, if any
+     * @param key the data key
+     * @return null if not set
+     */
+    KeyVal data(String key);
+
+    /**
      * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
      * encoded form key/value pairs. E.g.:
      * <code><pre>Jsoup.connect(url)

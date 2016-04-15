@@ -174,6 +174,15 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection.KeyVal data(String key) {
+        Validate.notEmpty(key, "Data key must not be empty");
+        for (Connection.KeyVal keyVal : request().data()) {
+            if (keyVal.key().equals(key))
+                return keyVal;
+        }
+        return null;
+    }
+
     public Connection requestBody(String body) {
         req.requestBody(body);
         return this;

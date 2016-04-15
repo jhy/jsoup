@@ -494,14 +494,10 @@ public class UrlConnectTest {
 
         File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html");
         FileInputStream stream = new FileInputStream(uploadFile);
-
-        // todo: need to add a better way to get an existing data field
-        for (Connection.KeyVal keyVal : post.request().data()) {
-            if (keyVal.key().equals("_file")) {
-                keyVal.value("check.html");
-                keyVal.inputStream(stream);
-            }
-        }
+        
+        Connection.KeyVal fileData = post.data("_file");
+        fileData.value("check.html");
+        fileData.inputStream(stream);
 
         Connection.Response res;
         try {

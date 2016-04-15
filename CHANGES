@@ -26,6 +26,8 @@ jsoup changelog
  * Added support for tags with non-ascii (unicode) letters.
    <https://github.com/jhy/jsoup/issues/667>
 
+ * Added Connection.data(key) to retrieve a data KeyVal by its key. Useful to update form data before submission.
+
  * Fixed an issue in the Parent selector where it would not match against the root element it was applied to.
    <https://github.com/jhy/jsoup/pull/619>
 
