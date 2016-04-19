@@ -891,4 +891,14 @@ public class ElementTest {
         root.appendChild(new Element(Tag.valueOf("a"), ""));
         assertTrue(set.contains(root));
     }
+
+    @Test
+    public void testNamespacedElements() {
+        // Namespaces with ns:tag in HTML must be translated to ns|tag in CSS.
+        String html = "<html><body><fb:comments /></body></html>";
+        Document doc = Jsoup.parse(html, "http://example.com/bar/");
+        Elements els = doc.select("fb|comments");
+        assertEquals(1, els.size());
+        assertEquals("html > body > fb|comments", els.get(0).cssSelector());
+    }
 }

@@ -498,7 +498,9 @@ public class Element extends Node {
         if (id().length() > 0)
             return "#" + id();
 
-        StringBuilder selector = new StringBuilder(tagName());
+        // Translate HTML namespace ns:tag to CSS namespace syntax ns|tag
+        String tagName = tagName().replace(':', '|');
+        StringBuilder selector = new StringBuilder(tagName);
         String classes = StringUtil.join(classNames(), ".");
         if (classes.length() > 0)
             selector.append('.').append(classes);
