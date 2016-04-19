@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.9.2 [PENDING]
+ * Fixed an issue where namespaced tags (like <fb:comment>) would cause Element.cssSelector() to fail.
+   <https://github.com/jhy/jsoup/pull/677>
+
 *** Release 1.9.1 [2016-Apr-16]
  * Added support for HTTP and SOCKS request proxies, specifiable per connection.
    <https://github.com/jhy/jsoup/pull/570>
