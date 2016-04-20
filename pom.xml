@@ -87,6 +87,9 @@
         <artifactId>maven-source-plugin</artifactId>
         <version>2.1.1</version>
         <configuration>
+	  <excludes>
+	    <exclude>org/jsoup/examples/**</exclude>
+	  </excludes>
         </configuration>
         <executions>
           <execution>
@@ -106,6 +109,9 @@
           <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
+	  <excludes>
+	    <exclude>org/jsoup/examples/**</exclude>
+	  </excludes>
         </configuration>
       </plugin>
       <plugin>
