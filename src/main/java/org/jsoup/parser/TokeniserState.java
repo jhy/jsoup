@@ -33,12 +33,7 @@ enum TokeniserState {
     CharacterReferenceInData {
         // from & in data
         void read(Tokeniser t, CharacterReader r) {
-            char[] c = t.consumeCharacterReference(null, false);
-            if (c == null)
-                t.emit('&');
-            else
-                t.emit(c);
-            t.transition(Data);
+            readCharRef(t, Data);
         }
     },
     Rcdata {
@@ -68,54 +63,17 @@ enum TokeniserState {
     },
     CharacterReferenceInRcdata {
         void read(Tokeniser t, CharacterReader r) {
-            char[] c = t.consumeCharacterReference(null, false);
-            if (c == null)
-                t.emit('&');
-            else
-                t.emit(c);
-            t.transition(Rcdata);
+            readCharRef(t, Rcdata);
         }
     },
     Rawtext {
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
-                case '<':
-                    t.advanceTransition(RawtextLessthanSign);
-                    break;
-                case nullChar:
-                    t.error(this);
-                    r.advance();
-                    t.emit(replacementChar);
-                    break;
-                case eof:
-                    t.emit(new Token.EOF());
-                    break;
-                default:
-                    String data = r.consumeToAny('<', nullChar);
-                    t.emit(data);
-                    break;
-            }
+            readData(t, r, this, RawtextLessthanSign);
         }
     },
     ScriptData {
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
-                case '<':
-                    t.advanceTransition(ScriptDataLessthanSign);
-                    break;
-                case nullChar:
-                    t.error(this);
-                    r.advance();
-                    t.emit(replacementChar);
-                    break;
-                case eof:
-                    t.emit(new Token.EOF());
-                    break;
-                default:
-                    String data = r.consumeToAny('<', nullChar);
-                    t.emit(data);
-                    break;
-            }
+            readData(t, r, this, ScriptDataLessthanSign);
         }
     },
     PLAINTEXT {
@@ -304,13 +262,7 @@ enum TokeniserState {
     },
     RawtextEndTagOpen {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                t.createTagPending(false);
-                t.transition(RawtextEndTagName);
-            } else {
-                t.emit("</");
-                t.transition(Rawtext);
-            }
+            readEndTag(t, r, RawtextEndTagName, Rawtext);
         }
     },
     RawtextEndTagName {
@@ -338,14 +290,7 @@ enum TokeniserState {
     },
     ScriptDataEndTagOpen {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
-                t.createTagPending(false);
-                t.transition(ScriptDataEndTagName);
-            } else {
-                t.emit("</");
-                t.transition(ScriptData);
-            }
-
+            readEndTag(t, r, ScriptDataEndTagName, ScriptData);
         }
     },
     ScriptDataEndTagName {
@@ -1711,6 +1656,45 @@ enum TokeniserState {
         if (needsExitTransition) {
             t.emit("</" + t.dataBuffer.toString());
             t.transition(elseTransition);
+        }
+    }
+
+    private static void readData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
+        switch (r.current()) {
+            case '<':
+                t.advanceTransition(advance);
+                break;
+            case nullChar:
+                t.error(current);
+                r.advance();
+                t.emit(replacementChar);
+                break;
+            case eof:
+                t.emit(new Token.EOF());
+                break;
+            default:
+                String data = r.consumeToAny('<', nullChar);
+                t.emit(data);
+                break;
+        }
+    }
+
+    private static void readCharRef(Tokeniser t, TokeniserState advance) {
+        char[] c = t.consumeCharacterReference(null, false);
+        if (c == null)
+            t.emit('&');
+        else
+            t.emit(c);
+        t.transition(advance);
+    }
+
+    private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState a, TokeniserState b) {
+        if (r.matchesLetter()) {
+            t.createTagPending(false);
+            t.transition(a);
+        } else {
+            t.emit("</");
+            t.transition(b);
         }
     }
 
