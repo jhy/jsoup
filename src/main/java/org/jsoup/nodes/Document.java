@@ -354,8 +354,6 @@ public class Document extends Element {
 
                     prependChild(decl);
                 }
-            } else {
-                // Unsupported syntax - nothing to do yet
             }
         }
     }

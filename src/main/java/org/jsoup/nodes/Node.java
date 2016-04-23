@@ -607,7 +607,6 @@ public abstract class Node implements Cloneable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Node node = (Node) o;
         return this.outerHtml().equals(((Node) o).outerHtml());
     }
 

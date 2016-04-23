@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches
-    private static final String[] TagsScriptStyle = new String[]{"script", "style"};
     public static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
     private static final String[] TagSearchList = new String[]{"ol", "ul"};
     private static final String[] TagSearchButton = new String[]{"button"};
