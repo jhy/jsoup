@@ -168,4 +168,10 @@ public class HttpConnectionTest {
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
     }
+    @Test public void dataBinary() throws IOException {
+        Connection con = HttpConnection.connect("http://httpsns.appspot.com/api?name=test");
+        con.method(Connection.Method.POST);
+        con.dataBinary("hello".getBytes());
+        assertEquals("1 messages are added to test",con.execute().body());
+    }
 }

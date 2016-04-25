@@ -202,6 +202,13 @@ public interface Connection {
     Connection data(String... keyvals);
 
     /**
+     * Add binaries data to request as same as CURL command `curl --data-binary URL `
+     * It used full in many case e.g raw json , raw text (non key-value pair) , raw binary image/file see  RawDataPost.java for example use
+     * @param byteArray an array of byte.
+     * @return this Connection, for chaining
+     * */
+    public Connection dataBinary(byte[] byteArray);
+    /**
      * Get the data KeyVal for this key, if any
      * @param key the data key
      * @return null if not set
@@ -598,6 +605,20 @@ public interface Connection {
          * @return character set to encode post data
          */
         String postDataCharset();
+
+        /**
+         * set a dataBinary  parameter to the request
+         * @param byteArray data to set.
+         * @return this Request, for chaining
+         */
+        public Request dataBinary(byte[] byteArray) ;
+
+        /**
+         * get a dataBinary  parameter of the request
+         *
+         * @return this byte[]
+         */
+        public byte[] dataBinary() ;
 
     }
 
