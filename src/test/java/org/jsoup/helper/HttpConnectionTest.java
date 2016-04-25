@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import static org.junit.Assert.*;
 
+import org.jsoup.Jsoup;
 import org.jsoup.integration.ParseTest;
 import org.junit.Test;
 import org.jsoup.Connection;
@@ -169,9 +170,12 @@ public class HttpConnectionTest {
         assertEquals("foo", con.request().requestBody());
     }
     @Test public void dataBinary() throws IOException {
-        Connection con = HttpConnection.connect("http://httpsns.appspot.com/api?name=test");
-        con.method(Connection.Method.POST);
-        con.dataBinary("hello".getBytes());
-        assertEquals("1 messages are added to test",con.execute().body());
+        String payload = "{\"data\":{\"type\":\"User\",\"attributes\":{\"userName\":\"test\",\"password\":\"password\"}}}";
+        String result = HttpConnection.connect("http://ohayvai.appspot.com/login")
+                .dataBinary(payload.getBytes())
+                .method(Connection.Method.POST)
+                .ignoreHttpErrors(true)
+                .execute().body().trim();
+        assertEquals("{\"code\":401,\"message\":\"Unauthorized\",\"description\":\"Unauthorized\"}",result);
     }
 }
