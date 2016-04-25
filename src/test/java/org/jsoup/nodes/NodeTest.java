@@ -3,7 +3,6 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 import org.junit.Test;
 
@@ -124,6 +123,12 @@ public class NodeTest {
 
         Element a2 = doc.select("a").get(1);
         assertEquals("http://jsoup.org/path/bar.html?foo", a2.absUrl("href"));
+    }
+
+    @Test public void absHandlesDotFromIndex() {
+        Document doc = Jsoup.parse("<a href='./one/two.html'>One</a>", "http://example.com");
+        Element a1 = doc.select("a").first();
+        assertEquals("http://example.com/one/two.html", a1.absUrl("href"));
     }
     
     @Test public void testRemove() {
@@ -251,5 +256,22 @@ public class NodeTest {
         div2.insertChildren(-1, divChildren);
         assertEquals("<div id=\"1\">Text 1 <p>One</p> Text 2 <p>Two</p><p>Three</p></div><div id=\"2\">Text 1 updated"
             +"<p>One</p> Text 2 <p>Two</p><p>Three</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void supportsClone() {
+        Document doc = org.jsoup.Jsoup.parse("<div class=foo>Text</div>");
+        Element el = doc.select("div").first();
+        assertTrue(el.hasClass("foo"));
+
+        Element elClone = doc.clone().select("div").first();
+        assertTrue(elClone.hasClass("foo"));
+        assertTrue(elClone.text().equals("Text"));
+
+        el.removeClass("foo");
+        el.text("None");
+        assertFalse(el.hasClass("foo"));
+        assertTrue(elClone.hasClass("foo"));
+        assertTrue(el.text().equals("None"));
+        assertTrue(elClone.text().equals("Text"));
     }
 }

@@ -48,7 +48,8 @@ public class SelectorTest {
     }
 
     @Test public void testByAttribute() {
-        String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM /><div />";
+        String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM />" +
+                "<div data-name='with spaces'/>";
         Document doc = Jsoup.parse(h);
 
         Elements withTitle = doc.select("[title]");
@@ -56,6 +57,16 @@ public class SelectorTest {
 
         Elements foo = doc.select("[title=foo]");
         assertEquals(1, foo.size());
+
+        Elements foo2 = doc.select("[title=\"foo\"]");
+        assertEquals(1, foo2.size());
+
+        Elements foo3 = doc.select("[title=\"Foo\"]");
+        assertEquals(1, foo3.size());
+
+        Elements dataName = doc.select("[data-name=\"with spaces\"]");
+        assertEquals(1, dataName.size());
+        assertEquals("with spaces", dataName.first().attr("data-name"));
 
         Elements not = doc.select("div[title!=bar]");
         assertEquals(5, not.size());
@@ -189,17 +200,22 @@ public class SelectorTest {
     @Test public void descendant() {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
-        Elements els = doc.select(".head p");
+        Element root = doc.getElementsByClass("head").first();
+        
+        Elements els = root.select(".head p");
         assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
         assertEquals("There", els.get(1).text());
 
-        Elements p = doc.select("p.first");
+        Elements p = root.select("p.first");
         assertEquals(1, p.size());
         assertEquals("Hello", p.get(0).text());
 
-        Elements empty = doc.select("p .first"); // self, not descend, should not match
+        Elements empty = root.select("p .first"); // self, not descend, should not match
         assertEquals(0, empty.size());
+        
+        Elements aboveRoot = root.select("body div.head");
+        assertEquals(0, aboveRoot.size());
     }
 
     @Test public void and() {
@@ -225,10 +241,16 @@ public class SelectorTest {
 
     @Test public void deeperDescendant() {
         String h = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>";
-        Elements els = Jsoup.parse(h).select("div p .first");
+        Document doc = Jsoup.parse(h);
+        Element root = doc.getElementsByClass("head").first();
+
+        Elements els = root.select("div p .first");
         assertEquals(1, els.size());
         assertEquals("Hello", els.first().text());
         assertEquals("span", els.first().tagName());
+
+        Elements aboveRoot = root.select("body p .first");
+        assertEquals(0, aboveRoot.size());
     }
 
     @Test public void parentChildElement() {
@@ -606,5 +628,37 @@ public class SelectorTest {
         Document doc = Jsoup.parse("<div k" + s + "='" + s + "'>^" + s +"$/div>");
         assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
         assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
+    }
+    
+    @Test
+    public void selectClassWithSpace() {
+        final String html = "<div class=\"value\">class without space</div>\n"
+                          + "<div class=\"value \">class with space</div>";
+        
+        Document doc = Jsoup.parse(html);
+        
+        Elements found = doc.select("div[class=value ]");
+        assertEquals(2, found.size());
+        assertEquals("class without space", found.get(0).text());
+        assertEquals("class with space", found.get(1).text());
+        
+        found = doc.select("div[class=\"value \"]");
+        assertEquals(2, found.size());
+        assertEquals("class without space", found.get(0).text());
+        assertEquals("class with space", found.get(1).text());
+        
+        found = doc.select("div[class=\"value\\ \"]");
+        assertEquals(0, found.size());
+    }
+
+    @Test public void selectSameElements() {
+        final String html = "<div>one</div><div>one</div>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("div");
+        assertEquals(2, els.size());
+
+        Elements subSelect = els.select(":contains(one)");
+        assertEquals(2, subSelect.size());
     }
 }

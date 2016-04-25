@@ -10,8 +10,8 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, http://jonathanhedley.com/
  */
 public class DocumentTypeTest {
-    @Test(expected = IllegalArgumentException.class)
-    public void constructorValidationThrowsExceptionOnBlankName() {
+    @Test
+    public void constructorValidationOkWithBlankName() {
         DocumentType fail = new DocumentType("","", "", "");
     }
 
@@ -27,7 +27,7 @@ public class DocumentTypeTest {
 
     @Test public void outerHtmlGeneration() {
         DocumentType html5 = new DocumentType("html", "", "", "");
-        assertEquals("<!DOCTYPE html>", html5.outerHtml());
+        assertEquals("<!doctype html>", html5.outerHtml());
 
         DocumentType publicDocType = new DocumentType("html", "-//IETF//DTD HTML//", "", "");
         assertEquals("<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML//\">", publicDocType.outerHtml());

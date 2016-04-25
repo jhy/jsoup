@@ -209,8 +209,7 @@ public class TokenQueue {
                 pos++;
         }
 
-        String data = queue.substring(start, pos); 
-        return data; 
+        return queue.substring(start, pos);
     }
 
     /**
@@ -226,8 +225,7 @@ public class TokenQueue {
             pos++;
         }
 
-        String data = queue.substring(start, pos); 
-        return data; 
+        return queue.substring(start, pos);
     }
 
     /**
@@ -260,7 +258,8 @@ public class TokenQueue {
      * @return data matched from the queue
      */
     public String chompBalanced(char open, char close) {
-        StringBuilder accum = new StringBuilder();
+        int start = -1;
+        int end = -1;
         int depth = 0;
         char last = 0;
 
@@ -268,17 +267,20 @@ public class TokenQueue {
             if (isEmpty()) break;
             Character c = consume();
             if (last == 0 || last != ESC) {
-                if (c.equals(open))
+                if (c.equals(open)) {
                     depth++;
+                    if (start == -1)
+                        start = pos;
+                }
                 else if (c.equals(close))
                     depth--;
             }
 
             if (depth > 0 && last != 0)
-                accum.append(c); // don't include the outer match pair in the return
+                end = pos; // don't include the outer match pair in the return
             last = c;
         } while (depth > 0);
-        return accum.toString();
+        return (end >= 0) ? queue.substring(start, end) : "";
     }
     
     /**
@@ -303,6 +305,7 @@ public class TokenQueue {
 
     /**
      * Pulls the next run of whitespace characters of the queue.
+     * @return Whether consuming whitespace or not
      */
     public boolean consumeWhitespace() {
         boolean seen = false;
@@ -380,13 +383,12 @@ public class TokenQueue {
      @return remained of queue.
      */
     public String remainder() {
-        StringBuilder accum = new StringBuilder();
-        while (!isEmpty()) {
-            accum.append(consume());
-        }
-        return accum.toString();
+        final String remainder = queue.substring(pos, queue.length());
+        pos = queue.length();
+        return remainder;
     }
     
+    @Override
     public String toString() {
         return queue.substring(pos);
     }

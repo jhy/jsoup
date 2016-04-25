@@ -6,6 +6,7 @@ import java.util.ListIterator;
 
 /**
  * Provides a descending iterator and other 1.6 methods to allow support on the 1.5 JRE.
+ * @param <E> Type of elements
  */
 public class DescendableLinkedList<E> extends LinkedList<E> {
 

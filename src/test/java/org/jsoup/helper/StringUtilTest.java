@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static org.jsoup.helper.StringUtil.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -12,9 +13,9 @@ import static org.junit.Assert.assertTrue;
 public class StringUtilTest {
 
     @Test public void join() {
-        assertEquals("", StringUtil.join(Arrays.<String>asList(""), " "));
-        assertEquals("one", StringUtil.join(Arrays.<String>asList("one"), " "));
-        assertEquals("one two three", StringUtil.join(Arrays.<String>asList("one", "two", "three"), " "));
+        assertEquals("", StringUtil.join(Arrays.asList(""), " "));
+        assertEquals("one", StringUtil.join(Arrays.asList("one"), " "));
+        assertEquals("one two three", StringUtil.join(Arrays.asList("one", "two", "three"), " "));
     }
 
     @Test public void padding() {
@@ -58,29 +59,35 @@ public class StringUtilTest {
     }
 
     @Test public void normaliseWhiteSpace() {
-        assertEquals(" ", StringUtil.normaliseWhitespace("    \r \n \r\n"));
-        assertEquals(" hello there ", StringUtil.normaliseWhitespace("   hello   \r \n  there    \n"));
-        assertEquals("hello", StringUtil.normaliseWhitespace("hello"));
-        assertEquals("hello there", StringUtil.normaliseWhitespace("hello\nthere"));
-    }
-
-    @Test public void normaliseWhiteSpaceModified() {
-        String check1 = "Hello there";
-        String check2 = "Hello\nthere";
-        String check3 = "Hello  there";
-
-        // does not create new string no mods done
-        assertTrue(check1 == StringUtil.normaliseWhitespace(check1));
-        assertTrue(check2 != StringUtil.normaliseWhitespace(check2));
-        assertTrue(check3 != StringUtil.normaliseWhitespace(check3));
+        assertEquals(" ", normaliseWhitespace("    \r \n \r\n"));
+        assertEquals(" hello there ", normaliseWhitespace("   hello   \r \n  there    \n"));
+        assertEquals("hello", normaliseWhitespace("hello"));
+        assertEquals("hello there", normaliseWhitespace("hello\nthere"));
     }
 
     @Test public void normaliseWhiteSpaceHandlesHighSurrogates() {
         String test71540chars = "\ud869\udeb2\u304b\u309a  1";
         String test71540charsExpectedSingleWhitespace = "\ud869\udeb2\u304b\u309a 1";
 
-        assertEquals(test71540charsExpectedSingleWhitespace, StringUtil.normaliseWhitespace(test71540chars));
+        assertEquals(test71540charsExpectedSingleWhitespace, normaliseWhitespace(test71540chars));
         String extractedText = Jsoup.parse(test71540chars).text();
         assertEquals(test71540charsExpectedSingleWhitespace, extractedText);
+    }
+
+    @Test public void resolvesRelativeUrls() {
+        assertEquals("http://example.com/one/two?three", resolve("http://example.com", "./one/two?three"));
+        assertEquals("http://example.com/one/two?three", resolve("http://example.com?one", "./one/two?three"));
+        assertEquals("http://example.com/one/two?three#four", resolve("http://example.com", "./one/two?three#four"));
+        assertEquals("https://example.com/one", resolve("http://example.com/", "https://example.com/one"));
+        assertEquals("http://example.com/one/two.html", resolve("http://example.com/two/", "../one/two.html"));
+        assertEquals("https://example2.com/one", resolve("https://example.com/", "//example2.com/one"));
+        assertEquals("https://example.com:8080/one", resolve("https://example.com:8080", "./one"));
+        assertEquals("https://example2.com/one", resolve("http://example.com/", "https://example2.com/one"));
+        assertEquals("https://example.com/one", resolve("wrong", "https://example.com/one"));
+        assertEquals("https://example.com/one", resolve("https://example.com/one", ""));
+        assertEquals("", resolve("wrong", "also wrong"));
+        assertEquals("ftp://example.com/one", resolve("ftp://example.com/two/", "../one"));
+        assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "./two.c"));
+        assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "two.c"));
     }
 }

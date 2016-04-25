@@ -59,11 +59,9 @@ public class FormElement extends Element {
         Connection.Method method = attr("method").toUpperCase().equals("POST") ?
                 Connection.Method.POST : Connection.Method.GET;
 
-        Connection con = Jsoup.connect(action)
+        return Jsoup.connect(action)
                 .data(formData())
                 .method(method);
-
-        return con;
     }
 
     /**
@@ -77,13 +75,28 @@ public class FormElement extends Element {
         // iterate the form control elements and accumulate their values
         for (Element el: elements) {
             if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
+            if (el.hasAttr("disabled")) continue; // skip disabled form inputs
             String name = el.attr("name");
             if (name.length() == 0) continue;
+            String type = el.attr("type");
 
             if ("select".equals(el.tagName())) {
                 Elements options = el.select("option[selected]");
+                boolean set = false;
                 for (Element option: options) {
                     data.add(HttpConnection.KeyVal.create(name, option.val()));
+                    set = true;
+                }
+                if (!set) {
+                    Element option = el.select("option").first();
+                    if (option != null)
+                        data.add(HttpConnection.KeyVal.create(name, option.val()));
+                }
+            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                // only add checkbox or radio if they have the checked attribute
+                if (el.hasAttr("checked")) {
+                    final String val = el.val().length() >  0 ? el.val() : "on";
+                    data.add(HttpConnection.KeyVal.create(name, val));
                 }
             } else {
                 data.add(HttpConnection.KeyVal.create(name, el.val()));

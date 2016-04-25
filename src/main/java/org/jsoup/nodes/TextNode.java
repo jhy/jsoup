@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
@@ -28,7 +30,7 @@ public class TextNode extends Node {
         this.text = text;
     }
 
-    public String nodeName() {
+	public String nodeName() {
         return "#text";
     }
     
@@ -89,19 +91,18 @@ public class TextNode extends Node {
         return tailNode;
     }
 
-    void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
-        String html = Entities.escape(getWholeText(), out);
-        if (out.prettyPrint() && parent() instanceof Element && !Element.preserveWhitespace((Element) parent())) {
-            html = normaliseWhitespace(html);
-        }
-
+	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
-        accum.append(html);
+
+        boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
+                && !Element.preserveWhitespace(parent());
+        Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
     }
 
-    void outerHtmlTail(StringBuilder accum, int depth, Document.OutputSettings out) {}
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
+    @Override
     public String toString() {
         return outerHtml();
     }
@@ -109,6 +110,7 @@ public class TextNode extends Node {
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
+     * @param baseUri Base uri
      * @return TextNode containing unencoded data (e.g. &lt;)
      */
     public static TextNode createFromEncoded(String encodedText, String baseUri) {

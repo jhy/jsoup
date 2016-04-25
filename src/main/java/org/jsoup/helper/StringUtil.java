@@ -1,5 +1,8 @@
 package org.jsoup.helper;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -103,32 +106,44 @@ public final class StringUtil {
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
 
+    /**
+     * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
+     * (e.g. newline, tab) convert to a simple space
+     * @param string content to normalise
+     * @return normalised string
+     */
     public static String normaliseWhitespace(String string) {
         StringBuilder sb = new StringBuilder(string.length());
+        appendNormalisedWhitespace(sb, string, false);
+        return sb.toString();
+    }
 
+    /**
+     * After normalizing the whitespace within a string, appends it to a string builder.
+     * @param accum builder to append to
+     * @param string string to normalize whitespace within
+     * @param stripLeading set to true if you wish to remove any leading whitespace
+     */
+    public static void appendNormalisedWhitespace(StringBuilder accum, String string, boolean stripLeading) {
         boolean lastWasWhite = false;
-        boolean modified = false;
+        boolean reachedNonWhite = false;
 
-        int l = string.length();
+        int len = string.length();
         int c;
-        for (int i = 0; i < l; i+= Character.charCount(c)) {
+        for (int i = 0; i < len; i+= Character.charCount(c)) {
             c = string.codePointAt(i);
             if (isWhitespace(c)) {
-                if (lastWasWhite) {
-                    modified = true;
+                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
                     continue;
-                }
-                if (c != ' ')
-                    modified = true;
-                sb.append(' ');
+                accum.append(' ');
                 lastWasWhite = true;
             }
             else {
-                sb.appendCodePoint(c);
+                accum.appendCodePoint(c);
                 lastWasWhite = false;
+                reachedNonWhite = true;
             }
         }
-        return modified ? sb.toString() : string;
     }
 
     public static boolean in(String needle, String... haystack) {
@@ -137,5 +152,50 @@ public final class StringUtil {
             return true;
         }
         return false;
+    }
+
+    public static boolean inSorted(String needle, String[] haystack) {
+        return Arrays.binarySearch(haystack, needle) >= 0;
+    }
+
+    /**
+     * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
+     * @param base the existing absolulte base URL
+     * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
+     * @return the resolved absolute URL
+     * @throws MalformedURLException if an error occurred generating the URL
+     */
+    public static URL resolve(URL base, String relUrl) throws MalformedURLException {
+        // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
+        if (relUrl.startsWith("?"))
+            relUrl = base.getPath() + relUrl;
+        // workaround: //example.com + ./foo = //example.com/./foo, not //example.com/foo
+        if (relUrl.indexOf('.') == 0 && base.getFile().indexOf('/') != 0) {
+            base = new URL(base.getProtocol(), base.getHost(), base.getPort(), "/" + base.getFile());
+        }
+        return new URL(base, relUrl);
+    }
+
+    /**
+     * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
+     * @param baseUrl the existing absolute base URL
+     * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
+     * @return an absolute URL if one was able to be generated, or the empty string if not
+     */
+    public static String resolve(final String baseUrl, final String relUrl) {
+        URL base;
+        try {
+            try {
+                base = new URL(baseUrl);
+            } catch (MalformedURLException e) {
+                // the base is unsuitable, but the attribute/rel may be abs on its own, so try that
+                URL abs = new URL(relUrl);
+                return abs.toExternalForm();
+            }
+            return resolve(base, relUrl).toExternalForm();
+        } catch (MalformedURLException e) {
+            return "";
+        }
+
     }
 }
