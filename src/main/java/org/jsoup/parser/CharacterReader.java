@@ -194,7 +194,7 @@ final class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c))
                 pos++;
             else
                 break;
@@ -207,7 +207,7 @@ final class CharacterReader {
         int start = pos;
         while (pos < length) {
             char c = input[pos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c))
                 pos++;
             else
                 break;

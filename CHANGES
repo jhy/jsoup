@@ -4,6 +4,10 @@ jsoup changelog
  * Fixed an issue where namespaced tags (like <fb:comment>) would cause Element.cssSelector() to fail.
    <https://github.com/jhy/jsoup/pull/677>
 
+ * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
+   would cause the parser to get stuck.
+   <https://github.com/jhy/jsoup/issues/704>
+
 *** Release 1.9.1 [2016-Apr-16]
  * Added support for HTTP and SOCKS request proxies, specifiable per connection.
    <https://github.com/jhy/jsoup/pull/570>

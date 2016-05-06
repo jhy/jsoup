@@ -892,4 +892,11 @@ public class HtmlParserTest {
         els = doc.select("русский-тэг");
         assertEquals("Correct", els.text());
     }
+
+    @Test public void testSupportsPartiallyNonAsciiTags() {
+        String body = "<div>Check</div>";
+        Document doc = Jsoup.parse(body);
+        Elements els = doc.select("div");
+        assertEquals("Check", els.text());
+    }
 }
