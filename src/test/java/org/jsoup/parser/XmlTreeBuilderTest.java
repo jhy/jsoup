@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
@@ -153,5 +154,17 @@ public class XmlTreeBuilderTest {
         assertEquals("else", decl.attr("something"));
         assertEquals("version=\"1\" encoding=\"UTF-8\" something=\"else\"", decl.getWholeDeclaration());
         assertEquals("<?xml version=\"1\" encoding=\"UTF-8\" something=\"else\"?>", decl.outerHtml());
+    }
+
+    @Test
+    public void testCreatesValidProlog() {
+        Document document = Document.createShell("");
+        document.outputSettings().syntax(Syntax.xml);
+        document.charset(Charset.forName("utf-8"));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<html>\n" +
+            " <head></head>\n" +
+            " <body></body>\n" +
+            "</html>", document.outerHtml());
     }
 }
