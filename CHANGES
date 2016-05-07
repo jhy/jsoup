@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.9.2 [PENDING]
+ * In XML documents, detect the charset from the XML prolog - <?xml encoding="UTF-8"?>
+   <https://github.com/jhy/jsoup/issues/701>
+
  * Fixed an issue where namespaced tags (like <fb:comment>) would cause Element.cssSelector() to fail.
    <https://github.com/jhy/jsoup/pull/677>
 

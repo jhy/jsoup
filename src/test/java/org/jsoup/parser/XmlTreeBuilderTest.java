@@ -6,6 +6,7 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -17,7 +18,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Tests XmlTreeBuilder.
@@ -103,7 +105,7 @@ public class XmlTreeBuilderTest {
     @Test public void handlesXmlDeclarationAsDeclaration() {
         String html = "<?xml encoding='UTF-8' ?><body>One</body><!-- comment -->";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<?xml encoding='UTF-8' ?> <body> One </body> <!-- comment -->",
+        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body> <!-- comment -->",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
         assertEquals("#declaration", doc.childNode(0).nodeName());
         assertEquals("#comment", doc.childNode(2).nodeName());
@@ -129,5 +131,27 @@ public class XmlTreeBuilderTest {
         String html = "<img src=asdf onerror=\"alert(1)\" x=";
         Document xmlDoc = Jsoup.parse(html, "", Parser.xmlParser());
         assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\" />", xmlDoc.html());
+    }
+
+    @Test
+    public void testDetectCharsetEncodingDeclaration() throws IOException, URISyntaxException {
+        File xmlFile = new File(XmlTreeBuilder.class.getResource("/htmltests/xml-charset.xml").toURI());
+        InputStream inStream = new FileInputStream(xmlFile);
+        Document doc = Jsoup.parse(inStream, null, "http://example.com/", Parser.xmlParser());
+        assertEquals("ISO-8859-1", doc.charset().name());
+        assertEquals("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> <data>äöåéü</data>",
+            TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test
+    public void testParseDeclarationAttributes() {
+        String xml = "<?xml version='1' encoding='UTF-8' something='else'?><val>One</val>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        XmlDeclaration decl = (XmlDeclaration) doc.childNode(0);
+        assertEquals("1", decl.attr("version"));
+        assertEquals("UTF-8", decl.attr("encoding"));
+        assertEquals("else", decl.attr("something"));
+        assertEquals("version=\"1\" encoding=\"UTF-8\" something=\"else\"", decl.getWholeDeclaration());
+        assertEquals("<?xml version=\"1\" encoding=\"UTF-8\" something=\"else\"?>", decl.outerHtml());
     }
 }

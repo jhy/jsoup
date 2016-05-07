@@ -332,7 +332,7 @@ public class Document extends Element {
                 if (node instanceof XmlDeclaration) {
                     XmlDeclaration decl = (XmlDeclaration) node;
 
-                    if (decl.attr(XmlDeclaration.DECL_KEY).equals("xml")) {
+                    if (decl.name().equals("xml")) {
                         decl.attr("encoding", charset().displayName());
 
                         final String version = decl.attr("version");

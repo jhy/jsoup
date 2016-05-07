@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.Validate;
+
 import java.io.IOException;
 
 /**
@@ -7,18 +9,19 @@ import java.io.IOException;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class XmlDeclaration extends Node {
-    static final String DECL_KEY = "declaration";
+    private final String name;
     private final boolean isProcessingInstruction; // <! if true, <? if false, declaration (and last data char should be ?)
 
     /**
      Create a new XML declaration
-     @param data data
+     @param name of declaration
      @param baseUri base uri
      @param isProcessingInstruction is processing instruction
      */
-    public XmlDeclaration(String data, String baseUri, boolean isProcessingInstruction) {
+    public XmlDeclaration(String name, String baseUri, boolean isProcessingInstruction) {
         super(baseUri);
-        attributes.put(DECL_KEY, data);
+        Validate.notNull(name);
+        this.name = name;
         this.isProcessingInstruction = isProcessingInstruction;
     }
 
@@ -26,40 +29,32 @@ public class XmlDeclaration extends Node {
         return "#declaration";
     }
 
+
+    /**
+     * Get the name of this declaration.
+     * @return name of this declaration.
+     */
+    public String name() {
+        return name;
+    }
+
     /**
      Get the unencoded XML declaration.
      @return XML declaration
      */
     public String getWholeDeclaration() {
-        final String decl = attributes.get(DECL_KEY);
-        
-        if(decl.equals("xml") && attributes.size() > 1 ) {
-            StringBuilder sb = new StringBuilder(decl);
-            final String version = attributes.get("version");
-            
-            if( version != null ) {
-                sb.append(" version=\"").append(version).append("\"");
-            }
-            
-            final String encoding = attributes.get("encoding");
-            
-            if( encoding != null ) {
-                sb.append(" encoding=\"").append(encoding).append("\"");
-            }
-            
-            return sb.toString();
-        }
-        else {
-            return attributes.get(DECL_KEY);
-        }
+        return attributes.html().trim(); // attr html starts with a " "
     }
 
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum
-                .append("<")
-                .append(isProcessingInstruction ? "!" : "?")
-                .append(getWholeDeclaration())
-                .append(">");
+            .append("<")
+            .append(isProcessingInstruction ? "!" : "?")
+            .append(name);
+        attributes.html(accum, out);
+        accum
+            .append(isProcessingInstruction ? "!" : "?")
+            .append(">");
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}

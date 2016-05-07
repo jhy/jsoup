@@ -312,7 +312,7 @@ public class DocumentTest {
         doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
@@ -330,7 +330,7 @@ public class DocumentTest {
         doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetIso8859));
         
-        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\">\n" +
+        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
@@ -348,7 +348,7 @@ public class DocumentTest {
         doc.updateMetaCharsetElement(true);
         doc.charset(Charset.forName(charsetUtf8));
         
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\">\n" +
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
@@ -372,7 +372,7 @@ public class DocumentTest {
     public void testMetaCharsetUpdateXmlDisabledNoChanges() {
         final Document doc = createXmlDocument("dontTouch", "dontTouch", true);
         
-        final String xmlCharset = "<?xml version=\"dontTouch\" encoding=\"dontTouch\">\n" +
+        final String xmlCharset = "<?xml version=\"dontTouch\" encoding=\"dontTouch\"?>\n" +
                                     "<root>\n" +
                                     " node\n" +
                                     "</root>";
