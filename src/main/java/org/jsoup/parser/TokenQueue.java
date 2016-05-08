@@ -268,7 +268,7 @@ public class TokenQueue {
             if (isEmpty()) break;
             Character c = consume();
             if (last == 0 || last != ESC) {
-                if (c.equals('\'') || c.equals('"') && c != open)
+                if ((c.equals('\'') || c.equals('"')) && c != open)
                     inQuote = !inQuote;
                 if (inQuote)
                     continue;

@@ -667,5 +667,7 @@ public class SelectorTest {
         Document doc = Jsoup.parse(html);
         assertEquals("One", doc.select("div[data='End]'").first().text());
         assertEquals("Two", doc.select("div[data='[Another)]]'").first().text());
+        assertEquals("One", doc.select("div[data=\"End]\"").first().text());
+        assertEquals("Two", doc.select("div[data=\"[Another)]]\"").first().text());
     }
 }
