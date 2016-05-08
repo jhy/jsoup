@@ -7,6 +7,10 @@ jsoup changelog
  * Fixed an issue where created XML documents would have an incorrect prolog.
    <https://github.com/jhy/jsoup/issues/652>
 
+ * Fixed an issue where you could not use an attribute selector to find values containing unbalanced braces or
+   parentheses.
+   <https://github.com/jhy/jsoup/issues/611>
+
  * Fixed an issue where namespaced tags (like <fb:comment>) would cause Element.cssSelector() to fail.
    <https://github.com/jhy/jsoup/pull/677>
 
