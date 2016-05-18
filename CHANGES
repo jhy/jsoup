@@ -1,6 +1,10 @@
 jsoup changelog
 
-*** Release 1.9.2 [PENDING]
+*** Release 1.9.2 [2016-May-17]
+ * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
+   would cause the parser to get stuck in an infinite loop.
+   <https://github.com/jhy/jsoup/issues/704>
+
  * In XML documents, detect the charset from the XML prolog - <?xml encoding="UTF-8"?>
    <https://github.com/jhy/jsoup/issues/701>
 
@@ -13,10 +17,6 @@ jsoup changelog
 
  * Fixed an issue where namespaced tags (like <fb:comment>) would cause Element.cssSelector() to fail.
    <https://github.com/jhy/jsoup/pull/677>
-
- * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
-   would cause the parser to get stuck.
-   <https://github.com/jhy/jsoup/issues/704>
 
 *** Release 1.9.1 [2016-Apr-16]
  * Added support for HTTP and SOCKS request proxies, specifiable per connection.
