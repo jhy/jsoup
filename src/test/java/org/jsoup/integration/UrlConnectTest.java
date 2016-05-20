@@ -40,7 +40,7 @@ public class UrlConnectTest {
 
     @Test
     public void fetchURl() throws IOException {
-        String url = "http://jsoup.org"; // no trailing / to force redir
+        String url = "https://jsoup.org"; // no trailing / to force redir
         Document doc = Jsoup.parse(new URL(url), 10*1000);
         assertTrue(doc.title().contains("jsoup"));
     }
@@ -95,7 +95,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignoresContentTypeIfSoConfigured() throws IOException {
-        Document doc = Jsoup.connect("http://jsoup.org/rez/osi_logo.png").ignoreContentType(true).get();
+        Document doc = Jsoup.connect("https://jsoup.org/rez/osi_logo.png").ignoreContentType(true).get();
         assertEquals("", doc.title()); // this will cause an ugly parse tree
     }
 
@@ -184,7 +184,7 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/307.pl"); // http://jsoup.org
         Document doc = con.get();
         assertTrue(doc.title().contains("jsoup"));
-        assertEquals("http://jsoup.org", con.response().url().toString());
+        assertEquals("https://jsoup.org", con.response().url().toString());
     }
 
     @Test
@@ -193,7 +193,7 @@ public class UrlConnectTest {
                 .data("Argument", "Riposte")
                 .method(Connection.Method.POST);
         Connection.Response res = con.execute();
-        assertEquals("http://jsoup.org", res.url().toExternalForm());
+        assertEquals("https://jsoup.org", res.url().toExternalForm());
         assertEquals(Connection.Method.GET, res.method());
     }
 
@@ -303,7 +303,7 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl").followRedirects(false);
         Connection.Response res = con.execute();
         assertEquals(302, res.statusCode());
-        assertEquals("http://jsoup.org", res.header("Location"));
+        assertEquals("https://jsoup.org", res.header("Location"));
     }
 
     @Test
@@ -529,12 +529,12 @@ public class UrlConnectTest {
     @Test
     public void handles201Created() throws IOException {
         Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
-        assertEquals("http://jsoup.org", doc.location());
+        assertEquals("https://jsoup.org", doc.location());
     }
 
     @Test
     public void fetchToW3c() throws IOException {
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         Document doc = Jsoup.connect(url).get();
 
         W3CDom dom = new W3CDom();
@@ -595,7 +595,7 @@ public class UrlConnectTest {
 
     @Test
     public void fetchViaHttpProxy() throws IOException {
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8888));
         Document doc = Jsoup.connect(url).proxy(proxy).get();
         assertTrue(doc.title().contains("jsoup"));
@@ -603,7 +603,7 @@ public class UrlConnectTest {
 
     @Test
     public void fetchViaHttpProxySetByArgument() throws IOException {
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         Document doc = Jsoup.connect(url).proxy("localhost", 8888).get();
         assertTrue(doc.title().contains("jsoup"));
     }
@@ -611,7 +611,7 @@ public class UrlConnectTest {
     @Test
     public void invalidProxyFails() throws IOException {
         boolean caught = false;
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         try {
             Document doc = Jsoup.connect(url).proxy("localhost", 8889).get();
         } catch (IOException e) {
@@ -622,7 +622,7 @@ public class UrlConnectTest {
 
     @Test
     public void proxyGetAndSet() throws IOException {
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8889)); // invalid
         final Connection con = Jsoup.connect(url).proxy(proxy);
 
@@ -635,7 +635,7 @@ public class UrlConnectTest {
     @Test
     public void throwsIfRequestBodyForGet() throws IOException {
         boolean caught = false;
-        String url = "http://jsoup.org";
+        String url = "https://jsoup.org";
         try {
             Document doc = Jsoup.connect(url).requestBody("fail").get();
         } catch (IllegalArgumentException e) {

@@ -123,7 +123,7 @@
         </executions>
         <configuration>
           <instructions>
-            <Bundle-DocURL>http://jsoup.org/</Bundle-DocURL>
+            <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
           </instructions>
         </configuration>
       </plugin>
