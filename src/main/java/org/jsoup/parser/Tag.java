@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class Tag {
     private static final Map<String, Tag> tags = new HashMap<String, Tag>(); // map of known tags
+    private static final Map<String, Tag> customTags = new HashMap<String, Tag>(); // map of unknown (custom) tags
 
     private String tagName;
     private boolean isBlock = true; // block or inline
@@ -39,14 +40,24 @@ public class Tag {
 
     /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
-     * <p>
-     * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
-     * </p>
-     * 
+     *
      * @param tagName Name of tag, e.g. "p". Case insensitive.
      * @return The tag, either defined or new generic.
      */
     public static Tag valueOf(String tagName) {
+        return valueOf(tagName, true);
+    }
+
+    /**
+     * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything,
+     * including being formatted inline, instead of the default to always "formatAsBlock".
+     *
+     * @param tagName Name of tag, e.g. "p". Case insensitive.
+     * @param formatAsBlock for custom (unknown) tags only -
+     *                      how to format HTML code of the nodes with this tag
+     * @return The tag, either defined or new generic.
+     */
+    public static Tag valueOf(String tagName, boolean formatAsBlock) {
         Validate.notNull(tagName);
         Tag tag = tags.get(tagName);
 
@@ -56,10 +67,16 @@ public class Tag {
             tag = tags.get(tagName);
 
             if (tag == null) {
-                // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
-                tag = new Tag(tagName);
-                tag.isBlock = false;
-                tag.canContainBlock = true;
+                if (tag == null)
+                    tag = customTags.get(tagName);
+                if (tag == null) {
+                    // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
+                    tag = new Tag(tagName);
+                    tag.isBlock = false;
+                    tag.formatAsBlock = formatAsBlock;
+                    tag.canContainBlock = true;
+                    customTags.put(tagName, tag);  // save memory if creating new tags
+                }
             }
         }
         return tag;
