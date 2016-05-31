@@ -1,10 +1,5 @@
 package org.jsoup.helper;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.XmlDeclaration;
-import org.jsoup.parser.Parser;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +13,11 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.parser.Parser;
 
 /**
  * Internal static utilities for handling data.
@@ -154,7 +154,7 @@ public final class DataUtil {
         int read;
         int remaining = maxSize;
 
-        while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
@@ -166,6 +166,10 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
+		if (Thread.currentThread().isInterrupted()) {
+			Thread.interrupted();
+			throw new IOException("JSoup thread has been interrupted");
+		}
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 
