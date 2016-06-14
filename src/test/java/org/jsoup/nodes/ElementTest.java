@@ -66,6 +66,11 @@ public class ElementTest {
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
+    @Test public void testGetTextWithoutNormalizing() {
+        Document doc = Jsoup.parse("<p>\n\nHello <b>\nhere</b>\n</p>");
+        assertEquals("\n\nHello \nhere\n", doc.text(false));
+    }
+
     @Test public void testGetChildText() {
         Document doc = Jsoup.parse("<p>Hello <b>there</b> now");
         Element p = doc.select("p").first();

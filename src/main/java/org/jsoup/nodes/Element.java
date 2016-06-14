@@ -883,22 +883,39 @@ public class Element extends Node {
      * <p>
      * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
+     * By default normalizes the text., aka removes irrelevant whitespaces in original document.
      * @return unencoded text, or empty string if none.
+     * @see #text(Boolean)
      * @see #ownText()
      * @see #textNodes()
      */
     public String text() {
+       return text(true);
+    }
+
+    /**
+     * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
+     * <p>
+     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
+     *
+     * @param normalize whether to normalize or not
+     *
+     * @return unencoded text, or empty string if none.
+     * @see #ownText()
+     * @see #textNodes()
+     */
+    public String text(final Boolean normalize) {
         final StringBuilder accum = new StringBuilder();
         new NodeTraversor(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
-                    appendNormalisedText(accum, textNode);
+                    appendNormalisedText(accum, textNode, normalize);
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
                     if (accum.length() > 0 &&
-                        (element.isBlock() || element.tag.getName().equals("br")) &&
-                        !TextNode.lastCharIsWhitespace(accum))
+                            (element.isBlock() || element.tag.getName().equals("br")) &&
+                            !TextNode.lastCharIsWhitespace(accum))
                         accum.append(" ");
                 }
             }
@@ -906,7 +923,7 @@ public class Element extends Node {
             public void tail(Node node, int depth) {
             }
         }).traverse(this);
-        return accum.toString().trim();
+        return normalize? accum.toString().trim() : accum.toString();
     }
 
     /**
@@ -930,17 +947,17 @@ public class Element extends Node {
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
-                appendNormalisedText(accum, textNode);
+                appendNormalisedText(accum, textNode, true);
             } else if (child instanceof Element) {
                 appendWhitespaceIfBr((Element) child, accum);
             }
         }
     }
 
-    private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
+    private static void appendNormalisedText(StringBuilder accum, TextNode textNode, Boolean normalize) {
         String text = textNode.getWholeText();
 
-        if (preserveWhitespace(textNode.parentNode))
+        if (!normalize || preserveWhitespace(textNode.parentNode))
             accum.append(text);
         else
             StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));

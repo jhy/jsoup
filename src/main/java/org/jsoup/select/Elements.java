@@ -181,13 +181,27 @@ public class Elements extends ArrayList<Element> {
      * children, as the Element.text() method returns the combined text of a parent and all its children.
      * @return string of all text: unescaped and no HTML.
      * @see Element#text()
+     * @see Elements#text(Boolean)
      */
     public String text() {
+        return text(true);
+    }
+
+    /**
+     * Get the combined text of all the matched elements.
+     * <p>
+     * @param normalize - whether to normalize or not., aka, remove irrelevant whitespaces
+     * Note that it is possible to get repeats if the matched elements contain both parent elements and their own
+     * children, as the Element.text() method returns the combined text of a parent and all its children.
+     * @return string of all text: unescaped and no HTML.
+     * @see Element#text()
+     */
+    public String text(final Boolean normalize) {
         StringBuilder sb = new StringBuilder();
         for (Element element : this) {
             if (sb.length() != 0)
                 sb.append(" ");
-            sb.append(element.text());
+            sb.append(element.text(normalize));
         }
         return sb.toString();
     }

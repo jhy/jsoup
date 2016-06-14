@@ -98,6 +98,12 @@ public class ElementsTest {
         assertEquals("Hello there world", doc.select("div > *").text());
     }
 
+    @Test public void textWithoutNormalizing() {
+        String h = "<span><div>\n\nHello<p> world\n</div><div>Hey there</div></span>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("\n\nHello  world\n Hey there", doc.select("div").text(false));
+    }
+
     @Test public void hasText() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div><p></p></div>");
         Elements divs = doc.select("div");
