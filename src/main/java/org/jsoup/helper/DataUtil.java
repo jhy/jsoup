@@ -166,6 +166,7 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
+        
 		if (Thread.currentThread().isInterrupted()) {
 			Thread.interrupted();
 			throw new IOException("JSoup thread has been interrupted");
