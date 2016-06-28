@@ -144,7 +144,7 @@ class QueryParser {
             byId();
         else if (tq.matchChomp("."))
             byClass();
-        else if (tq.matchesWord())
+        else if (tq.matchesWord() || tq.matches("*|"))
             byTag();
         else if (tq.matches("["))
             byAttribute();
@@ -211,13 +211,19 @@ class QueryParser {
 
     private void byTag() {
         String tagName = tq.consumeElementSelector();
+
         Validate.notEmpty(tagName);
 
-        // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
-        if (tagName.contains("|"))
-            tagName = tagName.replace("|", ":");
+        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
+        if (tagName.startsWith("*|")) {
+            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName.trim().toLowerCase()), new Evaluator.TagEndsWith(tagName.replace("*|", ":").trim().toLowerCase())));
+        } else {
+            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            if (tagName.contains("|"))
+                tagName = tagName.replace("|", ":");
 
-        evals.add(new Evaluator.Tag(tagName.trim().toLowerCase()));
+            evals.add(new Evaluator.Tag(tagName.trim().toLowerCase()));
+        }
     }
 
     private void byAttribute() {

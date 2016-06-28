@@ -51,6 +51,28 @@ public abstract class Evaluator {
         }
     }
 
+
+    /**
+     * Evaluator for tag name that ends with
+     */
+    public static final class TagEndsWith extends Evaluator {
+        private String tagName;
+
+        public TagEndsWith(String tagName) {
+            this.tagName = tagName;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.tagName().endsWith(tagName));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", tagName);
+        }
+    }
+
     /**
      * Evaluator for element id
      */
