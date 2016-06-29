@@ -193,6 +193,14 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection headers(Map<String,String> headers) {
+        Validate.notNull(headers, "Header map must not be null");
+        for (Map.Entry<String,String> entry : headers.entrySet()) {
+            req.header(entry.getKey(),entry.getValue());
+        }
+        return this;
+    }
+
     public Connection cookie(String name, String value) {
         req.cookie(name, value);
         return this;

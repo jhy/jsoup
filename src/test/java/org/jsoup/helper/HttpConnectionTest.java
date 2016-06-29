@@ -52,6 +52,18 @@ public class HttpConnectionTest {
         assertEquals("deflate", res.header("accept-Encoding"));
     }
 
+    @Test public void headers() {
+        Connection con = HttpConnection.connect("http://example.com");
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("content-type", "text/html");
+        headers.put("Connection", "keep-alive");
+        headers.put("Host", "http://example.com");
+        con.headers(headers);
+        assertEquals("text/html", con.request().header("content-type"));
+        assertEquals("keep-alive", con.request().header("Connection"));
+        assertEquals("http://example.com", con.request().header("Host"));
+    }
+
     @Test public void sameHeadersCombineWithComma() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
         List<String> values = new ArrayList<String>();
