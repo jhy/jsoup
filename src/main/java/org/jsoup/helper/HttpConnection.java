@@ -569,8 +569,11 @@ public class HttpConnection implements Connection {
                 res.setupFromConnection(conn, previousResponse);
                 res.req = req;
 
-                // redirect if there's a location header (from 3xx, or 201 etc)
-                if (res.hasHeader(LOCATION) && req.followRedirects()) {
+                // redirect if there's a location header (from 3xx, 201 or 202)
+                if (res.hasHeader(LOCATION)
+                        && req.followRedirects()
+                        && (status == 201 || status == 202 || (status >= 300 && status < 400))
+                        && (!res.cookies().isEmpty() || checkThatRedirectLocationIsDifferent(res))) { // Self redirects are ok if the response contains cookies
                     if (status != HTTP_TEMP_REDIR) {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                         req.data().clear();
@@ -913,6 +916,17 @@ public class HttpConnection implements Connection {
                 // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
             }
             return sb.toString();
+        }
+
+        private static boolean checkThatRedirectLocationIsDifferent(Connection.Response res) {
+            try {
+                String originalUrl = res.url().toString().replaceAll("\\|", "%7C");
+                String redirectUrl = res.url().toURI().resolve(res.header(LOCATION).replaceAll("\\|", "%7C")).toString();
+                return !originalUrl.equals(redirectUrl);
+            } catch (Exception e) {
+                // When URL is e.g. not RFC 2396 conform or contains illegal characters, stick with old behavior
+                return true;
+            }
         }
 
         // for get url reqs, serialise the data map into the url
