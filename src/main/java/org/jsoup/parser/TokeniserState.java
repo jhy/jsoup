@@ -143,7 +143,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
             //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
-            String tagName = r.consumeTagName().toLowerCase();
+            String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
 
             switch (r.consume()) {
@@ -194,8 +194,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTagPending(false);
-                t.tagPending.appendTagName(Character.toLowerCase(r.current()));
-                t.dataBuffer.append(Character.toLowerCase(r.current()));
+                t.tagPending.appendTagName(r.current());
+                t.dataBuffer.append(r.current());
                 t.advanceTransition(RCDATAEndTagName);
             } else {
                 t.emit("</");
@@ -207,7 +207,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 String name = r.consumeLetterSequence();
-                t.tagPending.appendTagName(name.toLowerCase());
+                t.tagPending.appendTagName(name);
                 t.dataBuffer.append(name);
                 return;
             }
@@ -408,7 +408,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTempBuffer();
-                t.dataBuffer.append(Character.toLowerCase(r.current()));
+                t.dataBuffer.append(r.current());
                 t.emit("<" + r.current());
                 t.advanceTransition(ScriptDataDoubleEscapeStart);
             } else if (r.matches('/')) {
@@ -424,7 +424,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTagPending(false);
-                t.tagPending.appendTagName(Character.toLowerCase(r.current()));
+                t.tagPending.appendTagName(r.current());
                 t.dataBuffer.append(r.current());
                 t.advanceTransition(ScriptDataEscapedEndTagName);
             } else {
@@ -591,7 +591,7 @@ enum TokeniserState {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
             String name = r.consumeToAnySorted(attributeNameCharsSorted);
-            t.tagPending.appendAttributeName(name.toLowerCase());
+            t.tagPending.appendAttributeName(name);
 
             char c = r.consume();
             switch (c) {
@@ -1143,7 +1143,7 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 String name = r.consumeLetterSequence();
-                t.doctypePending.name.append(name.toLowerCase());
+                t.doctypePending.name.append(name);
                 return;
             }
             char c = r.consume();
@@ -1622,7 +1622,7 @@ enum TokeniserState {
     private static void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
         if (r.matchesLetter()) {
             String name = r.consumeLetterSequence();
-            t.tagPending.appendTagName(name.toLowerCase());
+            t.tagPending.appendTagName(name);
             t.dataBuffer.append(name);
             return;
         }
@@ -1701,7 +1701,7 @@ enum TokeniserState {
     private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
         if (r.matchesLetter()) {
             String name = r.consumeLetterSequence();
-            t.dataBuffer.append(name.toLowerCase());
+            t.dataBuffer.append(name);
             t.emit(name);
             return;
         }

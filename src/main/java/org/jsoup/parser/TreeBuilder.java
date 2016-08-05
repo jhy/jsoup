@@ -18,15 +18,19 @@ abstract class TreeBuilder {
     protected String baseUri; // current base uri, for creating new elements
     protected Token currentToken; // currentToken is used only for error tracking.
     protected ParseErrorList errors; // null when not tracking errors
+    protected ParseSettings settings;
 
     private Token.StartTag start = new Token.StartTag(); // start tag to process
     private Token.EndTag end  = new Token.EndTag();
 
-    protected void initialiseParse(String input, String baseUri, ParseErrorList errors) {
+    abstract ParseSettings defaultSettings();
+
+    protected void initialiseParse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
         Validate.notNull(input, "String input must not be null");
         Validate.notNull(baseUri, "BaseURI must not be null");
 
         doc = new Document(baseUri);
+        this.settings = settings;
         reader = new CharacterReader(input);
         this.errors = errors;
         tokeniser = new Tokeniser(reader, errors);
@@ -34,12 +38,8 @@ abstract class TreeBuilder {
         this.baseUri = baseUri;
     }
 
-    Document parse(String input, String baseUri) {
-        return parse(input, baseUri, ParseErrorList.noTracking());
-    }
-
-    Document parse(String input, String baseUri, ParseErrorList errors) {
-        initialiseParse(input, baseUri, errors);
+    Document parse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+        initialiseParse(input, baseUri, errors, settings);
         runParser();
         return doc;
     }

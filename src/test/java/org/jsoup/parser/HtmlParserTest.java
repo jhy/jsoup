@@ -899,4 +899,31 @@ public class HtmlParserTest {
         Elements els = doc.select("div");
         assertEquals("Check", els.text());
     }
+
+    @Test public void testHtmlLowerCase() {
+        String html = "<!doctype HTML><DIV ID=1>One</DIV>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!doctype html> <html> <head></head> <body> <div id=\"1\"> One </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveTagCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(true, false));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN id=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveAttributeCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(false, true));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <span ID=\"2\"></span> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveBothCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(true, true));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN ID=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
 }

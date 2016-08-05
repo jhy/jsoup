@@ -16,8 +16,8 @@ final class Tokeniser {
         Arrays.sort(notCharRefCharsSorted);
     }
 
-    private CharacterReader reader; // html input
-    private ParseErrorList errors; // errors found while tokenising
+    private final CharacterReader reader; // html input
+    private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
@@ -218,7 +218,7 @@ final class Tokeniser {
     }
 
     boolean isAppropriateEndTagToken() {
-        return lastStartTag != null && tagPending.tagName.equals(lastStartTag);
+        return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
     String appropriateEndTagName() {

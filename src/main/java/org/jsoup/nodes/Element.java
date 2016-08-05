@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -58,7 +59,7 @@ public class Element extends Node {
      * @param tag element tag
      * @param baseUri the base URI of this element. It is acceptable for the base URI to be an empty
      *            string, but not null.
-     * @see Tag#valueOf(String)
+     * @see Tag#valueOf(String, ParseSettings)
      */
     public Element(Tag tag, String baseUri) {
         this(tag, baseUri, new Attributes());
@@ -87,7 +88,7 @@ public class Element extends Node {
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName);
+        tag = Tag.valueOf(tagName, ParseSettings.preserveCase); // preserve the requested tag case
         return this;
     }
 
@@ -116,7 +117,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return attributes.get("id");
+        return attributes.getIgnoreCase("id");
     }
 
     /**
@@ -668,7 +669,7 @@ public class Element extends Node {
      */
     public Elements getElementsByAttribute(String key) {
         Validate.notEmpty(key);
-        key = key.trim().toLowerCase();
+        key = key.trim();
 
         return Collector.collect(new Evaluator.Attribute(key), this);
     }
@@ -681,7 +682,7 @@ public class Element extends Node {
      */
     public Elements getElementsByAttributeStarting(String keyPrefix) {
         Validate.notEmpty(keyPrefix);
-        keyPrefix = keyPrefix.trim().toLowerCase();
+        keyPrefix = keyPrefix.trim();
 
         return Collector.collect(new Evaluator.AttributeStarting(keyPrefix), this);
     }

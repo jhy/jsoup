@@ -299,8 +299,9 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.appendElement("p").text("there");
-        div.appendElement("P").attr("class", "second").text("now");
-        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
+        div.appendElement("P").attr("CLASS", "second").text("now");
+        // manually specifying tag and attributes should now preserve case, regardless of parse mode
+        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><P CLASS=\"second\">now</P></div></body></html>",
                 TextUtil.stripNewlines(doc.html()));
 
         // check sibling index (with short circuit on reindexChildren):

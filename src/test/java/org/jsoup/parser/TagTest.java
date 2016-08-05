@@ -8,9 +8,15 @@ import static org.junit.Assert.*;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TagTest {
 
-    @Test public void isCaseInsensitive() {
+    @Test public void isCaseSensitive() {
         Tag p1 = Tag.valueOf("P");
         Tag p2 = Tag.valueOf("p");
+        assertFalse(p1.equals(p2));
+    }
+
+    @Test public void canBeInsensitive() {
+        Tag p1 = Tag.valueOf("P", ParseSettings.htmlDefault);
+        Tag p2 = Tag.valueOf("p", ParseSettings.htmlDefault);
         assertEquals(p1, p2);
     }
 
@@ -49,7 +55,7 @@ public class TagTest {
     }
 
     @Test public void defaultSemantics() {
-        Tag foo = Tag.valueOf("foo"); // not defined
+        Tag foo = Tag.valueOf("FOO"); // not defined
         Tag foo2 = Tag.valueOf("FOO");
 
         assertEquals(foo, foo2);
