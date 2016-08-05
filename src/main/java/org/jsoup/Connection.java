@@ -230,6 +230,14 @@ public interface Connection {
     Connection header(String name, String value);
 
     /**
+     * Adds each of the supplied headers to the request.
+     * @param headers map of headers name {@literal ->} value pairs
+     * @return this Connection, for chaining
+     * @see org.jsoup.Connection.Request#headers()
+     */
+    Connection headers(Map<String,String> headers);
+
+    /**
      * Set a cookie to be sent in the request.
      * @param name name of cookie
      * @param value value of cookie
