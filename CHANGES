@@ -7,6 +7,11 @@ jsoup changelog
  * Added support for setting multiple connection headers at once with Connection.headers(Map)
    <https://github.com/jhy/jsoup/pull/725>
 
+ * Fixed an issue when converting to the W3CDom XML, where valid (but ugly) HTML attribute names containing characters
+   like '"' could not be converted into valid XML attribute names. These attribute names are now normalized if possible,
+   or not added to the XML DOM.
+   <https://github.com/jhy/jsoup/issues/721>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.
