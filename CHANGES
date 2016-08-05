@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.10.1 [PENDING]
+ * Added support for *|E wildcard namespace selectors.
+   <https://github.com/jhy/jsoup/pull/724>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.
