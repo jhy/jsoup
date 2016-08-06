@@ -899,4 +899,19 @@ public class HtmlParserTest {
         Elements els = doc.select("div");
         assertEquals("Check", els.text());
     }
+
+    @Test public void testFragement() {
+        // make sure when parsing a body fragment, a script tag at start goes into the body
+        String html =
+            "<script type=\"text/javascript\">console.log('foo');</script>\n" +
+                "<div id=\"somecontent\">some content</div>\n" +
+                "<script type=\"text/javascript\">console.log('bar');</script>";
+
+        Document body = Jsoup.parseBodyFragment(html);
+        assertEquals("<script type=\"text/javascript\">console.log('foo');</script> \n" +
+            "<div id=\"somecontent\">\n" +
+            " some content\n" +
+            "</div> \n" +
+            "<script type=\"text/javascript\">console.log('bar');</script>", body.body().html());
+    }
 }
