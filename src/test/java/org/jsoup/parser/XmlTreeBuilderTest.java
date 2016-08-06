@@ -50,10 +50,10 @@ public class XmlTreeBuilderTest {
 
     @Test
     public void testCommentAndDocType() {
-        String xml = "<!DOCTYPE html><!-- a comment -->One <qux />Two";
+        String xml = "<!DOCTYPE HTML><!-- a comment -->One <qux />Two";
         XmlTreeBuilder tb = new XmlTreeBuilder();
         Document doc = tb.parse(xml, "http://foo.com/");
-        assertEquals("<!DOCTYPE html><!-- a comment -->One <qux />Two",
+        assertEquals("<!DOCTYPE HTML><!-- a comment -->One <qux />Two",
                 TextUtil.stripNewlines(doc.html()));
     }
 
@@ -157,6 +157,13 @@ public class XmlTreeBuilderTest {
     }
 
     @Test
+    public void caseSensitiveDeclaration() {
+        String xml = "<?XML version='1' encoding='UTF-8' something='else'?>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals("<?XML version=\"1\" encoding=\"UTF-8\" something=\"else\"?>", doc.outerHtml());
+    }
+
+    @Test
     public void testCreatesValidProlog() {
         Document document = Document.createShell("");
         document.outputSettings().syntax(Syntax.xml);
@@ -166,5 +173,19 @@ public class XmlTreeBuilderTest {
             " <head></head>\n" +
             " <body></body>\n" +
             "</html>", document.outerHtml());
+    }
+
+    @Test
+    public void preservesCaseByDefault() {
+        String xml = "<TEST ID=1>Check</TEST>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals("<TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test
+    public void canNormalizeCase() {
+        String xml = "<TEST ID=1>Check</TEST>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser().settings(ParseSettings.htmlDefault));
+        assertEquals("<test id=\"1\">Check</test>", TextUtil.stripNewlines(doc.html()));
     }
 }

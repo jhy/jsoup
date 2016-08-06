@@ -68,6 +68,7 @@ abstract class Token {
 
     static abstract class Tag extends Token {
         protected String tagName;
+        protected String normalName; // lc version of tag name, for case insensitive tree build
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
         private String pendingAttributeValueS; // try to get attr vals in one shot, vs Builder
@@ -79,6 +80,7 @@ abstract class Token {
         @Override
         Tag reset() {
             tagName = null;
+            normalName = null;
             pendingAttributeName = null;
             reset(pendingAttributeValue);
             pendingAttributeValueS = null;
@@ -119,13 +121,18 @@ abstract class Token {
             }
         }
 
-        final String name() {
+        final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
             Validate.isFalse(tagName == null || tagName.length() == 0);
             return tagName;
         }
 
+        final String normalName() { // loses case, used in tree building for working out where in tree it should go
+            return normalName;
+        }
+
         final Tag name(String name) {
             tagName = name;
+            normalName = name.toLowerCase();
             return this;
         }
 
@@ -141,6 +148,7 @@ abstract class Token {
         // these appenders are rarely hit in not null state-- caused by null chars.
         final void appendTagName(String append) {
             tagName = tagName == null ? append : tagName.concat(append);
+            normalName = tagName.toLowerCase();
         }
 
         final void appendTagName(char append) {
@@ -206,6 +214,7 @@ abstract class Token {
         StartTag nameAttr(String name, Attributes attributes) {
             this.tagName = name;
             this.attributes = attributes;
+            normalName = tagName.toLowerCase();
             return this;
         }
 

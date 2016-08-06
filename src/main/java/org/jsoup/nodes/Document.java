@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
@@ -27,7 +28,7 @@ public class Document extends Element {
      @see #createShell
      */
     public Document(String baseUri) {
-        super(Tag.valueOf("#root"), baseUri);
+        super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
         this.location = baseUri;
     }
 
@@ -103,7 +104,7 @@ public class Document extends Element {
      @return new element
      */
     public Element createElement(String tagName) {
-        return new Element(Tag.valueOf(tagName), this.baseUri());
+        return new Element(Tag.valueOf(tagName, ParseSettings.preserveCase), this.baseUri());
     }
 
     /**

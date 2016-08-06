@@ -16,6 +16,7 @@ public class Parser {
     private TreeBuilder treeBuilder;
     private int maxErrors = DEFAULT_MAX_ERRORS;
     private ParseErrorList errors;
+    private ParseSettings settings;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -23,11 +24,12 @@ public class Parser {
      */
     public Parser(TreeBuilder treeBuilder) {
         this.treeBuilder = treeBuilder;
+        settings = treeBuilder.defaultSettings();
     }
     
     public Document parseInput(String html, String baseUri) {
         errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
-        return treeBuilder.parse(html, baseUri, errors);
+        return treeBuilder.parse(html, baseUri, errors, settings);
     }
 
     // gets & sets
@@ -75,6 +77,15 @@ public class Parser {
         return errors;
     }
 
+    public Parser settings(ParseSettings settings) {
+        this.settings = settings;
+        return this;
+    }
+
+    public ParseSettings settings() {
+        return settings;
+    }
+
     // static parse functions below
     /**
      * Parse HTML into a Document.
@@ -86,7 +97,7 @@ public class Parser {
      */
     public static Document parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parse(html, baseUri, ParseErrorList.noTracking());
+        return treeBuilder.parse(html, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
     }
 
     /**
@@ -101,7 +112,7 @@ public class Parser {
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, ParseErrorList.noTracking());
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
     }
 
     /**
@@ -113,7 +124,7 @@ public class Parser {
      */
     public static List<Node> parseXmlFragment(String fragmentXml, String baseUri) {
         XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentXml, baseUri, ParseErrorList.noTracking());
+        return treeBuilder.parseFragment(fragmentXml, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
     }
 
     /**

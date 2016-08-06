@@ -1,6 +1,11 @@
 jsoup changelog
 
 *** Release 1.10.1 [PENDING]
+ * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML
+   parser will continue to normalize tag names and attribute names to lower case, and the XML parser will now preserve
+   case, according to the relevant spec. The CSS selectors for tags and attributes remain case insensitive, per the CSS
+   spec.
+
  * Added support for *|E wildcard namespace selectors.
    <https://github.com/jhy/jsoup/pull/724>
 

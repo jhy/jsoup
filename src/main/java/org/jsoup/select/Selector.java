@@ -12,7 +12,7 @@ import java.util.IdentityHashMap;
  * 
  * <h2>Selector syntax</h2>
  * <p>
- * A selector is a chain of simple selectors, separated by combinators. Selectors are case insensitive (including against
+ * A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case insensitive</b> (including against
  * elements, attributes, and attribute values).
  * </p>
  * <p>

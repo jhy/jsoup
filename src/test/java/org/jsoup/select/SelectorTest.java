@@ -14,7 +14,8 @@ import static org.junit.Assert.*;
  */
 public class SelectorTest {
     @Test public void testByTag() {
-        Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><div id=3>").select("div");
+        // should be case insensitive
+        Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><DIV id=3>").select("DIV");
         assertEquals(3, els.size());
         assertEquals("1", els.get(0).id());
         assertEquals("2", els.get(1).id());
@@ -35,7 +36,7 @@ public class SelectorTest {
     }
 
     @Test public void testByClass() {
-        Elements els = Jsoup.parse("<p id=0 class='one two'><p id=1 class='one'><p id=2 class='two'>").select("p.one");
+        Elements els = Jsoup.parse("<p id=0 class='ONE two'><p id=1 class='one'><p id=2 class='two'>").select("P.One");
         assertEquals(2, els.size());
         assertEquals("0", els.get(0).id());
         assertEquals("1", els.get(1).id());
@@ -55,7 +56,7 @@ public class SelectorTest {
         Elements withTitle = doc.select("[title]");
         assertEquals(4, withTitle.size());
 
-        Elements foo = doc.select("[title=foo]");
+        Elements foo = doc.select("[TITLE=foo]");
         assertEquals(1, foo.size());
 
         Elements foo2 = doc.select("[title=\"foo\"]");
@@ -221,7 +222,7 @@ public class SelectorTest {
     @Test public void descendant() {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
-        Element root = doc.getElementsByClass("head").first();
+        Element root = doc.getElementsByClass("HEAD").first();
         
         Elements els = root.select(".head p");
         assertEquals(2, els.size());

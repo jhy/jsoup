@@ -206,7 +206,7 @@ class QueryParser {
     private void byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        evals.add(new Evaluator.Class(className.trim().toLowerCase()));
+        evals.add(new Evaluator.Class(className.trim()));
     }
 
     private void byTag() {
@@ -222,7 +222,7 @@ class QueryParser {
             if (tagName.contains("|"))
                 tagName = tagName.replace("|", ":");
 
-            evals.add(new Evaluator.Tag(tagName.trim().toLowerCase()));
+            evals.add(new Evaluator.Tag(tagName.trim()));
         }
     }
 

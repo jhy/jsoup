@@ -58,7 +58,7 @@ public abstract class Node implements Cloneable {
     public abstract String nodeName();
 
     /**
-     * Get an attribute's value by its key.
+     * Get an attribute's value by its key. <b>Case insensitive</b>
      * <p>
      * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
@@ -75,8 +75,9 @@ public abstract class Node implements Cloneable {
     public String attr(String attributeKey) {
         Validate.notNull(attributeKey);
 
-        if (attributes.hasKey(attributeKey))
-            return attributes.get(attributeKey);
+        String val = attributes.getIgnoreCase(attributeKey);
+        if (val.length() > 0)
+            return val;
         else if (attributeKey.toLowerCase().startsWith("abs:"))
             return absUrl(attributeKey.substring("abs:".length()));
         else return "";
@@ -102,7 +103,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Test if this element has an attribute.
+     * Test if this element has an attribute. <b>Case insensitive</b>
      * @param attributeKey The attribute key to check.
      * @return true if the attribute exists, false if not.
      */
@@ -111,10 +112,10 @@ public abstract class Node implements Cloneable {
 
         if (attributeKey.startsWith("abs:")) {
             String key = attributeKey.substring("abs:".length());
-            if (attributes.hasKey(key) && !absUrl(key).equals(""))
+            if (attributes.hasKeyIgnoreCase(key) && !absUrl(key).equals(""))
                 return true;
         }
-        return attributes.hasKey(attributeKey);
+        return attributes.hasKeyIgnoreCase(attributeKey);
     }
 
     /**
@@ -124,7 +125,7 @@ public abstract class Node implements Cloneable {
      */
     public Node removeAttr(String attributeKey) {
         Validate.notNull(attributeKey);
-        attributes.remove(attributeKey);
+        attributes.removeIgnoreCase(attributeKey);
         return this;
     }
 

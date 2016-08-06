@@ -900,7 +900,7 @@ public class HtmlParserTest {
         assertEquals("Check", els.text());
     }
 
-    @Test public void testFragement() {
+    @Test public void testFragment() {
         // make sure when parsing a body fragment, a script tag at start goes into the body
         String html =
             "<script type=\"text/javascript\">console.log('foo');</script>\n" +
@@ -913,5 +913,32 @@ public class HtmlParserTest {
             " some content\n" +
             "</div> \n" +
             "<script type=\"text/javascript\">console.log('bar');</script>", body.body().html());
+    }
+
+    @Test public void testHtmlLowerCase() {
+        String html = "<!doctype HTML><DIV ID=1>One</DIV>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!doctype html> <html> <head></head> <body> <div id=\"1\"> One </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveTagCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(true, false));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN id=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveAttributeCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(false, true));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <span ID=\"2\"></span> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
+    @Test public void canPreserveBothCase() {
+        Parser parser = Parser.htmlParser();
+        parser.settings(new ParseSettings(true, true));
+        Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
+        assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN ID=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
     }
 }

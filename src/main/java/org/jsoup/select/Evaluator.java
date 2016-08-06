@@ -42,7 +42,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().equals(tagName));
+            return (element.tagName().equalsIgnoreCase(tagName));
         }
 
         @Override
@@ -146,14 +146,15 @@ public abstract class Evaluator {
         private String keyPrefix;
 
         public AttributeStarting(String keyPrefix) {
-            this.keyPrefix = keyPrefix;
+            Validate.notEmpty(keyPrefix);
+            this.keyPrefix = keyPrefix.toLowerCase();
         }
 
         @Override
         public boolean matches(Element root, Element element) {
             List<org.jsoup.nodes.Attribute> values = element.attributes().asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
-                if (attribute.getKey().startsWith(keyPrefix))
+                if (attribute.getKey().toLowerCase().startsWith(keyPrefix))
                     return true;
             }
             return false;
