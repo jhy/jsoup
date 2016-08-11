@@ -17,6 +17,9 @@ jsoup changelog
    or not added to the XML DOM.
    <https://github.com/jhy/jsoup/issues/721>
 
+ * Fixed an OOB exception when loading an empty-body URL and parsing with the XML parser.
+   <https://github.com/jhy/jsoup/issues/727>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.

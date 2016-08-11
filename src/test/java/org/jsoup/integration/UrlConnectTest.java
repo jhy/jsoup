@@ -281,7 +281,7 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void ignores500NoWithContentExceptionIfSoConfigured() throws IOException {
+    public void ignores500WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/500-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
@@ -290,12 +290,30 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void ignores200NoWithContentExceptionIfSoConfigured() throws IOException {
+    public void ignores200WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/200-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(200, res.statusCode());
         assertEquals("All Good", res.statusMessage());
+    }
+
+    @Test
+    public void handles200WithNoContent() throws IOException {
+        Connection con = Jsoup
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
+            .userAgent(browserUa);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(200, res.statusCode());
+
+        con = Jsoup
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
+            .parser(Parser.xmlParser())
+            .userAgent(browserUa);
+        res = con.execute();
+        doc = res.parse();
+        assertEquals(200, res.statusCode());
     }
 
     @Test
