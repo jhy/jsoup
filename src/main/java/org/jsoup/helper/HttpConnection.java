@@ -652,6 +652,11 @@ public class HttpConnection implements Connection {
             return charset;
         }
 
+        public Response charset(String charset) {
+            this.charset = charset;
+            return this;
+        }
+
         public String contentType() {
             return contentType;
         }

@@ -627,10 +627,17 @@ public interface Connection {
         String statusMessage();
 
         /**
-         * Get the character set name of the response.
+         * Get the character set name of the response, derived from the content-type header.
          * @return character set name
          */
         String charset();
+
+        /**
+         * Set / override the response character set. When the document body is parsed it will be with this charset.
+         * @param charset to decode body as
+         * @return this Response, for chaining
+         */
+        Response charset(String charset);
 
         /**
          * Get the response content type (e.g. "text/html");
