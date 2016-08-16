@@ -168,7 +168,7 @@ public final class StringUtil {
     public static URL resolve(URL base, String relUrl) throws MalformedURLException {
         // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
         if (relUrl.startsWith("?"))
-            relUrl = base.getPath() + relUrl;
+            relUrl = base.getPath().replaceAll("//", "/") + relUrl;
         // workaround: //example.com + ./foo = //example.com/./foo, not //example.com/foo
         if (relUrl.indexOf('.') == 0 && base.getFile().indexOf('/') != 0) {
             base = new URL(base.getProtocol(), base.getHost(), base.getPort(), "/" + base.getFile());

@@ -573,7 +573,7 @@ public class HttpConnection implements Connection {
                 if (res.hasHeader(LOCATION)
                         && req.followRedirects()
                         && (status == 201 || status == 202 || (status >= 300 && status < 400))
-                        && (!res.cookies().isEmpty() || checkThatRedirectLocationIsDifferent(res))) { // Self redirects are ok if the response contains cookies
+                        && (checkIfNewCookies(req, res) || checkThatRedirectLocationIsDifferent(res))) { // Self redirects are ok if the response contains new cookies
                     if (status != HTTP_TEMP_REDIR) {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                         req.data().clear();
@@ -633,6 +633,16 @@ public class HttpConnection implements Connection {
 
             res.executed = true;
             return res;
+        }
+
+        private static boolean checkIfNewCookies(Connection.Request req, Connection.Response res) {
+            for (String cookieKey : res.cookies().keySet()) {
+                if (!req.cookies().containsKey(cookieKey)
+                        || !req.cookies().get(cookieKey).equals(res.cookies().get(cookieKey))) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public int statusCode() {
