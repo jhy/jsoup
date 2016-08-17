@@ -90,4 +90,9 @@ public class AttributeParseTest {
         assertEquals(html, el.outerHtml());
     }
     
+    @Test public void slashNotChangeAttribute() {
+	Parser parser = Parser.htmlParser();
+        Document doc = parser.parseInput("<img /onerror='doMyJob'/>", "");
+        assertTrue("SelfClosingStartTag ignores last character", doc.select("img[onerror]").size() != 0);
+    }
 }
