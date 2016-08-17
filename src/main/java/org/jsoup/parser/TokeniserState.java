@@ -880,6 +880,7 @@ enum TokeniserState {
                     break;
                 default:
                     t.error(this);
+                    r.unconsume();
                     t.transition(BeforeAttributeName);
             }
         }
