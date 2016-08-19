@@ -371,7 +371,6 @@ public class Document extends Element {
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = Charset.forName("UTF-8");
-        private CharsetEncoder charsetEncoder = charset.newEncoder();
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
@@ -421,7 +420,6 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
-            charsetEncoder = charset.newEncoder();
             return this;
         }
 
@@ -436,7 +434,7 @@ public class Document extends Element {
         }
 
         CharsetEncoder encoder() {
-            return charsetEncoder;
+            return charset.newEncoder();
         }
 
         /**

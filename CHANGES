@@ -32,6 +32,9 @@ jsoup changelog
  * Fixed an issue where attribute names starting with a slash would be parsed incorrectly.
    <https://github.com/jhy/jsoup/pull/748>
 
+ * Don't reuse charset encoders from OutputSettings, to make threadsafe.
+   <https://github.com/jhy/jsoup/issues/740>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.
