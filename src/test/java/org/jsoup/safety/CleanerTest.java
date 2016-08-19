@@ -210,7 +210,7 @@ public class CleanerTest {
         String defaultOut = Jsoup.clean(html, "http://foo.com/", Whitelist.relaxed());
         assertNotSame(defaultOut, customOut);
 
-        assertEquals("<div><p>&bernou;</p></div>", customOut);
+        assertEquals("<div><p>&Bscr;</p></div>", customOut); // entities now prefers shorted names if aliased
         assertEquals("<div>\n" +
             " <p>ℬ</p>\n" +
             "</div>", defaultOut);

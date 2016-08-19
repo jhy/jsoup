@@ -199,6 +199,14 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <!-- gson, to fetch entities from w3.org -->
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.7</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
     
   <dependencyManagement>

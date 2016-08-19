@@ -737,7 +737,7 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    char[] ref = t.consumeCharacterReference('"', true);
+                    int[] ref = t.consumeCharacterReference('"', true);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref);
                     else
@@ -769,7 +769,7 @@ enum TokeniserState {
                     t.transition(AfterAttributeValue_quoted);
                     break;
                 case '&':
-                    char[] ref = t.consumeCharacterReference('\'', true);
+                    int[] ref = t.consumeCharacterReference('\'', true);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref);
                     else
@@ -803,7 +803,7 @@ enum TokeniserState {
                     t.transition(BeforeAttributeName);
                     break;
                 case '&':
-                    char[] ref = t.consumeCharacterReference('>', true);
+                    int[] ref = t.consumeCharacterReference('>', true);
                     if (ref != null)
                         t.tagPending.appendAttributeValue(ref);
                     else
@@ -1680,7 +1680,7 @@ enum TokeniserState {
     }
 
     private static void readCharRef(Tokeniser t, TokeniserState advance) {
-        char[] c = t.consumeCharacterReference(null, false);
+        int[] c = t.consumeCharacterReference(null, false);
         if (c == null)
             t.emit('&');
         else

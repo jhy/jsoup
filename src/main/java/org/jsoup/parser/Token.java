@@ -181,6 +181,13 @@ abstract class Token {
             ensureAttributeValue();
             pendingAttributeValue.append(append);
         }
+
+        final void appendAttributeValue(int[] appendCodepoints) {
+            ensureAttributeValue();
+            for (int codepoint : appendCodepoints) {
+                pendingAttributeValue.appendCodePoint(codepoint);
+            }
+        }
         
         final void setEmptyAttributeValue() {
             hasEmptyAttributeValue = true;

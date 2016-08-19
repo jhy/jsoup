@@ -6,6 +6,11 @@ jsoup changelog
    case, according to the relevant spec. The CSS selectors for tags and attributes remain case insensitive, per the CSS
    spec.
 
+ * Improved support for extended HTML entities, including supplemental characters and multiple character references.
+   Also reduced memory consumption of the entity tables.
+   <https://github.com/jhy/jsoup/issues/602>
+   <https://github.com/jhy/jsoup/issues/603>
+
  * Added support for *|E wildcard namespace selectors.
    <https://github.com/jhy/jsoup/pull/724>
 

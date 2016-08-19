@@ -4,10 +4,18 @@ import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.parser.Parser;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.CharsetEncoder;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.jsoup.nodes.Entities.EscapeMode.base;
+import static org.jsoup.nodes.Entities.EscapeMode.extended;
 
 /**
  * HTML entities, and escape routines.
@@ -15,40 +23,64 @@ import java.util.*;
  * named character references</a>.
  */
 public class Entities {
+    private static Pattern entityPattern = Pattern.compile("^(\\w+)=(\\w+)(?:,(\\w+))?;(\\w+)$");
+    static final int empty = -1;
+    static final String emptyName = "";
+    static final int codepointRadix = 36;
+
     public enum EscapeMode {
         /** Restricted entities suitable for XHTML output: lt, gt, amp, and quot only. */
-        xhtml(xhtmlByVal),
+        xhtml("entities-xhtml.properties", 4),
         /** Default HTML output entities. */
-        base(baseByVal),
+        base("entities-base.properties", 106),
         /** Complete HTML entities. */
-        extended(fullByVal);
+        extended("entities-full.properties", 2125);
 
-        private Map<Character, String> map;
+        // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
+        private String[] nameKeys;
+        private int[] codeVals; // limitation is the few references with multiple characters; those go into multipoints.
 
-        EscapeMode(Map<Character, String> map) {
-            this.map = map;
+        // table of codepoints to named entities.
+        private int[] codeKeys; // we don' support multicodepoints to single named value currently
+        private String[] nameVals;
+
+        EscapeMode(String file, int size) {
+            load(this, file, size);
         }
 
-        public Map<Character, String> getMap() {
-            return map;
+        int codepointForName(final String name) {
+            int index = Arrays.binarySearch(nameKeys, name);
+            return index >= 0 ? codeVals[index] : empty;
+        }
+
+        String nameForCodepoint(final int codepoint) {
+            final int index = Arrays.binarySearch(codeKeys, codepoint);
+            if (index >= 0) {
+                // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
+                // (and binary search for same item with multi results is undefined
+                return (index < nameVals.length-1 && codeKeys[index+1] == codepoint) ?
+                    nameVals[index+1] : nameVals[index];
+            }
+            return emptyName;
+        }
+
+        private int size() {
+            return nameKeys.length;
         }
     }
 
-    private static final Map<String, Character> full;
-    private static final Map<Character, String> xhtmlByVal;
-    private static final Map<String, Character> base;
-    private static final Map<Character, String> baseByVal;
-    private static final Map<Character, String> fullByVal;
+    private static final HashMap<String, String> multipoints = new HashMap<String, String>(); // name -> multiple character references
 
-    private Entities() {}
+    private Entities() {
+    }
 
     /**
      * Check if the input is a known named entity
      * @param name the possible entity name (e.g. "lt" or "amp")
      * @return true if a known named entity
      */
-    public static boolean isNamedEntity(String name) {
-        return full.containsKey(name);
+    public static boolean isNamedEntity(final String name) {
+        return extended.codepointForName(name) != empty;
     }
 
     /**
@@ -57,19 +89,50 @@ public class Entities {
      * @return true if a known named entity in the base set
      * @see #isNamedEntity(String)
      */
-    public static boolean isBaseNamedEntity(String name) {
-        return base.containsKey(name);
+    public static boolean isBaseNamedEntity(final String name) {
+        return base.codepointForName(name) != empty;
     }
 
     /**
      * Get the Character value of the named entity
      * @param name named entity (e.g. "lt" or "amp")
      * @return the Character value of the named entity (e.g. '{@literal <}' or '{@literal &}')
+     * @deprecated does not support characters outside the BMP or multiple character names
      */
     public static Character getCharacterByName(String name) {
-        return full.get(name);
+        return (char) extended.codepointForName(name);
     }
-    
+
+    /**
+     * Get the character(s) represented by the named entitiy
+     * @param name entity (e.g. "lt" or "amp")
+     * @return the string value of the character(s) represented by this entity, or "" if not defined
+     */
+    public static String getByName(String name) {
+        String val = multipoints.get(name);
+        if (val != null)
+            return val;
+        int codepoint = extended.codepointForName(name);
+        if (codepoint != empty)
+            return new String(new int[]{codepoint}, 0, 1);
+        return emptyName;
+    }
+
+    public static int codepointsForName(final String name, final int[] codepoints) {
+        String val = multipoints.get(name);
+        if (val != null) {
+            codepoints[0] = val.codePointAt(0);
+            codepoints[1] = val.codePointAt(1);
+            return 2;
+        }
+        int codepoint = extended.codepointForName(name);
+        if (codepoint != empty) {
+            codepoints[0] = codepoint;
+            return 1;
+        }
+        return 0;
+    }
+
     static String escape(String string, Document.OutputSettings out) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         try {
@@ -89,7 +152,6 @@ public class Entities {
         final EscapeMode escapeMode = out.escapeMode();
         final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
-        final Map<Character, String> map = escapeMode.getMap();
         final int length = string.length();
 
         int codePoint;
@@ -144,19 +206,25 @@ public class Entities {
                     default:
                         if (canEncode(coreCharset, c, encoder))
                             accum.append(c);
-                        else if (map.containsKey(c))
-                            accum.append('&').append(map.get(c)).append(';');
                         else
-                            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                            appendEncoded(accum, escapeMode, codePoint);
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));
                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
                     accum.append(c);
                 else
-                    accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+                    appendEncoded(accum, escapeMode, codePoint);
             }
         }
+    }
+
+    private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
+        final String name = escapeMode.nameForCodepoint(codePoint);
+        if (name != emptyName) // ok for identity check
+            accum.append('&').append(name).append(';');
+        else
+            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
     }
 
     static String unescape(String string) {
@@ -186,7 +254,6 @@ public class Entities {
      * Alterslash: 3013, 28
      * Jsoup: 167, 2
      */
-
     private static boolean canEncode(final CoreCharset charset, final char c, final CharsetEncoder fallback) {
         // todo add more charset tests if impacted by Android's bad perf in canEncode
         switch (charset) {
@@ -211,61 +278,43 @@ public class Entities {
         }
     }
 
+    private static void load(EscapeMode e, String file, int size) {
+        e.nameKeys = new String[size];
+        e.codeVals = new int[size];
+        e.codeKeys = new int[size];
+        e.nameVals = new String[size];
 
-    // xhtml has restricted entities
-    private static final Object[][] xhtmlArray = {
-            {"quot", 0x00022},
-            {"amp", 0x00026},
-            {"lt", 0x0003C},
-            {"gt", 0x0003E}
-    };
-
-    static {
-        xhtmlByVal = new HashMap<Character, String>();
-        base = loadEntities("entities-base.properties");  // most common / default
-        baseByVal = toCharacterKey(base);
-        full = loadEntities("entities-full.properties"); // extended and overblown.
-        fullByVal = toCharacterKey(full);
-
-        for (Object[] entity : xhtmlArray) {
-            Character c = Character.valueOf((char) ((Integer) entity[1]).intValue());
-            xhtmlByVal.put(c, ((String) entity[0]));
-        }
-    }
-
-    private static Map<String, Character> loadEntities(String filename) {
-        Properties properties = new Properties();
-        Map<String, Character> entities = new HashMap<String, Character>();
+        InputStream stream = Entities.class.getResourceAsStream(file);
+        if (stream == null)
+            throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        String entry;
+        int i = 0;
         try {
-            InputStream in = Entities.class.getResourceAsStream(filename);
-            properties.load(in);
-            in.close();
-        } catch (IOException e) {
-            throw new MissingResourceException("Error loading entities resource: " + e.getMessage(), "Entities", filename);
-        }
+            while ((entry = reader.readLine()) != null) {
+                // NotNestedLessLess=10913,824;1887
+                final Matcher match = entityPattern.matcher(entry);
+                if (match.find()) {
+                    final String name = match.group(1);
+                    final int cp1 = Integer.parseInt(match.group(2), codepointRadix);
+                    final int cp2 = match.group(3) != null ? Integer.parseInt(match.group(3), codepointRadix) : empty;
+                    final int index = Integer.parseInt(match.group(4), codepointRadix);
 
-        for (Map.Entry entry: properties.entrySet()) {
-            Character val = Character.valueOf((char) Integer.parseInt((String) entry.getValue(), 16));
-            String name = (String) entry.getKey();
-            entities.put(name, val);
-        }
-        return entities;
-    }
+                    e.nameKeys[i] = name;
+                    e.codeVals[i] = cp1;
+                    e.codeKeys[index] = cp1;
+                    e.nameVals[index] = name;
 
-    private static Map<Character, String> toCharacterKey(Map<String, Character> inMap) {
-        Map<Character, String> outMap = new HashMap<Character, String>();
-        for (Map.Entry<String, Character> entry: inMap.entrySet()) {
-            Character character = entry.getValue();
-            String name = entry.getKey();
+                    if (cp2 != empty) {
+                        multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                    }
+                    i++;
+                }
 
-            if (outMap.containsKey(character)) {
-                // dupe, prefer the lower case version
-                if (name.toLowerCase().equals(name))
-                    outMap.put(character, name);
-            } else {
-                outMap.put(character, name);
             }
+            reader.close();
+        } catch (IOException err) {
+            throw new IllegalStateException("Error reading resource " + file);
         }
-        return outMap;
     }
 }
