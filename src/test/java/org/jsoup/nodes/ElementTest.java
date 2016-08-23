@@ -214,7 +214,62 @@ public class ElementTest {
         assertEquals(0, classes.size());
         assertFalse(doc.hasClass("mellow"));
     }
+    
+    @Test public void testHasClassDomMethods() {
+        Tag tag = Tag.valueOf("a");
+        Attributes attribs = new Attributes();
+        Element el = new Element(tag, "", attribs);
+        
+        attribs.put("class", "toto");
+        boolean hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " toto");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "toto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "\ttoto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "  toto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "ab");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "     ");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "tototo");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "raulpismuth  ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd  raulpismuth efgh ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd efgh raulpismuth");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd efgh raulpismuth ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+    }
 
+    
     @Test public void testClassUpdates() {
         Document doc = Jsoup.parse("<div class='mellow yellow'></div>");
         Element div = doc.select("div").first();
