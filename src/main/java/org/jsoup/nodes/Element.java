@@ -1067,15 +1067,49 @@ public class Element extends Node {
     */
     public boolean hasClass(String className) {
         String classAttr = attributes.get("class");
-        if (classAttr.equals("") || classAttr.length() < className.length())
-            return false;
+        final int end = classAttr.length();
+        final int classNameLength = className.length();
 
-        final String[] classes = classSplit.split(classAttr);
-        for (String name : classes) {
-            if (className.equalsIgnoreCase(name))
-                return true;
+        // class attribute is empty or the requested class name is 'too' long
+        if (end == 0 || end < classNameLength) {
+            return false;
+        }
+        
+        // if both length are equals, just compare the className with the attribute
+        if(end == classNameLength) {
+            return className.equalsIgnoreCase(classAttr);
         }
 
+        // manually split the different class names in the class attibute
+        // DO NOT allocate the string but use regionMatches and length comparaison to make the check
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < end; i ++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if(inClass) {
+                    // the white space ends a class name
+                    // compare it with the requested one
+                    if(i-start == classNameLength && classAttr.regionMatches(true, start, className, 0, classNameLength)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            }
+            else {
+                if(!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+        
+        // the attribute may not end by a white space
+        // check the current class name
+        if(inClass && end-start == classNameLength) {
+            return classAttr.regionMatches(true, start, className, 0, classNameLength);  
+        }
+        
         return false;
     }
 
