@@ -175,8 +175,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (attributes == null || attributes.isEmpty()) {
             return Collections.<Attribute>emptyList().iterator();
         }
-        
-        return new AttributesReadOnlyIterator(attributes.values().iterator());
+
+        return attributes.values().iterator();
     }
 
     /**
@@ -337,27 +337,5 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     private static String dataKey(String key) {
         return dataPrefix + key;
-    }
-    
-    private static class AttributesReadOnlyIterator implements Iterator<Attribute> {
-
-        private Iterator<Attribute> iterator;
-
-        public AttributesReadOnlyIterator(Iterator<Attribute> iterator) {
-            this.iterator = iterator;
-        }
-
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        public Attribute next() {
-            return iterator.next();
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-        
     }
 }

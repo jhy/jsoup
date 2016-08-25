@@ -24,6 +24,9 @@ jsoup changelog
  * Improved performance of class selectors by reducing memory allocation and garbase collection.
    <https://github.com/jhy/jsoup/pull/753>
 
+ * Improved performance of HTML output by reducing the creation of temporary attribute list iterators.
+   <https://github.com/jhy/jsoup/pull/755>
+
  * Fixed an issue when converting to the W3CDom XML, where valid (but ugly) HTML attribute names containing characters
    like '"' could not be converted into valid XML attribute names. These attribute names are now normalized if possible,
    or not added to the XML DOM.

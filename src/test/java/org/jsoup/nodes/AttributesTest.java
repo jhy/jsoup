@@ -36,16 +36,18 @@ public class AttributesTest {
         assertEquals(" Tot=\"a&amp;p\" Hello=\"There\" data-name=\"Jsoup\"", a.html());
         assertEquals(a.html(), a.toString());
     }
-    
-    @Test(expected=UnsupportedOperationException.class)
-    public void testIteratorReadOnly() {
+
+    @Test
+    public void testIteratorRemovable() {
         Attributes a = new Attributes();
         a.put("Tot", "a&p");
         a.put("Hello", "There");
         a.put("data-name", "Jsoup");
 
         Iterator<Attribute> iterator = a.iterator();
+        iterator.next();
         iterator.remove();
+        assertEquals(2, a.size());
     }
     
     @Test
