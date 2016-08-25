@@ -1057,59 +1057,47 @@ public class Element extends Node {
      * @param className name of class to check for
      * @return true if it does, false if not
      */
-    /*
-    Used by common .class selector, so perf tweaked to reduce object creation vs hitting classnames().
-
-    Wiki: 71, 13 (5.4x)
-    CNN: 227, 91 (2.5x)
-    Alterslash: 59, 4 (14.8x)
-    Jsoup: 14, 1 (14x)
-    */
+    // performance sensitive
     public boolean hasClass(String className) {
-        String classAttr = attributes.get("class");
-        final int end = classAttr.length();
-        final int classNameLength = className.length();
+        final String classAttr = attributes.get("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
 
-        // class attribute is empty or the requested class name is 'too' long
-        if (end == 0 || end < classNameLength) {
+        if (len == 0 || len < wantLen) {
             return false;
         }
-        
-        // if both length are equals, just compare the className with the attribute
-        if(end == classNameLength) {
+
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
             return className.equalsIgnoreCase(classAttr);
         }
 
-        // manually split the different class names in the class attibute
-        // DO NOT allocate the string but use regionMatches and length comparaison to make the check
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
         boolean inClass = false;
         int start = 0;
-        for (int i = 0; i < end; i ++) {
+        for (int i = 0; i < len; i++) {
             if (Character.isWhitespace(classAttr.charAt(i))) {
-                if(inClass) {
-                    // the white space ends a class name
-                    // compare it with the requested one
-                    if(i-start == classNameLength && classAttr.regionMatches(true, start, className, 0, classNameLength)) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
                         return true;
                     }
                     inClass = false;
                 }
-            }
-            else {
-                if(!inClass) {
+            } else {
+                if (!inClass) {
                     // we're in a class name : keep the start of the substring
                     inClass = true;
                     start = i;
                 }
             }
         }
-        
-        // the attribute may not end by a white space
-        // check the current class name
-        if(inClass && end-start == classNameLength) {
-            return classAttr.regionMatches(true, start, className, 0, classNameLength);  
+
+        // check the last entry
+        if (inClass && len - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
         }
-        
+
         return false;
     }
 

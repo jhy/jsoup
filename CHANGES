@@ -21,6 +21,9 @@ jsoup changelog
    is not defined by the server, or is defined incorrectly.
    <https://github.com/jhy/jsoup/issues/743>
 
+ * Improved performance of class selectors by reducing memory allocation and garbase collection.
+   <https://github.com/jhy/jsoup/pull/753>
+
  * Fixed an issue when converting to the W3CDom XML, where valid (but ugly) HTML attribute names containing characters
    like '"' could not be converted into valid XML attribute names. These attribute names are now normalized if possible,
    or not added to the XML DOM.
