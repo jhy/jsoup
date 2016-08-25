@@ -38,6 +38,9 @@ jsoup changelog
  * Don't reuse charset encoders from OutputSettings, to make threadsafe.
    <https://github.com/jhy/jsoup/issues/740>
 
+ * Fixed an issue in connections with a requestBody where a custom content-type header could be ignored.
+   <https://github.com/jhy/jsoup/issues/756>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.

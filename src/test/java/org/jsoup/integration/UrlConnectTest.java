@@ -114,6 +114,34 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void sendsRequestBodyJsonWithData() throws IOException {
+        final String body = "{key:value}";
+        Document doc = Jsoup.connect(echoURL)
+            .requestBody(body)
+            .header("Content-Type", "application/json")
+            .userAgent(browserUa)
+            .data("foo", "true")
+            .post();
+        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
+        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
+        assertEquals("foo=true", ihVal("QUERY_STRING", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
+    }
+
+    @Test
+    public void sendsRequestBodyJsonWithoutData() throws IOException {
+        final String body = "{key:value}";
+        Document doc = Jsoup.connect(echoURL)
+            .requestBody(body)
+            .header("Content-Type", "application/json")
+            .userAgent(browserUa)
+            .post();
+        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
+        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
+    }
+
+    @Test
     public void sendsRequestBody() throws IOException {
         final String body = "{key:value}";
         Document doc = Jsoup.connect(echoURL)
@@ -122,7 +150,8 @@ public class UrlConnectTest {
             .userAgent(browserUa)
             .post();
         assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals(body, ihVal("keywords", doc));
+        assertEquals("text/plain", ihVal("CONTENT_TYPE", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
     }
 
     @Test
