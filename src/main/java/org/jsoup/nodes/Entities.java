@@ -19,7 +19,7 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
 
 /**
  * HTML entities, and escape routines.
- * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
+ * Source: <a href="http://www.w3.org/TR/2011/WD-html5-20110113/named-character-references.html">W3C HTML
  * named character references</a>.
  */
 public class Entities {
