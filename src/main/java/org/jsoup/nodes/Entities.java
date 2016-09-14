@@ -24,48 +24,31 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
  */
 public class Entities {
     private static Pattern entityPattern = Pattern.compile("^(\\w+)=(\\w+)(?:,(\\w+))?;(\\w+)$");
-    static final int empty = -1;
-    static final String emptyName = "";
+    private static final int empty = -1;
+    private static final String emptyName = "";
     static final int codepointRadix = 36;
 
     public enum EscapeMode {
+
         /** Restricted entities suitable for XHTML output: lt, gt, amp, and quot only. */
-        xhtml("entities-xhtml.properties", 4),
+        xhtml(new XhtmlCharacterCodeTable()),
         /** Default HTML output entities. */
-        base("entities-base.properties", 106),
+        base(new BaseCharacterCodeTable()),
         /** Complete HTML entities. */
-        extended("entities-full.properties", 2125);
+        extended(new FullCharacterCodeTable());
 
-        // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
-        private String[] nameKeys;
-        private int[] codeVals; // limitation is the few references with multiple characters; those go into multipoints.
+        final CharacterCodeTable table;
 
-        // table of codepoints to named entities.
-        private int[] codeKeys; // we don' support multicodepoints to single named value currently
-        private String[] nameVals;
-
-        EscapeMode(String file, int size) {
-            load(this, file, size);
+        EscapeMode(final CharacterCodeTable table) {
+            this.table = table;
         }
 
         int codepointForName(final String name) {
-            int index = Arrays.binarySearch(nameKeys, name);
-            return index >= 0 ? codeVals[index] : empty;
+            return table.codepontForName(name);
         }
 
         String nameForCodepoint(final int codepoint) {
-            final int index = Arrays.binarySearch(codeKeys, codepoint);
-            if (index >= 0) {
-                // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
-                // (and binary search for same item with multi results is undefined
-                return (index < nameVals.length-1 && codeKeys[index+1] == codepoint) ?
-                    nameVals[index+1] : nameVals[index];
-            }
-            return emptyName;
-        }
-
-        private int size() {
-            return nameKeys.length;
+            return table.nameForCodepoint(codepoint);
         }
     }
 
@@ -278,43 +261,134 @@ public class Entities {
         }
     }
 
-    private static void load(EscapeMode e, String file, int size) {
-        e.nameKeys = new String[size];
-        e.codeVals = new int[size];
-        e.codeKeys = new int[size];
-        e.nameVals = new String[size];
 
-        InputStream stream = Entities.class.getResourceAsStream(file);
-        if (stream == null)
-            throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String entry;
-        int i = 0;
-        try {
-            while ((entry = reader.readLine()) != null) {
-                // NotNestedLessLess=10913,824;1887
-                final Matcher match = entityPattern.matcher(entry);
-                if (match.find()) {
-                    final String name = match.group(1);
-                    final int cp1 = Integer.parseInt(match.group(2), codepointRadix);
-                    final int cp2 = match.group(3) != null ? Integer.parseInt(match.group(3), codepointRadix) : empty;
-                    final int index = Integer.parseInt(match.group(4), codepointRadix);
+    private static abstract class CharacterCodeTable {
+        // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
+        String[] nameKeys = new String[] {};
+        int[] codeVals = new int[] {}; // limitation is the few references with multiple characters; those go into multipoints.
 
-                    e.nameKeys[i] = name;
-                    e.codeVals[i] = cp1;
-                    e.codeKeys[index] = cp1;
-                    e.nameVals[index] = name;
+        // table of codepoints to named entities.
+        int[] codeKeys = new int[] {}; // we don' support multicodepoints to single named value currently
+        String[] nameVals = new String[] {};
 
-                    if (cp2 != empty) {
-                        multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
-                    }
-                    i++;
-                }
+        int codepontForName(String name) {
+            int index = Arrays.binarySearch(nameKeys, name);
+            return index >= 0 ? codeVals[index] : empty;
+        }
 
+        String nameForCodepoint(int codepoint) {
+            final int index = Arrays.binarySearch(codeKeys, codepoint);
+            if (index >= 0) {
+                // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
+                // (and binary search for same item with multi results is undefined
+                return (index < nameVals.length-1 && codeKeys[index+1] == codepoint) ?
+                        nameVals[index+1] : nameVals[index];
             }
-            reader.close();
-        } catch (IOException err) {
-            throw new IllegalStateException("Error reading resource " + file);
+            return emptyName;
+        }
+    }
+
+    private static class BaseCharacterCodeTable extends CharacterCodeTable {
+        BaseCharacterCodeTable() {
+            fillValues();
+        }
+
+        private void fillValues() {
+            nameKeys = new String[] {"AElig", "AMP", "Aacute", "Acirc", "Agrave", "Aring", "Atilde", "Auml", "COPY",
+                    "Ccedil", "ETH", "Eacute", "Ecirc", "Egrave", "Euml", "GT", "Iacute", "Icirc", "Igrave", "Iuml",
+                    "LT", "Ntilde", "Oacute", "Ocirc", "Ograve", "Oslash", "Otilde", "Ouml", "QUOT", "REG", "THORN",
+                    "Uacute", "Ucirc", "Ugrave", "Uuml", "Yacute", "aacute", "acirc", "acute", "aelig", "agrave", "amp",
+                    "aring", "atilde", "auml", "brvbar", "ccedil", "cedil", "cent", "copy", "curren", "deg", "divide",
+                    "eacute", "ecirc", "egrave", "eth", "euml", "frac12", "frac14", "frac34", "gt", "iacute", "icirc",
+                    "iexcl", "igrave", "iquest", "iuml", "laquo", "lt", "macr", "micro", "middot", "nbsp", "not",
+                    "ntilde", "oacute", "ocirc", "ograve", "ordf", "ordm", "oslash", "otilde", "ouml", "para", "plusmn",
+                    "pound", "quot", "raquo", "reg", "sect", "shy", "sup1", "sup2", "sup3", "szlig", "thorn", "times",
+                    "uacute", "ucirc", "ugrave", "uml", "uuml", "yacute", "yen", "yuml"};
+            codeVals = new int[] {198, 38, 193, 194, 192, 197, 195, 196, 169, 199, 208, 201, 202, 200, 203, 62, 205, 206,
+                    204, 207, 60, 209, 211, 212, 210, 216, 213, 214, 34, 174, 222, 218, 219, 217, 220, 221, 225, 226,
+                    180, 230, 224, 38, 229, 227, 228, 166, 231, 184, 162, 169, 164, 176, 247, 233, 234, 232, 240, 235,
+                    189, 188, 190, 62, 237, 238, 161, 236, 191, 239, 171, 60, 175, 181, 183, 160, 172, 241, 243, 244,
+                    242, 170, 186, 248, 245, 246, 182, 177, 163, 34, 187, 174, 167, 173, 185, 178, 179, 223, 254, 215,
+                    250, 251, 249, 168, 252, 253, 165, 255};
+
+            codeKeys = new int[] {34, 34, 38, 38, 60, 60, 62, 62, 160, 161, 162, 163, 164, 165, 166 ,167, 168, 169, 169,
+                    170, 171, 172, 173, 174, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188,
+                    189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208,
+                    209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
+                    229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248,
+                    249, 250, 251, 252, 253, 254, 255};
+            nameVals = new String[] {"QUOT", "quot", "AMP", "amp", "LT", "lt", "GT", "gt", "nbsp", "iexcl", "cent",
+                    "pound", "curren", "yen", "brvbar", "sect", "uml", "COPY", "copy", "ordf", "laquo", "not", "shy",
+                    "REG", "reg", "macr", "deg", "plusmn", "sup2", "sup3", "acute", "micro", "para", "middot", "cedil",
+                    "sup1", "ordm", "raquo", "frac14", "frac12", "frac34", "iquest", "Agrave", "Aacute", "Acirc",
+                    "Atilde", "Auml", "Aring", "AElig", "Ccedil", "Egrave", "Eacute", "Ecirc", "Euml", "Igrave",
+                    "Iacute", "Icirc", "Iuml", "ETH", "Ntilde", "Ograve", "Oacute", "Ocirc", "Otilde", "Ouml", "times",
+                    "Oslash", "Ugrave", "Uacute", "Ucirc", "Uuml", "Yacute", "THORN", "szlig", "agrave", "aacute",
+                    "acirc", "atilde", "auml", "aring", "aelig", "ccedil", "egrave", "eacute", "ecirc", "euml",
+                    "igrave", "iacute", "icirc", "iuml", "eth", "ntilde", "ograve", "oacute", "ocirc", "otilde",
+                    "ouml", "divide", "oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml"};
+        }
+    }
+
+    private static class FullCharacterCodeTable extends CharacterCodeTable {
+        private static final int SIZE = 2125;
+
+        FullCharacterCodeTable() {
+            load("entities-full.properties", SIZE);
+        }
+
+        private void load(String file, int size) {
+            nameKeys = new String[size];
+            codeVals = new int[size];
+            codeKeys = new int[size];
+            nameVals = new String[size];
+
+            InputStream stream = Entities.class.getResourceAsStream(file);
+            if (stream == null)
+                throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            String entry;
+            int i = 0;
+            try {
+                while ((entry = reader.readLine()) != null) {
+                    // NotNestedLessLess=10913,824;1887
+                    final Matcher match = entityPattern.matcher(entry);
+                    if (match.find()) {
+                        final String name = match.group(1);
+                        final int cp1 = Integer.parseInt(match.group(2), codepointRadix);
+                        final int cp2 = match.group(3) != null ? Integer.parseInt(match.group(3), codepointRadix) : empty;
+                        final int index = Integer.parseInt(match.group(4), codepointRadix);
+
+                        nameKeys[i] = name;
+                        codeVals[i] = cp1;
+                        codeKeys[index] = cp1;
+                        nameVals[index] = name;
+
+                        if (cp2 != empty) {
+                            multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                        }
+                        i++;
+                    }
+
+                }
+                reader.close();
+            } catch (IOException err) {
+                throw new IllegalStateException("Error reading resource " + file);
+            }
+        }
+    }
+
+    private static class XhtmlCharacterCodeTable extends CharacterCodeTable {
+        XhtmlCharacterCodeTable() {
+            fillValues();
+        }
+
+        private void fillValues() {
+            nameKeys = new String[] {"amp", "gt", "lt", "quot"};
+            codeVals = new int[] {38, 62, 60, 34};
+
+            codeKeys = new int[] {34, 38, 60, 62};
+            nameVals = new String[] {"quot", "amp", "lt", "gt"};
         }
     }
 }

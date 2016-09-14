@@ -21,7 +21,7 @@ import java.util.Map;
  * only to be complete.
  */
 class BuildEntities {
-    private static final String projectDir = "/Users/jhy/projects/jsoup";
+    private static final String projectDir = "PROJECT_DIR_HERE";
 
     public static void main(String[] args) throws IOException {
         String url = "https://www.w3.org/TR/2012/WD-html5-20121025/entities.json";
