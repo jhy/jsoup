@@ -644,7 +644,7 @@ public abstract class Node implements Cloneable {
      * Return a clone of the node using the given parent (which can be null).
      * Not a deep copy of children.
      */
-    protected Node doClone(Node parent) {
+    private Node doClone(Node parent) {
         Node clone;
 
         try {
@@ -665,7 +665,10 @@ public abstract class Node implements Cloneable {
         return clone;
     }
 
-    private static class OuterHtmlVisitor implements NodeVisitor {
+    /**
+     * Created by kirillf on 9/14/16.
+     */
+    public static class OuterHtmlVisitor implements NodeVisitor {
         private Appendable accum;
         private Document.OutputSettings out;
 
@@ -676,19 +679,19 @@ public abstract class Node implements Cloneable {
 
         public void head(Node node, int depth) {
             try {
-				node.outerHtmlHead(accum, depth, out);
-			} catch (IOException exception) {
-				throw new SerializationException(exception);
-			}
+                node.outerHtmlHead(accum, depth, out);
+            } catch (IOException exception) {
+                throw new SerializationException(exception);
+            }
         }
 
         public void tail(Node node, int depth) {
             if (!node.nodeName().equals("#text")) { // saves a void hit.
-				try {
-					node.outerHtmlTail(accum, depth, out);
-				} catch (IOException exception) {
-					throw new SerializationException(exception);
-				}
+                try {
+                    node.outerHtmlTail(accum, depth, out);
+                } catch (IOException exception) {
+                    throw new SerializationException(exception);
+                }
             }
         }
     }
