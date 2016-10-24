@@ -1,18 +1,18 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.jsoup.nodes.Entities.EscapeMode.base;
 import static org.jsoup.nodes.Entities.EscapeMode.extended;
@@ -23,17 +23,22 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
  * named character references</a>.
  */
 public class Entities {
-    private static Pattern entityPattern = Pattern.compile("^(\\w+)=(\\w+)(?:,(\\w+))?;(\\w+)$");
-    static final int empty = -1;
-    static final String emptyName = "";
+    private static final int empty = -1;
+    private static final String emptyName = "";
     static final int codepointRadix = 36;
 
     public enum EscapeMode {
-        /** Restricted entities suitable for XHTML output: lt, gt, amp, and quot only. */
+        /**
+         * Restricted entities suitable for XHTML output: lt, gt, amp, and quot only.
+         */
         xhtml("entities-xhtml.properties", 4),
-        /** Default HTML output entities. */
+        /**
+         * Default HTML output entities.
+         */
         base("entities-base.properties", 106),
-        /** Complete HTML entities. */
+        /**
+         * Complete HTML entities.
+         */
         extended("entities-full.properties", 2125);
 
         // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
@@ -58,8 +63,8 @@ public class Entities {
             if (index >= 0) {
                 // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
                 // (and binary search for same item with multi results is undefined
-                return (index < nameVals.length-1 && codeKeys[index+1] == codepoint) ?
-                    nameVals[index+1] : nameVals[index];
+                return (index < nameVals.length - 1 && codeKeys[index + 1] == codepoint) ?
+                    nameVals[index + 1] : nameVals[index];
             }
             return emptyName;
         }
@@ -76,6 +81,7 @@ public class Entities {
 
     /**
      * Check if the input is a known named entity
+     *
      * @param name the possible entity name (e.g. "lt" or "amp")
      * @return true if a known named entity
      */
@@ -85,6 +91,7 @@ public class Entities {
 
     /**
      * Check if the input is a known named entity in the base entity set.
+     *
      * @param name the possible entity name (e.g. "lt" or "amp")
      * @return true if a known named entity in the base set
      * @see #isNamedEntity(String)
@@ -95,6 +102,7 @@ public class Entities {
 
     /**
      * Get the Character value of the named entity
+     *
      * @param name named entity (e.g. "lt" or "amp")
      * @return the Character value of the named entity (e.g. '{@literal <}' or '{@literal &}')
      * @deprecated does not support characters outside the BMP or multiple character names
@@ -105,6 +113,7 @@ public class Entities {
 
     /**
      * Get the character(s) represented by the named entitiy
+     *
      * @param name entity (e.g. "lt" or "amp")
      * @return the string value of the character(s) represented by this entity, or "" if not defined
      */
@@ -233,6 +242,7 @@ public class Entities {
 
     /**
      * Unescape the input string.
+     *
      * @param string to un-HTML-escape
      * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
      * @return unescaped string
@@ -278,6 +288,8 @@ public class Entities {
         }
     }
 
+    private static final char[] codeDelims = {',', ';'};
+
     private static void load(EscapeMode e, String file, int size) {
         e.nameKeys = new String[size];
         e.codeVals = new int[size];
@@ -287,32 +299,43 @@ public class Entities {
         InputStream stream = Entities.class.getResourceAsStream(file);
         if (stream == null)
             throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String entry;
+
         int i = 0;
         try {
-            while ((entry = reader.readLine()) != null) {
+            ByteBuffer bytes = DataUtil.readToByteBuffer(stream, 0);
+            String contents = Charset.forName("ascii").decode(bytes).toString();
+            CharacterReader reader = new CharacterReader(contents);
+
+            while (!reader.isEmpty()) {
                 // NotNestedLessLess=10913,824;1887
-                final Matcher match = entityPattern.matcher(entry);
-                if (match.find()) {
-                    final String name = match.group(1);
-                    final int cp1 = Integer.parseInt(match.group(2), codepointRadix);
-                    final int cp2 = match.group(3) != null ? Integer.parseInt(match.group(3), codepointRadix) : empty;
-                    final int index = Integer.parseInt(match.group(4), codepointRadix);
 
-                    e.nameKeys[i] = name;
-                    e.codeVals[i] = cp1;
-                    e.codeKeys[index] = cp1;
-                    e.nameVals[index] = name;
-
-                    if (cp2 != empty) {
-                        multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
-                    }
-                    i++;
+                final String name = reader.consumeTo('=');
+                reader.advance();
+                final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
+                final char codeDelim = reader.current();
+                reader.advance();
+                final int cp2;
+                if (codeDelim == ',') {
+                    cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
+                    reader.advance();
+                } else {
+                    cp2 = empty;
                 }
+                final int index = Integer.parseInt(reader.consumeTo('\n'), codepointRadix);
+                reader.advance();
+
+                e.nameKeys[i] = name;
+                e.codeVals[i] = cp1;
+                e.codeKeys[index] = cp1;
+                e.nameVals[index] = name;
+
+                if (cp2 != empty) {
+                    multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                }
+                i++;
+
 
             }
-            reader.close();
         } catch (IOException err) {
             throw new IllegalStateException("Error reading resource " + file);
         }

@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.10.2 [PENDING]
+ * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
+   the HTML entity files. About 1.72x faster in this area.
+
 *** Release 1.10.1 [2016-Oct-23]
  * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML
    parser will continue to normalize tag names and attribute names to lower case, and the XML parser will now preserve
