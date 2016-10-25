@@ -97,7 +97,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insert(Token.Doctype d) {
-        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier(), baseUri);
+        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPubSysKey(), d.getPublicIdentifier(), d.getSystemIdentifier(), baseUri);
         insertNode(doctypeNode);
     }
 

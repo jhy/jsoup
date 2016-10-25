@@ -32,6 +32,7 @@ abstract class Token {
 
     static final class Doctype extends Token {
         final StringBuilder name = new StringBuilder();
+        String pubSysKey = null;
         final StringBuilder publicIdentifier = new StringBuilder();
         final StringBuilder systemIdentifier = new StringBuilder();
         boolean forceQuirks = false;
@@ -43,6 +44,7 @@ abstract class Token {
         @Override
         Token reset() {
             reset(name);
+            pubSysKey = null;
             reset(publicIdentifier);
             reset(systemIdentifier);
             forceQuirks = false;
@@ -51,6 +53,10 @@ abstract class Token {
 
         String getName() {
             return name.toString();
+        }
+
+        String getPubSysKey() {
+            return pubSysKey;
         }
 
         String getPublicIdentifier() {
