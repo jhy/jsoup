@@ -4,8 +4,10 @@ jsoup changelog
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
 
- * Bugfix - a "SYSTEM" flag in doctype tags would be incorrectly removed.
+ * Bugfix: a "SYSTEM" flag in doctype tags would be incorrectly removed.
    <https://github.com/jhy/jsoup/issues/408>
+
+ * Bugfix: removing attributes from an Element with removeAttr() would cause a ConcurrentModificationException.
 
 *** Release 1.10.1 [2016-Oct-23]
  * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML
