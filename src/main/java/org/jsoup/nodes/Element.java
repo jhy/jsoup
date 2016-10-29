@@ -10,6 +10,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
 import java.io.IOException;
@@ -285,6 +286,19 @@ public class Element extends Node {
      */
     public Elements select(String cssQuery) {
         return Selector.select(cssQuery, this);
+    }
+
+    /**
+     * Check if this element matches the given {@link Selector} CSS query.
+     * @param cssQuery a {@link Selector} CSS query
+     * @return if this element matches the query
+     */
+    public boolean is(String cssQuery) {
+        return is(QueryParser.parse(cssQuery));
+    }
+
+    public boolean is(Evaluator evaluator) {
+        return evaluator.matches(this.ownerDocument(), this);
     }
     
     /**

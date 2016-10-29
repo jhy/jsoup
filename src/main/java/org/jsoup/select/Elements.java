@@ -440,8 +440,12 @@ public class Elements extends ArrayList<Element> {
      * @return true if at least one element in the list matches the query.
      */
     public boolean is(String query) {
-        Elements children = select(query);
-        return !children.isEmpty();
+        Evaluator eval = QueryParser.parse(query);
+        for (Element e : this) {
+            if (e.is(eval))
+                return true;
+        }
+        return false;
     }
 
     /**

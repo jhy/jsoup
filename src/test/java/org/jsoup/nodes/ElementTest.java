@@ -972,4 +972,27 @@ public class ElementTest {
             .removeAttr("five");
         assertEquals("<a>Text</a>", a.outerHtml());
     }
+
+    @Test
+    public void testIs() {
+        String html = "<div><p>One <a class=big>Two</a> Three</p><p>Another</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.select("p").first();
+
+        assertTrue(p.is("p"));
+        assertFalse(p.is("div"));
+        assertTrue(p.is("p:has(a)"));
+        assertTrue(p.is("p:first-child"));
+        assertFalse(p.is("p:last-child"));
+        assertTrue(p.is("*"));
+        assertTrue(p.is("div p"));
+
+        Element q = doc.select("p").last();
+        assertTrue(q.is("p"));
+        assertTrue(q.is("p ~ p"));
+        assertTrue(q.is("p + p"));
+        assertTrue(q.is("p:last-child"));
+        assertFalse(q.is("p a"));
+        assertFalse(q.is("a"));
+    }
 }
