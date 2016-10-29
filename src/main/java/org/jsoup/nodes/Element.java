@@ -297,6 +297,11 @@ public class Element extends Node {
         return is(QueryParser.parse(cssQuery));
     }
 
+    /**
+     * Check if this element matches the given evaluator.
+     * @param evaluator an element evaluator
+     * @return if this element matches
+     */
     public boolean is(Evaluator evaluator) {
         return evaluator.matches(this.ownerDocument(), this);
     }
