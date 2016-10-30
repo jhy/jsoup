@@ -78,12 +78,13 @@ public interface Connection {
      * Set the request user-agent header.
      * @param userAgent user-agent to use
      * @return this Connection, for chaining
+     * @see org.jsoup.helper.HttpConnection#DEFAULT_UA
      */
     Connection userAgent(String userAgent);
 
     /**
      * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is 3 seconds (3000 millis). A timeout of zero is treated as an infinite timeout.
+     * timeout is <b<30 seconds</b> (30000 millis). A timeout of zero is treated as an infinite timeout.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
      */

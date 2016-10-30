@@ -116,12 +116,14 @@ public class HttpConnectionTest {
 
     @Test public void userAgent() {
         Connection con = HttpConnection.connect("http://example.com/");
+        assertEquals(HttpConnection.DEFAULT_UA, con.request().header("User-Agent"));
         con.userAgent("Mozilla");
         assertEquals("Mozilla", con.request().header("User-Agent"));
     }
 
     @Test public void timeout() {
         Connection con = HttpConnection.connect("http://example.com/");
+        assertEquals(30 * 1000, con.request().timeout());
         con.timeout(1000);
         assertEquals(1000, con.request().timeout());
     }
@@ -139,7 +141,7 @@ public class HttpConnectionTest {
         assertEquals(Connection.Method.POST, con.request().method());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsOnOdddData() {
+    @Test(expected=IllegalArgumentException.class) public void throwsOnOddData() {
         Connection con = HttpConnection.connect("http://example.com/");
         con.data("Name", "val", "what");
     }

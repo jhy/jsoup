@@ -26,6 +26,13 @@ import static org.jsoup.Connection.Method.HEAD;
  */
 public class HttpConnection implements Connection {
     public static final String  CONTENT_ENCODING = "Content-Encoding";
+    /**
+     * Many users would get caught by not setting a user-agent and therefore getting different responses on their desktop
+     * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
+     */
+    public static final String DEFAULT_UA =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
+    private static final String USER_AGENT = "User-Agent";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
@@ -108,7 +115,7 @@ public class HttpConnection implements Connection {
 
     public Connection userAgent(String userAgent) {
         Validate.notNull(userAgent, "User agent must not be null");
-        req.header("User-Agent", userAgent);
+        req.header(USER_AGENT, userAgent);
         return this;
     }
 
@@ -466,12 +473,13 @@ public class HttpConnection implements Connection {
         private String postDataCharset = DataUtil.defaultCharset;
 
         private Request() {
-            timeoutMilliseconds = 3000;
+            timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            headers.put(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
         }
 

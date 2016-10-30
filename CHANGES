@@ -15,8 +15,14 @@ jsoup changelog
    of data that doesn't read timeout.
    <https://github.com/jhy/jsoup/pull/712>
 
- * In Jsoup.Connect, now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
-   the header value appropriately.
+ * Jsoup.Connect now uses a desktop user-agent by default. Many users were getting caught by not specifying a
+   user-agent, and so the default of 'Java' was used. That causes many servers to return different content than what
+   they would to a desktop browser, and what the developer was expecting.
+
+ * Increased the default connect/read timeout in Jsoup.Connect to 30 seconds.
+
+ * Jsoup.Connect now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
+   the header value appropriately. This improves compatibility with servers that are configured incorrectly.
 
  * Bugfix: in Jsoup.Connect, URLs containing non-URL-safe characters were not encoded to URL safe correctly.
    <https://github.com/jhy/jsoup/issues/706>
