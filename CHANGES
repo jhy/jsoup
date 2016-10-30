@@ -9,6 +9,8 @@ jsoup changelog
  * Added new methods to Elements: next(query), nextAll(query), prev(query), prevAll(query) to select next and previous
    element siblings from a current selection, with optional selectors.
 
+ * Added Node.root() to get the topmost ancestor of a Node.
+
  * Bugfix: a "SYSTEM" flag in doctype tags would be incorrectly removed.
    <https://github.com/jhy/jsoup/issues/408>
 

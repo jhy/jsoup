@@ -303,7 +303,7 @@ public class Element extends Node {
      * @return if this element matches
      */
     public boolean is(Evaluator evaluator) {
-        return evaluator.matches(this.ownerDocument(), this);
+        return evaluator.matches((Element)this.root(), this);
     }
     
     /**

@@ -245,21 +245,25 @@ public abstract class Node implements Cloneable {
     public final Node parentNode() {
         return parentNode;
     }
+
+    /**
+     * Get this node's root node; that is, its topmost ancestor. If this node is the top ancestor, returns {@code this}.
+     * @return topmost ancestor.
+     */
+    public Node root() {
+        Node node = this;
+        while (node.parentNode != null)
+            node = node.parentNode;
+        return node;
+    }
     
     /**
      * Gets the Document associated with this Node. 
      * @return the Document associated with this Node, or null if there is no such Document.
      */
     public Document ownerDocument() {
-        Node node = this;
-        while (true) {
-            if (node instanceof Document)
-                return (Document) node;
-            else if (node.parentNode == null)
-                return null;
-            else
-                node = node.parentNode;
-        }
+        Node root = root();
+        return (root instanceof Document) ? (Document) root : null;
     }
     
     /**
@@ -557,7 +561,8 @@ public abstract class Node implements Cloneable {
 
     // if this node has no document (or parent), retrieve the default output settings
     Document.OutputSettings getOutputSettings() {
-        return ownerDocument() != null ? ownerDocument().outputSettings() : (new Document("")).outputSettings();
+        Document owner = ownerDocument();
+        return owner != null ? owner.outputSettings() : (new Document("")).outputSettings();
     }
 
     /**
