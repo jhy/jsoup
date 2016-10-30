@@ -43,11 +43,29 @@ public class HttpConnection implements Connection {
         return con;
     }
 
+    /**
+     * Encodes the input URL into a safe ASCII URL string
+     * @param url unescaped URL
+     * @return escaped URL
+     */
 	private static String encodeUrl(String url) {
-		if(url == null)
-			return null;
-    	return url.replaceAll(" ", "%20");
+        try {
+            URL u = new URL(url);
+            return encodeUrl(u).toExternalForm();
+        } catch (Exception e) {
+            return url;
+        }
 	}
+
+	private static URL encodeUrl(URL u) {
+        try {
+            //  odd way to encode urls, but it works!
+            final URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+            return new URL(uri.toASCIIString());
+        } catch (Exception e) {
+            return u;
+        }
+    }
 
     private static String encodeMimeName(String val) {
         if (val == null)
@@ -293,7 +311,61 @@ public class HttpConnection implements Connection {
 
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
-            return getHeaderCaseInsensitive(name);
+            String val = getHeaderCaseInsensitive(name);
+            if (val != null) {
+                // headers should be ISO8859 - but values are often actually UTF-8. Test if it looks like UTF8 and convert if so
+                val = fixHeaderEncoding(val);
+            }
+            return val;
+        }
+
+        private static String fixHeaderEncoding(String val) {
+            try {
+                byte[] bytes = val.getBytes("ISO-8859-1");
+                if (!looksLikeUtf8(bytes))
+                    return val;
+                return new String(bytes, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // shouldn't happen as these both always exist
+                return val;
+            }
+        }
+
+        private static boolean looksLikeUtf8(byte[] input) {
+            int i = 0;
+            // BOM:
+            if (input.length >= 3 && (input[0] & 0xFF) == 0xEF
+                && (input[1] & 0xFF) == 0xBB & (input[2] & 0xFF) == 0xBF) {
+                i = 3;
+            }
+
+            int end;
+            for (int j = input.length; i < j; ++i) {
+                int o = input[i];
+                if ((o & 0x80) == 0) {
+                    continue; // ASCII
+                }
+
+                // UTF-8 leading:
+                if ((o & 0xE0) == 0xC0) {
+                    end = i + 1;
+                } else if ((o & 0xF0) == 0xE0) {
+                    end = i + 2;
+                } else if ((o & 0xF8) == 0xF0) {
+                    end = i + 3;
+                } else {
+                    return false;
+                }
+
+                while (i < end) {
+                    i++;
+                    o = input[i];
+                    if ((o & 0xC0) != 0x80) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public T header(String name, String value) {
@@ -587,7 +659,8 @@ public class HttpConnection implements Connection {
                     String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
-                    req.url(StringUtil.resolve(req.url(), encodeUrl(location)));
+                    URL redir = StringUtil.resolve(req.url(), location);
+                    req.url(encodeUrl(redir));
 
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());

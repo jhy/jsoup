@@ -11,6 +11,12 @@ jsoup changelog
 
  * Added Node.root() to get the topmost ancestor of a Node.
 
+ * In Jsoup.Connect, now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
+   the header value appropriately.
+
+ * Bugfix: in Jsoup.Connect, URLs containing non-URL-safe characters were not encoded to URL safe correctly.
+   <https://github.com/jhy/jsoup/issues/706>
+
  * Bugfix: a "SYSTEM" flag in doctype tags would be incorrectly removed.
    <https://github.com/jhy/jsoup/issues/408>
 
