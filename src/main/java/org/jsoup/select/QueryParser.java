@@ -162,6 +162,8 @@ public class QueryParser {
             contains(false);
         else if (tq.matches(":containsOwn("))
             contains(true);
+        else if (tq.matches(":containsData("))
+            containsData();
         else if (tq.matches(":matches("))
             matches(false);
         else if (tq.matches(":matchesOwn("))
@@ -337,6 +339,14 @@ public class QueryParser {
             evals.add(new Evaluator.ContainsOwnText(searchText));
         else
             evals.add(new Evaluator.ContainsText(searchText));
+    }
+
+    // pseudo selector :containsData(data)
+    private void containsData() {
+        tq.consume(":containsData");
+        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+        Validate.notEmpty(searchText, ":containsData(text) query must not be empty");
+        evals.add(new Evaluator.ContainsData(searchText));
     }
 
     // :matches(regex), matchesOwn(regex)

@@ -11,6 +11,8 @@ jsoup changelog
 
  * Added Node.root() to get the topmost ancestor of a Node.
 
+ * Added the new selector :containsData(), to find elements that hold data, like script and style tags.
+
  * Allow the Jsoup.Connect thread to be interrupted when reading the input stream; helps when reading from a long stream
    of data that doesn't read timeout.
    <https://github.com/jhy/jsoup/pull/712>
@@ -31,6 +33,8 @@ jsoup changelog
    <https://github.com/jhy/jsoup/issues/408>
 
  * Bugfix: removing attributes from an Element with removeAttr() would cause a ConcurrentModificationException.
+
+ * Bugfix: the contents of Comment nodes were not returned by Element.data()
 
 *** Release 1.10.1 [2016-Oct-23]
  * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML

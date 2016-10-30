@@ -692,4 +692,26 @@ public class SelectorTest {
         assertEquals("One", doc.select("div[data=\"End]\"").first().text());
         assertEquals("Two", doc.select("div[data=\"[Another)]]\"").first().text());
     }
+
+    @Test public void containsData() {
+        String html = "<p>jsoup</p><script>jsoup</script><span><!-- comments --></span>";
+        Document doc = Jsoup.parse(html);
+        Element body = doc.body();
+
+        Elements dataEls1 = body.select(":containsData(jsoup)");
+        Elements dataEls2 = body.select("script:containsData(jsoup)");
+        Elements dataEls3 = body.select("span:containsData(comments)");
+        Elements dataEls4 = body.select(":containsData(s)");
+
+        assertEquals(2, dataEls1.size()); // body and script
+        assertEquals(1, dataEls2.size());
+        assertEquals(dataEls1.last(), dataEls2.first());
+        assertEquals("<script>jsoup</script>", dataEls2.outerHtml());
+        assertEquals(1, dataEls3.size());
+        assertEquals("span", dataEls3.first().tagName());
+        assertEquals(3, dataEls4.size());
+        assertEquals("body", dataEls4.first().tagName());
+        assertEquals("script", dataEls4.get(1).tagName());
+        assertEquals("span", dataEls4.get(2).tagName());
+    }
 }

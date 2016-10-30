@@ -1036,6 +1036,9 @@ public class Element extends Node {
             if (childNode instanceof DataNode) {
                 DataNode data = (DataNode) childNode;
                 sb.append(data.getWholeData());
+            } else if (childNode instanceof Comment) {
+                Comment comment = (Comment) childNode;
+                sb.append(comment.getData());
             } else if (childNode instanceof Element) {
                 Element element = (Element) childNode;
                 String elementData = element.data();

@@ -658,7 +658,28 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":contains(%s", searchText);
+            return String.format(":contains(%s)", searchText);
+        }
+    }
+
+    /**
+     * Evaluator for matching Element (and its descendants) data
+     */
+    public static final class ContainsData extends Evaluator {
+        private String searchText;
+
+        public ContainsData(String searchText) {
+            this.searchText = searchText.toLowerCase();
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.data().toLowerCase().contains(searchText));
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":containsData(%s)", searchText);
         }
     }
 
@@ -679,7 +700,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":containsOwn(%s", searchText);
+            return String.format(":containsOwn(%s)", searchText);
         }
     }
 
@@ -701,7 +722,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":matches(%s", pattern);
+            return String.format(":matches(%s)", pattern);
         }
     }
 
@@ -723,7 +744,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":matchesOwn(%s", pattern);
+            return String.format(":matchesOwn(%s)", pattern);
         }
     }
 }
