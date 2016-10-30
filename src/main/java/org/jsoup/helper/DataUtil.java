@@ -139,7 +139,8 @@ public final class DataUtil {
     }
 
     /**
-     * Read the input stream into a byte buffer.
+     * Read the input stream into a byte buffer. To deal with slow input streams, you may interrupt the thread this
+     * method is executing on. The data read until being interrupted will be available.
      * @param inStream the input stream to read from
      * @param maxSize the maximum size in bytes to read from the stream. Set to 0 to be unlimited.
      * @return the filled byte buffer
@@ -153,7 +154,7 @@ public final class DataUtil {
         int read;
         int remaining = maxSize;
 
-		while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.interrupted()) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
@@ -165,11 +166,7 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
-        
-		if (Thread.currentThread().isInterrupted()) {
-			Thread.interrupted();
-			throw new IOException("JSoup thread has been interrupted");
-		}
+
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 

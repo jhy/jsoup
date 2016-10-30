@@ -11,6 +11,10 @@ jsoup changelog
 
  * Added Node.root() to get the topmost ancestor of a Node.
 
+ * Allow the Jsoup.Connect thread to be interrupted when reading the input stream; helps when reading from a long stream
+   of data that doesn't read timeout.
+   <https://github.com/jhy/jsoup/pull/712>
+
  * In Jsoup.Connect, now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
    the header value appropriately.
 

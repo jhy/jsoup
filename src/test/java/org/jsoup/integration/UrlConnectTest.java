@@ -771,4 +771,29 @@ public class UrlConnectTest {
             doc.location()
         );
     }
+
+    @Test public void canInterruptRead() throws IOException, InterruptedException {
+        final String[] body = new String[1];
+        Thread runner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
+                        .timeout(10 * 1000)
+                        .execute();
+                    body[0] = res.body();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        runner.start();
+        Thread.sleep(1000 * 5);
+        runner.interrupt();
+        assertTrue(runner.isInterrupted());
+        runner.join();
+
+        assertTrue(body[0].length() > 0);
+    }
 }
