@@ -761,4 +761,14 @@ public class UrlConnectTest {
             doc.location()
             );
     }
+
+    @Test
+    public void inWildUtfRedirect2() throws IOException {
+        Connection.Response res = Jsoup.connect("https://ssl.souq.com/sa-en/2724288604627/s").execute();
+        Document doc = res.parse();
+        assertEquals(
+            "http://saudi.souq.com/sa-en/%D8%AE%D8%B2%D9%86%D8%A9-%D8%A2%D9%85%D9%86%D8%A9-3-%D8%B7%D8%A8%D9%82%D8%A7%D8%AA-%D8%A8%D9%86%D8%B8%D8%A7%D9%85-%D9%82%D9%81%D9%84-%D8%A5%D9%84%D9%83%D8%AA%D8%B1%D9%88%D9%86%D9%8A-bsd11523-6831477/i/?ctype=dsrch",
+            doc.location()
+        );
+    }
 }
