@@ -153,7 +153,7 @@ public final class DataUtil {
         int read;
         int remaining = maxSize;
 
-        while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
@@ -165,6 +165,11 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
+        
+		if (Thread.currentThread().isInterrupted()) {
+			Thread.interrupted();
+			throw new IOException("JSoup thread has been interrupted");
+		}
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 
