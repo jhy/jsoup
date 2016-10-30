@@ -995,4 +995,10 @@ public class ElementTest {
         assertFalse(q.is("p a"));
         assertFalse(q.is("a"));
     }
+
+
+    @Test public void elementByTagName() {
+        Element a = new Element("P");
+        assertTrue(a.tagName().equals("P"));
+    }
 }

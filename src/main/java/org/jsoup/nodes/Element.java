@@ -39,6 +39,14 @@ public class Element extends Node {
     private static final Pattern classSplit = Pattern.compile("\\s+");
 
     /**
+     * Create a new, standalone element.
+     * @param tag tag name
+     */
+    public Element(String tag) {
+        this(Tag.valueOf(tag), "", new Attributes());
+    }
+
+    /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
      * @param tag tag of this element
