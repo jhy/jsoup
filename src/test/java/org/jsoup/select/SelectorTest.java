@@ -327,10 +327,10 @@ public class SelectorTest {
         String h = "<dIv tItle=bAr><div>"; // mixed case so a simple toLowerCase() on value doesn't catch
         Document doc = Jsoup.parse(h);
 
-        assertEquals(2, doc.select("DIV").size());
-        assertEquals(1, doc.select("DIV[TITLE]").size());
-        assertEquals(1, doc.select("DIV[TITLE=BAR]").size());
-        assertEquals(0, doc.select("DIV[TITLE=BARBARELLA").size());
+        assertEquals(2, doc.select("DiV").size());
+        assertEquals(1, doc.select("DiV[TiTLE]").size());
+        assertEquals(1, doc.select("DiV[TiTLE=BAR]").size());
+        assertEquals(0, doc.select("DiV[TiTLE=BARBARELLA").size());
     }
 
     @Test public void adjacentSiblings() {
