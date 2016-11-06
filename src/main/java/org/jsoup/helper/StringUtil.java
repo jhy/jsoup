@@ -14,7 +14,7 @@ public final class StringUtil {
     private static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          "};
 
     /**
-     * Join a collection of strings by a seperator
+     * Join a collection of strings by a separator
      * @param strings collection of string objects
      * @param sep string to place between strings
      * @return joined string
@@ -24,7 +24,7 @@ public final class StringUtil {
     }
 
     /**
-     * Join a collection of strings by a seperator
+     * Join a collection of strings by a separator
      * @param strings iterator of string objects
      * @param sep string to place between strings
      * @return joined string
@@ -64,7 +64,7 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a string is blank: null, emtpy, or only whitespace (" ", \r\n, \t, etc)
+     * Tests if a string is blank: null, empty, or only whitespace (" ", \r\n, \t, etc)
      * @param string string to test
      * @return if string is blank
      */
@@ -83,7 +83,7 @@ public final class StringUtil {
     /**
      * Tests if a string is numeric, i.e. contains only digit characters
      * @param string string to test
-     * @return true if only digit chars, false if empty or null or contains non-digit chrs
+     * @return true if only digit chars, false if empty or null or contains non-digit chars
      */
     public static boolean isNumeric(String string) {
         if (string == null || string.length() == 0)
@@ -160,7 +160,7 @@ public final class StringUtil {
 
     /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
-     * @param base the existing absolulte base URL
+     * @param base the existing absolute base URL
      * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
      * @return the resolved absolute URL
      * @throws MalformedURLException if an error occurred generating the URL

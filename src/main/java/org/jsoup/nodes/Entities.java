@@ -112,7 +112,7 @@ public class Entities {
     }
 
     /**
-     * Get the character(s) represented by the named entitiy
+     * Get the character(s) represented by the named entity
      *
      * @param name entity (e.g. "lt" or "amp")
      * @return the string value of the character(s) represented by this entity, or "" if not defined
