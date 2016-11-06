@@ -164,7 +164,7 @@ public class Tag {
     /**
      * Get if this tag should preserve whitespace within child text nodes.
      *
-     * @return if preserve whitepace
+     * @return if preserve whitespace
      */
     public boolean preserveWhitespace() {
         return preserveWhitespace;

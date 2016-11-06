@@ -140,7 +140,7 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     * Disable/enable TSL certificates validation for HTTPS requests.
+     * Disable/enable TLS certificates validation for HTTPS requests.
      * <p>
      * By default this is <b>true</b>; all
      * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
@@ -153,7 +153,7 @@ public interface Connection {
      * <p>
      * <b>Be careful</b> and understand why you need to disable these validations.
      * </p>
-     * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
+     * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
      * @return this Connection, for chaining
      */
     Connection validateTLSCertificates(boolean value);
@@ -168,7 +168,7 @@ public interface Connection {
     Connection data(String key, String value);
 
     /**
-     * Add an input stream as a request data paramater. For GETs, has no effect, but for POSTS this will upload the
+     * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
      * input stream.
      * @param key data key (form item name)
      * @param filename the name of the file to present to the remove server. Typically just the name, not path,
