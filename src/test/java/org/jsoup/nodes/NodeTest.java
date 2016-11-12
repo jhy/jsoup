@@ -157,6 +157,21 @@ public class NodeTest {
         assertNull(doc.parent());
     }
 
+    @Test public void root() {
+        Document doc = Jsoup.parse("<div><p>Hello");
+        Element p = doc.select("p").first();
+        Node root = p.root();
+        assertTrue(doc == root);
+        assertNull(root.parent());
+        assertTrue(doc.root() == doc);
+        assertTrue(doc.root() == doc.ownerDocument());
+
+        Element standAlone = new Element(Tag.valueOf("p"), "");
+        assertTrue(standAlone.parent() == null);
+        assertTrue(standAlone.root() == standAlone);
+        assertTrue(standAlone.ownerDocument() == null);
+    }
+
     @Test public void before() {
         Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
         Element newNode = new Element(Tag.valueOf("em"), "");

@@ -26,6 +26,13 @@ import static org.jsoup.Connection.Method.HEAD;
  */
 public class HttpConnection implements Connection {
     public static final String  CONTENT_ENCODING = "Content-Encoding";
+    /**
+     * Many users would get caught by not setting a user-agent and therefore getting different responses on their desktop
+     * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
+     */
+    public static final String DEFAULT_UA =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
+    private static final String USER_AGENT = "User-Agent";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
@@ -43,11 +50,29 @@ public class HttpConnection implements Connection {
         return con;
     }
 
+    /**
+     * Encodes the input URL into a safe ASCII URL string
+     * @param url unescaped URL
+     * @return escaped URL
+     */
 	private static String encodeUrl(String url) {
-		if(url == null)
-			return null;
-    	return url.replaceAll(" ", "%20");
+        try {
+            URL u = new URL(url);
+            return encodeUrl(u).toExternalForm();
+        } catch (Exception e) {
+            return url;
+        }
 	}
+
+	private static URL encodeUrl(URL u) {
+        try {
+            //  odd way to encode urls, but it works!
+            final URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+            return new URL(uri.toASCIIString());
+        } catch (Exception e) {
+            return u;
+        }
+    }
 
     private static String encodeMimeName(String val) {
         if (val == null)
@@ -90,7 +115,7 @@ public class HttpConnection implements Connection {
 
     public Connection userAgent(String userAgent) {
         Validate.notNull(userAgent, "User agent must not be null");
-        req.header("User-Agent", userAgent);
+        req.header(USER_AGENT, userAgent);
         return this;
     }
 
@@ -193,6 +218,14 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection headers(Map<String,String> headers) {
+        Validate.notNull(headers, "Header map must not be null");
+        for (Map.Entry<String,String> entry : headers.entrySet()) {
+            req.header(entry.getKey(),entry.getValue());
+        }
+        return this;
+    }
+
     public Connection cookie(String name, String value) {
         req.cookie(name, value);
         return this;
@@ -285,7 +318,61 @@ public class HttpConnection implements Connection {
 
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
-            return getHeaderCaseInsensitive(name);
+            String val = getHeaderCaseInsensitive(name);
+            if (val != null) {
+                // headers should be ISO8859 - but values are often actually UTF-8. Test if it looks like UTF8 and convert if so
+                val = fixHeaderEncoding(val);
+            }
+            return val;
+        }
+
+        private static String fixHeaderEncoding(String val) {
+            try {
+                byte[] bytes = val.getBytes("ISO-8859-1");
+                if (!looksLikeUtf8(bytes))
+                    return val;
+                return new String(bytes, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                // shouldn't happen as these both always exist
+                return val;
+            }
+        }
+
+        private static boolean looksLikeUtf8(byte[] input) {
+            int i = 0;
+            // BOM:
+            if (input.length >= 3 && (input[0] & 0xFF) == 0xEF
+                && (input[1] & 0xFF) == 0xBB & (input[2] & 0xFF) == 0xBF) {
+                i = 3;
+            }
+
+            int end;
+            for (int j = input.length; i < j; ++i) {
+                int o = input[i];
+                if ((o & 0x80) == 0) {
+                    continue; // ASCII
+                }
+
+                // UTF-8 leading:
+                if ((o & 0xE0) == 0xC0) {
+                    end = i + 1;
+                } else if ((o & 0xF0) == 0xE0) {
+                    end = i + 2;
+                } else if ((o & 0xF8) == 0xF0) {
+                    end = i + 3;
+                } else {
+                    return false;
+                }
+
+                while (i < end) {
+                    i++;
+                    o = input[i];
+                    if ((o & 0xC0) != 0x80) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public T header(String name, String value) {
@@ -386,12 +473,13 @@ public class HttpConnection implements Connection {
         private String postDataCharset = DataUtil.defaultCharset;
 
         private Request() {
-            timeoutMilliseconds = 3000;
+            timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<Connection.KeyVal>();
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
+            headers.put(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
         }
 
@@ -582,7 +670,8 @@ public class HttpConnection implements Connection {
                     String location = res.header(LOCATION);
                     if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
-                    req.url(StringUtil.resolve(req.url(), encodeUrl(location)));
+                    URL redir = StringUtil.resolve(req.url(), location);
+                    req.url(encodeUrl(redir));
 
                     for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
                         req.cookie(cookie.getKey(), cookie.getValue());
@@ -655,6 +744,11 @@ public class HttpConnection implements Connection {
 
         public String charset() {
             return charset;
+        }
+
+        public Response charset(String charset) {
+            this.charset = charset;
+            return this;
         }
 
         public String contentType() {
@@ -855,7 +949,11 @@ public class HttpConnection implements Connection {
 
         private static String setOutputContentType(final Connection.Request req) {
             String bound = null;
-            if (needsMultipart(req)) {
+            if (req.hasHeader(CONTENT_TYPE)) {
+                // no-op; don't add content type as already set (e.g. for requestBody())
+                // todo - if content type already set, we could add charset or boundary if those aren't included
+            }
+            else if (needsMultipart(req)) {
                 bound = DataUtil.mimeBoundary();
                 req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
             } else {

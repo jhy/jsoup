@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.BooleanAttribute;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
@@ -90,4 +91,13 @@ public class AttributeParseTest {
         assertEquals(html, el.outerHtml());
     }
     
+    @Test public void dropsSlashFromAttributeName() {
+        String html = "<img /onerror='doMyJob'/>";
+        Document doc = Jsoup.parse(html);
+        assertTrue("SelfClosingStartTag ignores last character", doc.select("img[onerror]").size() != 0);
+        assertEquals("<img onerror=\"doMyJob\">", doc.body().html());
+
+        doc = Jsoup.parse(html, "", Parser.xmlParser());
+        assertEquals("<img onerror=\"doMyJob\" />", doc.html());
+    }
 }

@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -9,6 +10,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
 import java.io.IOException;
@@ -37,6 +39,14 @@ public class Element extends Node {
     private static final Pattern classSplit = Pattern.compile("\\s+");
 
     /**
+     * Create a new, standalone element.
+     * @param tag tag name
+     */
+    public Element(String tag) {
+        this(Tag.valueOf(tag), "", new Attributes());
+    }
+
+    /**
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
      * @param tag tag of this element
@@ -58,7 +68,7 @@ public class Element extends Node {
      * @param tag element tag
      * @param baseUri the base URI of this element. It is acceptable for the base URI to be an empty
      *            string, but not null.
-     * @see Tag#valueOf(String)
+     * @see Tag#valueOf(String, ParseSettings)
      */
     public Element(Tag tag, String baseUri) {
         this(tag, baseUri, new Attributes());
@@ -87,7 +97,7 @@ public class Element extends Node {
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName);
+        tag = Tag.valueOf(tagName, ParseSettings.preserveCase); // preserve the requested tag case
         return this;
     }
 
@@ -116,7 +126,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return attributes.get("id");
+        return attributes.getIgnoreCase("id");
     }
 
     /**
@@ -284,6 +294,24 @@ public class Element extends Node {
      */
     public Elements select(String cssQuery) {
         return Selector.select(cssQuery, this);
+    }
+
+    /**
+     * Check if this element matches the given {@link Selector} CSS query.
+     * @param cssQuery a {@link Selector} CSS query
+     * @return if this element matches the query
+     */
+    public boolean is(String cssQuery) {
+        return is(QueryParser.parse(cssQuery));
+    }
+
+    /**
+     * Check if this element matches the given evaluator.
+     * @param evaluator an element evaluator
+     * @return if this element matches
+     */
+    public boolean is(Evaluator evaluator) {
+        return evaluator.matches((Element)this.root(), this);
     }
     
     /**
@@ -668,7 +696,7 @@ public class Element extends Node {
      */
     public Elements getElementsByAttribute(String key) {
         Validate.notEmpty(key);
-        key = key.trim().toLowerCase();
+        key = key.trim();
 
         return Collector.collect(new Evaluator.Attribute(key), this);
     }
@@ -681,7 +709,7 @@ public class Element extends Node {
      */
     public Elements getElementsByAttributeStarting(String keyPrefix) {
         Validate.notEmpty(keyPrefix);
-        keyPrefix = keyPrefix.trim().toLowerCase();
+        keyPrefix = keyPrefix.trim();
 
         return Collector.collect(new Evaluator.AttributeStarting(keyPrefix), this);
     }
@@ -1008,6 +1036,9 @@ public class Element extends Node {
             if (childNode instanceof DataNode) {
                 DataNode data = (DataNode) childNode;
                 sb.append(data.getWholeData());
+            } else if (childNode instanceof Comment) {
+                Comment comment = (Comment) childNode;
+                sb.append(comment.getData());
             } else if (childNode instanceof Element) {
                 Element element = (Element) childNode;
                 String elementData = element.data();
@@ -1056,23 +1087,45 @@ public class Element extends Node {
      * @param className name of class to check for
      * @return true if it does, false if not
      */
-    /*
-    Used by common .class selector, so perf tweaked to reduce object creation vs hitting classnames().
-
-    Wiki: 71, 13 (5.4x)
-    CNN: 227, 91 (2.5x)
-    Alterslash: 59, 4 (14.8x)
-    Jsoup: 14, 1 (14x)
-    */
+    // performance sensitive
     public boolean hasClass(String className) {
-        String classAttr = attributes.get("class");
-        if (classAttr.equals("") || classAttr.length() < className.length())
-            return false;
+        final String classAttr = attributes.get("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
 
-        final String[] classes = classSplit.split(classAttr);
-        for (String name : classes) {
-            if (className.equalsIgnoreCase(name))
-                return true;
+        if (len == 0 || len < wantLen) {
+            return false;
+        }
+
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
+            return className.equalsIgnoreCase(classAttr);
+        }
+
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+
+        // check the last entry
+        if (inClass && len - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
         }
 
         return false;

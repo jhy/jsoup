@@ -36,7 +36,7 @@ public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
     private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
-    private static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
+    public static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
 
     @Test
     public void fetchURl() throws IOException {
@@ -114,6 +114,34 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void sendsRequestBodyJsonWithData() throws IOException {
+        final String body = "{key:value}";
+        Document doc = Jsoup.connect(echoURL)
+            .requestBody(body)
+            .header("Content-Type", "application/json")
+            .userAgent(browserUa)
+            .data("foo", "true")
+            .post();
+        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
+        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
+        assertEquals("foo=true", ihVal("QUERY_STRING", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
+    }
+
+    @Test
+    public void sendsRequestBodyJsonWithoutData() throws IOException {
+        final String body = "{key:value}";
+        Document doc = Jsoup.connect(echoURL)
+            .requestBody(body)
+            .header("Content-Type", "application/json")
+            .userAgent(browserUa)
+            .post();
+        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
+        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
+    }
+
+    @Test
     public void sendsRequestBody() throws IOException {
         final String body = "{key:value}";
         Document doc = Jsoup.connect(echoURL)
@@ -122,7 +150,8 @@ public class UrlConnectTest {
             .userAgent(browserUa)
             .post();
         assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals(body, ihVal("keywords", doc));
+        assertEquals("text/plain", ihVal("CONTENT_TYPE", doc));
+        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
     }
 
     @Test
@@ -184,7 +213,7 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/307.pl"); // http://jsoup.org
         Document doc = con.get();
         assertTrue(doc.title().contains("jsoup"));
-        assertEquals("https://jsoup.org", con.response().url().toString());
+        assertEquals("https://jsoup.org/", con.response().url().toString());
     }
 
     @Test
@@ -193,7 +222,7 @@ public class UrlConnectTest {
                 .data("Argument", "Riposte")
                 .method(Connection.Method.POST);
         Connection.Response res = con.execute();
-        assertEquals("https://jsoup.org", res.url().toExternalForm());
+        assertEquals("https://jsoup.org/", res.url().toExternalForm());
         assertEquals(Connection.Method.GET, res.method());
     }
 
@@ -281,7 +310,7 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void ignores500NoWithContentExceptionIfSoConfigured() throws IOException {
+    public void ignores500WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/500-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
@@ -290,7 +319,7 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void ignores200NoWithContentExceptionIfSoConfigured() throws IOException {
+    public void ignores200WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/200-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
@@ -299,11 +328,29 @@ public class UrlConnectTest {
     }
 
     @Test
+    public void handles200WithNoContent() throws IOException {
+        Connection con = Jsoup
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
+            .userAgent(browserUa);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(200, res.statusCode());
+
+        con = Jsoup
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
+            .parser(Parser.xmlParser())
+            .userAgent(browserUa);
+        res = con.execute();
+        doc = res.parse();
+        assertEquals(200, res.statusCode());
+    }
+
+    @Test
     public void doesntRedirectIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl").followRedirects(false);
         Connection.Response res = con.execute();
         assertEquals(302, res.statusCode());
-        assertEquals("https://jsoup.org", res.header("Location"));
+        assertEquals("http://jsoup.org", res.header("Location"));
     }
 
     @Test
@@ -529,7 +576,7 @@ public class UrlConnectTest {
     @Test
     public void handles201Created() throws IOException {
         Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
-        assertEquals("https://jsoup.org", doc.location());
+        assertEquals("https://jsoup.org/", doc.location());
     }
 
     @Test
@@ -642,5 +689,111 @@ public class UrlConnectTest {
             caught = true;
         }
         assertTrue(caught);
+    }
+
+    @Test
+    public void canSpecifyResponseCharset() throws IOException {
+        // both these docs have <80> in there as euro/control char depending on charset
+        String noCharsetUrl = "http://direct.infohound.net/tools/Windows-1252-nocharset.html";
+        String charsetUrl = "http://direct.infohound.net/tools/Windows-1252-charset.html";
+
+        // included in meta
+        Connection.Response res1 = Jsoup.connect(charsetUrl).execute();
+        assertEquals(null, res1.charset()); // not set in headers
+        final Document doc1 = res1.parse();
+        assertEquals("windows-1252", doc1.charset().displayName()); // but determined at parse time
+        assertEquals("Cost is €100", doc1.select("p").text());
+        assertTrue(res1.body().contains("€"));
+
+        // no meta, no override
+        Connection.Response res2 = Jsoup.connect(noCharsetUrl).execute();
+        assertEquals(null, res2.charset()); // not set in headers
+        final Document doc2 = res2.parse();
+        assertEquals("UTF-8", doc2.charset().displayName()); // so defaults to utf-8
+        assertEquals("Cost is �100", doc2.select("p").text());
+        assertTrue(res2.body().contains("�"));
+
+        // no meta, let's override
+        Connection.Response res3 = Jsoup.connect(noCharsetUrl).execute();
+        assertEquals(null, res3.charset()); // not set in headers
+        res3.charset("windows-1252");
+        assertEquals("windows-1252", res3.charset()); // read back
+        final Document doc3 = res3.parse();
+        assertEquals("windows-1252", doc3.charset().displayName()); // from override
+        assertEquals("Cost is €100", doc3.select("p").text());
+        assertTrue(res3.body().contains("€"));
+    }
+
+    @Test
+    public void handlesUnescapedRedirects() throws IOException {
+        // URL locations should be url safe (ascii) but are often not, so we should try to guess
+        // in this case the location header is utf-8, but defined in spec as iso8859, so detect, convert, encode
+        String url = "http://direct.infohound.net/tools/302-utf.pl";
+        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
+
+        Connection.Response res = Jsoup.connect(url).execute();
+        Document doc = res.parse();
+        assertEquals(doc.body().text(), "\uD83D\uDCA9!");
+        assertEquals(doc.location(), urlEscaped);
+
+        Connection.Response res2 = Jsoup.connect(url).followRedirects(false).execute();
+        assertEquals("/tools/test\uD83D\uDCA9.html", res2.header("Location"));
+        // if we didn't notice it was utf8, would look like: Location: /tools/testð©.html
+    }
+
+    @Test
+    public void handlesUt8fInUrl() throws IOException {
+        String url = "http://direct.infohound.net/tools/test\uD83D\uDCA9.html";
+        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
+
+        Connection.Response res = Jsoup.connect(url).execute();
+        Document doc = res.parse();
+        assertEquals("\uD83D\uDCA9!", doc.body().text());
+        assertEquals(urlEscaped, doc.location());
+    }
+
+    @Test
+    public void inWildUtfRedirect() throws IOException {
+        Connection.Response res = Jsoup.connect("http://brabantn.ws/Q4F").execute();
+        Document doc = res.parse();
+        assertEquals(
+            "http://www.omroepbrabant.nl/?news/2474781303/Gestrande+ree+in+Oss+niet+verdoofd,+maar+doodgeschoten+%E2%80%98Dit+kan+gewoon+niet,+bizar%E2%80%99+[VIDEO].aspx",
+            doc.location()
+            );
+    }
+
+    @Test
+    public void inWildUtfRedirect2() throws IOException {
+        Connection.Response res = Jsoup.connect("https://ssl.souq.com/sa-en/2724288604627/s").execute();
+        Document doc = res.parse();
+        assertEquals(
+            "http://saudi.souq.com/sa-en/%D8%AE%D8%B2%D9%86%D8%A9-%D8%A2%D9%85%D9%86%D8%A9-3-%D8%B7%D8%A8%D9%82%D8%A7%D8%AA-%D8%A8%D9%86%D8%B8%D8%A7%D9%85-%D9%82%D9%81%D9%84-%D8%A5%D9%84%D9%83%D8%AA%D8%B1%D9%88%D9%86%D9%8A-bsd11523-6831477/i/?ctype=dsrch",
+            doc.location()
+        );
+    }
+
+    @Test public void canInterruptRead() throws IOException, InterruptedException {
+        final String[] body = new String[1];
+        Thread runner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
+                        .timeout(10 * 1000)
+                        .execute();
+                    body[0] = res.body();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        runner.start();
+        Thread.sleep(1000 * 5);
+        runner.interrupt();
+        assertTrue(runner.isInterrupted());
+        runner.join();
+
+        assertTrue(body[0].length() > 0);
     }
 }

@@ -26,8 +26,7 @@ import java.util.regex.Pattern;
 public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
-    private static final int bufferSize = 0x20000; // ~130K.
-    private static final int UNICODE_BOM = 0xFEFF;
+    private static final int bufferSize = 60000;
     private static final char[] mimeBoundaryChars =
             "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     static final int boundaryLength = 32;
@@ -113,7 +112,7 @@ public final class DataUtil {
                 }
             }
             // look for <?xml encoding='ISO-8859-1'?>
-            if (foundCharset == null && doc.childNode(0) instanceof XmlDeclaration) {
+            if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
                 XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
                 if (prolog.name().equals("xml")) {
                     foundCharset = prolog.attr("encoding");
@@ -140,21 +139,22 @@ public final class DataUtil {
     }
 
     /**
-     * Read the input stream into a byte buffer.
+     * Read the input stream into a byte buffer. To deal with slow input streams, you may interrupt the thread this
+     * method is executing on. The data read until being interrupted will be available.
      * @param inStream the input stream to read from
      * @param maxSize the maximum size in bytes to read from the stream. Set to 0 to be unlimited.
      * @return the filled byte buffer
      * @throws IOException if an exception occurs whilst reading from the input stream.
      */
-    static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
+    public static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
         Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
         final boolean capped = maxSize > 0;
-        byte[] buffer = new byte[bufferSize];
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+        byte[] buffer = new byte[capped && maxSize < bufferSize ? maxSize : bufferSize];
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream(capped ? maxSize : bufferSize);
         int read;
         int remaining = maxSize;
 
-        while (true) {
+        while (!Thread.interrupted()) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
@@ -166,6 +166,7 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
+
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 

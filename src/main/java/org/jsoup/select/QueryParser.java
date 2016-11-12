@@ -12,7 +12,7 @@ import org.jsoup.parser.TokenQueue;
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
-class QueryParser {
+public class QueryParser {
     private final static String[] combinators = {",", ">", "+", "~", " "};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
@@ -144,7 +144,7 @@ class QueryParser {
             byId();
         else if (tq.matchChomp("."))
             byClass();
-        else if (tq.matchesWord())
+        else if (tq.matchesWord() || tq.matches("*|"))
             byTag();
         else if (tq.matches("["))
             byAttribute();
@@ -162,6 +162,8 @@ class QueryParser {
             contains(false);
         else if (tq.matches(":containsOwn("))
             contains(true);
+        else if (tq.matches(":containsData("))
+            containsData();
         else if (tq.matches(":matches("))
             matches(false);
         else if (tq.matches(":matchesOwn("))
@@ -206,18 +208,24 @@ class QueryParser {
     private void byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        evals.add(new Evaluator.Class(className.trim().toLowerCase()));
+        evals.add(new Evaluator.Class(className.trim()));
     }
 
     private void byTag() {
         String tagName = tq.consumeElementSelector();
+
         Validate.notEmpty(tagName);
 
-        // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
-        if (tagName.contains("|"))
-            tagName = tagName.replace("|", ":");
+        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
+        if (tagName.startsWith("*|")) {
+            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName.trim().toLowerCase()), new Evaluator.TagEndsWith(tagName.replace("*|", ":").trim().toLowerCase())));
+        } else {
+            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            if (tagName.contains("|"))
+                tagName = tagName.replace("|", ":");
 
-        evals.add(new Evaluator.Tag(tagName.trim().toLowerCase()));
+            evals.add(new Evaluator.Tag(tagName.trim()));
+        }
     }
 
     private void byAttribute() {
@@ -331,6 +339,14 @@ class QueryParser {
             evals.add(new Evaluator.ContainsOwnText(searchText));
         else
             evals.add(new Evaluator.ContainsText(searchText));
+    }
+
+    // pseudo selector :containsData(data)
+    private void containsData() {
+        tq.consume(":containsData");
+        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+        Validate.notEmpty(searchText, ":containsData(text) query must not be empty");
+        evals.add(new Evaluator.ContainsData(searchText));
     }
 
     // :matches(regex), matchesOwn(regex)

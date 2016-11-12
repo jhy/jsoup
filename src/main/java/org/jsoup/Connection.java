@@ -78,12 +78,13 @@ public interface Connection {
      * Set the request user-agent header.
      * @param userAgent user-agent to use
      * @return this Connection, for chaining
+     * @see org.jsoup.helper.HttpConnection#DEFAULT_UA
      */
     Connection userAgent(String userAgent);
 
     /**
      * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is 3 seconds (3000 millis). A timeout of zero is treated as an infinite timeout.
+     * timeout is <b<30 seconds</b> (30000 millis). A timeout of zero is treated as an infinite timeout.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
      */
@@ -228,6 +229,14 @@ public interface Connection {
      * @see org.jsoup.Connection.Request#headers()
      */
     Connection header(String name, String value);
+
+    /**
+     * Adds each of the supplied headers to the request.
+     * @param headers map of headers name {@literal ->} value pairs
+     * @return this Connection, for chaining
+     * @see org.jsoup.Connection.Request#headers()
+     */
+    Connection headers(Map<String,String> headers);
 
     /**
      * Set a cookie to be sent in the request.
@@ -619,10 +628,17 @@ public interface Connection {
         String statusMessage();
 
         /**
-         * Get the character set name of the response.
+         * Get the character set name of the response, derived from the content-type header.
          * @return character set name
          */
         String charset();
+
+        /**
+         * Set / override the response character set. When the document body is parsed it will be with this charset.
+         * @param charset to decode body as
+         * @return this Response, for chaining
+         */
+        Response charset(String charset);
 
         /**
          * Get the response content type (e.g. "text/html");

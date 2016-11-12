@@ -39,4 +39,13 @@ public class QueryParserTest {
         assertEquals("li :prevli :ImmediateParentol", andRight.toString());
         assertEquals(2, andLeft.evaluators.size());
     }
+
+    @Test public void exceptionOnUncloseAttribute() {
+        boolean threw = false;
+        try {Evaluator parse = QueryParser.parse("section > a[href=\"");}
+        catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+    }
 }
