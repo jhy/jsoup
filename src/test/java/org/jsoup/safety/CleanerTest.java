@@ -5,6 +5,7 @@ import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -241,5 +242,185 @@ public class CleanerTest {
         Whitelist whitelist = Whitelist.relaxed();
         whitelist.addTags( "script" );
         assertTrue( Jsoup.isValid("Hello<script>alert('Doh')</script>World !", whitelist ) );
+    }
+
+    @Test public void testValidAttributeValueBounded() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("^x-.*$"));
+        assertTrue(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testValidAttributeValueUnbounded() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertTrue(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testValidAttributeValueUnboundedPartialMatch() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertFalse(Jsoup.isValid("<p class=\"-x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testInvalidAttributeValueMatchNotFind() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertTrue(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testInvalidAttributeValueNotPrefixed() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertFalse(Jsoup.isValid("<p class=\"para\">Test</p>", whitelist));
+    }
+
+    @Test public void testInvalidAttributeValueWrongCase() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertFalse(Jsoup.isValid("<p class=\"X-PARA\">Test</p>", whitelist));
+    }
+
+    @Test public void testValidAttributeValueCaseInsensitive() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*$", true));
+        assertTrue(Jsoup.isValid("<p class=\"X-PARA\">Test</p>", whitelist));
+    }
+
+    @Test public void testOnePassSufficient() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*"));
+        assertTrue(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+        assertTrue(Jsoup.isValid("<p class=\"y-para\">Test</p>", whitelist));
+        assertTrue(Jsoup.isValid("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testRequiredMustPass() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*"));
+        assertFalse(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+        assertTrue(Jsoup.isValid("<p class=\"y-para\">Test</p>", whitelist));
+        assertFalse(Jsoup.isValid("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testAllRequiredMustPassInputFails() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*", false, true));
+        assertFalse(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+        assertFalse(Jsoup.isValid("<p class=\"y-para\">Test</p>", whitelist));
+        assertFalse(Jsoup.isValid("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testAllRequiredMustPassInputPasses() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("[a-z]-.*", false, true));
+        assertFalse(Jsoup.isValid("<p class=\"x-para\">Test</p>", whitelist));
+        assertTrue(Jsoup.isValid("<p class=\"y-para\">Test</p>", whitelist));
+        assertFalse(Jsoup.isValid("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testValidatedAttributeNotRequired() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertTrue(Jsoup.isValid("<p>Test</p>", whitelist));
+    }
+
+    @Test public void testValidAttributeSimpleSingle() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para"));
+        assertTrue(Jsoup.isValid("<p class=\"para\">Test</p>", whitelist));
+    }
+    
+    @Test public void testValidAttributeSimpleMultiple() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para", "section"));
+        assertTrue(Jsoup.isValid("<p class=\"para\">Test</p><p class=\"section\">Test</p>", whitelist));
+    }
+    
+    @Test public void testValidAttributeSimpleMultipleUnsafe() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para", "section"));
+        assertFalse(Jsoup.isValid("<p class=\"para\">Test</p><p class=\"unsafe\">Test</p><p class=\"section\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidAttributeValueBounded() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("^x-.*$"));
+        assertEquals("<p class=\"x-para\">Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidAttributeValueUnbounded() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertEquals("<p class=\"x-para\">Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidAttributeValueUnboundedPartialMatch() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"-x-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanInvalidAttributeValueNotPrefixed() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanInvalidAttributeValueWrongCase() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"X-PARA\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidAttributeValueCaseInsensitive() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class",
+                new PatternValueValidator("x-.*$", true));
+        assertEquals("<p class=\"X-PARA\">Test</p>", Jsoup.clean("<p class=\"X-PARA\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanOnePassSufficient() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*"));
+        assertEquals("<p class=\"x-para\">Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+        assertEquals("<p class=\"y-para\">Test</p>", Jsoup.clean("<p class=\"y-para\">Test</p>", whitelist));
+        assertEquals("<p class=\"z-para\">Test</p>", Jsoup.clean("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanRequiredMustPass() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*"));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+        assertEquals("<p class=\"y-para\">Test</p>", Jsoup.clean("<p class=\"y-para\">Test</p>", whitelist));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanAllRequiredMustPassInputFails() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("z-.*", false, true));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"y-para\">Test</p>", whitelist));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanAllRequiredMustPassInputPasses() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"))
+                .addAttributeValidator("p", "class", new PatternValueValidator("y-.*", false, true))
+                .addAttributeValidator("p", "class", new PatternValueValidator("[a-z]-.*", false, true));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"x-para\">Test</p>", whitelist));
+        assertEquals("<p class=\"y-para\">Test</p>", Jsoup.clean("<p class=\"y-para\">Test</p>", whitelist));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p class=\"z-para\">Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidatedAttributeNotRequired() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new PatternValueValidator("x-.*"));
+        assertEquals("<p>Test</p>", Jsoup.clean("<p>Test</p>", whitelist));
+    }
+
+    @Test public void testCleanValidAttributeSimpleSingle() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para"));
+        assertEquals("<p class=\"para\">Test</p>", Jsoup.clean("<p class=\"para\">Test</p>", whitelist));
+    }
+    
+    @Test public void testCleanValidAttributeSimpleMultiple() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para", "section"));
+        String cleanHtml = Jsoup.clean("<p class=\"para\">Test</p><p class=\"section\">Test</p>", whitelist);
+        assertEquals("<p class=\"para\">Test</p><p class=\"section\">Test</p>", TextUtil.stripNewlines(cleanHtml));
+    }
+    
+    @Test public void testCleanValidAttributeSimpleMultipleUnsafe() {
+        Whitelist whitelist = Whitelist.none().addAttributeValidator("p", "class", new SimpleValueValidator("para", "section"));
+        String cleanHtml = Jsoup.clean("<p class=\"para\">Test</p><p class=\"unsafe\">Test</p><p class=\"section\">Test</p>", whitelist);
+        assertEquals("<p class=\"para\">Test</p><p>Test</p><p class=\"section\">Test</p>", TextUtil.stripNewlines(cleanHtml));
     }
 }
