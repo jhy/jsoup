@@ -683,6 +683,7 @@ public class HttpConnection implements Connection {
                 if (contentType != null
                         && !req.ignoreContentType()
                         && !contentType.startsWith("text/")
+		        && !contentType.equalsIgnoreCase("application/json")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
                         )
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
