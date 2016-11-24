@@ -23,6 +23,8 @@ jsoup changelog
 
  * Increased the default connect/read timeout in Jsoup.Connect to 30 seconds.
 
+ * In Whitelists, validate that a removed protocol exists before removing said protocol.
+
  * Jsoup.Connect now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
    the header value appropriately. This improves compatibility with servers that are configured incorrectly.
 

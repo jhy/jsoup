@@ -5,6 +5,7 @@ import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -241,5 +242,15 @@ public class CleanerTest {
         Whitelist whitelist = Whitelist.relaxed();
         whitelist.addTags( "script" );
         assertTrue( Jsoup.isValid("Hello<script>alert('Doh')</script>World !", whitelist ) );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void bailsIfRemovingProtocolThatsNotSet() {
+        // a case that came up on the email list
+        Whitelist w = Whitelist.none();
+
+        // note no add tag, and removing protocol without adding first
+        w.addAttributes("a", "href");
+        w.removeProtocols("a", "href", "javascript"); // with no protocols enforced, this was a noop. Now validates.
     }
 }
