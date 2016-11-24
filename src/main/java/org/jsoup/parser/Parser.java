@@ -116,6 +116,22 @@ public class Parser {
     }
 
     /**
+     * Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
+     *
+     * @param fragmentHtml the fragment of HTML to parse
+     * @param context (optional) the element that this HTML fragment is being parsed for (i.e. for inner HTML). This
+     * provides stack context (for implicit element creation).
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @param errorList list to add errors to
+     *
+     * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
+     */
+    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri, ParseErrorList errorList) {
+        HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, errorList, treeBuilder.defaultSettings());
+    }
+
+    /**
      * Parse a fragment of XML into a list of nodes.
      *
      * @param fragmentXml the fragment of XML to parse

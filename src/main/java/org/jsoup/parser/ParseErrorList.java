@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * 
  * @author Jonathan Hedley
  */
-class ParseErrorList extends ArrayList<ParseError>{
+public class ParseErrorList extends ArrayList<ParseError>{
     private static final int INITIAL_CAPACITY = 16;
     private final int maxSize;
     
@@ -24,11 +24,11 @@ class ParseErrorList extends ArrayList<ParseError>{
         return maxSize;
     }
 
-    static ParseErrorList noTracking() {
+    public static ParseErrorList noTracking() {
         return new ParseErrorList(0, 0);
     }
     
-    static ParseErrorList tracking(int maxSize) {
+    public static ParseErrorList tracking(int maxSize) {
         return new ParseErrorList(INITIAL_CAPACITY, maxSize);
     }
 }

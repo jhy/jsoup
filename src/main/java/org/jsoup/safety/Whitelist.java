@@ -497,15 +497,23 @@ public class Whitelist {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
-        if (attributes.containsKey(tag)) {
-            if (attributes.get(tag).contains(key)) {
-                if (protocols.containsKey(tag)) {
-                    Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
-                    // ok if not defined protocol; otherwise test
-                    return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
-                } else { // attribute found, no protocols defined, so OK
-                    return true;
-                }
+        Set<AttributeKey> okSet = attributes.get(tag);
+        if (okSet != null && okSet.contains(key)) {
+            if (protocols.containsKey(tag)) {
+                Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
+                // ok if not defined protocol; otherwise test
+                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
+            } else { // attribute found, no protocols defined, so OK
+                return true;
+            }
+        }
+        // might be an enforced attribute?
+        Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
+        if (enforcedSet != null) {
+            Attributes expect = getEnforcedAttributes(tagName);
+            String attrKey = attr.getKey();
+            if (expect.hasKeyIgnoreCase(attrKey)) {
+                return expect.getIgnoreCase(attrKey).equals(attr.getValue());
             }
         }
         // no attributes defined for tag, try :all tag

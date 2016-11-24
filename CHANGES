@@ -25,6 +25,12 @@ jsoup changelog
 
  * In Whitelists, validate that a removed protocol exists before removing said protocol.
 
+ * Changed Jsoup.isValid(bodyHtml) to validate that the input contains only body HTML that is safe according to the
+   whitelist, and does not include HTML errors. And in the Jsoup.Cleaner.isValid(Document) method, make sure the doc
+   only includes body HTML.
+   <https://github.com/jhy/jsoup/issues/245>
+   <https://github.com/jhy/jsoup/issues/632>
+
  * Jsoup.Connect now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
    the header value appropriately. This improves compatibility with servers that are configured incorrectly.
 
