@@ -44,6 +44,8 @@ jsoup changelog
 
  * Bugfix: the contents of Comment nodes were not returned by Element.data()
 
+ * Bugfix: if source checked out on Windows with git autocrlf=true, Entities.load would fail because of the \r char.
+
 *** Release 1.10.1 [2016-Oct-23]
  * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML
    parser will continue to normalize tag names and attribute names to lower case, and the XML parser will now preserve

@@ -321,7 +321,12 @@ public class Entities {
                 } else {
                     cp2 = empty;
                 }
-                final int index = Integer.parseInt(reader.consumeTo('\n'), codepointRadix);
+                String indexS = reader.consumeTo('\n');
+                // default git checkout on windows will add a \r there, so remove
+                if (indexS.charAt(indexS.length() - 1) == '\r') {
+                    indexS = indexS.substring(0, indexS.length() - 1);
+                }
+                final int index = Integer.parseInt(indexS, codepointRadix);
                 reader.advance();
 
                 e.nameKeys[i] = name;
