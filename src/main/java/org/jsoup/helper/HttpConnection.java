@@ -675,9 +675,25 @@ public class HttpConnection implements Connection {
                     }
                     return execute(req, res);
                 }
-                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
-
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors()){
+				    //return body conent when is error
+                    InputStream bodyStream = null;
+                    String error = "HTTP error fetching URL";
+                    String detail = "";
+                    try {
+                        bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                        if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")){
+                            bodyStream = new GZIPInputStream(bodyStream);
+                        }
+                        if(bodyStream!=null){
+                            ByteBuffer errorBuffer = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                            detail = Charset.forName(DataUtil.defaultCharset).decode(errorBuffer).toString();
+                        }
+                    } finally {
+                        if (bodyStream != null) bodyStream.close();
+                    }
+                    throw new HttpStatusException(error, status, req.url().toString(),detail);
+                }
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
                 if (contentType != null

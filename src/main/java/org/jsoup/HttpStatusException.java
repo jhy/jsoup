@@ -8,11 +8,13 @@ import java.io.IOException;
 public class HttpStatusException extends IOException {
     private int statusCode;
     private String url;
-
-    public HttpStatusException(String message, int statusCode, String url) {
+    private String errorDetail;
+    
+    public HttpStatusException(String message, int statusCode, String url,String errorDetail) {
         super(message);
         this.statusCode = statusCode;
         this.url = url;
+        this.errorDetail = errorDetail;
     }
 
     public int getStatusCode() {
@@ -25,6 +27,12 @@ public class HttpStatusException extends IOException {
 
     @Override
     public String toString() {
-        return super.toString() + ". Status=" + statusCode + ", URL=" + url;
+        return super.toString() + ". Status=" + statusCode + ", URL=" + url+", errorDetail="+errorDetail;
     }
+
+    public String getErrorDetail() {
+        return errorDetail;
+    }
+
+  
 }
