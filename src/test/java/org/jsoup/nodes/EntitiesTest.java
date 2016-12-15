@@ -31,6 +31,45 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
+    @Test public void escapedSupplemtary() {
+        String text = "\uD835\uDD59";
+        String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
+        assertEquals("&#x1d559;", escapedAscii);
+        String escapedAsciiFull = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(extended));
+        assertEquals("&hopf;", escapedAsciiFull);
+        String escapedUtf= Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(extended));
+        assertEquals(text, escapedUtf);
+    }
+
+    @Test public void unescapeMultiChars() {
+        String text = "&NestedGreaterGreater; &nGg; &nGt; &nGtv; &Gt; &gg;"; // gg is not combo, but 8811 could conflict with NestedGreaterGreater or others
+        String un = "≫ ⋙̸ ≫⃒ ≫̸ ≫ ≫";
+        assertEquals(un, Entities.unescape(text));
+        String escaped = Entities.escape(un, new OutputSettings().charset("ascii").escapeMode(extended));
+        assertEquals("&Gt; &Gg;&#x338; &Gt;&#x20d2; &Gt;&#x338; &Gt; &Gt;", escaped);
+        assertEquals(un, Entities.unescape(escaped));
+    }
+
+    @Test public void xhtml() {
+        String text = "&amp; &gt; &lt; &quot;";
+        assertEquals(38, xhtml.codepointForName("amp"));
+        assertEquals(62, xhtml.codepointForName("gt"));
+        assertEquals(60, xhtml.codepointForName("lt"));
+        assertEquals(34, xhtml.codepointForName("quot"));
+
+        assertEquals("amp", xhtml.nameForCodepoint(38));
+        assertEquals("gt", xhtml.nameForCodepoint(62));
+        assertEquals("lt", xhtml.nameForCodepoint(60));
+        assertEquals("quot", xhtml.nameForCodepoint(34));
+    }
+
+    @Test public void getByName() {
+        assertEquals("≫⃒", Entities.getByName("nGt"));
+        assertEquals("fj", Entities.getByName("fjlig"));
+        assertEquals("≫", Entities.getByName("gg"));
+        assertEquals("©", Entities.getByName("copy"));
+    }
+
     @Test public void escapeSupplementaryCharacter() {
         String text = new String(Character.toChars(135361));
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
@@ -39,9 +78,21 @@ public class EntitiesTest {
         assertEquals(text, escapedUtf);
     }
 
+    @Test public void notMissingMultis() {
+        String text = "&nparsl;";
+        String un = "\u2AFD\u20E5";
+        assertEquals(un, Entities.unescape(text));
+    }
+
+    @Test public void notMissingSupplementals() {
+        String text = "&npolint; &qfr;";
+        String un = "⨔ \uD835\uDD2E"; // 𝔮
+        assertEquals(un, Entities.unescape(text));
+    }
+
     @Test public void unescape() {
-        String text = "Hello &amp;&LT&gt; &reg &angst; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;";
-        assertEquals("Hello &<> ® Å &angst π π 新 there &! ¾ © ©", Entities.unescape(text));
+        String text = "Hello &AElig; &amp;&LT&gt; &reg &angst; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;";
+        assertEquals("Hello Æ &<> ® Å &angst π π 新 there &! ¾ © ©", Entities.unescape(text));
 
         assertEquals("&0987654321; &unknown", Entities.unescape("&0987654321; &unknown"));
     }

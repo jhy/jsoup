@@ -52,6 +52,18 @@ public class HttpConnectionTest {
         assertEquals("deflate", res.header("accept-Encoding"));
     }
 
+    @Test public void headers() {
+        Connection con = HttpConnection.connect("http://example.com");
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("content-type", "text/html");
+        headers.put("Connection", "keep-alive");
+        headers.put("Host", "http://example.com");
+        con.headers(headers);
+        assertEquals("text/html", con.request().header("content-type"));
+        assertEquals("keep-alive", con.request().header("Connection"));
+        assertEquals("http://example.com", con.request().header("Host"));
+    }
+
     @Test public void sameHeadersCombineWithComma() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
         List<String> values = new ArrayList<String>();
@@ -104,12 +116,14 @@ public class HttpConnectionTest {
 
     @Test public void userAgent() {
         Connection con = HttpConnection.connect("http://example.com/");
+        assertEquals(HttpConnection.DEFAULT_UA, con.request().header("User-Agent"));
         con.userAgent("Mozilla");
         assertEquals("Mozilla", con.request().header("User-Agent"));
     }
 
     @Test public void timeout() {
         Connection con = HttpConnection.connect("http://example.com/");
+        assertEquals(30 * 1000, con.request().timeout());
         con.timeout(1000);
         assertEquals(1000, con.request().timeout());
     }
@@ -127,7 +141,7 @@ public class HttpConnectionTest {
         assertEquals(Connection.Method.POST, con.request().method());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsOnOdddData() {
+    @Test(expected=IllegalArgumentException.class) public void throwsOnOddData() {
         Connection con = HttpConnection.connect("http://example.com/");
         con.data("Name", "val", "what");
     }

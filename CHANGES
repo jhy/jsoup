@@ -1,5 +1,95 @@
 jsoup changelog
 
+*** Release 1.10.2 [PENDING]
+ * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
+   the HTML entity files. About 1.72x faster in this area.
+
+ * Added Element.is(query) to check if an element matches this CSS query.
+
+ * Added new methods to Elements: next(query), nextAll(query), prev(query), prevAll(query) to select next and previous
+   element siblings from a current selection, with optional selectors.
+
+ * Added Node.root() to get the topmost ancestor of a Node.
+
+ * Added the new selector :containsData(), to find elements that hold data, like script and style tags.
+
+ * Allow the Jsoup.Connect thread to be interrupted when reading the input stream; helps when reading from a long stream
+   of data that doesn't read timeout.
+   <https://github.com/jhy/jsoup/pull/712>
+
+ * Jsoup.Connect now uses a desktop user-agent by default. Many users were getting caught by not specifying a
+   user-agent, and so the default of 'Java' was used. That causes many servers to return different content than what
+   they would to a desktop browser, and what the developer was expecting.
+
+ * Increased the default connect/read timeout in Jsoup.Connect to 30 seconds.
+
+ * In Whitelists, validate that a removed protocol exists before removing said protocol.
+
+ * Changed Jsoup.isValid(bodyHtml) to validate that the input contains only body HTML that is safe according to the
+   whitelist, and does not include HTML errors. And in the Jsoup.Cleaner.isValid(Document) method, make sure the doc
+   only includes body HTML.
+   <https://github.com/jhy/jsoup/issues/245>
+   <https://github.com/jhy/jsoup/issues/632>
+
+ * Jsoup.Connect now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
+   the header value appropriately. This improves compatibility with servers that are configured incorrectly.
+
+ * Bugfix: in Jsoup.Connect, URLs containing non-URL-safe characters were not encoded to URL safe correctly.
+   <https://github.com/jhy/jsoup/issues/706>
+
+ * Bugfix: a "SYSTEM" flag in doctype tags would be incorrectly removed.
+   <https://github.com/jhy/jsoup/issues/408>
+
+ * Bugfix: removing attributes from an Element with removeAttr() would cause a ConcurrentModificationException.
+
+ * Bugfix: the contents of Comment nodes were not returned by Element.data()
+
+ * Bugfix: if source checked out on Windows with git autocrlf=true, Entities.load would fail because of the \r char.
+
+*** Release 1.10.1 [2016-Oct-23]
+ * New feature: added the option to preserve case for tags and/or attributes, with ParseSettings. By default, the HTML
+   parser will continue to normalize tag names and attribute names to lower case, and the XML parser will now preserve
+   case, according to the relevant spec. The CSS selectors for tags and attributes remain case insensitive, per the CSS
+   spec.
+
+ * Improved support for extended HTML entities, including supplemental characters and multiple character references.
+   Also reduced memory consumption of the entity tables.
+   <https://github.com/jhy/jsoup/issues/602>
+   <https://github.com/jhy/jsoup/issues/603>
+
+ * Added support for *|E wildcard namespace selectors.
+   <https://github.com/jhy/jsoup/pull/724>
+
+ * Added support for setting multiple connection headers at once with Connection.headers(Map)
+   <https://github.com/jhy/jsoup/pull/725>
+
+ * Added support for setting/overriding the response character set in Connection.Response, for cases where the charset
+   is not defined by the server, or is defined incorrectly.
+   <https://github.com/jhy/jsoup/issues/743>
+
+ * Improved performance of class selectors by reducing memory allocation and garbase collection.
+   <https://github.com/jhy/jsoup/pull/753>
+
+ * Improved performance of HTML output by reducing the creation of temporary attribute list iterators.
+   <https://github.com/jhy/jsoup/pull/755>
+
+ * Fixed an issue when converting to the W3CDom XML, where valid (but ugly) HTML attribute names containing characters
+   like '"' could not be converted into valid XML attribute names. These attribute names are now normalized if possible,
+   or not added to the XML DOM.
+   <https://github.com/jhy/jsoup/issues/721>
+
+ * Fixed an OOB exception when loading an empty-body URL and parsing with the XML parser.
+   <https://github.com/jhy/jsoup/issues/727>
+
+ * Fixed an issue where attribute names starting with a slash would be parsed incorrectly.
+   <https://github.com/jhy/jsoup/pull/748>
+
+ * Don't reuse charset encoders from OutputSettings, to make threadsafe.
+   <https://github.com/jhy/jsoup/issues/740>
+
+ * Fixed an issue in connections with a requestBody where a custom content-type header could be ignored.
+   <https://github.com/jhy/jsoup/issues/756>
+
 *** Release 1.9.2 [2016-May-17]
  * Fixed an issue where tag names that contained non-ascii characters but started with an ascii character
    would cause the parser to get stuck in an infinite loop.

@@ -42,7 +42,29 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().equals(tagName));
+            return (element.tagName().equalsIgnoreCase(tagName));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", tagName);
+        }
+    }
+
+
+    /**
+     * Evaluator for tag name that ends with
+     */
+    public static final class TagEndsWith extends Evaluator {
+        private String tagName;
+
+        public TagEndsWith(String tagName) {
+            this.tagName = tagName;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.tagName().endsWith(tagName));
         }
 
         @Override
@@ -124,14 +146,15 @@ public abstract class Evaluator {
         private String keyPrefix;
 
         public AttributeStarting(String keyPrefix) {
-            this.keyPrefix = keyPrefix;
+            Validate.notEmpty(keyPrefix);
+            this.keyPrefix = keyPrefix.toLowerCase();
         }
 
         @Override
         public boolean matches(Element root, Element element) {
             List<org.jsoup.nodes.Attribute> values = element.attributes().asList();
             for (org.jsoup.nodes.Attribute attribute : values) {
-                if (attribute.getKey().startsWith(keyPrefix))
+                if (attribute.getKey().toLowerCase().startsWith(keyPrefix))
                     return true;
             }
             return false;
@@ -635,7 +658,28 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":contains(%s", searchText);
+            return String.format(":contains(%s)", searchText);
+        }
+    }
+
+    /**
+     * Evaluator for matching Element (and its descendants) data
+     */
+    public static final class ContainsData extends Evaluator {
+        private String searchText;
+
+        public ContainsData(String searchText) {
+            this.searchText = searchText.toLowerCase();
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.data().toLowerCase().contains(searchText));
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":containsData(%s)", searchText);
         }
     }
 
@@ -656,7 +700,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":containsOwn(%s", searchText);
+            return String.format(":containsOwn(%s)", searchText);
         }
     }
 
@@ -678,7 +722,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":matches(%s", pattern);
+            return String.format(":matches(%s)", pattern);
         }
     }
 
@@ -700,7 +744,7 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":matchesOwn(%s", pattern);
+            return String.format(":matchesOwn(%s)", pattern);
         }
     }
 }

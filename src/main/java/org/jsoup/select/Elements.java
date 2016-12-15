@@ -440,8 +440,97 @@ public class Elements extends ArrayList<Element> {
      * @return true if at least one element in the list matches the query.
      */
     public boolean is(String query) {
-        Elements children = select(query);
-        return !children.isEmpty();
+        Evaluator eval = QueryParser.parse(query);
+        for (Element e : this) {
+            if (e.is(eval))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get the immediate next element sibling of each element in this list.
+     * @return next element siblings.
+     */
+    public Elements next() {
+        return siblings(null, true, false);
+    }
+
+    /**
+     * Get the immediate next element sibling of each element in this list, filtered by the query.
+     * @param query CSS query to match siblings against
+     * @return next element siblings.
+     */
+    public Elements next(String query) {
+        return siblings(query, true, false);
+    }
+
+    /**
+     * Get all of the following element siblings of each element in this list.
+     * @return all following element siblings.
+     */
+    public Elements nextAll() {
+        return siblings(null, true, true);
+    }
+
+    /**
+     * Get all of the following element siblings of each element in this list, filtered by the query.
+     * @param query CSS query to match siblings against
+     * @return all following element siblings.
+     */
+    public Elements nextAll(String query) {
+        return siblings(query, true, true);
+    }
+
+    /**
+     * Get the immediate previous element sibling of each element in this list.
+     * @return previous element siblings.
+     */
+    public Elements prev() {
+        return siblings(null, false, false);
+    }
+
+    /**
+     * Get the immediate previous element sibling of each element in this list, filtered by the query.
+     * @param query CSS query to match siblings against
+     * @return previous element siblings.
+     */
+    public Elements prev(String query) {
+        return siblings(query, false, false);
+    }
+
+    /**
+     * Get all of the previous element siblings of each element in this list.
+     * @return all previous element siblings.
+     */
+    public Elements prevAll() {
+        return siblings(null, false, true);
+    }
+
+    /**
+     * Get all of the previous element siblings of each element in this list, filtered by the query.
+     * @param query CSS query to match siblings against
+     * @return all previous element siblings.
+     */
+    public Elements prevAll(String query) {
+        return siblings(query, false, true);
+    }
+
+    private Elements siblings(String query, boolean next, boolean all) {
+        Elements els = new Elements();
+        Evaluator eval = query != null? QueryParser.parse(query) : null;
+        for (Element e : this) {
+            do {
+                Element sib = next ? e.nextElementSibling() : e.previousElementSibling();
+                if (sib == null) break;
+                if (eval == null)
+                    els.add(sib);
+                else if (sib.is(eval))
+                    els.add(sib);
+                e = sib;
+            } while (all);
+        }
+        return els;
     }
 
     /**

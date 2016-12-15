@@ -14,7 +14,8 @@ import static org.junit.Assert.*;
  */
 public class SelectorTest {
     @Test public void testByTag() {
-        Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><div id=3>").select("div");
+        // should be case insensitive
+        Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><DIV id=3>").select("DIV");
         assertEquals(3, els.size());
         assertEquals("1", els.get(0).id());
         assertEquals("2", els.get(1).id());
@@ -35,7 +36,7 @@ public class SelectorTest {
     }
 
     @Test public void testByClass() {
-        Elements els = Jsoup.parse("<p id=0 class='one two'><p id=1 class='one'><p id=2 class='two'>").select("p.one");
+        Elements els = Jsoup.parse("<p id=0 class='ONE two'><p id=1 class='one'><p id=2 class='two'>").select("P.One");
         assertEquals(2, els.size());
         assertEquals("0", els.get(0).id());
         assertEquals("1", els.get(1).id());
@@ -55,7 +56,7 @@ public class SelectorTest {
         Elements withTitle = doc.select("[title]");
         assertEquals(4, withTitle.size());
 
-        Elements foo = doc.select("[title=foo]");
+        Elements foo = doc.select("[TITLE=foo]");
         assertEquals(1, foo.size());
 
         Elements foo2 = doc.select("[title=\"foo\"]");
@@ -104,6 +105,27 @@ public class SelectorTest {
         assertEquals("2", byTagAttr.last().id());
 
         Elements byContains = doc.select("abc|def:contains(e)");
+        assertEquals(2, byContains.size());
+        assertEquals("1", byContains.first().id());
+        assertEquals("2", byContains.last().id());
+    }
+
+    @Test public void testWildcardNamespacedTag() {
+        Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>");
+        Elements byTag = doc.select("*|def");
+        assertEquals(2, byTag.size());
+        assertEquals("1", byTag.first().id());
+        assertEquals("2", byTag.last().id());
+
+        Elements byAttr = doc.select(".bold");
+        assertEquals(1, byAttr.size());
+        assertEquals("2", byAttr.last().id());
+
+        Elements byTagAttr = doc.select("*|def.bold");
+        assertEquals(1, byTagAttr.size());
+        assertEquals("2", byTagAttr.last().id());
+
+        Elements byContains = doc.select("*|def:contains(e)");
         assertEquals(2, byContains.size());
         assertEquals("1", byContains.first().id());
         assertEquals("2", byContains.last().id());
@@ -200,7 +222,7 @@ public class SelectorTest {
     @Test public void descendant() {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
-        Element root = doc.getElementsByClass("head").first();
+        Element root = doc.getElementsByClass("HEAD").first();
         
         Elements els = root.select(".head p");
         assertEquals(2, els.size());
@@ -305,10 +327,10 @@ public class SelectorTest {
         String h = "<dIv tItle=bAr><div>"; // mixed case so a simple toLowerCase() on value doesn't catch
         Document doc = Jsoup.parse(h);
 
-        assertEquals(2, doc.select("DIV").size());
-        assertEquals(1, doc.select("DIV[TITLE]").size());
-        assertEquals(1, doc.select("DIV[TITLE=BAR]").size());
-        assertEquals(0, doc.select("DIV[TITLE=BARBARELLA").size());
+        assertEquals(2, doc.select("DiV").size());
+        assertEquals(1, doc.select("DiV[TiTLE]").size());
+        assertEquals(1, doc.select("DiV[TiTLE=BAR]").size());
+        assertEquals(0, doc.select("DiV[TiTLE=BARBARELLA").size());
     }
 
     @Test public void adjacentSiblings() {
@@ -669,5 +691,27 @@ public class SelectorTest {
         assertEquals("Two", doc.select("div[data='[Another)]]'").first().text());
         assertEquals("One", doc.select("div[data=\"End]\"").first().text());
         assertEquals("Two", doc.select("div[data=\"[Another)]]\"").first().text());
+    }
+
+    @Test public void containsData() {
+        String html = "<p>jsoup</p><script>jsoup</script><span><!-- comments --></span>";
+        Document doc = Jsoup.parse(html);
+        Element body = doc.body();
+
+        Elements dataEls1 = body.select(":containsData(jsoup)");
+        Elements dataEls2 = body.select("script:containsData(jsoup)");
+        Elements dataEls3 = body.select("span:containsData(comments)");
+        Elements dataEls4 = body.select(":containsData(s)");
+
+        assertEquals(2, dataEls1.size()); // body and script
+        assertEquals(1, dataEls2.size());
+        assertEquals(dataEls1.last(), dataEls2.first());
+        assertEquals("<script>jsoup</script>", dataEls2.outerHtml());
+        assertEquals(1, dataEls3.size());
+        assertEquals("span", dataEls3.first().tagName());
+        assertEquals(3, dataEls4.size());
+        assertEquals("body", dataEls4.first().tagName());
+        assertEquals("script", dataEls4.get(1).tagName());
+        assertEquals("span", dataEls4.get(2).tagName());
     }
 }

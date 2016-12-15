@@ -346,13 +346,13 @@ public class TokenQueue {
     }
     
     /**
-     * Consume a CSS element selector (tag name, but | instead of : for namespaces, to not conflict with :pseudo selects).
+     * Consume a CSS element selector (tag name, but | instead of : for namespaces (or *| for wildcard namespace), to not conflict with :pseudo selects).
      * 
      * @return tag name
      */
     public String consumeElementSelector() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('|', '_', '-')))
+        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-")))
             pos++;
         
         return queue.substring(start, pos);

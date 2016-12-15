@@ -214,7 +214,62 @@ public class ElementTest {
         assertEquals(0, classes.size());
         assertFalse(doc.hasClass("mellow"));
     }
+    
+    @Test public void testHasClassDomMethods() {
+        Tag tag = Tag.valueOf("a");
+        Attributes attribs = new Attributes();
+        Element el = new Element(tag, "", attribs);
+        
+        attribs.put("class", "toto");
+        boolean hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " toto");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "toto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "\ttoto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "  toto ");
+        hasClass = el.hasClass("toto");
+        assertTrue(hasClass);
+        
+        attribs.put("class", "ab");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "     ");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "tototo");
+        hasClass = el.hasClass("toto");
+        assertFalse(hasClass);
+        
+        attribs.put("class", "raulpismuth  ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd  raulpismuth efgh ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd efgh raulpismuth");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+        
+        attribs.put("class", " abcd efgh raulpismuth ");
+        hasClass = el.hasClass("raulpismuth");
+        assertTrue(hasClass);
+    }
 
+    
     @Test public void testClassUpdates() {
         Document doc = Jsoup.parse("<div class='mellow yellow'></div>");
         Element div = doc.select("div").first();
@@ -299,8 +354,9 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.appendElement("p").text("there");
-        div.appendElement("P").attr("class", "second").text("now");
-        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><p class=\"second\">now</p></div></body></html>",
+        div.appendElement("P").attr("CLASS", "second").text("now");
+        // manually specifying tag and attributes should now preserve case, regardless of parse mode
+        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><P CLASS=\"second\">now</P></div></body></html>",
                 TextUtil.stripNewlines(doc.html()));
 
         // check sibling index (with short circuit on reindexChildren):
@@ -900,5 +956,49 @@ public class ElementTest {
         Elements els = doc.select("fb|comments");
         assertEquals(1, els.size());
         assertEquals("html > body > fb|comments", els.get(0).cssSelector());
+    }
+
+    @Test
+    public void testChainedRemoveAttributes() {
+        String html = "<a one two three four>Text</a>";
+        Document doc = Jsoup.parse(html);
+        Element a = doc.select("a").first();
+        a
+            .removeAttr("zero")
+            .removeAttr("one")
+            .removeAttr("two")
+            .removeAttr("three")
+            .removeAttr("four")
+            .removeAttr("five");
+        assertEquals("<a>Text</a>", a.outerHtml());
+    }
+
+    @Test
+    public void testIs() {
+        String html = "<div><p>One <a class=big>Two</a> Three</p><p>Another</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.select("p").first();
+
+        assertTrue(p.is("p"));
+        assertFalse(p.is("div"));
+        assertTrue(p.is("p:has(a)"));
+        assertTrue(p.is("p:first-child"));
+        assertFalse(p.is("p:last-child"));
+        assertTrue(p.is("*"));
+        assertTrue(p.is("div p"));
+
+        Element q = doc.select("p").last();
+        assertTrue(q.is("p"));
+        assertTrue(q.is("p ~ p"));
+        assertTrue(q.is("p + p"));
+        assertTrue(q.is("p:last-child"));
+        assertFalse(q.is("p a"));
+        assertFalse(q.is("a"));
+    }
+
+
+    @Test public void elementByTagName() {
+        Element a = new Element("P");
+        assertTrue(a.tagName().equals("P"));
     }
 }

@@ -45,17 +45,21 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     HtmlTreeBuilder() {}
 
-    @Override
-    Document parse(String input, String baseUri, ParseErrorList errors) {
-        state = HtmlTreeBuilderState.Initial;
-        baseUriSetFromDoc = false;
-        return super.parse(input, baseUri, errors);
+    ParseSettings defaultSettings() {
+        return ParseSettings.htmlDefault;
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors) {
+    @Override
+    Document parse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+        state = HtmlTreeBuilderState.Initial;
+        baseUriSetFromDoc = false;
+        return super.parse(input, baseUri, errors, settings);
+    }
+
+    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        initialiseParse(inputFragment, baseUri, errors);
+        initialiseParse(inputFragment, baseUri, errors, settings);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;
@@ -79,7 +83,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             else
                 tokeniser.transition(TokeniserState.Data); // default
 
-            root = new Element(Tag.valueOf("html"), baseUri);
+            root = new Element(Tag.valueOf("html", settings), baseUri);
             doc.appendChild(root);
             stack.add(root);
             resetInsertionMode();
@@ -178,13 +182,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
             return el;
         }
         
-        Element el = new Element(Tag.valueOf(startTag.name()), baseUri, startTag.attributes);
+        Element el = new Element(Tag.valueOf(startTag.name(), settings), baseUri, settings.normalizeAttributes(startTag.attributes));
         insert(el);
         return el;
     }
 
     Element insertStartTag(String startTagName) {
-        Element el = new Element(Tag.valueOf(startTagName), baseUri);
+        Element el = new Element(Tag.valueOf(startTagName, settings), baseUri);
         insert(el);
         return el;
     }
@@ -195,7 +199,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
-        Tag tag = Tag.valueOf(startTag.name());
+        Tag tag = Tag.valueOf(startTag.name(), settings);
         Element el = new Element(tag, baseUri, startTag.attributes);
         insertNode(el);
         if (startTag.isSelfClosing()) {
@@ -211,7 +215,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack) {
-        Tag tag = Tag.valueOf(startTag.name());
+        Tag tag = Tag.valueOf(startTag.name(), settings);
         FormElement el = new FormElement(tag, baseUri, startTag.attributes);
         setFormElement(el);
         insertNode(el);

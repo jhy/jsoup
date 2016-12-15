@@ -78,12 +78,13 @@ public interface Connection {
      * Set the request user-agent header.
      * @param userAgent user-agent to use
      * @return this Connection, for chaining
+     * @see org.jsoup.helper.HttpConnection#DEFAULT_UA
      */
     Connection userAgent(String userAgent);
 
     /**
      * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is 3 seconds (3000 millis). A timeout of zero is treated as an infinite timeout.
+     * timeout is <b<30 seconds</b> (30000 millis). A timeout of zero is treated as an infinite timeout.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
      */
@@ -139,7 +140,7 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     * Disable/enable TSL certificates validation for HTTPS requests.
+     * Disable/enable TLS certificates validation for HTTPS requests.
      * <p>
      * By default this is <b>true</b>; all
      * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
@@ -152,7 +153,7 @@ public interface Connection {
      * <p>
      * <b>Be careful</b> and understand why you need to disable these validations.
      * </p>
-     * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
+     * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
      * @return this Connection, for chaining
      */
     Connection validateTLSCertificates(boolean value);
@@ -167,7 +168,7 @@ public interface Connection {
     Connection data(String key, String value);
 
     /**
-     * Add an input stream as a request data paramater. For GETs, has no effect, but for POSTS this will upload the
+     * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
      * input stream.
      * @param key data key (form item name)
      * @param filename the name of the file to present to the remove server. Typically just the name, not path,
@@ -228,6 +229,14 @@ public interface Connection {
      * @see org.jsoup.Connection.Request#headers()
      */
     Connection header(String name, String value);
+
+    /**
+     * Adds each of the supplied headers to the request.
+     * @param headers map of headers name {@literal ->} value pairs
+     * @return this Connection, for chaining
+     * @see org.jsoup.Connection.Request#headers()
+     */
+    Connection headers(Map<String,String> headers);
 
     /**
      * Set a cookie to be sent in the request.
@@ -619,10 +628,17 @@ public interface Connection {
         String statusMessage();
 
         /**
-         * Get the character set name of the response.
+         * Get the character set name of the response, derived from the content-type header.
          * @return character set name
          */
         String charset();
+
+        /**
+         * Set / override the response character set. When the document body is parsed it will be with this charset.
+         * @param charset to decode body as
+         * @return this Response, for chaining
+         */
+        Response charset(String charset);
 
         /**
          * Get the response content type (e.g. "text/html");

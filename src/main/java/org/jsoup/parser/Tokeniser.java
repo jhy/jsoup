@@ -16,8 +16,8 @@ final class Tokeniser {
         Arrays.sort(notCharRefCharsSorted);
     }
 
-    private CharacterReader reader; // html input
-    private ParseErrorList errors; // errors found while tokenising
+    private final CharacterReader reader; // html input
+    private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     private Token emitPending; // the token we are about to emit on next read
@@ -101,6 +101,10 @@ final class Tokeniser {
         emit(String.valueOf(chars));
     }
 
+    void emit(int[] codepoints) {
+        emit(new String(codepoints, 0, codepoints.length));
+    }
+
     void emit(char c) {
         emit(String.valueOf(c));
     }
@@ -122,8 +126,9 @@ final class Tokeniser {
         selfClosingFlagAcknowledged = true;
     }
 
-    final private char[] charRefHolder = new char[1]; // holder to not have to keep creating arrays
-    char[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
+    final private int[] multipointHolder = new int[2];
+    int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -131,7 +136,7 @@ final class Tokeniser {
         if (reader.matchesAnySorted(notCharRefCharsSorted))
             return null;
 
-        final char[] charRef = charRefHolder;
+        final int[] codeRef = codepointHolder;
         reader.mark();
         if (reader.matchConsume("#")) { // numbered
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
@@ -151,16 +156,13 @@ final class Tokeniser {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
-                charRef[0] = replacementChar;
-                return charRef;
+                codeRef[0] = replacementChar;
+                return codeRef;
             } else {
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
-                if (charval < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
-                    charRef[0] = (char) charval;
-                    return charRef;
-                } else
-                return Character.toChars(charval);
+                codeRef[0] = charval;
+                return codeRef;
             }
         } else { // named
             // get as many letters as possible, and look for matching entities.
@@ -182,8 +184,16 @@ final class Tokeniser {
             }
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
-            charRef[0] = Entities.getCharacterByName(nameRef);
-            return charRef;
+            int numChars = Entities.codepointsForName(nameRef, multipointHolder);
+            if (numChars == 1) {
+                codeRef[0] = multipointHolder[0];
+                return codeRef;
+            } else if (numChars ==2) {
+                return multipointHolder;
+            } else {
+                Validate.fail("Unexpected characters returned for " + nameRef);
+                return multipointHolder;
+            }
         }
     }
 
@@ -218,7 +228,7 @@ final class Tokeniser {
     }
 
     boolean isAppropriateEndTagToken() {
-        return lastStartTag != null && tagPending.tagName.equals(lastStartTag);
+        return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
     String appropriateEndTagName() {
@@ -265,11 +275,15 @@ final class Tokeniser {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {
                 reader.consume();
-                char[] c = consumeCharacterReference(null, inAttribute);
+                int[] c = consumeCharacterReference(null, inAttribute);
                 if (c == null || c.length==0)
                     builder.append('&');
-                else
-                    builder.append(c);
+                else {
+                    builder.appendCodePoint(c[0]);
+                    if (c.length == 2)
+                        builder.appendCodePoint(c[1]);
+                }
+
             }
         }
         return builder.toString();
