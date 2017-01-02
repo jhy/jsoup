@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.10.2 [PENDING]
+*** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
 
@@ -13,23 +13,23 @@ jsoup changelog
 
  * Added the new selector :containsData(), to find elements that hold data, like script and style tags.
 
- * Allow the Jsoup.Connect thread to be interrupted when reading the input stream; helps when reading from a long stream
-   of data that doesn't read timeout.
-   <https://github.com/jhy/jsoup/pull/712>
-
- * Jsoup.Connect now uses a desktop user-agent by default. Many users were getting caught by not specifying a
-   user-agent, and so the default of 'Java' was used. That causes many servers to return different content than what
-   they would to a desktop browser, and what the developer was expecting.
-
- * Increased the default connect/read timeout in Jsoup.Connect to 30 seconds.
-
- * In Whitelists, validate that a removed protocol exists before removing said protocol.
-
  * Changed Jsoup.isValid(bodyHtml) to validate that the input contains only body HTML that is safe according to the
    whitelist, and does not include HTML errors. And in the Jsoup.Cleaner.isValid(Document) method, make sure the doc
    only includes body HTML.
    <https://github.com/jhy/jsoup/issues/245>
    <https://github.com/jhy/jsoup/issues/632>
+
+ * In Whitelists, validate that a removed protocol exists before removing said protocol.
+
+ * Allow the Jsoup.Connect thread to be interrupted when reading the input stream; helps when reading from a long stream
+   of data that doesn't read timeout.
+   <https://github.com/jhy/jsoup/pull/712>
+
+ * Jsoup.Connect now uses a desktop user agent by default. Many developers were getting caught by not specifying the
+   user agent, and sending the default 'Java'. That causes many servers to return different content than what they would
+   to a desktop browser, and what the developer was expecting.
+
+ * Increased the default connect/read timeout in Jsoup.Connect to 30 seconds.
 
  * Jsoup.Connect now detects if a header value is actually in UTF-8 vs the HTTP spec of ISO-8859, and converts
    the header value appropriately. This improves compatibility with servers that are configured incorrectly.
