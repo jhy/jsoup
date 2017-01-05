@@ -220,6 +220,10 @@ public class Element extends Node {
      * @see #childNodes()
      */
     public Elements children() {
+        if(childNodes == null){
+            return new Elements();
+        }
+
         // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
         List<Element> elements = new ArrayList<Element>(childNodes.size());
         for (Node node : childNodes) {
