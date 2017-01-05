@@ -1001,4 +1001,33 @@ public class ElementTest {
         Element a = new Element("P");
         assertTrue(a.tagName().equals("P"));
     }
+
+    public void testChildrenElements() {
+        String html = "<div><p><a>One</a></p><p><a>Two</a></p>Three</div><span>Four</span><foo></foo><img>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.select("div").first();
+        Element p = doc.select("p").first();
+        Element span = doc.select("span").first();
+        Element foo = doc.select("foo").first();
+        Element img = doc.select("img").first();
+
+        Elements docChildren = div.children();
+        assertEquals(2, docChildren.size());
+        assertEquals("<p><a>One</a></p>", docChildren.get(0).outerHtml());
+        assertEquals("<p><a>Two</a></p>", docChildren.get(1).outerHtml());
+        assertEquals(3, div.childNodes().size());
+        assertEquals("Three", div.childNodes().get(2).outerHtml());
+
+        assertEquals(1, p.children().size());
+        assertEquals("One", p.children().text());
+
+        assertEquals(0, span.children().size());
+        assertEquals(1, span.childNodes().size());
+        assertEquals("Four", span.childNodes().get(0).outerHtml());
+
+        assertEquals(0, foo.children().size());
+        assertEquals(0, foo.childNodes().size());
+        assertEquals(0, img.children().size());
+        assertEquals(0, img.childNodes().size());
+    }
 }
