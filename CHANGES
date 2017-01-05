@@ -1,5 +1,10 @@
 jsoup changelog
 
+*** Release 1.10.3 [PENDING]
+  * Bugfix: if an attribute name started or ended with a control character, the parse would fail with a validation
+    exception.
+    <https://github.com/jhy/jsoup/issues/793>
+
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.

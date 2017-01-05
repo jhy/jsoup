@@ -29,9 +29,10 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * @see #createFromEncoded
      */
     public Attribute(String key, String value) {
-        Validate.notEmpty(key);
+        Validate.notNull(key);
         Validate.notNull(value);
         this.key = key.trim();
+        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         this.value = value;
     }
 
