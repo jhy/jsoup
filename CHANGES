@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.10.3 [PENDING]
+  * Improved selector validation for :contains(...) with unbalanced quotes.
+    <https://github.com/jhy/jsoup/issues/803>
+
   * Bugfix: if an attribute name started or ended with a control character, the parse would fail with a validation
     exception.
     <https://github.com/jhy/jsoup/issues/793>

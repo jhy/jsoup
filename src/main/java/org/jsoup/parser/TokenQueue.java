@@ -285,7 +285,11 @@ public class TokenQueue {
                 end = pos; // don't include the outer match pair in the return
             last = c;
         } while (depth > 0);
-        return (end >= 0) ? queue.substring(start, end) : "";
+        final String out = (end >= 0) ? queue.substring(start, end) : "";
+        if (depth > 0) {// ran out of queue before seeing enough )
+            Validate.fail("Did not find balanced maker at " + out);
+        }
+        return out;
     }
     
     /**

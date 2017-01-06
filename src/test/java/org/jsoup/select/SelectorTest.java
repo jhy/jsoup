@@ -330,7 +330,7 @@ public class SelectorTest {
         assertEquals(2, doc.select("DiV").size());
         assertEquals(1, doc.select("DiV[TiTLE]").size());
         assertEquals(1, doc.select("DiV[TiTLE=BAR]").size());
-        assertEquals(0, doc.select("DiV[TiTLE=BARBARELLA").size());
+        assertEquals(0, doc.select("DiV[TiTLE=BARBARELLA]").size());
     }
 
     @Test public void adjacentSiblings() {
@@ -472,7 +472,7 @@ public class SelectorTest {
         assertEquals("0", divs1.get(0).id());
         assertEquals("1", divs1.get(1).id());
 
-        Elements divs2 = doc.select("div:has([class]");
+        Elements divs2 = doc.select("div:has([class])");
         assertEquals(1, divs2.size());
         assertEquals("1", divs2.get(0).id());
 
@@ -687,10 +687,10 @@ public class SelectorTest {
     @Test public void attributeWithBrackets() {
         String html = "<div data='End]'>One</div> <div data='[Another)]]'>Two</div>";
         Document doc = Jsoup.parse(html);
-        assertEquals("One", doc.select("div[data='End]'").first().text());
-        assertEquals("Two", doc.select("div[data='[Another)]]'").first().text());
-        assertEquals("One", doc.select("div[data=\"End]\"").first().text());
-        assertEquals("Two", doc.select("div[data=\"[Another)]]\"").first().text());
+        assertEquals("One", doc.select("div[data='End]']").first().text());
+        assertEquals("Two", doc.select("div[data='[Another)]]']").first().text());
+        assertEquals("One", doc.select("div[data=\"End]\"]").first().text());
+        assertEquals("Two", doc.select("div[data=\"[Another)]]\"]").first().text());
     }
 
     @Test public void containsData() {
@@ -713,5 +713,13 @@ public class SelectorTest {
         assertEquals("body", dataEls4.first().tagName());
         assertEquals("script", dataEls4.get(1).tagName());
         assertEquals("span", dataEls4.get(2).tagName());
+    }
+
+    @Test public void containsWithQuote() {
+        String html = "<p>One'One</p><p>One'Two</p>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("p:contains(One\\'One)");
+        assertEquals(1, els.size());
+        assertEquals("One'One", els.text());
     }
 }
