@@ -845,6 +845,7 @@ public class HttpConnection implements Connection {
                     sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                     // Create an ssl socket factory with our all-trusting manager
                     sslSocketFactory = sslContext.getSocketFactory();
+                    sslSocketFactory = new SupportAllCipherSuiteSSLSocketFactory(sslSocketFactory);
                 } catch (NoSuchAlgorithmException e) {
                     throw new IOException("Can't create unsecure trust manager");
                 } catch (KeyManagementException e) {
