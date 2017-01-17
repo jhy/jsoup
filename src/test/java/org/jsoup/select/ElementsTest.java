@@ -9,7 +9,9 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  Tests for ElementList.
@@ -327,5 +329,43 @@ public class ElementsTest {
         Elements prevAF = els.prevAll("p:contains(1)");
         assertEquals(1, prevAF.size());
         assertEquals("1", prevAF.first().text());
+    }
+
+    @Test public void eachText() {
+        Document doc = Jsoup.parse("<div><p>1<p>2<p>3<p>4<p>5<p>6</div><div><p>7<p>8<p>9<p>10<p>11<p>12<p></p></div>");
+        List<String> divText = doc.select("div").eachText();
+        assertEquals(2, divText.size());
+        assertEquals("1 2 3 4 5 6", divText.get(0));
+        assertEquals("7 8 9 10 11 12", divText.get(1));
+
+        List<String> pText = doc.select("p").eachText();
+        Elements ps = doc.select("p");
+        assertEquals(13, ps.size());
+        assertEquals(12, pText.size()); // not 13, as last doesn't have text
+        assertEquals("1", pText.get(0));
+        assertEquals("2", pText.get(1));
+        assertEquals("5", pText.get(4));
+        assertEquals("7", pText.get(6));
+        assertEquals("12", pText.get(11));
+    }
+
+    @Test public void eachAttr() {
+        Document doc = Jsoup.parse(
+            "<div><a href='/foo'>1</a><a href='http://example.com/bar'>2</a><a href=''>3</a><a>4</a>",
+            "http://example.com");
+
+        List<String> hrefAttrs = doc.select("a").eachAttr("href");
+        assertEquals(3, hrefAttrs.size());
+        assertEquals("/foo", hrefAttrs.get(0));
+        assertEquals("http://example.com/bar", hrefAttrs.get(1));
+        assertEquals("", hrefAttrs.get(2));
+        assertEquals(4, doc.select("a").size());
+
+        List<String> absAttrs = doc.select("a").eachAttr("abs:href");
+        assertEquals(3, absAttrs.size());
+        assertEquals(3, absAttrs.size());
+        assertEquals("http://example.com/foo", absAttrs.get(0));
+        assertEquals("http://example.com/bar", absAttrs.get(1));
+        assertEquals("http://example.com", absAttrs.get(2));
     }
 }

@@ -1,6 +1,10 @@
 jsoup changelog
 
 *** Release 1.10.3 [PENDING]
+  * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,
+    respectively. This makes it simpler to for example get a list of each URL on a page:
+    List<String> urls = doc.select("a").eachAttr("abs:href"");
+
   * Improved selector validation for :contains(...) with unbalanced quotes.
     <https://github.com/jhy/jsoup/issues/803>
 
