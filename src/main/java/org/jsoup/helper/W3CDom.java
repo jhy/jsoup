@@ -23,9 +23,6 @@ import java.util.HashMap;
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
  * for integration with toolsets that use the W3C DOM.
- * <p>
- * This class is currently <b>experimental</b>, please provide feedback on utility and any problems experienced.
- * </p>
  */
 public class W3CDom {
     protected DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
