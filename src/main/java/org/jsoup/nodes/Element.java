@@ -1089,7 +1089,7 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        final String classAttr = attributes.get("class");
+        final String classAttr = attributes.getIgnoreCase("class");
         final int len = classAttr.length();
         final int wantLen = className.length();
 

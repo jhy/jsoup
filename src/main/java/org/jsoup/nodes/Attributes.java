@@ -60,6 +60,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (attributes == null)
             return "";
 
+        Attribute attr = attributes.get(key);
+        if (attr != null)
+            return attr.getValue();
+
         for (String attrKey : attributes.keySet()) {
             if (attrKey.equalsIgnoreCase(key))
                 return attributes.get(attrKey).getValue();

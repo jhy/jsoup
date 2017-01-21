@@ -48,6 +48,16 @@ public class SelectorTest {
         assertEquals(1, els2.size());
     }
 
+    @Test public void testByClassCaseInsensitive() {
+        String html = "<p Class=foo>One <p Class=Foo>Two <p class=FOO>Three <p class=farp>Four";
+        Elements elsFromClass = Jsoup.parse(html).select("P.Foo");
+        Elements elsFromAttr = Jsoup.parse(html).select("p[class=foo]");
+
+        assertEquals(elsFromAttr.size(), elsFromClass.size());
+        assertEquals(3, elsFromClass.size());
+        assertEquals("Two", elsFromClass.get(1).text());
+    }
+
     @Test public void testByAttribute() {
         String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Bam /><div title=SLAM />" +
                 "<div data-name='with spaces'/>";
