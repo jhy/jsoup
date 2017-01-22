@@ -796,4 +796,21 @@ public class UrlConnectTest {
 
         assertTrue(body[0].length() > 0);
     }
+
+    @Test public void handlesEscapedRedirectUrls() throws IOException {
+        String url = "http://www.altalex.com/documents/news/2016/12/06/questioni-civilistiche-conseguenti-alla-depenalizzazione";
+        // sends: Location:http://shop.wki.it/shared/sso/sso.aspx?sso=&url=http%3a%2f%2fwww.altalex.com%2fsession%2fset%2f%3freturnurl%3dhttp%253a%252f%252fwww.altalex.com%253a80%252fdocuments%252fnews%252f2016%252f12%252f06%252fquestioni-civilistiche-conseguenti-alla-depenalizzazione
+        // then to: http://www.altalex.com/session/set/?returnurl=http%3a%2f%2fwww.altalex.com%3a80%2fdocuments%2fnews%2f2016%2f12%2f06%2fquestioni-civilistiche-conseguenti-alla-depenalizzazione&sso=RDRG6T684G4AK2E7U591UGR923
+        // then : http://www.altalex.com:80/documents/news/2016/12/06/questioni-civilistiche-conseguenti-alla-depenalizzazione
+
+        // bug is that jsoup goes to
+        // 	GET /shared/sso/sso.aspx?sso=&url=http%253a%252f%252fwww.altalex.com%252fsession%252fset%252f%253freturnurl%253dhttp%25253a%25252f%25252fwww.altalex.com%25253a80%25252fdocuments%25252fnews%25252f2016%25252f12%25252f06%25252fquestioni-civilistiche-conseguenti-alla-depenalizzazione HTTP/1.1
+        // i.e. double escaped
+
+        Connection.Response res = Jsoup.connect(url)
+                .proxy("localhost", 8888)
+                .execute();
+        Document doc = res.parse();
+        assertEquals(200, res.statusCode());
+    }
 }

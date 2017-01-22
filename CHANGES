@@ -15,6 +15,9 @@ jsoup changelog
   * Bugfix: Element.hasClass() and the ".classname" selector would not find the class attribute case-insensitively.
     <https://github.com/jhy/jsoup/issues/814>
 
+  * Bugfix: In Jsoup.Connection, if a redirect contained a query string with %xx escapes, they would be double escaped
+    before the redirect was followed, leading to fetching an incorrect location.
+
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
