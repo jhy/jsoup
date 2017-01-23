@@ -150,7 +150,7 @@
         <filtering>false</filtering>
         <includes>
           <include>LICENSE</include>
-          <include>README</include>
+          <include>README.md</include>
           <include>CHANGES</include>
         </includes>
       </resource>
