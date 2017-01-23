@@ -1,10 +1,20 @@
 package org.jsoup.safety;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.ParseErrorList;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+
+import java.util.List;
 
 
 /**
@@ -51,10 +61,10 @@ public class Cleaner {
     }
 
     /**
-     Determines if the input document is valid, against the whitelist. It is considered valid if all the tags and attributes
-     in the input HTML are allowed by the whitelist.
+     Determines if the input document <b>body</b>is valid, against the whitelist. It is considered valid if all the tags and attributes
+     in the input HTML are allowed by the whitelist, and that there is no content in the <code>head</code>.
      <p>
-     This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
+     This method can be used as a validator for user input. An invalid document will still be cleaned successfully
      using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
      to ensure enforced attributes are set correctly, and that the output is tidied.
      </p>
@@ -66,7 +76,18 @@ public class Cleaner {
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
         int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());
-        return numDiscarded == 0;
+        return numDiscarded == 0
+            && dirtyDocument.head().childNodes().size() == 0; // because we only look at the body, but we start from a shell, make sure there's nothing in the head
+    }
+
+    public boolean isValidBodyHtml(String bodyHtml) {
+        Document clean = Document.createShell("");
+        Document dirty = Document.createShell("");
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), "", errorList);
+        dirty.body().insertChildren(0, nodes);
+        int numDiscarded = copySafeNodes(dirty.body(), clean.body());
+        return numDiscarded == 0 && errorList.size() == 0;
     }
 
     /**

@@ -3,8 +3,10 @@ package org.jsoup.safety;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -140,15 +142,38 @@ public class CleanerTest {
         assertEquals("<img alt=\"\">", cleanHtml);
     }
 
-    @Test public void testIsValid() {
-        String ok = "<p>Test <b><a href='http://example.com/'>OK</a></b></p>";
+    @Test public void testIsValidBodyHtml() {
+        String ok = "<p>Test <b><a href='http://example.com/' rel='nofollow'>OK</a></b></p>";
+        String ok1 = "<p>Test <b><a href='http://example.com/'>OK</a></b></p>"; // missing enforced is OK because still needs run thru cleaner
         String nok1 = "<p><script></script>Not <b>OK</b></p>";
         String nok2 = "<p align=right>Test Not <b>OK</b></p>";
         String nok3 = "<!-- comment --><p>Not OK</p>"; // comments and the like will be cleaned
+        String nok4 = "<html><head>Foo</head><body><b>OK</b></body></html>"; // not body html
+        String nok5 = "<p>Test <b><a href='http://example.com/' rel='nofollowme'>OK</a></b></p>";
+        String nok6 = "<p>Test <b><a href='http://example.com/'>OK</b></p>"; // missing close tag
+        String nok7 = "</div>What";
         assertTrue(Jsoup.isValid(ok, Whitelist.basic()));
+        assertTrue(Jsoup.isValid(ok1, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok1, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok2, Whitelist.basic()));
         assertFalse(Jsoup.isValid(nok3, Whitelist.basic()));
+        assertFalse(Jsoup.isValid(nok4, Whitelist.basic()));
+        assertFalse(Jsoup.isValid(nok5, Whitelist.basic()));
+        assertFalse(Jsoup.isValid(nok6, Whitelist.basic()));
+        assertFalse(Jsoup.isValid(ok, Whitelist.none()));
+        assertFalse(Jsoup.isValid(nok7, Whitelist.basic()));
+    }
+
+    @Test public void testIsValidDocument() {
+        String ok = "<html><head></head><body><p>Hello</p></body><html>";
+        String nok = "<html><head><script>woops</script><title>Hello</title></head><body><p>Hello</p></body><html>";
+
+        Whitelist relaxed = Whitelist.relaxed();
+        Cleaner cleaner = new Cleaner(relaxed);
+        Document okDoc = Jsoup.parse(ok);
+        assertTrue(cleaner.isValid(okDoc));
+        assertFalse(cleaner.isValid(Jsoup.parse(nok)));
+        assertFalse(new Cleaner(Whitelist.none()).isValid(okDoc));
     }
     
     @Test public void resolvesRelativeLinks() {
@@ -241,5 +266,21 @@ public class CleanerTest {
         Whitelist whitelist = Whitelist.relaxed();
         whitelist.addTags( "script" );
         assertTrue( Jsoup.isValid("Hello<script>alert('Doh')</script>World !", whitelist ) );
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void bailsIfRemovingProtocolThatsNotSet() {
+        // a case that came up on the email list
+        Whitelist w = Whitelist.none();
+
+        // note no add tag, and removing protocol without adding first
+        w.addAttributes("a", "href");
+        w.removeProtocols("a", "href", "javascript"); // with no protocols enforced, this was a noop. Now validates.
+    }
+
+    @Test public void handlesControlCharactersAfterTagName() {
+        String html = "<a/\06>";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("<a rel=\"nofollow\"></a>", clean);
     }
 }

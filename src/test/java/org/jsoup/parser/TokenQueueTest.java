@@ -31,10 +31,10 @@ public class TokenQueueTest {
     }
 
     @Test public void chompBalancedMatchesAsMuchAsPossible() {
-        TokenQueue tq = new TokenQueue("unbalanced(something(or another");
+        TokenQueue tq = new TokenQueue("unbalanced(something(or another)) else");
         tq.consumeTo("(");
         String match = tq.chompBalanced('(', ')');
-        assertEquals("something(or another", match);
+        assertEquals("something(or another)", match);
     }
     
     @Test public void unescape() {

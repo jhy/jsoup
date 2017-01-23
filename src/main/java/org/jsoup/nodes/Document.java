@@ -37,7 +37,7 @@ public class Document extends Element {
      @param baseUri baseUri of document
      @return document with html, head, and body elements.
      */
-    static public Document createShell(String baseUri) {
+    public static Document createShell(String baseUri) {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
@@ -296,7 +296,7 @@ public class Document extends Element {
      * <tt>true</tt>, otherwise this method does nothing.
      * 
      * <ul>
-     * <li>An exsiting element gets updated with the current charset</li>
+     * <li>An existing element gets updated with the current charset</li>
      * <li>If there's no element yet it will be inserted</li>
      * <li>Obsolete elements are removed</li>
      * </ul>
