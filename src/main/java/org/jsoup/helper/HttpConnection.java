@@ -635,6 +635,7 @@ public class HttpConnection implements Connection {
                 throw new MalformedURLException("Only http & https protocols supported");
             final boolean methodHasBody = req.method().hasBody();
             final boolean hasRequestBody = req.requestBody() != null;
+            final boolean hasContentType = req.header(CONTENT_TYPE) != null;
             if (!methodHasBody)
                 Validate.isFalse(hasRequestBody, "Cannot set a request body for HTTP method " + req.method());
 
@@ -642,7 +643,7 @@ public class HttpConnection implements Connection {
             String mimeBoundary = null;
             if (req.data().size() > 0 && (!methodHasBody || hasRequestBody))
                 serialiseRequestUrl(req);
-            else if (methodHasBody)
+            else if (methodHasBody && !hasContentType)
                 mimeBoundary = setOutputContentType(req);
 
             HttpURLConnection conn = createConnection(req);
