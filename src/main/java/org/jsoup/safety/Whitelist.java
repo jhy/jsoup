@@ -540,7 +540,10 @@ public class Whitelist {
                 }
             }
 
-            prot += ":";
+            // it is bug,  eq: \<img src="/springrain/images/test.jpg" /> ,protocol is "/", not "/:"
+            if(!"/".equals(prot)){
+               prot += ":";
+            }
 
             if (value.toLowerCase().startsWith(prot)) {
                 return true;
