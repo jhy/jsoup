@@ -207,10 +207,7 @@ public class Entities {
                             accum.append(c);
                         break;
                     case '"':
-                        if (inAttribute)
-                            accum.append("&quot;");
-                        else
-                            accum.append(c);
+                        accum.append("&quot;");
                         break;
                     default:
                         if (canEncode(coreCharset, c, encoder))

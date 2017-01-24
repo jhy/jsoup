@@ -753,7 +753,7 @@ public class HtmlParserTest {
         String html = "&amp &quot &reg &icy &hopf &icy; &hopf;";
         Document doc = Jsoup.parse(html);
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended).charset("ascii"); // modifies output only to clarify test
-        assertEquals("&amp; \" &reg; &amp;icy &amp;hopf &icy; &hopf;", doc.body().html());
+        assertEquals("&amp; &quot; &reg; &amp;icy &amp;hopf &icy; &hopf;", doc.body().html());
     }
 
     @Test public void handlesXmlDeclarationAsBogusComment() {
