@@ -191,6 +191,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection dataBinary(byte[] byteArray) {
+        this.req.dataBinary(byteArray);
+        return this;
+    }
+
     public Connection data(Collection<Connection.KeyVal> data) {
         Validate.notNull(data, "Data collection must not be null");
         for (Connection.KeyVal entry: data) {
@@ -471,7 +476,7 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
-
+        private byte[] dataBinary; // only set when use Connection.dataBinary() method
         private Request() {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
@@ -591,6 +596,16 @@ public class HttpConnection implements Connection {
         public String postDataCharset() {
             return postDataCharset;
         }
+
+        public Connection.Request dataBinary(byte[] byteArray) {
+            Validate.notNull(byteArray, "DataBinary must not be null");
+            this.dataBinary = byteArray;
+            return this;
+        }
+
+        public byte[] dataBinary() {
+            return this.dataBinary ;
+        }
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
@@ -649,6 +664,10 @@ public class HttpConnection implements Connection {
             Response res;
             try {
                 conn.connect();
+                if(req.dataBinary()!=null)
+                {
+                  writeRawPost(req.dataBinary(), conn.getOutputStream());
+                }
                 if (conn.getDoOutput())
                     writePost(req, conn.getOutputStream(), mimeBoundary);
 
@@ -948,7 +967,10 @@ public class HttpConnection implements Connection {
             }
             return bound;
         }
-
+        private static void writeRawPost(byte[] data, OutputStream outputStream) throws IOException {
+            outputStream.write(data);
+            outputStream.close();
+        }
         private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
             final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
