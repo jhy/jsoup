@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
+import static org.jsoup.internal.Normalizer.lowerCase;
 
 /**
  * Implementation of {@link Connection}.
@@ -412,7 +413,7 @@ public class HttpConnection implements Connection {
             // quick evals for common case of title case, lower case, then scan for mixed
             String value = headers.get(name);
             if (value == null)
-                value = headers.get(name.toLowerCase());
+                value = headers.get(lowerCase(name));
             if (value == null) {
                 Map.Entry<String, String> entry = scanHeaders(name);
                 if (entry != null)
@@ -422,9 +423,9 @@ public class HttpConnection implements Connection {
         }
 
         private Map.Entry<String, String> scanHeaders(String name) {
-            String lc = name.toLowerCase();
+            String lc = lowerCase(name);
             for (Map.Entry<String, String> entry : headers.entrySet()) {
-                if (entry.getKey().toLowerCase().equals(lc))
+                if (lowerCase(entry.getKey()).equals(lc))
                     return entry;
             }
             return null;
