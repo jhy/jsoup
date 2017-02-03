@@ -9,7 +9,7 @@ public class BooleanAttribute extends Attribute {
      * @param key attribute key
      */
     public BooleanAttribute(String key) {
-        super(key, "");
+        super(key.toLowerCase(), "");
     }
 
     @Override
