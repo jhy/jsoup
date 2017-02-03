@@ -113,7 +113,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      */
     public static Attribute createFromEncoded(String unencodedKey, String encodedValue) {
         String value = Entities.unescape(encodedValue, true);
-        return new Attribute(unencodedKey.toLowerCase(), value);
+        return new Attribute(unencodedKey, value);
     }
 
     protected boolean isDataAttribute() {
