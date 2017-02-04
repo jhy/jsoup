@@ -98,7 +98,7 @@ public abstract class Node implements Cloneable {
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        attributes.put(attributeKey, attributeValue);
+        attributes.put(attributeKey.toLowerCase(), attributeValue);
         return this;
     }
 
