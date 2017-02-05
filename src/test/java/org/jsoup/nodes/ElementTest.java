@@ -1002,7 +1002,7 @@ public class ElementTest {
         assertTrue(a.tagName().equals("P"));
     }
 
-    public void testChildrenElements() {
+    @Test public void testChildrenElements() {
         String html = "<div><p><a>One</a></p><p><a>Two</a></p>Three</div><span>Four</span><foo></foo><img>";
         Document doc = Jsoup.parse(html);
         Element div = doc.select("div").first();
