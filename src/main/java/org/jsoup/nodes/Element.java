@@ -12,6 +12,8 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
+import org.jsoup.text.Region;
+import org.jsoup.text.Regions;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1254,6 +1256,21 @@ public class Element extends Node {
     private void html(StringBuilder accum) {
         for (Node node : childNodes)
             node.outerHtml(accum);
+    }
+
+    /**
+     *  Return the {@link Regions} whose text match needle. Matching
+     *  is as for {@link org.jsoup.Region#findNext()}.
+     */
+    public Regions find(final String needle) {
+        Regions result = new Regions();
+        Region r = Region.find(needle, this, this);
+        while(r != null) {
+            result.add(r);
+            r.splitTextNodes();
+            r = r.findNext(needle, this);
+        }
+        return result;
     }
 
     /**

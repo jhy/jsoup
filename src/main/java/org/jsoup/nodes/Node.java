@@ -650,7 +650,8 @@ public abstract class Node implements Cloneable {
         clone.reindexChildren(0);
 
         clone.parentNode = null;
-        parentNode.addChildren(siblingIndex + 1, clone);
+        if(parentNode != null)
+            parentNode.addChildren(siblingIndex + 1, clone);
     }
 
 
