@@ -57,11 +57,11 @@ public class Element extends Node {
      */
     public Element(Tag tag, String baseUri, Attributes attributes) {
         super(baseUri, attributes);
-
-        Validate.notNull(tag);
+        
+        Validate.notNull(tag);    
         this.tag = tag;
     }
-
+    
     /**
      * Create a new Element from a tag and a base URI.
      * 
@@ -109,7 +109,7 @@ public class Element extends Node {
     public Tag tag() {
         return tag;
     }
-
+    
     /**
      * Test if this element is a block-level element. (E.g. {@code <div> == true} or an inline element
      * {@code <p> == false}).
@@ -139,7 +139,7 @@ public class Element extends Node {
         super.attr(attributeKey, attributeValue);
         return this;
     }
-
+    
     /**
      * Set a boolean attribute value on this element. Setting to <code>true</code> sets the attribute value to "" and
      * marks the attribute as boolean so no value is written out. Setting to <code>false</code> removes the attribute
@@ -311,9 +311,9 @@ public class Element extends Node {
      * @return if this element matches
      */
     public boolean is(Evaluator evaluator) {
-        return evaluator.matches((Element) this.root(), this);
+        return evaluator.matches((Element)this.root(), this);
     }
-
+    
     /**
      * Add a node child node to this element.
      * 
@@ -339,10 +339,11 @@ public class Element extends Node {
      */
     public Element prependChild(Node child) {
         Validate.notNull(child);
-
+        
         addChildren(0, child);
         return this;
     }
+
 
     /**
      * Inserts the given child nodes into this element at the specified index. Current nodes will be shifted to the
@@ -356,8 +357,7 @@ public class Element extends Node {
     public Element insertChildren(int index, Collection<? extends Node> children) {
         Validate.notNull(children, "Children collection to be inserted must not be null.");
         int currentSize = childNodeSize();
-        if (index < 0)
-            index += currentSize + 1; // roll around
+        if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
         ArrayList<Node> nodes = new ArrayList<Node>(children);
@@ -365,7 +365,7 @@ public class Element extends Node {
         addChildren(index, nodeArray);
         return this;
     }
-
+    
     /**
      * Create a new element by tag name, and add it as the last child.
      * 
@@ -378,7 +378,7 @@ public class Element extends Node {
         appendChild(child);
         return child;
     }
-
+    
     /**
      * Create a new element by tag name, and add it as the first child.
      * 
@@ -391,7 +391,7 @@ public class Element extends Node {
         prependChild(child);
         return child;
     }
-
+    
     /**
      * Create and append a new TextNode to this element.
      * 
@@ -404,7 +404,7 @@ public class Element extends Node {
         appendChild(node);
         return this;
     }
-
+    
     /**
      * Create and prepend a new TextNode to this element.
      * 
@@ -417,7 +417,7 @@ public class Element extends Node {
         prependChild(node);
         return this;
     }
-
+    
     /**
      * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended to the end of the children.
      * @param html HTML to add inside this element, after the existing HTML
@@ -431,7 +431,7 @@ public class Element extends Node {
         addChildren(nodes.toArray(new Node[nodes.size()]));
         return this;
     }
-
+    
     /**
      * Add inner HTML into this element. The supplied HTML will be parsed, and each node prepended to the start of the element's children.
      * @param html HTML to add inside this element, before the existing HTML
@@ -440,7 +440,7 @@ public class Element extends Node {
      */
     public Element prepend(String html) {
         Validate.notNull(html);
-
+        
         List<Node> nodes = Parser.parseFragment(html, this, baseUri());
         addChildren(0, nodes.toArray(new Node[nodes.size()]));
         return this;
@@ -538,7 +538,8 @@ public class Element extends Node {
 
         selector.insert(0, " > ");
         if (parent().select(selector.toString()).size() > 1)
-            selector.append(String.format(":nth-child(%d)", elementSiblingIndex() + 1));
+            selector.append(String.format(
+                ":nth-child(%d)", elementSiblingIndex() + 1));
 
         return parent().cssSelector() + selector.toString();
     }
@@ -554,7 +555,7 @@ public class Element extends Node {
 
         List<Element> elements = parent().children();
         Elements siblings = new Elements(elements.size() - 1);
-        for (Element el : elements)
+        for (Element el: elements)
             if (el != this)
                 siblings.add(el);
         return siblings;
@@ -570,13 +571,12 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public Element nextElementSibling() {
-        if (parentNode == null)
-            return null;
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
-        if (siblings.size() > index + 1)
-            return siblings.get(index + 1);
+        if (siblings.size() > index+1)
+            return siblings.get(index+1);
         else
             return null;
     }
@@ -587,13 +587,12 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public Element previousElementSibling() {
-        if (parentNode == null)
-            return null;
+        if (parentNode == null) return null;
         List<Element> siblings = parent().children();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
         if (index > 0)
-            return siblings.get(index - 1);
+            return siblings.get(index-1);
         else
             return null;
     }
@@ -607,16 +606,15 @@ public class Element extends Node {
         List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
-
+    
     /**
      * Get the list index of this element in its element sibling list. I.e. if this is the first element
      * sibling, returns 0.
      * @return position in element sibling list
      */
     public Integer elementSiblingIndex() {
-        if (parent() == null)
-            return 0;
-        return indexInList(this, parent().children());
+       if (parent() == null) return 0;
+       return indexInList(this, parent().children()); 
     }
 
     /**
@@ -627,7 +625,7 @@ public class Element extends Node {
         List<Element> siblings = parent().children();
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
     }
-
+    
     private static <E extends Element> Integer indexInList(Element search, List<E> elements) {
         Validate.notNull(search);
         Validate.notNull(elements);
@@ -665,7 +663,7 @@ public class Element extends Node {
      */
     public Element getElementById(String id) {
         Validate.notEmpty(id);
-
+        
         Elements elements = Collector.collect(new Evaluator.Id(id), this);
         if (elements.size() > 0)
             return elements.get(0);
@@ -770,7 +768,7 @@ public class Element extends Node {
     public Elements getElementsByAttributeValueContaining(String key, String match) {
         return Collector.collect(new Evaluator.AttributeWithValueContaining(key, match), this);
     }
-
+    
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
@@ -779,9 +777,9 @@ public class Element extends Node {
      */
     public Elements getElementsByAttributeValueMatching(String key, Pattern pattern) {
         return Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this);
-
+        
     }
-
+    
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
@@ -797,7 +795,7 @@ public class Element extends Node {
         }
         return getElementsByAttributeValueMatching(key, pattern);
     }
-
+    
     /**
      * Find elements whose sibling index is less than the supplied index.
      * @param index 0-based index
@@ -806,7 +804,7 @@ public class Element extends Node {
     public Elements getElementsByIndexLessThan(int index) {
         return Collector.collect(new Evaluator.IndexLessThan(index), this);
     }
-
+    
     /**
      * Find elements whose sibling index is greater than the supplied index.
      * @param index 0-based index
@@ -815,7 +813,7 @@ public class Element extends Node {
     public Elements getElementsByIndexGreaterThan(int index) {
         return Collector.collect(new Evaluator.IndexGreaterThan(index), this);
     }
-
+    
     /**
      * Find elements whose sibling index is equal to the supplied index.
      * @param index 0-based index
@@ -824,7 +822,7 @@ public class Element extends Node {
     public Elements getElementsByIndexEquals(int index) {
         return Collector.collect(new Evaluator.IndexEquals(index), this);
     }
-
+    
     /**
      * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
      * in the element, or in any of its descendants.
@@ -835,7 +833,7 @@ public class Element extends Node {
     public Elements getElementsContainingText(String searchText) {
         return Collector.collect(new Evaluator.ContainsText(searchText), this);
     }
-
+    
     /**
      * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
      * in the element, not in any of its descendants.
@@ -846,7 +844,7 @@ public class Element extends Node {
     public Elements getElementsContainingOwnText(String searchText) {
         return Collector.collect(new Evaluator.ContainsOwnText(searchText), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param pattern regular expression to match text against
@@ -856,7 +854,7 @@ public class Element extends Node {
     public Elements getElementsMatchingText(Pattern pattern) {
         return Collector.collect(new Evaluator.Matches(pattern), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
@@ -872,7 +870,7 @@ public class Element extends Node {
         }
         return getElementsMatchingText(pattern);
     }
-
+    
     /**
      * Find elements whose own text matches the supplied regular expression.
      * @param pattern regular expression to match text against
@@ -882,7 +880,7 @@ public class Element extends Node {
     public Elements getElementsMatchingOwnText(Pattern pattern) {
         return Collector.collect(new Evaluator.MatchesOwn(pattern), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
@@ -898,7 +896,7 @@ public class Element extends Node {
         }
         return getElementsMatchingOwnText(pattern);
     }
-
+    
     /**
      * Find all elements under this element (including self, and children of children).
      * 
@@ -926,7 +924,9 @@ public class Element extends Node {
                     appendNormalisedText(accum, textNode);
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
-                    if (accum.length() > 0 && (element.isBlock() || element.tag.getName().equals("br")) && !TextNode.lastCharIsWhitespace(accum))
+                    if (accum.length() > 0 &&
+                        (element.isBlock() || element.tag.getName().equals("br")) &&
+                        !TextNode.lastCharIsWhitespace(accum))
                         accum.append(" ");
                 }
             }
@@ -983,7 +983,8 @@ public class Element extends Node {
         // looks only at this element and one level up, to prevent recursion & needless stack searches
         if (node != null && node instanceof Element) {
             Element element = (Element) node;
-            return element.tag.preserveWhitespace() || element.parent() != null && element.parent().tag.preserveWhitespace();
+            return element.tag.preserveWhitespace() ||
+                element.parent() != null && element.parent().tag.preserveWhitespace();
         }
         return false;
     }
@@ -1008,7 +1009,7 @@ public class Element extends Node {
      @return true if element has non-blank text content.
      */
     public boolean hasText() {
-        for (Node child : childNodes) {
+        for (Node child: childNodes) {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 if (!textNode.isBlank())
@@ -1045,7 +1046,7 @@ public class Element extends Node {
             }
         }
         return sb.toString();
-    }
+    }   
 
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
@@ -1063,9 +1064,9 @@ public class Element extends Node {
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
-        String[] names = classSplit.split(className());
-        Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
-        classNames.remove(""); // if classNames() was empty, would include an empty class
+    	String[] names = classSplit.split(className());
+    	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
+    	classNames.remove(""); // if classNames() was empty, would include an empty class
 
         return classNames;
     }
@@ -1086,17 +1087,47 @@ public class Element extends Node {
      * @param className name of class to check for
      * @return true if it does, false if not
      */
+    // performance sensitive
     public boolean hasClass(String className) {
-        String classAttr = this.attributes.get("class");
-        if ((classAttr.equals("")) || (classAttr.length() < className.length())) {
+        final String classAttr = attributes.getIgnoreCase("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
+
+        if (len == 0 || len < wantLen) {
             return false;
         }
-        String[] classes = classSplit.split(classAttr);
-        for (String name : classes) {
-            if (className.equalsIgnoreCase(name)) {
-                return true;
+
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
+            return className.equalsIgnoreCase(classAttr);
+        }
+
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
             }
         }
+
+        // check the last entry
+        if (inClass && len - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
+        }
+
         return false;
     }
 
@@ -1147,7 +1178,7 @@ public class Element extends Node {
 
         return this;
     }
-
+    
     /**
      * Get the value of a form element (input, textarea, etc).
      * @return the value of the form element, or empty string if not set.
@@ -1158,7 +1189,7 @@ public class Element extends Node {
         else
             return attr("value");
     }
-
+    
     /**
      * Set the value of a form element (input, textarea, etc).
      * @param value value to set
@@ -1181,7 +1212,9 @@ public class Element extends Node {
                 indent(accum, depth, out);
             }
         }
-        accum.append("<").append(tagName());
+        accum
+                .append("<")
+                .append(tagName());
         attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
@@ -1190,13 +1223,16 @@ public class Element extends Node {
                 accum.append('>');
             else
                 accum.append(" />"); // <img> in html, <img /> in xml
-        } else
+        }
+        else
             accum.append(">");
     }
 
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
-            if (out.prettyPrint() && (!childNodes.isEmpty() && (tag.formatAsBlock() || (out.outline() && (childNodes.size() > 1 || (childNodes.size() == 1 && !(childNodes.get(0) instanceof TextNode)))))))
+            if (out.prettyPrint() && (!childNodes.isEmpty() && (
+                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
+            )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append(">");
         }
@@ -1230,7 +1266,7 @@ public class Element extends Node {
 
         return appendable;
     }
-
+    
     /**
      * Set this element's inner HTML. Clears the existing HTML first.
      * @param html HTML to parse and set into this element
@@ -1243,7 +1279,7 @@ public class Element extends Node {
         return this;
     }
 
-    public String toString() {
+	public String toString() {
         return outerHtml();
     }
 
