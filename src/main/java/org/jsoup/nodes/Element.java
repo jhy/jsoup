@@ -1088,7 +1088,7 @@ public class Element extends Node {
      * @return true if it does, false if not
      */
     public boolean hasClass(String className) {
-      String classAttr = this.attributes.get("class");
+      String classAttr = this.attributes.getIgnoreCase("class");
       if ((classAttr.equals("")) || (classAttr.length() < className.length())) {
         return false;
       }
