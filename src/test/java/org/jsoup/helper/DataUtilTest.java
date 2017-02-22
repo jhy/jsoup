@@ -102,6 +102,18 @@ public class DataUtilTest {
     }
 
     @Test
+    public void secondMetaElementWithContentTypeContainsCharsetParameter() throws Exception {
+        ByteBuffer inBuffer = ByteBuffer.wrap(("<html><head>" +
+                "<meta http-equiv=\"Content-Type\" content=\"text/html\">" +
+                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=euc-kr\">" +
+                "</head><body>한국어</body></html>").getBytes("euc-kr"));
+
+        Document doc = DataUtil.parseByteData(inBuffer, null, "http://example.com", Parser.htmlParser());
+
+        assertEquals("한국어", doc.body().text());
+    }
+
+    @Test
     public void supportsBOMinFiles() throws IOException {
         // test files from http://www.i18nl10n.com/korean/utftest/
         File in = getFile("/bomtests/bom_utf16be.html");
