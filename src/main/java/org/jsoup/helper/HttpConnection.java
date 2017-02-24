@@ -717,6 +717,8 @@ public class HttpConnection implements Connection {
                 conn.disconnect();
             }
 
+            conn.disconnect();
+
             res.executed = true;
             return res;
         }
