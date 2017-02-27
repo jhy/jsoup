@@ -17,4 +17,11 @@ public class AttributeTest {
         assertEquals(s + "=\"A" + s + "B\"", attr.html());
         assertEquals(attr.html(), attr.toString());
     }
+
+    @Test
+    public void testHashCode() {
+        String s = new String(Character.toChars(135361));
+        Attribute attr = new Attribute(s, (("A" + s) + "B"));
+        assertEquals(111849895, attr.hashCode());
+    }
 }
