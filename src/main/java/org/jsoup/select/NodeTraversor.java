@@ -24,6 +24,15 @@ public class NodeTraversor {
      * @param root the root node point to traverse.
      */
     public void traverse(Node root) {
+        traverse(visitor, root);
+    }
+
+    /**
+     * Start a depth-first traverse of the root and all of its descendants.
+     * @param visitor Node visitor.
+     * @param root the root node point to traverse.
+     */
+    public static void traverse(NodeVisitor visitor, Node root) {
         Node node = root;
         int depth = 0;
         
