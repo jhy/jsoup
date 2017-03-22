@@ -54,4 +54,16 @@ public class NodeTraversor {
             }
         }
     }
+
+    /**
+     * Start a depth-first traverse of all elements.
+     * @param visitor Node visitor.
+     * @param elements Elements to filter.
+     */
+    public static void traverse(NodeVisitor visitor, Elements elements) {
+        Validate.notNull(visitor);
+        Validate.notNull(elements);
+        for (Element el : elements)
+            traverse(visitor, el);
+    }
 }
