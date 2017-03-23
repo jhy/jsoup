@@ -139,8 +139,7 @@ public class Cleaner {
 
     private int copySafeNodes(Element source, Element dest) {
         CleaningVisitor cleaningVisitor = new CleaningVisitor(source, dest);
-        NodeTraversor traversor = new NodeTraversor(cleaningVisitor);
-        traversor.traverse(source);
+        NodeTraversor.traverse(cleaningVisitor, source);
         return cleaningVisitor.numDiscarded;
     }
 

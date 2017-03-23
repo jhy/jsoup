@@ -917,7 +917,7 @@ public class Element extends Node {
      */
     public String text() {
         final StringBuilder accum = new StringBuilder();
-        new NodeTraversor(new NodeVisitor() {
+        NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -933,7 +933,7 @@ public class Element extends Node {
 
             public void tail(Node node, int depth) {
             }
-        }).traverse(this);
+        }, this);
         return accum.toString().trim();
     }
 

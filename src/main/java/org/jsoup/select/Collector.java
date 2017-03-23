@@ -21,7 +21,7 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         Elements elements = new Elements();
-        new NodeTraversor(new Accumulator(root, elements, eval)).traverse(root);
+        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
         return elements;
     }
 
