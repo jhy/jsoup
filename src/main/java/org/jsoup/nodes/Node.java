@@ -4,6 +4,7 @@ import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -544,6 +545,17 @@ public abstract class Node implements Cloneable {
     public Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
         NodeTraversor.traverse(nodeVisitor, this);
+        return this;
+    }
+
+    /**
+     * Perform a depth-first filtering through this node and its descendants.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public Node filter(NodeFilter nodeFilter) {
+        Validate.notNull(nodeFilter);
+        NodeTraversor.filter(nodeFilter, this);
         return this;
     }
 

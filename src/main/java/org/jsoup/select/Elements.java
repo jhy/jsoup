@@ -617,6 +617,16 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
+     * Perform a depth-first filtering on each of the selected elements.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this, for chaining
+     */
+    public Elements filter(NodeFilter nodeFilter) {
+        NodeTraversor.filter(nodeFilter, this);
+        return this;
+    }
+
+    /**
      * Get the {@link FormElement} forms from the selected elements, if any.
      * @return a list of {@link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
      * no forms.
