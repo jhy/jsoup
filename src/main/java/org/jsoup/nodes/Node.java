@@ -543,8 +543,7 @@ public abstract class Node implements Cloneable {
      */
     public Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
-        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
-        traversor.traverse(this);
+        NodeTraversor.traverse(nodeVisitor, this);
         return this;
     }
 
@@ -559,7 +558,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void outerHtml(Appendable accum) {
-        new NodeTraversor(new OuterHtmlVisitor(accum, getOutputSettings())).traverse(this);
+        NodeTraversor.traverse(new OuterHtmlVisitor(accum, getOutputSettings()), this);
     }
 
     // if this node has no document (or parent), retrieve the default output settings

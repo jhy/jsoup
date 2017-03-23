@@ -612,11 +612,7 @@ public class Elements extends ArrayList<Element> {
      * @return this, for chaining
      */
     public Elements traverse(NodeVisitor nodeVisitor) {
-        Validate.notNull(nodeVisitor);
-        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
-        for (Element el: this) {
-            traversor.traverse(el);
-        }
+        NodeTraversor.traverse(nodeVisitor, this);
         return this;
     }
 

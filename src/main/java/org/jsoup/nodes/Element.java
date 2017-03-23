@@ -1010,8 +1010,8 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = StringUtil.stringBuilder();
-        new NodeTraversor(new NodeVisitor() {
+        final StringBuilder accum = new StringBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -1027,7 +1027,7 @@ public class Element extends Node {
 
             public void tail(Node node, int depth) {
             }
-        }).traverse(this);
+        }, this);
         return accum.toString().trim();
     }
 
