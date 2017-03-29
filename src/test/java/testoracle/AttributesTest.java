@@ -172,7 +172,11 @@ public class AttributesTest {
 
 	@Test
 	public void testHasKeyIgnoreCase() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		assertFalse(a.hasKeyIgnoreCase("tot"));			// Case1 : attributes = null
+		a.put("Tot", "a&p");					
+		assertTrue(a.hasKeyIgnoreCase("tot"));			// Case2 : find attributes (standard case)
+		assertFalse(a.hasKeyIgnoreCase("Hello"));		// Case3 : not found attributes
 	}
 
 	@Test
