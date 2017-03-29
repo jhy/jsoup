@@ -155,10 +155,19 @@ public class AttributesTest {
         assertEquals(2, a.size());
         assertFalse(a.hasKey("Tot"));
 	}
-
+	
 	@Test
 	public void testHasKey() {
-		fail("Not yet implemented");
+		Attributes aTT = new Attributes();
+        aTT.put("Tot", "a&p");
+        assertTrue(aTT.hasKey("Tot"));
+        
+        Attributes aTF = new Attributes();
+        aTF.put("Tot", "");
+        assertTrue(aTF.hasKey("Tot"));
+        
+        Attributes aFF = new Attributes();
+        assertFalse(aFF.hasKey("Tot"));
 	}
 
 	@Test
