@@ -145,7 +145,15 @@ public class AttributesTest {
 
 	@Test
 	public void testRemoveIgnoreCase() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+        a.put("Tot", "a&p");
+        a.put("Hello", "There");
+        a.put("data-name", "Jsoup");
+
+        assertEquals(3, a.size());
+        a.removeIgnoreCase("tot");
+        assertEquals(2, a.size());
+        assertFalse(a.hasKey("Tot"));
 	}
 
 	@Test
