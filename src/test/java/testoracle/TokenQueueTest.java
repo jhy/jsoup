@@ -1,0 +1,89 @@
+package testoracle;
+
+import static org.junit.Assert.*;
+
+import org.jsoup.parser.TokenQueue;
+import org.junit.Test;
+
+public class TokenQueueTest {
+
+	@Test
+	public void testPeekAndAddFirst() {
+		TokenQueue tq = new TokenQueue("Test");
+		assertEquals('T', tq.peek());
+		tq.consume("Test");
+		assertEquals(0, tq.peek());
+		tq.addFirst('a');
+		assertEquals('a', tq.peek());
+	}
+	
+	@Test
+	public void testMatchesCS() {
+		TokenQueue tq = new TokenQueue("Test");
+		assertEquals(true, tq.matchesCS("Te"));
+		assertEquals(false, tq.matchesCS("te"));
+	}
+	
+	@Test
+	public void testMatchesAnyWithEmptyQueue() {
+		TokenQueue tq = new TokenQueue("Test");
+		tq.consume("Test");
+		assertEquals(false, tq.matchesAny('T', 'e', 's', 't'));
+	}
+	
+	@Test
+	public void testMatchesStartTag() {
+		TokenQueue tq = new TokenQueue("<a>");
+		assertEquals(true, tq.matchesStartTag());
+		tq = new TokenQueue("a");
+		assertEquals(false, tq.matchesStartTag());
+		tq = new TokenQueue("test");
+		assertEquals(false, tq.matchesStartTag());
+		tq = new TokenQueue("<1");
+		assertEquals(false, tq.matchesStartTag());
+	}
+	
+	@Test
+	public void testMatchesWord() {
+		TokenQueue tq = new TokenQueue("test");
+		assertEquals(true, tq.matchesWord());
+		tq.consume("test");
+		assertEquals(false, tq.matchesWord());
+		tq.addFirst('5');
+		assertEquals(true, tq.matchesWord());
+		tq.consume("5");
+		tq.addFirst('<');
+		assertEquals(false, tq.matchesWord());	
+	}
+	
+	@Test
+	public void testAdvance() {
+		TokenQueue tq = new TokenQueue("Test");
+		assertEquals('T', tq.peek());
+		tq.advance();
+		assertEquals('e', tq.peek());
+		tq.advance();
+		assertEquals('s', tq.peek());
+		tq.advance();
+		assertEquals('t', tq.peek());
+		tq.advance();
+		assertEquals(0, tq.peek());
+		tq.advance();
+		assertEquals(0, tq.peek());
+	}
+	
+	@Test(expected = IllegalStateException.class)
+	public void testConsume() {
+		TokenQueue tq = new TokenQueue("Test");
+		tq.consume("Fest");
+	}
+	
+	// TODO
+	@Test
+	public void testConsumeToIgnoreCaseCantScan() {
+		TokenQueue tq = new TokenQueue("<<<<a>test");
+		assertTrue(tq.consumeToIgnoreCase("<a>").equals("<<<"));
+	}
+	
+	
+}
