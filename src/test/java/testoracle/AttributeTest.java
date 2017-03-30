@@ -3,6 +3,7 @@ package testoracle;
 import static org.junit.Assert.*;
 
 import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 import org.junit.Test;
 
 public class AttributeTest {
@@ -25,9 +26,16 @@ public class AttributeTest {
 	@Test
 	public void testSetValue() {
 		Attribute a = new Attribute("Tot", "a&p");
-		assertEquals("a&p", a.setValue("wjdebug"));
+		assertEquals("a&p", a.setValue("wjdebug"));			// old value return test
 		assertEquals("Tot", a.getKey());
 		assertEquals("wjdebug", a.getValue());
+	}
+	
+	@Test
+	public void testHtml() {
+		Attribute a = new Attribute("Tot", "a&p");
+        assertEquals("Tot=\"a&amp;p\"", a.html());
+        assertEquals(a.html(), a.toString());
 	}
 	
 	@Test
@@ -42,11 +50,6 @@ public class AttributeTest {
 
 	@Test
 	public void testGetValue() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testHtml() {
 		fail("Not yet implemented");
 	}
 
