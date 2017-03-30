@@ -643,6 +643,39 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse("<textarea>One</textarea>");
         assertEquals("<textarea>One</textarea>", doc.body().html());
     }
+    @Test public void ksooTest(){
+//        Element img = p.child(0);
+//        assertEquals("foo.png", img.attr("src"));
+//        assertEquals("img", img.tagName());
+        Element el = new Element("xmp");
+        String html = "<ol><li>One</li></ol><p>Two</p>";
+        List<Node> nodes = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+        
+        el = new Element("script");
+        List<Node> nodes2 = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+        
+        el = new Element("noscript");
+        List<Node> nodes3 = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+
+        el = new Element("plaintext");
+        List<Node> nodes4 = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+
+        el = new Element("textarea");
+        List<Node> nodes5 = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+
+        el = new Element("form");
+        List<Node> nodes6 = Parser.parseFragment(html, el, "http://example.com/");
+        assertEquals(1, nodes.size()); 
+//        assertEquals("html", nodes.get(0).nodeName());
+//        assertEquals("<html> <head></head> <body> <ol> <li>One</li> </ol> <p>Two</p> </body> </html>", StringUtil.normaliseWhitespace(nodes.get(0).outerHtml()));
+    	
+
+    }
 
     @Test public void handlesEscapedScript() {
         Document doc = Jsoup.parse("<script><!-- one <script>Blah</script> --></script>");
