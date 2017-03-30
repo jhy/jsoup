@@ -57,7 +57,7 @@ public class AttributesTest {
 
     @Test
     public void testIterator() {
-        Attributes a = new Attributes();
+        Attributes a = new Attributes();						
         String[][] datas = {{"Tot", "raul"},
             {"Hello", "pismuth"},
             {"data-name", "Jsoup"}};
@@ -65,7 +65,7 @@ public class AttributesTest {
             a.put(atts[0], atts[1]);
         }
 
-        Iterator<Attribute> iterator = a.iterator();
+        Iterator<Attribute> iterator = a.iterator();			// Case1 : Attributes != null, !attributes.isEmpty()
         assertTrue(iterator.hasNext());
         int i = 0;
         for (Attribute attribute : a) {
@@ -74,6 +74,16 @@ public class AttributesTest {
             i++;
         }
         assertEquals(datas.length, i);
+        
+        Attributes aNull = new Attributes();					
+        Iterator<Attribute> iteratorNull = aNull.iterator();	// Case 2 : Attributes == null
+        assertFalse(iteratorNull.hasNext());
+        
+        Attributes aEmpty = new Attributes();
+        aEmpty.put("Tot", "a&p");
+        aEmpty.remove("Tot");
+        Iterator<Attribute> iteratorEmpty = aEmpty.iterator();	// Case 3 : Attributes != null, attributes.isEmpty()
+        assertFalse(iteratorEmpty.hasNext());
     }
 
     @Test
