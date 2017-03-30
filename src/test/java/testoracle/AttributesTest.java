@@ -129,7 +129,10 @@ public class AttributesTest {
 
 	@Test
 	public void testGet() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();			
+		assertEquals("", a.get("Tot"));				// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		assertEquals("a&p", a.get("Tot"));			// Case2 : attributes != null
 	}
 
 	@Test
@@ -281,7 +284,6 @@ public class AttributesTest {
 		assertEquals(1, html5Custom.size());
 		assertEquals(3, a.size());
 		assertEquals("", a.get("data-asdf"));
-		//assertEquals()
 	}
 
 	@Test
