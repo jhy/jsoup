@@ -145,10 +145,12 @@ public class AttributesTest {
 		assertEquals("", a.getIgnoreCase("data-name"));		// Case3 : attributes != null, not exist key get test
 	}
 
+	/*
 	@Test
 	public void testPutStringString() {
 		fail("Not yet implemented");
 	}
+	*/
 
 	@Test
 	public void testPutStringBoolean() {
@@ -162,10 +164,12 @@ public class AttributesTest {
 		assertFalse(a.hasKey("Hello"));
 	}
 
+	/*
 	@Test
 	public void testPutAttribute() {
 		fail("Not yet implemented");
 	}
+	*/
 
 	@Test
 	public void testRemove() {
@@ -305,6 +309,7 @@ public class AttributesTest {
 		assertEquals("", a.get("data-asdf"));
 	}
 
+	/*
 	@Test
 	public void testHtml() {
 		fail("Not yet implemented");
@@ -319,6 +324,7 @@ public class AttributesTest {
 	public void testToString() {
 		fail("Not yet implemented");
 	}
+	*/
 
 	@Test
 	public void testEqualsObject() {
