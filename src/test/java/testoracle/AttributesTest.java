@@ -20,6 +20,10 @@ public class AttributesTest {
 	
     @Test
     public void html() {
+    	Attributes aNull = new Attributes();
+    	assertEquals("", aNull.html());
+    	assertEquals(aNull.html(), aNull.toString());
+    	
         Attributes a = new Attributes();
         a.put("Tot", "a&p");
         a.put("Hello", "There");
