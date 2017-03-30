@@ -137,7 +137,12 @@ public class AttributesTest {
 
 	@Test
 	public void testGetIgnoreCase() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		assertEquals("", a.getIgnoreCase("tot"));			// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		assertEquals("There", a.getIgnoreCase("hello"));	// Case2 : attributes != null, stadard case
+		assertEquals("", a.getIgnoreCase("data-name"));		// Case3 : attributes != null, not exist key get test
 	}
 
 	@Test
