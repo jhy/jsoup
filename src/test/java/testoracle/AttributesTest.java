@@ -190,7 +190,26 @@ public class AttributesTest {
 
 	@Test
 	public void testAddAll() {
-		fail("Not yet implemented");
+		Attributes tmp = new Attributes();
+		Attributes a = new Attributes();
+		
+		a.addAll(tmp);							// Case1 : incoming == null
+		assertEquals(0, a.size());
+		
+		tmp.put("Tot", "a&p");
+		tmp.put("Hello", "There");
+		a.addAll(tmp);							// Case2 : incomming is normal case
+		assertEquals(2, a.size());
+		assertTrue(a.hasKey("Tot"));
+		assertTrue(a.hasKey("Hello"));
+		
+		Attributes aNotNull = new Attributes();
+		aNotNull.put("data-name", "Jsoup");
+		aNotNull.addAll(tmp);					// Case3 : attributes is not null
+		assertEquals(3, aNotNull.size());
+		assertTrue(aNotNull.hasKey("data-name"));
+		assertTrue(aNotNull.hasKey("Tot"));
+		assertTrue(aNotNull.hasKey("Hello"));
 	}
 
 	/*
