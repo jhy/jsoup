@@ -297,7 +297,14 @@ public class AttributesTest {
 
 	@Test
 	public void testClone() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		Attributes aComp = new Attributes();
+		assertEquals(aComp, a.clone());			// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		aComp.put("Tot", "a&p");
+		aComp.put("Hello", "There");
+		assertEquals(aComp, a.clone());			// Case2 : attributes != null
 	}
 
 }
