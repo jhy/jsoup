@@ -181,7 +181,11 @@ public class AttributesTest {
 
 	@Test
 	public void testSize() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		assertEquals(0, a.size());						// Case 1 : Attributes = null
+		
+		a.put("Tot", "a&p");
+		assertEquals(1, a.size());						// Case 2 : Attributes standard
 	}
 
 	@Test
