@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -258,7 +259,29 @@ public class AttributesTest {
 
 	@Test
 	public void testDataset() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		Map<String, String> html5CustomNull = a.dataset();			// Case1 : attributes == null
+		assertEquals(0, html5CustomNull.size());
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		a.put("data-name", "Jsoup");
+		Map<String, String> html5Custom = a.dataset();
+		assertEquals(1, html5Custom.size());						// Case2 : attributes != null
+		
+		assertEquals(null, html5Custom.put("asdf", "Ksoup"));		// Case3 : dataset's put method standard test
+		assertEquals(2, html5Custom.size());
+		assertEquals(4, a.size());
+		assertEquals("Ksoup", a.get("data-asdf"));
+		assertEquals("Jsoup", html5Custom.put("name", "Lsoup"));	// Case4 : dataset's put method with same key test
+		assertEquals(2, html5Custom.size());
+		assertEquals(4, a.size());
+		assertEquals("Lsoup", a.get("data-name"));
+
+		html5Custom.remove("asdf");									// Case5 : dataset's remove method test
+		assertEquals(1, html5Custom.size());
+		assertEquals(3, a.size());
+		assertEquals("", a.get("data-asdf"));
+		//assertEquals()
 	}
 
 	@Test
