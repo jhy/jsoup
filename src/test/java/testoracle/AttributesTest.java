@@ -119,7 +119,11 @@ public class AttributesTest {
     
 	@Test
 	public void testHashCode() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		assertEquals(0, a.hashCode());				// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		assertEquals(-2123275893, a.hashCode());	// Case2 : attributes != null
 	}
 
 	@Test
