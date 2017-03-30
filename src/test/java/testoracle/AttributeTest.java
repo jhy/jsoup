@@ -23,6 +23,14 @@ public class AttributeTest {
 	}
 	
 	@Test
+	public void testSetValue() {
+		Attribute a = new Attribute("Tot", "a&p");
+		assertEquals("a&p", a.setValue("wjdebug"));
+		assertEquals("Tot", a.getKey());
+		assertEquals("wjdebug", a.getValue());
+	}
+	
+	@Test
 	public void testHashCode() {
 		fail("Not yet implemented");
 	}
@@ -34,11 +42,6 @@ public class AttributeTest {
 
 	@Test
 	public void testGetValue() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetValue() {
 		fail("Not yet implemented");
 	}
 
