@@ -86,6 +86,7 @@ public class AttributeTest {
 		assertEquals(aComp, a.clone());
 	}
 
+	/*
 	@Test
 	public void testGetKey() {
 		fail("Not yet implemented");
@@ -115,4 +116,5 @@ public class AttributeTest {
 	public void testIsBooleanAttribute() {
 		fail("Not yet implemented");
 	}
+	*/
 }
