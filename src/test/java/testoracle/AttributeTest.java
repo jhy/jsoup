@@ -74,7 +74,8 @@ public class AttributeTest {
 	
 	@Test
 	public void testHashCode() {
-		fail("Not yet implemented");
+		Attribute a = new Attribute("Tot", "a&p");
+		assertEquals(31 * "Tot".hashCode() + "a&p".hashCode(), a.hashCode());
 	}
 
 	@Test
