@@ -16,21 +16,21 @@ public class TokenQueueTest {
 		tq.addFirst('a');
 		assertEquals('a', tq.peek());
 	}
-	
+
 	@Test
 	public void testMatchesCS() {
 		TokenQueue tq = new TokenQueue("Test");
 		assertEquals(true, tq.matchesCS("Te"));
 		assertEquals(false, tq.matchesCS("te"));
 	}
-	
+
 	@Test
 	public void testMatchesAnyWithEmptyQueue() {
 		TokenQueue tq = new TokenQueue("Test");
 		tq.consume("Test");
 		assertEquals(false, tq.matchesAny('T', 'e', 's', 't'));
 	}
-	
+
 	@Test
 	public void testMatchesStartTag() {
 		TokenQueue tq = new TokenQueue("<a>");
@@ -42,7 +42,7 @@ public class TokenQueueTest {
 		tq = new TokenQueue("<1");
 		assertEquals(false, tq.matchesStartTag());
 	}
-	
+
 	@Test
 	public void testMatchesWord() {
 		TokenQueue tq = new TokenQueue("test");
@@ -53,9 +53,9 @@ public class TokenQueueTest {
 		assertEquals(true, tq.matchesWord());
 		tq.consume("5");
 		tq.addFirst('<');
-		assertEquals(false, tq.matchesWord());	
+		assertEquals(false, tq.matchesWord());
 	}
-	
+
 	@Test
 	public void testAdvance() {
 		TokenQueue tq = new TokenQueue("Test");
@@ -71,13 +71,13 @@ public class TokenQueueTest {
 		tq.advance();
 		assertEquals(0, tq.peek());
 	}
-	
+
 	@Test(expected = IllegalStateException.class)
 	public void testConsume() {
 		TokenQueue tq = new TokenQueue("Test");
 		tq.consume("Fest");
 	}
-	
+
 	@Test
 	public void testchompBalanced() {
 		TokenQueue tq = new TokenQueue("hello world");
@@ -87,7 +87,7 @@ public class TokenQueueTest {
 		tq = new TokenQueue("\"hello world");
 		assertEquals(tq.chompBalanced('(', ')'), "");
 	}
-	
+
 	@Test
 	public void testConsumeTagName() {
 		TokenQueue tq = new TokenQueue("div ul:a");
@@ -95,7 +95,7 @@ public class TokenQueueTest {
 		tq.advance();
 		assertEquals(tq.consumeTagName(), "ul:a");
 	}
-	
+
 	@Test
 	public void testConsumeAttributeKey() {
 		TokenQueue tq = new TokenQueue("id='hello' accept-charset='utf-8'");
