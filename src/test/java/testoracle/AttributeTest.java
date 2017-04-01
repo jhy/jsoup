@@ -39,6 +39,13 @@ public class AttributeTest {
 	}
 	
 	@Test
+	public void testCreateFromEncoded() {
+		Attribute a = new Attribute("Tot", "a&p");
+		Attribute aComp = new Attribute("äöü", "a&p");
+		assertEquals(aComp, a.createFromEncoded("äöü", "a&p"));
+	}
+	
+	@Test
 	public void testHashCode() {
 		fail("Not yet implemented");
 	}
@@ -60,11 +67,6 @@ public class AttributeTest {
 
 	@Test
 	public void testToString() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testCreateFromEncoded() {
 		fail("Not yet implemented");
 	}
 
