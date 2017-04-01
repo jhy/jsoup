@@ -77,6 +77,14 @@ public class AttributeTest {
 		Attribute a = new Attribute("Tot", "a&p");
 		assertEquals(31 * "Tot".hashCode() + "a&p".hashCode(), a.hashCode());
 	}
+	
+	@Test
+	public void testClone() {
+		Attribute a = new Attribute("Tot", "a&p");
+		Attribute aComp = new Attribute("Tot", "a&p");
+		
+		assertEquals(aComp, a.clone());
+	}
 
 	@Test
 	public void testGetKey() {
@@ -107,10 +115,4 @@ public class AttributeTest {
 	public void testIsBooleanAttribute() {
 		fail("Not yet implemented");
 	}
-
-	@Test
-	public void testClone() {
-		fail("Not yet implemented");
-	}
-
 }
