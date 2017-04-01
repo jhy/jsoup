@@ -487,6 +487,8 @@ public class DocumentTest {
 		assertEquals(0, doc.outputSettings().indentAmount());
 		doc.outputSettings().indentAmount(3);	// Case4 : indentAmount set 3
 		assertEquals(3, doc.outputSettings().indentAmount());
+		doc.outputSettings().indentAmount(-1);	// Case5 : indentAmount set -1
+		assertEquals(0, doc.outputSettings().indentAmount());
 	}
     
     @Test
