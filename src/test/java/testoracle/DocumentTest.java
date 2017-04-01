@@ -470,6 +470,11 @@ public class DocumentTest {
 						+ "  before&nbsp;after\n"
 						+ " </body>\n"
 						+ "</html>", doc.normalise().toString());
+		
+		Document docTextNode = Jsoup.parse(html);
+		//System.out.println(docTextNode.toString());
+		//System.out.println(docTextNode.normalise().toString());
+		
 	}
     
     @Test
@@ -502,6 +507,7 @@ public class DocumentTest {
 		assertEquals(QuirksMode.limitedQuirks, doc.quirksMode());
 	}
     
+    /*
 	@Test
 	public void testNodeName() {
 		fail("Not yet implemented");
@@ -526,13 +532,6 @@ public class DocumentTest {
 	public void testCreateShell() {
 		fail("Not yet implemented");
 	}
-
-	/*
-	@Test
-	public void testLocation() {
-		fail("Not yet implemented");
-	}
-	*/
 
 	@Test
 	public void testHead() {
@@ -574,13 +573,6 @@ public class DocumentTest {
 		fail("Not yet implemented");
 	}
 
-	/*
-	@Test
-	public void testClone() {
-		fail("Not yet implemented");
-	}
-	*/
-
 	@Test
 	public void testOutputSettingsOutputSettings() {
 		fail("Not yet implemented");
@@ -590,5 +582,6 @@ public class DocumentTest {
 	public void testQuirksModeQuirksMode() {
 		fail("Not yet implemented");
 	}
+	*/
 
 }
