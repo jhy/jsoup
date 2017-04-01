@@ -26,7 +26,7 @@ p^-1
 -2p^-2
  @author Jonathan Hedley, jonathan@hedley.net */
 public class HtmlParserTest2 {
-    @Test public void ksooTest(){
+    @Test public void parseFragmentTest(){
 //        Element img = p.child(0);
 //        assertEquals("foo.png", img.attr("src"));
 //        assertEquals("img", img.tagName());
