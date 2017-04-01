@@ -448,21 +448,27 @@ public class DocumentTest {
 	public void testNormalise() {
 		String html =
                 "<html>"
-                        +   "<head>"
+                        +   " <head>"
                         +     "<meta http-equiv=\"content-type\" content=\"text/html; charset=Shift_JIS\" />"
                         +   "</head>"
                         +   "<body>"
                         +     "before&nbsp;after"
-                        +     "<a>a tag test</a>"
                         +   "</body>"
                         + "</html>";
-		String htmlOnlyAtag = "<a>a tag test</a>";
+		String htmlOnlyAtag = "<a></a>";
 		
-		Document doc = new Document(html);				// Case1 : html has <html>, <head>, <body>
-		assertEquals("<html>\n <head></head>\n <body></body>\n</html>", doc.normalise().toString());
-		
-		Document docNull = new Document(htmlOnlyAtag);	// Case2 : html does not have <html>, <head>, <body>
+		Document docNull = new Document("");		// Case1 : html does not have <html>, <head>, <body>
 		assertEquals("<html>\n <head></head>\n <body></body>\n</html>", docNull.normalise().toString());
+		
+		Document doc = Jsoup.parse(html);			// Case2 : html has <html>, <head>, <body>
+		assertEquals("<html>\n"
+						+ " <head>\n"
+						+ "  <meta http-equiv=\"content-type\" content=\"text/html; charset=Shift_JIS\">\n"
+						+ " </head>\n"
+						+ " <body>\n"
+						+ "  before&nbsp;after\n"
+						+ " </body>\n"
+						+ "</html>", doc.normalise().toString());
 	}
     
 	@Test
