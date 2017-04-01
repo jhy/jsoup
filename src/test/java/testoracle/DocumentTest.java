@@ -471,6 +471,23 @@ public class DocumentTest {
 						+ "</html>", doc.normalise().toString());
 	}
     
+    @Test
+	public void testOutputSettings() {
+		Document doc = new Document("");
+		
+		doc.outputSettings().outline(true);		// Case1 : outline set true
+		assertEquals(true, doc.outputSettings().outline());
+		
+		doc.outputSettings().outline(false);	// Case2 : outline set false
+		assertEquals(false, doc.outputSettings().outline());
+		
+		assertEquals(1, doc.outputSettings().indentAmount());
+		doc.outputSettings().indentAmount(0);	// Case3 : indentAmount set 0
+		assertEquals(0, doc.outputSettings().indentAmount());
+		doc.outputSettings().indentAmount(3);	// Case4 : indentAmount set 3
+		assertEquals(3, doc.outputSettings().indentAmount());
+	}
+    
 	@Test
 	public void testNodeName() {
 		fail("Not yet implemented");
@@ -549,11 +566,6 @@ public class DocumentTest {
 		fail("Not yet implemented");
 	}
 	*/
-
-	@Test
-	public void testOutputSettings() {
-		fail("Not yet implemented");
-	}
 
 	@Test
 	public void testOutputSettingsOutputSettings() {
