@@ -45,6 +45,14 @@ public class AttributeTest {
 		assertEquals(aComp, a.createFromEncoded("äöü", "a&p"));
 	}
 	
+	/*
+	@Test
+	public void testIsDataAttribute() {
+		Attribute a = new Attribute("data-name", "Jsoup");
+		assertEquals(true, a.isDataAttribute());
+	}
+	*/
+	
 	@Test
 	public void testHashCode() {
 		fail("Not yet implemented");
@@ -67,11 +75,6 @@ public class AttributeTest {
 
 	@Test
 	public void testToString() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testIsDataAttribute() {
 		fail("Not yet implemented");
 	}
 
