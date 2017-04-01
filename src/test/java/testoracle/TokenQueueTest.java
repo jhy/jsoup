@@ -78,12 +78,31 @@ public class TokenQueueTest {
 		tq.consume("Fest");
 	}
 	
-	// TODO
 	@Test
-	public void testConsumeToIgnoreCaseCantScan() {
-		TokenQueue tq = new TokenQueue("<<<<a>test");
-		assertTrue(tq.consumeToIgnoreCase("<a>").equals("<<<"));
+	public void testchompBalanced() {
+		TokenQueue tq = new TokenQueue("hello world");
+		assertEquals(tq.chompBalanced('(', ')'), "");
+		tq = new TokenQueue("\'hello world");
+		assertEquals(tq.chompBalanced('(', ')'), "");
+		tq = new TokenQueue("\"hello world");
+		assertEquals(tq.chompBalanced('(', ')'), "");
 	}
 	
+	@Test
+	public void testConsumeTagName() {
+		TokenQueue tq = new TokenQueue("div ul:a");
+		assertEquals(tq.consumeTagName(), "div");
+		tq.advance();
+		assertEquals(tq.consumeTagName(), "ul:a");
+	}
 	
+	@Test
+	public void testConsumeAttributeKey() {
+		TokenQueue tq = new TokenQueue("id='hello' accept-charset='utf-8'");
+		assertEquals(tq.consumeAttributeKey(), "id");
+		tq.consume("='hello' ");
+		assertEquals(tq.consumeAttributeKey(), "accept-charset");
+		tq.consume("='utf-8'");
+		assertEquals(tq.consumeAttributeKey(), "");
+	}
 }
