@@ -444,6 +444,27 @@ public class DocumentTest {
 		assertEquals("", doc.title());
 	}
     
+    @Test
+	public void testNormalise() {
+		String html =
+                "<html>"
+                        +   "<head>"
+                        +     "<meta http-equiv=\"content-type\" content=\"text/html; charset=Shift_JIS\" />"
+                        +   "</head>"
+                        +   "<body>"
+                        +     "before&nbsp;after"
+                        +     "<a>a tag test</a>"
+                        +   "</body>"
+                        + "</html>";
+		String htmlOnlyAtag = "<a>a tag test</a>";
+		
+		Document doc = new Document(html);				// Case1 : html has <html>, <head>, <body>
+		assertEquals("<html>\n <head></head>\n <body></body>\n</html>", doc.normalise().toString());
+		
+		Document docNull = new Document(htmlOnlyAtag);	// Case2 : html does not have <html>, <head>, <body>
+		assertEquals("<html>\n <head></head>\n <body></body>\n</html>", docNull.normalise().toString());
+	}
+    
 	@Test
 	public void testNodeName() {
 		fail("Not yet implemented");
@@ -493,11 +514,6 @@ public class DocumentTest {
 
 	@Test
 	public void testTitleString() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testNormalise() {
 		fail("Not yet implemented");
 	}
 
