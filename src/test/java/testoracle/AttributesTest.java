@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -145,12 +146,36 @@ public class AttributesTest {
 		assertEquals("", a.getIgnoreCase("data-name"));		// Case3 : attributes != null, not exist key get test
 	}
 
-	/*
+	@Test
+	public void testDatasetPutStringString() {
+		Attributes a = new Attributes();
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		a.put("data-name", "Jsoup");
+		Map<String, String> html5Custom = a.dataset();
+		assertEquals(1, html5Custom.size());
+
+		assertEquals("Jsoup", html5Custom.put("name", "Lsoup"));	// Case4 : dataset's put method with same key test
+		assertEquals(1, html5Custom.size());
+		assertEquals(3, a.size());
+		assertEquals("Lsoup", a.get("data-name"));
+	}
+	
 	@Test
 	public void testPutStringString() {
-		fail("Not yet implemented");
+		Attributes a = new Attributes();
+		a.put("Tot", "a&p");
+		assertEquals(1, a.size());
+		assertTrue(a.hasKey("Tot"));
+		
+		a.put("Hello", "There");
+		assertEquals(2, a.size());
+		assertTrue(a.hasKey("Tot"));
+		
+		//assertSame("a&p", a.put("Tot", "wjdebug"));
+		//assertEquals(2, a.size());
+		//assertTrue(a.hasKey("Tot"));
 	}
-	*/
 
 	@Test
 	public void testPutStringBoolean() {
