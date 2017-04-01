@@ -18,6 +18,7 @@ import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
+import org.jsoup.nodes.Document.QuirksMode;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -488,6 +489,17 @@ public class DocumentTest {
 		assertEquals(3, doc.outputSettings().indentAmount());
 	}
     
+    @Test
+	public void testQuirksMode() {
+		Document doc = new Document("");
+		doc.quirksMode(QuirksMode.noQuirks);			// Case1 : set QuirksMode to noQuirks
+		assertEquals(QuirksMode.noQuirks, doc.quirksMode());
+		doc.quirksMode(QuirksMode.quirks);				// Case2 : set QuirksMode to quirks
+		assertEquals(QuirksMode.quirks, doc.quirksMode());
+		doc.quirksMode(QuirksMode.limitedQuirks);		// Case3 : set QuirksMode to limitedQuirks
+		assertEquals(QuirksMode.limitedQuirks, doc.quirksMode());
+	}
+    
 	@Test
 	public void testNodeName() {
 		fail("Not yet implemented");
@@ -569,11 +581,6 @@ public class DocumentTest {
 
 	@Test
 	public void testOutputSettingsOutputSettings() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testQuirksMode() {
 		fail("Not yet implemented");
 	}
 
