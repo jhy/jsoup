@@ -53,12 +53,12 @@ public class Entities {
             load(this, file, size);
         }
 
-        int codepointForName(final String name) {
+        public int codepointForName(final String name) {
             int index = Arrays.binarySearch(nameKeys, name);
             return index >= 0 ? codeVals[index] : empty;
         }
 
-        String nameForCodepoint(final int codepoint) {
+        public String nameForCodepoint(final int codepoint) {
             final int index = Arrays.binarySearch(codeKeys, codepoint);
             if (index >= 0) {
                 // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
@@ -142,7 +142,7 @@ public class Entities {
         return 0;
     }
 
-    static String escape(String string, Document.OutputSettings out) {
+    public static String escape(String string, Document.OutputSettings out) {
         StringBuilder accum = new StringBuilder(string.length() * 2);
         try {
             escape(accum, string, out, false, false, false);
@@ -153,7 +153,7 @@ public class Entities {
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
-    static void escape(Appendable accum, String string, Document.OutputSettings out,
+    public static void escape(Appendable accum, String string, Document.OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
 
         boolean lastWasWhite = false;
@@ -236,7 +236,7 @@ public class Entities {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
     }
 
-    static String unescape(String string) {
+    public static String unescape(String string) {
         return unescape(string, false);
     }
 
@@ -247,7 +247,7 @@ public class Entities {
      * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
      * @return unescaped string
      */
-    static String unescape(String string, boolean strict) {
+    public static String unescape(String string, boolean strict) {
         return Parser.unescapeEntities(string, strict);
     }
 
