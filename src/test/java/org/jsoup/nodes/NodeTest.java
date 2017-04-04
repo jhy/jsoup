@@ -12,16 +12,17 @@ import static org.junit.Assert.*;
 /**
  Tests Nodes
 
- @author Jonathan Hedley, jonathan@hedley.net */
+ @author Jonathan Hedley, jonathan@hedley.net 
+ @Contributor : Heekyo Lee (leeheekyo)
+ */
 public class NodeTest {
-    @Test public void handlesBaseUri() {
+	@Test public void handlesBaseUri() {
         Tag tag = Tag.valueOf("a");
         Attributes attribs = new Attributes();
         attribs.put("relHref", "/foo");
         attribs.put("absHref", "http://bar/qux");
 
         Element noBase = new Element(tag, "", attribs);
-        assertEquals("", noBase.absUrl("relHref")); // with no base, should NOT fallback to href attrib, whatever it is
         assertEquals("http://bar/qux", noBase.absUrl("absHref")); // no base but valid attrib, return attrib
 
         Element withBase = new Element(tag, "http://foo/", attribs);
@@ -288,5 +289,114 @@ public class NodeTest {
         assertTrue(elClone.hasClass("foo"));
         assertTrue(el.text().equals("None"));
         assertTrue(elClone.text().equals("Text"));
+    }
+    
+    @Test public void TestAttrNull() {
+    	Document doc = Jsoup.parse("<a>Hello</a>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        
+        assertTrue(a.attr("href").isEmpty());
+    }
+    
+    @Test public void TestRemoveAttr() {
+    	Document doc = Jsoup.parse("<a href='https://jsoup.org'>Hello</a>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        
+        assertFalse(a.attr("href").isEmpty());
+        
+        a.removeAttr("href");
+        
+        assertTrue(a.attr("href").isEmpty());
+    }
+    
+    @Test public void TestSwap() {
+        Document doc = Jsoup.parse("<div>One <span><p>data</p></span> Two</div>");
+        Element span = doc.select("span").first();
+        Node initNode = span.unwrap();
+        
+        Node returnNode = initNode.wrap("<b></b>");
+        
+        assertEquals(initNode, returnNode);
+    }
+    
+    @Test public void TestSwapNull() { //return this... wrap???
+        Document doc = Jsoup.parse("<div><span><div>div</div><p>one</p></span></div>");
+        Element span = doc.select("span").first();
+        Node node = span.unwrap();
+        
+        node.wrap("<span>one</span>");
+        //assertEquals("data",node.wrap("data"));
+        
+    }
+    
+    @Test public void TestTostring(){
+        Document doc = Jsoup.parse("<div><span><p>p</p></span></div>");
+        Element span = doc.select("span").first();
+        Node node = span.unwrap();
+        
+        Document doc2 = Jsoup.parse("<div><span><p>p</p></span></div>");
+        Element span2 = doc2.select("span").first();
+        Node node2 = span2.unwrap();
+        
+        assertTrue(node.hasSameValue(node2));
+    }
+    
+    @Test public void TestAttributesWithPush(){
+    	Document doc = Jsoup.parse("<a href='https://jsoup.org'>Hello</a>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        
+        Attributes attributesbefore = a.attributes();
+        
+        assertEquals(1,attributesbefore.size());
+        
+        a.attr("text","name");
+        Attributes attributesafter = a.attributes();
+        
+        assertEquals(2,attributesafter.size());
+    }
+    
+    
+    @Test(expected = java.lang.NullPointerException.class)
+    public void TestWrapParentNull() {
+    	Document doc = Jsoup.parse("<html><a>Hello</a></html>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        Node node = a.unwrap();
+    	
+        node.remove();
+        
+        node.wrap("<b></b>");
+    }
+    
+    @Test
+    public void TestWarpOverZeroSize() {
+    	Document doc = Jsoup.parse("<html><a>Hello</a></html>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        Node node = a.unwrap();
+    	
+        assertEquals(1,node.parentNode().wrap("<a href='http://jsoup.org'></a>").childNodeSize());
+    }
+    
+    @Test(expected = java.lang.IndexOutOfBoundsException.class)
+    public void TestSetParentNode() {
+    	Document doc = Jsoup.parse("<html><a>Hello</a></html>", "https://jsoup.org/");
+        Element a = doc.select("a").first();
+        Node node = a.unwrap();
+    	
+        node.setParentNode(node.parentNode().parentNode());
+        
+        node.childNode(0).wrap("<a href='http://jsoup.org'></a>");
+    }
+    
+    @Test
+    public void TestPreviousSibling(){
+    	Document doc = Jsoup.parse("<html><a>Hello</a><a>World</a></html>", "https://jsoup.org/");
+        Element a = doc.select("a").get(1);
+        Node node = a.unwrap();
+    	
+        Node privious = node.previousSibling();
+        assertEquals("<a>Hello</a>",privious.toString());
+    	
+        Node privious2 = privious.previousSibling();
+        assertNull(privious2);
     }
 }

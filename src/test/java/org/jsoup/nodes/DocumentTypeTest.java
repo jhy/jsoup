@@ -12,7 +12,8 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, http://jonathanhedley.com/
  */
 public class DocumentTypeTest {
-    @Test
+
+	@Test
     public void constructorValidationOkWithBlankName() {
         DocumentType fail = new DocumentType("","", "", "");
     }
@@ -28,7 +29,10 @@ public class DocumentTypeTest {
     }
 
     @Test public void outerHtmlGeneration() {
-        DocumentType html5 = new DocumentType("html", "", "", "");
+    	DocumentType htmlNull = new DocumentType("", "", "", "");		// Case1 : html is null
+    	assertEquals("<!doctype>", htmlNull.outerHtml());
+    	
+        DocumentType html5 = new DocumentType("html", "", "", "");		// Case2 : html is not null
         assertEquals("<!doctype html>", html5.outerHtml());
 
         DocumentType publicDocType = new DocumentType("html", "-//IETF//DTD HTML//", "", "");

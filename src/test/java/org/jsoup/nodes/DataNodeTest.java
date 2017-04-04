@@ -1,4 +1,4 @@
-package testoracle;
+package org.jsoup.nodes;
 
 import static org.junit.Assert.*;
 
@@ -25,41 +25,4 @@ public class DataNodeTest {
 		assertEquals("HTML encoded data", dnFromEncoded.toString());
 	}
 	
-	/*
-	@Test
-	public void testNodeName() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testOuterHtmlHead() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testOuterHtmlTail() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testToString() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetWholeData() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetWholeData() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testCreateFromEncoded() {
-		fail("Not yet implemented");
-	}
-	*/
-
 }

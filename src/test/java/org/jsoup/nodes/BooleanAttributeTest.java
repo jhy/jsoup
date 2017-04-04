@@ -1,4 +1,4 @@
-package testoracle;
+package org.jsoup.nodes;
 
 import static org.junit.Assert.*;
 
@@ -14,10 +14,4 @@ public class BooleanAttributeTest {
 		assertEquals("", ba.getValue());
 	}
 
-	/*
-	@Test
-	public void testIsBooleanAttribute() {
-		fail("Not yet implemented");
-	}
-	*/
 }
