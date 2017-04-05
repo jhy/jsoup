@@ -946,4 +946,24 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse("<p><a \06=foo>One</a><a/\06=bar><a foo\06=bar>Two</a></p>");
         assertEquals("<p><a>One</a><a></a><a foo=\"bar\">Two</a></p>", doc.body().html());
     }
+    @Test public void parseInFrame() {
+        Document doc = Jsoup.parse("<frameset cols=\"200,*\"> </frameset");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"> </frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<frameset cols=\"200,*\"><!-- comment --></frameset");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"> <!-- comment --> </frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml())); 
+        
+        doc = Jsoup.parse("<frameset cols=\"200,*\"><html></html></frameset");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"></frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml())); 
+        
+        doc = Jsoup.parse("<frameset cols=\"200,*\"><frameset></frameset></frameset");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"> <frameset></frameset> </frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<frameset cols=\"200,*\"><frame></frame></frameset");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"> <frame> </frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        doc = Jsoup.parse("<frameset cols=\"200,*\"><noframes></noframes></frameset>");
+        assertEquals("<html> <head></head> <frameset cols=\"200,*\"> <noframes></noframes> </frameset> </html>", StringUtil.normaliseWhitespace(doc.outerHtml())); 
+    }
+
 }
