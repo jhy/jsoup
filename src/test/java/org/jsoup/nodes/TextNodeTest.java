@@ -9,11 +9,9 @@ import static org.junit.Assert.*;
 /**
  Test TextNodes
 
- @author Jonathan Hedley, jonathan@hedley.net 
- @Contributor : Heekyo Lee (leeheekyo)
- */
+ @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNodeTest {
-	@Test public void testBlank() {
+    @Test public void testBlank() {
         TextNode one = new TextNode("", "");
         TextNode two = new TextNode("     ", "");
         TextNode three = new TextNode("  \n\n   ", "");
@@ -73,64 +71,5 @@ public class TextNodeTest {
         Document doc = Jsoup.parse(new String(Character.toChars(135361)));
         TextNode t = doc.body().textNodes().get(0);
         assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
-    }
-    
-    @Test public void testCreateFromEncoded(){
-        Document doc = Jsoup.parse("<div>one</div>");
-        Element div = doc.select("div").first();
-        TextNode textnode = (TextNode) div.childNode(0);
-        
-        assertEquals("base64",textnode.createFromEncoded("base64","http://naver.com").toString());
-    }
-    
-    @Test public void TestStripLeadingWhitespace(){
-    	Document doc = Jsoup.parse("<div>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	assertEquals("text", textnode.stripLeadingWhitespace("text"));
-    }
-    
-    @Test public void TestAttr(){
-    	Document doc = Jsoup.parse("<div name=val>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	assertNotNull(textnode.attr("val"));
-    }
-    
-    @Test public void TestAttributes(){
-    	Document doc = Jsoup.parse("<div name=val>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	assertNotNull(textnode.attributes());
-    }
-    
-    @Test public void TestHasAttr(){
-    	Document doc = Jsoup.parse("<div name=val>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	assertTrue(textnode.hasAttr("text"));
-    }
-    
-    @Test public void TestRemoveAttr(){
-    	Document doc = Jsoup.parse("<div name=val>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	textnode.removeAttr("text");
-    	assertNotNull(textnode.attr("text"));
-    	assertFalse(textnode.hasAttr("text"));
-    	assertEquals("\ntext",textnode.text("text").toString());
-    }
-    
-    @Test public void TestAbsUrl(){
-    	Document doc = Jsoup.parse("<div name=val>one</div>");
-    	Element div = doc.select("div").first();
-    	TextNode textnode = (TextNode) div.childNode(0);
-    	
-    	assertEquals("",textnode.absUrl("text").toString());
     }
 }

@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document.OutputSettings;
-import org.jsoup.nodes.Document.QuirksMode;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -25,12 +24,9 @@ import static org.junit.Assert.assertTrue;
 /**
  Tests for Document.
 
- @author Jonathan Hedley, jonathan@hedley.net 
- @Contributor : Woojin Lee (holinder4s)
- */
+ @author Jonathan Hedley, jonathan@hedley.net */
 public class DocumentTest {
-
-	private static final String charsetUtf8 = "UTF-8";
+    private static final String charsetUtf8 = "UTF-8";
     private static final String charsetIso8859 = "ISO-8859-1";
     
     
@@ -438,74 +434,4 @@ public class DocumentTest {
         assertTrue("Should have contained a '&#xa0;' or a '&nbsp;'.",
                 output.contains("&#xa0;") || output.contains("&nbsp;"));
     }
-    
-    @Test
-	public void testCreateElement() {
-		Document doc = new Document("http://holinder4s.tistory.com");
-		Element element = doc.createElement("h1");
-		assertEquals("http://holinder4s.tistory.com", doc.location());
-		assertEquals("", doc.title());
-	}
-    
-    @Test
-	public void testNormalise() {
-		String html =
-                "<html>"
-                        +   " <head>"
-                        +     "<meta http-equiv=\"content-type\" content=\"text/html; charset=Shift_JIS\" />"
-                        +   "</head>"
-                        +   "<body>"
-                        +     "before&nbsp;after"
-                        +   "</body>"
-                        + "</html>";
-		String htmlOnlyAtag = "<a></a>";
-		
-		Document docNull = new Document("");		// Case1 : html does not have <html>, <head>, <body>
-		assertEquals("<html>\n <head></head>\n <body></body>\n</html>", docNull.normalise().toString());
-		
-		Document doc = Jsoup.parse(html);			// Case2 : html has <html>, <head>, <body>
-		assertEquals("<html>\n"
-						+ " <head>\n"
-						+ "  <meta http-equiv=\"content-type\" content=\"text/html; charset=Shift_JIS\">\n"
-						+ " </head>\n"
-						+ " <body>\n"
-						+ "  before&nbsp;after\n"
-						+ " </body>\n"
-						+ "</html>", doc.normalise().toString());
-		
-		Document docTextNode = Jsoup.parse(html);
-		//System.out.println(docTextNode.toString());
-		//System.out.println(docTextNode.normalise().toString());
-		
-	}
-    
-    @Test
-	public void testOutputSettings() {
-		Document doc = new Document("");
-		
-		doc.outputSettings().outline(true);		// Case1 : outline set true
-		assertEquals(true, doc.outputSettings().outline());
-		
-		doc.outputSettings().outline(false);	// Case2 : outline set false
-		assertEquals(false, doc.outputSettings().outline());
-		
-		assertEquals(1, doc.outputSettings().indentAmount());
-		doc.outputSettings().indentAmount(0);	// Case3 : indentAmount set 0
-		assertEquals(0, doc.outputSettings().indentAmount());
-		doc.outputSettings().indentAmount(3);	// Case4 : indentAmount set 3
-		assertEquals(3, doc.outputSettings().indentAmount());
-		doc.outputSettings().indentAmount(-1);	// Case5 : indentAmount set -1
-		assertEquals(0, doc.outputSettings().indentAmount());
-	}
-    
-    @Test
-	public void testQuirksMode() {
-		Document doc = new Document("");
-		doc.quirksMode(QuirksMode.noQuirks);			// Case1 : set QuirksMode to noQuirks
-		assertEquals(QuirksMode.noQuirks, doc.quirksMode());
-		doc.quirksMode(QuirksMode.quirks);				// Case2 : set QuirksMode to quirks
-		assertEquals(QuirksMode.quirks, doc.quirksMode());
-		doc.quirksMode(QuirksMode.limitedQuirks);		// Case3 : set QuirksMode to limitedQuirks
-		assertEquals(QuirksMode.limitedQuirks, doc.quirksMode());
-	}
 }
