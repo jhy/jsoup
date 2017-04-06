@@ -73,4 +73,12 @@ public class AttributeTest {
 		Attribute a = new Attribute("Tot", "a&p");
 		assertEquals(31 * "Tot".hashCode() + "a&p".hashCode(), a.hashCode());
 	}
+    
+    @Test
+	public void testClone() {
+		Attribute a = new Attribute("Tot", "a&p");
+		Attribute aComp = new Attribute("Tot", "a&p");
+		
+		assertEquals(aComp, a.clone());
+	}
 }
