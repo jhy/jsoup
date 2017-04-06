@@ -10,7 +10,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-public class TokeniserTest {
+public class TokeniserStateTest {
 
     final char[] whiteSpace = { '\t', '\n', '\r', '\f', ' ' };
     final char[] quote = { '\'', '"' };
@@ -120,6 +120,7 @@ public class TokeniserTest {
 
     @Test
     public void testPublicIdentifiersWithWhitespace() {
+        String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
                 String[] htmls = { 
@@ -130,7 +131,6 @@ public class TokeniserTest {
                         String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws),
                         String.format("<!DOCTYPE html PUBLIC%c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws)
                     };
-                String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\">";
                 for (String html : htmls) {
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
@@ -141,6 +141,7 @@ public class TokeniserTest {
 
     @Test
     public void testSystemIdentifiersWithWhitespace() {
+        String expectedOutput = "<!DOCTYPE html SYSTEM \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
                 String[] htmls = {
@@ -151,7 +152,6 @@ public class TokeniserTest {
                         String.format("<!DOCTYPE html SYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws),
                         String.format("<!DOCTYPE html SYSTEM%chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws)
                     };
-                String expectedOutput = "<!DOCTYPE html SYSTEM \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
                 for (String html : htmls) {
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
@@ -162,7 +162,9 @@ public class TokeniserTest {
 
     @Test
     public void testPublicAndSystemIdentifiersWithWhitespace() {
-        for (char q : quote) {
+        String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\""
+                + " \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
+    	for (char q : quote) {
             for (char ws : whiteSpace) {
                 String[] htmls = {
                         String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c"
@@ -170,10 +172,7 @@ public class TokeniserTest {
                         String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c"
                                 + "%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", q, q, q, q)
                     };
-                String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\""
-                        + " \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
                 for (String html : htmls) {
-                    System.out.println(html);
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
                 }
