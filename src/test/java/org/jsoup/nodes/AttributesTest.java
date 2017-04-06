@@ -230,5 +230,14 @@ public class AttributesTest {
         Attributes aFF = new Attributes();
         assertFalse(aFF.hasKey("Tot"));
 	}
+    
+    @Test
+	public void testHasKeyIgnoreCase() {
+		Attributes a = new Attributes();
+		assertFalse(a.hasKeyIgnoreCase("tot"));			// Case1 : attributes = null
+		a.put("Tot", "a&p");					
+		assertTrue(a.hasKeyIgnoreCase("tot"));			// Case2 : find attributes (standard case)
+		assertFalse(a.hasKeyIgnoreCase("Hello"));		// Case3 : not found attributes
+	}
 
 }
