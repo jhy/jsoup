@@ -17,4 +17,11 @@ public class AttributeTest {
         assertEquals(s + "=\"A" + s + "B\"", attr.html());
         assertEquals(attr.html(), attr.toString());
     }
+    
+    @Test
+	public void testAttribute() {
+		Attribute a = new Attribute("Tot", "a&p");
+		assertEquals("Tot", a.getKey());
+		assertEquals("a&p", a.getValue());
+	}
 }
