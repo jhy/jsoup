@@ -168,9 +168,21 @@ public class AttributesTest {
 		assertEquals(2, a.size());
 		assertTrue(a.hasKey("Tot"));
 		
-		//assertSame("a&p", a.put("Tot", "wjdebug"));
+		//assertEquals("a&p", a.put("Tot", "wjdebug"));			// Not Return old value => I think this method have to return old value
 		//assertEquals(2, a.size());
 		//assertTrue(a.hasKey("Tot"));
+	}
+    
+    @Test
+	public void testPutStringBoolean() {
+		Attributes a = new Attributes();
+		a.put("Tot", true);
+		assertEquals(1, a.size());
+		assertTrue(a.hasKey("Tot"));
+		
+		a.put("Hello", false);
+		assertEquals(1, a.size());
+		assertFalse(a.hasKey("Hello"));
 	}
 
 }
