@@ -113,5 +113,14 @@ public class AttributesTest {
         assertTrue(a.hasKey("tot"));
         assertFalse(a.hasKey("Tot"));
     }
+    
+    @Test
+	public void testHashCode() {
+		Attributes a = new Attributes();
+		assertEquals(0, a.hashCode());				// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		assertEquals(-2123275893, a.hashCode());	// Case2 : attributes != null
+	}
 
 }
