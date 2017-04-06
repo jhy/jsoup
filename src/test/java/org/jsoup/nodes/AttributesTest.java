@@ -17,6 +17,10 @@ public class AttributesTest {
 
     @Test
     public void html() {
+    	Attributes aNull = new Attributes();
+    	assertEquals("", aNull.html());
+    	assertEquals(aNull.html(), aNull.toString());
+    	
         Attributes a = new Attributes();
         a.put("Tot", "a&p");
         a.put("Hello", "There");
@@ -35,6 +39,7 @@ public class AttributesTest {
         assertEquals("", a.get("tot"));
         assertEquals("a&p", a.get("Tot"));
         assertEquals("a&p", a.getIgnoreCase("tot"));
+        assertEquals("a&p", a.getIgnoreCase("Tot"));	// Add Case : correct case-sensitive attribute data to getIgnoreCase()'s arg
 
         assertEquals(" Tot=\"a&amp;p\" Hello=\"There\" data-name=\"Jsoup\"", a.html());
         assertEquals(a.html(), a.toString());
