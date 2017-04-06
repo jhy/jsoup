@@ -24,4 +24,13 @@ public class AttributeTest {
 		assertEquals("Tot", a.getKey());
 		assertEquals("a&p", a.getValue());
 	}
+    
+    @Test
+	public void testSetKey() {
+		Attribute a = new Attribute("Tot", "a&p");
+		//assertEquals("Tot", a.setKey("Hello"));			// old key return test
+		a.setKey("Hello");
+		assertEquals("Hello", a.getKey());
+		assertEquals("a&p", a.getValue());
+	}
 }
