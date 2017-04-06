@@ -156,5 +156,21 @@ public class AttributesTest {
 		assertEquals(3, a.size());
 		assertEquals("Lsoup", a.get("data-name"));
 	}
+    
+    @Test
+	public void testPutStringString() {
+		Attributes a = new Attributes();
+		a.put("Tot", "a&p");
+		assertEquals(1, a.size());
+		assertTrue(a.hasKey("Tot"));
+		
+		a.put("Hello", "There");
+		assertEquals(2, a.size());
+		assertTrue(a.hasKey("Tot"));
+		
+		//assertSame("a&p", a.put("Tot", "wjdebug"));
+		//assertEquals(2, a.size());
+		//assertTrue(a.hasKey("Tot"));
+	}
 
 }
