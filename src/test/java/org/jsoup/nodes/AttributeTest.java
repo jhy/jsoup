@@ -67,4 +67,10 @@ public class AttributeTest {
 		
 		assertFalse(a.equals(as));				// Case6 : Compare with Attributes
 	}
+    
+    @Test
+	public void testHashCode() {
+		Attribute a = new Attribute("Tot", "a&p");
+		assertEquals(31 * "Tot".hashCode() + "a&p".hashCode(), a.hashCode());
+	}
 }
