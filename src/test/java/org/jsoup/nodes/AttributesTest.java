@@ -317,5 +317,24 @@ public class AttributesTest {
 		assertEquals(3, a.size());
 		assertEquals("", a.get("data-asdf"));
 	}
+    
+    @Test
+	public void testEqualsObject() {
+		Attributes aOne = new Attributes();
+		Attributes aTwo = new Attributes();
+		assertTrue(aOne.equals(aTwo));			// Case1 : attributes == null, compare with null
+		aTwo.put("Tot", "a&p");
+		aTwo.put("Hello", "There");
+		assertFalse(aOne.equals(aTwo));			// Case2 : attributes == null, compare with another attr
+		aOne.put("Tot", "a&p");
+		aOne.put("Hello", "There");
+		assertFalse(aOne.equals(null));			// Case2 : attributes != null, Compare with null
+		assertTrue(aOne.equals(aOne));			// Case3 : attributes != null, Compare with itself
+		assertTrue(aOne.equals(aTwo));			// Case4 : attributes != null, Compare with another attr(equal value)
+		aTwo.remove("Hello");
+		assertFalse(aOne.equals(aTwo));			// Case5 : attributes != null, Compare with another attr(not equal value)
+		aTwo.remove("Tot");
+		assertFalse(aOne.equals(aTwo));			// Case6 : attributes != null, Compare with empty attr
+	}
 
 }
