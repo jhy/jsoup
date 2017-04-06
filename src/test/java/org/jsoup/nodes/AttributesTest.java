@@ -336,5 +336,17 @@ public class AttributesTest {
 		aTwo.remove("Tot");
 		assertFalse(aOne.equals(aTwo));			// Case6 : attributes != null, Compare with empty attr
 	}
+    
+    @Test
+	public void testClone() {
+		Attributes a = new Attributes();
+		Attributes aComp = new Attributes();
+		assertEquals(aComp, a.clone());			// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		aComp.put("Tot", "a&p");
+		aComp.put("Hello", "There");
+		assertEquals(aComp, a.clone());			// Case2 : attributes != null
+	}
 
 }
