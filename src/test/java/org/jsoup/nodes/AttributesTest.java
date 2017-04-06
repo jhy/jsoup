@@ -198,5 +198,23 @@ public class AttributesTest {
 		a.remove("data-name");				// Case3 : attributes != null, not exist key remove test
 		assertEquals(1, a.size());
 	}
+    
+    @Test
+	public void testRemoveIgnoreCase() {
+		Attributes a = new Attributes();
+		a.removeIgnoreCase("tot");			// Case1 : attributes == null
+		assertEquals(0, a.size());
+        a.put("Tot", "a&p");
+        a.put("Hello", "There");
+        a.put("data-name", "Jsoup");
+
+        assertEquals(3, a.size());
+        a.removeIgnoreCase("tot");			// Case2 : attributes != null, standard case
+        assertEquals(2, a.size());
+        assertFalse(a.hasKey("Tot"));
+        
+        a.removeIgnoreCase("unknown");		// Case3 : attributes != null, not exist key removeIgnore test
+        assertEquals(2, a.size());
+	}
 
 }
