@@ -33,4 +33,12 @@ public class AttributeTest {
 		assertEquals("Hello", a.getKey());
 		assertEquals("a&p", a.getValue());
 	}
+    
+    @Test
+	public void testSetValue() {
+		Attribute a = new Attribute("Tot", "a&p");
+		assertEquals("a&p", a.setValue("wjdebug"));			// old value return test
+		assertEquals("Tot", a.getKey());
+		assertEquals("wjdebug", a.getValue());
+	}
 }
