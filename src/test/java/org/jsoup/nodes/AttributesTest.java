@@ -216,5 +216,19 @@ public class AttributesTest {
         a.removeIgnoreCase("unknown");		// Case3 : attributes != null, not exist key removeIgnore test
         assertEquals(2, a.size());
 	}
+    
+    @Test
+	public void testHasKey() {
+		Attributes aTT = new Attributes();
+        aTT.put("Tot", "a&p");
+        assertTrue(aTT.hasKey("Tot"));
+        
+        Attributes aTF = new Attributes();
+        aTF.put("Tot", "");
+        assertTrue(aTF.hasKey("Tot"));
+        
+        Attributes aFF = new Attributes();
+        assertFalse(aFF.hasKey("Tot"));
+	}
 
 }
