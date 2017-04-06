@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.junit.Test;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -139,6 +140,21 @@ public class AttributesTest {
 		a.put("Hello", "There");
 		assertEquals("There", a.getIgnoreCase("hello"));	// Case2 : attributes != null, stadard case
 		assertEquals("", a.getIgnoreCase("data-name"));		// Case3 : attributes != null, not exist key get test
+	}
+    
+    @Test
+	public void testDatasetPutStringString() {
+		Attributes a = new Attributes();
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		a.put("data-name", "Jsoup");
+		Map<String, String> html5Custom = a.dataset();
+		assertEquals(1, html5Custom.size());
+
+		assertEquals("Jsoup", html5Custom.put("name", "Lsoup"));	// Case4 : dataset's put method with same key test
+		assertEquals(1, html5Custom.size());
+		assertEquals(3, a.size());
+		assertEquals("Lsoup", a.get("data-name"));
 	}
 
 }
