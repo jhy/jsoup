@@ -41,4 +41,11 @@ public class AttributeTest {
 		assertEquals("Tot", a.getKey());
 		assertEquals("wjdebug", a.getValue());
 	}
+    
+    @Test
+	public void testCreateFromEncoded() {
+		Attribute a = new Attribute("Tot", "a&p");
+		Attribute aComp = new Attribute("우진디벅", "a&p");
+		assertEquals(aComp, a.createFromEncoded("우진디벅", "a&p"));
+	}
 }
