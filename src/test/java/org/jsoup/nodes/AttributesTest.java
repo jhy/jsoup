@@ -184,5 +184,19 @@ public class AttributesTest {
 		assertEquals(1, a.size());
 		assertFalse(a.hasKey("Hello"));
 	}
+    
+    @Test
+	public void testRemove() {
+		Attributes a = new Attributes();
+		a.remove("Tot");					// Case1 : attributes == null
+		assertEquals(0, a.size());
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		a.remove("Hello");					// Case2 : attributes != null, standard case
+		assertEquals(1, a.size());
+		assertFalse(a.hasKey("Hello"));
+		a.remove("data-name");				// Case3 : attributes != null, not exist key remove test
+		assertEquals(1, a.size());
+	}
 
 }
