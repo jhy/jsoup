@@ -122,5 +122,14 @@ public class AttributesTest {
 		a.put("Hello", "There");
 		assertEquals(-2123275893, a.hashCode());	// Case2 : attributes != null
 	}
+    
+    @Test
+	public void testGet() {
+		Attributes a = new Attributes();			
+		assertEquals("", a.get("Tot"));				// Case1 : attributes == null
+		a.put("Tot", "a&p");
+		assertEquals("a&p", a.get("Tot"));			// Case2 : attributes != null
+	}
+
 
 }
