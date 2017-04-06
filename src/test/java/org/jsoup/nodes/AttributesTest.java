@@ -2,7 +2,9 @@ package org.jsoup.nodes;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -271,6 +273,23 @@ public class AttributesTest {
 		assertTrue(aNotNull.hasKey("data-name"));
 		assertTrue(aNotNull.hasKey("Tot"));
 		assertTrue(aNotNull.hasKey("Hello"));
+	}
+    
+    @Test
+	public void testAsList() {
+		Attributes aNull = new Attributes();						
+		List<Attribute> EmptyList = new ArrayList<Attribute>();
+		assertEquals(EmptyList, aNull.asList());					// Case1 : attributes == null
+		
+		Attributes a = new Attributes();
+		List<Attribute> list = new ArrayList<Attribute>();
+		a.put("Tot", "a&p");
+		a.put("Hello", "There");
+		list = a.asList();											// Case2 : Normal case
+		assertEquals("Tot", list.get(0).getKey());
+		assertEquals("a&p", list.get(0).getValue());
+		assertEquals("Hello", list.get(1).getKey());
+		assertEquals("There", list.get(1).getValue());
 	}
 
 }
