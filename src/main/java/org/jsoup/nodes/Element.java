@@ -1,5 +1,18 @@
 package org.jsoup.nodes;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
@@ -13,18 +26,6 @@ import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
  * other elements).
@@ -37,6 +38,14 @@ public class Element extends Node {
     private Tag tag;
 
     private static final Pattern classSplit = Pattern.compile("\\s+");
+    
+    /** 
+     * Maps child elements to their sibling element index
+     * 
+     * This is set to null when the childNodes List is modified, and is 
+     * re-coputed when a child finds out its sibling element index. 
+     */
+    private Map<Element, Integer> childElementToSiblingElementIndex = null;
 
     /**
      * Create a new, standalone element.
@@ -226,6 +235,7 @@ public class Element extends Node {
             if (node instanceof Element)
                 elements.add((Element) node);
         }
+        
         return new Elements(elements);
     }
 
@@ -614,8 +624,31 @@ public class Element extends Node {
      */
     public Integer elementSiblingIndex() {
        if (parent() == null) return 0;
-       return indexInList(this, parent().children()); 
+       return parent().getSiblingIndexOfChild(this);
     }
+    
+    /**
+     * Get the list index of the child element in its element sibling list. I.e. if this is the first element
+     * sibling, returns 0.
+     * 
+     * @param child The child element of this to find the sibling index of.
+     * @return child's position in element sibling list.
+     */
+    private Integer getSiblingIndexOfChild(Element child) {
+        // If the childElementToSiblingElementIndex is null we need to 
+        // re-compute the sibling indexes. It may be set back to null when
+        // the childNodes list is modified.
+        if(this.childElementToSiblingElementIndex == null) {
+            this.childElementToSiblingElementIndex = new HashMap<Element, Integer>();
+            List<Element> children = this.children();
+            for(int i = 0; i < children.size(); i++) {
+                this.childElementToSiblingElementIndex.put(children.get(i), i);
+            }
+        }
+        return this.childElementToSiblingElementIndex.get(child);
+    }
+    
+    
 
     /**
      * Gets the last element sibling of this element
@@ -1286,5 +1319,13 @@ public class Element extends Node {
     @Override
     public Element clone() {
         return (Element) super.clone();
+    }
+    
+    @Override
+    protected void onChildNodeChange() {
+        // The list of child nodes has changed, set the child element to index 
+        // map to null to force it to be re-computed if needed.
+        this.childElementToSiblingElementIndex = null;
+        super.onChildNodeChange();
     }
 }
