@@ -1,26 +1,34 @@
 package org.jsoup.nodes;
 
-import org.jsoup.SerializationException;
-import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
-import org.jsoup.parser.Parser;
-import org.jsoup.select.NodeTraversor;
-import org.jsoup.select.NodeVisitor;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jsoup.SerializationException;
+import org.jsoup.helper.ChangeNotifyingList;
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
+import org.jsoup.parser.Parser;
+import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
+
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
-    private static final List<Node> EMPTY_NODES = Collections.emptyList();
+    
+    private static final ChangeNotifyingList<Node> EMPTY_NODES = new ChangeNotifyingList<Node>(Collections.<Node>emptyList(), new Runnable() {
+        
+        public void run() {
+            // We don't need to call onChildNodeChange() because the wrapped list is immutable
+        }
+    });
+    
     Node parentNode;
-    List<Node> childNodes;
+    ChangeNotifyingList<Node> childNodes;
     Attributes attributes;
     String baseUri;
     int siblingIndex;
@@ -456,7 +464,7 @@ public abstract class Node implements Cloneable {
 
     protected void ensureChildNodes() {
         if (childNodes == EMPTY_NODES) {
-            childNodes = new ArrayList<Node>(4);
+            childNodes = new ChangeNotifyingList<Node>(new ArrayList<Node>(4), getOnChildNodeChangeRunnable());
         }
     }
 
@@ -665,7 +673,7 @@ public abstract class Node implements Cloneable {
         clone.siblingIndex = parent == null ? 0 : siblingIndex;
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
-        clone.childNodes = new ArrayList<Node>(childNodes.size());
+        clone.childNodes = new ChangeNotifyingList<Node>(new ArrayList<Node>(childNodes.size()), clone.getOnChildNodeChangeRunnable());
 
         for (Node child: childNodes)
             clone.childNodes.add(child);
@@ -699,5 +707,28 @@ public abstract class Node implements Cloneable {
 				}
             }
         }
+    }
+    
+    /**
+     * Gets a Runnable to be set in the childNodes {@link ChangeNotifyingList} list.
+     *  
+     * @return A runnable which will call onChildNodeChange()
+     */
+    private Runnable getOnChildNodeChangeRunnable() {
+        return new Runnable() {
+            public void run() {
+                onChildNodeChange();
+            }
+        };
+    }
+    
+    /**
+     * Called when the childNodes list is modified.
+     * 
+     * <p>Sub classes which override this must also call this method on
+     * their super class.</p>
+     */
+    protected void onChildNodeChange() {
+        // Currently does nothing.
     }
 }

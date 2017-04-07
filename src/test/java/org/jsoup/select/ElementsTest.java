@@ -8,6 +8,8 @@ import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.junit.Test;
 
+import junit.framework.Assert;
+
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -346,6 +348,32 @@ public class ElementsTest {
         Elements prevAF = els.prevAll("p:contains(1)");
         assertEquals(1, prevAF.size());
         assertEquals("1", prevAF.first().text());
+    }
+    
+    
+    @Test public void elementSiblingIndexRemoveTest() {
+        Document doc = Jsoup.parse("<div><h1>1<h2>2</div>");
+
+        Element h1Element = doc.select("h1").first();
+        assertEquals(0, h1Element.elementSiblingIndex() + 0);
+        
+        Element h2Element = doc.select("h2").first();
+        assertEquals(1, h2Element.elementSiblingIndex() + 0);
+
+        h1Element.remove();
+        
+        assertEquals(0, h2Element.elementSiblingIndex() + 0);
+    }
+    
+    @Test public void elementSiblingIndexPrependTest() {
+        Document doc = Jsoup.parse("<div><h2>2</div>");
+
+        Element h2Element = doc.select("h2").first();
+        assertEquals(0, h2Element.elementSiblingIndex() + 0);
+        
+        h2Element.parent().prependElement("h1");
+        
+        assertEquals(1, h2Element.elementSiblingIndex() + 0);
     }
 
     @Test public void eachText() {
