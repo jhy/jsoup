@@ -406,7 +406,7 @@ public abstract class Node implements Cloneable {
         parentNode.replaceChild(this, in);
     }
 
-    public void setParentNode(Node parentNode) {
+    protected void setParentNode(Node parentNode) {
         if (this.parentNode != null)
             this.parentNode.removeChild(this);
         this.parentNode = parentNode;
