@@ -31,14 +31,14 @@ public class NodeTest {
 
         Element dodgyBase = new Element(tag, "wtf://no-such-protocol/", attribs);
         assertEquals("http://bar/qux", dodgyBase.absUrl("absHref")); // base fails, but href good, so get that
-        assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
+        assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing
     }
 
     @Test public void setBaseUriIsRecursive() {
         Document doc = Jsoup.parse("<div><p></p></div>");
         String baseUri = "https://jsoup.org";
         doc.setBaseUri(baseUri);
-        
+
         assertEquals(baseUri, doc.baseUri());
         assertEquals(baseUri, doc.select("div").first().baseUri());
         assertEquals(baseUri, doc.select("p").first().baseUri());
@@ -130,25 +130,25 @@ public class NodeTest {
         Element a1 = doc.select("a").first();
         assertEquals("http://example.com/one/two.html", a1.absUrl("href"));
     }
-    
+
     @Test public void testRemove() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();
         p.childNode(0).remove();
-        
+
         assertEquals("two three", p.text());
         assertEquals("<span>two</span> three", TextUtil.stripNewlines(p.html()));
     }
-    
+
     @Test public void testReplace() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();
         Element insert = doc.createElement("em").text("foo");
         p.childNode(1).replaceWith(insert);
-        
+
         assertEquals("One <em>foo</em> three", p.html());
     }
-    
+
     @Test public void ownerDocument() {
         Document doc = Jsoup.parse("<p>Hello");
         Element p = doc.select("p").first();
@@ -194,6 +194,9 @@ public class NodeTest {
 
         doc.select("b").first().after("<i>five</i>");
         assertEquals("<p>One <b>two</b><i>five</i><em>four</em> three</p>", doc.body().html());
+
+        doc.select("p").first().after("<p>six</p>");
+        assertEquals("<p>One <b>two</b><i>five</i><em>four</em> three</p>\n<p>six</p>", doc.body().html());
     }
 
     @Test public void unwrap() {
@@ -288,5 +291,51 @@ public class NodeTest {
         assertTrue(elClone.hasClass("foo"));
         assertTrue(el.text().equals("None"));
         assertTrue(elClone.text().equals("Text"));
+    }
+
+    @Test public void splits() {
+        Document doc =
+            org.jsoup.Jsoup.parse("<div><b>f</b><i>o</i><u>o</u></div>");
+        Element div = doc.select("div").first();
+        assertEquals(3, div.childNodeSize());
+        assertNull(div.nextSibling());
+        Element body = div.parent();
+        assertEquals(1, body.childNodeSize());
+
+        Element b = doc.select("b").first();
+        Element i = doc.select("i").first();
+        Element u = doc.select("u").first();
+
+        div.splitAfter(u);
+        assertEquals(1, body.childNodeSize());
+        assertEquals(body, div.parent());
+
+        div.splitAfter(body);
+        assertEquals(1, body.childNodeSize());
+        assertEquals(body, div.parent());
+
+        assertEquals(1, i.siblingIndex());
+
+        div.splitAfter(i);
+        assertEquals(2, div.childNodeSize());
+        assertEquals(div, b.parent());
+        assertEquals(div, i.parent());
+
+        Element udiv = div.nextElementSibling();
+        assertNotNull(udiv);
+        assertEquals(body, div.parent());
+        assertEquals(body, udiv.parent());
+        assertEquals(div, udiv.previousElementSibling());
+        assertEquals(2, body.childNodeSize());
+        assertEquals(1, udiv.childNodeSize());
+        assertEquals(u, udiv.child(0));
+        assertEquals(udiv, u.parent());
+
+        div.splitAfter(b);
+        assertEquals(1, div.childNodeSize());
+        assertEquals(3, body.childNodeSize());
+        assertEquals(div.nextElementSibling(), i.parent());
+        assertEquals(udiv.previousElementSibling(), i.parent());
+        assertEquals(body.child(1), i.parent());
     }
 }
