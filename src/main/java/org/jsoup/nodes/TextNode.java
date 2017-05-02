@@ -123,7 +123,7 @@ public class TextNode extends Node {
         return text;
     }
 
-    static String stripLeadingWhitespace(String text) {
+    public static String stripLeadingWhitespace(String text) {
         return text.replaceFirst("^\\s+", "");
     }
 
