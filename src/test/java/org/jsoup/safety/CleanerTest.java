@@ -18,7 +18,7 @@ public class CleanerTest {
         String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
         String cleanHtml = Jsoup.clean(h, Whitelist.simpleText());
 
-        assertEquals("Hello <b>there</b>!", TextUtil.stripNewlines(cleanHtml));
+        assertEquals("Hello <b>there</b>d", TextUtil.stripNewlines(cleanHtml));
     }
     
     @Test public void simpleBehaviourTest2() {
