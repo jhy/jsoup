@@ -661,6 +661,7 @@ public class HttpConnection implements Connection {
                 if (res.hasHeader(LOCATION) && req.followRedirects()) {
                     if (status != HTTP_TEMP_REDIR) {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                        req.removeHeader(CONTENT_TYPE); // also remove Content-Type header from get request
                         req.data().clear();
                     }
 
