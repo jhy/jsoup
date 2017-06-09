@@ -180,6 +180,73 @@ public class Whitelist {
     }
 
     /**
+     * Returns Whitelist with set of HTML5 tags according to
+     * <a href="https://www.w3.org/TR/html5/">https://www.w3.org/TR/html5/</a>
+     *
+     * @return WhiteList with HTML5 tags.
+     * @see {@link #relaxed()}
+     */
+    public static Whitelist HTML5WhiteList() {
+        return relaxed()
+                .addTags(
+                        "article",
+                        "aside",
+                        "bdi",
+                        "details",
+                        "dialog",
+                        "figcaption",
+                        "figure",
+                        "footer",
+                        "main",
+                        "mark",
+                        "nav",
+                        "section",
+                        "summary",
+                        "time",
+
+                        // forms
+                        "datalist",
+                        "keygen",
+                        "output"
+                )
+                .addAttributes("article", "")
+                ;
+    }
+
+
+    /**
+     * Gives Whitelist with set of HTML5 tags + media tags.
+     *
+     * @return WhiteList with HTML5 tags including media tags.
+     * @see #relaxed()
+     * @see <a href=https://www.w3.org/TR/html5/embedded-content-0.html#media-elements>Media elements</a>
+     */
+    public static Whitelist HTML5WhiteListWithMedia() {
+        return relaxed().addTags(
+                "audio",
+                "embed",
+                "source",
+                "track",
+                "video"
+        )
+                .addAttributes("audio",
+                        "src", "crossorigin", "prereload", "autoplay", "mediagroup",
+                        "loop", "muted", "controls")
+                .addAttributes("embed",
+                        "src", "type", "width", "height")
+                .addAttributes("source",
+                        "src", "type")
+
+                .addAttributes("track",
+                        "src", "kind", "srclang", "label", "default")
+
+                .addAttributes("video",
+                        "src", "crossorigin", "poster", "preload", "autoplay", "mediagroup",
+                        "loop", "muted", "controls", "width", "height")
+                ;
+    }
+
+    /**
      Create a new, empty whitelist. Generally it will be better to start with a default prepared whitelist instead.
 
      @see #basic()
