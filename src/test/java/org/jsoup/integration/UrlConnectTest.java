@@ -813,4 +813,12 @@ public class UrlConnectTest {
         Document doc = res.parse();
         assertEquals(200, res.statusCode());
     }
+
+    @Test public void handlesUnicodeInQuery() throws IOException {
+        Document doc = Jsoup.connect("https://www.google.pl/search?q=gąska").get();
+        assertEquals("gąska - Szukaj w Google", doc.title());
+
+        doc = Jsoup.connect("http://mov-world.net/archiv/TV/A/%23No.Title/").get();
+        assertEquals("Index of /archiv/TV/A/%23No.Title", doc.title());
+    }
 }
