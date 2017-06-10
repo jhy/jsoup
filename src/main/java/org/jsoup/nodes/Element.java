@@ -14,6 +14,7 @@ import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +36,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public class Element extends Node {
     private Tag tag;
+    private SoftReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
 
     private static final Pattern classSplit = Pattern.compile("\\s+");
 
@@ -207,7 +209,7 @@ public class Element extends Node {
      * @see #childNode(int)
      */
     public Element child(int index) {
-        return children().get(index);
+        return childElementsList().get(index);
     }
 
     /**
@@ -215,18 +217,38 @@ public class Element extends Node {
      * <p>
      * This is effectively a filter on {@link #childNodes()} to get Element nodes.
      * </p>
-     * @return child elements. If this element has no children, returns an
-     * empty list.
+     * @return child elements. If this element has no children, returns an empty list.
      * @see #childNodes()
      */
     public Elements children() {
-        // create on the fly rather than maintaining two lists. if gets slow, memoize, and mark dirty on change
-        List<Element> elements = new ArrayList<Element>(childNodes.size());
-        for (Node node : childNodes) {
-            if (node instanceof Element)
-                elements.add((Element) node);
+        return new Elements(childElementsList());
+    }
+
+    /**
+     * Maintains a shadow copy of this element's child elements. If the nodelist is changed, this cache is invalidated.
+     * TODO - think about pulling this out as a helper as there are other shadow lists (like in Attributes) kept around.
+     * @return a list of child elements
+     */
+    private List<Element> childElementsList() {
+        List<Element> children;
+        if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
+            children = new ArrayList<Element>(childNodes.size());
+            for (Node node : childNodes) {
+                if (node instanceof Element)
+                    children.add((Element) node);
+            }
+            shadowChildrenRef = new SoftReference<List<Element>>(children);
         }
-        return new Elements(elements);
+        return children;
+    }
+
+    /**
+     * Clears the cached shadow child elements.
+     */
+    @Override
+    void nodelistChanged() {
+        super.nodelistChanged();
+        shadowChildrenRef = null;
     }
 
     /**
@@ -363,6 +385,25 @@ public class Element extends Node {
         ArrayList<Node> nodes = new ArrayList<Node>(children);
         Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
         addChildren(index, nodeArray);
+        return this;
+    }
+
+    /**
+     * Inserts the given child nodes into this element at the specified index. Current nodes will be shifted to the
+     * right. The inserted nodes will be moved from their current parent. To prevent moving, copy the nodes first.
+     *
+     * @param index 0-based index to insert children at. Specify {@code 0} to insert at the start, {@code -1} at the
+     * end
+     * @param children child nodes to insert
+     * @return this element, for chaining.
+     */
+    public Element insertChildren(int index, Node... children) {
+        Validate.notNull(children, "Children collection to be inserted must not be null.");
+        int currentSize = childNodeSize();
+        if (index < 0) index += currentSize +1; // roll around
+        Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
+
+        addChildren(index, children);
         return this;
     }
     
@@ -553,7 +594,7 @@ public class Element extends Node {
         if (parentNode == null)
             return new Elements(0);
 
-        List<Element> elements = parent().children();
+        List<Element> elements = parent().childElementsList();
         Elements siblings = new Elements(elements.size() - 1);
         for (Element el: elements)
             if (el != this)
@@ -572,7 +613,7 @@ public class Element extends Node {
      */
     public Element nextElementSibling() {
         if (parentNode == null) return null;
-        List<Element> siblings = parent().children();
+        List<Element> siblings = parent().childElementsList();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
         if (siblings.size() > index+1)
@@ -588,7 +629,7 @@ public class Element extends Node {
      */
     public Element previousElementSibling() {
         if (parentNode == null) return null;
-        List<Element> siblings = parent().children();
+        List<Element> siblings = parent().childElementsList();
         Integer index = indexInList(this, siblings);
         Validate.notNull(index);
         if (index > 0)
@@ -603,7 +644,7 @@ public class Element extends Node {
      */
     public Element firstElementSibling() {
         // todo: should firstSibling() exclude this?
-        List<Element> siblings = parent().children();
+        List<Element> siblings = parent().childElementsList();
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
     
@@ -614,7 +655,7 @@ public class Element extends Node {
      */
     public Integer elementSiblingIndex() {
        if (parent() == null) return 0;
-       return indexInList(this, parent().children()); 
+       return indexInList(this, parent().childElementsList());
     }
 
     /**
@@ -622,7 +663,7 @@ public class Element extends Node {
      * @return the last sibling that is an element (aka the parent's last element child) 
      */
     public Element lastElementSibling() {
-        List<Element> siblings = parent().children();
+        List<Element> siblings = parent().childElementsList();
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
     }
     

@@ -8,6 +8,9 @@ jsoup changelog
   * Improved selector validation for :contains(...) with unbalanced quotes.
     <https://github.com/jhy/jsoup/issues/803>
 
+  * Improved the speed of index based CSS selectors and other methods that use elementSiblingIndex, by a factor of 18x.
+    <https://github.com/jhy/jsoup/pull/862>
+
   * Bugfix: if an attribute name started or ended with a control character, the parse would fail with a validation
     exception.
     <https://github.com/jhy/jsoup/issues/793>

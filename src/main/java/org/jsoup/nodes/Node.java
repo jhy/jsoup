@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Parser;
@@ -395,6 +396,10 @@ public abstract class Node implements Cloneable {
         else
             return el;
     }
+
+    void nodelistChanged() {
+        // Element overrides this to clear its shadow children elements
+    }
     
     /**
      * Replace this node in the DOM with the supplied node.
@@ -407,6 +412,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void setParentNode(Node parentNode) {
+        Validate.notNull(parentNode);
         if (this.parentNode != null)
             this.parentNode.removeChild(this);
         this.parentNode = parentNode;
@@ -456,7 +462,7 @@ public abstract class Node implements Cloneable {
 
     protected void ensureChildNodes() {
         if (childNodes == EMPTY_NODES) {
-            childNodes = new ArrayList<Node>(4);
+            childNodes = new NodeList(4);
         }
     }
 
@@ -665,7 +671,7 @@ public abstract class Node implements Cloneable {
         clone.siblingIndex = parent == null ? 0 : siblingIndex;
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
-        clone.childNodes = new ArrayList<Node>(childNodes.size());
+        clone.childNodes = new NodeList(childNodes.size());
 
         for (Node child: childNodes)
             clone.childNodes.add(child);
@@ -698,6 +704,16 @@ public abstract class Node implements Cloneable {
 					throw new SerializationException(exception);
 				}
             }
+        }
+    }
+
+    private final class NodeList extends ChangeNotifyingArrayList<Node> {
+        NodeList(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public void onContentsChanged() {
+            nodelistChanged();
         }
     }
 }
