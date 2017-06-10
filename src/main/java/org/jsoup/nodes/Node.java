@@ -11,6 +11,7 @@ import org.jsoup.select.NodeVisitor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -127,6 +128,19 @@ public abstract class Node implements Cloneable {
     public Node removeAttr(String attributeKey) {
         Validate.notNull(attributeKey);
         attributes.removeIgnoreCase(attributeKey);
+        return this;
+    }
+
+    /**
+     * Clear (remove) all of the attributes in this node.
+     * @return this, for chaining
+     */
+    public Node clearAttributes() {
+        Iterator<Attribute> it = attributes.iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.remove();
+        }
         return this;
     }
 

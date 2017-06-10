@@ -974,6 +974,17 @@ public class ElementTest {
     }
 
     @Test
+    public void testLoopedRemoveAttributes() {
+        String html = "<a one two three four>Text</a><p foo>Two</p>";
+        Document doc = Jsoup.parse(html);
+        for (Element el : doc.getAllElements()) {
+            el.clearAttributes();
+        }
+
+        assertEquals("<a>Text</a>\n<p>Two</p>", doc.body().html());
+    }
+
+    @Test
     public void testIs() {
         String html = "<div><p>One <a class=big>Two</a> Three</p><p>Another</p>";
         Document doc = Jsoup.parse(html);

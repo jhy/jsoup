@@ -11,6 +11,9 @@ jsoup changelog
   * Improved the speed of index based CSS selectors and other methods that use elementSiblingIndex, by a factor of 18x.
     <https://github.com/jhy/jsoup/pull/862>
 
+  * Added Node.clearAttributes(), to simplify removing of all attributes of a Node / Element.
+    <https://github.com/jhy/jsoup/issues/829>
+
   * Bugfix: if an attribute name started or ended with a control character, the parse would fail with a validation
     exception.
     <https://github.com/jhy/jsoup/issues/793>
@@ -24,6 +27,10 @@ jsoup changelog
   * Bugfix: In Jsoup.Connection, if a request body was set and the connection was redirected, the body would incorrectly
     still be sent.
     <https://github.com/jhy/jsoup/pull/881>
+
+  * Bugfix: In DataUtil when detecting the character set from meta data, and there are two Content-Types defined, use
+    the one that defines a character set.
+    <https://github.com/jhy/jsoup/pull/835>
 
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
