@@ -356,7 +356,7 @@ public class ElementTest {
         div.appendElement("p").text("there");
         div.appendElement("P").attr("CLASS", "second").text("now");
         // manually specifying tag and attributes should now preserve case, regardless of parse mode
-        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><P CLASS=\"second\">now</P></div></body></html>",
+        assertEquals("<html><head></head><body><div id=\"1\"><p>Hello</p><p>there</p><P class=\"second\">now</P></div></body></html>",
                 TextUtil.stripNewlines(doc.html()));
 
         // check sibling index (with short circuit on reindexChildren):
