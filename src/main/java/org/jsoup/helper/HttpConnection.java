@@ -662,6 +662,7 @@ public class HttpConnection implements Connection {
                     if (status != HTTP_TEMP_REDIR) {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                         req.data().clear();
+                        req.requestBody(null);
                     }
 
                     String location = res.header(LOCATION);
