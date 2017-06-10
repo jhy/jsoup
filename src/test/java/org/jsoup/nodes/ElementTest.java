@@ -1082,4 +1082,39 @@ public class ElementTest {
             "<p><a>Two</a></p>\n" +
             "<p>P4</p>Three", div.html());
     }
+
+    @Test public void classNamesAndAttributeNameIsCaseInsensitive() {
+        String html = "<p Class='SomeText AnotherText'>One</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.select("p").first();
+        assertEquals("SomeText AnotherText", p.className());
+        assertTrue(p.classNames().contains("SomeText"));
+        assertTrue(p.classNames().contains("AnotherText"));
+        assertTrue(p.hasClass("SomeText"));
+        assertTrue(p.hasClass("sometext"));
+        assertTrue(p.hasClass("AnotherText"));
+        assertTrue(p.hasClass("anothertext"));
+
+        Element p1 = doc.select(".SomeText").first();
+        Element p2 = doc.select(".sometext").first();
+        Element p3 = doc.select("[class=SomeText AnotherText]").first();
+        Element p4 = doc.select("[Class=SomeText AnotherText]").first();
+        Element p5 = doc.select("[class=sometext anothertext]").first();
+        Element p6 = doc.select("[class=SomeText AnotherText]").first();
+        Element p7 = doc.select("[class^=sometext]").first();
+        Element p8 = doc.select("[class$=nothertext]").first();
+        Element p9 = doc.select("[class^=sometext]").first();
+        Element p10 = doc.select("[class$=AnotherText]").first();
+
+        assertEquals("One", p1.text());
+        assertEquals(p1, p2);
+        assertEquals(p1, p3);
+        assertEquals(p1, p4);
+        assertEquals(p1, p5);
+        assertEquals(p1, p6);
+        assertEquals(p1, p7);
+        assertEquals(p1, p8);
+        assertEquals(p1, p9);
+        assertEquals(p1, p10);
+    }
 }
