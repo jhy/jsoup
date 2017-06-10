@@ -32,6 +32,9 @@ jsoup changelog
     the one that defines a character set.
     <https://github.com/jhy/jsoup/pull/835>
 
+  * Bugfix: when parsing unknown tags in case-sensitive HTML mode, end tags would not close scope correctly.
+    <https://github.com/jhy/jsoup/issues/819>
+
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
