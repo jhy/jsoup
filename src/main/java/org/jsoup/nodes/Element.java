@@ -1068,7 +1068,7 @@ public class Element extends Node {
      * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag. Note that data is NOT the
      * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@link #data()}
      * for the contents of scripts, comments, CSS styles, etc.
-     * 
+     *
      * @return the data, or empty string if none
      *
      * @see #dataNodes()
