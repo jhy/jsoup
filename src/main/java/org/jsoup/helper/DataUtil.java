@@ -4,6 +4,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -101,16 +102,20 @@ public final class DataUtil {
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
             docData = Charset.forName(defaultCharset).decode(byteData).toString();
             doc = parser.parseInput(docData, baseUri);
-            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
             String foundCharset = null; // if not found, will keep utf-8 as best attempt
-            if (meta != null) {
+            for (Element meta : metaElements) {
                 if (meta.hasAttr("http-equiv")) {
                     foundCharset = getCharsetFromContentType(meta.attr("content"));
                 }
                 if (foundCharset == null && meta.hasAttr("charset")) {
                     foundCharset = meta.attr("charset");
                 }
+                if (foundCharset != null) {
+                    break;
+                }
             }
+
             // look for <?xml encoding='ISO-8859-1'?>
             if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
                 XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
