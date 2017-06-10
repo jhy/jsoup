@@ -663,6 +663,7 @@ public class HttpConnection implements Connection {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                         req.data().clear();
                         req.requestBody(null);
+                        req.removeHeader(CONTENT_TYPE);
                     }
 
                     String location = res.header(LOCATION);
