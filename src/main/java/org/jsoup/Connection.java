@@ -1,14 +1,14 @@
 package org.jsoup;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -330,6 +330,14 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     Connection response(Response response);
+    
+    /**
+     * 
+     * @param secureProtocol
+     * @return this Connection, for chaining
+     */
+    Connection secureProtocol(String secureProtocol);
+    
 
     /**
      * Common methods for Requests and Responses
@@ -611,6 +619,22 @@ public interface Connection {
          * @return character set to encode post data
          */
         String postDataCharset();
+        
+        /**
+         * 
+         * @return the desired secure protocol
+         * @author Tommaso Formica
+         */
+        String secureProtocol();
+
+        /**
+         * 
+         * @param secureProtocol the desired secure protocol to set
+         * @return  this Request, for chaining
+         * @author Tommaso Formica
+         */
+        Request secureProtocol(String secureProtocol);
+
 
     }
 

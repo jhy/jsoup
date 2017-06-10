@@ -1,15 +1,24 @@
 package org.jsoup.helper;
 
-import static org.junit.Assert.*;
-
-import org.jsoup.integration.ParseTest;
-import org.junit.Test;
-import org.jsoup.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.*;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.integration.ParseTest;
+import org.junit.Test;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
@@ -181,5 +190,18 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+    
+    @Test
+    public void setSecureProtocol() throws IOException
+    {
+
+        org.jsoup.helper.HttpConnection.Response resConnect = null;
+
+        resConnect =    (org.jsoup.helper.HttpConnection.Response) Jsoup.connect("https://telematici.agenziaentrate.gov.it/Main/index.jsp").validateTLSCertificates(false).secureProtocol("TLSv1.2")
+                          .method(org.jsoup.Connection.Method.GET).execute();
+
+        assertNotNull(resConnect);
+
     }
 }

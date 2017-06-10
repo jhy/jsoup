@@ -1,24 +1,48 @@
 package org.jsoup.helper;
 
-import org.jsoup.*;
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-import org.jsoup.parser.TokenQueue;
+import static org.jsoup.Connection.Method.HEAD;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import static org.jsoup.Connection.Method.HEAD;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
+import org.jsoup.parser.TokenQueue;
 
 /**
  * Implementation of {@link Connection}.
@@ -471,6 +495,7 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
+        private String secureProtocol = "SSL";
 
         private Request() {
             timeoutMilliseconds = 30000; // 30 seconds
@@ -590,6 +615,17 @@ public class HttpConnection implements Connection {
 
         public String postDataCharset() {
             return postDataCharset;
+        }
+
+        public String secureProtocol()
+        {
+           return secureProtocol;
+        }
+
+        public Connection.Request secureProtocol(String secureProtocol)
+        {
+            this.secureProtocol = secureProtocol;
+            return this;
         }
     }
 
@@ -784,7 +820,7 @@ public class HttpConnection implements Connection {
 
             if (conn instanceof HttpsURLConnection) {
                 if (!req.validateTLSCertificates()) {
-                    initUnSecureTSL();
+                    initUnSecureTSL(req.secureProtocol());
                     ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
                     ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
                 }
@@ -821,10 +857,11 @@ public class HttpConnection implements Connection {
          * <p/>
          * please not that this method will only perform action if sslSocketFactory is not yet
          * instantiated.
+         * @param string 
          *
          * @throws IOException
          */
-        private static synchronized void initUnSecureTSL() throws IOException {
+        private static synchronized void initUnSecureTSL(String secureProtocol) throws IOException {
             if (sslSocketFactory == null) {
                 // Create a trust manager that does not validate certificate chains
                 final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
@@ -843,7 +880,7 @@ public class HttpConnection implements Connection {
                 // Install the all-trusting trust manager
                 final SSLContext sslContext;
                 try {
-                    sslContext = SSLContext.getInstance("SSL");
+                    sslContext = SSLContext.getInstance(secureProtocol);
                     sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                     // Create an ssl socket factory with our all-trusting manager
                     sslSocketFactory = sslContext.getSocketFactory();
@@ -1112,5 +1149,10 @@ public class HttpConnection implements Connection {
         public String toString() {
             return key + "=" + value;
         }
+    }
+    public Connection secureProtocol(String secureProtocol)
+    {
+        req.secureProtocol(secureProtocol);
+        return this;
     }
 }
