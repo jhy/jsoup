@@ -8,7 +8,7 @@ jsoup changelog
   * Improved selector validation for :contains(...) with unbalanced quotes.
     <https://github.com/jhy/jsoup/issues/803>
 
-  * Improved the speed of index based CSS selectors and other methods that use elementSiblingIndex, by a factor of 18x.
+  * Improved the speed of index based CSS selectors and other methods that use elementSiblingIndex, by a factor of 34x.
     <https://github.com/jhy/jsoup/pull/862>
 
   * Added Node.clearAttributes(), to simplify removing of all attributes of a Node / Element.

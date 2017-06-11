@@ -234,8 +234,10 @@ public class Element extends Node {
     private List<Element> childElementsList() {
         List<Element> children;
         if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
-            children = new ArrayList<Element>(childNodes.size());
-            for (Node node : childNodes) {
+            final int size = childNodes.size();
+            children = new ArrayList<Element>(size);
+            for (int i = 0; i < size; i++) {
+                final Node node = childNodes.get(i);
                 if (node instanceof Element)
                     children.add((Element) node);
             }
@@ -655,7 +657,7 @@ public class Element extends Node {
      * sibling, returns 0.
      * @return position in element sibling list
      */
-    public Integer elementSiblingIndex() {
+    public int elementSiblingIndex() {
        if (parent() == null) return 0;
        return indexInList(this, parent().childElementsList());
     }
@@ -668,17 +670,13 @@ public class Element extends Node {
         List<Element> siblings = parent().childElementsList();
         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
     }
-    
-    private static <E extends Element> Integer indexInList(Element search, List<E> elements) {
-        Validate.notNull(search);
-        Validate.notNull(elements);
 
+    private static <E extends Element> int indexInList(Element search, List<E> elements) {
         for (int i = 0; i < elements.size(); i++) {
-            E element = elements.get(i);
-            if (element == search)
+            if (elements.get(i) == search)
                 return i;
         }
-        return null;
+        return 0;
     }
 
     // DOM type methods
