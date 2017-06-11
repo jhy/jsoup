@@ -38,6 +38,9 @@ jsoup changelog
   * In Jsoup.Connection, ensure there is no Content-Type set when being redirected to a GET.
     <https://github.com/jhy/jsoup/pull/895>
 
+  * Bugfix: in certain locales (Turkey specifically), lowercasing and case insensitivity could fail for specific items.
+    <https://github.com/jhy/jsoup/pull/820>
+
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
