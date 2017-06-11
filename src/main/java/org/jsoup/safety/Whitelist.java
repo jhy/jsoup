@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.jsoup.internal.Normalizer.lowerCase;
+
 
 /**
  Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
@@ -542,7 +544,7 @@ public class Whitelist {
 
             prot += ":";
 
-            if (value.toLowerCase().startsWith(prot)) {
+            if (lowerCase(value).startsWith(prot)) {
                 return true;
             }
         }

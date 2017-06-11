@@ -15,6 +15,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.jsoup.internal.Normalizer.lowerCase;
+
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
 
@@ -80,7 +82,7 @@ public abstract class Node implements Cloneable {
         String val = attributes.getIgnoreCase(attributeKey);
         if (val.length() > 0)
             return val;
-        else if (attributeKey.toLowerCase().startsWith("abs:"))
+        else if (lowerCase(attributeKey).startsWith("abs:"))
             return absUrl(attributeKey.substring("abs:".length()));
         else return "";
     }

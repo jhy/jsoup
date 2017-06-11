@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static org.jsoup.internal.Normalizer.normalize;
+
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
  * other elements).
@@ -688,7 +690,7 @@ public class Element extends Node {
      */
     public Elements getElementsByTag(String tagName) {
         Validate.notEmpty(tagName);
-        tagName = tagName.toLowerCase().trim();
+        tagName = normalize(tagName);
 
         return Collector.collect(new Evaluator.Tag(tagName), this);
     }
