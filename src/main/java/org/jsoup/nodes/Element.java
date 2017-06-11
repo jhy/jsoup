@@ -14,7 +14,7 @@ import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,7 +38,7 @@ import static org.jsoup.internal.Normalizer.normalize;
  */
 public class Element extends Node {
     private Tag tag;
-    private SoftReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
+    private WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
 
     private static final Pattern classSplit = Pattern.compile("\\s+");
 
@@ -239,7 +239,7 @@ public class Element extends Node {
                 if (node instanceof Element)
                     children.add((Element) node);
             }
-            shadowChildrenRef = new SoftReference<List<Element>>(children);
+            shadowChildrenRef = new WeakReference<List<Element>>(children);
         }
         return children;
     }
