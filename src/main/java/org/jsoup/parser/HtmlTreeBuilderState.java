@@ -1229,7 +1229,8 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html"))
                         return tb.process(start, InBody);
                     else if (name.equals("option")) {
-                        tb.processEndTag("option");
+                        if (tb.currentElement().nodeName().equals("option"))
+                            tb.processEndTag("option");
                         tb.insert(start);
                     } else if (name.equals("optgroup")) {
                         if (tb.currentElement().nodeName().equals("option"))
