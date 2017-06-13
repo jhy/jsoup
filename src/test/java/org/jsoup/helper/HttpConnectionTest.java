@@ -3,7 +3,9 @@ package org.jsoup.helper;
 import static org.junit.Assert.*;
 
 import org.jsoup.MultiLocaleRule;
+import org.jsoup.Connection.Method;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.helper.HttpConnection.Request;
 import org.jsoup.integration.ParseTest;
 import org.junit.Rule;
 import org.junit.Test;
@@ -191,5 +193,15 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+    
+    @Test public void whenRequestBodyContainsPDF() throws IOException{
+    	HttpConnection.Response res = new HttpConnection.Response();
+    	 Connection con = HttpConnection.connect("http://example.com/");
+    	HttpConnection.Request req = (Request) con.request();
+    	req.method(Method.POST);
+    	req.header("Content-Type", "application/pdf");
+    	HttpConnection.Response response = HttpConnection.Response.execute(req, res);
+    	assertEquals("text/html",response.contentType());
     }
 }

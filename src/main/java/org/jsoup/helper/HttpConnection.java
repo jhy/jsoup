@@ -38,6 +38,7 @@ public class HttpConnection implements Connection {
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
+    private static final Object APPLICATION_PDF = "application/pdf";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -940,8 +941,14 @@ public class HttpConnection implements Connection {
         private static String setOutputContentType(final Connection.Request req) {
             String bound = null;
             if (req.hasHeader(CONTENT_TYPE)) {
-                // no-op; don't add content type as already set (e.g. for requestBody())
-                // todo - if content type already set, we could add charset or boundary if those aren't included
+            	//Upload PDF files. If the boundary is not included, the file is uploaded but with an unknown content type.
+            	//TODO if it were a known content type, include the boundary
+            	if ( APPLICATION_PDF.equals(req.headers().get(CONTENT_TYPE)) ){
+            		bound = DataUtil.mimeBoundary();
+            	} else {
+            		// no-op; don't add content type as already set (e.g. for requestBody())
+            		// todo - if content type already set, we could add charset or boundary if those aren't included
+            	}
             }
             else if (needsMultipart(req)) {
                 bound = DataUtil.mimeBoundary();
