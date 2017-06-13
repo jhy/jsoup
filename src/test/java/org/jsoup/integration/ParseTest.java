@@ -168,6 +168,16 @@ public class ParseTest {
         assertEquals("In July, GM said its electric Chevrolet Volt will be sold in the United States at $41,000 -- $8,000 more than its nearest competitor, the Nissan Leaf.", p.text());
     }
 
+    @Test
+    public void testLowercaseUtf8Charset() throws IOException {
+        File in = getFile("/htmltests/lowercase-charset-test.html");
+        Document doc = Jsoup.parse(in, null);
+
+        Element form = doc.select("#form").first();
+        assertEquals(2, form.children().size());
+        assertEquals("UTF-8", doc.outputSettings().charset().name());
+    }
+
     public static File getFile(String resourceName) {
         try {
             File file = new File(ParseTest.class.getResource(resourceName).toURI());

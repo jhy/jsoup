@@ -2,7 +2,13 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
@@ -31,17 +37,17 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
 
-    private boolean baseUriSetFromDoc = false;
+    private boolean baseUriSetFromDoc;
     private Element headElement; // the current head element
     private FormElement formElement; // the current form element
     private Element contextElement; // fragment parse context -- could be null even if fragment parsing
-    private ArrayList<Element> formattingElements = new ArrayList<Element>(); // active (open) formatting elements
-    private List<String> pendingTableCharacters = new ArrayList<String>(); // chars in table to be shifted out
-    private Token.EndTag emptyEnd = new Token.EndTag(); // reused empty end tag
+    private ArrayList<Element> formattingElements; // active (open) formatting elements
+    private List<String> pendingTableCharacters; // chars in table to be shifted out
+    private Token.EndTag emptyEnd; // reused empty end tag
 
-    private boolean framesetOk = true; // if ok to go into frameset
-    private boolean fosterInserts = false; // if next inserts should be fostered
-    private boolean fragmentParsing = false; // if parsing a fragment of html
+    private boolean framesetOk; // if ok to go into frameset
+    private boolean fosterInserts; // if next inserts should be fostered
+    private boolean fragmentParsing; // if parsing a fragment of html
 
     HtmlTreeBuilder() {}
 
@@ -50,10 +56,22 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    Document parse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    protected void initialiseParse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+        super.initialiseParse(input, baseUri, errors, settings);
+
+        // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
         state = HtmlTreeBuilderState.Initial;
+        originalState = null;
         baseUriSetFromDoc = false;
-        return super.parse(input, baseUri, errors, settings);
+        headElement = null;
+        formElement = null;
+        contextElement = null;
+        formattingElements = new ArrayList<Element>();
+        pendingTableCharacters = new ArrayList<String>();
+        emptyEnd = new Token.EndTag();
+        framesetOk = true;
+        fosterInserts = false;
+        fragmentParsing = false;
     }
 
     List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {

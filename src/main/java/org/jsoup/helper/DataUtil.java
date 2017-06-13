@@ -124,8 +124,7 @@ public final class DataUtil {
                 }
             }
             foundCharset = validateCharset(foundCharset);
-
-            if (foundCharset != null && !foundCharset.equals(defaultCharset)) { // need to re-decode
+            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                 charsetName = foundCharset;
                 byteData.rewind();
