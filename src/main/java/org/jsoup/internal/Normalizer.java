@@ -2,12 +2,16 @@ package org.jsoup.internal;
 
 import java.util.Locale;
 
-public class Normalizer {
-    public static String lowerCase(String input) {
+/**
+ * Util methods for normalizing strings. Jsoup internal use only, please don't depend on this API.
+ */
+public final class Normalizer {
+
+    public static String lowerCase(final String input) {
         return input.toLowerCase(Locale.ENGLISH);
     }
 
-    public static String normalize(String input) {
+    public static String normalize(final String input) {
         return lowerCase(input).trim();
     }
 }
