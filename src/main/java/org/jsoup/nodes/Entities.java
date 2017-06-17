@@ -74,7 +74,7 @@ public class Entities {
         }
     }
 
-    private static final HashMap<String, String> multipoints = new HashMap<String, String>(); // name -> multiple character references
+    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
 
     private Entities() {
     }

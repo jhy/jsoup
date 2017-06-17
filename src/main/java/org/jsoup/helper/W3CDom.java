@@ -71,7 +71,7 @@ public class W3CDom {
         private static final String xmlnsPrefix = "xmlns:";
 
         private final Document doc;
-        private final HashMap<String, String> namespaces = new HashMap<String, String>(); // prefix => urn
+        private final HashMap<String, String> namespaces = new HashMap<>(); // prefix => urn
         private Element dest;
 
         public W3CBuilder(Document doc) {

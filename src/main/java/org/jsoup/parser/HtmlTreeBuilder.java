@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches
-    public static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
+    private static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
     private static final String[] TagSearchList = new String[]{"ol", "ul"};
     private static final String[] TagSearchButton = new String[]{"button"};
     private static final String[] TagSearchTableScope = new String[]{"html", "table"};
@@ -66,8 +66,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         headElement = null;
         formElement = null;
         contextElement = null;
-        formattingElements = new ArrayList<Element>();
-        pendingTableCharacters = new ArrayList<String>();
+        formattingElements = new ArrayList<>();
+        pendingTableCharacters = new ArrayList<>();
         emptyEnd = new Token.EndTag();
         framesetOk = true;
         fosterInserts = false;
@@ -536,7 +536,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void newPendingTableCharacters() {
-        pendingTableCharacters = new ArrayList<String>();
+        pendingTableCharacters = new ArrayList<>();
     }
 
     List<String> getPendingTableCharacters() {

@@ -137,7 +137,7 @@ public class Document extends Element {
 
     // does not recurse.
     private void normaliseTextNodes(Element element) {
-        List<Node> toMove = new ArrayList<Node>();
+        List<Node> toMove = new ArrayList<>();
         for (Node node: element.childNodes) {
             if (node instanceof TextNode) {
                 TextNode tn = (TextNode) node;
@@ -159,7 +159,7 @@ public class Document extends Element {
         Elements elements = this.getElementsByTag(tag);
         Element master = elements.first(); // will always be available as created above if not existent
         if (elements.size() > 1) { // dupes, move contents to master
-            List<Node> toMove = new ArrayList<Node>();
+            List<Node> toMove = new ArrayList<>();
             for (int i = 1; i < elements.size(); i++) {
                 Node dupe = elements.get(i);
                 for (Node node : dupe.childNodes)

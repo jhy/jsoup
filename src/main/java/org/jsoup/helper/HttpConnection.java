@@ -293,8 +293,8 @@ public class HttpConnection implements Connection {
         Map<String, String> cookies;
 
         private Base() {
-            headers = new LinkedHashMap<String, String>();
-            cookies = new LinkedHashMap<String, String>();
+            headers = new LinkedHashMap<>();
+            cookies = new LinkedHashMap<>();
         }
 
         public URL url() {
@@ -477,7 +477,7 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
-            data = new ArrayList<Connection.KeyVal>();
+            data = new ArrayList<>();
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             headers.put(USER_AGENT, DEFAULT_UA);
@@ -848,9 +848,7 @@ public class HttpConnection implements Connection {
                     sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                     // Create an ssl socket factory with our all-trusting manager
                     sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                } catch (KeyManagementException e) {
+                } catch (NoSuchAlgorithmException | KeyManagementException e) {
                     throw new IOException("Can't create unsecure trust manager");
                 }
             }
@@ -879,7 +877,7 @@ public class HttpConnection implements Connection {
 
         private static LinkedHashMap<String, List<String>> createHeaderMap(HttpURLConnection conn) {
             // the default sun impl of conn.getHeaderFields() returns header values out of order
-            final LinkedHashMap<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+            final LinkedHashMap<String, List<String>> headers = new LinkedHashMap<>();
             int i = 0;
             while (true) {
                 final String key = conn.getHeaderFieldKey(i);
@@ -893,7 +891,7 @@ public class HttpConnection implements Connection {
                 if (headers.containsKey(key))
                     headers.get(key).add(val);
                 else {
-                    final ArrayList<String> vals = new ArrayList<String>();
+                    final ArrayList<String> vals = new ArrayList<>();
                     vals.add(val);
                     headers.put(key, vals);
                 }

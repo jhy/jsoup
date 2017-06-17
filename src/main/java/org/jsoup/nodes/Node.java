@@ -228,7 +228,7 @@ public abstract class Node implements Cloneable {
      * @return a deep copy of this node's children
      */
     public List<Node> childNodesCopy() {
-        List<Node> children = new ArrayList<Node>(childNodes.size());
+        List<Node> children = new ArrayList<>(childNodes.size());
         for (Node node : childNodes) {
             children.add(node.clone());
         }
@@ -371,6 +371,7 @@ public abstract class Node implements Cloneable {
 
         // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
         if (wrapChildren.size() > 0) {
+            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
             for (int i = 0; i < wrapChildren.size(); i++) {
                 Node remainder = wrapChildren.get(i);
                 remainder.parentNode.removeChild(remainder);
@@ -504,7 +505,7 @@ public abstract class Node implements Cloneable {
             return Collections.emptyList();
 
         List<Node> nodes = parentNode.childNodes;
-        List<Node> siblings = new ArrayList<Node>(nodes.size() - 1);
+        List<Node> siblings = new ArrayList<>(nodes.size() - 1);
         for (Node node: nodes)
             if (node != this)
                 siblings.add(node);
@@ -654,7 +655,7 @@ public abstract class Node implements Cloneable {
         Node thisClone = doClone(null); // splits for orphan
 
         // Queue up nodes that need their children cloned (BFS).
-        LinkedList<Node> nodesToProcess = new LinkedList<Node>();
+        LinkedList<Node> nodesToProcess = new LinkedList<>();
         nodesToProcess.add(thisClone);
 
         while (!nodesToProcess.isEmpty()) {

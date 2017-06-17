@@ -20,7 +20,7 @@ public class QueryParser {
 
     private TokenQueue tq;
     private String query;
-    private List<Evaluator> evals = new ArrayList<Evaluator>();
+    private List<Evaluator> evals = new ArrayList<>();
 
     /**
      * Create a new QueryParser.

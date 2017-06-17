@@ -235,13 +235,14 @@ public class Element extends Node {
         List<Element> children;
         if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
             final int size = childNodes.size();
-            children = new ArrayList<Element>(size);
+            children = new ArrayList<>(size);
+            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
             for (int i = 0; i < size; i++) {
                 final Node node = childNodes.get(i);
                 if (node instanceof Element)
                     children.add((Element) node);
             }
-            shadowChildrenRef = new WeakReference<List<Element>>(children);
+            shadowChildrenRef = new WeakReference<>(children);
         }
         return children;
     }
@@ -272,7 +273,7 @@ public class Element extends Node {
      * </ul>
      */
     public List<TextNode> textNodes() {
-        List<TextNode> textNodes = new ArrayList<TextNode>();
+        List<TextNode> textNodes = new ArrayList<>();
         for (Node node : childNodes) {
             if (node instanceof TextNode)
                 textNodes.add((TextNode) node);
@@ -290,7 +291,7 @@ public class Element extends Node {
      * @see #data()
      */
     public List<DataNode> dataNodes() {
-        List<DataNode> dataNodes = new ArrayList<DataNode>();
+        List<DataNode> dataNodes = new ArrayList<>();
         for (Node node : childNodes) {
             if (node instanceof DataNode)
                 dataNodes.add((DataNode) node);
@@ -386,7 +387,7 @@ public class Element extends Node {
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
-        ArrayList<Node> nodes = new ArrayList<Node>(children);
+        ArrayList<Node> nodes = new ArrayList<>(children);
         Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
         addChildren(index, nodeArray);
         return this;
@@ -1109,7 +1110,7 @@ public class Element extends Node {
      */
     public Set<String> classNames() {
     	String[] names = classSplit.split(className());
-    	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
+    	Set<String> classNames = new LinkedHashSet<>(Arrays.asList(names));
     	classNames.remove(""); // if classNames() was empty, would include an empty class
 
         return classNames;

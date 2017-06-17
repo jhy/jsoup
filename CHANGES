@@ -1,6 +1,10 @@
 jsoup changelog
 
 *** Release 1.11.1 [PENDING]
+  * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
+    not used.
+    <https://github.com/jhy/jsoup/issues/899>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
