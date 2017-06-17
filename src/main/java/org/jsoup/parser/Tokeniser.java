@@ -152,7 +152,7 @@ final class Tokeniser {
             try {
                 int base = isHexMode ? 16 : 10;
                 charval = Integer.valueOf(numRef, base);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");

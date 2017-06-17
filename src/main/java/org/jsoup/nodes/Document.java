@@ -162,8 +162,7 @@ public class Document extends Element {
             List<Node> toMove = new ArrayList<>();
             for (int i = 1; i < elements.size(); i++) {
                 Node dupe = elements.get(i);
-                for (Node node : dupe.childNodes)
-                    toMove.add(node);
+                toMove.addAll(dupe.childNodes);
                 dupe.remove();
             }
 

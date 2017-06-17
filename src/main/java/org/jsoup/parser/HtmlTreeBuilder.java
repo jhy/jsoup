@@ -119,7 +119,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         runParser();
-        if (context != null && root != null)
+        if (context != null)
             return root.childNodes();
         else
             return doc.childNodes();

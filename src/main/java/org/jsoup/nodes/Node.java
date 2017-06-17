@@ -690,8 +690,7 @@ public abstract class Node implements Cloneable {
         clone.baseUri = baseUri;
         clone.childNodes = new NodeList(childNodes.size());
 
-        for (Node child: childNodes)
-            clone.childNodes.add(child);
+        clone.childNodes.addAll(childNodes);
 
         return clone;
     }
