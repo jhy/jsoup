@@ -1035,7 +1035,9 @@ enum HtmlTreeBuilderState {
                 case StartTag:
                     Token.StartTag startTag = t.asStartTag();
                     String name = startTag.normalName();
-                    if (name.equals("tr")) {
+                    if (name.equals("template")) {
+                        tb.insert(startTag);
+                    } else if (name.equals("tr")) {
                         tb.clearStackToTableBodyContext();
                         tb.insert(startTag);
                         tb.transition(InRow);
@@ -1095,7 +1097,9 @@ enum HtmlTreeBuilderState {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.normalName();
 
-                if (StringUtil.in(name, "th", "td")) {
+                if (name.equals("template")) {
+                    tb.insert(startTag);
+                } else if (StringUtil.in(name, "th", "td")) {
                     tb.clearStackToTableRowContext();
                     tb.insert(startTag);
                     tb.transition(InCell);

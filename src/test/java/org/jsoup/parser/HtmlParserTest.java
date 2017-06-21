@@ -962,4 +962,15 @@ public class HtmlParserTest {
         assertEquals("<r> <X> A </X> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
 
     }
+
+  @Test public void testTemplateInsideTable() throws IOException {
+        File in = ParseTest.getFile("/htmltests/table-polymer-template.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        doc.outputSettings().prettyPrint(true);
+
+        Elements templates = doc.body().getElementsByTag("template");
+        for (Element template : templates) {
+            assertTrue(template.childNodes().size() > 1);
+        }
+  }
 }
