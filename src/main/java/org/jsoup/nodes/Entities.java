@@ -1,14 +1,15 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ public class Entities {
     private static final int empty = -1;
     private static final String emptyName = "";
     static final int codepointRadix = 36;
+    private static final Charset ASCII = Charset.forName("ascii");
 
     public enum EscapeMode {
         /**
@@ -301,48 +303,42 @@ public class Entities {
             throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
 
         int i = 0;
-        try {
-            ByteBuffer bytes = DataUtil.readToByteBuffer(stream, 0);
-            String contents = Charset.forName("ascii").decode(bytes).toString();
-            CharacterReader reader = new CharacterReader(contents);
+        BufferedReader input = new BufferedReader(new InputStreamReader(stream, ASCII));
+        CharacterReader reader = new CharacterReader(input);
 
-            while (!reader.isEmpty()) {
-                // NotNestedLessLess=10913,824;1887
+        while (!reader.isEmpty()) {
+            // NotNestedLessLess=10913,824;1887
 
-                final String name = reader.consumeTo('=');
+            final String name = reader.consumeTo('=');
+            reader.advance();
+            final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
+            final char codeDelim = reader.current();
+            reader.advance();
+            final int cp2;
+            if (codeDelim == ',') {
+                cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
                 reader.advance();
-                final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
-                final char codeDelim = reader.current();
-                reader.advance();
-                final int cp2;
-                if (codeDelim == ',') {
-                    cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
-                    reader.advance();
-                } else {
-                    cp2 = empty;
-                }
-                String indexS = reader.consumeTo('\n');
-                // default git checkout on windows will add a \r there, so remove
-                if (indexS.charAt(indexS.length() - 1) == '\r') {
-                    indexS = indexS.substring(0, indexS.length() - 1);
-                }
-                final int index = Integer.parseInt(indexS, codepointRadix);
-                reader.advance();
-
-                e.nameKeys[i] = name;
-                e.codeVals[i] = cp1;
-                e.codeKeys[index] = cp1;
-                e.nameVals[index] = name;
-
-                if (cp2 != empty) {
-                    multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
-                }
-                i++;
-
-
+            } else {
+                cp2 = empty;
             }
-        } catch (IOException err) {
-            throw new IllegalStateException("Error reading resource " + file);
+            String indexS = reader.consumeTo('\n');
+            // default git checkout on windows will add a \r there, so remove
+            if (indexS.charAt(indexS.length() - 1) == '\r') {
+                indexS = indexS.substring(0, indexS.length() - 1);
+            }
+            final int index = Integer.parseInt(indexS, codepointRadix);
+            reader.advance();
+
+            e.nameKeys[i] = name;
+            e.codeVals[i] = cp1;
+            e.codeKeys[index] = cp1;
+            e.nameVals[index] = name;
+
+            if (cp2 != empty) {
+                multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+            }
+            i++;
         }
+        Validate.isTrue(i == size, "Unexpected count of entities loaded for " + file);
     }
 }

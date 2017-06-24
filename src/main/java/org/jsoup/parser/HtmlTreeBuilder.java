@@ -11,6 +11,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +58,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    protected void initialiseParse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
         super.initialiseParse(input, baseUri, errors, settings);
 
         // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
@@ -77,7 +79,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        initialiseParse(inputFragment, baseUri, errors, settings);
+        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;

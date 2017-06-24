@@ -1,20 +1,44 @@
 package org.jsoup.helper;
 
-import org.jsoup.*;
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UncheckedIOException;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -601,6 +625,7 @@ public class HttpConnection implements Connection {
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
+        private InputStream bodyStream;
         private String charset;
         private String contentType;
         private boolean executed = false;
@@ -701,23 +726,17 @@ public class HttpConnection implements Connection {
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
-                    InputStream bodyStream = null;
-                    try {
-                        bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                        if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
-                            bodyStream = new GZIPInputStream(bodyStream);
-
-                        res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
-                    } finally {
-                        if (bodyStream != null) bodyStream.close();
-                    }
+                    res.bodyStream = null;
+                    res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                        res.bodyStream = new GZIPInputStream(res.bodyStream);
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
             } finally {
                 // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
                 // connection errors will not be released quickly enough and can cause a too many open files error.
-                conn.disconnect();
+                //conn.disconnect();
             }
 
             res.executed = true;
@@ -747,14 +766,25 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
-            byteData.rewind();
+            Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
+            // todo - disconnect here?
             return doc;
+        }
+
+        private void prepareByteData() {
+            if (byteData == null) {
+                try {
+                    byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
         }
 
         public String body() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            prepareByteData();
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body;
             if (charset == null)
@@ -767,6 +797,7 @@ public class HttpConnection implements Connection {
 
         public byte[] bodyAsBytes() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            prepareByteData();
             return byteData.array();
         }
 

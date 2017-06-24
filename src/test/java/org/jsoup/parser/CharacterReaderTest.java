@@ -165,6 +165,7 @@ public class CharacterReaderTest {
         assertFalse(r.matches("ne Two Three Four"));
         assertEquals("ne Two Three", r.consumeToEnd());
         assertFalse(r.matches("ne"));
+        assertTrue(r.isEmpty());
     }
 
     @Test
@@ -242,6 +243,17 @@ public class CharacterReaderTest {
 
         assertTrue(r.rangeEquals(18, 5, "CHOKE"));
         assertFalse(r.rangeEquals(18, 5, "CHIKE"));
+    }
+
+    @Test
+    public void empty() {
+        CharacterReader r = new CharacterReader("One");
+        assertTrue(r.matchConsume("One"));
+        assertTrue(r.isEmpty());
+
+        r = new CharacterReader("Two");
+        String two = r.consumeToEnd();
+        assertEquals("Two", two);
     }
 
 
