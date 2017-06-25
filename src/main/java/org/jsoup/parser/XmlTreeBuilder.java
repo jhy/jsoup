@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.*;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 
 /**
@@ -18,12 +20,16 @@ public class XmlTreeBuilder extends TreeBuilder {
         return ParseSettings.preserveCase;
     }
 
-    Document parse(String input, String baseUri) {
+    Document parse(Reader input, String baseUri) {
         return parse(input, baseUri, ParseErrorList.noTracking(), ParseSettings.preserveCase);
     }
 
+    Document parse(String input, String baseUri) {
+        return parse(new StringReader(input), baseUri, ParseErrorList.noTracking(), ParseSettings.preserveCase);
+    }
+
     @Override
-    protected void initialiseParse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
         super.initialiseParse(input, baseUri, errors, settings);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
@@ -130,7 +136,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     List<Node> parseFragment(String inputFragment, String baseUri, ParseErrorList errors, ParseSettings settings) {
-        initialiseParse(inputFragment, baseUri, errors, settings);
+        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
         runParser();
         return doc.childNodes();
     }

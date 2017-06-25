@@ -5,6 +5,11 @@ jsoup changelog
     not used.
     <https://github.com/jhy/jsoup/issues/899>
 
+  * When loading content from a URL or a file, the content is now parsed as it streams in from the network or disk,
+    rather than being fully buffered before parsing. This substantially reduces memory consumption & large garbage
+    objects when loading large files.
+    <https://github.com/jhy/jsoup/issues/904>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
