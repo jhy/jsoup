@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  *
  */
 public final class DataUtil {
-    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
+    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
     static final int bufferSize = 1024 * 32;
