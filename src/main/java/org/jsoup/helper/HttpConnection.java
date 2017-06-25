@@ -16,6 +16,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -629,6 +630,7 @@ public class HttpConnection implements Connection {
         private String charset;
         private String contentType;
         private boolean executed = false;
+        private boolean inputStreamRead = false;
         private int numRedirects = 0;
         private Connection.Request req;
 
@@ -766,14 +768,22 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
+            if (byteData != null) { // bytes have been read in to the buffer, parse that
+                bodyStream = new ByteArrayInputStream(byteData.array());
+                inputStreamRead = false; // ok to reparse if in bytes
+            }
+            Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
             Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             // todo - disconnect here?
+            inputStreamRead = true;
             return doc;
         }
 
         private void prepareByteData() {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             if (byteData == null) {
+                Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
                 try {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
                 } catch (IOException e) {
@@ -783,7 +793,6 @@ public class HttpConnection implements Connection {
         }
 
         public String body() {
-            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             prepareByteData();
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body;
@@ -796,7 +805,6 @@ public class HttpConnection implements Connection {
         }
 
         public byte[] bodyAsBytes() {
-            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             prepareByteData();
             return byteData.array();
         }

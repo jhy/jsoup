@@ -821,4 +821,28 @@ public class UrlConnectTest {
         doc = Jsoup.connect("http://mov-world.net/archiv/TV/A/%23No.Title/").get();
         assertEquals("Index of /archiv/TV/A/%23No.Title", doc.title());
     }
+
+    @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
+        Connection.Response res = Jsoup.connect(echoURL).execute();
+        Document doc = res.parse();
+        String body = res.body();
+    }
+
+    @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
+        Connection.Response res = Jsoup.connect(echoURL).execute();
+        String body = res.body();
+        assertTrue(body.contains("Environment"));
+        byte[] bytes = res.bodyAsBytes();
+        assertTrue(bytes.length > 100);
+
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+    }
+
+    @Test(expected=IllegalArgumentException.class) public void parseParseThrowsValidates() throws IOException {
+        Connection.Response res = Jsoup.connect(echoURL).execute();
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+        Document doc2 = res.parse();
+    }
 }
