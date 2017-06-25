@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
@@ -51,7 +52,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
-    public static final String  CONTENT_ENCODING = "Content-Encoding";
+    public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
      * Many users would get caught by not setting a user-agent and therefore getting different responses on their desktop
      * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
@@ -734,6 +735,7 @@ public class HttpConnection implements Connection {
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
                     if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    res.bodyStream = new ConstrainableInputStream(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }

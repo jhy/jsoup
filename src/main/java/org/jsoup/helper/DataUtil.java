@@ -1,6 +1,7 @@
 package org.jsoup.helper;
 
 import org.jsoup.UncheckedIOException;
+import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.XmlDeclaration;
@@ -33,7 +34,7 @@ public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:\"|')?([^\\s,;\"']*)");
     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
-    private static final int bufferSize = 1024 * 32;
+    static final int bufferSize = 1024 * 32;
     private static final char[] mimeBoundaryChars =
             "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     static final int boundaryLength = 32;
@@ -95,8 +96,8 @@ public final class DataUtil {
         if (input == null) // empty body
             return new Document(baseUri);
 
-        if (!input.markSupported())
-            input = new BufferedInputStream(input);
+        if (!(input instanceof ConstrainableInputStream))
+            input = new ConstrainableInputStream(input, bufferSize, 0);
 
         Document doc = null;
         boolean fullyRead = false;
@@ -173,12 +174,13 @@ public final class DataUtil {
     public static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
         Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
         final boolean capped = maxSize > 0;
-        byte[] buffer = new byte[capped && maxSize < bufferSize ? maxSize : bufferSize];
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream(capped ? maxSize : bufferSize);
+        final byte[] buffer = new byte[capped && maxSize < bufferSize ? maxSize : bufferSize];
+        final ByteArrayOutputStream outStream = new ByteArrayOutputStream(capped ? maxSize : bufferSize);
+
         int read;
         int remaining = maxSize;
 
-        while (!Thread.interrupted()) {
+        while (true) {
             read = inStream.read(buffer);
             if (read == -1) break;
             if (capped) {
@@ -190,7 +192,6 @@ public final class DataUtil {
             }
             outStream.write(buffer, 0, read);
         }
-
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 

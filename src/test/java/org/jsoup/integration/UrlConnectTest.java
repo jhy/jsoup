@@ -411,16 +411,9 @@ public class UrlConnectTest {
         Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
 
-        int actualString = 280735;
-        assertEquals(actualString, defaultRes.body().length());
-        assertEquals(50 * 1024, smallRes.body().length());
-        assertEquals(200 * 1024, mediumRes.body().length());
-        assertEquals(actualString, largeRes.body().length());
-        assertEquals(actualString, unlimitedRes.body().length());
-
         int actualDocText = 269541;
         assertEquals(actualDocText, defaultRes.parse().text().length());
-        assertEquals(49165, smallRes.parse().text().length());
+        assertEquals(47200, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
@@ -780,8 +773,8 @@ public class UrlConnectTest {
         );
     }
 
-    @Test public void canInterruptRead() throws IOException, InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate, and not only for body / bodyBytes read
+    @Test public void canInterruptBodyStringRead() throws IOException, InterruptedException {
+        // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
             public void run() {
@@ -790,6 +783,32 @@ public class UrlConnectTest {
                         .timeout(15 * 1000)
                         .execute();
                     body[0] = res.body();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        runner.start();
+        Thread.sleep(1000 * 7);
+        runner.interrupt();
+        assertTrue(runner.isInterrupted());
+        runner.join();
+
+        assertTrue(body[0].length() > 0);
+    }
+
+    @Test public void canInterruptDocumentRead() throws IOException, InterruptedException {
+        // todo - implement in interruptable channels, so it's immediate
+        final String[] body = new String[1];
+        Thread runner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
+                        .timeout(15 * 1000)
+                        .execute();
+                    body[0] = res.parse().text();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
