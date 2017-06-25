@@ -703,7 +703,7 @@ public class UrlConnectTest {
         final Document doc1 = res1.parse();
         assertEquals("windows-1252", doc1.charset().displayName()); // but determined at parse time
         assertEquals("Cost is €100", doc1.select("p").text());
-        assertTrue(res1.body().contains("€"));
+        assertTrue(doc1.text().contains("€"));
 
         // no meta, no override
         Connection.Response res2 = Jsoup.connect(noCharsetUrl).execute();
@@ -711,7 +711,7 @@ public class UrlConnectTest {
         final Document doc2 = res2.parse();
         assertEquals("UTF-8", doc2.charset().displayName()); // so defaults to utf-8
         assertEquals("Cost is �100", doc2.select("p").text());
-        assertTrue(res2.body().contains("�"));
+        assertTrue(doc2.text().contains("�"));
 
         // no meta, let's override
         Connection.Response res3 = Jsoup.connect(noCharsetUrl).execute();
@@ -721,7 +721,7 @@ public class UrlConnectTest {
         final Document doc3 = res3.parse();
         assertEquals("windows-1252", doc3.charset().displayName()); // from override
         assertEquals("Cost is €100", doc3.select("p").text());
-        assertTrue(res3.body().contains("€"));
+        assertTrue(doc3.text().contains("€"));
     }
 
     @Test
@@ -739,6 +739,14 @@ public class UrlConnectTest {
         Connection.Response res2 = Jsoup.connect(url).followRedirects(false).execute();
         assertEquals("/tools/test\uD83D\uDCA9.html", res2.header("Location"));
         // if we didn't notice it was utf8, would look like: Location: /tools/testð©.html
+    }
+
+    @Test public void handlesEscapesInRedirecct() throws IOException {
+        Document doc = Jsoup.connect("http://infohound.net/tools/302-escaped.pl").get();
+        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
+
+        doc = Jsoup.connect("http://infohound.net/tools/302-white.pl").get();
+        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
     }
 
     @Test

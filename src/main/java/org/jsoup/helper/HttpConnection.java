@@ -90,10 +90,12 @@ public class HttpConnection implements Connection {
         }
 	}
 
-	private static URL encodeUrl(URL u) {
+    static URL encodeUrl(URL u) {
         try {
             //  odd way to encode urls, but it works!
-            final URI uri = new URI(u.toExternalForm());
+            String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
+            urlS = urlS.replaceAll(" ", "%20");
+            final URI uri = new URI(urlS);
             return new URL(uri.toASCIIString());
         } catch (Exception e) {
             return u;
