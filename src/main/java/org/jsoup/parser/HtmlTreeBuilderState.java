@@ -466,7 +466,6 @@ enum HtmlTreeBuilderState {
                         if (tb.getFormElement() != null)
                             return false;
 
-                        tb.tokeniser.acknowledgeSelfClosingFlag();
                         tb.processStartTag("form");
                         if (startTag.attributes.hasKey("action")) {
                             Element form = tb.getFormElement();
@@ -540,12 +539,10 @@ enum HtmlTreeBuilderState {
                         tb.reconstructFormattingElements();
                         // todo: handle A start tag whose tag name is "math" (i.e. foreign, mathml)
                         tb.insert(startTag);
-                        tb.tokeniser.acknowledgeSelfClosingFlag();
                     } else if (name.equals("svg")) {
                         tb.reconstructFormattingElements();
                         // todo: handle A start tag whose tag name is "svg" (xlink, svg)
                         tb.insert(startTag);
-                        tb.tokeniser.acknowledgeSelfClosingFlag();
                     } else if (StringUtil.inSorted(name, Constants.InBodyStartDrop)) {
                         tb.error(this);
                         return false;

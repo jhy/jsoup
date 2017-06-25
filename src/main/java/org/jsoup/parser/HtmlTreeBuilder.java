@@ -224,12 +224,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         insertNode(el);
         if (startTag.isSelfClosing()) {
             if (tag.isKnownTag()) {
-                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag(); // if not acked, promulagates error
-            } else {
-                // unknown tag, remember this is self closing for output
-                tag.setSelfClosing();
-                tokeniser.acknowledgeSelfClosingFlag(); // not an distinct error
+                if (!tag.isEmpty())
+                    tokeniser.error("Tag cannot be self closing; not a void tag");
             }
+            else // unknown tag, remember this is self closing for output
+                tag.setSelfClosing();
         }
         return el;
     }

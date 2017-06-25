@@ -72,7 +72,6 @@ public class XmlTreeBuilder extends TreeBuilder {
         Element el = new Element(tag, baseUri, settings.normalizeAttributes(startTag.attributes));
         insertNode(el);
         if (startTag.isSelfClosing()) {
-            tokeniser.acknowledgeSelfClosingFlag();
             if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output. see above.
                 tag.setSelfClosing();
         } else {

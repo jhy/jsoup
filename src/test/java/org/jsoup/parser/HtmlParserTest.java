@@ -5,6 +5,7 @@ import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.*;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -694,7 +696,7 @@ public class HtmlParserTest {
         assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
         assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
         assertEquals("36: Invalid character reference: invalid named referenece 'arrgh'", errors.get(2).toString());
-        assertEquals("50: Self closing flag not acknowledged", errors.get(3).toString());
+        assertEquals("50: Tag cannot be self closing; not a void tag", errors.get(3).toString());
         assertEquals("61: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
     }
 
@@ -960,6 +962,28 @@ public class HtmlParserTest {
         parser.settings(ParseSettings.preserveCase);
         Document doc = parser.parseInput(html, "");
         assertEquals("<r> <X> A </X> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
+    }
 
+    @Test public void selfClosingVoidIsNotAnError() {
+        String html = "<p>test<br/>test<br/></p>";
+        Parser parser = Parser.htmlParser().setTrackErrors(5);
+        parser.parseInput(html, "");
+        assertEquals(0, parser.getErrors().size());
+
+        assertTrue(Jsoup.isValid(html, Whitelist.basic()));
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("<p>test<br>test<br></p>", clean);
+    }
+
+    @Test public void selfClosingOnNonvoidIsError() {
+        String html = "<p>test</p><div /><div>Two</div>";
+        Parser parser = Parser.htmlParser().setTrackErrors(5);
+        parser.parseInput(html, "");
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("18: Tag cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
+
+        assertFalse(Jsoup.isValid(html, Whitelist.relaxed()));
+        String clean = Jsoup.clean(html, Whitelist.relaxed());
+        assertEquals("<p>test</p> <div></div> <div> Two </div>", StringUtil.normaliseWhitespace(clean));
     }
 }
