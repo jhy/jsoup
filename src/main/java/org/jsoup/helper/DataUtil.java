@@ -1,6 +1,5 @@
 package org.jsoup.helper;
 
-import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,7 +7,6 @@ import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -92,7 +90,7 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser)  {
+    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
 
@@ -102,65 +100,61 @@ public final class DataUtil {
         Document doc = null;
         boolean fullyRead = false;
 
-        try {
-            // read the start of the stream and look for a BOM or meta charset
-            input.mark(firstReadBufferSize);
-            ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed
-            fullyRead = input.read() == -1;
-            input.reset();
+        // read the start of the stream and look for a BOM or meta charset
+        input.mark(firstReadBufferSize);
+        ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed
+        fullyRead = input.read() == -1;
+        input.reset();
 
-            // look for BOM - overrides any other header or input
-            BomCharset bomCharset = detectCharsetFromBom(firstBytes, charsetName);
-            if (bomCharset != null) {
-                charsetName = bomCharset.charset;
-                input.skip(bomCharset.offset);
-            }
-
-            if (charsetName == null) { // determine from meta. safe first parse as UTF-8
-                String docData = Charset.forName(defaultCharset).decode(firstBytes).toString();
-                doc = parser.parseInput(docData, baseUri);
-
-                // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-                Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
-                String foundCharset = null; // if not found, will keep utf-8 as best attempt
-                for (Element meta : metaElements) {
-                    if (meta.hasAttr("http-equiv"))
-                        foundCharset = getCharsetFromContentType(meta.attr("content"));
-                    if (foundCharset == null && meta.hasAttr("charset"))
-                        foundCharset = meta.attr("charset");
-                    if (foundCharset != null)
-                        break;
-                }
-
-                // look for <?xml encoding='ISO-8859-1'?>
-                if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
-                    XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
-                    if (prolog.name().equals("xml"))
-                        foundCharset = prolog.attr("encoding");
-                }
-                foundCharset = validateCharset(foundCharset);
-                if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
-                    foundCharset = foundCharset.trim().replaceAll("[\"']", "");
-                    charsetName = foundCharset;
-                    doc = null;
-                } else if (!fullyRead) {
-                    doc = null;
-                }
-            } else { // specified by content type header (or by user on file load)
-                Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
-            }
-            if (doc == null) {
-                if (charsetName == null)
-                    charsetName = defaultCharset;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
-                doc = parser.parseInput(reader, baseUri);
-                doc.outputSettings().charset(charsetName);
-            }
-            input.close();
-            return doc;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        // look for BOM - overrides any other header or input
+        BomCharset bomCharset = detectCharsetFromBom(firstBytes, charsetName);
+        if (bomCharset != null) {
+            charsetName = bomCharset.charset;
+            input.skip(bomCharset.offset);
         }
+
+        if (charsetName == null) { // determine from meta. safe first parse as UTF-8
+            String docData = Charset.forName(defaultCharset).decode(firstBytes).toString();
+            doc = parser.parseInput(docData, baseUri);
+
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+            String foundCharset = null; // if not found, will keep utf-8 as best attempt
+            for (Element meta : metaElements) {
+                if (meta.hasAttr("http-equiv"))
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                if (foundCharset == null && meta.hasAttr("charset"))
+                    foundCharset = meta.attr("charset");
+                if (foundCharset != null)
+                    break;
+            }
+
+            // look for <?xml encoding='ISO-8859-1'?>
+            if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
+                XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
+                if (prolog.name().equals("xml"))
+                    foundCharset = prolog.attr("encoding");
+            }
+            foundCharset = validateCharset(foundCharset);
+            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
+                foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                charsetName = foundCharset;
+                doc = null;
+            } else if (!fullyRead) {
+                doc = null;
+            }
+        } else { // specified by content type header (or by user on file load)
+            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+        }
+        if (doc == null) {
+            if (charsetName == null)
+                charsetName = defaultCharset;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
+            doc = parser.parseInput(reader, baseUri);
+            doc.outputSettings().charset(charsetName);
+        }
+        input.close();
+        return doc;
     }
 
     /**

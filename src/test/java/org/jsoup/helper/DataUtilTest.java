@@ -50,13 +50,13 @@ public class DataUtilTest {
         return null;
     }
 
-    @Test public void discardsSpuriousByteOrderMark() {
+    @Test public void discardsSpuriousByteOrderMark() throws IOException {
         String html = "\uFEFF<html><head><title>One</title></head><body>Two</body></html>";
         Document doc = DataUtil.parseInputStream(stream(html), "UTF-8", "http://foo.com/", Parser.htmlParser());
         assertEquals("One", doc.head().text());
     }
 
-    @Test public void discardsSpuriousByteOrderMarkWhenNoCharsetSet() {
+    @Test public void discardsSpuriousByteOrderMarkWhenNoCharsetSet() throws IOException {
         String html = "\uFEFF<html><head><title>One</title></head><body>Two</body></html>";
         Document doc = DataUtil.parseInputStream(stream(html), null, "http://foo.com/", Parser.htmlParser());
         assertEquals("One", doc.head().text());
@@ -95,7 +95,7 @@ public class DataUtilTest {
     }
     
     @Test
-    public void wrongMetaCharsetFallback() {
+    public void wrongMetaCharsetFallback() throws IOException {
         String html = "<html><head><meta charset=iso-8></head><body></body></html>";
 
         Document doc = DataUtil.parseInputStream(stream(html), null, "http://example.com", Parser.htmlParser());
