@@ -739,11 +739,11 @@ public class HttpConnection implements Connection {
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
-            } finally {
+            } catch (IOException e){
                 // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
                 // connection errors will not be released quickly enough and can cause a too many open files error.
-                //conn.disconnect();
-                // todo - move to res.close(), free up streams as well
+                conn.disconnect();
+                throw e;
             }
 
             res.executed = true;

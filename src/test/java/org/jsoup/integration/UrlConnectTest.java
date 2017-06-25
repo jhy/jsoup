@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 @Ignore // ignored by default so tests don't require network access. comment out to enable.
+// todo: rebuild these into a local Jetty test server, so not reliant on the vagaries of the internet.
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
     private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
