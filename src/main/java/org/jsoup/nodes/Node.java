@@ -96,13 +96,14 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Set an attribute (key=value). If the attribute already exists, it is replaced.
+     * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
+     * <b>case insensitive</b>.
      * @param attributeKey The attribute key.
      * @param attributeValue The attribute value.
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        attributes.put(attributeKey, attributeValue);
+        attributes.putIgnoreCase(attributeKey, attributeValue);
         return this;
     }
 

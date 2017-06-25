@@ -56,19 +56,24 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @return the first matching attribute value if set; or empty string if not set.
      */
     public String getIgnoreCase(String key) {
+        Attribute attr = getAttributeIgnoreCase(key);
+        return attr != null ? attr.getValue() : "";
+    }
+
+    private Attribute getAttributeIgnoreCase(String key) {
         Validate.notEmpty(key);
         if (attributes == null)
-            return "";
+            return null;
 
         Attribute attr = attributes.get(key);
         if (attr != null)
-            return attr.getValue();
+            return attr;
 
         for (String attrKey : attributes.keySet()) {
             if (attrKey.equalsIgnoreCase(key))
-                return attributes.get(attrKey).getValue();
+                return attributes.get(attrKey);
         }
-        return "";
+        return null;
     }
 
     /**
@@ -79,6 +84,15 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     public void put(String key, String value) {
         Attribute attr = new Attribute(key, value);
         put(attr);
+    }
+
+    void putIgnoreCase(String key, String value) {
+        Attribute oldAttr = getAttributeIgnoreCase(key);
+        if (oldAttr != null && !oldAttr.getKey().equals(key)) {
+            attributes.remove(oldAttr.getKey());
+        }
+
+        put(key, value);
     }
 
     /**

@@ -289,4 +289,29 @@ public class NodeTest {
         assertTrue(el.text().equals("None"));
         assertTrue(elClone.text().equals("Text"));
     }
+
+    @Test public void changingAttributeValueShouldReplaceExistingAttributeCaseInsensitive() {
+        Document document = Jsoup.parse("<INPUT id=\"foo\" NAME=\"foo\" VALUE=\"\">");
+        Element inputElement = document.select("#foo").first();
+
+        inputElement.attr("value","bar");
+
+        assertEquals(singletonAttributes("value", "bar"), getAttributesCaseInsensitive(inputElement, "value"));
+    }
+
+    private Attributes getAttributesCaseInsensitive(Element element, String attributeName) {
+        Attributes matches = new Attributes();
+        for (Attribute attribute : element.attributes()) {
+            if (attribute.getKey().equalsIgnoreCase(attributeName)) {
+                matches.put(attribute);
+            }
+        }
+        return matches;
+    }
+
+    private Attributes singletonAttributes(String key, String value) {
+        Attributes attributes = new Attributes();
+        attributes.put(key, value);
+        return attributes;
+    }
 }
