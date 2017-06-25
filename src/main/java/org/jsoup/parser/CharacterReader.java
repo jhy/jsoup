@@ -160,7 +160,7 @@ public final class CharacterReader {
     public String consumeTo(char c) {
         int offset = nextIndexOf(c);
         if (offset != -1) {
-            String consumed = cacheString(bufPos, offset);
+            String consumed = cacheString(charBuf, stringCache, bufPos, offset);
             bufPos += offset;
             return consumed;
         } else {
@@ -171,7 +171,7 @@ public final class CharacterReader {
     String consumeTo(String seq) {
         int offset = nextIndexOf(seq);
         if (offset != -1) {
-            String consumed = cacheString(bufPos, offset);
+            String consumed = cacheString(charBuf, stringCache, bufPos, offset);
             bufPos += offset;
             return consumed;
         } else {
@@ -198,7 +198,7 @@ public final class CharacterReader {
             bufPos++;
         }
 
-        return bufPos > start ? cacheString(start, bufPos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
     }
 
     String consumeToAnySorted(final char... chars) {
@@ -213,7 +213,7 @@ public final class CharacterReader {
             bufPos++;
         }
 
-        return bufPos > start ? cacheString(start, bufPos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
     }
 
     String consumeData() {
@@ -230,7 +230,7 @@ public final class CharacterReader {
             bufPos++;
         }
 
-        return bufPos > start ? cacheString(start, bufPos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
     }
 
     String consumeTagName() {
@@ -247,12 +247,12 @@ public final class CharacterReader {
             bufPos++;
         }
 
-        return bufPos > start ? cacheString(start, bufPos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
     }
 
     String consumeToEnd() {
         bufferUp();
-        String data = cacheString(bufPos, bufLength - bufPos);
+        String data = cacheString(charBuf, stringCache, bufPos, bufLength - bufPos);
         bufPos = bufLength;
         return data;
     }
@@ -268,7 +268,7 @@ public final class CharacterReader {
                 break;
         }
 
-        return cacheString(start, bufPos - start);
+        return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
     String consumeLetterThenDigitSequence() {
@@ -289,7 +289,7 @@ public final class CharacterReader {
                 break;
         }
 
-        return cacheString(start, bufPos - start);
+        return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
     String consumeHexSequence() {
@@ -302,7 +302,7 @@ public final class CharacterReader {
             else
                 break;
         }
-        return cacheString(start, bufPos - start);
+        return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
     String consumeDigitSequence() {
@@ -315,7 +315,7 @@ public final class CharacterReader {
             else
                 break;
         }
-        return cacheString(start, bufPos - start);
+        return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
     boolean matches(char c) {
@@ -420,34 +420,31 @@ public final class CharacterReader {
      * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
      * some more duplicates.
      */
-    private String cacheString(final int start, final int count) {
-        final char[] val = charBuf;
-        final String[] cache = stringCache;
-
+    private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
         // limit (no cache):
         if (count > maxStringCacheLen)
-            return new String(val, start, count);
+            return new String(charBuf, start, count);
 
         // calculate hash:
         int hash = 0;
         int offset = start;
         for (int i = 0; i < count; i++) {
-            hash = 31 * hash + val[offset++];
+            hash = 31 * hash + charBuf[offset++];
         }
 
         // get from cache
-        final int index = hash & cache.length - 1;
-        String cached = cache[index];
+        final int index = hash & stringCache.length - 1;
+        String cached = stringCache[index];
 
         if (cached == null) { // miss, add
-            cached = new String(val, start, count);
-            cache[index] = cached;
+            cached = new String(charBuf, start, count);
+            stringCache[index] = cached;
         } else { // hashcode hit, check equality
-            if (rangeEquals(start, count, cached)) { // hit
+            if (rangeEquals(charBuf, start, count, cached)) { // hit
                 return cached;
             } else { // hashcode conflict
-                cached = new String(val, start, count);
-                cache[index] = cached; // update the cache, as recently used strings are more likely to show up again
+                cached = new String(charBuf, start, count);
+                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
             }
         }
         return cached;
@@ -456,17 +453,21 @@ public final class CharacterReader {
     /**
      * Check if the value of the provided range equals the string.
      */
-    boolean rangeEquals(final int start, int count, final String cached) {
+    static boolean rangeEquals(final char[] charBuf, final int start, int count, final String cached) {
         if (count == cached.length()) {
-            char one[] = charBuf;
             int i = start;
             int j = 0;
             while (count-- != 0) {
-                if (one[i++] != cached.charAt(j++))
+                if (charBuf[i++] != cached.charAt(j++))
                     return false;
             }
             return true;
         }
         return false;
+    }
+
+    // just used for testing
+    boolean rangeEquals(final int start, final int count, final String cached) {
+        return rangeEquals(charBuf, start, count, cached);
     }
 }
