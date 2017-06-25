@@ -14,6 +14,9 @@ jsoup changelog
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
 
+  * Bugfix: attributes with the same name but different case would be incorrectly treated as different attributes.
+    <https://github.com/jhy/jsoup/pull/903>
+
 *** Release 1.10.3 [2017-Jun-11]
   * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,
     respectively. This makes it simpler to for example get a list of each URL on a page:
