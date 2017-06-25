@@ -773,12 +773,13 @@ public class UrlConnectTest {
     }
 
     @Test public void canInterruptRead() throws IOException, InterruptedException {
+        // todo - implement in interruptable channels, so it's immediate, and not only for body / bodyBytes read
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
             public void run() {
                 try {
                     Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
-                        .timeout(10 * 1000)
+                        .timeout(15 * 1000)
                         .execute();
                     body[0] = res.body();
                 } catch (IOException e) {
@@ -789,7 +790,7 @@ public class UrlConnectTest {
         });
 
         runner.start();
-        Thread.sleep(1000 * 5);
+        Thread.sleep(1000 * 7);
         runner.interrupt();
         assertTrue(runner.isInterrupted());
         runner.join();
