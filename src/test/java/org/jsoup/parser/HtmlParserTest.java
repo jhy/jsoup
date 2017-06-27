@@ -4,9 +4,16 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.integration.ParseTest;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
+import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -509,6 +516,16 @@ public class HtmlParserTest {
         String h = "<b>1<p>2</b>3</p>";
         Document doc = Jsoup.parse(h);
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
+    }
+
+    @Ignore // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
+    @Test public void handlesMisnestedAInDivs() {
+        String h = "<a href='#1'><div><div><a href='#2'>child</a</div</div></a>";
+        String w = "<a href=\"#1\"></a><div><a href=\"#1\"></a><div><a href=\"#1\"></a><a href=\"#2\">child</a></div></div>";
+        Document doc = Jsoup.parse(h);
+        assertEquals(
+            StringUtil.normaliseWhitespace(w),
+            StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
     @Test public void handlesUnexpectedMarkupInTables() {
