@@ -364,6 +364,24 @@ public class HtmlParserTest {
         assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void handlesKnownEmptyNoFrames() {
+        String h = "<html><head><noframes /><meta name=foo></head><body>One</body></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><noframes></noframes><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void handlesKnownEmptyStyle() {
+        String h = "<html><head><style /><meta name=foo></head><body>One</body></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><style></style><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void handlesKnownEmptyTitle() {
+        String h = "<html><head><title /><meta name=foo></head><body>One</body></html>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<html><head><title></title><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
     @Test public void handlesSolidusAtAttributeEnd() {
         // this test makes sure [<a href=/>link</a>] is parsed as [<a href="/">link</a>], not [<a href="" /><a>link</a>]
         String h = "<a href=/>link</a>";

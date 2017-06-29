@@ -1479,17 +1479,17 @@ enum HtmlTreeBuilderState {
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
-        tb.insert(startTag);
         tb.tokeniser.transition(TokeniserState.Rcdata);
         tb.markInsertionMode();
         tb.transition(Text);
+        tb.insert(startTag);
     }
 
     private static void handleRawtext(Token.StartTag startTag, HtmlTreeBuilder tb) {
-        tb.insert(startTag);
         tb.tokeniser.transition(TokeniserState.Rawtext);
         tb.markInsertionMode();
         tb.transition(Text);
+        tb.insert(startTag);
     }
 
     // lists of tags to search through. A little harder to read here, but causes less GC than dynamic varargs.
