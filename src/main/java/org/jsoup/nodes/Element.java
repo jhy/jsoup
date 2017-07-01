@@ -359,6 +359,18 @@ public class Element extends Node {
     }
 
     /**
+     * Add this element to the supplied parent element, as its next child.
+     *
+     * @param parent element to which this element will be appended
+     * @return this element, so that you can continue modifying the element
+     */
+    public Element appendTo(Element parent) {
+        Validate.notNull(parent);
+        parent.appendChild(this);
+        return this;
+    }
+
+    /**
      * Add a node to the start of this element's children.
      * 
      * @param child node to add.

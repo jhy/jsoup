@@ -6,9 +6,20 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -1117,4 +1128,25 @@ public class ElementTest {
         assertEquals(p1, p9);
         assertEquals(p1, p10);
     }
+
+	@Test
+	public void testAppendTo() {
+		String parentHtml = "<div class='a'></div>";
+		String childHtml = "<div class='b'></div><p>Two</p>";
+
+		Document parentDoc = Jsoup.parse(parentHtml);
+		Element parent = parentDoc.body();
+        Document childDoc = Jsoup.parse(childHtml);
+
+        Element div = childDoc.select("div").first();
+        Element p = childDoc.select("p").first();
+        Element appendTo1 = div.appendTo(parent);
+        assertEquals(div, appendTo1);
+
+        Element appendTo2 = p.appendTo(div);
+        assertEquals(p, appendTo2);
+
+        assertEquals("<div class=\"a\"></div>\n<div class=\"b\">\n <p>Two</p>\n</div>", parentDoc.body().html());
+        assertEquals("", childDoc.body().html()); // got moved out
+	}
 }
