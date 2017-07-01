@@ -207,6 +207,27 @@ public final class StringUtil {
         } catch (MalformedURLException e) {
             return "";
         }
+    }
+
+    /**
+     * Maintains a cached StringBuilder, to minimize new StringBuilder GCs. Prevents it from growing to big per thread.
+     * @return an empty StringBuilder
+     */
+    // todo: roll this out everywhere
+    public static StringBuilder stringBuilder() {
+        StringBuilder sb = stringLocal.get();
+        if (sb.length() > MaxCachedBuilderSize) {
+            sb = new StringBuilder(MaxCachedBuilderSize);
+            stringLocal.set(sb);
+        }
+        sb.delete(0, sb.length());
+        return sb;
 
     }
+    private static final ThreadLocal<StringBuilder> stringLocal = new ThreadLocal<>();
+    private static final int MaxCachedBuilderSize = 16 * 1024;
+    static {
+        stringLocal.set(new StringBuilder(MaxCachedBuilderSize));
+    }
+
 }

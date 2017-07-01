@@ -970,7 +970,7 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = new StringBuilder();
+        final StringBuilder accum = StringUtil.stringBuilder();
         new NodeTraversor(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
@@ -1303,7 +1303,7 @@ public class Element extends Node {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder accum = StringUtil.stringBuilder();
         html(accum);
         return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
     }
