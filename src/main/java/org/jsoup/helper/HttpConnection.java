@@ -972,7 +972,7 @@ public class HttpConnection implements Connection {
                     if (values.size() == 1)
                         header(name, values.get(0));
                     else if (values.size() > 1) {
-                        StringBuilder accum = new StringBuilder();
+                        StringBuilder accum = StringUtil.stringBuilder();
                         for (int i = 0; i < values.size(); i++) {
                             final String val = values.get(i);
                             if (i != 0)
@@ -1051,7 +1051,7 @@ public class HttpConnection implements Connection {
         }
 
         private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = StringUtil.stringBuilder();
             boolean first = true;
             for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
                 if (!first)
@@ -1067,7 +1067,7 @@ public class HttpConnection implements Connection {
         // for get url reqs, serialise the data map into the url
         private static void serialiseRequestUrl(Connection.Request req) throws IOException {
             URL in = req.url();
-            StringBuilder url = new StringBuilder();
+            StringBuilder url = StringUtil.stringBuilder();
             boolean first = true;
             // reconstitute the query, ready for appends
             url

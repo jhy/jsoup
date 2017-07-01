@@ -298,7 +298,7 @@ public class TokenQueue {
      * @return unescaped string
      */
     public static String unescape(String in) {
-        StringBuilder out = new StringBuilder();
+        StringBuilder out = StringUtil.stringBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {

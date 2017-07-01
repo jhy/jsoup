@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Entities;
 
@@ -258,7 +259,7 @@ final class Tokeniser {
      * @return unescaped string from reader
      */
     String unescapeEntities(boolean inAttribute) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = StringUtil.stringBuilder();
         while (!reader.isEmpty()) {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {

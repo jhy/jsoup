@@ -12,6 +12,8 @@ jsoup changelog
     into memory.
     <https://github.com/jhy/jsoup/issues/904>
 
+  * Performance improvements in text and HTML generation (through less GC).
+
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>
 

@@ -124,7 +124,7 @@ public final class StringUtil {
      * @return normalised string
      */
     public static String normaliseWhitespace(String string) {
-        StringBuilder sb = new StringBuilder(string.length());
+        StringBuilder sb = StringUtil.stringBuilder();
         appendNormalisedWhitespace(sb, string, false);
         return sb.toString();
     }
@@ -211,23 +211,28 @@ public final class StringUtil {
 
     /**
      * Maintains a cached StringBuilder, to minimize new StringBuilder GCs. Prevents it from growing to big per thread.
+     * Care must be taken to not grab more than one in the same stack (not locked or mutexed or anything).
      * @return an empty StringBuilder
      */
-    // todo: roll this out everywhere
     public static StringBuilder stringBuilder() {
         StringBuilder sb = stringLocal.get();
         if (sb.length() > MaxCachedBuilderSize) {
             sb = new StringBuilder(MaxCachedBuilderSize);
             stringLocal.set(sb);
+        } else {
+            sb.delete(0, sb.length());
         }
-        sb.delete(0, sb.length());
         return sb;
 
     }
-    private static final ThreadLocal<StringBuilder> stringLocal = new ThreadLocal<>();
-    private static final int MaxCachedBuilderSize = 16 * 1024;
-    static {
-        stringLocal.set(new StringBuilder(MaxCachedBuilderSize));
-    }
+
+    private static final int MaxCachedBuilderSize = 8 * 1024;
+    private static final ThreadLocal<StringBuilder> stringLocal = new ThreadLocal<StringBuilder>(){
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder(MaxCachedBuilderSize);
+        }
+    };
+
 
 }

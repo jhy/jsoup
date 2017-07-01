@@ -8,6 +8,7 @@ import org.jsoup.select.Elements;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -369,13 +370,16 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset = Charset.forName("UTF-8");
+        private Charset charset;
+        private final ThreadLocal<CharsetEncoder> encoder = new ThreadLocal<>(); // enables the doc to be shared in multiple threads, without creating new encoders on every travers
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            charset(StandardCharsets.UTF_8);
+        }
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -419,6 +423,7 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
+            encoder.set(charset.newEncoder());
             return this;
         }
 
@@ -433,7 +438,7 @@ public class Document extends Element {
         }
 
         CharsetEncoder encoder() {
-            return charset.newEncoder();
+            return encoder.get();
         }
 
         /**
