@@ -12,6 +12,9 @@ jsoup changelog
     into memory.
     <https://github.com/jhy/jsoup/issues/904>
 
+  * Added Element.appendTo(parent) to simplify slinging elements about.
+    <https://github.com/jhy/jsoup/pull/662>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>

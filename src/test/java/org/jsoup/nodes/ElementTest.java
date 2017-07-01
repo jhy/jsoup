@@ -14,14 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1136,17 +1132,21 @@ public class ElementTest {
 	@Test
 	public void testAppendTo() {
 		String parentHtml = "<div class='a'></div>";
-		String childHtml = "<div class='b'></div>";
+		String childHtml = "<div class='b'></div><p>Two</p>";
 
-		Element parentElement = Jsoup.parse(parentHtml).getElementsByClass("a").first();
-		Element childElement = Jsoup.parse(childHtml).getElementsByClass("b").first();
+		Document parentDoc = Jsoup.parse(parentHtml);
+		Element parent = parentDoc.body();
+        Document childDoc = Jsoup.parse(childHtml);
 
-		childElement.attr("class", "test-class").appendTo(parentElement).attr("id", "testId");
-		assertEquals("test-class", childElement.attr("class"));
-		assertEquals("testId", childElement.attr("id"));
-		assertThat(parentElement.attr("id"), not(equalTo("testId")));
-		assertThat(parentElement.attr("class"), not(equalTo("test-class")));
-		assertSame(childElement, parentElement.children().first());
-		assertSame(parentElement, childElement.parent());
+        Element div = childDoc.select("div").first();
+        Element p = childDoc.select("p").first();
+        Element appendTo1 = div.appendTo(parent);
+        assertEquals(div, appendTo1);
+
+        Element appendTo2 = p.appendTo(div);
+        assertEquals(p, appendTo2);
+
+        assertEquals("<div class=\"a\"></div>\n<div class=\"b\">\n <p>Two</p>\n</div>", parentDoc.body().html());
+        assertEquals("", childDoc.body().html()); // got moved out
 	}
 }
