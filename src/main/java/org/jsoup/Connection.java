@@ -651,7 +651,8 @@ public interface Connection {
         String contentType();
 
         /**
-         * Parse the body of the response as a Document.
+         * Read and parse the body of the response as a Document. If you intend to parse the same response multiple
+         * times, you should {@link #bufferUp()} first.
          * @return a parsed Document
          * @throws IOException on error
          */
@@ -668,6 +669,14 @@ public interface Connection {
          * @return body bytes
          */
         byte[] bodyAsBytes();
+
+        /**
+         * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
+         * same connection response (otherwise, once the response is read, its InputStream will have been drained and
+         * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect. If the requ
+         * @return this response, for chaining
+         */
+        Response bufferUp();
     }
 
     /**

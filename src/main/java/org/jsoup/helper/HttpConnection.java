@@ -814,6 +814,12 @@ public class HttpConnection implements Connection {
             return byteData.array();
         }
 
+        @Override
+        public Connection.Response bufferUp() {
+            prepareByteData();
+            return this;
+        }
+
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
             final HttpURLConnection conn = (HttpURLConnection) (

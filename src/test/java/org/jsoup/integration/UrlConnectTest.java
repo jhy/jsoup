@@ -872,6 +872,17 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect(echoURL).execute();
         Document doc = res.parse();
         assertTrue(doc.title().contains("Environment"));
-        Document doc2 = res.parse();
+        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
     }
+
+    @Test public void multipleParsesOkAfterBufferUp() throws IOException {
+        Connection.Response res = Jsoup.connect(echoURL).execute().bufferUp();
+
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+
+        Document doc2 = res.parse();
+        assertTrue(doc2.title().contains("Environment"));
+    }
+
 }
