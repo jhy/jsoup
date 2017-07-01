@@ -15,6 +15,8 @@ jsoup changelog
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>
 
+  * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>

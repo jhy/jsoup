@@ -1149,4 +1149,20 @@ public class ElementTest {
         assertEquals("<div class=\"a\"></div>\n<div class=\"b\">\n <p>Two</p>\n</div>", parentDoc.body().html());
         assertEquals("", childDoc.body().html()); // got moved out
 	}
+
+	@Test public void testNormalizesNbspInText() {
+        String escaped = "You can't always get what you&nbsp;want.";
+        String withNbsp = "You can't always get what you want."; // there is an nbsp char in there
+        Document doc = Jsoup.parse("<p>" + escaped);
+        Element p = doc.select("p").first();
+        assertEquals("You can't always get what you want.", p.text()); // text is normalized
+
+        assertEquals("<p>" + escaped + "</p>", p.outerHtml()); // html / whole text keeps &nbsp;
+        assertEquals(withNbsp, p.textNodes().get(0).getWholeText());
+        assertEquals(160, withNbsp.charAt(29));
+
+        Element matched = doc.select("p:contains(get what you want)").first();
+        assertEquals("p", matched.nodeName());
+        assertTrue(matched.is(":containsOwn(get what you want)"));
+    }
 }
