@@ -372,7 +372,13 @@ public class Document extends Element {
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset;
-        private final ThreadLocal<CharsetEncoder> encoder = new ThreadLocal<>(); // enables the doc to be shared in multiple threads, without creating new encoders on every travers
+        // enables the doc to be shared in multiple threads, without creating new encoders on every traverse
+        private final ThreadLocal<CharsetEncoder> encoder = new ThreadLocal<CharsetEncoder>() {
+            @Override
+            protected CharsetEncoder initialValue() {
+                return charset.newEncoder();
+            }
+        };
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
@@ -424,7 +430,7 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
-            encoder.set(charset.newEncoder());
+            encoder.remove();
             return this;
         }
 

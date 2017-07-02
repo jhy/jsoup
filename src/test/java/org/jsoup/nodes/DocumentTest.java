@@ -434,4 +434,19 @@ public class DocumentTest {
         assertTrue("Should have contained a '&#xa0;' or a '&nbsp;'.",
                 output.contains("&#xa0;") || output.contains("&nbsp;"));
     }
+
+    @Test public void parseAndHtmlOnDifferentThreads() throws InterruptedException {
+        String html = "<p>Alright then.</p>";
+        final Document doc = Jsoup.parse(html);
+        final String[] out = new String[1];
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                out[0] = doc.select("p").outerHtml();
+            }
+        });
+        thread.start();
+        thread.join();
+        assertEquals("<p>Alright then.</p>", out[0]);
+    }
 }
