@@ -150,7 +150,7 @@ public class Document extends Element {
         for (int i = toMove.size()-1; i >= 0; i--) {
             Node node = toMove.get(i);
             element.removeChild(node);
-            body().prependChild(new TextNode(" ", ""));
+            body().prependChild(new TextNode(" "));
             body().prependChild(node);
         }
     }
@@ -163,7 +163,7 @@ public class Document extends Element {
             List<Node> toMove = new ArrayList<>();
             for (int i = 1; i < elements.size(); i++) {
                 Node dupe = elements.get(i);
-                toMove.addAll(dupe.childNodes);
+                toMove.addAll(dupe.ensureChildNodes());
                 dupe.remove();
             }
 
@@ -181,8 +181,9 @@ public class Document extends Element {
         if (node.nodeName().equals(tag))
             return (Element) node;
         else {
-            for (Node child: node.childNodes) {
-                Element found = findFirstElementByTagName(tag, child);
+            int size = node.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                Element found = findFirstElementByTagName(tag, node.childNode(i));
                 if (found != null)
                     return found;
             }
@@ -342,14 +343,14 @@ public class Document extends Element {
                             decl.attr("version", "1.0");
                         }
                     } else {
-                        decl = new XmlDeclaration("xml", baseUri, false);
+                        decl = new XmlDeclaration("xml", false);
                         decl.attr("version", "1.0");
                         decl.attr("encoding", charset().displayName());
 
                         prependChild(decl);
                     }
                 } else {
-                    XmlDeclaration decl = new XmlDeclaration("xml", baseUri, false);
+                    XmlDeclaration decl = new XmlDeclaration("xml", false);
                     decl.attr("version", "1.0");
                     decl.attr("encoding", charset().displayName());
 

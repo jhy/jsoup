@@ -6,17 +6,24 @@ import java.io.IOException;
  A data node, for contents of style, script tags etc, where contents should not show in text().
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class DataNode extends Node{
-    private static final String DATA_KEY = "data";
+public class DataNode extends LeafNode {
 
     /**
      Create a new DataNode.
      @param data data contents
-     @param baseUri base URI
+     */
+    public DataNode(String data) {
+        value = data;
+    }
+
+    /**
+     Create a new DataNode.
+     @param data data contents
+     @param baseUri Unused, Leaf Nodes do not hold base URis
+     @deprecated
      */
     public DataNode(String data, String baseUri) {
-        super(baseUri);
-        attributes.put(DATA_KEY, data);
+        this(data);
     }
 
     public String nodeName() {
@@ -28,7 +35,7 @@ public class DataNode extends Node{
      @return data
      */
     public String getWholeData() {
-        return attributes.get(DATA_KEY);
+        return coreValue();
     }
 
     /**
@@ -37,7 +44,7 @@ public class DataNode extends Node{
      * @return this node, for chaining
      */
     public DataNode setWholeData(String data) {
-        attributes.put(DATA_KEY, data);
+        coreValue(data);
         return this;
     }
 

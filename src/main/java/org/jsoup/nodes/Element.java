@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
@@ -37,10 +38,13 @@ import static org.jsoup.internal.Normalizer.normalize;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Element extends Node {
+    private static final List<Node> EMPTY_NODES = Collections.emptyList();
+    private static final Pattern classSplit = Pattern.compile("\\s+");
     private Tag tag;
     private WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
-
-    private static final Pattern classSplit = Pattern.compile("\\s+");
+    List<Node> childNodes;
+    private Attributes attributes;
+    private String baseUri;
 
     /**
      * Create a new, standalone element.
@@ -60,9 +64,11 @@ public class Element extends Node {
      * @see #appendElement(String)
      */
     public Element(Tag tag, String baseUri, Attributes attributes) {
-        super(baseUri, attributes);
-        
-        Validate.notNull(tag);    
+        Validate.notNull(tag);
+        Validate.notNull(baseUri);
+        childNodes = EMPTY_NODES;
+        this.baseUri = baseUri;
+        this.attributes = attributes;
         this.tag = tag;
     }
     
@@ -75,7 +81,41 @@ public class Element extends Node {
      * @see Tag#valueOf(String, ParseSettings)
      */
     public Element(Tag tag, String baseUri) {
-        this(tag, baseUri, new Attributes());
+        this(tag, baseUri, null);
+    }
+
+    protected List<Node> ensureChildNodes() {
+        if (childNodes == EMPTY_NODES) {
+            childNodes = new NodeList(4);
+        }
+        return childNodes;
+    }
+
+    @Override
+    protected boolean hasAttributes() {
+        return attributes != null;
+    }
+
+    @Override
+    public Attributes attributes() {
+        if (!hasAttributes())
+            attributes = new Attributes();
+        return attributes;
+    }
+
+    @Override
+    public String baseUri() {
+        return baseUri;
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        this.baseUri = baseUri;
+    }
+
+    @Override
+    public int childNodeSize() {
+        return childNodes.size();
     }
 
     @Override
@@ -130,7 +170,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return attributes.getIgnoreCase("id");
+        return attributes().getIgnoreCase("id");
     }
 
     /**
@@ -155,7 +195,7 @@ public class Element extends Node {
      * @return this element
      */
     public Element attr(String attributeKey, boolean attributeValue) {
-        attributes.put(attributeKey, attributeValue);
+        attributes().put(attributeKey, attributeValue);
         return this;
     }
 
@@ -173,7 +213,7 @@ public class Element extends Node {
      * @return a map of {@code key=value} custom data attributes.
      */
     public Map<String, String> dataset() {
-        return attributes.dataset();
+        return attributes().dataset();
     }
 
     @Override
@@ -458,7 +498,7 @@ public class Element extends Node {
      */
     public Element appendText(String text) {
         Validate.notNull(text);
-        TextNode node = new TextNode(text, baseUri());
+        TextNode node = new TextNode(text);
         appendChild(node);
         return this;
     }
@@ -471,7 +511,7 @@ public class Element extends Node {
      */
     public Element prependText(String text) {
         Validate.notNull(text);
-        TextNode node = new TextNode(text, baseUri());
+        TextNode node = new TextNode(text);
         prependChild(node);
         return this;
     }
@@ -1052,7 +1092,7 @@ public class Element extends Node {
         Validate.notNull(text);
 
         empty();
-        TextNode textNode = new TextNode(text, baseUri);
+        TextNode textNode = new TextNode(text);
         appendChild(textNode);
 
         return this;
@@ -1135,7 +1175,7 @@ public class Element extends Node {
      */
     public Element classNames(Set<String> classNames) {
         Validate.notNull(classNames);
-        attributes.put("class", StringUtil.join(classNames, " "));
+        attributes().put("class", StringUtil.join(classNames, " "));
         return this;
     }
 
@@ -1146,7 +1186,7 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        final String classAttr = attributes.getIgnoreCase("class");
+        final String classAttr = attributes().getIgnoreCase("class");
         final int len = classAttr.length();
         final int wantLen = className.length();
 
@@ -1272,7 +1312,8 @@ public class Element extends Node {
         accum
                 .append("<")
                 .append(tagName());
-        attributes.html(accum, out);
+        if (hasAttributes())
+            attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
         if (childNodes.isEmpty() && tag.isSelfClosing()) {
@@ -1343,5 +1384,27 @@ public class Element extends Node {
     @Override
     public Element clone() {
         return (Element) super.clone();
+    }
+
+    @Override
+    protected Element doClone(Node parent) {
+        Element clone = (Element) super.doClone(parent);
+        clone.attributes = attributes != null ? attributes.clone() : null;
+        clone.baseUri = baseUri;
+        clone.childNodes = new NodeList(childNodes.size());
+
+        clone.childNodes.addAll(childNodes);
+
+        return clone;
+    }
+
+    private final class NodeList extends ChangeNotifyingArrayList<Node> {
+        NodeList(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public void onContentsChanged() {
+            nodelistChanged();
+        }
     }
 }

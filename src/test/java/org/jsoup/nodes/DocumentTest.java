@@ -403,7 +403,7 @@ public class DocumentTest {
         doc.outputSettings().syntax(Syntax.xml);
         
         if( addDecl == true ) {
-            XmlDeclaration decl = new XmlDeclaration("xml", "", false);
+            XmlDeclaration decl = new XmlDeclaration("xml", false);
             decl.attr("version", version);
             decl.attr("encoding", charset);
             doc.prependChild(decl);

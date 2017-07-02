@@ -244,7 +244,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insert(Token.Comment commentToken) {
-        Comment comment = new Comment(commentToken.getData(), baseUri);
+        Comment comment = new Comment(commentToken.getData());
         insertNode(comment);
     }
 
@@ -253,9 +253,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // characters in script and style go in as datanodes, not text nodes
         String tagName = currentElement().tagName();
         if (tagName.equals("script") || tagName.equals("style"))
-            node = new DataNode(characterToken.getData(), baseUri);
+            node = new DataNode(characterToken.getData());
         else
-            node = new TextNode(characterToken.getData(), baseUri);
+            node = new TextNode(characterToken.getData());
         currentElement().appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
     }
 

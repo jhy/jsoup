@@ -14,6 +14,10 @@ jsoup changelog
 
   * Performance improvements in text and HTML generation (through less GC).
 
+  * Reduced memory consumption of text, scripts, and comments in the DOM by 40%, by refactoring the node
+    hierarchy to not track childnodes or attributes by default for lead nodes. For the average document, that's about a
+    30% memory reduction.
+
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>
 

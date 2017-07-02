@@ -77,13 +77,15 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Set a new attribute, or replace an existing one by key.
-     @param key attribute key
-     @param value attribute value
+     * Set a new attribute, or replace an existing one by key.
+     * @param key attribute key
+     * @param value attribute value
+     * @return these attributes, for chaining
      */
-    public void put(String key, String value) {
+    public Attributes put(String key, String value) {
         Attribute attr = new Attribute(key, value);
         put(attr);
+        return this;
     }
 
     void putIgnoreCase(String key, String value) {
@@ -96,26 +98,30 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-    Set a new boolean attribute, remove attribute if value is false.
-    @param key attribute key
-    @param value attribute value
-    */
-    public void put(String key, boolean value) {
+     * Set a new boolean attribute, remove attribute if value is false.
+     * @param key attribute key
+     * @param value attribute value
+     * @return these attributes, for chaining
+     */
+    public Attributes put(String key, boolean value) {
         if (value)
             put(new BooleanAttribute(key));
         else
             remove(key);
+        return this;
     }
 
     /**
      Set a new attribute, or replace an existing one by key.
      @param attribute attribute
+     @return these attributes, for chaining
      */
-    public void put(Attribute attribute) {
+    public Attributes put(Attribute attribute) {
         Validate.notNull(attribute);
         if (attributes == null)
              attributes = new LinkedHashMap<>(2);
         attributes.put(attribute.getKey(), attribute);
+        return this;
     }
 
     /**

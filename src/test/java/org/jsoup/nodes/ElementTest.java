@@ -783,7 +783,7 @@ public class ElementTest {
         List<Node> els = new ArrayList<Node>();
         Element el1 = new Element(Tag.valueOf("span"), "").text("Span1");
         Element el2 = new Element(Tag.valueOf("span"), "").text("Span2");
-        TextNode tn1 = new TextNode("Text4", "");
+        TextNode tn1 = new TextNode("Text4");
         els.add(el1);
         els.add(el2);
         els.add(tn1);
