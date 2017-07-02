@@ -455,6 +455,7 @@ public class DocumentTest {
         });
         thread.start();
         thread.join();
+
         assertEquals(html, out[0]);
         assertEquals(StandardCharsets.US_ASCII, doc.outputSettings().charset());
         assertEquals(asci, p.outerHtml());
