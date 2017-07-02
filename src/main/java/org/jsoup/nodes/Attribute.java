@@ -48,9 +48,12 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Set the attribute key; case is preserved.
      @param key the new key; must not be null
      */
-    public void setKey(String key) {
+    public String setKey(String key) {
+    	Validate.notNull(key);
         Validate.notEmpty(key);
+        String old = this.key;
         this.key = key.trim();
+        return old;
     }
 
     /**

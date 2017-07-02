@@ -81,9 +81,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @param key attribute key
      @param value attribute value
      */
-    public void put(String key, String value) {
+    public String put(String key, String value) {
+        String oldValue = hasKey(key) ? attributes.get(key).getValue() : null;
         Attribute attr = new Attribute(key, value);
         put(attr);
+        return oldValue;
     }
 
     void putIgnoreCase(String key, String value) {
