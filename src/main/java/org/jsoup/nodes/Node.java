@@ -14,8 +14,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
-
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
 
@@ -69,7 +67,7 @@ public abstract class Node implements Cloneable {
         String val = attributes().getIgnoreCase(attributeKey);
         if (val.length() > 0)
             return val;
-        else if (lowerCase(attributeKey).startsWith("abs:"))
+        else if (attributeKey.startsWith("abs:"))
             return absUrl(attributeKey.substring("abs:".length()));
         else return "";
     }
@@ -582,9 +580,9 @@ public abstract class Node implements Cloneable {
      @param accum accumulator to place HTML into
      @throws IOException if appending to the given accumulator fails.
      */
-    abstract void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException;
+    abstract void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
 
-    abstract void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException;
+    abstract void outerHtmlTail(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
 
     /**
      * Write this node and its children to the given {@link Appendable}.
@@ -602,7 +600,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void indent(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        accum.append("\n").append(StringUtil.padding(depth * out.indentAmount()));
+        accum.append('\n').append(StringUtil.padding(depth * out.indentAmount()));
     }
 
     /**
@@ -688,6 +686,7 @@ public abstract class Node implements Cloneable {
         OuterHtmlVisitor(Appendable accum, Document.OutputSettings out) {
             this.accum = accum;
             this.out = out;
+            out.prepareEncoder();
         }
 
         public void head(Node node, int depth) {

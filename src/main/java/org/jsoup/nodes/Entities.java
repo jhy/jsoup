@@ -161,8 +161,8 @@ public class Entities {
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
-        final CharsetEncoder encoder = out.encoder();
-        final CoreCharset coreCharset = CoreCharset.byName(encoder.charset().name());
+        final CharsetEncoder encoder = out.encoder != null ? out.encoder : out.prepareEncoder();
+        final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
         final int length = string.length();
 
         int codePoint;
@@ -278,10 +278,10 @@ public class Entities {
         }
     }
 
-    private enum CoreCharset {
+    enum CoreCharset {
         ascii, utf, fallback;
 
-        private static CoreCharset byName(String name) {
+        static CoreCharset byName(final String name) {
             if (name.equals("US-ASCII"))
                 return ascii;
             if (name.startsWith("UTF-")) // covers UTF-8, UTF-16, et al

@@ -10,8 +10,10 @@ import java.util.Iterator;
  * A minimal String utility class. Designed for internal jsoup use only.
  */
 public final class StringUtil {
-    // memoised padding up to 10
-    private static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          "};
+    // memoised padding up to 21
+    static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
+        "         ", "          ", "           ", "            ", "             ", "              ", "               ",
+        "                ", "                 ", "                  ", "                   ", "                    "};
 
     /**
      * Join a collection of strings by a separator
@@ -56,7 +58,6 @@ public final class StringUtil {
 
         if (width < padding.length)
             return padding[width];
-
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';

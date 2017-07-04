@@ -17,6 +17,11 @@ jsoup changelog
   * Reduced memory consumption of text, scripts, and comments in the DOM by 40%, by refactoring the node
     hierarchy to not track childnodes or attributes by default for lead nodes. For the average document, that's about a
     30% memory reduction.
+    <https://github.com/jhy/jsoup/issues/911>
+
+  * Reduced memory consumption of Elements by refactoring their Attributes to be a simple pair of arrays, vs a
+    LinkedHashSet.
+    <https://github.com/jhy/jsoup/issues/911>
 
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>

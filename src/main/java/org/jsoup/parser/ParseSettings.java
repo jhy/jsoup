@@ -1,6 +1,5 @@
 package org.jsoup.parser;
 
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -52,9 +51,7 @@ public class ParseSettings {
 
     Attributes normalizeAttributes(Attributes attributes) {
         if (!preserveAttributeCase) {
-            for (Attribute attr : attributes) {
-                attr.setKey(lowerCase(attr.getKey()));
-            }
+            attributes.normalize();
         }
         return attributes;
     }

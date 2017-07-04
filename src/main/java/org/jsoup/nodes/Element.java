@@ -1021,7 +1021,7 @@ public class Element extends Node {
                     if (accum.length() > 0 &&
                         (element.isBlock() || element.tag.getName().equals("br")) &&
                         !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(" ");
+                        accum.append(' ');
                 }
             }
 
@@ -1300,7 +1300,7 @@ public class Element extends Node {
         return this;
     }
 
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
             if (accum instanceof StringBuilder) {
                 if (((StringBuilder) accum).length() > 0)
@@ -1309,11 +1309,8 @@ public class Element extends Node {
                 indent(accum, depth, out);
             }
         }
-        accum
-                .append("<")
-                .append(tagName());
-        if (hasAttributes())
-            attributes.html(accum, out);
+        accum.append('<').append(tagName());
+        if (attributes != null) attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
         if (childNodes.isEmpty() && tag.isSelfClosing()) {
@@ -1323,7 +1320,7 @@ public class Element extends Node {
                 accum.append(" />"); // <img> in html, <img /> in xml
         }
         else
-            accum.append(">");
+            accum.append('>');
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
@@ -1332,7 +1329,7 @@ public class Element extends Node {
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
             )))
                 indent(accum, depth, out);
-            accum.append("</").append(tagName()).append(">");
+            accum.append("</").append(tagName()).append('>');
         }
     }
 

@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 import java.io.IOException;
@@ -25,6 +26,9 @@ public class DocumentType extends LeafNode {
      * @param systemId the doctype's system ID
      */
     public DocumentType(String name, String publicId, String systemId) {
+        Validate.notNull(name);
+        Validate.notNull(publicId);
+        Validate.notNull(systemId);
         attr(NAME, name);
         attr(PUBLIC_ID, publicId);
         if (has(PUBLIC_ID)) {
