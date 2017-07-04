@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.jsoup.Jsoup;
+import org.jsoup.ProtocolConnection;
 import org.jsoup.nodes.Document;
 
 
@@ -18,8 +19,9 @@ import org.jsoup.nodes.Document;
  * @author Jay Patel
  *
  */
-public class FileConnection {
+public class FileConnection implements ProtocolConnection {
 
+	@Override
 	public Document load(String fileURL) throws Exception {
 		try {
 			fileURL = fileURL.replaceAll(" ", "%20");
@@ -44,5 +46,7 @@ public class FileConnection {
 			throw new Exception("Unknown reason ", e);
 		}
 	}
+
+	
 
 }

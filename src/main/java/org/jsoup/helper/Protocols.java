@@ -3,6 +3,11 @@
  */
 package org.jsoup.helper;
 
+import java.net.URI;
+import java.net.URL;
+
+import org.jsoup.ProtocolConnection;
+
 /**
  * @author Jay Patel
  *
@@ -11,6 +16,7 @@ public class Protocols {
 	
 	public static final String FILE = "file";
 	private static boolean isFileProtocolEnable = false; // default 
+	
 
 	public static boolean setValue(String protocolName, boolean enable) {
 		if(FILE.equalsIgnoreCase(protocolName)){
@@ -28,5 +34,21 @@ public class Protocols {
 			
 	}
 	
+	public static ProtocolConnection getProtocolConnection(String url) {
+		String fileURL = url.replaceAll(" ", "%20");
+		URI filepath;
+		try {
+			filepath = new URL(fileURL).toURI();
+			String scheme = filepath.getScheme();
+			if(FILE.equalsIgnoreCase(scheme)){
+				return new FileConnection();
+			}
+			return null; 
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		 
+	}
 
 }

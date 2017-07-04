@@ -263,7 +263,8 @@ public class Jsoup {
 	}
 
 	public static Document load(String fileURL) throws Exception {
-		return new FileConnection().load(fileURL);
+		ProtocolConnection connection = Protocols.getProtocolConnection(fileURL);
+		return connection.load(fileURL);
 	}
     
 }
