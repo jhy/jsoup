@@ -5,7 +5,9 @@ import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.FileConnection;
 import org.jsoup.helper.HttpConnection;
+import org.jsoup.helper.Protocols;
 
 import java.io.File;
 import java.io.IOException;
@@ -249,5 +251,20 @@ public class Jsoup {
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
     }
+
+    /**
+     Enable Jsoup to handle file:// protocols to load file from local directory. 
+     @param  protocolName : E.g. Protocol.FILE
+     @param  enable		  : Enable/Disable Access. Default false
+     * */
+	public static FileConnection allowProtocol(String protocolName, boolean enable) {
+		Protocols.setValue(protocolName, enable);
+		return new FileConnection();
+	}
+
+	public static Document load(String fileURL) throws Exception {
+		ProtocolConnection connection = Protocols.getProtocolConnection(fileURL);
+		return connection.load(fileURL);
+	}
     
 }
