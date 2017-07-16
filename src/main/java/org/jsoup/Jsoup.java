@@ -6,10 +6,12 @@ import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
+import org.jsoup.helper.ProtocolHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -70,7 +72,23 @@ public class Jsoup {
      * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
      */
     public static Connection connect(String url) {
+    	
         return HttpConnection.connect(url);
+    }
+    
+    /**
+     * Creates a new {@link ProtocolConnection} to a URL. Use to fetch and parse a HTML page.
+     * <p>
+     * Use examples:
+     * <ul>
+     *  <li><code>Document doc = Jsoup.load("file://home/username/desktop/page.html").get();</code></li>
+     * </ul>
+     * @param url URL to connect to. The protocol must be {@code file} or {@code ftp}.
+     * @return the connection.
+     * @throws MalformedURLException 
+     */
+    public static ProtocolConnection load(String url) throws MalformedURLException {
+    	return ProtocolHelper.getHandler(url);
     }
 
     /**
