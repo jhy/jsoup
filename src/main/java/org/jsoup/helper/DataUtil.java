@@ -177,7 +177,7 @@ public final class DataUtil {
         while (true) {
             read = inStream.read(buffer);
             if (read == -1) break;
-            if (capped) {
+            if (capped) { // todo - why not using ConstrainedInputStream?
                 if (read >= remaining) {
                     outStream.write(buffer, 0, remaining);
                     break;

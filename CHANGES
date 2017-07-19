@@ -12,6 +12,9 @@ jsoup changelog
     into memory.
     <https://github.com/jhy/jsoup/issues/904>
 
+  * Added Connection.Response.bodyStream(), a method to get the response body as an input stream. This is useful for
+    saving a large response straight to a file, without buffering fully into memory first.
+
   * Performance improvements in text and HTML generation (through less GC).
 
   * Reduced memory consumption of text, scripts, and comments in the DOM by 40%, by refactoring the node
