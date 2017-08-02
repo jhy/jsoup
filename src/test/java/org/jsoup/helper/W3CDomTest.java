@@ -54,6 +54,21 @@ public class W3CDomTest {
         String out = w3c.asString(wDoc);
         assertTrue(out.contains("ipod"));
     }
+    
+    
+    @Test
+    public void convertsGoogleLocation() throws IOException {
+        File in = ParseTest.getFile("/htmltests/google-ipod.html");
+        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
+
+        W3CDom w3c = new W3CDom();
+        Document wDoc = w3c.fromJsoup(doc);
+
+        String out = w3c.asString(wDoc);
+        assertEquals(doc.location(), wDoc.getDocumentURI() );
+    }
+    
+    
 
     @Test
     public void namespacePreservation() throws IOException {
