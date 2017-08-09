@@ -303,7 +303,9 @@ public class Entities {
             throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
 
         int i = 0;
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(stream, ASCII))) {
+        BufferedReader input = null;
+        try {
+            input = new BufferedReader(new InputStreamReader(stream, ASCII));
             CharacterReader reader = new CharacterReader(input);
 
             while (!reader.isEmpty()) {
@@ -339,8 +341,14 @@ public class Entities {
                 }
                 i++;
             }
-        } catch (IOException e1) {
-            throw new IllegalStateException("Could not read resource " + file, e1);
+        } finally {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+            } catch (IOException e1) {
+                //ignore exception
+            }
         }
         Validate.isTrue(i == size, "Unexpected count of entities loaded for " + file);
     }
