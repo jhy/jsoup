@@ -460,12 +460,11 @@ public abstract class Node implements Cloneable {
         Validate.noNullElements(children);
         final List<Node> nodes = ensureChildNodes();
 
-        for (int i = children.length - 1; i >= 0; i--) {
-            Node in = children[i];
-            reparentChild(in);
-            nodes.add(index, in);
-            reindexChildren(index);
+        for (Node child : children) {
+            reparentChild(child);
         }
+        nodes.addAll(index, Arrays.asList(children));
+        reindexChildren(index);
     }
     
     protected void reparentChild(Node child) {
