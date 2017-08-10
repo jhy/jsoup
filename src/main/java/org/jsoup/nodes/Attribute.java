@@ -59,8 +59,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @param key the new key; must not be null
      */
     public void setKey(String key) {
-        Validate.notEmpty(key);
+        Validate.notNull(key);
         key = key.trim();
+        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
             if (i != Attributes.NotFound)
