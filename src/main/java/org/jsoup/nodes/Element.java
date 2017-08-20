@@ -894,7 +894,7 @@ public class Element extends Node {
             public void tail(Node node, int depth) {
             }
         }).traverse(this);
-        return accum.toString().trim();
+        return accum.toString();
     }
 
     /**
