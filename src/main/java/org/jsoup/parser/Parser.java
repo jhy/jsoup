@@ -4,6 +4,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 
 /**
@@ -29,7 +31,12 @@ public class Parser {
     
     public Document parseInput(String html, String baseUri) {
         errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
-        return treeBuilder.parse(html, baseUri, errors, settings);
+        return treeBuilder.parse(new StringReader(html), baseUri, errors, settings);
+    }
+
+    public Document parseInput(Reader inputHtml, String baseUri) {
+        errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
+        return treeBuilder.parse(inputHtml, baseUri, errors, settings);
     }
 
     // gets & sets
@@ -97,7 +104,7 @@ public class Parser {
      */
     public static Document parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parse(html, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
+        return treeBuilder.parse(new StringReader(html), baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
     }
 
     /**

@@ -1,18 +1,30 @@
 package org.jsoup.helper;
 
-import static org.junit.Assert.*;
-
-import org.jsoup.integration.ParseTest;
-import org.junit.Test;
 import org.jsoup.Connection;
+import org.jsoup.MultiLocaleRule;
+import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.integration.ParseTest;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.IOException;
-import java.util.*;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
+
+    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
 
     @Test(expected=IllegalArgumentException.class) public void throwsExceptionOnParseWithoutExecute() throws IOException {
         Connection con = HttpConnection.connect("http://example.com");
@@ -29,7 +41,7 @@ public class HttpConnectionTest {
         con.response().bodyAsBytes();
     }
 
-    @Test public void caseInsensitiveHeaders() {
+    @Test @MultiLocaleTest public void caseInsensitiveHeaders() {
         Connection.Response res = new HttpConnection.Response();
         Map<String, String> headers = res.headers();
         headers.put("Accept-Encoding", "gzip");
@@ -39,15 +51,20 @@ public class HttpConnectionTest {
         assertTrue(res.hasHeader("Accept-Encoding"));
         assertTrue(res.hasHeader("accept-encoding"));
         assertTrue(res.hasHeader("accept-Encoding"));
+        assertTrue(res.hasHeader("ACCEPT-ENCODING"));
 
         assertEquals("gzip", res.header("accept-Encoding"));
+        assertEquals("gzip", res.header("ACCEPT-ENCODING"));
         assertEquals("text/html", res.header("Content-Type"));
         assertEquals("http://example.com", res.header("Referrer"));
 
         res.removeHeader("Content-Type");
         assertFalse(res.hasHeader("content-type"));
 
-        res.header("accept-encoding", "deflate");
+        res.removeHeader("ACCEPT-ENCODING");
+        assertFalse(res.hasHeader("Accept-Encoding"));
+
+        res.header("ACCEPT-ENCODING", "deflate");
         assertEquals("deflate", res.header("Accept-Encoding"));
         assertEquals("deflate", res.header("accept-Encoding"));
     }
@@ -181,5 +198,11 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+
+    @Test public void encodeUrl() throws MalformedURLException {
+        URL url1 = new URL("http://test.com/?q=white space");
+        URL url2 = HttpConnection.encodeUrl(url1);
+        assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
     }
 }

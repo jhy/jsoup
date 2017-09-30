@@ -5,7 +5,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -65,7 +70,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Checks if any of the matched elements have this attribute set.
+     Checks if any of the matched elements have this attribute defined.
      @param attributeKey attribute key
      @return true if any of the elements have the attribute; false if none do.
      */
@@ -75,6 +80,22 @@ public class Elements extends ArrayList<Element> {
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Get the attribute value for each of the matched elements. If an element does not have this attribute, no value is
+     * included in the result set for that element.
+     * @param attributeKey the attribute name to return values for. You can add the {@code abs:} prefix to the key to
+     * get absolute URLs from relative URLs, e.g.: {@code doc.select("a").eachAttr("abs:href")} .
+     * @return a list of each element's attribute value for the attribute
+     */
+    public List<String> eachAttr(String attributeKey) {
+        List<String> attrs = new ArrayList<>(size());
+        for (Element element : this) {
+            if (element.hasAttr(attributeKey))
+                attrs.add(element.attr(attributeKey));
+        }
+        return attrs;
     }
 
     /**
@@ -181,6 +202,7 @@ public class Elements extends ArrayList<Element> {
      * children, as the Element.text() method returns the combined text of a parent and all its children.
      * @return string of all text: unescaped and no HTML.
      * @see Element#text()
+     * @see #eachText()
      */
     public String text() {
         StringBuilder sb = new StringBuilder();
@@ -192,12 +214,34 @@ public class Elements extends ArrayList<Element> {
         return sb.toString();
     }
 
+    /**
+     Test if any matched Element has any text content, that is not just whitespace.
+     @return true if any element has non-blank text content.
+     @see Element#hasText()
+     */
     public boolean hasText() {
         for (Element element: this) {
             if (element.hasText())
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Get the text content of each of the matched elements. If an element has no text, then it is not included in the
+     * result.
+     * @return A list of each matched element's text content.
+     * @see Element#text()
+     * @see Element#hasText()
+     * @see #text()
+     */
+    public List<String> eachText() {
+        ArrayList<String> texts = new ArrayList<>(size());
+        for (Element el: this) {
+            if (el.hasText())
+                texts.add(el.text());
+        }
+        return texts;
     }
     
     /**
@@ -538,7 +582,7 @@ public class Elements extends ArrayList<Element> {
      * @return all of the parents and ancestor elements of the matched elements
      */
     public Elements parents() {
-        HashSet<Element> combo = new LinkedHashSet<Element>();
+        HashSet<Element> combo = new LinkedHashSet<>();
         for (Element e: this) {
             combo.addAll(e.parents());
         }
@@ -582,7 +626,7 @@ public class Elements extends ArrayList<Element> {
      * no forms.
      */
     public List<FormElement> forms() {
-        ArrayList<FormElement> forms = new ArrayList<FormElement>();
+        ArrayList<FormElement> forms = new ArrayList<>();
         for (Element el: this)
             if (el instanceof FormElement)
                 forms.add((FormElement) el);

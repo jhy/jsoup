@@ -287,7 +287,7 @@ public class TokenQueue {
         } while (depth > 0);
         final String out = (end >= 0) ? queue.substring(start, end) : "";
         if (depth > 0) {// ran out of queue before seeing enough )
-            Validate.fail("Did not find balanced maker at " + out);
+            Validate.fail("Did not find balanced marker at '" + out + "'");
         }
         return out;
     }
@@ -298,7 +298,7 @@ public class TokenQueue {
      * @return unescaped string
      */
     public static String unescape(String in) {
-        StringBuilder out = new StringBuilder();
+        StringBuilder out = StringUtil.stringBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {

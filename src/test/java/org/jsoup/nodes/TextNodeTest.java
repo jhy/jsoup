@@ -12,11 +12,11 @@ import static org.junit.Assert.*;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNodeTest {
     @Test public void testBlank() {
-        TextNode one = new TextNode("", "");
-        TextNode two = new TextNode("     ", "");
-        TextNode three = new TextNode("  \n\n   ", "");
-        TextNode four = new TextNode("Hello", "");
-        TextNode five = new TextNode("  \nHello ", "");
+        TextNode one = new TextNode("");
+        TextNode two = new TextNode("     ");
+        TextNode three = new TextNode("  \n\n   ");
+        TextNode four = new TextNode("Hello");
+        TextNode five = new TextNode("  \nHello ");
 
         assertTrue(one.isBlank());
         assertTrue(two.isBlank());
@@ -40,7 +40,7 @@ public class TextNodeTest {
         tn.text(" POW!");
         assertEquals("One <span>two &amp;</span> POW!", TextUtil.stripNewlines(p.html()));
 
-        tn.attr("text", "kablam &");
+        tn.attr(tn.nodeName(), "kablam &");
         assertEquals("kablam &", tn.text());
         assertEquals("One <span>two &amp;</span>kablam &amp;", TextUtil.stripNewlines(p.html()));
     }

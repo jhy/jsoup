@@ -1,27 +1,50 @@
 package org.jsoup.parser;
 
+import org.jsoup.MultiLocaleRule;
+import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.nodes.Attributes;
+import org.junit.Rule;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 public class ParserSettingsTest {
-    @Test
-    public void caseSupport() {
+    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
+
+    @Test @MultiLocaleTest public void caseSupport() {
         ParseSettings bothOn = new ParseSettings(true, true);
         ParseSettings bothOff = new ParseSettings(false, false);
         ParseSettings tagOn = new ParseSettings(true, false);
         ParseSettings attrOn = new ParseSettings(false, true);
 
-        assertEquals("FOO", bothOn.normalizeTag("FOO"));
-        assertEquals("FOO", bothOn.normalizeAttribute("FOO"));
+        assertEquals("IMG", bothOn.normalizeTag("IMG"));
+        assertEquals("ID", bothOn.normalizeAttribute("ID"));
 
-        assertEquals("foo", bothOff.normalizeTag("FOO"));
-        assertEquals("foo", bothOff.normalizeAttribute("FOO"));
+        assertEquals("img", bothOff.normalizeTag("IMG"));
+        assertEquals("id", bothOff.normalizeAttribute("ID"));
 
-        assertEquals("FOO", tagOn.normalizeTag("FOO"));
-        assertEquals("foo", tagOn.normalizeAttribute("FOO"));
+        assertEquals("IMG", tagOn.normalizeTag("IMG"));
+        assertEquals("id", tagOn.normalizeAttribute("ID"));
 
-        assertEquals("foo", attrOn.normalizeTag("FOO"));
-        assertEquals("FOO", attrOn.normalizeAttribute("FOO"));
+        assertEquals("img", attrOn.normalizeTag("IMG"));
+        assertEquals("ID", attrOn.normalizeAttribute("ID"));
+    }
 
+    @Test @MultiLocaleTest public void attributeCaseNormalization() throws Exception {
+        ParseSettings parseSettings = new ParseSettings(false, false);
+
+        String normalizedAttribute = parseSettings.normalizeAttribute("HIDDEN");
+
+        assertEquals("hidden", normalizedAttribute);
+    }
+
+    @Test @MultiLocaleTest public void attributesCaseNormalization() throws Exception {
+        ParseSettings parseSettings = new ParseSettings(false, false);
+        Attributes attributes = new Attributes();
+        attributes.put("ITEM", "1");
+
+        Attributes normalizedAttributes = parseSettings.normalizeAttributes(attributes);
+
+        assertEquals("item", normalizedAttributes.asList().get(0).getKey());
     }
 }

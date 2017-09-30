@@ -9,6 +9,8 @@ import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
 
+import static org.jsoup.internal.Normalizer.normalize;
+
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
@@ -18,7 +20,7 @@ public class QueryParser {
 
     private TokenQueue tq;
     private String query;
-    private List<Evaluator> evals = new ArrayList<Evaluator>();
+    private List<Evaluator> evals = new ArrayList<>();
 
     /**
      * Create a new QueryParser.
@@ -222,7 +224,7 @@ public class QueryParser {
 
         // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
         if (tagName.startsWith("*|")) {
-            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName.trim().toLowerCase()), new Evaluator.TagEndsWith(tagName.replace("*|", ":").trim().toLowerCase())));
+            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(normalize(tagName)), new Evaluator.TagEndsWith(normalize(tagName.replace("*|", ":")))));
         } else {
             // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
             if (tagName.contains("|"))
@@ -284,11 +286,11 @@ public class QueryParser {
     }
     
     //pseudo selectors :first-child, :last-child, :nth-child, ...
-    private static final Pattern NTH_AB = Pattern.compile("((\\+|-)?(\\d+)?)n(\\s*(\\+|-)?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NTH_B  = Pattern.compile("(\\+|-)?(\\d+)");
+    private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
 
 	private void cssNthChild(boolean backwards, boolean ofType) {
-		String argS = tq.chompTo(")").trim().toLowerCase();
+		String argS = normalize(tq.chompTo(")"));
 		Matcher mAB = NTH_AB.matcher(argS);
 		Matcher mB = NTH_B.matcher(argS);
 		final int a, b;

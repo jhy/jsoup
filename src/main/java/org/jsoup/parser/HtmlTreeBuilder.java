@@ -2,9 +2,17 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +21,7 @@ import java.util.List;
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches
-    public static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
+    private static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
     private static final String[] TagSearchList = new String[]{"ol", "ul"};
     private static final String[] TagSearchButton = new String[]{"button"};
     private static final String[] TagSearchTableScope = new String[]{"html", "table"};
@@ -31,17 +39,17 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
 
-    private boolean baseUriSetFromDoc = false;
+    private boolean baseUriSetFromDoc;
     private Element headElement; // the current head element
     private FormElement formElement; // the current form element
     private Element contextElement; // fragment parse context -- could be null even if fragment parsing
-    private ArrayList<Element> formattingElements = new ArrayList<Element>(); // active (open) formatting elements
-    private List<String> pendingTableCharacters = new ArrayList<String>(); // chars in table to be shifted out
-    private Token.EndTag emptyEnd = new Token.EndTag(); // reused empty end tag
+    private ArrayList<Element> formattingElements; // active (open) formatting elements
+    private List<String> pendingTableCharacters; // chars in table to be shifted out
+    private Token.EndTag emptyEnd; // reused empty end tag
 
-    private boolean framesetOk = true; // if ok to go into frameset
-    private boolean fosterInserts = false; // if next inserts should be fostered
-    private boolean fragmentParsing = false; // if parsing a fragment of html
+    private boolean framesetOk; // if ok to go into frameset
+    private boolean fosterInserts; // if next inserts should be fostered
+    private boolean fragmentParsing; // if parsing a fragment of html
 
     HtmlTreeBuilder() {}
 
@@ -50,16 +58,28 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    Document parse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+        super.initialiseParse(input, baseUri, errors, settings);
+
+        // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
         state = HtmlTreeBuilderState.Initial;
+        originalState = null;
         baseUriSetFromDoc = false;
-        return super.parse(input, baseUri, errors, settings);
+        headElement = null;
+        formElement = null;
+        contextElement = null;
+        formattingElements = new ArrayList<>();
+        pendingTableCharacters = new ArrayList<>();
+        emptyEnd = new Token.EndTag();
+        framesetOk = true;
+        fosterInserts = false;
+        fragmentParsing = false;
     }
 
     List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        initialiseParse(inputFragment, baseUri, errors, settings);
+        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;
@@ -101,7 +121,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         runParser();
-        if (context != null && root != null)
+        if (context != null)
             return root.childNodes();
         else
             return doc.childNodes();
@@ -204,12 +224,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         insertNode(el);
         if (startTag.isSelfClosing()) {
             if (tag.isKnownTag()) {
-                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag(); // if not acked, promulagates error
-            } else {
-                // unknown tag, remember this is self closing for output
-                tag.setSelfClosing();
-                tokeniser.acknowledgeSelfClosingFlag(); // not an distinct error
+                if (!tag.isEmpty())
+                    tokeniser.error("Tag cannot be self closing; not a void tag");
             }
+            else // unknown tag, remember this is self closing for output
+                tag.setSelfClosing();
         }
         return el;
     }
@@ -225,7 +244,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insert(Token.Comment commentToken) {
-        Comment comment = new Comment(commentToken.getData(), baseUri);
+        Comment comment = new Comment(commentToken.getData());
         insertNode(comment);
     }
 
@@ -234,9 +253,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // characters in script and style go in as datanodes, not text nodes
         String tagName = currentElement().tagName();
         if (tagName.equals("script") || tagName.equals("style"))
-            node = new DataNode(characterToken.getData(), baseUri);
+            node = new DataNode(characterToken.getData());
         else
-            node = new TextNode(characterToken.getData(), baseUri);
+            node = new TextNode(characterToken.getData());
         currentElement().appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
     }
 
@@ -518,7 +537,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void newPendingTableCharacters() {
-        pendingTableCharacters = new ArrayList<String>();
+        pendingTableCharacters = new ArrayList<>();
     }
 
     List<String> getPendingTableCharacters() {
