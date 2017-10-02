@@ -1,9 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.BooleanAttribute;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 
@@ -107,15 +105,14 @@ abstract class Token {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
                 pendingAttributeName = pendingAttributeName.trim();
                 if (pendingAttributeName.length() > 0) {
-                    Attribute attribute;
+                    String value;
                     if (hasPendingAttributeValue)
-                        attribute = new Attribute(pendingAttributeName,
-                            pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS);
+                        value = pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS;
                     else if (hasEmptyAttributeValue)
-                        attribute = new Attribute(pendingAttributeName, "");
+                        value = "";
                     else
-                        attribute = new BooleanAttribute(pendingAttributeName);
-                    attributes.put(attribute);
+                        value = null;
+                    attributes.put(pendingAttributeName, value);
                 }
             }
             pendingAttributeName = null;

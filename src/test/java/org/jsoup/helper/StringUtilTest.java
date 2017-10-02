@@ -23,6 +23,15 @@ public class StringUtilTest {
         assertEquals(" ", StringUtil.padding(1));
         assertEquals("  ", StringUtil.padding(2));
         assertEquals("               ", StringUtil.padding(15));
+        assertEquals("                                             ", StringUtil.padding(45));
+    }
+
+    @Test public void paddingInACan() {
+        String[] padding = StringUtil.padding;
+        assertEquals(21, padding.length);
+        for (int i = 0; i < padding.length; i++) {
+            assertEquals(i, padding[i].length());
+        }
     }
 
     @Test public void isBlank() {

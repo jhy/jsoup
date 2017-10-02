@@ -1678,7 +1678,7 @@ enum TokeniserState {
                 t.emit(new Token.EOF());
                 break;
             default:
-                String data = r.consumeToAny('<', nullChar);
+                String data = r.consumeToAny('<', nullChar); // todo - why hunt for null here? Just consumeTo'<'?
                 t.emit(data);
                 break;
         }

@@ -5,7 +5,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -85,7 +90,7 @@ public class Elements extends ArrayList<Element> {
      * @return a list of each element's attribute value for the attribute
      */
     public List<String> eachAttr(String attributeKey) {
-        List<String> attrs = new ArrayList<String>(size());
+        List<String> attrs = new ArrayList<>(size());
         for (Element element : this) {
             if (element.hasAttr(attributeKey))
                 attrs.add(element.attr(attributeKey));
@@ -231,7 +236,7 @@ public class Elements extends ArrayList<Element> {
      * @see #text()
      */
     public List<String> eachText() {
-        ArrayList<String> texts = new ArrayList<String>(size());
+        ArrayList<String> texts = new ArrayList<>(size());
         for (Element el: this) {
             if (el.hasText())
                 texts.add(el.text());
@@ -577,7 +582,7 @@ public class Elements extends ArrayList<Element> {
      * @return all of the parents and ancestor elements of the matched elements
      */
     public Elements parents() {
-        HashSet<Element> combo = new LinkedHashSet<Element>();
+        HashSet<Element> combo = new LinkedHashSet<>();
         for (Element e: this) {
             combo.addAll(e.parents());
         }
@@ -621,7 +626,7 @@ public class Elements extends ArrayList<Element> {
      * no forms.
      */
     public List<FormElement> forms() {
-        ArrayList<FormElement> forms = new ArrayList<FormElement>();
+        ArrayList<FormElement> forms = new ArrayList<>();
         for (Element el: this)
             if (el instanceof FormElement)
                 forms.add((FormElement) el);

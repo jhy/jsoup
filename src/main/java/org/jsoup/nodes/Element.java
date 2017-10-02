@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
@@ -37,10 +38,13 @@ import static org.jsoup.internal.Normalizer.normalize;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Element extends Node {
+    private static final List<Node> EMPTY_NODES = Collections.emptyList();
+    private static final Pattern classSplit = Pattern.compile("\\s+");
     private Tag tag;
     private WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
-
-    private static final Pattern classSplit = Pattern.compile("\\s+");
+    List<Node> childNodes;
+    private Attributes attributes;
+    private String baseUri;
 
     /**
      * Create a new, standalone element.
@@ -60,9 +64,11 @@ public class Element extends Node {
      * @see #appendElement(String)
      */
     public Element(Tag tag, String baseUri, Attributes attributes) {
-        super(baseUri, attributes);
-        
-        Validate.notNull(tag);    
+        Validate.notNull(tag);
+        Validate.notNull(baseUri);
+        childNodes = EMPTY_NODES;
+        this.baseUri = baseUri;
+        this.attributes = attributes;
         this.tag = tag;
     }
     
@@ -75,7 +81,41 @@ public class Element extends Node {
      * @see Tag#valueOf(String, ParseSettings)
      */
     public Element(Tag tag, String baseUri) {
-        this(tag, baseUri, new Attributes());
+        this(tag, baseUri, null);
+    }
+
+    protected List<Node> ensureChildNodes() {
+        if (childNodes == EMPTY_NODES) {
+            childNodes = new NodeList(4);
+        }
+        return childNodes;
+    }
+
+    @Override
+    protected boolean hasAttributes() {
+        return attributes != null;
+    }
+
+    @Override
+    public Attributes attributes() {
+        if (!hasAttributes())
+            attributes = new Attributes();
+        return attributes;
+    }
+
+    @Override
+    public String baseUri() {
+        return baseUri;
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        this.baseUri = baseUri;
+    }
+
+    @Override
+    public int childNodeSize() {
+        return childNodes.size();
     }
 
     @Override
@@ -130,7 +170,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return attributes.getIgnoreCase("id");
+        return attributes().getIgnoreCase("id");
     }
 
     /**
@@ -155,7 +195,7 @@ public class Element extends Node {
      * @return this element
      */
     public Element attr(String attributeKey, boolean attributeValue) {
-        attributes.put(attributeKey, attributeValue);
+        attributes().put(attributeKey, attributeValue);
         return this;
     }
 
@@ -173,7 +213,7 @@ public class Element extends Node {
      * @return a map of {@code key=value} custom data attributes.
      */
     public Map<String, String> dataset() {
-        return attributes.dataset();
+        return attributes().dataset();
     }
 
     @Override
@@ -235,13 +275,14 @@ public class Element extends Node {
         List<Element> children;
         if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
             final int size = childNodes.size();
-            children = new ArrayList<Element>(size);
+            children = new ArrayList<>(size);
+            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
             for (int i = 0; i < size; i++) {
                 final Node node = childNodes.get(i);
                 if (node instanceof Element)
                     children.add((Element) node);
             }
-            shadowChildrenRef = new WeakReference<List<Element>>(children);
+            shadowChildrenRef = new WeakReference<>(children);
         }
         return children;
     }
@@ -272,7 +313,7 @@ public class Element extends Node {
      * </ul>
      */
     public List<TextNode> textNodes() {
-        List<TextNode> textNodes = new ArrayList<TextNode>();
+        List<TextNode> textNodes = new ArrayList<>();
         for (Node node : childNodes) {
             if (node instanceof TextNode)
                 textNodes.add((TextNode) node);
@@ -290,7 +331,7 @@ public class Element extends Node {
      * @see #data()
      */
     public List<DataNode> dataNodes() {
-        List<DataNode> dataNodes = new ArrayList<DataNode>();
+        List<DataNode> dataNodes = new ArrayList<>();
         for (Node node : childNodes) {
             if (node instanceof DataNode)
                 dataNodes.add((DataNode) node);
@@ -358,6 +399,18 @@ public class Element extends Node {
     }
 
     /**
+     * Add this element to the supplied parent element, as its next child.
+     *
+     * @param parent element to which this element will be appended
+     * @return this element, so that you can continue modifying the element
+     */
+    public Element appendTo(Element parent) {
+        Validate.notNull(parent);
+        parent.appendChild(this);
+        return this;
+    }
+
+    /**
      * Add a node to the start of this element's children.
      * 
      * @param child node to add.
@@ -386,7 +439,7 @@ public class Element extends Node {
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
-        ArrayList<Node> nodes = new ArrayList<Node>(children);
+        ArrayList<Node> nodes = new ArrayList<>(children);
         Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
         addChildren(index, nodeArray);
         return this;
@@ -445,7 +498,7 @@ public class Element extends Node {
      */
     public Element appendText(String text) {
         Validate.notNull(text);
-        TextNode node = new TextNode(text, baseUri());
+        TextNode node = new TextNode(text);
         appendChild(node);
         return this;
     }
@@ -458,7 +511,7 @@ public class Element extends Node {
      */
     public Element prependText(String text) {
         Validate.notNull(text);
-        TextNode node = new TextNode(text, baseUri());
+        TextNode node = new TextNode(text);
         prependChild(node);
         return this;
     }
@@ -957,7 +1010,7 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = new StringBuilder();
+        final StringBuilder accum = StringUtil.stringBuilder();
         new NodeTraversor(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
@@ -968,7 +1021,7 @@ public class Element extends Node {
                     if (accum.length() > 0 &&
                         (element.isBlock() || element.tag.getName().equals("br")) &&
                         !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(" ");
+                        accum.append(' ');
                 }
             }
 
@@ -1039,7 +1092,7 @@ public class Element extends Node {
         Validate.notNull(text);
 
         empty();
-        TextNode textNode = new TextNode(text, baseUri);
+        TextNode textNode = new TextNode(text);
         appendChild(textNode);
 
         return this;
@@ -1109,7 +1162,7 @@ public class Element extends Node {
      */
     public Set<String> classNames() {
     	String[] names = classSplit.split(className());
-    	Set<String> classNames = new LinkedHashSet<String>(Arrays.asList(names));
+    	Set<String> classNames = new LinkedHashSet<>(Arrays.asList(names));
     	classNames.remove(""); // if classNames() was empty, would include an empty class
 
         return classNames;
@@ -1122,7 +1175,7 @@ public class Element extends Node {
      */
     public Element classNames(Set<String> classNames) {
         Validate.notNull(classNames);
-        attributes.put("class", StringUtil.join(classNames, " "));
+        attributes().put("class", StringUtil.join(classNames, " "));
         return this;
     }
 
@@ -1133,7 +1186,7 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        final String classAttr = attributes.getIgnoreCase("class");
+        final String classAttr = attributes().getIgnoreCase("class");
         final int len = classAttr.length();
         final int wantLen = className.length();
 
@@ -1247,7 +1300,7 @@ public class Element extends Node {
         return this;
     }
 
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
             if (accum instanceof StringBuilder) {
                 if (((StringBuilder) accum).length() > 0)
@@ -1256,10 +1309,8 @@ public class Element extends Node {
                 indent(accum, depth, out);
             }
         }
-        accum
-                .append("<")
-                .append(tagName());
-        attributes.html(accum, out);
+        accum.append('<').append(tagName());
+        if (attributes != null) attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
         if (childNodes.isEmpty() && tag.isSelfClosing()) {
@@ -1269,7 +1320,7 @@ public class Element extends Node {
                 accum.append(" />"); // <img> in html, <img /> in xml
         }
         else
-            accum.append(">");
+            accum.append('>');
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
@@ -1278,7 +1329,7 @@ public class Element extends Node {
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
             )))
                 indent(accum, depth, out);
-            accum.append("</").append(tagName()).append(">");
+            accum.append("</").append(tagName()).append('>');
         }
     }
 
@@ -1290,7 +1341,7 @@ public class Element extends Node {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder accum = StringUtil.stringBuilder();
         html(accum);
         return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
     }
@@ -1330,5 +1381,27 @@ public class Element extends Node {
     @Override
     public Element clone() {
         return (Element) super.clone();
+    }
+
+    @Override
+    protected Element doClone(Node parent) {
+        Element clone = (Element) super.doClone(parent);
+        clone.attributes = attributes != null ? attributes.clone() : null;
+        clone.baseUri = baseUri;
+        clone.childNodes = new NodeList(childNodes.size());
+
+        clone.childNodes.addAll(childNodes);
+
+        return clone;
+    }
+
+    private final class NodeList extends ChangeNotifyingArrayList<Node> {
+        NodeList(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public void onContentsChanged() {
+            nodelistChanged();
+        }
     }
 }

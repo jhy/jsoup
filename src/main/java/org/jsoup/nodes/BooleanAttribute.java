@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 /**
  * A boolean attribute that is written out without any value.
+ * @deprecated just use null values (vs empty string) for booleans.
  */
 public class BooleanAttribute extends Attribute {
     /**
@@ -9,7 +10,7 @@ public class BooleanAttribute extends Attribute {
      * @param key attribute key
      */
     public BooleanAttribute(String key) {
-        super(key, "");
+        super(key, null);
     }
 
     @Override

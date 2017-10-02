@@ -190,10 +190,10 @@ public class Whitelist {
      @see #relaxed()
      */
     public Whitelist() {
-        tagNames = new HashSet<TagName>();
-        attributes = new HashMap<TagName, Set<AttributeKey>>();
-        enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
-        protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
+        tagNames = new HashSet<>();
+        attributes = new HashMap<>();
+        enforcedAttributes = new HashMap<>();
+        protocols = new HashMap<>();
         preserveRelativeLinks = false;
     }
 
@@ -258,7 +258,7 @@ public class Whitelist {
         TagName tagName = TagName.valueOf(tag);
         if (!tagNames.contains(tagName))
             tagNames.add(tagName);
-        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
@@ -293,7 +293,7 @@ public class Whitelist {
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
         TagName tagName = TagName.valueOf(tag);
-        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
@@ -343,7 +343,7 @@ public class Whitelist {
         if (enforcedAttributes.containsKey(tagName)) {
             enforcedAttributes.get(tagName).put(attrKey, attrVal);
         } else {
-            Map<AttributeKey, AttributeValue> attrMap = new HashMap<AttributeKey, AttributeValue>();
+            Map<AttributeKey, AttributeValue> attrMap = new HashMap<>();
             attrMap.put(attrKey, attrVal);
             enforcedAttributes.put(tagName, attrMap);
         }
@@ -422,13 +422,13 @@ public class Whitelist {
         if (this.protocols.containsKey(tagName)) {
             attrMap = this.protocols.get(tagName);
         } else {
-            attrMap = new HashMap<AttributeKey, Set<Protocol>>();
+            attrMap = new HashMap<>();
             this.protocols.put(tagName, attrMap);
         }
         if (attrMap.containsKey(attrKey)) {
             protSet = attrMap.get(attrKey);
         } else {
-            protSet = new HashSet<Protocol>();
+            protSet = new HashSet<>();
             attrMap.put(attrKey, protSet);
         }
         for (String protocol : protocols) {

@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Entities;
 
@@ -33,7 +34,6 @@ final class Tokeniser {
     Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     Token.Comment commentPending = new Token.Comment(); // comment building up
     private String lastStartTag; // the last start tag emitted, to test appropriate end tag
-    private boolean selfClosingFlagAcknowledged = true;
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
@@ -41,11 +41,6 @@ final class Tokeniser {
     }
 
     Token read() {
-        if (!selfClosingFlagAcknowledged) {
-            error("Self closing flag not acknowledged");
-            selfClosingFlagAcknowledged = true;
-        }
-
         while (!isEmitPending)
             state.read(this, reader);
 
@@ -74,8 +69,6 @@ final class Tokeniser {
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
             lastStartTag = startTag.tagName;
-            if (startTag.selfClosing)
-                selfClosingFlagAcknowledged = false;
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.attributes != null)
@@ -122,10 +115,6 @@ final class Tokeniser {
         this.state = state;
     }
 
-    void acknowledgeSelfClosingFlag() {
-        selfClosingFlagAcknowledged = true;
-    }
-
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
     int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
@@ -152,7 +141,7 @@ final class Tokeniser {
             try {
                 int base = isHexMode ? 16 : 10;
                 charval = Integer.valueOf(numRef, base);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException ignored) {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
@@ -252,7 +241,7 @@ final class Tokeniser {
             errors.add(new ParseError(reader.pos(), "Invalid character reference: %s", message));
     }
 
-    private void error(String errorMsg) {
+    void error(String errorMsg) {
         if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), errorMsg));
     }
@@ -270,7 +259,7 @@ final class Tokeniser {
      * @return unescaped string from reader
      */
     String unescapeEntities(boolean inAttribute) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = StringUtil.stringBuilder();
         while (!reader.isEmpty()) {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {

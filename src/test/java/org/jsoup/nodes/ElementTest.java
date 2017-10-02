@@ -6,9 +6,20 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -772,7 +783,7 @@ public class ElementTest {
         List<Node> els = new ArrayList<Node>();
         Element el1 = new Element(Tag.valueOf("span"), "").text("Span1");
         Element el2 = new Element(Tag.valueOf("span"), "").text("Span2");
-        TextNode tn1 = new TextNode("Text4", "");
+        TextNode tn1 = new TextNode("Text4");
         els.add(el1);
         els.add(el2);
         els.add(tn1);
@@ -1116,5 +1127,42 @@ public class ElementTest {
         assertEquals(p1, p8);
         assertEquals(p1, p9);
         assertEquals(p1, p10);
+    }
+
+	@Test
+	public void testAppendTo() {
+		String parentHtml = "<div class='a'></div>";
+		String childHtml = "<div class='b'></div><p>Two</p>";
+
+		Document parentDoc = Jsoup.parse(parentHtml);
+		Element parent = parentDoc.body();
+        Document childDoc = Jsoup.parse(childHtml);
+
+        Element div = childDoc.select("div").first();
+        Element p = childDoc.select("p").first();
+        Element appendTo1 = div.appendTo(parent);
+        assertEquals(div, appendTo1);
+
+        Element appendTo2 = p.appendTo(div);
+        assertEquals(p, appendTo2);
+
+        assertEquals("<div class=\"a\"></div>\n<div class=\"b\">\n <p>Two</p>\n</div>", parentDoc.body().html());
+        assertEquals("", childDoc.body().html()); // got moved out
+	}
+
+	@Test public void testNormalizesNbspInText() {
+        String escaped = "You can't always get what you&nbsp;want.";
+        String withNbsp = "You can't always get what you want."; // there is an nbsp char in there
+        Document doc = Jsoup.parse("<p>" + escaped);
+        Element p = doc.select("p").first();
+        assertEquals("You can't always get what you want.", p.text()); // text is normalized
+
+        assertEquals("<p>" + escaped + "</p>", p.outerHtml()); // html / whole text keeps &nbsp;
+        assertEquals(withNbsp, p.textNodes().get(0).getWholeText());
+        assertEquals(160, withNbsp.charAt(29));
+
+        Element matched = doc.select("p:contains(get what you want)").first();
+        assertEquals("p", matched.nodeName());
+        assertTrue(matched.is(":containsOwn(get what you want)"));
     }
 }

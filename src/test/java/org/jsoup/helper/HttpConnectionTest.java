@@ -1,7 +1,6 @@
 package org.jsoup.helper;
 
-import static org.junit.Assert.*;
-
+import org.jsoup.Connection;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.Connection.Method;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
@@ -9,12 +8,20 @@ import org.jsoup.helper.HttpConnection.Request;
 import org.jsoup.integration.ParseTest;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jsoup.Connection;
 
 import java.io.IOException;
-import java.util.*;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
@@ -194,6 +201,7 @@ public class HttpConnectionTest {
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
     }
+
     
     @Test public void whenRequestBodyContainsPDF() throws IOException{
     	HttpConnection.Response res = new HttpConnection.Response();
@@ -203,5 +211,11 @@ public class HttpConnectionTest {
     	req.header("Content-Type", "application/pdf");
     	HttpConnection.Response response = HttpConnection.Response.execute(req, res);
     	assertEquals("text/html",response.contentType());
+    }
+
+    @Test public void encodeUrl() throws MalformedURLException {
+        URL url1 = new URL("http://test.com/?q=white space");
+        URL url2 = HttpConnection.encodeUrl(url1);
+        assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
     }
 }

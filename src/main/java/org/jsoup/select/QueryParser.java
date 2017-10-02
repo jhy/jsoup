@@ -20,7 +20,7 @@ public class QueryParser {
 
     private TokenQueue tq;
     private String query;
-    private List<Evaluator> evals = new ArrayList<Evaluator>();
+    private List<Evaluator> evals = new ArrayList<>();
 
     /**
      * Create a new QueryParser.
@@ -286,8 +286,8 @@ public class QueryParser {
     }
     
     //pseudo selectors :first-child, :last-child, :nth-child, ...
-    private static final Pattern NTH_AB = Pattern.compile("((\\+|-)?(\\d+)?)n(\\s*(\\+|-)?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NTH_B  = Pattern.compile("(\\+|-)?(\\d+)");
+    private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
 
 	private void cssNthChild(boolean backwards, boolean ofType) {
 		String argS = normalize(tq.chompTo(")"));

@@ -1,20 +1,47 @@
 package org.jsoup.helper;
 
-import org.jsoup.*;
+import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UncheckedIOException;
+import org.jsoup.UnsupportedMimeTypeException;
+import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -26,7 +53,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * @see org.jsoup.Jsoup#connect(String)
  */
 public class HttpConnection implements Connection {
-    public static final String  CONTENT_ENCODING = "Content-Encoding";
+    public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
      * Many users would get caught by not setting a user-agent and therefore getting different responses on their desktop
      * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
@@ -66,10 +93,12 @@ public class HttpConnection implements Connection {
         }
 	}
 
-	private static URL encodeUrl(URL u) {
+    static URL encodeUrl(URL u) {
         try {
             //  odd way to encode urls, but it works!
-            final URI uri = new URI(u.toExternalForm());
+            String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
+            urlS = urlS.replaceAll(" ", "%20");
+            final URI uri = new URI(urlS);
             return new URL(uri.toASCIIString());
         } catch (Exception e) {
             return u;
@@ -294,8 +323,8 @@ public class HttpConnection implements Connection {
         Map<String, String> cookies;
 
         private Base() {
-            headers = new LinkedHashMap<String, String>();
-            cookies = new LinkedHashMap<String, String>();
+            headers = new LinkedHashMap<>();
+            cookies = new LinkedHashMap<>();
         }
 
         public URL url() {
@@ -478,7 +507,7 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
-            data = new ArrayList<Connection.KeyVal>();
+            data = new ArrayList<>();
             method = Method.GET;
             headers.put("Accept-Encoding", "gzip");
             headers.put(USER_AGENT, DEFAULT_UA);
@@ -602,9 +631,11 @@ public class HttpConnection implements Connection {
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
+        private InputStream bodyStream;
         private String charset;
         private String contentType;
         private boolean executed = false;
+        private boolean inputStreamRead = false;
         private int numRedirects = 0;
         private Connection.Request req;
 
@@ -702,23 +733,19 @@ public class HttpConnection implements Connection {
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
-                    InputStream bodyStream = null;
-                    try {
-                        bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                        if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
-                            bodyStream = new GZIPInputStream(bodyStream);
-
-                        res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
-                    } finally {
-                        if (bodyStream != null) bodyStream.close();
-                    }
+                    res.bodyStream = null;
+                    res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                        res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    res.bodyStream = new ConstrainableInputStream(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
-            } finally {
+            } catch (IOException e){
                 // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
                 // connection errors will not be released quickly enough and can cause a too many open files error.
                 conn.disconnect();
+                throw e;
             }
 
             res.executed = true;
@@ -748,14 +775,32 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            Document doc = DataUtil.parseByteData(byteData, charset, url.toExternalForm(), req.parser());
-            byteData.rewind();
+            if (byteData != null) { // bytes have been read in to the buffer, parse that
+                bodyStream = new ByteArrayInputStream(byteData.array());
+                inputStreamRead = false; // ok to reparse if in bytes
+            }
+            Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
+            Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
+            // todo - disconnect here?
+            inputStreamRead = true;
             return doc;
         }
 
-        public String body() {
+        private void prepareByteData() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            if (byteData == null) {
+                Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
+                try {
+                    byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+
+        public String body() {
+            prepareByteData();
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body;
             if (charset == null)
@@ -767,8 +812,22 @@ public class HttpConnection implements Connection {
         }
 
         public byte[] bodyAsBytes() {
-            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            prepareByteData();
             return byteData.array();
+        }
+
+        @Override
+        public Connection.Response bufferUp() {
+            prepareByteData();
+            return this;
+        }
+
+        @Override
+        public BufferedInputStream bodyStream() {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            Validate.isFalse(inputStreamRead, "Request has already been read");
+            inputStreamRead = true;
+            return new ConstrainableInputStream(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
         // set up connection defaults, and details from request
@@ -849,9 +908,7 @@ public class HttpConnection implements Connection {
                     sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
                     // Create an ssl socket factory with our all-trusting manager
                     sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                } catch (KeyManagementException e) {
+                } catch (NoSuchAlgorithmException | KeyManagementException e) {
                     throw new IOException("Can't create unsecure trust manager");
                 }
             }
@@ -880,7 +937,7 @@ public class HttpConnection implements Connection {
 
         private static LinkedHashMap<String, List<String>> createHeaderMap(HttpURLConnection conn) {
             // the default sun impl of conn.getHeaderFields() returns header values out of order
-            final LinkedHashMap<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+            final LinkedHashMap<String, List<String>> headers = new LinkedHashMap<>();
             int i = 0;
             while (true) {
                 final String key = conn.getHeaderFieldKey(i);
@@ -894,7 +951,7 @@ public class HttpConnection implements Connection {
                 if (headers.containsKey(key))
                     headers.get(key).add(val);
                 else {
-                    final ArrayList<String> vals = new ArrayList<String>();
+                    final ArrayList<String> vals = new ArrayList<>();
                     vals.add(val);
                     headers.put(key, vals);
                 }
@@ -925,7 +982,7 @@ public class HttpConnection implements Connection {
                     if (values.size() == 1)
                         header(name, values.get(0));
                     else if (values.size() > 1) {
-                        StringBuilder accum = new StringBuilder();
+                        StringBuilder accum = StringUtil.stringBuilder();
                         for (int i = 0; i < values.size(); i++) {
                             final String val = values.get(i);
                             if (i != 0)
@@ -1010,7 +1067,7 @@ public class HttpConnection implements Connection {
         }
 
         private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = StringUtil.stringBuilder();
             boolean first = true;
             for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
                 if (!first)
@@ -1026,7 +1083,7 @@ public class HttpConnection implements Connection {
         // for get url reqs, serialise the data map into the url
         private static void serialiseRequestUrl(Connection.Request req) throws IOException {
             URL in = req.url();
-            StringBuilder url = new StringBuilder();
+            StringBuilder url = StringUtil.stringBuilder();
             boolean first = true;
             // reconstitute the query, ready for appends
             url

@@ -5,6 +5,7 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.Reader;
 import java.util.ArrayList;
 
 /**
@@ -25,7 +26,7 @@ abstract class TreeBuilder {
 
     abstract ParseSettings defaultSettings();
 
-    protected void initialiseParse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
         Validate.notNull(input, "String input must not be null");
         Validate.notNull(baseUri, "BaseURI must not be null");
 
@@ -35,11 +36,11 @@ abstract class TreeBuilder {
         this.errors = errors;
         currentToken = null;
         tokeniser = new Tokeniser(reader, errors);
-        stack = new ArrayList<Element>(32);
+        stack = new ArrayList<>(32);
         this.baseUri = baseUri;
     }
 
-    Document parse(String input, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    Document parse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
         initialiseParse(input, baseUri, errors, settings);
         runParser();
         return doc;

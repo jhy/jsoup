@@ -8,6 +8,7 @@ import org.jsoup.select.Elements;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -137,7 +138,7 @@ public class Document extends Element {
 
     // does not recurse.
     private void normaliseTextNodes(Element element) {
-        List<Node> toMove = new ArrayList<Node>();
+        List<Node> toMove = new ArrayList<>();
         for (Node node: element.childNodes) {
             if (node instanceof TextNode) {
                 TextNode tn = (TextNode) node;
@@ -149,7 +150,7 @@ public class Document extends Element {
         for (int i = toMove.size()-1; i >= 0; i--) {
             Node node = toMove.get(i);
             element.removeChild(node);
-            body().prependChild(new TextNode(" ", ""));
+            body().prependChild(new TextNode(" "));
             body().prependChild(node);
         }
     }
@@ -159,11 +160,10 @@ public class Document extends Element {
         Elements elements = this.getElementsByTag(tag);
         Element master = elements.first(); // will always be available as created above if not existent
         if (elements.size() > 1) { // dupes, move contents to master
-            List<Node> toMove = new ArrayList<Node>();
+            List<Node> toMove = new ArrayList<>();
             for (int i = 1; i < elements.size(); i++) {
                 Node dupe = elements.get(i);
-                for (Node node : dupe.childNodes)
-                    toMove.add(node);
+                toMove.addAll(dupe.ensureChildNodes());
                 dupe.remove();
             }
 
@@ -181,8 +181,9 @@ public class Document extends Element {
         if (node.nodeName().equals(tag))
             return (Element) node;
         else {
-            for (Node child: node.childNodes) {
-                Element found = findFirstElementByTagName(tag, child);
+            int size = node.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                Element found = findFirstElementByTagName(tag, node.childNode(i));
                 if (found != null)
                     return found;
             }
@@ -342,14 +343,14 @@ public class Document extends Element {
                             decl.attr("version", "1.0");
                         }
                     } else {
-                        decl = new XmlDeclaration("xml", baseUri, false);
+                        decl = new XmlDeclaration("xml", false);
                         decl.attr("version", "1.0");
                         decl.attr("encoding", charset().displayName());
 
                         prependChild(decl);
                     }
                 } else {
-                    XmlDeclaration decl = new XmlDeclaration("xml", baseUri, false);
+                    XmlDeclaration decl = new XmlDeclaration("xml", false);
                     decl.attr("version", "1.0");
                     decl.attr("encoding", charset().displayName());
 
@@ -370,13 +371,18 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset = Charset.forName("UTF-8");
+        private Charset charset;
+        CharsetEncoder encoder; // initialized by start of OuterHtmlVisitor and cleared at end
+        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
+
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            charset(StandardCharsets.UTF_8);
+        }
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -433,8 +439,10 @@ public class Document extends Element {
             return this;
         }
 
-        CharsetEncoder encoder() {
-            return charset.newEncoder();
+        CharsetEncoder prepareEncoder() {
+            encoder = charset.newEncoder(); // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
+            return encoder;
         }
 
         /**
