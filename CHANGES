@@ -54,6 +54,9 @@ jsoup changelog
   * Bugfix: fixed an issue where the entity resources were left open after startup, causing a warning.
     <https://github.com/jhy/jsoup/pull/928>
 
+  * Bugfix: fixed an issue where Element.getElementsByIndexLessThan(index) would incorrectly provide the root element
+    <https://github.com/jhy/jsoup/pull/918>
+
 *** Release 1.10.3 [2017-Jun-11]
   * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,
     respectively. This makes it simpler to for example get a list of each URL on a page:
