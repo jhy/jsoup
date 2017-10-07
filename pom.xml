@@ -47,7 +47,7 @@
       	<!-- this plugin allows us to ensure Java 7 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.15</version>
+        <version>1.16</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
@@ -60,6 +60,11 @@
                 <groupId>org.codehaus.mojo.signature</groupId>
                 <artifactId>java17</artifactId>
                 <version>1.0</version>
+              </signature>
+              <signature>
+                <groupId>net.sf.androidscents.signature</groupId>
+                <artifactId>android-api-level-8</artifactId>
+                <version>2.2_r3</version>
               </signature>
             </configuration>
           </execution>

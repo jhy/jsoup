@@ -8,7 +8,6 @@ import org.jsoup.select.Elements;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -381,7 +380,7 @@ public class Document extends Element {
         private Syntax syntax = Syntax.html;
 
         public OutputSettings() {
-            charset(StandardCharsets.UTF_8);
+            charset(Charset.forName("UTF8"));
         }
         
         /**
