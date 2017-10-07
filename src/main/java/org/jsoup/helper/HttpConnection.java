@@ -16,6 +16,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -818,6 +819,14 @@ public class HttpConnection implements Connection {
         public Connection.Response bufferUp() {
             prepareByteData();
             return this;
+        }
+
+        @Override
+        public BufferedInputStream bodyStream() {
+            Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+            Validate.isFalse(inputStreamRead, "Request has already been read");
+            inputStreamRead = true;
+            return new ConstrainableInputStream(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
         // set up connection defaults, and details from request

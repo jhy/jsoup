@@ -1005,6 +1005,13 @@ public class HtmlParserTest {
         assertEquals("<r> <X> A </X> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
+    @Test public void caseInsensitiveParseTree() {
+        String html = "<r><X>A</X><y>B</y></r>";
+        Parser parser = Parser.htmlParser();
+        Document doc = parser.parseInput(html, "");
+        assertEquals("<r> <x> A </x> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
+    }
+
     @Test public void selfClosingVoidIsNotAnError() {
         String html = "<p>test<br/>test<br/></p>";
         Parser parser = Parser.htmlParser().setTrackErrors(5);

@@ -12,6 +12,9 @@ jsoup changelog
     into memory.
     <https://github.com/jhy/jsoup/issues/904>
 
+  * Added Connection.Response.bodyStream(), a method to get the response body as an input stream. This is useful for
+    saving a large response straight to a file, without buffering fully into memory first.
+
   * Performance improvements in text and HTML generation (through less GC).
 
   * Reduced memory consumption of text, scripts, and comments in the DOM by 40%, by refactoring the node
@@ -28,6 +31,9 @@ jsoup changelog
 
   * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
 
+  * Improved performance of Node.addChildren (was quadratic)
+    <https://github.com/jhy/jsoup/pull/930>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
@@ -41,6 +47,12 @@ jsoup changelog
   * Bugfix: fixed an issue where a self-closing title, noframes, or style tag would cause the rest of the page to be
     incorrectly parsed as data or text.
     <https://github.com/jhy/jsoup/issues/906>
+
+  * Bugfix: fixed an issue with unknown mixed-case tags
+    <https://github.com/jhy/jsoup/pull/942>
+
+  * Bugfix: fixed an issue where the entity resources were left open after startup, causing a warning.
+    <https://github.com/jhy/jsoup/pull/928>
 
 *** Release 1.10.3 [2017-Jun-11]
   * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,

@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Proxy;
@@ -673,10 +674,18 @@ public interface Connection {
         /**
          * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
          * same connection response (otherwise, once the response is read, its InputStream will have been drained and
-         * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect. If the requ
+         * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.
          * @return this response, for chaining
          */
         Response bufferUp();
+
+        /**
+         * Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done with it.
+         * Other body methods (like bufferUp, body, parse, etc) will not work in conjunction with this method.
+         * <p>This method is useful for writing large responses to disk, without buffering them completely into memory first.</p>
+         * @return the response body input stream
+         */
+        BufferedInputStream bodyStream();
     }
 
     /**

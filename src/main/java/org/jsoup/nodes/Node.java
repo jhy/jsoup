@@ -8,11 +8,7 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -460,17 +456,14 @@ public abstract class Node implements Cloneable {
         Validate.noNullElements(children);
         final List<Node> nodes = ensureChildNodes();
 
-        for (int i = children.length - 1; i >= 0; i--) {
-            Node in = children[i];
-            reparentChild(in);
-            nodes.add(index, in);
-            reindexChildren(index);
+        for (Node child : children) {
+            reparentChild(child);
         }
+        nodes.addAll(index, Arrays.asList(children));
+        reindexChildren(index);
     }
     
     protected void reparentChild(Node child) {
-        if (child.parentNode != null)
-            child.parentNode.removeChild(child);
         child.setParentNode(this);
     }
 

@@ -1199,4 +1199,16 @@ public class ElementTest {
 
 	    assertEquals("<body><div><p>before1</p><p>before2</p><p>XXX</p></div></body>", TextUtil.stripNewlines(body.outerHtml()));
 	}
+	
+    @Test 
+    public void whiteSpaceClassElement(){
+	    Tag tag = Tag.valueOf("a");
+	    Attributes attribs = new Attributes();
+	    Element el = new Element(tag, "", attribs);
+	    
+	    attribs.put("class", "abc ");
+	    boolean hasClass = el.hasClass("ab");
+	    assertFalse(hasClass);
+	        
+	}
 }

@@ -44,7 +44,7 @@
         </configuration>
       </plugin>
       <plugin>
-      	<!-- this plugin allows us to ensure Java 5 API compatibility -->
+      	<!-- this plugin allows us to ensure Java 7 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
         <version>1.15</version>
@@ -68,7 +68,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.4</version>
+        <version>3.0.0-M1</version>
         <configuration>
           <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>

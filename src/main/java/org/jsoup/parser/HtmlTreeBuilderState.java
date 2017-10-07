@@ -760,7 +760,7 @@ enum HtmlTreeBuilderState {
         }
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
-            String name = t.asEndTag().name(); // matches with case sensitivity if enabled
+            String name = tb.settings.normalizeTag(t.asEndTag().name()); // matches with case sensitivity if enabled
             ArrayList<Element> stack = tb.getStack();
             for (int pos = stack.size() -1; pos >= 0; pos--) {
                 Element node = stack.get(pos);
