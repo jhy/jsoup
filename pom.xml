@@ -44,7 +44,7 @@
         </configuration>
       </plugin>
       <plugin>
-      	<!-- this plugin allows us to ensure Java 5 API compatibility -->
+      	<!-- this plugin allows us to ensure Java 7 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
         <version>1.15</version>
