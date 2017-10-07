@@ -1165,4 +1165,20 @@ public class ElementTest {
         assertEquals("p", matched.nodeName());
         assertTrue(matched.is(":containsOwn(get what you want)"));
     }
+	
+	
+	
+    @Test 
+    public void whiteSpaceClassElement(){
+	    Tag tag = Tag.valueOf("a");
+	    Attributes attribs = new Attributes();
+	    Element el = new Element(tag, "", attribs);
+	    
+	    attribs.put("class", "abc ");
+	    boolean hasClass = el.hasClass("ab");
+	    assertFalse(hasClass);
+	        
+	}
+	
+	
 }
