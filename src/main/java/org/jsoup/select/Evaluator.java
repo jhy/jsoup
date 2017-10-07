@@ -340,7 +340,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return element.elementSiblingIndex() < index;
+            return root != element && element.elementSiblingIndex() < index;
         }
 
         @Override
