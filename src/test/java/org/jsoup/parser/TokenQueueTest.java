@@ -58,4 +58,17 @@ public class TokenQueueTest {
         tq.addFirst("Three");
         assertEquals("Three Two", tq.remainder());
     }
+    
+    
+    @Test 
+    public void consumeToIgnoreSecondCallTest(){
+		String t = "<textarea>one < two </TEXTarea> third </TEXTarea>";
+		TokenQueue tq = new TokenQueue(t);
+		String data = tq.chompToIgnoreCase("</textarea>");
+		assertEquals("<textarea>one < two ", data);
+		
+		data = tq.chompToIgnoreCase("</textarea>");
+		assertEquals(" third ", data);
+    }
+    
 }
