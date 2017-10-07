@@ -357,11 +357,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void clearStackToTableBodyContext() {
-        clearStackToContext("tbody", "tfoot", "thead");
+        clearStackToContext("tbody", "tfoot", "thead", "template");
     }
 
     void clearStackToTableRowContext() {
-        clearStackToContext("tr");
+        clearStackToContext("tr", "template");
     }
 
     private void clearStackToContext(String... nodeNames) {
