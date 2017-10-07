@@ -31,6 +31,9 @@ jsoup changelog
 
   * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
 
+  * Improved performance of Node.addChildren (was quadratic)
+    <https://github.com/jhy/jsoup/pull/930>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
