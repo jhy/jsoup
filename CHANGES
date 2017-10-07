@@ -34,6 +34,9 @@ jsoup changelog
   * Improved performance of Node.addChildren (was quadratic)
     <https://github.com/jhy/jsoup/pull/930>
 
+  * Added missing support for template tags in tables
+    <https://github.com/jhy/jsoup/pull/901>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
