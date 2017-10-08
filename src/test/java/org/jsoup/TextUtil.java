@@ -6,7 +6,7 @@ package org.jsoup;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextUtil {
     public static String stripNewlines(String text) {
-        text = text.replaceAll("\\n\\s*", "");
+        text = text.replaceAll("\\r?\\n\\s*", "");
         return text;
     }
 }
