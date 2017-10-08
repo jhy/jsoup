@@ -37,6 +37,9 @@ jsoup changelog
   * Added missing support for template tags in tables
     <https://github.com/jhy/jsoup/pull/901>
 
+  * Improved Node traversal, including less object creation, and partial and filtering traversor support.
+    <https://github.com/jhy/jsoup/pull/849>
+
   * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
