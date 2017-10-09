@@ -1117,4 +1117,21 @@ public class ElementTest {
         assertEquals(p1, p9);
         assertEquals(p1, p10);
     }
+
+    @Test public void testDoAfterOnCloneElementNotNullParent(){
+        String html = "<!DOCTYPE html><html lang=\"en\"><head></head><body><div>Initial element</div></body></html>";
+        Document original = Jsoup.parse(html);
+        Document clone = original.clone();
+
+        Element originalElement = original.body().child(0);
+        originalElement.after("<div>New element</div>");
+        Element originalNextElementSibling = originalElement.nextElementSibling();
+        Element originalNextSibling = (Element) originalElement.nextSibling();
+
+        assertNotNull(clone);
+        assertNotEquals(clone,original);
+        assertNotNull(clone.parentNode);
+        assertNotNull(originalNextElementSibling);
+        assertNotNull(originalNextSibling);
+    }
 }
