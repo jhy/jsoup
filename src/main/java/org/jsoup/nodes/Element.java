@@ -86,7 +86,7 @@ public class Element extends Node {
 
     protected List<Node> ensureChildNodes() {
         if (childNodes == EMPTY_NODES) {
-            childNodes = new NodeList(4);
+            childNodes = new NodeList(this, 4);
         }
         return childNodes;
     }
@@ -1399,20 +1399,22 @@ public class Element extends Node {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
-        clone.childNodes = new NodeList(childNodes.size());
-
+        clone.childNodes = new NodeList(clone, childNodes.size());
         clone.childNodes.addAll(childNodes);
 
         return clone;
     }
 
-    private final class NodeList extends ChangeNotifyingArrayList<Node> {
-        NodeList(int initialCapacity) {
+    private static final class NodeList extends ChangeNotifyingArrayList<Node> {
+        private final Element owner;
+
+        NodeList(Element owner, int initialCapacity) {
             super(initialCapacity);
+            this.owner = owner;
         }
 
         public void onContentsChanged() {
-            nodelistChanged();
+            owner.nodelistChanged();
         }
     }
 }

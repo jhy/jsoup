@@ -108,6 +108,9 @@ jsoup changelog
   * Bugfix: in certain locales (Turkey specifically), lowercasing and case insensitivity could fail for specific items.
     <https://github.com/jhy/jsoup/pull/820>
 
+  * Bugfix: after an element was cloned, changes to its child list where not notifying the element correctly.
+    <https://github.com/jhy/jsoup/issues/951>
+
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading
    the HTML entity files. About 1.72x faster in this area.
