@@ -350,28 +350,25 @@ public class HttpConnection implements Connection {
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
             List<String> vals = getHeadersCaseInsensitive(name);
-            String val = null;
-            if (vals.size() > 0)
-                val = vals.get(0);
-
-            if (val != null) {
-                // headers should be ISO8859 - but values are often actually UTF-8. Test if it looks like UTF8 and convert if so
-                val = fixHeaderEncoding(val);
+            if (vals.size() > 0) {
+                // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                return StringUtil.join(vals, ", ");
             }
-            return val;
+
+            return null;
         }
 
         @Override
         public T addHeader(String name, String value) {
             Validate.notEmpty(name);
-            Validate.notNull(value);
+            value = value == null ? "" : value;
 
             List<String> values = headers(name);
             if (values.isEmpty()) {
                 values = new ArrayList<>();
                 headers.put(name, values);
             }
-            values.add(value);
+            values.add(fixHeaderEncoding(value));
 
             return (T) this;
         }
@@ -433,7 +430,6 @@ public class HttpConnection implements Connection {
 
         public T header(String name, String value) {
             Validate.notEmpty(name, "Header name must not be empty");
-            Validate.notNull(value, "Header value must not be null");
             removeHeader(name); // ensures we don't get an "accept-encoding" and a "Accept-Encoding"
             addHeader(name, value);
             return (T) this;
@@ -896,8 +892,10 @@ public class HttpConnection implements Connection {
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
                 conn.addRequestProperty("Cookie", getRequestCookieString(req));
-            for (Map.Entry<String, String> header : req.headers().entrySet()) {
-                conn.addRequestProperty(header.getKey(), header.getValue());
+            for (Map.Entry<String, List<String>> header : req.multiHeaders().entrySet()) {
+                for (String value : header.getValue()) {
+                    conn.addRequestProperty(header.getKey(), value);
+                }
             }
             return conn;
         }
@@ -1019,19 +1017,9 @@ public class HttpConnection implements Connection {
                         if (cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
-                } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-                    if (values.size() == 1)
-                        header(name, values.get(0));
-                    else if (values.size() > 1) {
-                        StringBuilder accum = StringUtil.stringBuilder();
-                        for (int i = 0; i < values.size(); i++) {
-                            final String val = values.get(i);
-                            if (i != 0)
-                                accum.append(", ");
-                            accum.append(val);
-                        }
-                        header(name, accum.toString());
-                    }
+                }
+                for (String value : values) {
+                    addHeader(name, value);
                 }
             }
         }

@@ -99,7 +99,7 @@ public class HttpConnectionTest {
 
         assertTrue(req.hasHeader("Accept"));
         assertTrue(req.hasHeader("ACCEpt"));
-        assertEquals("Something", req.header("accept"));
+        assertEquals("Something, Everything", req.header("accept"));
         assertTrue(req.hasHeader("fOO"));
         assertEquals("Bar", req.header("foo"));
 

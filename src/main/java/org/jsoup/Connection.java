@@ -366,7 +366,8 @@ public interface Connection {
         T method(Method method);
 
         /**
-         * Get the value of a header. If there is more than one header with the same name, returns the first header.
+         * Get the value of a header. If there is more than one header value with the same name, the headers are returned
+         * comma seperated, per <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2">rfc2616-sec4</a>.
          * <p>
          * Header names are case insensitive.
          * </p>

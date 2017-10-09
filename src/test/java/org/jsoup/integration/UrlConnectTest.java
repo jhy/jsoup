@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -614,8 +615,14 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect(url);
         con.get();
 
-        assertEquals("text/html", con.response().header("Content-Type"));
-        assertEquals("no-cache, no-store", con.response().header("Cache-Control"));
+        Connection.Response res = con.response();
+        assertEquals("text/html", res.header("Content-Type"));
+        assertEquals("no-cache, no-store", res.header("Cache-Control"));
+
+        List<String> header = res.headers("Cache-Control");
+        assertEquals(2, header.size());
+        assertEquals("no-cache", header.get(0));
+        assertEquals("no-store", header.get(1));
     }
 
     @Test
