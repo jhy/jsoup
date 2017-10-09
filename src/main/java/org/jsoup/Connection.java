@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -365,7 +366,7 @@ public interface Connection {
         T method(Method method);
 
         /**
-         * Get the value of a header. This is a simplified header model, where a header may only have one value.
+         * Get the value of a header. If there is more than one header with the same name, returns the first header.
          * <p>
          * Header names are case insensitive.
          * </p>
@@ -377,12 +378,29 @@ public interface Connection {
         String header(String name);
 
         /**
-         * Set a header. This method will overwrite any existing header with the same case insensitive name.
+         * Get the values of a header.
+         * @param name header name, case insensitive.
+         * @return a list of values for this header, or an empty list if not set.
+         */
+        List<String> headers(String name);
+
+        /**
+         * Set a header. This method will overwrite any existing header with the same case insensitive name. (If there
+         * is more than one value for this header, this method will update the first matching header.
          * @param name Name of header
          * @param value Value of header
          * @return this, for chaining
+         * @see #addHeader(String, String)
          */
         T header(String name, String value);
+
+        /**
+         * Add a header. The header will be added regardless of whether a header with the same name already exists.
+         * @param name Name of new header
+         * @param value Value of new header
+         * @return this, for chaining
+         */
+        T addHeader(String name, String value);
 
         /**
          * Check if a header is present
@@ -400,17 +418,26 @@ public interface Connection {
         boolean hasHeaderWithValue(String name, String value);
 
         /**
-         * Remove a header by name
+         * Remove headers by name. If there is more than one header with this name, they will all be removed.
          * @param name name of header to remove (case insensitive)
          * @return this, for chaining
          */
         T removeHeader(String name);
 
         /**
-         * Retrieve all of the request/response headers as a map
+         * Retrieve all of the request/response header names and corresponding values as a map. For headers with multiple
+         * values, only the first header is returned.
          * @return headers
+         * @see #multiHeaders()
+
          */
         Map<String, String> headers();
+
+        /**
+         * Retreive all of the headers, keyed by the header name, and with a list of values per header.
+         * @return a list of multiple values per header.
+         */
+        Map<String, List<String>> multiHeaders();
 
         /**
          * Get a cookie value by name from this request/response.

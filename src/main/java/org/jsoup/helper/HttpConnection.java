@@ -39,6 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -318,7 +319,7 @@ public class HttpConnection implements Connection {
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
         Method method;
-        Map<String, String> headers;
+        Map<String, List<String>> headers;
         Map<String, String> cookies;
 
         private Base() {
@@ -348,12 +349,37 @@ public class HttpConnection implements Connection {
 
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
-            String val = getHeaderCaseInsensitive(name);
+            List<String> vals = getHeadersCaseInsensitive(name);
+            String val = null;
+            if (vals.size() > 0)
+                val = vals.get(0);
+
             if (val != null) {
                 // headers should be ISO8859 - but values are often actually UTF-8. Test if it looks like UTF8 and convert if so
                 val = fixHeaderEncoding(val);
             }
             return val;
+        }
+
+        @Override
+        public T addHeader(String name, String value) {
+            Validate.notEmpty(name);
+            Validate.notNull(value);
+
+            List<String> values = headers(name);
+            if (values.isEmpty()) {
+                values = new ArrayList<>();
+                headers.put(name, values);
+            }
+            values.add(value);
+
+            return (T) this;
+        }
+
+        @Override
+        public List<String> headers(String name) {
+            Validate.notEmpty(name);
+            return getHeadersCaseInsensitive(name);
         }
 
         private static String fixHeaderEncoding(String val) {
@@ -409,51 +435,67 @@ public class HttpConnection implements Connection {
             Validate.notEmpty(name, "Header name must not be empty");
             Validate.notNull(value, "Header value must not be null");
             removeHeader(name); // ensures we don't get an "accept-encoding" and a "Accept-Encoding"
-            headers.put(name, value);
+            addHeader(name, value);
             return (T) this;
         }
 
         public boolean hasHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            return getHeaderCaseInsensitive(name) != null;
+            return getHeadersCaseInsensitive(name).size() != 0;
         }
 
         /**
          * Test if the request has a header with this value (case insensitive).
          */
         public boolean hasHeaderWithValue(String name, String value) {
-            return hasHeader(name) && header(name).equalsIgnoreCase(value);
+            Validate.notEmpty(name);
+            Validate.notEmpty(value);
+            List<String> values = headers(name);
+            for (String candidate : values) {
+                if (value.equalsIgnoreCase(candidate))
+                    return true;
+            }
+            return false;
         }
 
         public T removeHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            Map.Entry<String, String> entry = scanHeaders(name); // remove is case insensitive too
+            Map.Entry<String, List<String>> entry = scanHeaders(name); // remove is case insensitive too
             if (entry != null)
                 headers.remove(entry.getKey()); // ensures correct case
             return (T) this;
         }
 
         public Map<String, String> headers() {
+            LinkedHashMap<String, String> map = new LinkedHashMap<>(headers.size());
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                String header = entry.getKey();
+                List<String> values = entry.getValue();
+                if (values.size() > 0)
+                    map.put(header, values.get(0));
+            }
+            return map;
+        }
+
+        @Override
+        public Map<String, List<String>> multiHeaders() {
             return headers;
         }
 
-        private String getHeaderCaseInsensitive(String name) {
-            Validate.notNull(name, "Header name must not be null");
-            // quick evals for common case of title case, lower case, then scan for mixed
-            String value = headers.get(name);
-            if (value == null)
-                value = headers.get(lowerCase(name));
-            if (value == null) {
-                Map.Entry<String, String> entry = scanHeaders(name);
-                if (entry != null)
-                    value = entry.getValue();
+        private List<String> getHeadersCaseInsensitive(String name) {
+            Validate.notNull(name);
+
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                if (name.equalsIgnoreCase(entry.getKey()))
+                    return entry.getValue();
             }
-            return value;
+
+            return Collections.emptyList();
         }
 
-        private Map.Entry<String, String> scanHeaders(String name) {
+        private Map.Entry<String, List<String>> scanHeaders(String name) {
             String lc = lowerCase(name);
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (lowerCase(entry.getKey()).equals(lc))
                     return entry;
             }
@@ -502,14 +544,14 @@ public class HttpConnection implements Connection {
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
 
-        private Request() {
+        Request() {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<>();
             method = Method.GET;
-            headers.put("Accept-Encoding", "gzip");
-            headers.put(USER_AGENT, DEFAULT_UA);
+            addHeader("Accept-Encoding", "gzip");
+            addHeader(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
         }
 

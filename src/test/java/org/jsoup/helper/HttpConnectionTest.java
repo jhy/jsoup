@@ -92,6 +92,39 @@ public class HttpConnectionTest {
         assertEquals("no-cache, no-store", res.header("Cache-Control"));
     }
 
+    @Test public void multipleHeaders() {
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("Accept", "Something");
+        req.addHeader("Accept", "Everything");
+        req.addHeader("Foo", "Bar");
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeader("ACCEpt"));
+        assertEquals("Something", req.header("accept"));
+        assertTrue(req.hasHeader("fOO"));
+        assertEquals("Bar", req.header("foo"));
+
+        List<String> accept = req.headers("accept");
+        assertEquals(2, accept.size());
+        assertEquals("Something", accept.get(0));
+        assertEquals("Everything", accept.get(1));
+
+        Map<String, List<String>> headers = req.multiHeaders();
+        assertEquals(accept, headers.get("Accept"));
+        assertEquals("Bar", headers.get("Foo").get(0));
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeaderWithValue("accept", "Something"));
+        assertTrue(req.hasHeaderWithValue("accept", "Everything"));
+        assertFalse(req.hasHeaderWithValue("accept", "Something for nothing"));
+
+        req.removeHeader("accept");
+        headers = req.multiHeaders();
+        assertEquals("Bar", headers.get("Foo").get(0));
+        assertFalse(req.hasHeader("Accept"));
+        assertTrue(headers.get("Accept") == null);
+    }
+
     @Test public void ignoresEmptySetCookies() {
         // prep http response header map
         Map<String, List<String>> headers = new HashMap<String, List<String>>();

@@ -31,6 +31,8 @@ jsoup changelog
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>
 
+  * Added support for multiple headers with the same name in Jsoup.Connect
+
   * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
 
   * Improved performance of Node.addChildren (was quadratic)
