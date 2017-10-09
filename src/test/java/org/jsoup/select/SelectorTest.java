@@ -748,4 +748,22 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("One'One", els.text());
     }
+
+    @Test public void selectFirst() {
+        String html = "<p>One<p>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("One", doc.selectFirst("p").text());
+    }
+
+    @Test public void selectFirstWithAnd() {
+        String html = "<p>One<p class=foo>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("Two", doc.selectFirst("p.foo").text());
+    }
+
+    @Test public void selectFirstWithOr() {
+        String html = "<p>One<p>Two<p>Three<div>Four";
+        Document doc = Jsoup.parse(html);
+        assertEquals("One", doc.selectFirst("p, div").text());
+    }
 }

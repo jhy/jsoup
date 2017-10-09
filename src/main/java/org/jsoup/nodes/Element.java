@@ -364,6 +364,17 @@ public class Element extends Node {
     }
 
     /**
+     * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
+     * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
+     * execution stops on the first hit.</p>
+     * @param cssQuery cssQuery a {@link Selector} CSS-like query
+     * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     */
+    public Element selectFirst(String cssQuery) {
+        return Selector.selectFirst(cssQuery, this);
+    }
+
+    /**
      * Check if this element matches the given {@link Selector} CSS query.
      * @param cssQuery a {@link Selector} CSS query
      * @return if this element matches the query

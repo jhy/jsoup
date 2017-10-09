@@ -26,6 +26,8 @@ jsoup changelog
     LinkedHashSet.
     <https://github.com/jhy/jsoup/issues/911>
 
+  * Added support for Element.selectFirst(query), to efficiently find the first matching element.
+
   * Added Element.appendTo(parent) to simplify slinging elements about.
     <https://github.com/jhy/jsoup/pull/662>
 

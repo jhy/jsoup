@@ -9,7 +9,7 @@ import java.util.IdentityHashMap;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
- * 
+ *
  * <h2>Selector syntax</h2>
  * <p>
  * A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case insensitive</b> (including against
@@ -69,32 +69,13 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:only-of-type</code></td><td> an element that has a parent element and whose parent element has no other element children with the same expanded element name</td><td></td></tr>
  * <tr><td><code>:empty</code></td><td>elements that have no children at all</td><td></td></tr>
  * </table>
- * 
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  * @see Element#select(String)
  */
 public class Selector {
-    private final Evaluator evaluator;
-    private final Element root;
-
-    private Selector(String query, Element root) {
-        Validate.notNull(query);
-        query = query.trim();
-        Validate.notEmpty(query);
-        Validate.notNull(root);
-
-        this.evaluator = QueryParser.parse(query);
-
-        this.root = root;
-    }
-
-    private Selector(Evaluator evaluator, Element root) {
-        Validate.notNull(evaluator);
-        Validate.notNull(root);
-
-        this.evaluator = evaluator;
-        this.root = root;
-    }
+    // not instantiable
+    private Selector() {}
 
     /**
      * Find elements matching selector.
@@ -105,7 +86,8 @@ public class Selector {
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public static Elements select(String query, Element root) {
-        return new Selector(query, root).select();
+        Validate.notEmpty(query);
+        return select(QueryParser.parse(query), root);
     }
 
     /**
@@ -116,7 +98,9 @@ public class Selector {
      * @return matching elements, empty if none
      */
     public static Elements select(Evaluator evaluator, Element root) {
-        return new Selector(evaluator, root).select();
+        Validate.notNull(evaluator);
+        Validate.notNull(root);
+        return Collector.collect(evaluator, root);
     }
 
     /**
@@ -146,10 +130,6 @@ public class Selector {
         return new Elements(elements);
     }
 
-    private Elements select() {
-        return Collector.collect(evaluator, root);
-    }
-
     // exclude set. package open so that Elements can implement .not() selector.
     static Elements filterOut(Collection<Element> elements, Collection<Element> outs) {
         Elements output = new Elements();
@@ -165,6 +145,17 @@ public class Selector {
                 output.add(el);
         }
         return output;
+    }
+
+    /**
+     * Find the first element that matches the query.
+     * @param cssQuery CSS selector
+     * @param root root element to descend into
+     * @return the matching element, or <b>null</b> if none.
+     */
+    public static Element selectFirst(String cssQuery, Element root) {
+        Validate.notEmpty(cssQuery);
+        return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
     public static class SelectorParseException extends IllegalStateException {

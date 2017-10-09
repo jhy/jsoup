@@ -100,7 +100,7 @@ abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":or%s", evaluators);
+            return StringUtil.join(evaluators, ", ");
         }
     }
 }
