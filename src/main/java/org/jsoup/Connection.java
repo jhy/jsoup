@@ -427,6 +427,8 @@ public interface Connection {
         /**
          * Retrieve all of the request/response header names and corresponding values as a map. For headers with multiple
          * values, only the first header is returned.
+         * <p>Note that this is a view of the headers only, and changes made to this map will not be reflected in the
+         * request/response object.</p>
          * @return headers
          * @see #multiHeaders()
 

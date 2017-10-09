@@ -43,10 +43,9 @@ public class HttpConnectionTest {
 
     @Test @MultiLocaleTest public void caseInsensitiveHeaders() {
         Connection.Response res = new HttpConnection.Response();
-        Map<String, String> headers = res.headers();
-        headers.put("Accept-Encoding", "gzip");
-        headers.put("content-type", "text/html");
-        headers.put("refErrer", "http://example.com");
+        res.header("Accept-Encoding", "gzip");
+        res.header("content-type", "text/html");
+        res.header("refErrer", "http://example.com");
 
         assertTrue(res.hasHeader("Accept-Encoding"));
         assertTrue(res.hasHeader("accept-encoding"));
