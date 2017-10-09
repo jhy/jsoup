@@ -1330,6 +1330,6 @@ public class Element extends Node {
 
     @Override
     public Element clone() {
-        return (Element) super.clone();
+        return (Element) super.doClone(this);
     }
 }
