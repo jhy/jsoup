@@ -293,7 +293,7 @@ public class TokenQueue {
     }
     
     /**
-     * Unescaped a \ escaped string.
+     * Unescape a \ escaped string.
      * @param in backslash escaped string
      * @return unescaped string
      */

@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.UrlConnectTest;
-import org.jsoup.nodes.Entities;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -37,8 +36,8 @@ class BuildEntities {
 
 
         // build name sorted base and full character lists:
-        ArrayList<CharacterRef> base = new ArrayList<CharacterRef>();
-        ArrayList<CharacterRef> full = new ArrayList<CharacterRef>();
+        ArrayList<CharacterRef> base = new ArrayList<>();
+        ArrayList<CharacterRef> full = new ArrayList<>();
 
         for (Map.Entry<String, CharacterRef> entry : input.entrySet()) {
             String name = entry.getKey().substring(1); // name is like &acute or &acute; , trim &
@@ -55,13 +54,13 @@ class BuildEntities {
         Collections.sort(full, byName);
 
         // now determine code point order
-        ArrayList<CharacterRef> baseByCode = new ArrayList<CharacterRef>(base);
-        ArrayList<CharacterRef> fullByCode = new ArrayList<CharacterRef>(full);
+        ArrayList<CharacterRef> baseByCode = new ArrayList<>(base);
+        ArrayList<CharacterRef> fullByCode = new ArrayList<>(full);
         Collections.sort(baseByCode, byCode);
         Collections.sort(fullByCode, byCode);
 
-        // and update their codepoint index. Don't
-        ArrayList<CharacterRef>[] codelists = new ArrayList[]{baseByCode, fullByCode};
+        // and update their codepoint index.
+        @SuppressWarnings("unchecked") ArrayList<CharacterRef>[] codelists = new ArrayList[]{baseByCode, fullByCode};
         for (ArrayList<CharacterRef> codelist : codelists) {
             for (int i = 0; i < codelist.size(); i++) {
                 codelist.get(i).codeIndex = i;

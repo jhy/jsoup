@@ -111,7 +111,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      * If the stack contains an element with this tag's name, pop up the stack to remove the first occurrence. If not
      * found, skips.
      *
-     * @param endTag
+     * @param endTag tag to close
      */
     private void popStackToClose(Token.EndTag endTag) {
         String elName = endTag.name();

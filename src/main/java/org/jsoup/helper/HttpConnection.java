@@ -922,7 +922,7 @@ public class HttpConnection implements Connection {
          * please not that this method will only perform action if sslSocketFactory is not yet
          * instantiated.
          *
-         * @throws IOException
+         * @throws IOException on SSL init errors
          */
         private static synchronized void initUnSecureTSL() throws IOException {
             if (sslSocketFactory == null) {

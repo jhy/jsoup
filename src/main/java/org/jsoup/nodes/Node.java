@@ -135,7 +135,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
-     * @param baseUri
+     * @param baseUri new URI
      */
     protected abstract void doSetBaseUri(String baseUri);
 

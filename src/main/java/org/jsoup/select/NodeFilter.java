@@ -27,7 +27,7 @@ public interface NodeFilter {
     /**
      * Filter decision.
      */
-    public enum FilterResult {
+    enum FilterResult {
         /** Continue processing the tree */
         CONTINUE,
         /** Skip the child nodes, but do call {@link NodeFilter#tail(Node, int)} next. */

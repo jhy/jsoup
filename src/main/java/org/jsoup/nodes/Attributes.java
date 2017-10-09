@@ -85,7 +85,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
-    static final String checkNotNull(String val) {
+    static String checkNotNull(String val) {
         return val == null ? EmptyString : val;
     }
 

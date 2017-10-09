@@ -255,7 +255,7 @@ final class Tokeniser {
 
     /**
      * Utility method to consume reader and unescape entities found within.
-     * @param inAttribute
+     * @param inAttribute if the text to be unescaped is in an attribute
      * @return unescaped string from reader
      */
     String unescapeEntities(boolean inAttribute) {

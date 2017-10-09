@@ -780,7 +780,7 @@ public class ElementTest {
         assertEquals(4, div2.childNodeSize());
         assertEquals(3, p1s.get(1).siblingIndex()); // should be last
 
-        List<Node> els = new ArrayList<Node>();
+        List<Node> els = new ArrayList<>();
         Element el1 = new Element(Tag.valueOf("span"), "").text("Span1");
         Element el2 = new Element(Tag.valueOf("span"), "").text("Span2");
         TextNode tn1 = new TextNode("Text4");
@@ -847,7 +847,7 @@ public class ElementTest {
         assertEquals("c1 c2", div.className());
 
         // Update the class names to a fresh set
-        final Set<String> newSet = new LinkedHashSet<String>(3);
+        final Set<String> newSet = new LinkedHashSet<>(3);
         newSet.addAll(set1);
         newSet.add("c3");
         
@@ -937,7 +937,7 @@ public class ElementTest {
         div3.text("Check");
         final Element div4 = body.appendElement("div4");
 
-        ArrayList<Element> toMove = new ArrayList<Element>();
+        ArrayList<Element> toMove = new ArrayList<>();
         toMove.add(div3);
         toMove.add(div4);
 
@@ -951,7 +951,7 @@ public class ElementTest {
     public void testHashcodeIsStableWithContentChanges() {
         Element root = new Element(Tag.valueOf("root"), "");
 
-        HashSet<Element> set = new HashSet<Element>();
+        HashSet<Element> set = new HashSet<>();
         // Add root node:
         set.add(root);
 
