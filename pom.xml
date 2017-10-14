@@ -222,6 +222,22 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <!-- jetty for webserver integration tests -->
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>9.4.7.v20170914</version>
+    </dependency>
+
+    <dependency>
+      <!-- jetty for webserver integration tests -->
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>9.4.7.v20170914</version>
+    </dependency>
+
+
+
   </dependencies>
 
   <dependencyManagement>
