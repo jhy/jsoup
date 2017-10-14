@@ -819,8 +819,8 @@ public class HttpConnection implements Connection {
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
             Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
-            // todo - disconnect here?
             inputStreamRead = true;
+            safeClose();
             return doc;
         }
 
@@ -832,6 +832,9 @@ public class HttpConnection implements Connection {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
+                } finally {
+                    inputStreamRead = true;
+                    safeClose();
                 }
             }
         }
@@ -898,6 +901,21 @@ public class HttpConnection implements Connection {
                 }
             }
             return conn;
+        }
+
+        /**
+         * Call on completion of stream read, to close the body (or error) stream
+         */
+        private void safeClose() {
+            if (bodyStream != null) {
+                try {
+                    bodyStream.close();
+                } catch (IOException e) {
+                    // no-op
+                } finally {
+                    bodyStream = null;
+                }
+            }
         }
 
         /**
