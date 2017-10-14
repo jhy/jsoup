@@ -19,7 +19,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.List;
@@ -39,20 +38,6 @@ public class UrlConnectTest {
     private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
     private static String echoURL = "http://direct.infohound.net/tools/q.pl";
     public static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
-
-    @Test
-    public void fetchURl() throws IOException {
-        String url = "https://jsoup.org"; // no trailing / to force redir
-        Document doc = Jsoup.parse(new URL(url), 10*1000);
-        assertTrue(doc.title().contains("jsoup"));
-    }
-
-    @Test
-    public void fetchURIWithWihtespace() throws IOException {
-        Connection con = Jsoup.connect("http://try.jsoup.org/#with whitespaces");
-        Document doc = con.get();
-        assertTrue(doc.title().contains("jsoup"));
-    }
 
     @Test
     public void fetchBaidu() throws IOException {
@@ -82,122 +67,10 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void exceptOnUnsupportedProtocol(){
-        String url = "file://etc/passwd";
-        boolean threw = false;
-        try {
-            Document doc = Jsoup.connect(url).get();
-        } catch (MalformedURLException e) {
-            threw = true;
-            assertEquals("java.net.MalformedURLException: Only http & https protocols supported", e.toString());
-        } catch (IOException e) {
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void ignoresContentTypeIfSoConfigured() throws IOException {
         Document doc = Jsoup.connect("https://jsoup.org/rez/osi_logo.png").ignoreContentType(true).get();
         assertEquals("", doc.title()); // this will cause an ugly parse tree
     }
-
-    @Test
-    public void doesPost() throws IOException {
-        Document doc = Jsoup.connect(echoURL)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .cookie("auth", "token")
-            .post();
-
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        //assertEquals("gzip", ihVal("HTTP_ACCEPT_ENCODING", doc)); // current proxy removes gzip on post
-        assertEquals("auth=token", ihVal("HTTP_COOKIE", doc));
-        assertEquals("度一下", ihVal("百", doc));
-        assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
-    }
-
-    @Test
-    public void sendsRequestBodyJsonWithData() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .data("foo", "true")
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
-        assertEquals("foo=true", ihVal("QUERY_STRING", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBodyJsonWithoutData() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBody() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "text/plain")
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("text/plain", ihVal("CONTENT_TYPE", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBodyWithUrlParams() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .header("Content-Type", "text/plain") // todo - if user sets content-type, we should append postcharset
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("uname=Jsoup&uname=Jonathan&%E7%99%BE=%E5%BA%A6%E4%B8%80%E4%B8%8B", ihVal("QUERY_STRING", doc));
-        assertEquals(body, ihVal("POSTDATA", doc));
-    }
-
-    @Test
-    public void doesGet() throws IOException {
-        Connection con = Jsoup.connect(echoURL + "?what=the")
-            .userAgent("Mozilla")
-            .referrer("http://example.com")
-            .data("what", "about & me?");
-
-        Document doc = con.get();
-        assertEquals("what=the&what=about+%26+me%3F", ihVal("QUERY_STRING", doc));
-        assertEquals("the, about & me?", ihVal("what", doc));
-        assertEquals("Mozilla", ihVal("HTTP_USER_AGENT", doc));
-        assertEquals("http://example.com", ihVal("HTTP_REFERER", doc));
-    }
-
-    @Test
-    public void doesPut() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL)
-                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-                .cookie("auth", "token")
-                .method(Connection.Method.PUT)
-                .execute();
-
-        Document doc = res.parse();
-        assertEquals("PUT", ihVal("REQUEST_METHOD", doc));
-        //assertEquals("gzip", ihVal("HTTP_ACCEPT_ENCODING", doc)); // current proxy removes gzip on post
-        assertEquals("auth=token", ihVal("HTTP_COOKIE", doc));
-    }
-
 
     private static String ihVal(String key, Document doc) {
         return doc.select("th:contains("+key+") + td").first().text();

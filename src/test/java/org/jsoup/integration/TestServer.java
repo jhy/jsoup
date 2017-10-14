@@ -19,7 +19,7 @@ public class TestServer {
     private TestServer() {
     }
 
-    static void start() {
+    public static void start() {
         synchronized (jetty) {
             int count = latch.getAndIncrement();
             if (count == 0) {
@@ -32,7 +32,7 @@ public class TestServer {
         }
     }
 
-    static void stop() {
+    public static void stop() {
         synchronized (jetty) {
             int count = latch.decrementAndGet();
             if (count == 0) {
@@ -47,6 +47,9 @@ public class TestServer {
 
     public static String map(Class<? extends BaseServlet> servletClass) {
         synchronized (jetty) {
+            if (!jetty.isStarted())
+                start(); // if running out of the test cases
+
             String path = "/" + servletClass.getSimpleName();
             handler.addServletWithMapping(servletClass, path);
             int port = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();

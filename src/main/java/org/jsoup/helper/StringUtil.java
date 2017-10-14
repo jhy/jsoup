@@ -48,6 +48,16 @@ public final class StringUtil {
     }
 
     /**
+     * Join an array of strings by a separator
+     * @param strings collection of string objects
+     * @param sep string to place between strings
+     * @return joined string
+     */
+    public static String join(String[] strings, String sep) {
+        return join(Arrays.asList(strings), sep);
+    }
+
+    /**
      * Returns space padding
      * @param width amount of padding desired
      * @return string of spaces * width

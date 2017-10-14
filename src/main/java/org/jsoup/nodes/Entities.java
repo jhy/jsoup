@@ -28,6 +28,9 @@ public class Entities {
     private static final String emptyName = "";
     static final int codepointRadix = 36;
     private static final Charset ASCII = Charset.forName("ascii");
+    private static final char[] codeDelims = {',', ';'};
+    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
+    private static final Document.OutputSettings DefaultOutput = new Document.OutputSettings();
 
     public enum EscapeMode {
         /**
@@ -75,8 +78,6 @@ public class Entities {
             return nameKeys.length;
         }
     }
-
-    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
 
     private Entities() {
     }
@@ -144,7 +145,16 @@ public class Entities {
         return 0;
     }
 
-    static String escape(String string, Document.OutputSettings out) {
+    /**
+     * HTML escape an input string. That is, {@code <} is returned as
+     * {@code &lt;}
+     * @param string the un-escaped string to escape
+     * @param out the output settings to use
+     * @return the escaped string
+     */
+    public static String escape(String string, Document.OutputSettings out) {
+        if (string == null)
+            return "";
         StringBuilder accum = new StringBuilder(string.length() * 2);
         try {
             escape(accum, string, out, false, false, false);
@@ -152,6 +162,16 @@ public class Entities {
             throw new SerializationException(e); // doesn't happen
         }
         return accum.toString();
+    }
+
+    /**
+     * HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is returned as
+     * {@code &lt;}
+     * @param string the un-escaped string to escape
+     * @return the escaped string
+     */
+    public static String escape(String string) {
+        return escape(string, DefaultOutput);
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
@@ -238,7 +258,12 @@ public class Entities {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
     }
 
-    static String unescape(String string) {
+    /**
+     * Un-escape an HTML escaped string. That is, {@code &lt;} is returned as {@code <}.
+     * @param string the HTML string to un-escape
+     * @return the unescaped string
+     */
+    public static String unescape(String string) {
         return unescape(string, false);
     }
 
@@ -289,8 +314,6 @@ public class Entities {
             return fallback;
         }
     }
-
-    private static final char[] codeDelims = {',', ';'};
 
     private static void load(EscapeMode e, String file, int size) {
         e.nameKeys = new String[size];
