@@ -14,7 +14,6 @@ public class TestServer {
 
     static {
         jetty.setHandler(handler);
-        start();
     }
 
     private TestServer() {
