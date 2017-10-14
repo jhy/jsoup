@@ -415,7 +415,7 @@ public class UrlConnectTest {
 
         int actualDocText = 269541;
         assertEquals(actualDocText, defaultRes.parse().text().length());
-        assertEquals(47200, smallRes.parse().text().length());
+        assertEquals(49165, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());

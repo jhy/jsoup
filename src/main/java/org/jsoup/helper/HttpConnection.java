@@ -774,7 +774,7 @@ public class HttpConnection implements Connection {
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
                     if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
-                    res.bodyStream = new ConstrainableInputStream(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
+                    res.bodyStream = ConstrainableInputStream.wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -864,7 +864,7 @@ public class HttpConnection implements Connection {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             Validate.isFalse(inputStreamRead, "Request has already been read");
             inputStreamRead = true;
-            return new ConstrainableInputStream(bodyStream, DataUtil.bufferSize, req.maxBodySize());
+            return ConstrainableInputStream.wrap(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
         // set up connection defaults, and details from request

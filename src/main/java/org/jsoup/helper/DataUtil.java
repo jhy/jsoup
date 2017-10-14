@@ -8,7 +8,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -93,9 +92,7 @@ public final class DataUtil {
     static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
-
-        if (!(input instanceof ConstrainableInputStream))
-            input = new ConstrainableInputStream(input, bufferSize, 0);
+        input = ConstrainableInputStream.wrap(input, bufferSize, 0);
 
         Document doc = null;
         boolean fullyRead = false;
@@ -167,26 +164,8 @@ public final class DataUtil {
      */
     public static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
         Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
-        final boolean capped = maxSize > 0;
-        final byte[] buffer = new byte[capped && maxSize < bufferSize ? maxSize : bufferSize];
-        final ByteArrayOutputStream outStream = new ByteArrayOutputStream(capped ? maxSize : bufferSize);
-
-        int read;
-        int remaining = maxSize;
-
-        while (true) {
-            read = inStream.read(buffer);
-            if (read == -1) break;
-            if (capped) { // todo - why not using ConstrainedInputStream?
-                if (read >= remaining) {
-                    outStream.write(buffer, 0, remaining);
-                    break;
-                }
-                remaining -= read;
-            }
-            outStream.write(buffer, 0, read);
-        }
-        return ByteBuffer.wrap(outStream.toByteArray());
+        final ConstrainableInputStream input = ConstrainableInputStream.wrap(inStream, bufferSize, maxSize);
+        return input.readToByteBuffer(maxSize);
     }
 
     static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
