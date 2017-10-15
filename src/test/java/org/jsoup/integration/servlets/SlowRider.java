@@ -14,6 +14,8 @@ import java.io.PrintWriter;
 public class SlowRider extends BaseServlet {
     public static final String Url = TestServer.map(SlowRider.class);
     private static final int SleepTime = 1000;
+    public static String MaxTimeParam = "maxTime";
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -21,6 +23,13 @@ public class SlowRider extends BaseServlet {
         res.setStatus(HttpServletResponse.SC_OK);
         PrintWriter w = res.getWriter();
 
+        int maxTime = -1;
+        String maxTimeP = req.getParameter(MaxTimeParam);
+        if (maxTimeP != null) {
+            maxTime = Integer.valueOf(maxTimeP);
+        }
+
+        long startTime = System.currentTimeMillis();
         while (true) {
             w.println("<p>Are you still there?");
             boolean err = w.checkError(); // flush and check still ok
@@ -31,6 +40,11 @@ public class SlowRider extends BaseServlet {
             try {
                 Thread.sleep(SleepTime);
             } catch (InterruptedException e) {
+                break;
+            }
+
+            if (maxTime > 0 && System.currentTimeMillis() > startTime + maxTime) {
+                w.println("<h1>outatime</h1>");
                 break;
             }
         }

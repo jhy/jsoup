@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import static org.jsoup.integration.UrlConnectTest.browserUa;
@@ -228,5 +229,34 @@ public class ConnectTest {
         runner.join();
 
         assertTrue(body[0].length() == 0); // doesn't ready a failed doc
+    }
+
+    @Ignore
+    @Test public void totalTimeout() throws IOException {
+        int timeout = 3 * 1000;
+        long start = System.currentTimeMillis();
+        boolean threw = false;
+        try {
+            Jsoup.connect(SlowRider.Url).timeout(timeout).get();
+        } catch (SocketTimeoutException e) {
+            long end = System.currentTimeMillis();
+            long took = end - start;
+            assertTrue(("Time taken was " + took), took > timeout);
+            assertTrue(("Time taken was " + took), took < timeout * 1.2);
+            threw = true;
+        }
+
+        assertTrue(threw);
+    }
+
+    @Ignore
+    @Test public void slowReadOk() throws IOException {
+        // make sure that a slow read that is under the request timeout is still OK
+        Document doc = Jsoup.connect(SlowRider.Url)
+            .data(SlowRider.MaxTimeParam, "2000") // the reqest completes in 2 seconds
+            .get();
+
+        Element h1 = doc.selectFirst("h1");
+        assertEquals("outatime", h1.text());
     }
 }

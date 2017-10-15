@@ -35,6 +35,10 @@ jsoup changelog
 
   * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
 
+  * Updated Jsoup.connect().timeout() to implement a total connect + combined read timeout. Previously it specified
+    connect and buffer read times only, so to implement a combined total timeout, you had to have another thread send
+    an interupt.
+
   * Improved performance of Node.addChildren (was quadratic)
     <https://github.com/jhy/jsoup/pull/930>
 

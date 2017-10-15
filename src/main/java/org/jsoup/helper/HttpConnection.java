@@ -66,6 +66,7 @@ public class HttpConnection implements Connection {
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
+    private static final int ReadTimeoutMillis = 800; // max time between reads - only throws if exceeds total request timeout
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -715,6 +716,7 @@ public class HttpConnection implements Connection {
             else if (methodHasBody)
                 mimeBoundary = setOutputContentType(req);
 
+            long startTime = System.nanoTime();
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
@@ -774,7 +776,10 @@ public class HttpConnection implements Connection {
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
                     if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
-                    res.bodyStream = ConstrainableInputStream.wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
+                    res.bodyStream = ConstrainableInputStream
+                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
+                        .timeout(startTime, req.timeout())
+                    ;
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -881,7 +886,7 @@ public class HttpConnection implements Connection {
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(req.timeout());
+            conn.setReadTimeout(ReadTimeoutMillis);
 
             if (conn instanceof HttpsURLConnection) {
                 if (!req.validateTLSCertificates()) {

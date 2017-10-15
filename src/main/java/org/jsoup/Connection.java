@@ -85,14 +85,13 @@ public interface Connection {
     Connection userAgent(String userAgent);
 
     /**
-     * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.
-     * <p>Note that a read timeout is not the same as a maximum timeout. As long as the connection is sending bytes at
-     * least every <i>timeout</i> seconds (e.g. in the case of an infinite stream of data, or a slow large download), the
-     * read timeout will not fire. This can be mitigated by using a maximum download size (see {@link #maxBodySize(int)}),
-     * or interrupting the connecting thread after a max timeout.</p>
+     * Set the total request timeout duration. If a timeout occurs, an {@link java.net.SocketTimeoutException} will be thrown.
+     * <p>The default timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.
+     * <p>Note that this timeout specifies the combined maximum duration of the connection time and the time to read
+     * the full response.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
+     * @see #maxBodySize(int)
      */
     Connection timeout(int millis);
 

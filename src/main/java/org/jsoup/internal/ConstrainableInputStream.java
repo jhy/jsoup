@@ -6,6 +6,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 
 /**
@@ -17,6 +18,8 @@ public final class ConstrainableInputStream extends BufferedInputStream {
 
     private final boolean capped;
     private final int maxSize;
+    private long startTime;
+    private long timeout = -1; // optional max time of request
     private int remaining;
     private boolean interrupted;
 
@@ -26,6 +29,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         this.maxSize = maxSize;
         remaining = maxSize;
         capped = maxSize != 0;
+        startTime = System.nanoTime();
     }
 
     /**
@@ -46,18 +50,23 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         if (interrupted || capped && remaining <= 0)
             return -1;
         if (Thread.interrupted()) {
-            // tracks if this read was interrupted, because parse() may call twice (and we still want the thread interupt to clear)
+            // interrupted latches, because parse() may call twice (and we still want the thread interupt to clear)
             interrupted = true;
             return -1;
         }
+        if (expired())
+            throw new SocketTimeoutException("Read timeout");
 
         if (capped && len > remaining)
             len = remaining; // don't read more than desired, even if available
 
-        final int read = super.read(b, off, len);
-        remaining -= read;
-
-        return read;
+        try {
+            final int read = super.read(b, off, len);
+            remaining -= read;
+            return read;
+        } catch (SocketTimeoutException e) {
+            return 0;
+        }
     }
 
     /**
@@ -93,5 +102,20 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     public void reset() throws IOException {
         super.reset();
         remaining = maxSize - markpos;
+    }
+
+    public ConstrainableInputStream timeout(long startTimeNanos, long timeoutMillis) {
+        this.startTime = startTimeNanos;
+        this.timeout = timeoutMillis * 1000000;
+        return this;
+    }
+
+    private boolean expired() {
+        if (timeout == -1)
+            return false;
+
+        final long now = System.nanoTime();
+        final long dur = now - startTime;
+        return (dur > timeout);
     }
 }
