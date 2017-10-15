@@ -18,6 +18,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     private final boolean capped;
     private final int maxSize;
     private int remaining;
+    private boolean interrupted;
 
     private ConstrainableInputStream(InputStream in, int bufferSize, int maxSize) {
         super(in, bufferSize);
@@ -42,8 +43,13 @@ public final class ConstrainableInputStream extends BufferedInputStream {
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if (Thread.interrupted() || capped && remaining <= 0)
+        if (interrupted || capped && remaining <= 0)
             return -1;
+        if (Thread.interrupted()) {
+            // tracks if this read was interrupted, because parse() may call twice (and we still want the thread interupt to clear)
+            interrupted = true;
+            return -1;
+        }
 
         if (capped && len > remaining)
             len = remaining; // don't read more than desired, even if available

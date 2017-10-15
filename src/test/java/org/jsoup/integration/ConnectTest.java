@@ -4,10 +4,12 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
+import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -170,5 +172,61 @@ public class ConnectTest {
         assertEquals("PUT", ihVal("Method", doc));
         assertEquals("gzip", ihVal("Accept-Encoding", doc));
         assertEquals("auth=token", ihVal("Cookie", doc));
+    }
+
+    // Slow Rider tests. Ignored by default so tests don't take aaages
+    @Ignore
+    @Test public void canInterruptBodyStringRead() throws IOException, InterruptedException {
+        // todo - implement in interruptable channels, so it's immediate
+        final String[] body = new String[1];
+        Thread runner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Connection.Response res = Jsoup.connect(SlowRider.Url)
+                        .timeout(15 * 1000)
+                        .execute();
+                    body[0] = res.body();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        runner.start();
+        Thread.sleep(1000 * 3);
+        runner.interrupt();
+        assertTrue(runner.isInterrupted());
+        runner.join();
+
+        assertTrue(body[0].length() > 0);
+        assertTrue(body[0].contains("<p>Are you still there?"));
+    }
+
+    @Ignore
+    @Test public void canInterruptDocumentRead() throws IOException, InterruptedException {
+        // todo - implement in interruptable channels, so it's immediate
+        final String[] body = new String[1];
+        Thread runner = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Connection.Response res = Jsoup.connect(SlowRider.Url)
+                        .timeout(15 * 1000)
+                        .execute();
+                    body[0] = res.parse().text();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        runner.start();
+        Thread.sleep(1000 * 3);
+        runner.interrupt();
+        assertTrue(runner.isInterrupted());
+        runner.join();
+
+        assertTrue(body[0].length() == 0); // doesn't ready a failed doc
     }
 }
