@@ -221,9 +221,7 @@ final class Tokeniser {
     }
 
     String appropriateEndTagName() {
-        if (lastStartTag == null)
-            return null;
-        return lastStartTag;
+        return lastStartTag; // could be null
     }
 
     void error(TokeniserState state) {
