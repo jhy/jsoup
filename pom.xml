@@ -227,6 +227,7 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
       <version>9.2.22.v20170606</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -234,9 +235,8 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
       <version>9.2.22.v20170606</version>
+      <scope>test</scope>
     </dependency>
-
-
 
   </dependencies>
 
