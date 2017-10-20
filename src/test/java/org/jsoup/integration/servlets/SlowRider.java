@@ -14,7 +14,7 @@ import java.io.PrintWriter;
 public class SlowRider extends BaseServlet {
     public static final String Url = TestServer.map(SlowRider.class);
     private static final int SleepTime = 1000;
-    public static String MaxTimeParam = "maxTime";
+    public static final String MaxTimeParam = "maxTime";
 
 
     @Override
@@ -32,7 +32,7 @@ public class SlowRider extends BaseServlet {
         long startTime = System.currentTimeMillis();
         while (true) {
             w.println("<p>Are you still there?");
-            boolean err = w.checkError(); // flush and check still ok
+            boolean err = w.checkError(); // flush, and check still ok
             if (err) {
                 log("Remote connection lost");
                 break;
