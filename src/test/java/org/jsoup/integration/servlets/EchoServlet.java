@@ -1,15 +1,19 @@
 package org.jsoup.integration.servlets;
 
+import org.eclipse.jetty.server.Request;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.integration.TestServer;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.Enumeration;
 
 import static org.jsoup.nodes.Entities.escape;
@@ -32,7 +36,9 @@ public class EchoServlet extends BaseServlet {
         doIt(req, res);
     }
 
-    private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+        boolean isMulti = maybeEnableMultipart(req);
+
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);
         PrintWriter w = res.getWriter();
@@ -68,11 +74,26 @@ public class EchoServlet extends BaseServlet {
             write(w, name, StringUtil.join(values, ", "));
         }
 
-        // rest body
+        // post body
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(req.getInputStream(), 0);
         String postData = new String(byteBuffer.array(), "UTF-8");
         if (!StringUtil.isBlank(postData)) {
             write(w, "Post Data", postData);
+        }
+
+        // file uploads
+        if (isMulti) {
+            Collection<Part> parts = req.getParts();
+            write(w, "Parts", String.valueOf(parts.size()));
+
+            for (Part part : parts) {
+                String name = part.getName();
+                write(w, "Part " + name + " ContentType", part.getContentType());
+                write(w, "Part " + name + " Name", name);
+                write(w, "Part " + name + " Filename", part.getSubmittedFileName());
+                write(w, "Part " + name + " Size", String.valueOf(part.getSize()));
+                part.delete();
+            }
         }
 
         w.println("</table>");
@@ -86,5 +107,16 @@ public class EchoServlet extends BaseServlet {
     public static void main(String[] args) {
         TestServer.start();
         System.out.println(Url);
+    }
+
+    private static boolean maybeEnableMultipart(HttpServletRequest req) {
+        boolean isMulti = req.getContentType() != null
+            && req.getContentType().startsWith("multipart/form-data");
+
+        if (isMulti) {
+            req.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, new MultipartConfigElement(
+                System.getProperty("java.io.tmpdir")));
+        }
+        return isMulti;
     }
 }

@@ -181,8 +181,22 @@ public interface Connection {
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * You must close the InputStream in a {@code finally} block.
      * @return this Connections, for chaining
+     * @see #data(String, String, InputStream, String) if you want to set the uploaded file's mimetype.
      */
     Connection data(String key, String filename, InputStream inputStream);
+
+    /**
+     * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
+     * input stream.
+     * @param key data key (form item name)
+     * @param filename the name of the file to present to the remove server. Typically just the name, not path,
+     * component.
+     * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
+     * @param contentType the Content Type (aka mimetype) to specify for this file.
+     * You must close the InputStream in a {@code finally} block.
+     * @return this Connections, for chaining
+     */
+    Connection data(String key, String filename, InputStream inputStream, String contentType);
 
     /**
      * Adds all of the supplied data to the request data parameters
@@ -718,7 +732,7 @@ public interface Connection {
     }
 
     /**
-     * A Key Value tuple.
+     * A Key:Value tuple(+), used for form data.
      */
     interface KeyVal {
 
@@ -766,5 +780,20 @@ public interface Connection {
          * @return true if this keyval does indeed have an input stream
          */
         boolean hasInputStream();
+
+        /**
+         * Set the Content Type header used in the MIME body (aka mimetype) when uploading files.
+         * Only useful if {@link #inputStream(InputStream)} is set.
+         * <p>Will default to {@code application/octet-stream}.</p>
+         * @param contentType the new content type
+         * @return this KeyVal
+         */
+        KeyVal contentType(String contentType);
+
+        /**
+         * Get the current Content Type, or {@code null} if not set.
+         * @return the current Content Type.
+         */
+        String contentType();
     }
 }

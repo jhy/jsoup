@@ -409,7 +409,7 @@ public class UrlConnectTest {
 
         File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html");
         FileInputStream stream = new FileInputStream(uploadFile);
-        
+
         Connection.KeyVal fileData = post.data("_file");
         fileData.value("check.html");
         fileData.inputStream(stream);
@@ -423,22 +423,6 @@ public class UrlConnectTest {
 
         Document out = res.parse();
         assertTrue(out.text().contains("HTML Tidy Complete"));
-    }
-
-    /**
-     * Tests upload of binary content to a remote service.
-     */
-    @Test
-    public void postJpeg() throws IOException {
-        File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
-        Document result = Jsoup
-            .connect("http://regex.info/exif.cgi")
-            .data("f", thumb.getName(), new FileInputStream(thumb))
-            .userAgent(browserUa)
-            .post();
-
-        assertEquals("Baseline DCT, Huffman coding", result.select("td:contains(Process) + td").text());
-        assertEquals("1052 bytes 30 × 30", result.select("td:contains(Size) + td").text());
     }
 
     @Test

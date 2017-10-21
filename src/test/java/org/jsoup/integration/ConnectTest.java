@@ -12,6 +12,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
@@ -258,5 +260,44 @@ public class ConnectTest {
 
         Element h1 = doc.selectFirst("h1");
         assertEquals("outatime", h1.text());
+    }
+
+    /**
+     * Tests upload of content to a remote service.
+     */
+    @Test
+    public void postFiles() throws IOException {
+        File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
+        File html = ParseTest.getFile("/htmltests/google-ipod.html");
+
+        Document res = Jsoup
+            .connect(EchoServlet.Url)
+            .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
+            .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
+            .proxy("localhost", 8888)
+            .post();
+
+        assertEquals("2", ihVal("Parts", res));
+
+        assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
+        assertEquals("secondPart", ihVal("Part secondPart Name", res));
+        assertEquals("google-ipod.html", ihVal("Part secondPart Filename", res));
+        assertEquals("43972", ihVal("Part secondPart Size", res));
+
+        assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
+        assertEquals("firstPart", ihVal("Part firstPart Name", res));
+        assertEquals("thumb.jpg", ihVal("Part firstPart Filename", res));
+        assertEquals("1052", ihVal("Part firstPart Size", res));
+
+        /*
+        <tr><th>Part secondPart ContentType</th><td>application/octet-stream</td></tr>
+        <tr><th>Part secondPart Name</th><td>secondPart</td></tr>
+        <tr><th>Part secondPart Filename</th><td>google-ipod.html</td></tr>
+        <tr><th>Part secondPart Size</th><td>43972</td></tr>
+        <tr><th>Part firstPart ContentType</th><td>image/jpeg</td></tr>
+        <tr><th>Part firstPart Name</th><td>firstPart</td></tr>
+        <tr><th>Part firstPart Filename</th><td>thumb.jpg</td></tr>
+        <tr><th>Part firstPart Size</th><td>1052</td></tr>
+         */
     }
 }

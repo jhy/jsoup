@@ -67,6 +67,7 @@ public class HttpConnection implements Connection {
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final int ReadTimeoutMillis = 800; // max time between reads - only throws if exceeds total request timeout
+    private static final String DefaultUploadType = "application/octet-stream";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -199,6 +200,12 @@ public class HttpConnection implements Connection {
 
     public Connection data(String key, String filename, InputStream inputStream) {
         req.data(KeyVal.create(key, filename, inputStream));
+        return this;
+    }
+
+    @Override
+    public Connection data(String key, String filename, InputStream inputStream, String contentType) {
+        req.data(KeyVal.create(key, filename, inputStream).contentType(contentType));
         return this;
     }
 
@@ -1078,7 +1085,9 @@ public class HttpConnection implements Connection {
                     if (keyVal.hasInputStream()) {
                         w.write("; filename=\"");
                         w.write(encodeMimeName(keyVal.value()));
-                        w.write("\"\r\nContent-Type: application/octet-stream\r\n\r\n");
+                        w.write("\"\r\nContent-Type: ");
+                        w.write(keyVal.contentType() != null ? keyVal.contentType() : DefaultUploadType);
+                        w.write("\r\n\r\n");
                         w.flush(); // flush
                         DataUtil.crossStreams(keyVal.inputStream(), outputStream);
                         outputStream.flush();
@@ -1174,6 +1183,7 @@ public class HttpConnection implements Connection {
         private String key;
         private String value;
         private InputStream stream;
+        private String contentType;
 
         public static KeyVal create(String key, String value) {
             return new KeyVal().key(key).value(value);
@@ -1217,6 +1227,18 @@ public class HttpConnection implements Connection {
 
         public boolean hasInputStream() {
             return stream != null;
+        }
+
+        @Override
+        public Connection.KeyVal contentType(String contentType) {
+            Validate.notEmpty(contentType);
+            this.contentType = contentType;
+            return this;
+        }
+
+        @Override
+        public String contentType() {
+            return contentType;
         }
 
         @Override

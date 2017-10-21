@@ -45,6 +45,9 @@ jsoup changelog
   * Added missing support for template tags in tables
     <https://github.com/jhy/jsoup/pull/901>
 
+   * In Jsoup.connect file uploads, added the ability to set the uploaded files' mimetype.
+     <https://github.com/jhy/jsoup/issues/936>
+
   * Improved Node traversal, including less object creation, and partial and filtering traversor support.
     <https://github.com/jhy/jsoup/pull/849>
 
