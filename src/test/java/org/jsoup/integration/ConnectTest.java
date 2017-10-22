@@ -274,7 +274,6 @@ public class ConnectTest {
             .connect(EchoServlet.Url)
             .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
             .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
-            .proxy("localhost", 8888)
             .post();
 
         assertEquals("2", ihVal("Parts", res));
