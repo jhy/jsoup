@@ -20,6 +20,18 @@ public class PrettyPrintTest {
 		System.out.println("prettyHtml:"+prettyHtml);
 		Assert.assertTrue(!Pattern.compile("(?sm)</span>\\s{2,}<span>").matcher(prettyHtml).find());
 		Assert.assertTrue(Pattern.compile("(?s)<pre>\\s{2,}</pre>").matcher(prettyHtml).find());
+	}
+	
+	@Test
+	public void test4unkownTag(){
 		
+		String html="<w:xtag1>Aa</w:xtag1>";
+		final Document doc = Jsoup.parse(html);
+		doc.outputSettings().prettyPrint(true);
+		
+		String prettyHtml = doc.body().html();
+		System.out.println("prettyHtml:"+prettyHtml);
+		Assert.assertEquals(html, prettyHtml);
+	
 	}
 }

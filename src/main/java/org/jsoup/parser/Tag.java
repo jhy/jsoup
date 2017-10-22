@@ -59,6 +59,8 @@ public class Tag {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.isBlock = false;
+                tag.formatAsBlock = false;
+                //tag.preserveWhitespace = true;
             }
         }
         return tag;
