@@ -22,7 +22,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +35,6 @@ import static org.junit.Assert.assertTrue;
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
     private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
-    private static String echoURL = "http://direct.infohound.net/tools/q.pl";
     public static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
 
     @Test
@@ -247,21 +245,6 @@ public class UrlConnectTest {
             threw = true;
         }
         assertTrue(threw);
-    }
-
-    @Test
-    public void multiCookieSet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
-        Connection.Response res = con.execute();
-
-        // test cookies set by redirect:
-        Map<String, String> cookies = res.cookies();
-        assertEquals("asdfg123", cookies.get("token"));
-        assertEquals("jhy", cookies.get("uid"));
-
-        // send those cookies into the echo URL by map:
-        Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
-        assertEquals("token=asdfg123; uid=jhy", ihVal("HTTP_COOKIE", doc));
     }
 
     @Test
@@ -663,40 +646,6 @@ public class UrlConnectTest {
         assertEquals("Index of /archiv/TV/A/%23No.Title", doc.title());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        Document doc = res.parse();
-        String body = res.body();
-    }
-
-    @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        String body = res.body();
-        assertTrue(body.contains("Environment"));
-        byte[] bytes = res.bodyAsBytes();
-        assertTrue(bytes.length > 100);
-
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-    }
-
-    @Test(expected=IllegalArgumentException.class) public void parseParseThrowsValidates() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
-    }
-
-    @Test public void multipleParsesOkAfterBufferUp() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute().bufferUp();
-
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-
-        Document doc2 = res.parse();
-        assertTrue(doc2.title().contains("Environment"));
-    }
-
     @Test public void handlesSuperDeepPage() throws IOException {
         // https://github.com/jhy/jsoup/issues/955
 
@@ -707,7 +656,6 @@ public class UrlConnectTest {
         assertEquals(110160, doc.select("dd").size());
         // those are all <dl><dd> stacked in each other. wonder how that got generated?
         assertTrue(System.currentTimeMillis() - start < 1000);
-
     }
 
 }

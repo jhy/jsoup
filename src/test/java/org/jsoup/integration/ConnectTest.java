@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.Map;
 
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.Assert.assertEquals;
@@ -303,5 +304,55 @@ public class ConnectTest {
         <tr><th>Part firstPart Filename</th><td>thumb.jpg</td></tr>
         <tr><th>Part firstPart Size</th><td>1052</td></tr>
          */
+    }
+
+    @Test public void multipleParsesOkAfterBufferUp() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
+
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+
+        Document doc2 = res.parse();
+        assertTrue(doc2.title().contains("Environment"));
+    }
+
+    @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl).execute();
+        Document doc = res.parse();
+        String body = res.body();
+    }
+
+    @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl).execute();
+        String body = res.body();
+        assertTrue(body.contains("Environment"));
+        byte[] bytes = res.bodyAsBytes();
+        assertTrue(bytes.length > 100);
+
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+    }
+
+    @Test(expected=IllegalArgumentException.class) public void parseParseThrowsValidates() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl).execute();
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
+    }
+
+
+    @Test
+    public void multiCookieSet() throws IOException {
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
+        Connection.Response res = con.execute();
+
+        // test cookies set by redirect:
+        Map<String, String> cookies = res.cookies();
+        assertEquals("asdfg123", cookies.get("token"));
+        assertEquals("jhy", cookies.get("uid"));
+
+        // send those cookies into the echo URL by map:
+        Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();
+        assertEquals("token=asdfg123; uid=jhy", ihVal("Cookie", doc));
     }
 }
