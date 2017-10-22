@@ -697,4 +697,17 @@ public class UrlConnectTest {
         assertTrue(doc2.title().contains("Environment"));
     }
 
+    @Test public void handlesSuperDeepPage() throws IOException {
+        // https://github.com/jhy/jsoup/issues/955
+
+        long start = System.currentTimeMillis();
+        String url = "http://sv.stargate.wikia.com/wiki/M2J";
+        Document doc = Jsoup.connect(url).get();
+        assertEquals("M2J | Sv.stargate Wiki | FANDOM powered by Wikia", doc.title());
+        assertEquals(110160, doc.select("dd").size());
+        // those are all <dl><dd> stacked in each other. wonder how that got generated?
+        assertTrue(System.currentTimeMillis() - start < 1000);
+
+    }
+
 }

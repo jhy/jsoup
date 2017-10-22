@@ -168,9 +168,10 @@ public final class StringUtil {
         }
     }
 
-    public static boolean in(String needle, String... haystack) {
-        for (String hay : haystack) {
-            if (hay.equals(needle))
+    public static boolean in(final String needle, final String... haystack) {
+        final int len = haystack.length;
+        for (int i = 0; i < len; i++) {
+            if (haystack[i].equals(needle))
             return true;
         }
         return false;
@@ -178,6 +179,11 @@ public final class StringUtil {
 
     public static boolean inSorted(String needle, String[] haystack) {
         return Arrays.binarySearch(haystack, needle) >= 0;
+    }
+
+    public static String[] sort(String[] array) {
+        Arrays.sort(array);
+        return array;
     }
 
     /**
