@@ -1310,9 +1310,27 @@ public class Element extends Node {
             attr("value", value);
         return this;
     }
+    
+    private Node getNotBlankNodePreviousSibling(){
+    	Node previousSibling  = previousSibling();
+    	while (  true ){
+    		if( previousSibling instanceof TextNode && ((TextNode)previousSibling).isBlank()){
+    			previousSibling = previousSibling.previousSibling();
+    			continue;
+    		}else{
+    			return previousSibling;
+    		}
+    	}
+    }
 
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
+        Node previousSibling;
+    	if (out.prettyPrint() && (tag.formatAsBlock() 
+        		//|| (parent() != null && parent().tag().formatAsBlock()) 
+        		|| ( (previousSibling = getNotBlankNodePreviousSibling() )== null ? parent() != null && parent().tag().isBlock() :
+        		(  previousSibling instanceof Element && ((Element) previousSibling).tag().isBlock() ) )
+
+        		|| out.outline())) {
             if (accum instanceof StringBuilder) {
                 if (((StringBuilder) accum).length() > 0)
                     indent(accum, depth, out);
@@ -1337,7 +1355,7 @@ public class Element extends Node {
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
+                    tag.isBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
             )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append('>');

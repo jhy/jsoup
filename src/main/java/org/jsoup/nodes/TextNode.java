@@ -96,7 +96,7 @@ public class TextNode extends LeafNode {
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean isBlank = isBlank();
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element 
-           && ((Element) parentNode).tag().formatAsBlock() && !isBlank) 
+           && ((Element) parentNode).tag().isBlock() && !isBlank) 
             || (out.outline() && siblingNodes().size()>0 && !isBlank) ))
             indent(accum, depth, out);
 
