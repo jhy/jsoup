@@ -266,6 +266,10 @@ public class Tag {
     private static final String[] formSubmitTags = {
             "input", "keygen", "object", "select", "textarea"
     };
+    
+    private static final String[] formatAsBlockTags = {
+    		"option"
+    };
 
     static {
         // creates
@@ -310,6 +314,12 @@ public class Tag {
             Tag tag = tags.get(tagName);
             Validate.notNull(tag);
             tag.formSubmit = true;
+        }
+        
+         for (String tagName : formatAsBlockTags) {
+            Tag tag = tags.get(tagName);
+            Validate.notNull(tag);
+            tag.formatAsBlock=true;
         }
     }
 
