@@ -181,11 +181,6 @@ public final class StringUtil {
         return Arrays.binarySearch(haystack, needle) >= 0;
     }
 
-    public static String[] sort(String[] array) {
-        Arrays.sort(array);
-        return array;
-    }
-
     /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
      * @param base the existing absolute base URL

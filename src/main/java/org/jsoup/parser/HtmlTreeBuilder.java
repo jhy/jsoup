@@ -17,27 +17,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jsoup.helper.StringUtil.inSorted;
-import static org.jsoup.helper.StringUtil.sort;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 public class HtmlTreeBuilder extends TreeBuilder {
-    // tag searches. must be sorted, used in inSorted
-    private static final String[] TagsSearchInScope = sort(new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"});
-    private static final String[] TagSearchList = sort(new String[]{"ol", "ul"});
-    private static final String[] TagSearchButton = sort(new String[]{"button"});
-    private static final String[] TagSearchTableScope = sort(new String[]{"html", "table"});
-    private static final String[] TagSearchSelectScope = sort(new String[]{"optgroup", "option"});
-    private static final String[] TagSearchEndTags = sort(new String[]{"dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"});
-    private static final String[] TagSearchSpecial = sort(new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
+    // tag searches. must be sorted, used in inSorted. MUST update HtmlTreeBuilderTest if more arrays are added.
+    static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "marquee", "object", "table", "td", "th"};
+    static final String[] TagSearchList = new String[]{"ol", "ul"};
+    static final String[] TagSearchButton = new String[]{"button"};
+    static final String[] TagSearchTableScope = new String[]{"html", "table"};
+    static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
+    static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rp", "rt"};
+    static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
         "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
         "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
         "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
         "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
         "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
         "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
-        "title", "tr", "ul", "wbr", "xmp"});
+        "title", "tr", "ul", "wbr", "xmp"};
 
     public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
 
