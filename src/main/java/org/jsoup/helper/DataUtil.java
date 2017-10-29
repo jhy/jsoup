@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -104,7 +105,7 @@ public final class DataUtil {
         input.reset();
 
         // look for BOM - overrides any other header or input
-        BomCharset bomCharset = detectCharsetFromBom(firstBytes, charsetName);
+        BomCharset bomCharset = detectCharsetFromBom(firstBytes);
         if (bomCharset != null) {
             charsetName = bomCharset.charset;
             input.skip(bomCharset.offset);
@@ -231,12 +232,13 @@ public final class DataUtil {
         return mime.toString();
     }
 
-    private static BomCharset detectCharsetFromBom(final ByteBuffer byteData, final String charsetName) {
-        byteData.mark();
+    private static BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
+        final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
+        buffer.mark();
         byte[] bom = new byte[4];
         if (byteData.remaining() >= bom.length) {
             byteData.get(bom);
-            byteData.rewind();
+            buffer.rewind();
         }
         if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE

@@ -31,6 +31,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -859,7 +860,7 @@ public class HttpConnection implements Connection {
                 body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString();
             else
                 body = Charset.forName(charset).decode(byteData).toString();
-            byteData.rewind();
+            ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
         }
 
