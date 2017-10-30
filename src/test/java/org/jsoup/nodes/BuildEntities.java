@@ -9,6 +9,7 @@ import org.jsoup.integration.UrlConnectTest;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,8 +21,6 @@ import java.util.Map;
  * only to be complete.
  */
 class BuildEntities {
-    private static final String projectDir = "/Users/jhy/projects/jsoup";
-
     public static void main(String[] args) throws IOException {
         String url = "https://www.w3.org/TR/2012/WD-html5-20121025/entities.json";
         Connection.Response res = Jsoup.connect(url)
@@ -68,20 +67,23 @@ class BuildEntities {
         }
 
         // now write them
-        persist("entities-full.properties", full);
-        persist("entities-base.properties", base);
+        persist("entities-full", full);
+        persist("entities-base", base);
 
         System.out.println("Full size: " + full.size() + ", base size: " + base.size());
     }
 
     private static void persist(String name, ArrayList<CharacterRef> refs) throws IOException {
-        String base = projectDir + "/src/main/java/org/jsoup/nodes";
-        File file = new File(base, name);
+        File file = Files.createTempFile(name, ".txt").toFile();
         FileWriter writer = new FileWriter(file, false);
+        writer.append("static final String points = \"");
         for (CharacterRef ref : refs) {
-            writer.append(ref.toString()).append("\n");
+            writer.append(ref.toString()).append('&');
         }
+        writer.append("\";\n");
         writer.close();
+
+        System.out.println("Wrote " + name + " to " + file.getAbsolutePath());
     }
 
 

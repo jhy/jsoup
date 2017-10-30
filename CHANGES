@@ -77,6 +77,10 @@ jsoup changelog
   * Improved parse time for pages with exceptionally deeply nested tags.
     <https://github.com/jhy/jsoup/issues/955>
 
+  * Improvement / workaround: modified the Entities implementation to load its data from a .class vs from a jar resource.
+    Faster, and safer on Android.
+    <https://github.com/jhy/jsoup/issues/959>
+
 *** Release 1.10.3 [2017-Jun-11]
   * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,
     respectively. This makes it simpler to for example get a list of each URL on a page:
