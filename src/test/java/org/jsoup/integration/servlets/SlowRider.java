@@ -13,12 +13,13 @@ import java.io.PrintWriter;
  */
 public class SlowRider extends BaseServlet {
     public static final String Url = TestServer.map(SlowRider.class);
-    private static final int SleepTime = 1000;
+    private static final int SleepTime = 2000;
     public static final String MaxTimeParam = "maxTime";
 
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        pause(1000);
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);
         PrintWriter w = res.getWriter();
@@ -37,17 +38,22 @@ public class SlowRider extends BaseServlet {
                 log("Remote connection lost");
                 break;
             }
-            try {
-                Thread.sleep(SleepTime);
-            } catch (InterruptedException e) {
-                break;
-            }
+            if (pause(SleepTime)) break;
 
             if (maxTime > 0 && System.currentTimeMillis() > startTime + maxTime) {
                 w.println("<h1>outatime</h1>");
                 break;
             }
         }
+    }
+
+    private static boolean pause(int sleepTime) {
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            return true;
+        }
+        return false;
     }
 
     // allow the servlet to run as a main program, for local test

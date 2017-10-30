@@ -256,7 +256,7 @@ public class ConnectTest {
     @Test public void slowReadOk() throws IOException {
         // make sure that a slow read that is under the request timeout is still OK
         Document doc = Jsoup.connect(SlowRider.Url)
-            .data(SlowRider.MaxTimeParam, "2000") // the reqest completes in 2 seconds
+            .data(SlowRider.MaxTimeParam, "2000") // the request completes in 2 seconds
             .get();
 
         Element h1 = doc.selectFirst("h1");

@@ -67,7 +67,6 @@ public class HttpConnection implements Connection {
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
-    private static final int ReadTimeoutMillis = 800; // max time between reads - only throws if exceeds total request timeout
     private static final String DefaultUploadType = "application/octet-stream";
 
     public static Connection connect(String url) {
@@ -894,7 +893,7 @@ public class HttpConnection implements Connection {
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(ReadTimeoutMillis);
+            conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
             if (conn instanceof HttpsURLConnection) {
                 if (!req.validateTLSCertificates()) {
