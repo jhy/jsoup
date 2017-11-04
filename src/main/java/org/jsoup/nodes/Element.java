@@ -1186,7 +1186,11 @@ public class Element extends Node {
      */
     public Element classNames(Set<String> classNames) {
         Validate.notNull(classNames);
-        attributes().put("class", StringUtil.join(classNames, " "));
+        if (classNames.isEmpty()) {
+            attributes().remove("class");
+        } else {
+            attributes().put("class", StringUtil.join(classNames, " "));
+        }
         return this;
     }
 

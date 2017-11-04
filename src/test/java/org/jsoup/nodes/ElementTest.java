@@ -1235,4 +1235,15 @@ public class ElementTest {
         assertEquals(cloneExpect, cloneNextElementSibling.text());
         assertEquals(cloneExpect, cloneNextSibling.text());
     }
+
+    @Test
+    public void testRemovingEmptyClassAttributeWhenLastClassRemoved() {
+        // https://github.com/jhy/jsoup/issues/947
+        Document doc = Jsoup.parse("<img class=\"one two\" />");
+        Element img = doc.select("img").first();
+        img.removeClass("one");
+        img.removeClass("two");
+        assertFalse(doc.body().html().contains("class=\"\""));
+    }
+
 }
