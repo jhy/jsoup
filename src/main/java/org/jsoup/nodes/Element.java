@@ -1399,12 +1399,18 @@ public class Element extends Node {
     }
 
     @Override
+    public Element shallowClone() {
+        // simpler than implementing a clone version with no child copy
+        return new Element(tag, baseUri, attributes);
+    }
+
+    @Override
     protected Element doClone(Node parent) {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
         clone.childNodes = new NodeList(clone, childNodes.size());
-        clone.childNodes.addAll(childNodes);
+        clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
 
         return clone;
     }

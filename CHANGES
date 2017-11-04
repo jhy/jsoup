@@ -33,6 +33,9 @@ jsoup changelog
 
   * Added support for multiple headers with the same name in Jsoup.Connect
 
+  * Added Element.shallowClone() and Node.shallowClone(), to allow cloning nodes without getting all their children.
+    <https://github.com/jhy/jsoup/issues/900>
+
   * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
 
   * Updated Jsoup.connect().timeout() to implement a total connect + combined read timeout. Previously it specified

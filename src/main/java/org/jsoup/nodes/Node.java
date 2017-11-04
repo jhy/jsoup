@@ -639,7 +639,8 @@ public abstract class Node implements Cloneable {
      * original node.
      * <p>
      * The cloned node may be adopted into another Document or node structure using {@link Element#appendChild(Node)}.
-     * @return stand-alone cloned node
+     * @return a stand-alone cloned node, including clones of any children
+     * @see #shallowClone()
      */
     @Override
     public Node clone() {
@@ -662,6 +663,16 @@ public abstract class Node implements Cloneable {
         }
 
         return thisClone;
+    }
+
+    /**
+     * Create a stand-alone, shallow copy of this node. None of its children (if any) will be cloned, and it will have
+     * no parent or sibling nodes.
+     * @return a single independent copy of this node
+     * @see #clone()
+     */
+    public Node shallowClone() {
+        return doClone(null);
     }
 
     /*
