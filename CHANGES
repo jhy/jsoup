@@ -1,6 +1,10 @@
 jsoup changelog
 
-*** Release 1.11.1 [PENDING]
+*** Release 1.11.2 [PENDING]
+  * Fixed an issue where in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
+    <https://github.com/jhy/jsoup/issues/966>
+
+*** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
     <https://github.com/jhy/jsoup/issues/899>

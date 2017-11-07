@@ -658,4 +658,13 @@ public class UrlConnectTest {
         assertTrue(System.currentTimeMillis() - start < 1000);
     }
 
+    @Test public void handles966() throws IOException {
+        // http://szshb.nxszs.gov.cn/
+        // https://github.com/jhy/jsoup/issues/966
+
+        Document doc = Jsoup.connect("http://szshb.nxszs.gov.cn/").get();
+
+        assertEquals("石嘴山市环境保护局", doc.title());
+    }
+
 }
