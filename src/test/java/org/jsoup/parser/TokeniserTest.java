@@ -2,8 +2,10 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -77,5 +79,79 @@ public class TokeniserTest {
         Attribute attribute = el.attributes().asList().get(0);
         assertEquals(attrName.toLowerCase(), attribute.getKey());
         assertEquals("foo", attribute.getValue());
+    }
+
+    @Test public void handleLargeText() {
+        StringBuilder sb = new StringBuilder(maxBufferLen);
+        do {
+            sb.append("A Large Amount of Text");
+        } while (sb.length() < maxBufferLen);
+        String text = sb.toString();
+        String html = "<p>" + text + "</p>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("p");
+        assertEquals(1, els.size());
+        Element el = els.first();
+
+        assertNotNull(el);
+        assertEquals(text, el.text());
+    }
+
+    @Test public void handleLargeComment() {
+        StringBuilder sb = new StringBuilder(maxBufferLen);
+        do {
+            sb.append("Quite a comment ");
+        } while (sb.length() < maxBufferLen);
+        String comment = sb.toString();
+        String html = "<p><!-- " + comment + " --></p>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("p");
+        assertEquals(1, els.size());
+        Element el = els.first();
+
+        assertNotNull(el);
+        Comment child = (Comment) el.childNode(0);
+        assertEquals(" " + comment + " ", child.getData());
+    }
+
+    @Test public void handleLargeCdata() {
+        StringBuilder sb = new StringBuilder(maxBufferLen);
+        do {
+            sb.append("Quite a lot of CDATA <><><><>");
+        } while (sb.length() < maxBufferLen);
+        String cdata = sb.toString();
+        String html = "<p><![CDATA[" + cdata + "]]></p>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("p");
+        assertEquals(1, els.size());
+        Element el = els.first();
+
+        assertNotNull(el);
+        TextNode child = (TextNode) el.childNode(0);
+        assertEquals(cdata, el.text());
+        assertEquals(cdata, child.getWholeText());
+    }
+
+    @Test public void handleLargeTitle() {
+        StringBuilder sb = new StringBuilder(maxBufferLen);
+        do {
+            sb.append("Quite a long title");
+        } while (sb.length() < maxBufferLen);
+        String title = sb.toString();
+        String html = "<title>" + title + "</title>";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("title");
+        assertEquals(1, els.size());
+        Element el = els.first();
+
+        assertNotNull(el);
+        TextNode child = (TextNode) el.childNode(0);
+        assertEquals(title, el.text());
+        assertEquals(title, child.getWholeText());
+        assertEquals(title, doc.title());
     }
 }

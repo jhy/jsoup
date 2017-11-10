@@ -1603,8 +1603,9 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             String data = r.consumeTo("]]>");
             t.emit(data);
-            r.matchConsume("]]>");
-            t.transition(Data);
+            if (r.matchConsume("]]>") || r.isEmpty()) {
+                t.transition(Data);
+            }// otherwise, buffer underrun, stay in data section
         }
     };
 
