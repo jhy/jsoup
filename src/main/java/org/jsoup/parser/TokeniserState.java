@@ -148,7 +148,8 @@ enum TokeniserState {
             String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
 
-            switch (r.consume()) {
+            char c = r.consume();
+            switch (c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -169,7 +170,9 @@ enum TokeniserState {
                 case eof: // should emit pending tag?
                     t.eofError(this);
                     t.transition(Data);
-                // no default, as covered with above consumeToAny
+                    break;
+                default: // buffer underrun
+                    t.tagPending.appendTagName(c);
             }
         }
     },
@@ -627,7 +630,9 @@ enum TokeniserState {
                 case '<':
                     t.error(this);
                     t.tagPending.appendAttributeName(c);
-                // no default, as covered in consumeToAny
+                    break;
+                default: // buffer underrun
+                    t.tagPending.appendAttributeName(c);
             }
         }
     },
