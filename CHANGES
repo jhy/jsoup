@@ -4,6 +4,10 @@ jsoup changelog
   * Fixed an issue where in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
     <https://github.com/jhy/jsoup/issues/966>
 
+  * Fixed an issue when parsing large attribute values (e.g. image data values) where a character on a buffer boundary
+    read was dropped.
+    <https://github.com/jhy/jsoup/issues/967>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
