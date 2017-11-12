@@ -263,6 +263,17 @@ public class ConnectTest {
         assertEquals("outatime", h1.text());
     }
 
+    @Ignore
+    @Test public void infiniteReadSupported() throws IOException {
+        Document doc = Jsoup.connect(SlowRider.Url)
+            .timeout(0)
+            .data(SlowRider.MaxTimeParam, "2000")
+            .get();
+
+        Element h1 = doc.selectFirst("h1");
+        assertEquals("outatime", h1.text());
+    }
+
     /**
      * Tests upload of content to a remote service.
      */

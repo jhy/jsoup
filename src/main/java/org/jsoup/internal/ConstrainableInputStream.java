@@ -19,7 +19,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     private final boolean capped;
     private final int maxSize;
     private long startTime;
-    private long timeout = -1; // optional max time of request
+    private long timeout = 0; // optional max time of request
     private int remaining;
     private boolean interrupted;
 
@@ -111,7 +111,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     }
 
     private boolean expired() {
-        if (timeout == -1)
+        if (timeout == 0)
             return false;
 
         final long now = System.nanoTime();
