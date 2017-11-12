@@ -2,8 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
 
-import java.util.Arrays;
-
 /**
  * States and transition activations for the Tokeniser.
  */
@@ -1613,21 +1611,15 @@ enum TokeniserState {
     abstract void read(Tokeniser t, CharacterReader r);
 
     static final char nullChar = '\u0000';
-    private static final char[] attributeSingleValueCharsSorted = new char[]{'\'', '&', nullChar};
-    private static final char[] attributeDoubleValueCharsSorted = new char[]{'"', '&', nullChar};
-    private static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<'};
-    private static final char[] attributeValueUnquoted = new char[]{'\t', '\n', '\r', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`'};
+    // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
+    static final char[] attributeSingleValueCharsSorted = new char[]{nullChar, '&', '\''};
+    static final char[] attributeDoubleValueCharsSorted = new char[]{nullChar, '"', '&'};
+    static final char[] attributeNameCharsSorted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
+    static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
 
     private static final char replacementChar = Tokeniser.replacementChar;
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
     private static final char eof = CharacterReader.EOF;
-
-    static {
-        Arrays.sort(attributeSingleValueCharsSorted);
-        Arrays.sort(attributeDoubleValueCharsSorted);
-        Arrays.sort(attributeNameCharsSorted);
-        Arrays.sort(attributeValueUnquoted);
-    }
 
     /**
      * Handles RawtextEndTagName, ScriptDataEndTagName, and ScriptDataEscapedEndTagName. Same body impl, just
