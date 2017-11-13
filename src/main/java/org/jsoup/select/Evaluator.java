@@ -6,6 +6,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.PseudoTextElement;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 
 import java.util.List;
@@ -748,6 +750,29 @@ public abstract class Evaluator {
         @Override
         public String toString() {
             return String.format(":matchesOwn(%s)", pattern);
+        }
+    }
+
+    public static final class MatchText extends Evaluator {
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            if (element instanceof PseudoTextElement)
+                return true;
+
+            List<TextNode> textNodes = element.textNodes();
+            for (TextNode textNode : textNodes) {
+                PseudoTextElement pel = new PseudoTextElement(
+                    org.jsoup.parser.Tag.valueOf(element.tagName()), element.baseUri(), element.attributes());
+                textNode.replaceWith(pel);
+                pel.appendChild(textNode);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return ":matchText";
         }
     }
 }

@@ -766,4 +766,31 @@ public class SelectorTest {
         Document doc = Jsoup.parse(html);
         assertEquals("One", doc.selectFirst("p, div").text());
     }
+
+    @Test public void textAsElements() {
+        String html = "<p>One<br>Two</p>";
+        Document doc = Jsoup.parse(html);
+        String origHtml = doc.html();
+
+        Elements one = doc.select("p:matchText:first-child");
+        assertEquals("One", one.first().text());
+
+        Elements two = doc.select("p:matchText:last-child");
+        assertEquals("Two", two.first().text());
+
+        assertEquals(origHtml, doc.html());
+
+        assertEquals("Two", doc.select("p:matchText + br + *").text());
+    }
+
+    @Test public void splitOnBr() {
+        String html = "<div><p>One<br>Two<br>Three</p></div>";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p:matchText");
+        assertEquals(3, els.size());
+        assertEquals("One", els.get(0).text());
+        assertEquals("Two", els.get(1).text());
+        assertEquals("Three", els.get(2).toString());
+    }
 }

@@ -1,6 +1,10 @@
 jsoup changelog
 
 *** Release 1.11.2 [PENDING]
+  * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.
+    This enables finding text that is only marked by a "br" tag, for example.
+    <https://github.com/jhy/jsoup/issues/550>
+    
   * Fixed an issue where in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
     <https://github.com/jhy/jsoup/issues/966>
 

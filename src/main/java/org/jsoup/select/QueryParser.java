@@ -1,13 +1,13 @@
 package org.jsoup.select;
 
+import org.jsoup.helper.StringUtil;
+import org.jsoup.helper.Validate;
+import org.jsoup.parser.TokenQueue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
-import org.jsoup.parser.TokenQueue;
 
 import static org.jsoup.internal.Normalizer.normalize;
 
@@ -200,6 +200,8 @@ public class QueryParser {
         	evals.add(new Evaluator.IsEmpty());
         else if (tq.matchChomp(":root"))
         	evals.add(new Evaluator.IsRoot());
+        else if (tq.matchChomp(":matchText"))
+            evals.add(new Evaluator.MatchText());
 		else // unhandled
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
 
