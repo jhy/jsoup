@@ -767,7 +767,7 @@ public class SelectorTest {
         assertEquals("One", doc.selectFirst("p, div").text());
     }
 
-    @Test public void textAsElements() {
+    @Test public void matchText() {
         String html = "<p>One<br>Two</p>";
         Document doc = Jsoup.parse(html);
         String origHtml = doc.html();
@@ -792,5 +792,21 @@ public class SelectorTest {
         assertEquals("One", els.get(0).text());
         assertEquals("Two", els.get(1).text());
         assertEquals("Three", els.get(2).toString());
+    }
+
+    @Test public void matchTextAttributes() {
+        Document doc = Jsoup.parse("<div><p class=one>One<br>Two<p class=two>Three<br>Four");
+        Elements els = doc.select("p.two:matchText:last-child");
+
+        assertEquals(1, els.size());
+        assertEquals("Four", els.text());
+    }
+
+    @Test public void findBetweenSpan() {
+        Document doc = Jsoup.parse("<p><span>One</span> Two <span>Three</span>");
+        Elements els = doc.select("span ~ p:matchText"); // the Two becomes its own p, sibling of the span
+
+        assertEquals(1, els.size());
+        assertEquals("Two", els.text());
     }
 }
