@@ -11,6 +11,9 @@ jsoup changelog
   * Fixed an issue that prevented using infinite timeouts in Jsoup.Connection.
     <https://github.com/jhy/jsoup/issues/968>
 
+  * Fixed an issue where whitespaces where not preserved in deeper stacks.
+    <https://github.com/jhy/jsoup/issues/722>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
