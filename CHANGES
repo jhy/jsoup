@@ -22,6 +22,9 @@ jsoup changelog
     exception.
     <https://github.com/jhy/jsoup/issues/972>
 
+  * Fixed an NPE issue in the Cleaner which would occur if an <a href> attribute value was missing.
+    <https://github.com/jhy/jsoup/issues/973>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
