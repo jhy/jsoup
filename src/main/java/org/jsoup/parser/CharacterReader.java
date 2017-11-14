@@ -424,6 +424,8 @@ public final class CharacterReader {
         // limit (no cache):
         if (count > maxStringCacheLen)
             return new String(charBuf, start, count);
+        if (count < 1)
+            return "";
 
         // calculate hash:
         int hash = 0;

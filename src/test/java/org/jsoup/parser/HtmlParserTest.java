@@ -1081,4 +1081,9 @@ public class HtmlParserTest {
         assertEquals(200, doc.select("span").size());
         assertEquals(1, doc.select("p").size());
   }
+
+  @Test public void commentAtEnd() throws Exception {
+      Document doc = Jsoup.parse("<!");
+      assertTrue(doc.childNode(0) instanceof Comment);
+  }
 }

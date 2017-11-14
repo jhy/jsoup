@@ -18,6 +18,10 @@ jsoup changelog
   * Fixed an issue where whitespaces were not preserved in deeper stacks.
     <https://github.com/jhy/jsoup/issues/722>
 
+  * Fixed an issue where an unterminated comment token at the end of the HTML input would cause an out of bounds
+    exception.
+    <https://github.com/jhy/jsoup/issues/972>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
