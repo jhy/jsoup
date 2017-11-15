@@ -371,7 +371,8 @@ public class Document extends Element {
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset;
-        CharsetEncoder encoder; // initialized by start of OuterHtmlVisitor and cleared at end
+        private ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>();
+        //CharsetEncoder encoder; // initialized by start of OuterHtmlVisitor and cleared at end
         Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
@@ -439,9 +440,16 @@ public class Document extends Element {
         }
 
         CharsetEncoder prepareEncoder() {
-            encoder = charset.newEncoder(); // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            //encoder = charset.newEncoder(); // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            CharsetEncoder encoder = charset.newEncoder();
+            encoderThreadLocal.set(encoder);
             coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
             return encoder;
+        }
+
+        CharsetEncoder encoder() {
+            CharsetEncoder encoder = encoderThreadLocal.get();
+            return encoder != null ? encoder : prepareEncoder();
         }
 
         /**

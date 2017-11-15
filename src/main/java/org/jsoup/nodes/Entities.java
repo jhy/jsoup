@@ -176,7 +176,7 @@ public class Entities {
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
-        final CharsetEncoder encoder = out.encoder != null ? out.encoder : out.prepareEncoder();
+        final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
         final int length = string.length();
 

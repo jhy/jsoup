@@ -25,6 +25,10 @@ jsoup changelog
   * Fixed an NPE issue in the Cleaner which would occur if an <a href> attribute value was missing.
     <https://github.com/jhy/jsoup/issues/973>
 
+  * Fixed an issue where when serializing the same document in a multiple threads, on Android, with a character set that
+    is not ascii or UTF-8, an encoding exception could occur.
+    <https://github.com/jhy/jsoup/issues/970>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
