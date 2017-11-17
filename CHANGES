@@ -5,28 +5,26 @@ jsoup changelog
     This enables finding text that is only marked by a "br" tag, for example.
     <https://github.com/jhy/jsoup/issues/550>
     
-  * Fixed an issue where in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
+  * Bugfix: in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
     <https://github.com/jhy/jsoup/issues/966>
 
-  * Fixed an issue when parsing large attribute values (e.g. image data values) where a character on a buffer boundary
-    read was dropped.
+  * Bugfix: when parsing attribute values that happened to cross a buffer boundary, a character was dropped.
     <https://github.com/jhy/jsoup/issues/967>
 
-  * Fixed an issue that prevented using infinite timeouts in Jsoup.Connection.
+  * Bugfix: fixed an issue that prevented using infinite timeouts in Jsoup.Connection.
     <https://github.com/jhy/jsoup/issues/968>
 
-  * Fixed an issue where whitespaces were not preserved in deeper stacks.
+  * Bugfix: whitespace preserving tags were not honoured when nested deeper than two levels deep.
     <https://github.com/jhy/jsoup/issues/722>
 
-  * Fixed an issue where an unterminated comment token at the end of the HTML input would cause an out of bounds
-    exception.
+  * Bugfix: an unterminated comment token at the end of the HTML input would cause an out of bounds exception.
     <https://github.com/jhy/jsoup/issues/972>
 
-  * Fixed an NPE issue in the Cleaner which would occur if an <a href> attribute value was missing.
+  * Bugfix: an NPE in the Cleaner which would occur if an <a href> attribute value was missing.
     <https://github.com/jhy/jsoup/issues/973>
 
-  * Fixed an issue where when serializing the same document in a multiple threads, on Android, with a character set that
-    is not ascii or UTF-8, an encoding exception could occur.
+  * Bugfix: when serializing the same document in a multiple threads, on Android, with a character set that is not ascii
+    or UTF-8, an encoding exception could occur.
     <https://github.com/jhy/jsoup/issues/970>
 
 *** Release 1.11.1 [2017-Nov-06]
@@ -77,7 +75,7 @@ jsoup changelog
   * Added missing support for template tags in tables
     <https://github.com/jhy/jsoup/pull/901>
 
-   * In Jsoup.connect file uploads, added the ability to set the uploaded files' mimetype.
+  * In Jsoup.connect file uploads, added the ability to set the uploaded files' mimetype.
      <https://github.com/jhy/jsoup/issues/936>
 
   * Improved Node traversal, including less object creation, and partial and filtering traversor support.
