@@ -77,7 +77,14 @@ public class W3CDomTest {
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
+        // inherits default namespace
+        Node head = htmlEl.getFirstChild();
+        assertEquals("http://www.w3.org/1999/xhtml", head.getNamespaceURI());
+        assertEquals("head", head.getLocalName());
+        assertEquals("head", head.getNodeName());
+
         Node epubTitle = htmlEl.getChildNodes().item(2).getChildNodes().item(3);
+        assertEquals("Check", epubTitle.getTextContent());
         assertEquals("http://www.idpf.org/2007/ops", epubTitle.getNamespaceURI());
         assertEquals("title", epubTitle.getLocalName());
         assertEquals("epub:title", epubTitle.getNodeName());
@@ -86,6 +93,35 @@ public class W3CDomTest {
         assertEquals("urn:test", xSection.getNamespaceURI());
         assertEquals("section", xSection.getLocalName());
         assertEquals("x:section", xSection.getNodeName());
+
+        // https://github.com/jhy/jsoup/issues/977
+        // does not keep last set namespace
+        Node svg = xSection.getNextSibling().getNextSibling();
+        assertEquals("http://www.w3.org/2000/svg", svg.getNamespaceURI());
+        assertEquals("svg", svg.getLocalName());
+        assertEquals("svg", svg.getNodeName());
+
+        Node path = svg.getChildNodes().item(1);
+        assertEquals("http://www.w3.org/2000/svg", path.getNamespaceURI());
+        assertEquals("path", path.getLocalName());
+        assertEquals("path", path.getNodeName());
+
+        Node clip = path.getChildNodes().item(1);
+        assertEquals("http://example.com/clip", clip.getNamespaceURI());
+        assertEquals("clip", clip.getLocalName());
+        assertEquals("clip", clip.getNodeName());
+        assertEquals("456", clip.getTextContent());
+
+        Node picture = svg.getNextSibling().getNextSibling();
+        assertEquals("http://www.w3.org/1999/xhtml", picture.getNamespaceURI());
+        assertEquals("picture", picture.getLocalName());
+        assertEquals("picture", picture.getNodeName());
+
+        Node img = picture.getFirstChild();
+        assertEquals("http://www.w3.org/1999/xhtml", img.getNamespaceURI());
+        assertEquals("img", img.getLocalName());
+        assertEquals("img", img.getNodeName());
+
     }
 
     @Test

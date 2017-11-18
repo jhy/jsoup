@@ -30,6 +30,9 @@ jsoup changelog
   * Bugfix: removing a form value from the DOM would not remove it from FormData.
     <https://github.com/jhy/jsoup/pull/969>
 
+  * Bugfix: in the W3CDom transformer, siblings were incorrectly inheriting namespaces defined on previous siblings.
+    <https://github.com/jhy/jsoup/issues/977>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
