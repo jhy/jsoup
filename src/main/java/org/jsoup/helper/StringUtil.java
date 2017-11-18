@@ -128,6 +128,11 @@ public final class StringUtil {
         // 160 is &nbsp; (non-breaking space). Not in the spec but expected.
     }
 
+    public static boolean isInvisibleChar(int c) {
+        return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
+        // zero width sp, zw non join, zw join, soft hyphen
+    }
+
     /**
      * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
      * (e.g. newline, tab) convert to a simple space
@@ -160,7 +165,7 @@ public final class StringUtil {
                 accum.append(' ');
                 lastWasWhite = true;
             }
-            else {
+            else if (!isInvisibleChar(c)) {
                 accum.appendCodePoint(c);
                 lastWasWhite = false;
                 reachedNonWhite = true;
