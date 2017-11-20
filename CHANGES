@@ -5,6 +5,8 @@ jsoup changelog
     This enables finding text that is only marked by a "br" tag, for example.
     <https://github.com/jhy/jsoup/issues/550>
 
+  * Change: marked Connection.validateTLSCertificates() as deprecated.
+
   * Improvement: normalize invisible characters (like soft-hyphens) in Element.text().
     <https://github.com/jhy/jsoup/issues/978>
     

@@ -160,6 +160,8 @@ public interface Connection {
      * </p>
      * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
      * @return this Connection, for chaining
+     * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
+     * disabled.
      */
     Connection validateTLSCertificates(boolean value);
 
@@ -590,12 +592,15 @@ public interface Connection {
         /**
          * Get the current state of TLS (SSL) certificate validation.
          * @return true if TLS cert validation enabled
+         * @deprecated
          */
         boolean validateTLSCertificates();
 
         /**
-         * Set TLS certificate validation.
+         * Set TLS certificate validation. <b>True</b> by default.
          * @param value set false to ignore TLS (SSL) certificates
+         * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
+         * disabled.
          */
         void validateTLSCertificates(boolean value);
 
