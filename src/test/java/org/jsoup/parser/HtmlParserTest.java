@@ -921,7 +921,7 @@ public class HtmlParserTest {
         // Assert
         assertEquals(2, doc.body().childNodeSize());
         assertEquals(25000, doc.select("dd").size());
-        assertTrue(System.currentTimeMillis() - start < 1000);
+        assertTrue(System.currentTimeMillis() - start < 2000);
     }
 
     @Test
