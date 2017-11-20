@@ -10,10 +10,28 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class TokeniserStateTest {
 
     final char[] whiteSpace = { '\t', '\n', '\r', '\f', ' ' };
     final char[] quote = { '\'', '"' };
+
+    @Test
+    public void ensureSearchArraysAreSorted() {
+        char[][] arrays = {
+            TokeniserState.attributeSingleValueCharsSorted,
+            TokeniserState.attributeDoubleValueCharsSorted,
+            TokeniserState.attributeNameCharsSorted,
+            TokeniserState.attributeValueUnquoted
+        };
+
+        for (char[] array : arrays) {
+            char[] copy = Arrays.copyOf(array, array.length);
+            Arrays.sort(array);
+            assertArrayEquals(array, copy);
+        }
+    }
 
     @Test
     public void testCharacterReferenceInRcdata() {
