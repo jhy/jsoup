@@ -9,6 +9,9 @@ jsoup changelog
 
   * Improvement: normalize invisible characters (like soft-hyphens) in Element.text().
     <https://github.com/jhy/jsoup/issues/978>
+
+  * Improvement: added Element.wholeText(), to easily get the un-normalized text value of an element and its children.
+    <https://github.com/jhy/jsoup/pull/564>
     
   * Bugfix: in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
     <https://github.com/jhy/jsoup/issues/966>

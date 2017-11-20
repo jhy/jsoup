@@ -1016,7 +1016,8 @@ public class Element extends Node {
      * <p>
      * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
-     * @return unencoded text, or empty string if none.
+     * @return unencoded, normalized text, or empty string if none.
+     * @see #wholeText() if you don't want the text to be normalized.
      * @see #ownText()
      * @see #textNodes()
      */
@@ -1043,13 +1044,15 @@ public class Element extends Node {
     }
 
     /**
-     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the original.
+     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
+     * original.
      *
-     * @return text
+     * @return unencoded, un-normalized text
+     * @see #text()
      */
-    public String getWholeText(){
+    public String wholeText() {
         final StringBuilder accum = new StringBuilder();
-        new NodeTraversor(new NodeVisitor() {
+        NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -1059,7 +1062,7 @@ public class Element extends Node {
 
             public void tail(Node node, int depth) {
             }
-        }).traverse(this);
+        }, this);
         return accum.toString();
     }
 

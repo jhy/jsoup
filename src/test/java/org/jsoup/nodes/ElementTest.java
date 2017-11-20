@@ -120,15 +120,15 @@ public class ElementTest {
         assertEquals("Hello there", doc.text());
     }
 
-    @Test public void testGetWholeText() {
-        Document doc = Jsoup.parse("<p>Hello\nthere</p>");
-        assertEquals("Hello\nthere", doc.getWholeText());
+    @Test public void testWholeText() {
+        Document doc = Jsoup.parse("<p> Hello\nthere &nbsp;  </p>");
+        assertEquals(" Hello\nthere    ", doc.wholeText());
 
         doc = Jsoup.parse("<p>Hello  \n  there</p>");
-        assertEquals("Hello  \n  there", doc.getWholeText());
+        assertEquals("Hello  \n  there", doc.wholeText());
 
         doc = Jsoup.parse("<p>Hello  <div>\n  there</div></p>");
-        assertEquals("Hello  \n  there", doc.getWholeText());
+        assertEquals("Hello  \n  there", doc.wholeText());
     }
 
     @Test public void testGetSiblings() {
