@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
@@ -255,11 +256,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
-        String tagName = currentElement().tagName();
-        if (tagName.equals("script") || tagName.equals("style"))
-            node = new DataNode(characterToken.getData());
+        final String tagName = currentElement().tagName();
+        final String data = characterToken.getData();
+
+        if (characterToken.isCData())
+            node = new CDataNode(data);
+        else if (tagName.equals("script") || tagName.equals("style"))
+            node = new DataNode(data);
         else
-            node = new TextNode(characterToken.getData());
+            node = new TextNode(data);
         currentElement().appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
     }
 

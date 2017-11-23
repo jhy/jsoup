@@ -4,7 +4,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.integration.ParseTest;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
@@ -305,12 +307,55 @@ public class HtmlParserTest {
 
     @Test public void handlesCdata() {
         // todo: as this is html namespace, should actually treat as bogus comment, not cdata. keep as cdata for now
-        String h = "<div id=1><![CDATA[<html>\n<foo><&amp;]]></div>"; // the &amp; in there should remain literal
+        String h = "<div id=1><![CDATA[<html>\n <foo><&amp;]]></div>"; // the &amp; in there should remain literal
         Document doc = Jsoup.parse(h);
         Element div = doc.getElementById("1");
-        assertEquals("<html> <foo><&amp;", div.text());
+        assertEquals("<html>\n <foo><&amp;", div.text());
         assertEquals(0, div.children().size());
         assertEquals(1, div.childNodeSize()); // no elements, one text node
+    }
+
+    @Test public void roundTripsCdata() {
+        String h = "<div id=1><![CDATA[\n<html>\n <foo><&amp;]]></div>";
+        Document doc = Jsoup.parse(h);
+        Element div = doc.getElementById("1");
+        assertEquals("<html>\n <foo><&amp;", div.text());
+        assertEquals(0, div.children().size());
+        assertEquals(1, div.childNodeSize()); // no elements, one text node
+
+        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]>\n</div>", div.outerHtml());
+
+        CDataNode cdata = (CDataNode) div.textNodes().get(0);
+        assertEquals("\n<html>\n <foo><&amp;", cdata.text());
+    }
+
+    @Test public void handlesCdataAcrossBuffer() {
+        StringBuilder sb = new StringBuilder();
+        while (sb.length() <= CharacterReader.maxBufferLen) {
+            sb.append("A suitable amount of CData.\n");
+        }
+        String cdata = sb.toString();
+        String h = "<div><![CDATA[" + cdata + "]]></div>";
+        Document doc = Jsoup.parse(h);
+        Element div = doc.selectFirst("div");
+
+        CDataNode node = (CDataNode) div.textNodes().get(0);
+        assertEquals(cdata, node.text());
+    }
+
+    @Test public void handlesCdataInScript() {
+        String html = "<script type=\"text/javascript\">//<![CDATA[\n\n  foo();\n//]]></script>";
+        Document doc = Jsoup.parse(html);
+
+        String data = "//<![CDATA[\n\n  foo();\n//]]>";
+        Element script = doc.selectFirst("script");
+        assertEquals("", script.text()); // won't be parsed as cdata because in script data section
+        assertEquals(data, script.data());
+        assertEquals(html, script.outerHtml());
+
+        DataNode dataNode = (DataNode) script.childNode(0);
+        assertEquals(data, dataNode.getWholeData());
+        // see - not a cdata node, because in script. contrast with XmlTreeBuilder - will be cdata.
     }
 
     @Test public void handlesUnclosedCdataAtEOF() {

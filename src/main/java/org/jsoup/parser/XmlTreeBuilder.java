@@ -96,9 +96,9 @@ public class XmlTreeBuilder extends TreeBuilder {
         insertNode(insert);
     }
 
-    void insert(Token.Character characterToken) {
-        Node node = new TextNode(characterToken.getData());
-        insertNode(node);
+    void insert(Token.Character token) {
+        final String data = token.getData();
+        insertNode(token.isCData() ? new CDataNode(data) : new TextNode(data));
     }
 
     void insert(Token.Doctype d) {

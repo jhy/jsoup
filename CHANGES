@@ -1,5 +1,11 @@
 jsoup changelog
 
+*** Release 1.11.3 [PENDING]
+  * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
+    round-tripped into output HTML.
+    <https://github.com/jhy/jsoup/issues/406>
+    <https://github.com/jhy/jsoup/issues/965>
+
 *** Release 1.11.2 [2017-Nov-19]
   * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.
     This enables finding text that is only marked by a "br" tag, for example.

@@ -3,7 +3,9 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.StringUtil;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
@@ -187,5 +189,28 @@ public class XmlTreeBuilderTest {
         String xml = "<TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser().settings(ParseSettings.htmlDefault));
         assertEquals("<test id=\"1\">Check</test>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void roundTripsCdata() {
+        String xml = "<div id=1><![CDATA[\n<html>\n <foo><&amp;]]></div>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        Element div = doc.getElementById("1");
+        assertEquals("<html>\n <foo><&amp;", div.text());
+        assertEquals(0, div.children().size());
+        assertEquals(1, div.childNodeSize()); // no elements, one text node
+
+        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]>\n</div>", div.outerHtml());
+
+        CDataNode cdata = (CDataNode) div.textNodes().get(0);
+        assertEquals("\n<html>\n <foo><&amp;", cdata.text());
+    }
+
+    @Test public void cdataPreservesWhiteSpace() {
+        String xml = "<script type=\"text/javascript\">//<![CDATA[\n\n  foo();\n//]]></script>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals(xml, doc.outerHtml());
+
+        assertEquals("//\n\n  foo();\n//", doc.selectFirst("script").text());
     }
 }

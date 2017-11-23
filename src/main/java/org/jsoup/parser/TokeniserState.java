@@ -917,6 +917,7 @@ enum TokeniserState {
                 // todo: should actually check current namepspace, and only non-html allows cdata. until namespace
                 // is implemented properly, keep handling as cdata
                 //} else if (!t.currentNodeInHtmlNS() && r.matchConsume("[CDATA[")) {
+                t.createTempBuffer();
                 t.transition(CdataSection);
             } else {
                 t.error(this);
@@ -1600,8 +1601,9 @@ enum TokeniserState {
     CdataSection {
         void read(Tokeniser t, CharacterReader r) {
             String data = r.consumeTo("]]>");
-            t.emit(data);
+            t.dataBuffer.append(data);
             if (r.matchConsume("]]>") || r.isEmpty()) {
+                t.emit(new Token.CData(t.dataBuffer.toString()));
                 t.transition(Data);
             }// otherwise, buffer underrun, stay in data section
         }
