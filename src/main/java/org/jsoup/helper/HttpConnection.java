@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -781,8 +783,11 @@ public class HttpConnection implements Connection {
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     res.bodyStream = null;
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
+                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
+                    }
                     res.bodyStream = ConstrainableInputStream
                         .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout())
