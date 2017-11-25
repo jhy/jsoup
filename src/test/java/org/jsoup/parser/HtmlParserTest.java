@@ -365,6 +365,31 @@ public class HtmlParserTest {
         assertEquals(1, doc.body().childNodeSize());
     }
 
+    @Test public void handleCDataInText() {
+        String h = "<p>One <![CDATA[Two <&]]> Three</p>";
+        Document doc = Jsoup.parse(h);
+        Element p = doc.selectFirst("p");
+
+        List<Node> nodes = p.childNodes();
+        assertEquals("One ", ((TextNode) nodes.get(0)).getWholeText());
+        assertEquals("Two <&", ((TextNode) nodes.get(1)).getWholeText());
+        assertEquals("Two <&", ((CDataNode) nodes.get(1)).getWholeText());
+        assertEquals(" Three", ((TextNode) nodes.get(2)).getWholeText());
+
+        assertEquals(h, p.outerHtml());
+    }
+
+    @Test public void cdataNodesAreTextNodes() {
+        String h = "<p>One <![CDATA[ Two <& ]]> Three</p>";
+        Document doc = Jsoup.parse(h);
+        Element p = doc.selectFirst("p");
+
+        List<TextNode> nodes = p.textNodes();
+        assertEquals("One ", nodes.get(0).text());
+        assertEquals(" Two <& ", nodes.get(1).text());
+        assertEquals(" Three", nodes.get(2).text());
+    }
+
     @Test public void handlesInvalidStartTags() {
         String h = "<div>Hello < There <&amp;></div>"; // parse to <div {#text=Hello < There <&>}>
         Document doc = Jsoup.parse(h);
