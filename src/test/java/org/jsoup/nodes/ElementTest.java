@@ -1318,4 +1318,10 @@ public class ElementTest {
         assertEquals("<img src=\"foo\" noshade nohref async autofocus=\"false\">", img.outerHtml());
     }
 
+    @Test
+    public void textHasSpaceAfterBlockTags() {
+        Document doc = Jsoup.parse("<div>One</div>Two");
+        assertEquals("One Two", doc.text());
+    }
+
 }
