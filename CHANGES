@@ -1,14 +1,13 @@
 jsoup changelog
 
 *** Release 1.11.3 [PENDING]
-  * Improvement: Deflate encoding is now supported.
-    <https://github.com/jhy/jsoup/issues/556>
-    <https://github.com/jhy/jsoup/issues/964>
-
   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
     round-tripped into output HTML.
     <https://github.com/jhy/jsoup/issues/406>
     <https://github.com/jhy/jsoup/issues/965>
+
+  * Improvement: added support for Deflate encoding.
+    <https://github.com/jhy/jsoup/pull/982>
 
 *** Release 1.11.2 [2017-Nov-19]
   * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.
