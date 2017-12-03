@@ -316,9 +316,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             accum.append(' ').append(key);
 
             // collapse checked=null, checked="", checked=checked; write out others
-            if (!(out.syntax() == Document.OutputSettings.Syntax.html
-                && (val == null || val.equals(key) && Attribute.isBooleanAttribute(key)))) {
-
+            if (!Attribute.shouldCollapseAttribute(key, val, out)) {
                 accum.append("=\"");
                 Entities.escape(accum, val == null ? EmptyString : val, out, true, false, false);
                 accum.append('"');
