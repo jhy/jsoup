@@ -6,6 +6,21 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/406>
     <https://github.com/jhy/jsoup/issues/965>
 
+  * Improvement: added support for Deflate encoding.
+    <https://github.com/jhy/jsoup/pull/982>
+
+  * Improvement: when parsing <pre> tags, skip the first newline if present.
+    <https://github.com/jhy/jsoup/issues/825>
+
+  * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
+    <https://github.com/jhy/jsoup/issues/990>
+
+  * Bugfix: The Element.text() for <div>One</div>Two was "OneTwo", not "One Two".
+    <https://github.com/jhy/jsoup/issues/812>
+
+  * Bugfix: boolean attributes with empty string values were not collapsing in HTML output.
+    <https://github.com/jhy/jsoup/issues/985>
+
 *** Release 1.11.2 [2017-Nov-19]
   * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.
     This enables finding text that is only marked by a "br" tag, for example.

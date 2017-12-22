@@ -1038,6 +1038,13 @@ public class Element extends Node {
             }
 
             public void tail(Node node, int depth) {
+                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
+                if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+
             }
         }, this);
         return accum.toString().trim();

@@ -379,7 +379,7 @@ enum HtmlTreeBuilderState {
                             tb.processEndTag("p");
                         }
                         tb.insert(startTag);
-                        // todo: ignore LF if next token
+                        tb.reader.matchConsume("\n"); // ignore LF if next token
                         tb.framesetOk(false);
                     } else if (name.equals("form")) {
                         if (tb.getFormElement() != null) {

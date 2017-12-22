@@ -2,6 +2,7 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
 import org.jsoup.integration.servlets.SlowRider;
@@ -365,5 +366,14 @@ public class ConnectTest {
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();
         assertEquals("token=asdfg123; uid=jhy", ihVal("Cookie", doc));
+    }
+
+    @Test
+    public void supportsDeflate() throws IOException {
+        Connection.Response res = Jsoup.connect(Deflateservlet.Url).execute();
+        assertEquals("deflate", res.header("Content-Encoding"));
+
+        Document doc = res.parse();
+        assertEquals("Hello, World!", doc.selectFirst("p").text());
     }
 }
