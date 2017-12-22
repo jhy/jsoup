@@ -99,8 +99,8 @@ public final class DataUtil {
         boolean fullyRead = false;
 
         // read the start of the stream and look for a BOM or meta charset
-        input.mark(firstReadBufferSize);
-        ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed
+        input.mark(bufferSize);
+        ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
         fullyRead = input.read() == -1;
         input.reset();
 

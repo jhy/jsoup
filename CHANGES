@@ -12,6 +12,9 @@ jsoup changelog
   * Improvement: when parsing <pre> tags, skip the first newline if present.
     <https://github.com/jhy/jsoup/issues/825>
 
+  * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
+    <https://github.com/jhy/jsoup/issues/990>
+
   * Bugfix: The Element.text() for <div>One</div>Two was "OneTwo", not "One Two".
     <https://github.com/jhy/jsoup/issues/812>
 
