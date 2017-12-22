@@ -285,11 +285,13 @@ public class ConnectTest {
 
         Document res = Jsoup
             .connect(EchoServlet.Url)
+            .data("firstname", "Jay")
             .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
             .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
+            .data("surname", "Soup")
             .post();
 
-        assertEquals("2", ihVal("Parts", res));
+        assertEquals("4", ihVal("Parts", res));
 
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
@@ -305,6 +307,9 @@ public class ConnectTest {
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
         assertEquals("thumb.jpg", ihVal("Part firstPart Filename", res));
         assertEquals("1052", ihVal("Part firstPart Size", res));
+
+        assertEquals("Jay", ihVal("firstname", res));
+        assertEquals("Soup", ihVal("surname", res));
 
         /*
         <tr><th>Part secondPart ContentType</th><td>application/octet-stream</td></tr>
