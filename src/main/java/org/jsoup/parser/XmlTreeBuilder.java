@@ -114,7 +114,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      * @param endTag tag to close
      */
     private void popStackToClose(Token.EndTag endTag) {
-        String elName = endTag.normalName();
+        String elName = settings.normalizeTag(endTag.tagName);
         Element firstFound = null;
 
         for (int pos = stack.size() -1; pos >= 0; pos--) {

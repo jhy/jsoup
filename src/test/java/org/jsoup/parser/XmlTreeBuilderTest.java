@@ -179,9 +179,9 @@ public class XmlTreeBuilderTest {
 
     @Test
     public void preservesCaseByDefault() {
-        String xml = "<TEST ID=1>Check</TEST>";
+        String xml = "<CHECK>One</CHECK><TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
-        assertEquals("<TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<CHECK>One</CHECK><TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test
