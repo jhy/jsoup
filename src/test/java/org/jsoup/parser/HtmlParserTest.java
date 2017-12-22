@@ -1105,6 +1105,11 @@ public class HtmlParserTest {
         assertEquals("<r> <x> A </x> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
+    @Test public void normalizesDiscordantTags() {
+        Document document = Jsoup.parse("<div>test</DIV><p></p>");
+        assertEquals("<div>\n test\n</div>\n<p></p>", document.body().html());
+    }
+
     @Test public void selfClosingVoidIsNotAnError() {
         String html = "<p>test<br/>test<br/></p>";
         Parser parser = Parser.htmlParser().setTrackErrors(5);

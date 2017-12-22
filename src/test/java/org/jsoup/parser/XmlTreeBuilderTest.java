@@ -191,6 +191,13 @@ public class XmlTreeBuilderTest {
         assertEquals("<test id=\"1\">Check</test>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test public void normalizesDiscordantTags() {
+        Parser parser = Parser.xmlParser().settings(ParseSettings.htmlDefault);
+        Document document = Jsoup.parse("<div>test</DIV><p></p>", "", parser);
+        assertEquals("<div>\n test\n</div>\n<p></p>", document.html());
+        // was failing -> toString() = "<div>\n test\n <p></p>\n</div>"
+    }
+
     @Test public void roundTripsCdata() {
         String xml = "<div id=1><![CDATA[\n<html>\n <foo><&amp;]]></div>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
