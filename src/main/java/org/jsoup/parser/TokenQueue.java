@@ -271,10 +271,11 @@ public class TokenQueue {
             if (last == 0 || last != ESC) {
                 if (c.equals('\'') && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
-                if (c.equals('"') && c != open && !inSingleQuote)
+                else if (c.equals('"') && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
                 if (inSingleQuote || inDoubleQuote)
                     continue;
+
                 if (c.equals(open)) {
                     depth++;
                     if (start == -1)

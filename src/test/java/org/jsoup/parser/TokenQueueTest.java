@@ -1,17 +1,13 @@
 package org.jsoup.parser;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.jsoup.Jsoup;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Token queue tests.
  */
-@RunWith(JUnitParamsRunner.class)
 public class TokenQueueTest {
     @Test public void chompBalanced() {
         TokenQueue tq = new TokenQueue(":contains(one (two) three) four");
@@ -76,24 +72,14 @@ public class TokenQueueTest {
         assertEquals(" third ", data);
     }
 
-    @Test @Parameters(method = "singleQuotesInsideDouble, doubleQuotesInsideSingle")
-    public void testNestedQuotes(String html, String selector) {
+    @Test public void testNestedQuotes() {
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=\"func('arg')\" /></body></html>", "a[onclick*=\"('arg\"]");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=func('arg') /></body></html>", "a[onclick*=\"('arg\"]");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick='func(\"arg\")' /></body></html>", "a[onclick*='(\"arg']");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=func(\"arg\") /></body></html>", "a[onclick*='(\"arg']");
+    }
+
+    private static void validateNestedQuotes(String html, String selector) {
         assertEquals("#identifier", Jsoup.parse(html).select(selector).first().cssSelector());
-    }
-
-    public Object[] singleQuotesInsideDouble() {
-        return new Object[] {new String[] {
-            "<html><body><a id=\"identifier\" onclick=\"func('arg')\" /></body></html>",
-            "a[onclick*=\"('arg\"]"},
-            new String[] {"<html><body><a id=\"identifier\" onclick=func('arg') /></body></html>",
-                "a[onclick*=\"('arg\"]"}};
-    }
-
-    public Object[] doubleQuotesInsideSingle() {
-        return new Object[] {new String[] {
-            "<html><body><a id=\"identifier\" onclick='func(\"arg\")' /></body></html>",
-            "a[onclick*='(\"arg']"},
-            new String[] {"<html><body><a id=\"identifier\" onclick=func(\"arg\") /></body></html>",
-                "a[onclick*='(\"arg']"}};
     }
 }

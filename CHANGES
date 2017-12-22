@@ -12,6 +12,9 @@ jsoup changelog
   * Improvement: when parsing <pre> tags, skip the first newline if present.
     <https://github.com/jhy/jsoup/issues/825>
 
+  * Improvement: support nested quotes for attribute selection queries.
+    <https://github.com/jhy/jsoup/pull/988>
+
   * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
     <https://github.com/jhy/jsoup/issues/990>
 
