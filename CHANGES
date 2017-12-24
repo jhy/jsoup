@@ -69,6 +69,9 @@ jsoup changelog
   * Bugfix: in the W3CDom transformer, siblings were incorrectly inheriting namespaces defined on previous siblings.
     <https://github.com/jhy/jsoup/issues/977>
 
+  * Bugfix: when parsing from a URL, an end tag could be read incorrectly if it started on a buffer boundary.
+    <https://github.com/jhy/jsoup/issues/995>
+
 *** Release 1.11.1 [2017-Nov-06]
   * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
     not used.
