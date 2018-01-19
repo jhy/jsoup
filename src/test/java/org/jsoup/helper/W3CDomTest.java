@@ -7,11 +7,19 @@ import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.xpath.XPathEvaluator;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.IOException;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class W3CDomTest {
@@ -59,7 +67,24 @@ public class W3CDomTest {
         String out = w3c.asString(wDoc);
         assertEquals(doc.location(), wDoc.getDocumentURI() );
     }
-    
+
+    @Test
+    public void undeclaredNamespaces() throws IOException, XPathExpressionException {
+        File in = ParseTest.getFile("/htmltests/ietags.html");
+        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
+
+        W3CDom w3c = new W3CDom();
+        Document wDoc = w3c.fromJsoup(doc);
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        NodeList nodes = (NodeList)xPath.evaluate("//*[local-name() = 'menuitem']",
+            wDoc.getDocumentElement(), XPathConstants.NODESET);
+
+        assertThat(nodes.getLength(), equalTo(1));
+
+        org.w3c.dom.Element menuItem = (org.w3c.dom.Element) nodes.item(0);
+        assertThat(menuItem.getAttribute("id"), equalTo("MSOMenu_Help"));
+    }
     
 
     @Test
