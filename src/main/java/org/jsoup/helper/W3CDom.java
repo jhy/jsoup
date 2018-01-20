@@ -69,7 +69,6 @@ public class W3CDom {
     protected static class W3CBuilder implements NodeVisitor {
         private static final String xmlnsKey = "xmlns";
         private static final String xmlnsPrefix = "xmlns:";
-        private static final String DEFAULT_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
         private final Document doc;
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
@@ -87,8 +86,11 @@ public class W3CDom {
 
                 String prefix = updateNamespaces(sourceEl);
                 String namespace = namespacesStack.peek().get(prefix);
+
+                // If this element has a prefix which is not declared, then simply ignore it
+                // and treat it as though it had no prefix at all.
                 if(namespace == null) {
-                    namespace  = DEFAULT_NAMESPACE;
+                    namespace  = namespacesStack.peek().get("");
                 }
 
                 Element el = doc.createElementNS(namespace, sourceEl.tagName());

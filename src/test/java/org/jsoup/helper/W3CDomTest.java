@@ -69,20 +69,17 @@ public class W3CDomTest {
     }
 
     @Test
-    public void undeclaredNamespaces() throws IOException, XPathExpressionException {
+    public void undeclaredPrefixes() throws IOException, XPathExpressionException {
         File in = ParseTest.getFile("/htmltests/ietags.html");
         org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
 
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
 
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        NodeList nodes = (NodeList)xPath.evaluate("//*[local-name() = 'menuitem']",
-            wDoc.getDocumentElement(), XPathConstants.NODESET);
+        NodeList ns = wDoc.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "menuitem");
+        assertThat(ns.getLength(), equalTo(1));
 
-        assertThat(nodes.getLength(), equalTo(1));
-
-        org.w3c.dom.Element menuItem = (org.w3c.dom.Element) nodes.item(0);
+        org.w3c.dom.Element menuItem = (org.w3c.dom.Element) ns.item(0);
         assertThat(menuItem.getAttribute("id"), equalTo("MSOMenu_Help"));
     }
     
