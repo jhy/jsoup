@@ -84,12 +84,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      */
     public String setValue(String val) {
         String oldVal = parent.get(this.key);
-        if (parent != null) {
+        if (val != null) {
+            // update parent
             int i = parent.indexOfKey(this.key);
             if (i != Attributes.NotFound)
                 parent.vals[i] = val;
+            // update self
+            this.val = val;
         }
-        this.val = val;
         return oldVal;
     }
 
