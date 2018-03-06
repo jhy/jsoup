@@ -32,7 +32,7 @@ for (Element headline : newsHeadlines) {
 jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup/tree/master/src/main/java/org/jsoup).
 
 ## Getting started
-1. [Download](https://jsoup.org/download) the latest jsoup jar (or it add to your Maven/Gradle build)
+1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
 2. Read the [cookbook](https://jsoup.org/cookbook/)
 3. Enjoy!
 
