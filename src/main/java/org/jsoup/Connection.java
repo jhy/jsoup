@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLSocketFactory;
+
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
  * <p>
@@ -164,6 +166,13 @@ public interface Connection {
      * disabled.
      */
     Connection validateTLSCertificates(boolean value);
+
+    /**
+     * Set custom SSL socket factory
+     * @param sslSocketFactory custom SSL socket factory
+     * @return this Connection, for chaining
+     */
+    Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -603,6 +612,18 @@ public interface Connection {
          * disabled.
          */
         void validateTLSCertificates(boolean value);
+
+        /**
+         * Get the custom SSL socket factory
+         * @return custom SSL socket factory
+         */
+        SSLSocketFactory sslSocketFactory();
+
+        /**
+         * Set custom SSL socket factory.
+         * @param sslSocketFactory SSL socket factory
+         */
+        void sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
         /**
          * Add a data parameter to the request

@@ -200,6 +200,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+	    req.sslSocketFactory(sslSocketFactory);
+	    return this;
+    }
+
     public Connection data(String key, String filename, InputStream inputStream) {
         req.data(KeyVal.create(key, filename, inputStream));
         return this;
@@ -549,6 +554,7 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
+        private SSLSocketFactory sslSocketFactory;
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
@@ -614,6 +620,14 @@ public class HttpConnection implements Connection {
 
         public void validateTLSCertificates(boolean value) {
             validateTSLCertificates = value;
+        }
+
+        public SSLSocketFactory sslSocketFactory() {
+            return sslSocketFactory;
+        }
+
+        public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+            this.sslSocketFactory = sslSocketFactory;
         }
 
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
@@ -901,7 +915,11 @@ public class HttpConnection implements Connection {
             conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
             if (conn instanceof HttpsURLConnection) {
-                if (!req.validateTLSCertificates()) {
+                SSLSocketFactory socketFactory = req.sslSocketFactory();
+
+                if (socketFactory != null) {
+                    ((HttpsURLConnection) conn).setSSLSocketFactory(socketFactory);
+                } else if (!req.validateTLSCertificates()) {
                     initUnSecureTSL();
                     ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
                     ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
