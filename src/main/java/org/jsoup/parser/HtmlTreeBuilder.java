@@ -56,8 +56,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean fosterInserts; // if next inserts should be fostered
     private boolean fragmentParsing; // if parsing a fragment of html
 
-    HtmlTreeBuilder() {}
-
     ParseSettings defaultSettings() {
         return ParseSettings.htmlDefault;
     }
