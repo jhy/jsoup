@@ -29,12 +29,16 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/998>
 
   * Bugfix: when parsing from a URL, an end tag could be read incorrectly if it started on a buffer boundary.
-      <https://github.com/jhy/jsoup/issues/995>
+    <https://github.com/jhy/jsoup/issues/995>
 
   * Bugfix: when parsing from a URL, if the remote server failed to complete its write (i.e. it writes less than the
     Content Length header promised on a gzipped stream), the parse method would incorrectly throw an unchecked
     exception. It now throws the declared IOException.
-      <https://github.com/jhy/jsoup/issues/980>
+    <https://github.com/jhy/jsoup/issues/980>
+
+  * Bugfix: leaf nodes (such as text nodes) where throwing an unsupported operation exception on childNodes(), instead
+    of just returning an empty list.
+    <https://github.com/jhy/jsoup/issues/1032>
 
 *** Release 1.11.2 [2017-Nov-19]
   * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.

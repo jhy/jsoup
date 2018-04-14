@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -71,5 +73,13 @@ public class TextNodeTest {
         Document doc = Jsoup.parse(new String(Character.toChars(135361)));
         TextNode t = doc.body().textNodes().get(0);
         assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
+    }
+
+    @Test public void testLeadNodesHaveNoChildren() {
+        Document doc = Jsoup.parse("<div>Hello there</div>");
+        Element div = doc.select("div").first();
+        TextNode tn = (TextNode) div.childNode(0);
+        List<Node> nodes = tn.childNodes();
+        assertEquals(0, nodes.size());
     }
 }
