@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -148,7 +149,12 @@ public final class DataUtil {
             if (charsetName == null)
                 charsetName = defaultCharset;
             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
-            doc = parser.parseInput(reader, baseUri);
+            try {
+                doc = parser.parseInput(reader, baseUri);
+            } catch (UncheckedIOException e) {
+                // io exception when parsing (not seen before because reading the stream as we go)
+                throw e.ioException();
+            }
             doc.outputSettings().charset(charsetName);
         }
         input.close();

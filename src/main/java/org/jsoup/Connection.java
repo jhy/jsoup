@@ -724,6 +724,7 @@ public interface Connection {
          * same connection response (otherwise, once the response is read, its InputStream will have been drained and
          * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.
          * @return this response, for chaining
+         * @throws UncheckedIOException if an IO exception occurs during buffering.
          */
         Response bufferUp();
 

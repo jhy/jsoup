@@ -2,9 +2,11 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
+import org.jsoup.integration.servlets.InterruptedServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -380,5 +382,39 @@ public class ConnectTest {
 
         Document doc = res.parse();
         assertEquals("Hello, World!", doc.selectFirst("p").text());
+    }
+
+    @Test
+    public void handlesEmptyStreamDuringParseRead() throws IOException {
+        // this handles situations where the remote server sets a content length greater than it actually writes
+
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
+            .timeout(200)
+            .execute();
+
+        boolean threw = false;
+        try {
+            Document document = res.parse();
+            assertEquals("Something", document.title());
+        } catch (IOException e) {
+            threw = true;
+        }
+        assertEquals(true, threw);
+    }
+
+    @Test
+    public void handlesEmtpyStreamDuringBufferdRead() throws IOException {
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
+            .timeout(200)
+            .execute();
+
+        boolean threw = false;
+        try {
+            res.bufferUp();
+        } catch (UncheckedIOException e) {
+            threw = true;
+        }
+        assertEquals(true, threw);
+
     }
 }
