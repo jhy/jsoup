@@ -112,6 +112,9 @@
         <version>3.0.2</version>
         <configuration>
           <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
+            </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
 	  <excludes>
