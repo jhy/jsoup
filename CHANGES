@@ -15,6 +15,10 @@ jsoup changelog
   * Improvement: support nested quotes for attribute selection queries.
     <https://github.com/jhy/jsoup/pull/988>
 
+  * Improvement: character references from Windows-1252 that are not valid Unicode are mapped to the appropriate
+    Unicode replacement.
+    <https://github.com/jhy/jsoup/pull/1046>
+
   * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
     <https://github.com/jhy/jsoup/issues/990>
 

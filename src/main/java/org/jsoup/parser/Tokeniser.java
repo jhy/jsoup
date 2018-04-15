@@ -14,6 +14,7 @@ final class Tokeniser {
     private static final char[] notCharRefCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '<', '&'};
 
     // Some illegal character escapes are parsed by browsers as windows-1252 instead. See issue #1034
+    // https://html.spec.whatwg.org/multipage/parsing.html#numeric-character-reference-end-state
     static final int win1252ExtensionsStart = 0x80;
     static final int[] win1252Extensions = new int[] {
             // we could build this manually, but Windows-1252 is not a standard java charset so that could break on
