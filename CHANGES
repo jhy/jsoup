@@ -19,6 +19,9 @@ jsoup changelog
     Unicode replacement.
     <https://github.com/jhy/jsoup/pull/1046>
 
+  * Improvement: accept a custom SSL socket factory in Jsoup.Connection.
+    <https://github.com/jhy/jsoup/pull/1038>
+
   * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
     <https://github.com/jhy/jsoup/issues/990>
 

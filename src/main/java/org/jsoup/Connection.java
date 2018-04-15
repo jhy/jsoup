@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -164,6 +165,13 @@ public interface Connection {
      * disabled.
      */
     Connection validateTLSCertificates(boolean value);
+
+    /**
+     * Set custom SSL socket factory
+     * @param sslSocketFactory custom SSL socket factory
+     * @return this Connection, for chaining
+     */
+    Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -600,9 +608,22 @@ public interface Connection {
          * Set TLS certificate validation. <b>True</b> by default.
          * @param value set false to ignore TLS (SSL) certificates
          * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
-         * disabled.
+         * disabled. This method will be removed in the next release.
+         * @see #sslSocketFactory(SSLSocketFactory)
          */
         void validateTLSCertificates(boolean value);
+
+        /**
+         * Get the current custom SSL socket factory, if any.
+         * @return custom SSL socket factory if set, null otherwise
+         */
+        SSLSocketFactory sslSocketFactory();
+
+        /**
+         * Set a custom SSL socket factory.
+         * @param sslSocketFactory SSL socket factory
+         */
+        void sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
         /**
          * Add a data parameter to the request
