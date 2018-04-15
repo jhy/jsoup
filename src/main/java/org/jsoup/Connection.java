@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,8 +12,6 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.ssl.SSLSocketFactory;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
@@ -609,18 +608,19 @@ public interface Connection {
          * Set TLS certificate validation. <b>True</b> by default.
          * @param value set false to ignore TLS (SSL) certificates
          * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
-         * disabled.
+         * disabled. This method will be removed in the next release.
+         * @see #sslSocketFactory(SSLSocketFactory)
          */
         void validateTLSCertificates(boolean value);
 
         /**
-         * Get the custom SSL socket factory
-         * @return custom SSL socket factory
+         * Get the current custom SSL socket factory, if any.
+         * @return custom SSL socket factory if set, null otherwise
          */
         SSLSocketFactory sslSocketFactory();
 
         /**
-         * Set custom SSL socket factory.
+         * Set a custom SSL socket factory.
          * @param sslSocketFactory SSL socket factory
          */
         void sslSocketFactory(SSLSocketFactory sslSocketFactory);

@@ -1,9 +1,7 @@
 jsoup changelog
 
 *** Release 1.11.3 [PENDING]
-  * Improvement: accept a custom SSL socket factory
-
-  * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
+   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
     round-tripped into output HTML.
     <https://github.com/jhy/jsoup/issues/406>
     <https://github.com/jhy/jsoup/issues/965>
@@ -16,6 +14,9 @@ jsoup changelog
 
   * Improvement: support nested quotes for attribute selection queries.
     <https://github.com/jhy/jsoup/pull/988>
+
+  * Improvement: accept a custom SSL socket factory in Jsoup.Connection.
+    <https://github.com/jhy/jsoup/pull/1038>
 
   * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
     <https://github.com/jhy/jsoup/issues/990>
