@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.11.3 [PENDING]
+*** Release 1.11.3 [2018-Apr-15]
   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
     round-tripped into output HTML.
     <https://github.com/jhy/jsoup/issues/406>
