@@ -157,4 +157,11 @@ public class DataUtilTest {
         assertTrue(doc.title().contains("UTF-32LE"));
         assertTrue(doc.text().contains("가각갂갃간갅"));
     }
+
+    @Test
+    public void supportsUTF8BOM() throws IOException {
+        File in = getFile("/bomtests/bom_utf8.html");
+        Document doc = Jsoup.parse(in, null, "http://example.com");
+        assertEquals("OK", doc.head().select("title").text());
+    }
 }

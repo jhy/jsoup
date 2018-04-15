@@ -1479,13 +1479,7 @@ enum HtmlTreeBuilderState {
     }
 
     private static boolean isWhitespace(String data) {
-        // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
-        for (int i = 0; i < data.length(); i++) {
-            char c = data.charAt(i);
-            if (!StringUtil.isWhitespace(c))
-                return false;
-        }
-        return true;
+        return StringUtil.isBlank(data);
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
