@@ -88,9 +88,11 @@ public class XmlTreeBuilder extends TreeBuilder {
             String data = comment.getData();
             if (data.length() > 1 && (data.startsWith("!") || data.startsWith("?"))) {
                 Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri, Parser.xmlParser());
-                Element el = doc.child(0);
-                insert = new XmlDeclaration(settings.normalizeTag(el.tagName()), data.startsWith("!"));
-                insert.attributes().addAll(el.attributes());
+                if (doc.childNodeSize() > 0) {
+                    Element el = doc.child(0);
+                    insert = new XmlDeclaration(settings.normalizeTag(el.tagName()), data.startsWith("!"));
+                    insert.attributes().addAll(el.attributes());
+                } // else, we couldn't parse it as a decl, so leave as a comment
             }
         }
         insertNode(insert);
