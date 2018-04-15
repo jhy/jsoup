@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import java.io.UnsupportedEncodingException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
@@ -153,5 +154,30 @@ public class TokeniserTest {
         assertEquals(title, el.text());
         assertEquals(title, child.getWholeText());
         assertEquals(title, doc.title());
+    }
+
+    @Test public void cp1252Entities() {
+        assertEquals("\u20ac", Jsoup.parse("&#0128;").text());
+        assertEquals("\u201a", Jsoup.parse("&#0130;").text());
+        assertEquals("\u20ac", Jsoup.parse("&#x80;").text());
+    }
+
+    @Test public void cp1252EntitiesProduceError() {
+        Parser parser = new Parser(new HtmlTreeBuilder());
+        parser.setTrackErrors(10);
+        assertEquals("\u20ac", parser.parseInput("<html><body>&#0128;</body></html>", "").text());
+        assertEquals(1, parser.getErrors().size());
+    }
+
+    @Test public void cp1252SubstitutionTable() throws UnsupportedEncodingException {
+        for (int i = 0; i < Tokeniser.win1252Extensions.length; i++) {
+            String s = new String(new byte[]{ (byte) (i + Tokeniser.win1252ExtensionsStart) }, "Windows-1252");
+            assertEquals(1, s.length());
+
+            // some of these characters are illegal
+            if (s.charAt(0) == '\ufffd') { continue; }
+
+            assertEquals("At: " + i, s.charAt(0), Tokeniser.win1252Extensions[i]);
+        }
     }
 }
