@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,5 +155,34 @@ public class W3CDomTest {
         assertEquals("fb:like", fb.getNodeName());
 
     }
+
+@Test
+public void checkElementsAttributesCaseSensitivity() throws IOException {
+    File in = ParseTest.getFile("/htmltests/attributes-case-sensitivity-test.html");
+    org.jsoup.nodes.Document jsoupDoc;
+    jsoupDoc = Jsoup.parse(in, "UTF-8");
+
+    org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
+    Document doc = jDom.fromJsoup(jsoupDoc);
+
+    final org.w3c.dom.Element body = (org.w3c.dom.Element) doc.getDocumentElement().getElementsByTagName("body").item(0);
+
+    final NodeList imgs = body.getElementsByTagName("img");
+    assertEquals(2, imgs.getLength());
+
+    final org.w3c.dom.Element first = (org.w3c.dom.Element) imgs.item(0);
+    assertEquals(first.getAttributes().getLength(), 2);
+    final String img1 = first.getAttribute("src");
+    assertEquals("firstImage.jpg", img1);
+    final String alt1 = first.getAttribute("alt");
+    assertEquals("Alt one", alt1);
+
+    final org.w3c.dom.Element second = (org.w3c.dom.Element) imgs.item(1);
+    assertEquals(second.getAttributes().getLength(), 2);
+    final String img2 = second.getAttribute("src");
+    assertEquals("secondImage.jpg", img2);
+    final String alt2 = second.getAttribute("alt");
+    assertEquals("Alt two", alt2);
 }
 
+}
