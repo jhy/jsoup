@@ -7,12 +7,14 @@ import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPathExpressionException;
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
 
 public class W3CDomTest {
     @Test
@@ -59,7 +61,21 @@ public class W3CDomTest {
         String out = w3c.asString(wDoc);
         assertEquals(doc.location(), wDoc.getDocumentURI() );
     }
-    
+
+    @Test
+    public void undeclaredPrefixes() throws IOException, XPathExpressionException {
+        File in = ParseTest.getFile("/htmltests/ietags.html");
+        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
+
+        W3CDom w3c = new W3CDom();
+        Document wDoc = w3c.fromJsoup(doc);
+
+        NodeList ns = wDoc.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "menuitem");
+        assertThat(ns.getLength(), equalTo(1));
+
+        org.w3c.dom.Element menuItem = (org.w3c.dom.Element) ns.item(0);
+        assertThat(menuItem.getAttribute("id"), equalTo("MSOMenu_Help"));
+    }
     
 
     @Test

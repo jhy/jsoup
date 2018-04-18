@@ -87,6 +87,12 @@ public class W3CDom {
                 String prefix = updateNamespaces(sourceEl);
                 String namespace = namespacesStack.peek().get(prefix);
 
+                // If this element has a prefix which is not declared, then simply ignore it
+                // and treat it as though it had no prefix at all.
+                if(namespace == null) {
+                    namespace  = namespacesStack.peek().get("");
+                }
+
                 Element el = doc.createElementNS(namespace, sourceEl.tagName());
                 copyAttributes(sourceEl, el);
                 if (dest == null) { // sets up the root
