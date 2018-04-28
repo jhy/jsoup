@@ -146,27 +146,6 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     * Disable/enable TLS certificates validation for HTTPS requests.
-     * <p>
-     * By default this is <b>true</b>; all
-     * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
-     * certificate does not validate.
-     * </p>
-     * <p>
-     * Some servers use expired, self-generated certificates; or your JDK may not
-     * support SNI hosts. In which case, you may want to enable this setting.
-     * </p>
-     * <p>
-     * <b>Be careful</b> and understand why you need to disable these validations.
-     * </p>
-     * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
-     * @return this Connection, for chaining
-     * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
-     * disabled.
-     */
-    Connection validateTLSCertificates(boolean value);
-
-    /**
      * Set custom SSL socket factory
      * @param sslSocketFactory custom SSL socket factory
      * @return this Connection, for chaining
@@ -596,22 +575,6 @@ public interface Connection {
          * @return this Request, for chaining
          */
         Request ignoreContentType(boolean ignoreContentType);
-
-        /**
-         * Get the current state of TLS (SSL) certificate validation.
-         * @return true if TLS cert validation enabled
-         * @deprecated
-         */
-        boolean validateTLSCertificates();
-
-        /**
-         * Set TLS certificate validation. <b>True</b> by default.
-         * @param value set false to ignore TLS (SSL) certificates
-         * @deprecated as distributions (specifically Google Play) are starting to show warnings if these checks are
-         * disabled. This method will be removed in the next release.
-         * @see #sslSocketFactory(SSLSocketFactory)
-         */
-        void validateTLSCertificates(boolean value);
 
         /**
          * Get the current custom SSL socket factory, if any.

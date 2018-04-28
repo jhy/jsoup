@@ -11,11 +11,8 @@ import org.jsoup.parser.TokenQueue;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -35,9 +32,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -190,10 +184,6 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Connection validateTLSCertificates(boolean value) {
-        req.validateTLSCertificates(value);
-        return this;
-    }
 
     public Connection data(String key, String value) {
         req.data(KeyVal.create(key, value));
@@ -914,18 +904,8 @@ public class HttpConnection implements Connection {
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
-            if (conn instanceof HttpsURLConnection) {
-                SSLSocketFactory socketFactory = req.sslSocketFactory();
-
-                if (socketFactory != null) {
-                    ((HttpsURLConnection) conn).setSSLSocketFactory(socketFactory);
-                } else if (!req.validateTLSCertificates()) {
-                    initUnSecureTSL();
-                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
-                    ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
-                }
-            }
-
+            if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
+                ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
@@ -957,7 +937,6 @@ public class HttpConnection implements Connection {
          * Instantiate Hostname Verifier that does nothing.
          * This is used for connections with disabled SSL certificates validation.
          *
-         *
          * @return Hostname Verifier that does nothing and accepts all hostnames
          */
         private static HostnameVerifier getInsecureVerifier() {
@@ -966,45 +945,6 @@ public class HttpConnection implements Connection {
                     return true;
                 }
             };
-        }
-
-        /**
-         * Initialise Trust manager that does not validate certificate chains and
-         * add it to current SSLContext.
-         * <p/>
-         * please not that this method will only perform action if sslSocketFactory is not yet
-         * instantiated.
-         *
-         * @throws IOException on SSL init errors
-         */
-        private static synchronized void initUnSecureTSL() throws IOException {
-            if (sslSocketFactory == null) {
-                // Create a trust manager that does not validate certificate chains
-                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-
-                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                }};
-
-                // Install the all-trusting trust manager
-                final SSLContext sslContext;
-                try {
-                    sslContext = SSLContext.getInstance("SSL");
-                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                    // Create an ssl socket factory with our all-trusting manager
-                    sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                }
-            }
-
         }
 
         // set up url, method, header, cookies

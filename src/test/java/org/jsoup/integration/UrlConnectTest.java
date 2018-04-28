@@ -306,34 +306,6 @@ public class UrlConnectTest {
         Jsoup.connect(url).execute();
     }
 
-    /**
-     * Verify that requests to websites with SNI pass
-     * <p/>
-     * <b>NB!</b> this test is FAILING right now on jdk 1.6
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testSNIPass() throws Exception {
-        String url = WEBSITE_WITH_SNI;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
-    }
-
-    /**
-     * Verify that security disabling feature works properly.
-     * <p/>
-     * 1. disable security checks and call the same url to verify that content is consumed correctly
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testUnsafePass() throws Exception {
-        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
-    }
-
     @Test
     public void shouldWorkForCharsetInExtraAttribute() throws IOException {
         Connection.Response res = Jsoup.connect("https://www.creditmutuel.com/groupe/fr/").execute();
