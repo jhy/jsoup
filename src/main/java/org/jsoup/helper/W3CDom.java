@@ -86,8 +86,11 @@ public class W3CDom {
 
                 String prefix = updateNamespaces(sourceEl);
                 String namespace = namespacesStack.peek().get(prefix);
+                String tagName = sourceEl.tagName();
 
-                Element el = doc.createElementNS(namespace, sourceEl.tagName());
+                Element el = namespace == null && tagName.contains(":") ?
+                    doc.createElementNS("", tagName) : // doesn't have a real namespace defined
+                    doc.createElementNS(namespace, tagName);
                 copyAttributes(sourceEl, el);
                 if (dest == null) { // sets up the root
                     doc.appendChild(el);
