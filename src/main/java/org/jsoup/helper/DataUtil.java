@@ -166,7 +166,12 @@ public final class DataUtil {
                 // io exception when parsing (not seen before because reading the stream as we go)
                 throw e.ioException();
             }
-            doc.outputSettings().charset(charsetName);
+            Charset charset = Charset.forName(charsetName);
+            doc.outputSettings().charset(charset);
+            if (!charset.canEncode()) {
+                // some charsets can read but not encode; switch to an encodable charset and update the meta el
+                doc.charset(Charset.forName(defaultCharset));
+            }
         }
         input.close();
         return doc;
