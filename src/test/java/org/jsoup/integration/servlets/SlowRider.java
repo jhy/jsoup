@@ -2,7 +2,6 @@ package org.jsoup.integration.servlets;
 
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,9 +15,8 @@ public class SlowRider extends BaseServlet {
     private static final int SleepTime = 2000;
     public static final String MaxTimeParam = "maxTime";
 
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
         pause(1000);
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);

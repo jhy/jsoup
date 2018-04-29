@@ -7,6 +7,7 @@ import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
 import org.jsoup.integration.servlets.InterruptedServlet;
+import org.jsoup.integration.servlets.RedirectServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -34,13 +36,13 @@ public class ConnectTest {
     private static String echoUrl;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
+    public static void tearDown() {
         TestServer.stop();
     }
 
@@ -80,7 +82,8 @@ public class ConnectTest {
     }
 
     private static String ihVal(String key, Document doc) {
-        return doc.select("th:contains(" + key + ") + td").first().text();
+        final Element first = doc.select("th:contains(" + key + ") + td").first();
+        return first != null ? first.text() : null;
     }
 
     @Test
@@ -399,7 +402,7 @@ public class ConnectTest {
         } catch (IOException e) {
             threw = true;
         }
-        assertEquals(true, threw);
+        assertTrue(threw);
     }
 
     @Test
@@ -414,7 +417,52 @@ public class ConnectTest {
         } catch (UncheckedIOException e) {
             threw = true;
         }
-        assertEquals(true, threw);
+        assertTrue(threw);
+    }
 
+    @Test public void handlesRedirect() throws IOException {
+        Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, HelloServlet.Url)
+            .get();
+
+        Element p = doc.selectFirst("p");
+        assertEquals("Hello, World!", p.text());
+
+        assertEquals(HelloServlet.Url, doc.location());
+    }
+
+    @Test public void handlesEmptyRedirect() throws IOException {
+        boolean threw = false;
+        try {
+            Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .execute();
+        } catch (IOException e) {
+            assertTrue(e.getMessage().contains("Too many redirects"));
+            threw = true;
+        }
+        assertTrue(threw);
+    }
+
+    @Test public void doesNotPostFor302() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data("Hello", "there")
+            .data(RedirectServlet.LocationParam, EchoServlet.Url)
+            .post();
+
+        assertEquals(EchoServlet.Url, doc.location());
+        assertEquals("GET", ihVal("Method", doc));
+        assertNull(ihVal("Hello", doc)); // data not sent
+    }
+
+    @Test public void doesPostFor307() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data("Hello", "there")
+            .data(RedirectServlet.LocationParam, EchoServlet.Url)
+            .data(RedirectServlet.CodeParam, "307")
+            .post();
+
+        assertEquals(EchoServlet.Url, doc.location());
+        assertEquals("POST", ihVal("Method", doc));
+        assertEquals("there", ihVal("Hello", doc));
     }
 }

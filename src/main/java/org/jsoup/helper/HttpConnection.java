@@ -740,7 +740,7 @@ public class HttpConnection implements Connection {
                     }
 
                     String location = res.header(LOCATION);
-                    if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
                     req.url(encodeUrl(redir));
