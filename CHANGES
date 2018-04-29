@@ -17,6 +17,11 @@ jsoup changelog
   * Improvement: if the document's input character does not support encoding, flip it to one that does.
     <https://github.com/jhy/jsoup/issues/1007>
 
+  * Improvement: if a start tag is missing a > and a new tag is seen with a <, treat that as a new tag. (This differs
+    from the HTML5 spec, which would make at attribute with a name beginning with <, but in practice this impacts too
+    many pages.
+    <https://github.com/jhy/jsoup/issues/797>
+
 *** Release 1.11.3 [2018-Apr-15]
   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
     round-tripped into output HTML.

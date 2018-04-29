@@ -243,6 +243,7 @@ public final class CharacterReader {
 
     String consumeTagName() {
         // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
+        // NOTE: out of spec, added '<' to fix common author bugs
         bufferUp();
         final int start = bufPos;
         final int remaining = bufLength;
@@ -250,7 +251,7 @@ public final class CharacterReader {
 
         while (bufPos < remaining) {
             final char c = val[bufPos];
-            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  TokeniserState.nullChar)
+            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c == '<' || c ==  TokeniserState.nullChar)
                 break;
             bufPos++;
         }

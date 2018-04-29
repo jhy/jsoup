@@ -1,8 +1,7 @@
 package org.jsoup.parser;
 
-import static org.junit.Assert.*;
-
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,6 +10,9 @@ import org.jsoup.select.Elements;
 import org.junit.Test;
 
 import java.util.Arrays;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class TokeniserStateTest {
 
@@ -196,5 +198,12 @@ public class TokeniserStateTest {
                 }
             }
         }
+    }
+
+    @Test public void handlesLessInTagThanAsNewTag() {
+        // out of spec, but clear author intent
+        String html = "<p\n<p<div id=one <span>Two";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<p></p><p></p><div id=\"one\"><span>Two</span></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 }
