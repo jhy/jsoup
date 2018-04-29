@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
@@ -77,12 +78,13 @@ public abstract class Node implements Cloneable {
 
     /**
      * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
-     * <b>case insensitive</b>.
+     * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings.
      * @param attributeKey The attribute key.
      * @param attributeValue The attribute value.
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
+        attributeKey = getParser().settings().normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
         return this;
     }
@@ -332,7 +334,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(parentNode);
 
         Element context = parent() instanceof Element ? (Element) parent() : null;
-        List<Node> nodes = Parser.parseFragment(html, context, baseUri());
+        List<Node> nodes = getParser().parseFragmentInput(html, context, baseUri());
         parentNode.addChildren(index, nodes.toArray(new Node[nodes.size()]));
     }
 
@@ -345,7 +347,7 @@ public abstract class Node implements Cloneable {
         Validate.notEmpty(html);
 
         Element context = parent() instanceof Element ? (Element) parent() : null;
-        List<Node> wrapChildren = Parser.parseFragment(html, context, baseUri());
+        List<Node> wrapChildren = getParser().parseFragmentInput(html, context, baseUri());
         Node wrapNode = wrapChildren.get(0);
         if (wrapNode == null || !(wrapNode instanceof Element)) // nothing to wrap with; noop
             return null;
@@ -577,6 +579,11 @@ public abstract class Node implements Cloneable {
     Document.OutputSettings getOutputSettings() {
         Document owner = ownerDocument();
         return owner != null ? owner.outputSettings() : (new Document("")).outputSettings();
+    }
+
+    Parser getParser() {
+        Document doc = ownerDocument();
+        return doc != null && doc.parser() != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
     }
 
     /**

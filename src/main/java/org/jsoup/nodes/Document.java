@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
@@ -17,6 +18,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
+    private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
     private boolean updateMetaCharset = false;
@@ -41,6 +43,7 @@ public class Document extends Element {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
+        doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -571,6 +574,25 @@ public class Document extends Element {
 
     public Document quirksMode(QuirksMode quirksMode) {
         this.quirksMode = quirksMode;
+        return this;
+    }
+
+    /**
+     * Get the parser that was used to parse this document.
+     * @return the parser
+     */
+    public Parser parser() {
+        return parser;
+    }
+
+    /**
+     * Set the parser used to create this document. This parser is then used when further parsing within this document
+     * is required.
+     * @param parser the configured parser to use when further parsing is required for this document.
+     * @return this document, for chaining.
+     */
+    public Document parser(Parser parser) {
+        this.parser = parser;
         return this;
     }
 }

@@ -2,7 +2,14 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.CDataNode;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -20,19 +27,19 @@ public class XmlTreeBuilder extends TreeBuilder {
         return ParseSettings.preserveCase;
     }
 
+    @Override
+    protected void initialiseParse(Reader input, String baseUri, Parser parser) {
+        super.initialiseParse(input, baseUri, parser);
+        stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+    }
+
     Document parse(Reader input, String baseUri) {
-        return parse(input, baseUri, ParseErrorList.noTracking(), ParseSettings.preserveCase);
+        return parse(input, baseUri, new Parser(this));
     }
 
     Document parse(String input, String baseUri) {
-        return parse(new StringReader(input), baseUri, ParseErrorList.noTracking(), ParseSettings.preserveCase);
-    }
-
-    @Override
-    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
-        super.initialiseParse(input, baseUri, errors, settings);
-        stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
-        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        return parse(new StringReader(input), baseUri, new Parser(this));
     }
 
     @Override
@@ -137,9 +144,14 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    List<Node> parseFragment(String inputFragment, String baseUri, ParseErrorList errors, ParseSettings settings) {
-        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
+
+    List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
+        initialiseParse(new StringReader(inputFragment), baseUri, parser);
         runParser();
         return doc.childNodes();
+    }
+
+    List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
+        return parseFragment(inputFragment, baseUri, parser);
     }
 }

@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.select.Elements;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -182,6 +183,15 @@ public class XmlTreeBuilderTest {
         String xml = "<CHECK>One</CHECK><TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
         assertEquals("<CHECK>One</CHECK><TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test
+    public void appendPreservesCaseByDefault() {
+        String xml = "<One>One</One>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        Elements one = doc.select("One");
+        one.append("<Two ID=2>Two</Two>");
+        assertEquals("<One>One<Two ID=\"2\">Two</Two></One>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test

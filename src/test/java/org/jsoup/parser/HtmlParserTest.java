@@ -1062,6 +1062,10 @@ public class HtmlParserTest {
         String html = "<!doctype HTML><DIV ID=1>One</DIV>";
         Document doc = Jsoup.parse(html);
         assertEquals("<!doctype html> <html> <head></head> <body> <div id=\"1\"> One </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        Element div = doc.selectFirst("#1");
+        div.after("<TaG>One</TaG>");
+        assertEquals("<tag>One</tag>", TextUtil.stripNewlines(div.nextElementSibling().outerHtml()));
     }
 
     @Test public void canPreserveTagCase() {
@@ -1069,6 +1073,10 @@ public class HtmlParserTest {
         parser.settings(new ParseSettings(true, false));
         Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
         assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN id=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        Element div = doc.selectFirst("#1");
+        div.after("<TaG ID=one>One</TaG>");
+        assertEquals("<TaG id=\"one\">One</TaG>", TextUtil.stripNewlines(div.nextElementSibling().outerHtml()));
     }
 
     @Test public void canPreserveAttributeCase() {
@@ -1076,6 +1084,10 @@ public class HtmlParserTest {
         parser.settings(new ParseSettings(false, true));
         Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
         assertEquals("<html> <head></head> <body> <div id=\"1\"> <span ID=\"2\"></span> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        Element div = doc.selectFirst("#1");
+        div.after("<TaG ID=one>One</TaG>");
+        assertEquals("<tag ID=\"one\">One</tag>", TextUtil.stripNewlines(div.nextElementSibling().outerHtml()));
     }
 
     @Test public void canPreserveBothCase() {
@@ -1083,6 +1095,10 @@ public class HtmlParserTest {
         parser.settings(new ParseSettings(true, true));
         Document doc = parser.parseInput("<div id=1><SPAN ID=2>", "");
         assertEquals("<html> <head></head> <body> <div id=\"1\"> <SPAN ID=\"2\"></SPAN> </div> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+
+        Element div = doc.selectFirst("#1");
+        div.after("<TaG ID=one>One</TaG>");
+        assertEquals("<TaG ID=\"one\">One</TaG>", TextUtil.stripNewlines(div.nextElementSibling().outerHtml()));
     }
 
     @Test public void handlesControlCodeInAttributeName() {

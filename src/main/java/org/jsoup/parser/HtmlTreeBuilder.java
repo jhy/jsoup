@@ -61,8 +61,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
-        super.initialiseParse(input, baseUri, errors, settings);
+    protected void initialiseParse(Reader input, String baseUri, Parser parser) {
+        super.initialiseParse(input, baseUri, parser);
 
         // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
         state = HtmlTreeBuilderState.Initial;
@@ -79,10 +79,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
+        initialiseParse(new StringReader(inputFragment), baseUri, parser);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;
@@ -190,8 +190,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void error(HtmlTreeBuilderState state) {
-        if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
+        if (parser.getErrors().canAddError())
+            parser.getErrors().add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
 
     Element insert(Token.StartTag startTag) {
