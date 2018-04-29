@@ -3,6 +3,9 @@ jsoup changelog
 **** Release 1.12.1 [PENDING]
   * Change: removed deprecated method to disable TLS cert checking Connection.validateTLSCertificates().
 
+  * Change: some internal methods have been rearranged; if you extended any of the Jsoup internals you may need to make
+    updates.
+
   * Improvement: documents now remember their parser, so when later manipulating them, the correct HTML or XML tree
     builder is reused, as are the parser settings like case sensitivity.
     <https://github.com/jhy/jsoup/issues/769>

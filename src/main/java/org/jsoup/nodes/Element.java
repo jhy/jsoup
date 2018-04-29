@@ -140,7 +140,7 @@ public class Element extends Node {
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName, getParser().settings()); // maintains the case option of the original parse
+        tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -482,7 +482,7 @@ public class Element extends Node {
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, getParser().settings()), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -495,7 +495,7 @@ public class Element extends Node {
      *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element prependElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, getParser().settings()), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
         prependChild(child);
         return child;
     }
@@ -534,7 +534,7 @@ public class Element extends Node {
      */
     public Element append(String html) {
         Validate.notNull(html);
-        List<Node> nodes = getParser().parseFragmentInput(html, this, baseUri());
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
         addChildren(nodes.toArray(new Node[nodes.size()]));
         return this;
     }
@@ -547,7 +547,7 @@ public class Element extends Node {
      */
     public Element prepend(String html) {
         Validate.notNull(html);
-        List<Node> nodes = getParser().parseFragmentInput(html, this, baseUri());
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
         addChildren(0, nodes.toArray(new Node[nodes.size()]));
         return this;
     }
@@ -733,7 +733,8 @@ public class Element extends Node {
     }
 
     private static <E extends Element> int indexInList(Element search, List<E> elements) {
-        for (int i = 0; i < elements.size(); i++) {
+        final int size = elements.size();
+        for (int i = 0; i < size; i++) {
             if (elements.get(i) == search)
                 return i;
         }
@@ -1114,7 +1115,7 @@ public class Element extends Node {
 
     static boolean preserveWhitespace(Node node) {
         // looks only at this element and five levels up, to prevent recursion & needless stack searches
-        if (node != null && node instanceof Element) {
+        if (node instanceof Element) {
             Element el = (Element) node;
             int i = 0;
             do {
@@ -1396,21 +1397,14 @@ public class Element extends Node {
     public String html() {
         StringBuilder accum = StringUtil.stringBuilder();
         html(accum);
-        return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
+        return NodeUtils.outputSettings(this).prettyPrint() ? accum.toString().trim() : accum.toString();
     }
 
-    private void html(StringBuilder accum) {
-        for (Node node : childNodes)
-            node.outerHtml(accum);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public <T extends Appendable> T html(T appendable) {
-        for (Node node : childNodes)
-            node.outerHtml(appendable);
+        final int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).outerHtml(appendable);
 
         return appendable;
     }
@@ -1425,10 +1419,6 @@ public class Element extends Node {
         empty();
         append(html);
         return this;
-    }
-
-	public String toString() {
-        return outerHtml();
     }
 
     @Override

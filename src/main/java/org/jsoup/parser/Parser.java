@@ -13,8 +13,6 @@ import java.util.List;
  * in {@link org.jsoup.Jsoup}.
  */
 public class Parser {
-    private static final int DEFAULT_MAX_ERRORS = 0; // by default, error tracking is disabled.
-    
     private TreeBuilder treeBuilder;
     private ParseErrorList errors;
     private ParseSettings settings;

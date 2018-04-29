@@ -77,7 +77,7 @@ public class Comment extends LeafNode {
         XmlDeclaration decl = null;
         if (doc.childNodeSize() > 0) {
             Element el = doc.child(0);
-            decl = new XmlDeclaration(doc.getParser().settings().normalizeTag(el.tagName()), data.startsWith("!"));
+            decl = new XmlDeclaration(NodeUtils.parser(doc).settings().normalizeTag(el.tagName()), data.startsWith("!"));
             decl.attributes().addAll(el.attributes());
         }
         return decl;

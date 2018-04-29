@@ -556,10 +556,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return pendingTableCharacters;
     }
 
-    void setPendingTableCharacters(List<String> pendingTableCharacters) {
-        this.pendingTableCharacters = pendingTableCharacters;
-    }
-
     /**
      11.2.5.2 Closing elements that have implied end tags<p/>
      When the steps below require the UA to generate implied end tags, then, while the current node is a dd element, a

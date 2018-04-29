@@ -9,9 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -542,7 +540,6 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
-        private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
         private SSLSocketFactory sslSocketFactory;
 
@@ -602,14 +599,6 @@ public class HttpConnection implements Connection {
 
         public boolean ignoreHttpErrors() {
             return ignoreHttpErrors;
-        }
-
-        public boolean validateTLSCertificates() {
-            return validateTSLCertificates;
-        }
-
-        public void validateTLSCertificates(boolean value) {
-            validateTSLCertificates = value;
         }
 
         public SSLSocketFactory sslSocketFactory() {
@@ -677,7 +666,6 @@ public class HttpConnection implements Connection {
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
-        private static SSLSocketFactory sslSocketFactory;
         private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
@@ -931,20 +919,6 @@ public class HttpConnection implements Connection {
                     bodyStream = null;
                 }
             }
-        }
-
-        /**
-         * Instantiate Hostname Verifier that does nothing.
-         * This is used for connections with disabled SSL certificates validation.
-         *
-         * @return Hostname Verifier that does nothing and accepts all hostnames
-         */
-        private static HostnameVerifier getInsecureVerifier() {
-            return new HostnameVerifier() {
-                public boolean verify(String urlHostName, SSLSession session) {
-                    return true;
-                }
-            };
         }
 
         // set up url, method, header, cookies

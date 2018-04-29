@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -185,23 +184,6 @@ public final class DataUtil {
         Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
         final ConstrainableInputStream input = ConstrainableInputStream.wrap(inStream, bufferSize, maxSize);
         return input.readToByteBuffer(maxSize);
-    }
-
-    static ByteBuffer readToByteBuffer(InputStream inStream) throws IOException {
-        return readToByteBuffer(inStream, 0);
-    }
-
-    static ByteBuffer readFileToByteBuffer(File file) throws IOException {
-        RandomAccessFile randomAccessFile = null;
-        try {
-            randomAccessFile = new RandomAccessFile(file, "r");
-            byte[] bytes = new byte[(int) randomAccessFile.length()];
-            randomAccessFile.readFully(bytes);
-            return ByteBuffer.wrap(bytes);
-        } finally {
-            if (randomAccessFile != null)
-                randomAccessFile.close();
-        }
     }
 
     static ByteBuffer emptyByteBuffer() {
