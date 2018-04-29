@@ -35,14 +35,14 @@ public class ParseSettings {
         preserveAttributeCase = attribute;
     }
 
-    String normalizeTag(String name) {
+    public String normalizeTag(String name) {
         name = name.trim();
         if (!preserveTagCase)
             name = lowerCase(name);
         return name;
     }
 
-    String normalizeAttribute(String name) {
+    public String normalizeAttribute(String name) {
         name = name.trim();
         if (!preserveAttributeCase)
             name = lowerCase(name);

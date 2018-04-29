@@ -6,11 +6,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,29 +15,30 @@ import static org.jsoup.nodes.Entities.EscapeMode.base;
 import static org.jsoup.nodes.Entities.EscapeMode.extended;
 
 /**
- * HTML entities, and escape routines.
- * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
- * named character references</a>.
+ * HTML entities, and escape routines. Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C
+ * HTML named character references</a>.
  */
 public class Entities {
     private static final int empty = -1;
     private static final String emptyName = "";
     static final int codepointRadix = 36;
-    private static final Charset ASCII = Charset.forName("ascii");
+    private static final char[] codeDelims = {',', ';'};
+    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
+    private static final Document.OutputSettings DefaultOutput = new Document.OutputSettings();
 
     public enum EscapeMode {
         /**
          * Restricted entities suitable for XHTML output: lt, gt, amp, and quot only.
          */
-        xhtml("entities-xhtml.properties", 4),
+        xhtml(EntitiesData.xmlPoints, 4),
         /**
          * Default HTML output entities.
          */
-        base("entities-base.properties", 106),
+        base(EntitiesData.basePoints, 106),
         /**
          * Complete HTML entities.
          */
-        extended("entities-full.properties", 2125);
+        extended(EntitiesData.fullPoints, 2125);
 
         // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
         private String[] nameKeys;
@@ -75,8 +72,6 @@ public class Entities {
             return nameKeys.length;
         }
     }
-
-    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
 
     private Entities() {
     }
@@ -144,7 +139,16 @@ public class Entities {
         return 0;
     }
 
-    static String escape(String string, Document.OutputSettings out) {
+    /**
+     * HTML escape an input string. That is, {@code <} is returned as {@code &lt;}
+     *
+     * @param string the un-escaped string to escape
+     * @param out the output settings to use
+     * @return the escaped string
+     */
+    public static String escape(String string, Document.OutputSettings out) {
+        if (string == null)
+            return "";
         StringBuilder accum = new StringBuilder(string.length() * 2);
         try {
             escape(accum, string, out, false, false, false);
@@ -154,6 +158,17 @@ public class Entities {
         return accum.toString();
     }
 
+    /**
+     * HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is returned as
+     * {@code &lt;}
+     *
+     * @param string the un-escaped string to escape
+     * @return the escaped string
+     */
+    public static String escape(String string) {
+        return escape(string, DefaultOutput);
+    }
+
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
     static void escape(Appendable accum, String string, Document.OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
@@ -161,7 +176,7 @@ public class Entities {
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
-        final CharsetEncoder encoder = out.encoder != null ? out.encoder : out.prepareEncoder();
+        final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
         final int length = string.length();
 
@@ -238,7 +253,13 @@ public class Entities {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
     }
 
-    static String unescape(String string) {
+    /**
+     * Un-escape an HTML escaped string. That is, {@code &lt;} is returned as {@code <}.
+     *
+     * @param string the HTML string to un-escape
+     * @return the unescaped string
+     */
+    public static String unescape(String string) {
         return unescape(string, false);
     }
 
@@ -290,24 +311,17 @@ public class Entities {
         }
     }
 
-    private static final char[] codeDelims = {',', ';'};
-
-    private static void load(EscapeMode e, String file, int size) {
+    private static void load(EscapeMode e, String pointsData, int size) {
         e.nameKeys = new String[size];
         e.codeVals = new int[size];
         e.codeKeys = new int[size];
         e.nameVals = new String[size];
 
-        InputStream stream = Entities.class.getResourceAsStream(file);
-        if (stream == null)
-            throw new IllegalStateException("Could not read resource " + file + ". Make sure you copy resources for " + Entities.class.getCanonicalName());
-
         int i = 0;
-        BufferedReader input = new BufferedReader(new InputStreamReader(stream, ASCII));
-        CharacterReader reader = new CharacterReader(input);
+        CharacterReader reader = new CharacterReader(pointsData);
 
         while (!reader.isEmpty()) {
-            // NotNestedLessLess=10913,824;1887
+            // NotNestedLessLess=10913,824;1887&
 
             final String name = reader.consumeTo('=');
             reader.advance();
@@ -321,11 +335,7 @@ public class Entities {
             } else {
                 cp2 = empty;
             }
-            String indexS = reader.consumeTo('\n');
-            // default git checkout on windows will add a \r there, so remove
-            if (indexS.charAt(indexS.length() - 1) == '\r') {
-                indexS = indexS.substring(0, indexS.length() - 1);
-            }
+            final String indexS = reader.consumeTo('&');
             final int index = Integer.parseInt(indexS, codepointRadix);
             reader.advance();
 
@@ -339,6 +349,7 @@ public class Entities {
             }
             i++;
         }
-        Validate.isTrue(i == size, "Unexpected count of entities loaded for " + file);
+
+        Validate.isTrue(i == size, "Unexpected count of entities loaded");
     }
 }

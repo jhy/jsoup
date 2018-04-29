@@ -280,7 +280,7 @@ abstract class Token {
         }
     }
 
-    final static class Character extends Token {
+    static class Character extends Token {
         private String data;
 
         Character() {
@@ -307,6 +307,19 @@ abstract class Token {
         public String toString() {
             return getData();
         }
+    }
+
+    final static class CData extends Character {
+        CData(String data) {
+            super();
+            this.data(data);
+        }
+
+        @Override
+        public String toString() {
+            return "<![CDATA[" + getData() + "]]>";
+        }
+
     }
 
     final static class EOF extends Token {
@@ -356,6 +369,10 @@ abstract class Token {
         return type == TokenType.Character;
     }
 
+    final boolean isCData() {
+        return this instanceof CData;
+    }
+
     final Character asCharacter() {
         return (Character) this;
     }
@@ -364,12 +381,12 @@ abstract class Token {
         return type == TokenType.EOF;
     }
 
-    enum TokenType {
+    public enum TokenType {
         Doctype,
         StartTag,
         EndTag,
         Comment,
-        Character,
+        Character, // note no CData - treated in builder as an extension of Character
         EOF
     }
 }

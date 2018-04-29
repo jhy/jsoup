@@ -19,6 +19,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Stack;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -59,8 +60,7 @@ public class W3CDom {
             out.setDocumentURI(in.location());
 
         org.jsoup.nodes.Element rootEl = in.child(0); // skip the #root node
-        NodeTraversor traversor = new NodeTraversor(new W3CBuilder(out));
-        traversor.traverse(rootEl);
+        NodeTraversor.traverse(new W3CBuilder(out), rootEl);
     }
 
     /**
@@ -71,19 +71,21 @@ public class W3CDom {
         private static final String xmlnsPrefix = "xmlns:";
 
         private final Document doc;
-        private final HashMap<String, String> namespaces = new HashMap<>(); // prefix => urn
+        private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Element dest;
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
+            this.namespacesStack.push(new HashMap<String, String>());
         }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
+            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
             if (source instanceof org.jsoup.nodes.Element) {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
 
                 String prefix = updateNamespaces(sourceEl);
-                String namespace = namespaces.get(prefix);
+                String namespace = namespacesStack.peek().get(prefix);
 
                 Element el = doc.createElementNS(namespace, sourceEl.tagName());
                 copyAttributes(sourceEl, el);
@@ -114,6 +116,7 @@ public class W3CDom {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
                 dest = (Element) dest.getParentNode(); // undescend. cromulent.
             }
+            namespacesStack.pop();
         }
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
@@ -142,7 +145,7 @@ public class W3CDom {
                 } else {
                     continue;
                 }
-                namespaces.put(prefix, attr.getValue());
+                namespacesStack.peek().put(prefix, attr.getValue());
             }
 
             // get the element prefix if any

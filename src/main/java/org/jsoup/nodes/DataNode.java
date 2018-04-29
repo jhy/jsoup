@@ -20,7 +20,7 @@ public class DataNode extends LeafNode {
      Create a new DataNode.
      @param data data contents
      @param baseUri Unused, Leaf Nodes do not hold base URis
-     @deprecated
+     @deprecated use {@link #DataNode(String)} instead
      */
     public DataNode(String data, String baseUri) {
         this(data);
@@ -67,6 +67,6 @@ public class DataNode extends LeafNode {
      */
     public static DataNode createFromEncoded(String encodedData, String baseUri) {
         String data = Entities.unescape(encodedData);
-        return new DataNode(data, baseUri);
+        return new DataNode(data);
     }
 }

@@ -298,4 +298,11 @@ public class CleanerTest {
         String clean = Jsoup.clean(html, Whitelist.basic());
         assertEquals("<a rel=\"nofollow\"></a>", clean);
     }
+
+    @Test public void handlesAttributesWithNoValue() {
+        // https://github.com/jhy/jsoup/issues/973
+        String clean = Jsoup.clean("<a href>Clean</a>", Whitelist.basic());
+
+        assertEquals("<a rel=\"nofollow\">Clean</a>", clean);
+    }
 }

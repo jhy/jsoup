@@ -27,7 +27,7 @@ public class TextNode extends LeafNode {
      @param text raw text
      @param baseUri base uri - ignored for this node type
      @see #createFromEncoded(String, String)
-     @deprecated use {@link TextNode(String)}
+     @deprecated use {@link TextNode#TextNode(String)}
      */
     public TextNode(String text, String baseUri) {
         this(text);
@@ -43,7 +43,7 @@ public class TextNode extends LeafNode {
      * @see TextNode#getWholeText()
      */
     public String text() {
-        return normaliseWhitespace(getWholeText());
+        return StringUtil.normaliseWhitespace(getWholeText());
     }
     
     /**
@@ -86,7 +86,7 @@ public class TextNode extends LeafNode {
         String head = text.substring(0, offset);
         String tail = text.substring(offset);
         text(head);
-        TextNode tailNode = new TextNode(tail, this.baseUri());
+        TextNode tailNode = new TextNode(tail);
         if (parent() != null)
             parent().addChildren(siblingIndex()+1, tailNode);
 

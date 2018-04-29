@@ -48,6 +48,16 @@ public final class StringUtil {
     }
 
     /**
+     * Join an array of strings by a separator
+     * @param strings collection of string objects
+     * @param sep string to place between strings
+     * @return joined string
+     */
+    public static String join(String[] strings, String sep) {
+        return join(Arrays.asList(strings), sep);
+    }
+
+    /**
      * Returns space padding
      * @param width amount of padding desired
      * @return string of spaces * width
@@ -118,6 +128,11 @@ public final class StringUtil {
         // 160 is &nbsp; (non-breaking space). Not in the spec but expected.
     }
 
+    public static boolean isInvisibleChar(int c) {
+        return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
+        // zero width sp, zw non join, zw join, soft hyphen
+    }
+
     /**
      * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
      * (e.g. newline, tab) convert to a simple space
@@ -150,7 +165,7 @@ public final class StringUtil {
                 accum.append(' ');
                 lastWasWhite = true;
             }
-            else {
+            else if (!isInvisibleChar(c)) {
                 accum.appendCodePoint(c);
                 lastWasWhite = false;
                 reachedNonWhite = true;
@@ -158,9 +173,10 @@ public final class StringUtil {
         }
     }
 
-    public static boolean in(String needle, String... haystack) {
-        for (String hay : haystack) {
-            if (hay.equals(needle))
+    public static boolean in(final String needle, final String... haystack) {
+        final int len = haystack.length;
+        for (int i = 0; i < len; i++) {
+            if (haystack[i].equals(needle))
             return true;
         }
         return false;
@@ -211,7 +227,7 @@ public final class StringUtil {
     }
 
     /**
-     * Maintains a cached StringBuilder, to minimize new StringBuilder GCs. Prevents it from growing to big per thread.
+     * Maintains a cached StringBuilder, to minimize new StringBuilder GCs. Prevents it from growing too big per thread.
      * Care must be taken to not grab more than one in the same stack (not locked or mutexed or anything).
      * @return an empty StringBuilder
      */

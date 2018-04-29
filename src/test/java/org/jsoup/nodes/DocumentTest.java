@@ -404,7 +404,7 @@ public class DocumentTest {
         doc.appendElement("root").text("node");
         doc.outputSettings().syntax(Syntax.xml);
         
-        if( addDecl == true ) {
+        if(addDecl) {
             XmlDeclaration decl = new XmlDeclaration("xml", false);
             decl.attr("version", version);
             decl.attr("encoding", charset);

@@ -1,7 +1,12 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 import java.util.ArrayList;
 
@@ -374,7 +379,7 @@ enum HtmlTreeBuilderState {
                             tb.processEndTag("p");
                         }
                         tb.insert(startTag);
-                        // todo: ignore LF if next token
+                        tb.reader.matchConsume("\n"); // ignore LF if next token
                         tb.framesetOk(false);
                     } else if (name.equals("form")) {
                         if (tb.getFormElement() != null) {
@@ -760,7 +765,7 @@ enum HtmlTreeBuilderState {
         }
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
-            String name = t.asEndTag().name(); // matches with case sensitivity if enabled
+            String name = tb.settings.normalizeTag(t.asEndTag().name()); // matches with case sensitivity if enabled
             ArrayList<Element> stack = tb.getStack();
             for (int pos = stack.size() -1; pos >= 0; pos--) {
                 Element node = stack.get(pos);
@@ -1033,7 +1038,9 @@ enum HtmlTreeBuilderState {
                 case StartTag:
                     Token.StartTag startTag = t.asStartTag();
                     String name = startTag.normalName();
-                    if (name.equals("tr")) {
+                    if (name.equals("template")) {
+                        tb.insert(startTag);
+                    } else if (name.equals("tr")) {
                         tb.clearStackToTableBodyContext();
                         tb.insert(startTag);
                         tb.transition(InRow);
@@ -1093,7 +1100,9 @@ enum HtmlTreeBuilderState {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.normalName();
 
-                if (StringUtil.in(name, "th", "td")) {
+                if (name.equals("template")) {
+                    tb.insert(startTag);
+                } else if (StringUtil.in(name, "th", "td")) {
                     tb.clearStackToTableRowContext();
                     tb.insert(startTag);
                     tb.transition(InCell);
@@ -1470,13 +1479,7 @@ enum HtmlTreeBuilderState {
     }
 
     private static boolean isWhitespace(String data) {
-        // todo: this checks more than spec - "\t", "\n", "\f", "\r", " "
-        for (int i = 0; i < data.length(); i++) {
-            char c = data.charAt(i);
-            if (!StringUtil.isWhitespace(c))
-                return false;
-        }
-        return true;
+        return StringUtil.isBlank(data);
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
@@ -1495,27 +1498,28 @@ enum HtmlTreeBuilderState {
 
     // lists of tags to search through. A little harder to read here, but causes less GC than dynamic varargs.
     // was contributing around 10% of parse GC load.
-    private static final class Constants {
-        private static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "title"};
-        private static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
-                "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
-                "p", "section", "summary", "ul"};
-        private static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
-        private static final String[] InBodyStartPreListing = new String[]{"pre", "listing"};
-        private static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
-        private static final String[] DdDt = new String[]{"dd", "dt"};
-        private static final String[] Formatters = new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"};
-        private static final String[] InBodyStartApplets = new String[]{"applet", "marquee", "object"};
-        private static final String[] InBodyStartEmptyFormatters = new String[]{"area", "br", "embed", "img", "keygen", "wbr"};
-        private static final String[] InBodyStartMedia = new String[]{"param", "source", "track"};
-        private static final String[] InBodyStartInputAttribs = new String[]{"name", "action", "prompt"};
-        private static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
-        private static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
-        private static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
-        private static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
-                "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
-                "nav", "ol", "pre", "section", "summary", "ul"};
-        private static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
-        private static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
+    // must make sure these are sorted, as used in findSorted. MUST update HtmlTreebuilderStateTest if more arrays added.
+    static final class Constants {
+        static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "title"};
+        static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
+            "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
+            "p", "section", "summary", "ul"};
+        static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
+        static final String[] InBodyStartPreListing = new String[]{"listing", "pre"};
+        static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
+        static final String[] DdDt = new String[]{"dd", "dt"};
+        static final String[] Formatters = new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"};
+        static final String[] InBodyStartApplets = new String[]{"applet", "marquee", "object"};
+        static final String[] InBodyStartEmptyFormatters = new String[]{"area", "br", "embed", "img", "keygen", "wbr"};
+        static final String[] InBodyStartMedia = new String[]{"param", "source", "track"};
+        static final String[] InBodyStartInputAttribs = new String[]{"action", "name", "prompt"};
+        static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
+        static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
+        static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
+        static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
+            "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
+            "nav", "ol", "pre", "section", "summary", "ul"};
+        static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
+        static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
     }
 }

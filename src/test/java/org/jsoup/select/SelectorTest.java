@@ -748,4 +748,65 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("One'One", els.text());
     }
+
+    @Test public void selectFirst() {
+        String html = "<p>One<p>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("One", doc.selectFirst("p").text());
+    }
+
+    @Test public void selectFirstWithAnd() {
+        String html = "<p>One<p class=foo>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("Two", doc.selectFirst("p.foo").text());
+    }
+
+    @Test public void selectFirstWithOr() {
+        String html = "<p>One<p>Two<p>Three<div>Four";
+        Document doc = Jsoup.parse(html);
+        assertEquals("One", doc.selectFirst("p, div").text());
+    }
+
+    @Test public void matchText() {
+        String html = "<p>One<br>Two</p>";
+        Document doc = Jsoup.parse(html);
+        String origHtml = doc.html();
+
+        Elements one = doc.select("p:matchText:first-child");
+        assertEquals("One", one.first().text());
+
+        Elements two = doc.select("p:matchText:last-child");
+        assertEquals("Two", two.first().text());
+
+        assertEquals(origHtml, doc.html());
+
+        assertEquals("Two", doc.select("p:matchText + br + *").text());
+    }
+
+    @Test public void splitOnBr() {
+        String html = "<div><p>One<br>Two<br>Three</p></div>";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p:matchText");
+        assertEquals(3, els.size());
+        assertEquals("One", els.get(0).text());
+        assertEquals("Two", els.get(1).text());
+        assertEquals("Three", els.get(2).toString());
+    }
+
+    @Test public void matchTextAttributes() {
+        Document doc = Jsoup.parse("<div><p class=one>One<br>Two<p class=two>Three<br>Four");
+        Elements els = doc.select("p.two:matchText:last-child");
+
+        assertEquals(1, els.size());
+        assertEquals("Four", els.text());
+    }
+
+    @Test public void findBetweenSpan() {
+        Document doc = Jsoup.parse("<p><span>One</span> Two <span>Three</span>");
+        Elements els = doc.select("span ~ p:matchText"); // the Two becomes its own p, sibling of the span
+
+        assertEquals(1, els.size());
+        assertEquals("Two", els.text());
+    }
 }

@@ -612,11 +612,17 @@ public class Elements extends ArrayList<Element> {
      * @return this, for chaining
      */
     public Elements traverse(NodeVisitor nodeVisitor) {
-        Validate.notNull(nodeVisitor);
-        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
-        for (Element el: this) {
-            traversor.traverse(el);
-        }
+        NodeTraversor.traverse(nodeVisitor, this);
+        return this;
+    }
+
+    /**
+     * Perform a depth-first filtering on each of the selected elements.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this, for chaining
+     */
+    public Elements filter(NodeFilter nodeFilter) {
+        NodeTraversor.filter(nodeFilter, this);
         return this;
     }
 

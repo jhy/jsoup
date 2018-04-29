@@ -1,0 +1,29 @@
+<table style="width:100%">
+  <thead>
+    <th></th>
+    <template is="dom-repeat" items="{{fields_}}" as="field">
+      <th class$="[[cssClassForCell_(field.key, showAll_)]]">{{field.name}}</th>
+    </template>
+  </thead>
+  <tbody>
+    <tr></tr>
+    <template is="dom-repeat" items="{{volumes_}}" as="volume">
+      <tr class$="[[cssClassForVolume_(volume.inactive, showInactive_)]]">
+        <td style="background-color: white !important;">
+          <paper-button on-tap="onRetrieveButtonClick_" raised>Retrieve</paper-button>
+        </td>
+        <template is="dom-repeat" items="{{volume.data}}" as="field">
+          <td class$="[[cssClassForCell_(field.key, showAll_)]]">
+            {{field.value}}
+            <template is="dom-if" if="{{field.edit_link}}">
+              <iron-icon
+                icon="icons:create" on-click="changeOwner_"
+                data-id$="{{volume.id}}" data-owner$="{{field.value}}">
+              </iron-icon>
+            </template>
+          </td>
+        </template>
+      </tr>
+    </template>
+  </tbody>
+</table>

@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
@@ -16,25 +17,29 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.jsoup.helper.StringUtil.inSorted;
+
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 public class HtmlTreeBuilder extends TreeBuilder {
-    // tag searches
-    private static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "table", "td", "th", "marquee", "object"};
-    private static final String[] TagSearchList = new String[]{"ol", "ul"};
-    private static final String[] TagSearchButton = new String[]{"button"};
-    private static final String[] TagSearchTableScope = new String[]{"html", "table"};
-    private static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
-    private static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"};
-    private static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
-            "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
-            "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
-            "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
-            "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
-            "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
-            "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
-            "title", "tr", "ul", "wbr", "xmp"};
+    // tag searches. must be sorted, used in inSorted. MUST update HtmlTreeBuilderTest if more arrays are added.
+    static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "marquee", "object", "table", "td", "th"};
+    static final String[] TagSearchList = new String[]{"ol", "ul"};
+    static final String[] TagSearchButton = new String[]{"button"};
+    static final String[] TagSearchTableScope = new String[]{"html", "table"};
+    static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
+    static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rp", "rt"};
+    static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
+        "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
+        "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
+        "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
+        "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
+        "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
+        "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
+        "title", "tr", "ul", "wbr", "xmp"};
+
+    public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
 
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
@@ -51,15 +56,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean fosterInserts; // if next inserts should be fostered
     private boolean fragmentParsing; // if parsing a fragment of html
 
-    HtmlTreeBuilder() {}
-
     ParseSettings defaultSettings() {
         return ParseSettings.htmlDefault;
     }
 
     @Override
-    protected void initialiseParse(Reader input, String baseUri, ParseErrorList errors, ParseSettings settings) {
-        super.initialiseParse(input, baseUri, errors, settings);
+    protected void initialiseParse(Reader input, String baseUri, Parser parser) {
+        super.initialiseParse(input, baseUri, parser);
 
         // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
         state = HtmlTreeBuilderState.Initial;
@@ -76,10 +79,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
+    List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        initialiseParse(new StringReader(inputFragment), baseUri, errors, settings);
+        initialiseParse(new StringReader(inputFragment), baseUri, parser);
         contextElement = context;
         fragmentParsing = true;
         Element root = null;
@@ -187,8 +190,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void error(HtmlTreeBuilderState state) {
-        if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
+        if (parser.getErrors().canAddError())
+            parser.getErrors().add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
 
     Element insert(Token.StartTag startTag) {
@@ -251,11 +254,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
-        String tagName = currentElement().tagName();
-        if (tagName.equals("script") || tagName.equals("style"))
-            node = new DataNode(characterToken.getData());
+        final String tagName = currentElement().tagName();
+        final String data = characterToken.getData();
+
+        if (characterToken.isCData())
+            node = new CDataNode(data);
+        else if (tagName.equals("script") || tagName.equals("style"))
+            node = new DataNode(data);
         else
-            node = new TextNode(characterToken.getData());
+            node = new TextNode(data);
         currentElement().appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
     }
 
@@ -332,11 +339,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
+    // elnames is sorted, comes from Constants
     void popStackToClose(String... elNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (StringUtil.in(next.nodeName(), elNames))
+            if (inSorted(next.nodeName(), elNames))
                 break;
         }
     }
@@ -357,11 +365,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void clearStackToTableBodyContext() {
-        clearStackToContext("tbody", "tfoot", "thead");
+        clearStackToContext("tbody", "tfoot", "thead", "template");
     }
 
     void clearStackToTableRowContext() {
-        clearStackToContext("tr");
+        clearStackToContext("tr", "template");
     }
 
     private void clearStackToContext(String... nodeNames) {
@@ -459,17 +467,21 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, String[] extraTypes) {
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            String elName = el.nodeName();
-            if (StringUtil.in(elName, targetNames))
+        // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
+        final int bottom = stack.size() -1;
+        final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
+        // don't walk too far up the tree
+
+        for (int pos = bottom; pos >= top; pos--) {
+            final String elName = stack.get(pos).nodeName();
+            if (inSorted(elName, targetNames))
                 return true;
-            if (StringUtil.in(elName, baseTypes))
+            if (inSorted(elName, baseTypes))
                 return false;
-            if (extraTypes != null && StringUtil.in(elName, extraTypes))
+            if (extraTypes != null && inSorted(elName, extraTypes))
                 return false;
         }
-        Validate.fail("Should not be reachable");
+        //Validate.fail("Should not be reachable"); // would end up false because hitting 'html' at root (basetypes)
         return false;
     }
 
@@ -505,7 +517,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             String elName = el.nodeName();
             if (elName.equals(targetName))
                 return true;
-            if (!StringUtil.in(elName, TagSearchSelectScope)) // all elements except
+            if (!inSorted(elName, TagSearchSelectScope)) // all elements except
                 return false;
         }
         Validate.fail("Should not be reachable");
@@ -559,7 +571,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     void generateImpliedEndTags(String excludeTag) {
         while ((excludeTag != null && !currentElement().nodeName().equals(excludeTag)) &&
-                StringUtil.in(currentElement().nodeName(), TagSearchEndTags))
+                inSorted(currentElement().nodeName(), TagSearchEndTags))
             pop();
     }
 
@@ -571,7 +583,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // todo: mathml's mi, mo, mn
         // todo: svg's foreigObject, desc, title
         String name = el.nodeName();
-        return StringUtil.in(name, TagSearchSpecial);
+        return inSorted(name, TagSearchSpecial);
     }
 
     Element lastFormattingElement() {

@@ -45,10 +45,9 @@ public class HttpConnectionTest {
 
     @Test @MultiLocaleTest public void caseInsensitiveHeaders() {
         Connection.Response res = new HttpConnection.Response();
-        Map<String, String> headers = res.headers();
-        headers.put("Accept-Encoding", "gzip");
-        headers.put("content-type", "text/html");
-        headers.put("refErrer", "http://example.com");
+        res.header("Accept-Encoding", "gzip");
+        res.header("content-type", "text/html");
+        res.header("refErrer", "http://example.com");
 
         assertTrue(res.hasHeader("Accept-Encoding"));
         assertTrue(res.hasHeader("accept-encoding"));
@@ -73,7 +72,7 @@ public class HttpConnectionTest {
 
     @Test public void headers() {
         Connection con = HttpConnection.connect("http://example.com");
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "text/html");
         headers.put("Connection", "keep-alive");
         headers.put("Host", "http://example.com");
@@ -84,8 +83,8 @@ public class HttpConnectionTest {
     }
 
     @Test public void sameHeadersCombineWithComma() {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        List<String> values = new ArrayList<String>();
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> values = new ArrayList<>();
         values.add("no-cache");
         values.add("no-store");
         headers.put("Cache-Control", values);
@@ -94,9 +93,42 @@ public class HttpConnectionTest {
         assertEquals("no-cache, no-store", res.header("Cache-Control"));
     }
 
+    @Test public void multipleHeaders() {
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("Accept", "Something");
+        req.addHeader("Accept", "Everything");
+        req.addHeader("Foo", "Bar");
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeader("ACCEpt"));
+        assertEquals("Something, Everything", req.header("accept"));
+        assertTrue(req.hasHeader("fOO"));
+        assertEquals("Bar", req.header("foo"));
+
+        List<String> accept = req.headers("accept");
+        assertEquals(2, accept.size());
+        assertEquals("Something", accept.get(0));
+        assertEquals("Everything", accept.get(1));
+
+        Map<String, List<String>> headers = req.multiHeaders();
+        assertEquals(accept, headers.get("Accept"));
+        assertEquals("Bar", headers.get("Foo").get(0));
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeaderWithValue("accept", "Something"));
+        assertTrue(req.hasHeaderWithValue("accept", "Everything"));
+        assertFalse(req.hasHeaderWithValue("accept", "Something for nothing"));
+
+        req.removeHeader("accept");
+        headers = req.multiHeaders();
+        assertEquals("Bar", headers.get("Foo").get(0));
+        assertFalse(req.hasHeader("Accept"));
+        assertTrue(headers.get("Accept") == null);
+    }
+
     @Test public void ignoresEmptySetCookies() {
         // prep http response header map
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
         headers.put("Set-Cookie", Collections.<String>emptyList());
         HttpConnection.Response res = new HttpConnection.Response();
         res.processResponseHeaders(headers);
@@ -105,8 +137,8 @@ public class HttpConnectionTest {
 
     @Test public void ignoresEmptyCookieNameAndVals() {
         // prep http response header map
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        List<String> cookieStrings = new ArrayList<String>();
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> cookieStrings = new ArrayList<>();
         cookieStrings.add(null);
         cookieStrings.add("");
         cookieStrings.add("one");

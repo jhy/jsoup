@@ -59,8 +59,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @param key the new key; must not be null
      */
     public void setKey(String key) {
-        Validate.notEmpty(key);
+        Validate.notNull(key);
         key = key.trim();
+        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
             if (i != Attributes.NotFound)
@@ -158,11 +159,10 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return shouldCollapseAttribute(key, val, out);
     }
 
-    protected static boolean shouldCollapseAttribute(String key, String val, Document.OutputSettings out) {
-        // todo: optimize
-        return (val == null || "".equals(val) || val.equalsIgnoreCase(key))
-            && out.syntax() == Document.OutputSettings.Syntax.html
-            && isBooleanAttribute(key);
+    protected static boolean shouldCollapseAttribute(final String key, final String val, final Document.OutputSettings out) {
+        return (
+            out.syntax() == Document.OutputSettings.Syntax.html &&
+                (val == null || ("".equals(val) || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
     }
 
     /**

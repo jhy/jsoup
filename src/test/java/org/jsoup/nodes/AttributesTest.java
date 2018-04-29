@@ -145,4 +145,14 @@ public class AttributesTest {
         assertFalse(a.hasKey("Tot"));
     }
 
+    @Test
+    public void testSetKeyConsistency() {
+        Attributes a = new Attributes();
+        a.put("a", "a");
+        for(Attribute at : a) {
+            at.setKey("b");
+        }
+        assertFalse("Attribute 'a' not correctly removed", a.hasKey("a"));
+        assertTrue("Attribute 'b' not present after renaming", a.hasKey("b"));
+    }
 }

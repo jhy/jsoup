@@ -54,8 +54,16 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (minNewSize > newSize)
             newSize = minNewSize;
 
-        keys = Arrays.copyOf(keys, newSize);
-        vals = Arrays.copyOf(vals, newSize);
+        keys = copyOf(keys, newSize);
+        vals = copyOf(vals, newSize);
+    }
+
+    // simple implementation of Arrays.copy, for support of Android API 8.
+    private static String[] copyOf(String[] orig, int size) {
+        final String[] copy = new String[size];
+        System.arraycopy(orig, 0, copy, 0,
+                Math.min(orig.length, size));
+        return copy;
     }
 
     int indexOfKey(String key) {
@@ -77,7 +85,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
-    static final String checkNotNull(String val) {
+    static String checkNotNull(String val) {
         return val == null ? EmptyString : val;
     }
 
@@ -308,9 +316,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             accum.append(' ').append(key);
 
             // collapse checked=null, checked="", checked=checked; write out others
-            if (!(out.syntax() == Document.OutputSettings.Syntax.html
-                && (val == null || val.equals(key) && Attribute.isBooleanAttribute(key)))) {
-
+            if (!Attribute.shouldCollapseAttribute(key, val, out)) {
                 accum.append("=\"");
                 Entities.escape(accum, val == null ? EmptyString : val, out, true, false, false);
                 accum.append('"');
@@ -361,8 +367,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             throw new RuntimeException(e);
         }
         clone.size = size;
-        keys = Arrays.copyOf(keys, size);
-        vals = Arrays.copyOf(vals, size);
+        keys = copyOf(keys, size);
+        vals = copyOf(vals, size);
         return clone;
     }
 

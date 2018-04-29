@@ -3,12 +3,12 @@ package org.jsoup.nodes;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +18,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
+    private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
     private boolean updateMetaCharset = false;
@@ -42,6 +43,7 @@ public class Document extends Element {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
+        doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -372,7 +374,7 @@ public class Document extends Element {
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset;
-        CharsetEncoder encoder; // initialized by start of OuterHtmlVisitor and cleared at end
+        private ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
         Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
@@ -381,7 +383,7 @@ public class Document extends Element {
         private Syntax syntax = Syntax.html;
 
         public OutputSettings() {
-            charset(StandardCharsets.UTF_8);
+            charset(Charset.forName("UTF8"));
         }
         
         /**
@@ -440,9 +442,16 @@ public class Document extends Element {
         }
 
         CharsetEncoder prepareEncoder() {
-            encoder = charset.newEncoder(); // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            CharsetEncoder encoder = charset.newEncoder();
+            encoderThreadLocal.set(encoder);
             coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
             return encoder;
+        }
+
+        CharsetEncoder encoder() {
+            CharsetEncoder encoder = encoderThreadLocal.get();
+            return encoder != null ? encoder : prepareEncoder();
         }
 
         /**
@@ -565,6 +574,25 @@ public class Document extends Element {
 
     public Document quirksMode(QuirksMode quirksMode) {
         this.quirksMode = quirksMode;
+        return this;
+    }
+
+    /**
+     * Get the parser that was used to parse this document.
+     * @return the parser
+     */
+    public Parser parser() {
+        return parser;
+    }
+
+    /**
+     * Set the parser used to create this document. This parser is then used when further parsing within this document
+     * is required.
+     * @param parser the configured parser to use when further parsing is required for this document.
+     * @return this document, for chaining.
+     */
+    public Document parser(Parser parser) {
+        this.parser = parser;
         return this;
     }
 }

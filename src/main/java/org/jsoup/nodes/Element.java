@@ -4,7 +4,6 @@ import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -86,7 +85,7 @@ public class Element extends Node {
 
     protected List<Node> ensureChildNodes() {
         if (childNodes == EMPTY_NODES) {
-            childNodes = new NodeList(4);
+            childNodes = new NodeList(this, 4);
         }
         return childNodes;
     }
@@ -141,7 +140,7 @@ public class Element extends Node {
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName, ParseSettings.preserveCase); // preserve the requested tag case
+        tag = Tag.valueOf(tagName, getParser().settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -364,6 +363,17 @@ public class Element extends Node {
     }
 
     /**
+     * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
+     * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
+     * execution stops on the first hit.</p>
+     * @param cssQuery cssQuery a {@link Selector} CSS-like query
+     * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     */
+    public Element selectFirst(String cssQuery) {
+        return Selector.selectFirst(cssQuery, this);
+    }
+
+    /**
      * Check if this element matches the given {@link Selector} CSS query.
      * @param cssQuery a {@link Selector} CSS query
      * @return if this element matches the query
@@ -472,7 +482,7 @@ public class Element extends Node {
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, getParser().settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -485,7 +495,7 @@ public class Element extends Node {
      *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element prependElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, getParser().settings()), baseUri());
         prependChild(child);
         return child;
     }
@@ -524,8 +534,7 @@ public class Element extends Node {
      */
     public Element append(String html) {
         Validate.notNull(html);
-
-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        List<Node> nodes = getParser().parseFragmentInput(html, this, baseUri());
         addChildren(nodes.toArray(new Node[nodes.size()]));
         return this;
     }
@@ -538,8 +547,7 @@ public class Element extends Node {
      */
     public Element prepend(String html) {
         Validate.notNull(html);
-        
-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+        List<Node> nodes = getParser().parseFragmentInput(html, this, baseUri());
         addChildren(0, nodes.toArray(new Node[nodes.size()]));
         return this;
     }
@@ -1005,13 +1013,14 @@ public class Element extends Node {
      * <p>
      * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
-     * @return unencoded text, or empty string if none.
+     * @return unencoded, normalized text, or empty string if none.
+     * @see #wholeText() if you don't want the text to be normalized.
      * @see #ownText()
      * @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = StringUtil.stringBuilder();
-        new NodeTraversor(new NodeVisitor() {
+        final StringBuilder accum = new StringBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -1026,9 +1035,39 @@ public class Element extends Node {
             }
 
             public void tail(Node node, int depth) {
+                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
+                if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+
             }
-        }).traverse(this);
+        }, this);
         return accum.toString().trim();
+    }
+
+    /**
+     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
+     * original.
+     *
+     * @return unencoded, un-normalized text
+     * @see #text()
+     */
+    public String wholeText() {
+        final StringBuilder accum = new StringBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    accum.append(textNode.getWholeText());
+                }
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        }, this);
+        return accum.toString();
     }
 
     /**
@@ -1062,7 +1101,7 @@ public class Element extends Node {
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
 
-        if (preserveWhitespace(textNode.parentNode))
+        if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
             StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
@@ -1074,11 +1113,16 @@ public class Element extends Node {
     }
 
     static boolean preserveWhitespace(Node node) {
-        // looks only at this element and one level up, to prevent recursion & needless stack searches
+        // looks only at this element and five levels up, to prevent recursion & needless stack searches
         if (node != null && node instanceof Element) {
-            Element element = (Element) node;
-            return element.tag.preserveWhitespace() ||
-                element.parent() != null && element.parent().tag.preserveWhitespace();
+            Element el = (Element) node;
+            int i = 0;
+            do {
+                if (el.tag.preserveWhitespace())
+                    return true;
+                el = el.parent();
+                i++;
+            } while (i < 6 && el != null);
         }
         return false;
     }
@@ -1140,6 +1184,11 @@ public class Element extends Node {
                 Element element = (Element) childNode;
                 String elementData = element.data();
                 sb.append(elementData);
+            } else if (childNode instanceof CDataNode) {
+                // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
+                // but incase another type gets through.
+                CDataNode cDataNode = (CDataNode) childNode;
+                sb.append(cDataNode.getWholeText());
             }
         }
         return sb.toString();
@@ -1175,7 +1224,11 @@ public class Element extends Node {
      */
     public Element classNames(Set<String> classNames) {
         Validate.notNull(classNames);
-        attributes().put("class", StringUtil.join(classNames, " "));
+        if (classNames.isEmpty()) {
+            attributes().remove("class");
+        } else {
+            attributes().put("class", StringUtil.join(classNames, " "));
+        }
         return this;
     }
 
@@ -1384,24 +1437,32 @@ public class Element extends Node {
     }
 
     @Override
+    public Element shallowClone() {
+        // simpler than implementing a clone version with no child copy
+        return new Element(tag, baseUri, attributes);
+    }
+
+    @Override
     protected Element doClone(Node parent) {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.baseUri = baseUri;
-        clone.childNodes = new NodeList(childNodes.size());
-
-        clone.childNodes.addAll(childNodes);
+        clone.childNodes = new NodeList(clone, childNodes.size());
+        clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
 
         return clone;
     }
 
-    private final class NodeList extends ChangeNotifyingArrayList<Node> {
-        NodeList(int initialCapacity) {
+    private static final class NodeList extends ChangeNotifyingArrayList<Node> {
+        private final Element owner;
+
+        NodeList(Element owner, int initialCapacity) {
             super(initialCapacity);
+            this.owner = owner;
         }
 
         public void onContentsChanged() {
-            nodelistChanged();
+            owner.nodelistChanged();
         }
     }
 }

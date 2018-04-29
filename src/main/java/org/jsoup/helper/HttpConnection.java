@@ -11,11 +11,8 @@ import org.jsoup.parser.TokenQueue;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -31,19 +28,20 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -66,6 +64,7 @@ public class HttpConnection implements Connection {
     private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final Object APPLICATION_PDF = "application/pdf";
+    private static final String DefaultUploadType = "application/octet-stream";
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -186,18 +185,25 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Connection validateTLSCertificates(boolean value) {
-        req.validateTLSCertificates(value);
-        return this;
-    }
 
     public Connection data(String key, String value) {
         req.data(KeyVal.create(key, value));
         return this;
     }
 
+    public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+	    req.sslSocketFactory(sslSocketFactory);
+	    return this;
+    }
+
     public Connection data(String key, String filename, InputStream inputStream) {
         req.data(KeyVal.create(key, filename, inputStream));
+        return this;
+    }
+
+    @Override
+    public Connection data(String key, String filename, InputStream inputStream, String contentType) {
+        req.data(KeyVal.create(key, filename, inputStream).contentType(contentType));
         return this;
     }
 
@@ -319,7 +325,7 @@ public class HttpConnection implements Connection {
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
         URL url;
         Method method;
-        Map<String, String> headers;
+        Map<String, List<String>> headers;
         Map<String, String> cookies;
 
         private Base() {
@@ -349,12 +355,34 @@ public class HttpConnection implements Connection {
 
         public String header(String name) {
             Validate.notNull(name, "Header name must not be null");
-            String val = getHeaderCaseInsensitive(name);
-            if (val != null) {
-                // headers should be ISO8859 - but values are often actually UTF-8. Test if it looks like UTF8 and convert if so
-                val = fixHeaderEncoding(val);
+            List<String> vals = getHeadersCaseInsensitive(name);
+            if (vals.size() > 0) {
+                // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                return StringUtil.join(vals, ", ");
             }
-            return val;
+
+            return null;
+        }
+
+        @Override
+        public T addHeader(String name, String value) {
+            Validate.notEmpty(name);
+            value = value == null ? "" : value;
+
+            List<String> values = headers(name);
+            if (values.isEmpty()) {
+                values = new ArrayList<>();
+                headers.put(name, values);
+            }
+            values.add(fixHeaderEncoding(value));
+
+            return (T) this;
+        }
+
+        @Override
+        public List<String> headers(String name) {
+            Validate.notEmpty(name);
+            return getHeadersCaseInsensitive(name);
         }
 
         private static String fixHeaderEncoding(String val) {
@@ -408,53 +436,68 @@ public class HttpConnection implements Connection {
 
         public T header(String name, String value) {
             Validate.notEmpty(name, "Header name must not be empty");
-            Validate.notNull(value, "Header value must not be null");
             removeHeader(name); // ensures we don't get an "accept-encoding" and a "Accept-Encoding"
-            headers.put(name, value);
+            addHeader(name, value);
             return (T) this;
         }
 
         public boolean hasHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            return getHeaderCaseInsensitive(name) != null;
+            return getHeadersCaseInsensitive(name).size() != 0;
         }
 
         /**
          * Test if the request has a header with this value (case insensitive).
          */
         public boolean hasHeaderWithValue(String name, String value) {
-            return hasHeader(name) && header(name).equalsIgnoreCase(value);
+            Validate.notEmpty(name);
+            Validate.notEmpty(value);
+            List<String> values = headers(name);
+            for (String candidate : values) {
+                if (value.equalsIgnoreCase(candidate))
+                    return true;
+            }
+            return false;
         }
 
         public T removeHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            Map.Entry<String, String> entry = scanHeaders(name); // remove is case insensitive too
+            Map.Entry<String, List<String>> entry = scanHeaders(name); // remove is case insensitive too
             if (entry != null)
                 headers.remove(entry.getKey()); // ensures correct case
             return (T) this;
         }
 
         public Map<String, String> headers() {
+            LinkedHashMap<String, String> map = new LinkedHashMap<>(headers.size());
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                String header = entry.getKey();
+                List<String> values = entry.getValue();
+                if (values.size() > 0)
+                    map.put(header, values.get(0));
+            }
+            return map;
+        }
+
+        @Override
+        public Map<String, List<String>> multiHeaders() {
             return headers;
         }
 
-        private String getHeaderCaseInsensitive(String name) {
-            Validate.notNull(name, "Header name must not be null");
-            // quick evals for common case of title case, lower case, then scan for mixed
-            String value = headers.get(name);
-            if (value == null)
-                value = headers.get(lowerCase(name));
-            if (value == null) {
-                Map.Entry<String, String> entry = scanHeaders(name);
-                if (entry != null)
-                    value = entry.getValue();
+        private List<String> getHeadersCaseInsensitive(String name) {
+            Validate.notNull(name);
+
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+                if (name.equalsIgnoreCase(entry.getKey()))
+                    return entry.getValue();
             }
-            return value;
+
+            return Collections.emptyList();
         }
 
-        private Map.Entry<String, String> scanHeaders(String name) {
+        private Map.Entry<String, List<String>> scanHeaders(String name) {
             String lc = lowerCase(name);
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
+            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (lowerCase(entry.getKey()).equals(lc))
                     return entry;
             }
@@ -502,15 +545,16 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
+        private SSLSocketFactory sslSocketFactory;
 
-        private Request() {
+        Request() {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<>();
             method = Method.GET;
-            headers.put("Accept-Encoding", "gzip");
-            headers.put(USER_AGENT, DEFAULT_UA);
+            addHeader("Accept-Encoding", "gzip");
+            addHeader(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
         }
 
@@ -567,6 +611,14 @@ public class HttpConnection implements Connection {
 
         public void validateTLSCertificates(boolean value) {
             validateTSLCertificates = value;
+        }
+
+        public SSLSocketFactory sslSocketFactory() {
+            return sslSocketFactory;
+        }
+
+        public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+            this.sslSocketFactory = sslSocketFactory;
         }
 
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
@@ -678,6 +730,7 @@ public class HttpConnection implements Connection {
             else if (methodHasBody)
                 mimeBoundary = setOutputContentType(req);
 
+            long startTime = System.nanoTime();
             HttpURLConnection conn = createConnection(req);
             Response res;
             try {
@@ -735,9 +788,15 @@ public class HttpConnection implements Connection {
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     res.bodyStream = null;
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
-                    res.bodyStream = new ConstrainableInputStream(res.bodyStream, DataUtil.bufferSize, req.maxBodySize());
+                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
+                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
+                    }
+                    res.bodyStream = ConstrainableInputStream
+                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
+                        .timeout(startTime, req.timeout())
+                    ;
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -782,8 +841,8 @@ public class HttpConnection implements Connection {
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
             Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
-            // todo - disconnect here?
             inputStreamRead = true;
+            safeClose();
             return doc;
         }
 
@@ -795,6 +854,9 @@ public class HttpConnection implements Connection {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
+                } finally {
+                    inputStreamRead = true;
+                    safeClose();
                 }
             }
         }
@@ -807,7 +869,7 @@ public class HttpConnection implements Connection {
                 body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString();
             else
                 body = Charset.forName(charset).decode(byteData).toString();
-            byteData.rewind();
+            ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
         }
 
@@ -827,7 +889,7 @@ public class HttpConnection implements Connection {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             Validate.isFalse(inputStreamRead, "Request has already been read");
             inputStreamRead = true;
-            return new ConstrainableInputStream(bodyStream, DataUtil.bufferSize, req.maxBodySize());
+            return ConstrainableInputStream.wrap(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
         // set up connection defaults, and details from request
@@ -841,30 +903,40 @@ public class HttpConnection implements Connection {
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(req.timeout());
+            conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
-            if (conn instanceof HttpsURLConnection) {
-                if (!req.validateTLSCertificates()) {
-                    initUnSecureTSL();
-                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
-                    ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
-                }
-            }
-
+            if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
+                ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
                 conn.addRequestProperty("Cookie", getRequestCookieString(req));
-            for (Map.Entry<String, String> header : req.headers().entrySet()) {
-                conn.addRequestProperty(header.getKey(), header.getValue());
+            for (Map.Entry<String, List<String>> header : req.multiHeaders().entrySet()) {
+                for (String value : header.getValue()) {
+                    conn.addRequestProperty(header.getKey(), value);
+                }
             }
             return conn;
         }
 
         /**
+         * Call on completion of stream read, to close the body (or error) stream
+         */
+        private void safeClose() {
+            if (bodyStream != null) {
+                try {
+                    bodyStream.close();
+                } catch (IOException e) {
+                    // no-op
+                } finally {
+                    bodyStream = null;
+                }
+            }
+        }
+
+        /**
          * Instantiate Hostname Verifier that does nothing.
          * This is used for connections with disabled SSL certificates validation.
-         *
          *
          * @return Hostname Verifier that does nothing and accepts all hostnames
          */
@@ -874,45 +946,6 @@ public class HttpConnection implements Connection {
                     return true;
                 }
             };
-        }
-
-        /**
-         * Initialise Trust manager that does not validate certificate chains and
-         * add it to current SSLContext.
-         * <p/>
-         * please not that this method will only perform action if sslSocketFactory is not yet
-         * instantiated.
-         *
-         * @throws IOException
-         */
-        private static synchronized void initUnSecureTSL() throws IOException {
-            if (sslSocketFactory == null) {
-                // Create a trust manager that does not validate certificate chains
-                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-
-                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                }};
-
-                // Install the all-trusting trust manager
-                final SSLContext sslContext;
-                try {
-                    sslContext = SSLContext.getInstance("SSL");
-                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                    // Create an ssl socket factory with our all-trusting manager
-                    sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                }
-            }
-
         }
 
         // set up url, method, header, cookies
@@ -978,19 +1011,9 @@ public class HttpConnection implements Connection {
                         if (cookieName.length() > 0)
                             cookie(cookieName, cookieVal);
                     }
-                } else { // combine same header names with comma: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-                    if (values.size() == 1)
-                        header(name, values.get(0));
-                    else if (values.size() > 1) {
-                        StringBuilder accum = StringUtil.stringBuilder();
-                        for (int i = 0; i < values.size(); i++) {
-                            final String val = values.get(i);
-                            if (i != 0)
-                                accum.append(", ");
-                            accum.append(val);
-                        }
-                        header(name, accum.toString());
-                    }
+                }
+                for (String value : values) {
+                    addHeader(name, value);
                 }
             }
         }
@@ -1032,7 +1055,9 @@ public class HttpConnection implements Connection {
                     if (keyVal.hasInputStream()) {
                         w.write("; filename=\"");
                         w.write(encodeMimeName(keyVal.value()));
-                        w.write("\"\r\nContent-Type: application/octet-stream\r\n\r\n");
+                        w.write("\"\r\nContent-Type: ");
+                        w.write(keyVal.contentType() != null ? keyVal.contentType() : DefaultUploadType);
+                        w.write("\r\n\r\n");
                         w.flush(); // flush
                         DataUtil.crossStreams(keyVal.inputStream(), outputStream);
                         outputStream.flush();
@@ -1128,6 +1153,7 @@ public class HttpConnection implements Connection {
         private String key;
         private String value;
         private InputStream stream;
+        private String contentType;
 
         public static KeyVal create(String key, String value) {
             return new KeyVal().key(key).value(value);
@@ -1171,6 +1197,18 @@ public class HttpConnection implements Connection {
 
         public boolean hasInputStream() {
             return stream != null;
+        }
+
+        @Override
+        public Connection.KeyVal contentType(String contentType) {
+            Validate.notEmpty(contentType);
+            this.contentType = contentType;
+            return this;
+        }
+
+        @Override
+        public String contentType() {
+            return contentType;
         }
 
         @Override

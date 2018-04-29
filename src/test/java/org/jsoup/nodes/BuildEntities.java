@@ -5,11 +5,11 @@ import com.google.gson.reflect.TypeToken;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.UrlConnectTest;
-import org.jsoup.nodes.Entities;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,8 +21,6 @@ import java.util.Map;
  * only to be complete.
  */
 class BuildEntities {
-    private static final String projectDir = "/Users/jhy/projects/jsoup";
-
     public static void main(String[] args) throws IOException {
         String url = "https://www.w3.org/TR/2012/WD-html5-20121025/entities.json";
         Connection.Response res = Jsoup.connect(url)
@@ -37,8 +35,8 @@ class BuildEntities {
 
 
         // build name sorted base and full character lists:
-        ArrayList<CharacterRef> base = new ArrayList<CharacterRef>();
-        ArrayList<CharacterRef> full = new ArrayList<CharacterRef>();
+        ArrayList<CharacterRef> base = new ArrayList<>();
+        ArrayList<CharacterRef> full = new ArrayList<>();
 
         for (Map.Entry<String, CharacterRef> entry : input.entrySet()) {
             String name = entry.getKey().substring(1); // name is like &acute or &acute; , trim &
@@ -55,13 +53,13 @@ class BuildEntities {
         Collections.sort(full, byName);
 
         // now determine code point order
-        ArrayList<CharacterRef> baseByCode = new ArrayList<CharacterRef>(base);
-        ArrayList<CharacterRef> fullByCode = new ArrayList<CharacterRef>(full);
+        ArrayList<CharacterRef> baseByCode = new ArrayList<>(base);
+        ArrayList<CharacterRef> fullByCode = new ArrayList<>(full);
         Collections.sort(baseByCode, byCode);
         Collections.sort(fullByCode, byCode);
 
-        // and update their codepoint index. Don't
-        ArrayList<CharacterRef>[] codelists = new ArrayList[]{baseByCode, fullByCode};
+        // and update their codepoint index.
+        @SuppressWarnings("unchecked") ArrayList<CharacterRef>[] codelists = new ArrayList[]{baseByCode, fullByCode};
         for (ArrayList<CharacterRef> codelist : codelists) {
             for (int i = 0; i < codelist.size(); i++) {
                 codelist.get(i).codeIndex = i;
@@ -69,20 +67,23 @@ class BuildEntities {
         }
 
         // now write them
-        persist("entities-full.properties", full);
-        persist("entities-base.properties", base);
+        persist("entities-full", full);
+        persist("entities-base", base);
 
         System.out.println("Full size: " + full.size() + ", base size: " + base.size());
     }
 
     private static void persist(String name, ArrayList<CharacterRef> refs) throws IOException {
-        String base = projectDir + "/src/main/java/org/jsoup/nodes";
-        File file = new File(base, name);
+        File file = Files.createTempFile(name, ".txt").toFile();
         FileWriter writer = new FileWriter(file, false);
+        writer.append("static final String points = \"");
         for (CharacterRef ref : refs) {
-            writer.append(ref.toString()).append("\n");
+            writer.append(ref.toString()).append('&');
         }
+        writer.append("\";\n");
         writer.close();
+
+        System.out.println("Wrote " + name + " to " + file.getAbsolutePath());
     }
 
 

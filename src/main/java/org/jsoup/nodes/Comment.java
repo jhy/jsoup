@@ -1,5 +1,8 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
+
 import java.io.IOException;
 
 /**
@@ -53,5 +56,30 @@ public class Comment extends LeafNode {
     @Override
     public String toString() {
         return outerHtml();
+    }
+
+    /**
+     * Check if this comment looks like an XML Declaration.
+     * @return true if it looks like, maybe, it's an XML Declaration.
+     */
+    public boolean isXmlDeclaration() {
+        String data = getData();
+        return (data.length() > 1 && (data.startsWith("!") || data.startsWith("?")));
+    }
+
+    /**
+     * Attempt to cast this comment to an XML Declaration note.
+     * @return an XML declaration if it could be parsed as one, null otherwise.
+     */
+    public XmlDeclaration asXmlDeclaration() {
+        String data = getData();
+        Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri(), Parser.xmlParser());
+        XmlDeclaration decl = null;
+        if (doc.childNodeSize() > 0) {
+            Element el = doc.child(0);
+            decl = new XmlDeclaration(doc.getParser().settings().normalizeTag(el.tagName()), data.startsWith("!"));
+            decl.attributes().addAll(el.attributes());
+        }
+        return decl;
     }
 }

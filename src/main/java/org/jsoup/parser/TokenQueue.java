@@ -262,16 +262,20 @@ public class TokenQueue {
         int end = -1;
         int depth = 0;
         char last = 0;
-        boolean inQuote = false;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
 
         do {
             if (isEmpty()) break;
             Character c = consume();
             if (last == 0 || last != ESC) {
-                if ((c.equals('\'') || c.equals('"')) && c != open)
-                    inQuote = !inQuote;
-                if (inQuote)
+                if (c.equals('\'') && c != open && !inDoubleQuote)
+                    inSingleQuote = !inSingleQuote;
+                else if (c.equals('"') && c != open && !inSingleQuote)
+                    inDoubleQuote = !inDoubleQuote;
+                if (inSingleQuote || inDoubleQuote)
                     continue;
+
                 if (c.equals(open)) {
                     depth++;
                     if (start == -1)
@@ -293,7 +297,7 @@ public class TokenQueue {
     }
     
     /**
-     * Unescaped a \ escaped string.
+     * Unescape a \ escaped string.
      * @param in backslash escaped string
      * @return unescaped string
      */

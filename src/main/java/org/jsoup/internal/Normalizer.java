@@ -8,7 +8,7 @@ import java.util.Locale;
 public final class Normalizer {
 
     public static String lowerCase(final String input) {
-        return input.toLowerCase(Locale.ENGLISH);
+        return input != null ? input.toLowerCase(Locale.ENGLISH) : "";
     }
 
     public static String normalize(final String input) {

@@ -2,9 +2,12 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 
+import java.util.Collections;
 import java.util.List;
 
 abstract class LeafNode extends Node {
+    private static final List<Node> EmptyNodes = Collections.emptyList();
+
     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
 
     protected final boolean hasAttributes() {
@@ -90,6 +93,6 @@ abstract class LeafNode extends Node {
 
     @Override
     protected List<Node> ensureChildNodes() {
-        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+        return EmptyNodes;
     }
 }

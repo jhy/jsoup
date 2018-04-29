@@ -19,10 +19,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.util.Map;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -36,22 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
     private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
-    private static String echoURL = "http://direct.infohound.net/tools/q.pl";
     public static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
-
-    @Test
-    public void fetchURl() throws IOException {
-        String url = "https://jsoup.org"; // no trailing / to force redir
-        Document doc = Jsoup.parse(new URL(url), 10*1000);
-        assertTrue(doc.title().contains("jsoup"));
-    }
-
-    @Test
-    public void fetchURIWithWihtespace() throws IOException {
-        Connection con = Jsoup.connect("http://try.jsoup.org/#with whitespaces");
-        Document doc = con.get();
-        assertTrue(doc.title().contains("jsoup"));
-    }
 
     @Test
     public void fetchBaidu() throws IOException {
@@ -81,122 +65,10 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void exceptOnUnsupportedProtocol(){
-        String url = "file://etc/passwd";
-        boolean threw = false;
-        try {
-            Document doc = Jsoup.connect(url).get();
-        } catch (MalformedURLException e) {
-            threw = true;
-            assertEquals("java.net.MalformedURLException: Only http & https protocols supported", e.toString());
-        } catch (IOException e) {
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void ignoresContentTypeIfSoConfigured() throws IOException {
         Document doc = Jsoup.connect("https://jsoup.org/rez/osi_logo.png").ignoreContentType(true).get();
         assertEquals("", doc.title()); // this will cause an ugly parse tree
     }
-
-    @Test
-    public void doesPost() throws IOException {
-        Document doc = Jsoup.connect(echoURL)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .cookie("auth", "token")
-            .post();
-
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        //assertEquals("gzip", ihVal("HTTP_ACCEPT_ENCODING", doc)); // current proxy removes gzip on post
-        assertEquals("auth=token", ihVal("HTTP_COOKIE", doc));
-        assertEquals("度一下", ihVal("百", doc));
-        assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
-    }
-
-    @Test
-    public void sendsRequestBodyJsonWithData() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .data("foo", "true")
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
-        assertEquals("foo=true", ihVal("QUERY_STRING", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBodyJsonWithoutData() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("application/json", ihVal("CONTENT_TYPE", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBody() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .header("Content-Type", "text/plain")
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("text/plain", ihVal("CONTENT_TYPE", doc));
-        assertEquals(body, doc.select("th:contains(POSTDATA) ~ td").text());
-    }
-
-    @Test
-    public void sendsRequestBodyWithUrlParams() throws IOException {
-        final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoURL)
-            .requestBody(body)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .header("Content-Type", "text/plain") // todo - if user sets content-type, we should append postcharset
-            .userAgent(browserUa)
-            .post();
-        assertEquals("POST", ihVal("REQUEST_METHOD", doc));
-        assertEquals("uname=Jsoup&uname=Jonathan&%E7%99%BE=%E5%BA%A6%E4%B8%80%E4%B8%8B", ihVal("QUERY_STRING", doc));
-        assertEquals(body, ihVal("POSTDATA", doc));
-    }
-
-    @Test
-    public void doesGet() throws IOException {
-        Connection con = Jsoup.connect(echoURL + "?what=the")
-            .userAgent("Mozilla")
-            .referrer("http://example.com")
-            .data("what", "about & me?");
-
-        Document doc = con.get();
-        assertEquals("what=the&what=about+%26+me%3F", ihVal("QUERY_STRING", doc));
-        assertEquals("the, about & me?", ihVal("what", doc));
-        assertEquals("Mozilla", ihVal("HTTP_USER_AGENT", doc));
-        assertEquals("http://example.com", ihVal("HTTP_REFERER", doc));
-    }
-
-    @Test
-    public void doesPut() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL)
-                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-                .cookie("auth", "token")
-                .method(Connection.Method.PUT)
-                .execute();
-
-        Document doc = res.parse();
-        assertEquals("PUT", ihVal("REQUEST_METHOD", doc));
-        //assertEquals("gzip", ihVal("HTTP_ACCEPT_ENCODING", doc)); // current proxy removes gzip on post
-        assertEquals("auth=token", ihVal("HTTP_COOKIE", doc));
-    }
-
 
     private static String ihVal(String key, Document doc) {
         return doc.select("th:contains("+key+") + td").first().text();
@@ -376,21 +248,6 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void multiCookieSet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
-        Connection.Response res = con.execute();
-
-        // test cookies set by redirect:
-        Map<String, String> cookies = res.cookies();
-        assertEquals("asdfg123", cookies.get("token"));
-        assertEquals("jhy", cookies.get("uid"));
-
-        // send those cookies into the echo URL by map:
-        Document doc = Jsoup.connect(echoURL).cookies(cookies).get();
-        assertEquals("token=asdfg123; uid=jhy", ihVal("HTTP_COOKIE", doc));
-    }
-
-    @Test
     public void handlesDodgyCharset() throws IOException {
         // tests that when we get back "UFT8", that it is recognised as unsupported, and falls back to default instead
         String url = "http://direct.infohound.net/tools/bad-charset.pl";
@@ -414,7 +271,7 @@ public class UrlConnectTest {
 
         int actualDocText = 269541;
         assertEquals(actualDocText, defaultRes.parse().text().length());
-        assertEquals(47200, smallRes.parse().text().length());
+        assertEquals(49165, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
@@ -447,34 +304,6 @@ public class UrlConnectTest {
     public void testSNIFail() throws Exception {
         String url = WEBSITE_WITH_SNI;
         Jsoup.connect(url).execute();
-    }
-
-    /**
-     * Verify that requests to websites with SNI pass
-     * <p/>
-     * <b>NB!</b> this test is FAILING right now on jdk 1.6
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testSNIPass() throws Exception {
-        String url = WEBSITE_WITH_SNI;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
-    }
-
-    /**
-     * Verify that security disabling feature works properly.
-     * <p/>
-     * 1. disable security checks and call the same url to verify that content is consumed correctly
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testUnsafePass() throws Exception {
-        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
     }
 
     @Test
@@ -535,7 +364,7 @@ public class UrlConnectTest {
 
         File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html");
         FileInputStream stream = new FileInputStream(uploadFile);
-        
+
         Connection.KeyVal fileData = post.data("_file");
         fileData.value("check.html");
         fileData.inputStream(stream);
@@ -549,22 +378,6 @@ public class UrlConnectTest {
 
         Document out = res.parse();
         assertTrue(out.text().contains("HTML Tidy Complete"));
-    }
-
-    /**
-     * Tests upload of binary content to a remote service.
-     */
-    @Test
-    public void postJpeg() throws IOException {
-        File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
-        Document result = Jsoup
-            .connect("http://regex.info/exif.cgi")
-            .data("f", thumb.getName(), new FileInputStream(thumb))
-            .userAgent(browserUa)
-            .post();
-
-        assertEquals("Baseline DCT, Huffman coding", result.select("td:contains(Process) + td").text());
-        assertEquals("1052 bytes 30 × 30", result.select("td:contains(Size) + td").text());
     }
 
     @Test
@@ -614,8 +427,14 @@ public class UrlConnectTest {
         Connection con = Jsoup.connect(url);
         con.get();
 
-        assertEquals("text/html", con.response().header("Content-Type"));
-        assertEquals("no-cache, no-store", con.response().header("Cache-Control"));
+        Connection.Response res = con.response();
+        assertEquals("text/html", res.header("Content-Type"));
+        assertEquals("no-cache, no-store", res.header("Cache-Control"));
+
+        List<String> header = res.headers("Cache-Control");
+        assertEquals(2, header.size());
+        assertEquals("no-cache", header.get(0));
+        assertEquals("no-store", header.get(1));
     }
 
     @Test
@@ -774,59 +593,7 @@ public class UrlConnectTest {
         );
     }
 
-    @Test public void canInterruptBodyStringRead() throws IOException, InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
-        final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.body();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        });
-
-        runner.start();
-        Thread.sleep(1000 * 7);
-        runner.interrupt();
-        assertTrue(runner.isInterrupted());
-        runner.join();
-
-        assertTrue(body[0].length() > 0);
-    }
-
-    @Test public void canInterruptDocumentRead() throws IOException, InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
-        final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect("http://jsscxml.org/serverload.stream")
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.parse().text();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        });
-
-        runner.start();
-        Thread.sleep(1000 * 7);
-        runner.interrupt();
-        assertTrue(runner.isInterrupted());
-        runner.join();
-
-        assertTrue(body[0].length() > 0);
-    }
-
-    @Test public void handlesEscapedRedirectUrls() throws IOException {
+   @Test public void handlesEscapedRedirectUrls() throws IOException {
         String url = "http://www.altalex.com/documents/news/2016/12/06/questioni-civilistiche-conseguenti-alla-depenalizzazione";
         // sends: Location:http://shop.wki.it/shared/sso/sso.aspx?sso=&url=http%3a%2f%2fwww.altalex.com%2fsession%2fset%2f%3freturnurl%3dhttp%253a%252f%252fwww.altalex.com%253a80%252fdocuments%252fnews%252f2016%252f12%252f06%252fquestioni-civilistiche-conseguenti-alla-depenalizzazione
         // then to: http://www.altalex.com/session/set/?returnurl=http%3a%2f%2fwww.altalex.com%3a80%2fdocuments%2fnews%2f2016%2f12%2f06%2fquestioni-civilistiche-conseguenti-alla-depenalizzazione&sso=RDRG6T684G4AK2E7U591UGR923
@@ -851,38 +618,25 @@ public class UrlConnectTest {
         assertEquals("Index of /archiv/TV/A/%23No.Title", doc.title());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        Document doc = res.parse();
-        String body = res.body();
+    @Test public void handlesSuperDeepPage() throws IOException {
+        // https://github.com/jhy/jsoup/issues/955
+
+        long start = System.currentTimeMillis();
+        String url = "http://sv.stargate.wikia.com/wiki/M2J";
+        Document doc = Jsoup.connect(url).get();
+        assertEquals("M2J | Sv.stargate Wiki | FANDOM powered by Wikia", doc.title());
+        assertEquals(110160, doc.select("dd").size());
+        // those are all <dl><dd> stacked in each other. wonder how that got generated?
+        assertTrue(System.currentTimeMillis() - start < 1000);
     }
 
-    @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        String body = res.body();
-        assertTrue(body.contains("Environment"));
-        byte[] bytes = res.bodyAsBytes();
-        assertTrue(bytes.length > 100);
+    @Test public void handles966() throws IOException {
+        // http://szshb.nxszs.gov.cn/
+        // https://github.com/jhy/jsoup/issues/966
 
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-    }
+        Document doc = Jsoup.connect("http://szshb.nxszs.gov.cn/").get();
 
-    @Test(expected=IllegalArgumentException.class) public void parseParseThrowsValidates() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute();
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
-    }
-
-    @Test public void multipleParsesOkAfterBufferUp() throws IOException {
-        Connection.Response res = Jsoup.connect(echoURL).execute().bufferUp();
-
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-
-        Document doc2 = res.parse();
-        assertTrue(doc2.title().contains("Environment"));
+        assertEquals("石嘴山市环境保护局", doc.title());
     }
 
 }
