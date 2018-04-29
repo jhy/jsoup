@@ -7,6 +7,10 @@ jsoup changelog
     builder is reused, as are the parser settings like case sensitivity.
     <https://github.com/jhy/jsoup/issues/769>
 
+  * Improvement: Jsoup now detects the character set of the input if specified in an XML Declaration, when using the
+    HTML parser. Previously that only happened when the XML parser was specified.
+    <https://github.com/jhy/jsoup/issues/1009>
+
 *** Release 1.11.3 [2018-Apr-15]
   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
     round-tripped into output HTML.

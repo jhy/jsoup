@@ -2,8 +2,10 @@ package org.jsoup.helper;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
@@ -127,10 +129,20 @@ public final class DataUtil {
             }
 
             // look for <?xml encoding='ISO-8859-1'?>
-            if (foundCharset == null && doc.childNodeSize() > 0 && doc.childNode(0) instanceof XmlDeclaration) {
-                XmlDeclaration prolog = (XmlDeclaration) doc.childNode(0);
-                if (prolog.name().equals("xml"))
-                    foundCharset = prolog.attr("encoding");
+            if (foundCharset == null && doc.childNodeSize() > 0) {
+                Node first = doc.childNode(0);
+                XmlDeclaration decl = null;
+                if (first instanceof XmlDeclaration)
+                    decl = (XmlDeclaration) first;
+                else if (first instanceof Comment) {
+                    Comment comment = (Comment) first;
+                    if (comment.isXmlDeclaration())
+                        decl = comment.asXmlDeclaration();
+                }
+                if (decl != null) {
+                    if (decl.name().equalsIgnoreCase("xml"))
+                        foundCharset = decl.attr("encoding");
+                }
             }
             foundCharset = validateCharset(foundCharset);
             if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
