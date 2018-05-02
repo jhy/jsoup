@@ -688,6 +688,26 @@ public class Element extends Node {
     }
 
     /**
+     * Get all the siblings after this element.
+     *
+     * @return  all the siblings after this element, or null if there is no siblings after this
+     */
+    public List<Element> nextElementSiblings() {
+        if (parentNode == null) {
+            return null;
+        }
+
+        List<Element> siblings = parent().childElementsList();
+        int index = indexInList(this, siblings);
+        Validate.notNull(index);
+
+        if (siblings.size() > index + 1) {
+            return siblings.subList(index + 1, siblings.size());
+        }
+        return null;
+    }
+
+    /**
      * Gets the previous element sibling of this element.
      * @return the previous element, or null if there is no previous element
      * @see #nextElementSibling()
@@ -701,6 +721,26 @@ public class Element extends Node {
             return siblings.get(index-1);
         else
             return null;
+    }
+
+    /**
+     * Get all the element siblings before this element.
+     *
+     * @return all the previous element siblings, or null if no previous siblings
+     */
+    public List<Element> previousElementSiblings() {
+        if (parentNode == null) {
+            return null;
+        }
+
+        List<Element> siblings = parent().childElementsList();
+        int index = indexInList(this, siblings);
+        Validate.notNull(index);
+
+        if (index > 0 && index < siblings.size()) {
+            return siblings.subList(0, index);
+        }
+        return null;
     }
 
     /**

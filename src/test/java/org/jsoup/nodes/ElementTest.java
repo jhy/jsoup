@@ -1324,4 +1324,33 @@ public class ElementTest {
         assertEquals("One Two", doc.text());
     }
 
+    @Test
+    public void testNextElementSiblings() {
+        Document doc = Jsoup.parse("<li id='a'>a</li>" +
+            "<li id='b'>b</li>" +
+            "<li id='c'>c</li>");
+        Element element = doc.getElementById("a");
+        List<Element> elementSiblings = element.nextElementSiblings();
+        assertNotNull(elementSiblings);
+        assertEquals(2, elementSiblings.size());
+
+        Element element1 = doc.getElementById("c");
+        List<Element> elementSiblings1 = element1.nextElementSiblings();
+        assertNull(elementSiblings1);
+    }
+
+    @Test
+    public void testPreviousElementSiblings() {
+        Document doc = Jsoup.parse("<li id='a'>a</li>" +
+            "<li id='b'>b</li>" +
+            "<li id='c'>c</li>");
+        Element element = doc.getElementById("b");
+        List<Element> elementSiblings = element.previousElementSiblings();
+        assertNotNull(elementSiblings);
+        assertEquals(1, elementSiblings.size());
+
+        Element element1 = doc.getElementById("a");
+        List<Element> elementSiblings1 = element1.previousElementSiblings();
+        assertNull(elementSiblings1);
+    }
 }
