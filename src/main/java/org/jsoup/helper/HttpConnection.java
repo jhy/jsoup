@@ -671,6 +671,7 @@ public class HttpConnection implements Connection {
         private String statusMessage;
         private ByteBuffer byteData;
         private InputStream bodyStream;
+        private HttpURLConnection conn;
         private String charset;
         private String contentType;
         private boolean executed = false;
@@ -910,6 +911,10 @@ public class HttpConnection implements Connection {
          * Call on completion of stream read, to close the body (or error) stream
          */
         private void safeClose() {
+            if (conn != null) {
+                conn.disconnect();
+                conn = null;
+            }
             if (bodyStream != null) {
                 try {
                     bodyStream.close();
@@ -922,7 +927,8 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
+        private void setupFromConnection(HttpURLConnection conn, HttpConnection.Response previousResponse) throws IOException {
+            this.conn = conn;
             method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
@@ -938,6 +944,7 @@ public class HttpConnection implements Connection {
                     if (!hasCookie(prevCookie.getKey()))
                         cookie(prevCookie.getKey(), prevCookie.getValue());
                 }
+                previousResponse.safeClose();
             }
         }
 
