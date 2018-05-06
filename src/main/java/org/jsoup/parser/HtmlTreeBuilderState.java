@@ -1163,7 +1163,7 @@ enum HtmlTreeBuilderState {
                 Token.EndTag endTag = t.asEndTag();
                 String name = endTag.normalName();
 
-                if (StringUtil.in(name, "td", "th")) {
+                if (StringUtil.inSorted(name, Constants.InCellNames)) {
                     if (!tb.inTableScope(name)) {
                         tb.error(this);
                         tb.transition(InRow); // might not be in scope if empty: <td /> and processing fake end tag
@@ -1175,10 +1175,10 @@ enum HtmlTreeBuilderState {
                     tb.popStackToClose(name);
                     tb.clearFormattingElementsToLastMarker();
                     tb.transition(InRow);
-                } else if (StringUtil.in(name, "body", "caption", "col", "colgroup", "html")) {
+                } else if (StringUtil.inSorted(name, Constants.InCellBody)) {
                     tb.error(this);
                     return false;
-                } else if (StringUtil.in(name, "table", "tbody", "tfoot", "thead", "tr")) {
+                } else if (StringUtil.inSorted(name, Constants.InCellTable)) {
                     if (!tb.inTableScope(name)) {
                         tb.error(this);
                         return false;
@@ -1189,8 +1189,7 @@ enum HtmlTreeBuilderState {
                     return anythingElse(t, tb);
                 }
             } else if (t.isStartTag() &&
-                    StringUtil.in(t.asStartTag().normalName(),
-                            "caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr")) {
+                    StringUtil.inSorted(t.asStartTag().normalName(), Constants.InCellCol)) {
                 if (!(tb.inTableScope("td") || tb.inTableScope("th"))) {
                     tb.error(this);
                     return false;
@@ -1521,5 +1520,9 @@ enum HtmlTreeBuilderState {
             "nav", "ol", "pre", "section", "summary", "ul"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
+        static final String[] InCellNames = new String[]{"td", "th"};
+        static final String[] InCellBody = new String[]{"body", "caption", "col", "colgroup", "html"};
+        static final String[] InCellTable = new String[]{ "table", "tbody", "tfoot", "thead", "tr"};
+        static final String[] InCellCol = new String[]{"caption", "col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"};
     }
 }

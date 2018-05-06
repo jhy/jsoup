@@ -44,17 +44,18 @@ public final class CharacterReader {
     }
 
     private void bufferUp() {
-        if (bufPos < bufSplitPoint)
+        final int pos = bufPos;
+        if (pos < bufSplitPoint)
             return;
 
         try {
-            reader.skip(bufPos);
+            reader.skip(pos);
             reader.mark(maxBufferLen);
             final int read = reader.read(charBuf);
             reader.reset();
             if (read != -1) {
                 bufLength = read;
-                readerPos += bufPos;
+                readerPos += pos;
                 bufPos = 0;
                 bufMark = 0;
                 bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
@@ -197,16 +198,20 @@ public final class CharacterReader {
         final int start = bufPos;
         final int remaining = bufLength;
         final char[] val = charBuf;
+        final int charLen = chars.length;
+        int pos = bufPos;
+        int i;
 
-        OUTER: while (bufPos < remaining) {
-            for (char c : chars) {
-                if (val[bufPos] == c)
+        OUTER: while (pos < remaining) {
+            for (i = 0; i < charLen; i++) {
+                if (val[pos] == chars[i])
                     break OUTER;
             }
-            bufPos++;
+            pos++;
         }
 
-        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
     String consumeToAnySorted(final char... chars) {
@@ -214,14 +219,15 @@ public final class CharacterReader {
         final int start = bufPos;
         final int remaining = bufLength;
         final char[] val = charBuf;
+        int pos = bufPos;
 
-        while (bufPos < remaining) {
-            if (Arrays.binarySearch(chars, val[bufPos]) >= 0)
+        while (pos < remaining) {
+            if (Arrays.binarySearch(chars, val[pos]) >= 0)
                 break;
-            bufPos++;
+            pos++;
         }
-
-        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
+        bufPos = pos;
+        return bufPos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
     String consumeData() {
@@ -248,15 +254,17 @@ public final class CharacterReader {
         final int start = bufPos;
         final int remaining = bufLength;
         final char[] val = charBuf;
+        int pos = bufPos;
 
-        while (bufPos < remaining) {
-            final char c = val[bufPos];
+        while (pos < remaining) {
+            final char c = val[pos];
             if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c == '<' || c ==  TokeniserState.nullChar)
                 break;
-            bufPos++;
+            pos++;
         }
 
-        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
     String consumeToEnd() {

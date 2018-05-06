@@ -22,6 +22,8 @@ jsoup changelog
     many pages.
     <https://github.com/jhy/jsoup/issues/797>
 
+  * Improvement: performance optimization when parsing tables.
+
   * Bugfix: when converting a Jsoup document to a W3C DOM, if an element is namespaced but not in a defined namespace,
     set it to the global namespace.
     <https://github.com/jhy/jsoup/issues/848>

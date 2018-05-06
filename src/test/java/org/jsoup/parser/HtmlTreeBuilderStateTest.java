@@ -27,7 +27,11 @@ public class HtmlTreeBuilderStateTest {
             Constants.InBodyStartDrop,
             Constants.InBodyEndClosers,
             Constants.InBodyEndAdoptionFormatters,
-            Constants.InBodyEndTableFosters
+            Constants.InBodyEndTableFosters,
+            Constants.InCellNames,
+            Constants.InCellBody,
+            Constants.InCellTable,
+            Constants.InCellCol,
         };
 
         for (String[] array : arrays) {
