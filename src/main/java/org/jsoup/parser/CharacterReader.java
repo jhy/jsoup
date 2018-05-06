@@ -195,11 +195,11 @@ public final class CharacterReader {
      */
     public String consumeToAny(final char... chars) {
         bufferUp();
-        final int start = bufPos;
+        int pos = bufPos;
+        final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
         final int charLen = chars.length;
-        int pos = bufPos;
         int i;
 
         OUTER: while (pos < remaining) {
@@ -216,10 +216,10 @@ public final class CharacterReader {
 
     String consumeToAnySorted(final char... chars) {
         bufferUp();
-        final int start = bufPos;
+        int pos = bufPos;
+        final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-        int pos = bufPos;
 
         while (pos < remaining) {
             if (Arrays.binarySearch(chars, val[pos]) >= 0)
@@ -232,34 +232,48 @@ public final class CharacterReader {
 
     String consumeData() {
         // &, <, null
-        bufferUp();
-        final int start = bufPos;
+        //bufferUp(); // no need to bufferUp, just called consume()
+        int pos = bufPos;
+        final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
 
-        while (bufPos < remaining) {
-            final char c = val[bufPos];
-            if (c == '&'|| c ==  '<' || c ==  TokeniserState.nullChar)
-                break;
-            bufPos++;
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '&':
+                case '<':
+                case TokeniserState.nullChar:
+                    break OUTER;
+                default:
+                    pos++;
+            }
         }
-
-        return bufPos > start ? cacheString(charBuf, stringCache, start, bufPos -start) : "";
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
     String consumeTagName() {
         // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
         // NOTE: out of spec, added '<' to fix common author bugs
         bufferUp();
-        final int start = bufPos;
+        int pos = bufPos;
+        final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-        int pos = bufPos;
 
-        while (pos < remaining) {
-            final char c = val[pos];
-            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c == '<' || c ==  TokeniserState.nullChar)
-                break;
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                case '/':
+                case '>':
+                case '<':
+                case TokeniserState.nullChar:
+                    break OUTER;
+            }
             pos++;
         }
 

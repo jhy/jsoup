@@ -252,9 +252,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insert(Token.Character characterToken) {
-        Node node;
-        // characters in script and style go in as datanodes, not text nodes
-        final String tagName = currentElement().tagName();
+        final Node node;
+        final Element el = currentElement();
+        final String tagName = el.tagName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
@@ -263,7 +263,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             node = new DataNode(data);
         else
             node = new TextNode(data);
-        currentElement().appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
+        el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
     }
 
     private void insertNode(Node node) {
