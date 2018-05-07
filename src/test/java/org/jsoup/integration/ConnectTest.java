@@ -102,6 +102,19 @@ public class ConnectTest {
     }
 
     @Test
+    public void doesPostMultipartWithoutInputstream() throws IOException {
+        Document doc = Jsoup.connect(echoUrl)
+                .header("Content-Type", "multipart/form-data")
+                .userAgent(browserUa)
+                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
+                .post();
+
+        assertTrue(ihVal("Content-Type", doc).contains("boundary"));
+        assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
+        assertEquals("度一下", ihVal("百", doc));
+    }
+
+    @Test
     public void sendsRequestBodyJsonWithData() throws IOException {
         final String body = "{key:value}";
         Document doc = Jsoup.connect(echoUrl)
