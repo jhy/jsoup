@@ -542,6 +542,7 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private String postDataCharset = DataUtil.defaultCharset;
         private SSLSocketFactory sslSocketFactory;
+        private boolean forceMultipart = false;
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
@@ -552,6 +553,17 @@ public class HttpConnection implements Connection {
             addHeader("Accept-Encoding", "gzip");
             addHeader(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
+        }
+
+        @Override
+        public Connection.Request forceMultipart() {
+            this.forceMultipart = true;
+            return this;
+        }
+
+        @Override
+        public boolean forceToUseMultipart() {
+            return forceMultipart;
         }
 
         public Proxy proxy() {
@@ -1113,6 +1125,9 @@ public class HttpConnection implements Connection {
 
     private static boolean needsMultipart(Connection.Request req) {
         // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
+        if(req.forceToUseMultipart()) {
+            return true;
+        }
         boolean needsMulti = false;
         for (Connection.KeyVal keyVal : req.data()) {
             if (keyVal.hasInputStream()) {
