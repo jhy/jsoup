@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
@@ -298,13 +299,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @throws SerializationException if the HTML representation of the attributes cannot be constructed.
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         try {
-            html(accum, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
+            html(sb, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
         } catch (IOException e) { // ought never happen
             throw new SerializationException(e);
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     final void html(final Appendable accum, final Document.OutputSettings out) throws IOException {

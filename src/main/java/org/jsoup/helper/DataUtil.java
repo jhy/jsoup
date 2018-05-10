@@ -229,12 +229,12 @@ public final class DataUtil {
      * Creates a random string, suitable for use as a mime boundary
      */
     static String mimeBoundary() {
-        final StringBuilder mime = new StringBuilder(boundaryLength);
+        final StringBuilder mime = StringUtil.borrowBuilder();
         final Random rand = new Random();
         for (int i = 0; i < boundaryLength; i++) {
             mime.append(mimeBoundaryChars[rand.nextInt(mimeBoundaryChars.length)]);
         }
-        return mime.toString();
+        return StringUtil.releaseBuilder(mime);
     }
 
     private static BomCharset detectCharsetFromBom(final ByteBuffer byteData) {

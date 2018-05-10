@@ -1066,7 +1066,7 @@ public class HttpConnection implements Connection {
         }
 
         private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = StringUtil.stringBuilder();
+            StringBuilder sb = StringUtil.borrowBuilder();
             boolean first = true;
             for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
                 if (!first)
@@ -1076,13 +1076,13 @@ public class HttpConnection implements Connection {
                 sb.append(cookie.getKey()).append('=').append(cookie.getValue());
                 // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
             }
-            return sb.toString();
+            return StringUtil.releaseBuilder(sb);
         }
 
         // for get url reqs, serialise the data map into the url
         private static void serialiseRequestUrl(Connection.Request req) throws IOException {
             URL in = req.url();
-            StringBuilder url = StringUtil.stringBuilder();
+            StringBuilder url = StringUtil.borrowBuilder();
             boolean first = true;
             // reconstitute the query, ready for appends
             url
@@ -1106,7 +1106,7 @@ public class HttpConnection implements Connection {
                     .append('=')
                     .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
             }
-            req.url(new URL(url.toString()));
+            req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params
         }
     }

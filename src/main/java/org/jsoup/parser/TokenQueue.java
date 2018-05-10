@@ -302,7 +302,7 @@ public class TokenQueue {
      * @return unescaped string
      */
     public static String unescape(String in) {
-        StringBuilder out = StringUtil.stringBuilder();
+        StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
@@ -313,7 +313,7 @@ public class TokenQueue {
                 out.append(c);
             last = c;
         }
-        return out.toString();
+        return StringUtil.releaseBuilder(out);
     }
 
     /**

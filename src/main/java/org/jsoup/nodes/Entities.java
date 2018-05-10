@@ -149,13 +149,13 @@ public class Entities {
     public static String escape(String string, Document.OutputSettings out) {
         if (string == null)
             return "";
-        StringBuilder accum = new StringBuilder(string.length() * 2);
+        StringBuilder accum = StringUtil.borrowBuilder();
         try {
             escape(accum, string, out, false, false, false);
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(accum);
     }
 
     /**

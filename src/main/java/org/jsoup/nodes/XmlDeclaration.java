@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
@@ -52,13 +53,13 @@ public class XmlDeclaration extends LeafNode {
      * @return XML declaration
      */
     public String getWholeDeclaration() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         try {
             getWholeDeclaration(sb, new Document.OutputSettings());
         } catch (IOException e) {
             throw new SerializationException(e);
         }
-        return sb.toString().trim();
+        return StringUtil.releaseBuilder(sb).trim();
     }
 
     private void getWholeDeclaration(Appendable accum, Document.OutputSettings out) throws IOException {

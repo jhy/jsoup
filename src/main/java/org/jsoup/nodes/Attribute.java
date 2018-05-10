@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
@@ -98,14 +99,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return HTML
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         
         try {
-        	html(accum, (new Document("")).outputSettings());
+        	html(sb, (new Document("")).outputSettings());
         } catch(IOException exception) {
         	throw new SerializationException(exception);
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     protected static void html(String key, String val, Appendable accum, Document.OutputSettings out) throws IOException {

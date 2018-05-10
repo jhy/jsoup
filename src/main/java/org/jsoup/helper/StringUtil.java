@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Stack;
 
 /**
  * A minimal String utility class. Designed for internal jsoup use only.
@@ -39,12 +40,12 @@ public final class StringUtil {
         if (!strings.hasNext()) // only one, avoid builder
             return start;
 
-        StringBuilder sb = new StringBuilder(64).append(start);
+        StringBuilder sb = StringUtil.borrowBuilder().append(start);
         while (strings.hasNext()) {
             sb.append(sep);
             sb.append(strings.next());
         }
-        return sb.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
@@ -140,9 +141,9 @@ public final class StringUtil {
      * @return normalised string
      */
     public static String normaliseWhitespace(String string) {
-        StringBuilder sb = StringUtil.stringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         appendNormalisedWhitespace(sb, string, false);
-        return sb.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
@@ -226,30 +227,49 @@ public final class StringUtil {
         }
     }
 
-    /**
-     * Maintains a cached StringBuilder, to minimize new StringBuilder GCs. Prevents it from growing too big per thread.
-     * Care must be taken to not grab more than one in the same stack (not locked or mutexed or anything).
-     * @return an empty StringBuilder
-     */
-    public static StringBuilder stringBuilder() {
-        StringBuilder sb = stringLocal.get();
-        if (sb.length() > MaxCachedBuilderSize) {
-            sb = new StringBuilder(MaxCachedBuilderSize);
-            stringLocal.set(sb);
-        } else {
-            sb.delete(0, sb.length());
-        }
-        return sb;
+    private static final Stack<StringBuilder> builders = new Stack<>();
 
+    /**
+     * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
+     * prevented from growing too large.
+     * <p>
+     * Care must be taken to release the builder once its work has been completed, with {@see #releaseBuilder}
+     * @return an empty StringBuilder
+     * @
+     */
+    public static StringBuilder borrowBuilder() {
+        synchronized (builders) {
+            return builders.empty() ?
+                new StringBuilder(MaxCachedBuilderSize) :
+                builders.pop();
+        }
+    }
+
+    /**
+     * Release a borrowed builder. Care must be taken not to use the builder after it has been returned, as its
+     * contents may be changed by this method, or by a concurrent thread.
+     * @param sb the StringBuilder to release.
+     * @return the string value of the released String Builder (as an incentive to release it!).
+     */
+    public static String releaseBuilder(StringBuilder sb) {
+        Validate.notNull(sb);
+        String string = sb.toString();
+
+        if (sb.length() > MaxCachedBuilderSize)
+            sb = new StringBuilder(MaxCachedBuilderSize); // make sure it hasn't grown too big
+        else
+            sb.delete(0, sb.length()); // make sure it's emptied on release
+
+        synchronized (builders) {
+            builders.push(sb);
+
+            while (builders.size() > MaxIdleBuilders) {
+                builders.pop();
+            }
+        }
+        return string;
     }
 
     private static final int MaxCachedBuilderSize = 8 * 1024;
-    private static final ThreadLocal<StringBuilder> stringLocal = new ThreadLocal<StringBuilder>(){
-        @Override
-        protected StringBuilder initialValue() {
-            return new StringBuilder(MaxCachedBuilderSize);
-        }
-    };
-
-
+    private static final int MaxIdleBuilders = 8;
 }

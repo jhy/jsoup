@@ -131,7 +131,7 @@ public class QueryParser {
     }
 
     private String consumeSubQuery() {
-        StringBuilder sq = new StringBuilder();
+        StringBuilder sq = StringUtil.borrowBuilder();
         while (!tq.isEmpty()) {
             if (tq.matches("("))
                 sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
@@ -142,7 +142,7 @@ public class QueryParser {
             else
                 sq.append(tq.consume());
         }
-        return sq.toString();
+        return StringUtil.releaseBuilder(sq);
     }
 
     private void findElements() {

@@ -566,9 +566,9 @@ public abstract class Node implements Cloneable {
      @see Element#text()
      */
     public String outerHtml() {
-        StringBuilder accum = StringUtil.stringBuilder();
+        StringBuilder accum = StringUtil.borrowBuilder();
         outerHtml(accum);
-        return accum.toString();
+        return StringUtil.releaseBuilder(accum);
     }
 
     protected void outerHtml(Appendable accum) {

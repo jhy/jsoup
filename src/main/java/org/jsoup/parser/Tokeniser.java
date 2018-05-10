@@ -275,7 +275,7 @@ final class Tokeniser {
      * @return unescaped string from reader
      */
     String unescapeEntities(boolean inAttribute) {
-        StringBuilder builder = StringUtil.stringBuilder();
+        StringBuilder builder = StringUtil.borrowBuilder();
         while (!reader.isEmpty()) {
             builder.append(reader.consumeTo('&'));
             if (reader.matches('&')) {
@@ -291,6 +291,6 @@ final class Tokeniser {
 
             }
         }
-        return builder.toString();
+        return StringUtil.releaseBuilder(builder);
     }
 }
