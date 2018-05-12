@@ -302,11 +302,6 @@ public class ConnectTest {
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
         assertEquals("google-ipod.html", ihVal("Part secondPart Filename", res));
         assertEquals("43963", ihVal("Part secondPart Size", res));
-        // if this is failing as 43972 it is because git has normalized the html line endings to crlf (windows)
-        // disable that:
-        // git config --global core.eol lf
-        // git config --global core.autocrlf input
-        // (and rm cached and reset)
 
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
