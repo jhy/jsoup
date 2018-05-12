@@ -1114,14 +1114,11 @@ public class HttpConnection implements Connection {
 
     private static boolean needsMultipart(Connection.Request req) {
         // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
-        boolean needsMulti = false;
         for (Connection.KeyVal keyVal : req.data()) {
-            if (keyVal.hasInputStream()) {
-                needsMulti = true;
-                break;
-            }
+            if (keyVal.hasInputStream())
+                return true;
         }
-        return needsMulti;
+        return false;
     }
 
     public static class KeyVal implements Connection.KeyVal {
