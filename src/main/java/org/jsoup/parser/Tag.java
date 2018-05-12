@@ -59,6 +59,8 @@ public class Tag {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.isBlock = false;
+                tag.formatAsBlock = false;
+                //tag.preserveWhitespace = true;
             }
         }
         return tag;
@@ -264,6 +266,10 @@ public class Tag {
     private static final String[] formSubmitTags = {
             "input", "keygen", "object", "select", "textarea"
     };
+    
+    private static final String[] formatAsBlockTags = {
+    		"option"
+    };
 
     static {
         // creates
@@ -308,6 +314,12 @@ public class Tag {
             Tag tag = tags.get(tagName);
             Validate.notNull(tag);
             tag.formSubmit = true;
+        }
+        
+         for (String tagName : formatAsBlockTags) {
+            Tag tag = tags.get(tagName);
+            Validate.notNull(tag);
+            tag.formatAsBlock=true;
         }
     }
 
