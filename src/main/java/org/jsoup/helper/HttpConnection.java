@@ -76,6 +76,11 @@ public class HttpConnection implements Connection {
         return con;
     }
 
+    public HttpConnection() {
+        req = new Request();
+        res = new Response();
+    }
+
     /**
      * Encodes the input URL into a safe ASCII URL string
      * @param url unescaped URL
@@ -110,11 +115,6 @@ public class HttpConnection implements Connection {
 
     private Connection.Request req;
     private Connection.Response res;
-
-	private HttpConnection() {
-        req = new Request();
-        res = new Response();
-    }
 
     public Connection url(URL url) {
         req.url(url);
@@ -704,6 +704,7 @@ public class HttpConnection implements Connection {
 
         static Response execute(Connection.Request req, Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
+            Validate.notNull(req.url(), "URL must be specified to connect");
             String protocol = req.url().getProtocol();
             if (!protocol.equals("http") && !protocol.equals("https"))
                 throw new MalformedURLException("Only http & https protocols supported");

@@ -237,4 +237,16 @@ public class HttpConnectionTest {
         URL url2 = HttpConnection.encodeUrl(url1);
         assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
     }
+
+    @Test public void noUrlThrowsValidationError() throws IOException {
+        HttpConnection con = new HttpConnection();
+        boolean threw = false;
+        try {
+            con.execute();
+        } catch (IllegalArgumentException e) {
+            threw = true;
+            assertEquals("URL must be specified to connect", e.getMessage());
+        }
+        assertTrue(threw);
+    }
 }
