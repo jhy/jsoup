@@ -1383,8 +1383,8 @@ public class ElementTest {
         List<Element> elementSiblings2 = element2.previousElementSiblings();
         assertNotNull(elementSiblings2);
         assertEquals(2, elementSiblings2.size());
-        assertEquals("a", elementSiblings2.get(0).id());
-        assertEquals("b", elementSiblings2.get(1).id());
+        assertEquals("b", elementSiblings2.get(0).id());
+        assertEquals("a", elementSiblings2.get(1).id());
 
         Element ul = doc.getElementById("ul");
         List<Element> elementSiblings3 = ul.previousElementSiblings();
