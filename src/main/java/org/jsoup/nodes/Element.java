@@ -688,6 +688,15 @@ public class Element extends Node {
     }
 
     /**
+     * Get each of the sibling elements that come after this element.
+     *
+     * @return each of the element siblings after this element, or an empty list if there are no next sibling elements
+     */
+    public Elements nextElementSiblings() {
+        return nextElementSiblings(true);
+    }
+
+    /**
      * Gets the previous element sibling of this element.
      * @return the previous element, or null if there is no previous element
      * @see #nextElementSibling()
@@ -701,6 +710,23 @@ public class Element extends Node {
             return siblings.get(index-1);
         else
             return null;
+    }
+
+    /**
+     * Get each of the element siblings before this element.
+     *
+     * @return the previous element siblings, or an empty list if there are none.
+     */
+    public Elements previousElementSiblings() {
+        return nextElementSiblings(false);
+    }
+
+    private Elements nextElementSiblings(boolean next) {
+        Elements els = new Elements();
+        if (parentNode == null)
+            return  els;
+        els.add(this);
+        return next ?  els.nextAll() : els.prevAll();
     }
 
     /**

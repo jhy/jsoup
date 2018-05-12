@@ -14,12 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -1324,4 +1319,75 @@ public class ElementTest {
         assertEquals("One Two", doc.text());
     }
 
+    @Test
+    public void testNextElementSiblings() {
+        Document doc = Jsoup.parse("<ul id='ul'>" +
+            "<li id='a'>a</li>" +
+            "<li id='b'>b</li>" +
+            "<li id='c'>c</li>" +
+            "</ul> Not An Element but a node" +
+            "<div id='div'>" +
+            "<li id='d'>d</li>" +
+            "</div>");
+
+        Element element = doc.getElementById("a");
+        Elements elementSiblings = element.nextElementSiblings();
+        assertNotNull(elementSiblings);
+        assertEquals(2, elementSiblings.size());
+        assertEquals("b", elementSiblings.get(0).id());
+        assertEquals("c", elementSiblings.get(1).id());
+
+        Element element1 = doc.getElementById("b");
+        List<Element> elementSiblings1 = element1.nextElementSiblings();
+        assertNotNull(elementSiblings1);
+        assertEquals(1, elementSiblings1.size());
+        assertEquals("c", elementSiblings1.get(0).id());
+
+        Element element2 = doc.getElementById("c");
+        List<Element> elementSiblings2 = element2.nextElementSiblings();
+        assertEquals(0, elementSiblings2.size());
+
+        Element ul = doc.getElementById("ul");
+        List<Element> elementSiblings3 = ul.nextElementSiblings();
+        assertNotNull(elementSiblings3);
+        assertEquals(1, elementSiblings3.size());
+        assertEquals("div", elementSiblings3.get(0).id());
+
+        Element div = doc.getElementById("div");
+        List<Element> elementSiblings4 = div.nextElementSiblings();
+        assertEquals(0, elementSiblings4.size());
+    }
+
+    @Test
+    public void testPreviousElementSiblings() {
+        Document doc = Jsoup.parse("<ul id='ul'>" +
+            "<li id='a'>a</li>" +
+            "<li id='b'>b</li>" +
+            "<li id='c'>c</li>" +
+            "</ul>" +
+            "<div id='div'>" +
+            "<li id='d'>d</li>" +
+            "</div>");
+
+        Element element = doc.getElementById("b");
+        Elements elementSiblings = element.previousElementSiblings();
+        assertNotNull(elementSiblings);
+        assertEquals(1, elementSiblings.size());
+        assertEquals("a", elementSiblings.get(0).id());
+
+        Element element1 = doc.getElementById("a");
+        List<Element> elementSiblings1 = element1.previousElementSiblings();
+        assertEquals(0, elementSiblings1.size());
+
+        Element element2 = doc.getElementById("c");
+        List<Element> elementSiblings2 = element2.previousElementSiblings();
+        assertNotNull(elementSiblings2);
+        assertEquals(2, elementSiblings2.size());
+        assertEquals("a", elementSiblings2.get(0).id());
+        assertEquals("b", elementSiblings2.get(1).id());
+
+        Element ul = doc.getElementById("ul");
+        List<Element> elementSiblings3 = ul.previousElementSiblings();
+        assertEquals(0, elementSiblings3.size());
+    }
 }

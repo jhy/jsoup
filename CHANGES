@@ -24,6 +24,9 @@ jsoup changelog
 
   * Improvement: performance tweaks when parsing start tags, data, tables.
 
+  * Improvement: added Element.nextElementSiblings() and Element.previousElementSiblings()
+    https://github.com/jhy/jsoup/pull/1054
+
   * Bugfix: when converting a Jsoup document to a W3C DOM, if an element is namespaced but not in a defined namespace,
     set it to the global namespace.
     <https://github.com/jhy/jsoup/issues/848>
