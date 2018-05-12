@@ -5,6 +5,7 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;

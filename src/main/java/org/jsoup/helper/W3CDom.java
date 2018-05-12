@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.select.NodeTraversor;

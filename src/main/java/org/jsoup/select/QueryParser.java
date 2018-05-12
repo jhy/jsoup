@@ -1,6 +1,6 @@
 package org.jsoup.select;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
 

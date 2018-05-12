@@ -1,6 +1,6 @@
 package org.jsoup.select;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;

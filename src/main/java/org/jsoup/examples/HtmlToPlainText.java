@@ -1,7 +1,7 @@
 package org.jsoup.examples;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

@@ -2,7 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
