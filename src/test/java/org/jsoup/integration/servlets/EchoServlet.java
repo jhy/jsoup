@@ -2,7 +2,7 @@ package org.jsoup.integration.servlets;
 
 import org.eclipse.jetty.server.Request;
 import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.integration.TestServer;
 
 import javax.servlet.MultipartConfigElement;

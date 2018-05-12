@@ -1,6 +1,6 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
@@ -17,7 +17,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.jsoup.helper.StringUtil.inSorted;
+import static org.jsoup.internal.StringUtil.inSorted;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.

@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

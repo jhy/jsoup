@@ -1,4 +1,6 @@
-package org.jsoup.helper;
+package org.jsoup.internal;
+
+import org.jsoup.helper.Validate;
 
 import java.net.MalformedURLException;
 import java.net.URL;

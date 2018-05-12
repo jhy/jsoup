@@ -1,7 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
