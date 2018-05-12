@@ -1325,13 +1325,13 @@ public class ElementTest {
             "<li id='a'>a</li>" +
             "<li id='b'>b</li>" +
             "<li id='c'>c</li>" +
-            "</ul>" +
+            "</ul> Not An Element but a node" +
             "<div id='div'>" +
             "<li id='d'>d</li>" +
             "</div>");
 
         Element element = doc.getElementById("a");
-        List<Element> elementSiblings = element.nextElementSiblings();
+        Elements elementSiblings = element.nextElementSiblings();
         assertNotNull(elementSiblings);
         assertEquals(2, elementSiblings.size());
         assertEquals("b", elementSiblings.get(0).id());
@@ -1355,11 +1355,7 @@ public class ElementTest {
 
         Element div = doc.getElementById("div");
         List<Element> elementSiblings4 = div.nextElementSiblings();
-        try {
-            Element elementSibling = elementSiblings4.get(0);
-            fail("This element should has no next siblings");
-        } catch (IndexOutOfBoundsException e) {
-        }
+        assertEquals(0, elementSiblings4.size());
     }
 
     @Test
@@ -1374,7 +1370,7 @@ public class ElementTest {
             "</div>");
 
         Element element = doc.getElementById("b");
-        List<Element> elementSiblings = element.previousElementSiblings();
+        Elements elementSiblings = element.previousElementSiblings();
         assertNotNull(elementSiblings);
         assertEquals(1, elementSiblings.size());
         assertEquals("a", elementSiblings.get(0).id());
@@ -1392,10 +1388,6 @@ public class ElementTest {
 
         Element ul = doc.getElementById("ul");
         List<Element> elementSiblings3 = ul.previousElementSiblings();
-        try {
-            Element element3 = elementSiblings3.get(0);
-            fail("This element should has no previous siblings");
-        } catch (IndexOutOfBoundsException e) {
-        }
+        assertEquals(0, elementSiblings3.size());
     }
 }

@@ -688,23 +688,12 @@ public class Element extends Node {
     }
 
     /**
-     * Get all the siblings after this element.
+     * Get each of the sibling elements that come after this element.
      *
-     * @return  all the siblings after this element, or empty list if there is no siblings after this
+     * @return each of the element siblings after this element, or an empty list if there are no next sibling elements
      */
-    public List<Element> nextElementSiblings() {
-        if (parentNode == null) {
-            return Collections.emptyList();
-        }
-
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        Validate.notNull(index);
-
-        if (siblings.size() > index + 1) {
-            return siblings.subList(index + 1, siblings.size());
-        }
-        return Collections.emptyList();
+    public Elements nextElementSiblings() {
+        return nextElementSiblings(true);
     }
 
     /**
@@ -724,23 +713,20 @@ public class Element extends Node {
     }
 
     /**
-     * Get all the element siblings before this element.
+     * Get each of the element siblings before this element.
      *
-     * @return all the previous element siblings, or empty list if no previous siblings
+     * @return the previous element siblings, or an empty list if there are none.
      */
-    public List<Element> previousElementSiblings() {
-        if (parentNode == null) {
-            return Collections.emptyList();
-        }
+    public Elements previousElementSiblings() {
+        return nextElementSiblings(false);
+    }
 
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        Validate.notNull(index);
-
-        if (index > 0 && index < siblings.size()) {
-            return siblings.subList(0, index);
-        }
-        return Collections.emptyList();
+    private Elements nextElementSiblings(boolean next) {
+        Elements els = new Elements();
+        if (parentNode == null)
+            return  els;
+        els.add(this);
+        return next ?  els.nextAll() : els.prevAll();
     }
 
     /**
