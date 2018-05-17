@@ -495,18 +495,6 @@ public interface Connection {
         Proxy proxy();
 
         /**
-         * Force to use multipart/form-data in stead of application/x-www-form-urlencoded (default)
-         * @return this Request, for chaining
-         */
-        Request forceMultipart();
-
-        /**
-         * Check whether this request is forced to use multipart/form-data in stead of application/x-www-form-urlencoded
-         * @return true if this request is forced to be multipart.
-         */
-        boolean forceToUseMultipart();
-
-        /**
          * Update the proxy for this request.
          * @param proxy the proxy ot use; <code>null</code> to disable.
          * @return this Request, for chaining
