@@ -1003,6 +1003,17 @@ public class HttpConnection implements Connection {
             if (req.hasHeader(CONTENT_TYPE)) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
                 // todo - if content type already set, we could add charset or boundary if those aren't included
+
+                // vcoder4c's patch: 17th May 2018
+                // Description: support for the issue: https://github.com/jhy/jsoup/issues/788
+                // check whether the boundary has been added when the content type is multipart/form-data
+                // For the charset, I think it should be set explicit by the user.
+                if(req.header(CONTENT_TYPE).contains(MULTIPART_FORM_DATA) &&
+                        !req.header(CONTENT_TYPE).contains("boundary")) {
+                    bound = DataUtil.mimeBoundary();
+                    req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
+                }
+
             }
             else if (needsMultipart(req)) {
                 bound = DataUtil.mimeBoundary();
