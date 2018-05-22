@@ -812,4 +812,37 @@ public abstract class Evaluator {
             return ":matchText";
         }
     }
+
+    public static final class IsEnabled extends Evaluator {
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            if (element instanceof PseudoTextElement)
+                return true;
+
+            return !element.hasAttr("disabled");
+        }
+
+        @Override
+        public String toString() {
+            return ":enabled";
+        }
+    }
+
+    public static final class IsDisabled extends Evaluator {
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            if (element instanceof PseudoTextElement)
+                return true;
+
+            return element.hasAttr("disabled");
+        }
+
+        @Override
+        public String toString() {
+            return ":disabled";
+        }
+    }
+
 }

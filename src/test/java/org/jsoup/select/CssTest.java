@@ -41,6 +41,14 @@ public class CssTest {
 		sb.append("Some text before the <em>only</em> child in this div");
 		sb.append("</div>");
 
+		sb.append("<div id='enabled_disabled_advanced'>");
+		sb.append("Some text before the <em>only</em> child in this div");
+		sb.append("<span class='color'>");
+		sb.append("<input class='red' value='Red' disabled>");
+		sb.append("<input class='blue' value='Blue'>");
+		sb.append("</span>");
+		sb.append("</div>");
+
 		sb.append("</body></html>");
 		htmlString = sb.toString();
 	}
@@ -157,22 +165,33 @@ public class CssTest {
 	}
 
 	@Test
+	public void enabled_disabled_advanced() {
+		checkVal(html.select("#enabled_disabled_advanced > span.color > input.red:enabled"));
+		checkVal(html.select("#enabled_disabled_advanced > span.color > input.red:disabled"), "Red");
+
+		checkVal(html.select("#enabled_disabled_advanced > span.color > input.blue:enabled"), "Blue");
+		checkVal(html.select("#enabled_disabled_advanced > span.color > input.blue:disabled"));
+	}
+
+	@Test
 	public void firstOfType() {
-		check(html.select("div:not(#only) :first-of-type"), "1", "1", "1", "1", "1");
+		check(html.select("div:not(#only) :first-of-type"), "1", "1", "1", "1", "1", "only", "", "");
 	}
 
 	@Test
 	public void lastOfType() {
-		check(html.select("div:not(#only) :last-of-type"), "10", "10", "10", "10", "10");
+		check(html.select("div:not(#only) :last-of-type"), "10", "10", "10", "10", "10", "only", "", "");
 	}
 
 	@Test
 	public void empty() {
 		final Elements sel = html.select(":empty");
-		assertEquals(3, sel.size());
+		assertEquals(5, sel.size());
 		assertEquals("head", sel.get(0).tagName());
 		assertEquals("br", sel.get(1).tagName());
 		assertEquals("p", sel.get(2).tagName());
+		assertEquals("input", sel.get(3).tagName());
+		assertEquals("input", sel.get(4).tagName());
 	}
 
 	@Test
@@ -187,7 +206,7 @@ public class CssTest {
 	@Test
 	public void onlyOfType() {
 		final Elements sel = html.select(":only-of-type");
-		assertEquals(6, sel.size());
+		assertEquals(8, sel.size());
 		assertEquals("head", sel.get(0).tagName());
 		assertEquals("body", sel.get(1).tagName());
 		assertEquals("span", sel.get(2).tagName());
@@ -195,6 +214,8 @@ public class CssTest {
 		assertEquals("p", sel.get(4).tagName());
 		assertTrue(sel.get(4).hasClass("empty"));
 		assertEquals("em", sel.get(5).tagName());
+		assertEquals("em", sel.get(6).tagName());
+		assertEquals("span", sel.get(7).tagName());
 	}
 
 	protected void check(Elements result, String...expectedContent ) {
@@ -204,6 +225,15 @@ public class CssTest {
 			assertEquals(expectedContent[i], result.get(i).ownText(), "Expected element");
 		}
 	}
+
+	protected void checkVal(Elements result, String...expectedContent ) {
+		assertEquals(expectedContent.length, result.size());
+		for (int i = 0; i < expectedContent.length; i++) {
+			assertNotNull(result.get(i));
+			assertEquals(expectedContent[i], result.get(i).val());
+		}
+	}
+
 
 	@Test
 	public void root() {

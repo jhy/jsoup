@@ -216,6 +216,10 @@ public class QueryParser {
         	evals.add(new Evaluator.IsRoot());
         else if (tq.matchChomp(":matchText"))
             evals.add(new Evaluator.MatchText());
+        else if (tq.matchChomp(":enabled"))
+            evals.add(new Evaluator.IsEnabled());
+        else if (tq.matchChomp(":disabled"))
+            evals.add(new Evaluator.IsDisabled());
 		else // unhandled
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
 

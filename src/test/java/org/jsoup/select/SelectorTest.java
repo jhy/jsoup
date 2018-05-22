@@ -869,6 +869,28 @@ public class SelectorTest {
         assertEquals(0, els.size());
     }
 
+    @Test public void enabled() {
+        Document docEnabled = Jsoup.parse("<input>Enabled</input>");
+        Document docDisabled = Jsoup.parse("<input disabled>Enabled</input>");
+
+        Elements enabled = docEnabled.select("input:enabled");
+        assertEquals(false, enabled.isEmpty());
+
+        Elements disabled = docDisabled.select("input:enabled");
+        assertEquals(true, disabled.isEmpty());
+    }
+
+    @Test public void disabled() {
+        Document docEnabled = Jsoup.parse("<input>Enabled</input>");
+        Document docDisabled = Jsoup.parse("<input disabled>Enabled</input>");
+
+        Elements enabled = docEnabled.select("input:disabled");
+        assertEquals(true, enabled.isEmpty());
+
+        Elements disabled = docDisabled.select("input:disabled");
+        assertEquals(false, disabled.isEmpty());
+    }
+
     @Test public void splitOnBr() {
         String html = "<div><p>One<br>Two<br>Three</p></div>";
         Document doc = Jsoup.parse(html);
