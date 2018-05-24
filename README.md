@@ -29,6 +29,31 @@ for (Element headline : newsHeadlines) {
 ```
 [Online sample](https://try.jsoup.org/~LGB7rk_atM2roavV0d-czMt3J_g), [full source](https://github.com/jhy/jsoup/blob/master/src/main/java/org/jsoup/examples/Wikipedia.java).
 
+## Use in Testing
+With `jsoup-hamcrest` you can use powerful easy to read assertions in your tests.
+
+```java
+@Test
+public void form_every_non_hidden_input_has_the_correct_class() {
+    html(source)
+            .expect(elements("form input:not([type=hidden])").hasCount(3).each().hasCssClass("form-control"));
+}
+
+@Test
+public void multiple_assertions_combined() {
+    html(source)
+            .expect(anElement("form input[name=_csrf]").exists())
+            .and(elements("form input[type=submit], form button[type=submit]").hasCount(1))
+            .and(eachElement("form input:not([type=hidden])").hasCssClass("form-control"))
+            .and(hasTitle("Demo"));
+}
+```
+
+For more examples see [Fluent Examples](jsoup-hamcrest/src/test/java/org/jsoup/hamcrest/FluentExampleTest.java) or
+[All Matchers Examples](jsoup-hamcrest/src/test/java/org/jsoup/hamcrest/AllMatcherHappyTest.java).
+
+Note that `jsoup-hamcrest` requires Java 8 or higher.
+
 ## Open source
 jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup/tree/master/src/main/java/org/jsoup).
 

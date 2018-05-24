@@ -17,7 +17,6 @@
     manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and
     parses HTML to the same DOM as modern browsers do.
   </description>
-  <url>https://jsoup.org/</url>
 
   <properties>
     <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
