@@ -1,9 +1,5 @@
 package org.jsoup;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.parser.Parser;
-
-import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +8,11 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.SSLSocketFactory;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.

@@ -1,154 +1,180 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <name>jsoup Java HTML Parser</name>
+  <name>Jsoup Parent</name>
 
   <groupId>org.jsoup</groupId>
-  <artifactId>jsoup</artifactId>
+  <artifactId>jsoup-parent</artifactId>
   <version>1.12.1-SNAPSHOT</version>
-  <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for extracting and manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
+  <packaging>pom</packaging>
+  <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for extracting and
+    manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and
+    parses HTML to the same DOM as modern browsers do.
+  </description>
   <url>https://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
   <issueManagement>
-  	<system>GitHub</system>
-  	<url>http://github.com/jhy/jsoup/issues</url>
+    <system>GitHub</system>
+    <url>http://github.com/jhy/jsoup/issues</url>
   </issueManagement>
   <licenses>
-  	<license>
-  		<name>The MIT License</name>
-  		<url>https://jsoup.org/license</url>
-  		<distribution>repo</distribution>
-  	</license>
+    <license>
+      <name>The MIT License</name>
+      <url>https://jsoup.org/license</url>
+      <distribution>repo</distribution>
+    </license>
   </licenses>
   <scm>
-  	<url>https://github.com/jhy/jsoup</url>
+    <url>https://github.com/jhy/jsoup</url>
     <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
     <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
     <tag>HEAD</tag>
   </scm>
   <organization>
-  	<name>Jonathan Hedley</name>
-  	<url>http://jonathanhedley.com/</url>
+    <name>Jonathan Hedley</name>
+    <url>http://jonathanhedley.com/</url>
   </organization>
 
+  <modules>
+    <module>jsoup</module>
+  </modules>
+
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven-compiler-plugin.source>1.7</maven-compiler-plugin.source>
+    <maven-compiler-plugin.target>1.7</maven-compiler-plugin.target>
+    <Automatic-Module-Name>replacemeinsubmodule</Automatic-Module-Name>
+  </properties>
+
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.6.0</version>
+          <configuration>
+            <source>${maven-compiler-plugin.source}</source>
+            <target>${maven-compiler-plugin.target}</target>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <!-- this plugin allows us to ensure Java 7 API compatibility -->
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>animal-sniffer-maven-plugin</artifactId>
+          <version>1.16</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.0</version>
+          <configuration>
+            <doclint>none</doclint>
+          </configuration>
+          <executions>
+            <execution>
+              <id>attach-javadoc</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.0.1</version>
+          <configuration>
+            <excludes>
+              <exclude>org/jsoup/examples/**</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+            <!-- suppress seperate generation of sources-jar during
+                 run of release:stage, see
+                 http://blog.peterlynch.ca/2010/05/maven-how-to-prevent-generate-sources.html
+                 https://maven.apache.org/ref/3.3.9/maven-model-builder/super-pom.html
+            -->
+            <execution>
+              <id>attach-sources</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.1.0</version>
+          <configuration>
+            <archive>
+              <manifestEntries>
+                <Automatic-Module-Name>${Automatic-Module-Name}</Automatic-Module-Name>
+              </manifestEntries>
+              <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+            </archive>
+            <excludes>
+              <exclude>org/jsoup/examples/**</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.5.4</version>
+          <executions>
+            <execution>
+              <id>bundle-manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>manifest</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <instructions>
+              <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
+            </instructions>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-          <encoding>UTF-8</encoding>
-        </configuration>
-      </plugin>
-      <plugin>
-      	<!-- this plugin allows us to ensure Java 7 API compatibility -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.16</version>
-        <executions>
-          <execution>
-            <id>animal-sniffer</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <signature>
-                <groupId>org.codehaus.mojo.signature</groupId>
-                <artifactId>java17</artifactId>
-                <version>1.0</version>
-              </signature>
-              <signature>
-                <groupId>net.sf.androidscents.signature</groupId>
-                <artifactId>android-api-level-8</artifactId>
-                <version>2.2_r3</version>
-              </signature>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-source-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.0.0-M1</version>
-        <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
-        </configuration>
-        <executions>
-          <execution>
-            <id>attach-javadoc</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.0.1</version>
-        <configuration>
-	  <excludes>
-	    <exclude>org/jsoup/examples/**</exclude>
-	  </excludes>
-        </configuration>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
-            </manifestEntries>
-            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-          </archive>
-	  <excludes>
-	    <exclude>org/jsoup/examples/**</exclude>
-	  </excludes>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.4</version>
-        <executions>
-          <execution>
-            <id>bundle-manifest</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>manifest</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <instructions>
-            <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
-          </instructions>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.1</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
       </plugin>
     </plugins>
     <resources>
@@ -159,7 +185,7 @@
         </includes>
       </resource>
       <resource>
-        <directory>./</directory>
+        <directory>${maven.multiModuleProjectDirectory}</directory>
         <targetPath>META-INF/</targetPath>
         <filtering>false</filtering>
         <includes>
@@ -213,51 +239,42 @@
     </profile>
   </profiles>
 
-  <dependencies>
-
-    <dependency>
-      <!-- junit -->
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- gson, to fetch entities from w3.org -->
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.7</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty for webserver integration tests. 9.2 is last with Java7 support -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>9.2.22.v20170606</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty for webserver integration tests -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>9.2.22.v20170606</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-
   <dependencyManagement>
-  	<dependencies>
-  	</dependencies>
+    <dependencies>
+
+      <dependency>
+        <!-- junit -->
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <!-- gson, to fetch entities from w3.org -->
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.7</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <!-- jetty for webserver integration tests. 9.2 is last with Java7 support -->
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>9.2.22.v20170606</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <!-- jetty for webserver integration tests -->
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>9.2.22.v20170606</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
   <developers>
     <developer>
       <id>jhy</id>
@@ -269,5 +286,4 @@
       <timezone>+11</timezone>
     </developer>
   </developers>
-
 </project>

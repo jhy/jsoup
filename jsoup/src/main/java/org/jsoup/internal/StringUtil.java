@@ -1,13 +1,13 @@
 package org.jsoup.internal;
 
-import org.jsoup.helper.Validate;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Stack;
+
+import org.jsoup.helper.Validate;
 
 /**
  * A minimal String utility class. Designed for internal jsoup use only.
@@ -235,9 +235,8 @@ public final class StringUtil {
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
      * <p>
-     * Care must be taken to release the builder once its work has been completed, with {@see #releaseBuilder}
+     * Care must be taken to release the builder once its work has been completed, with {@link #releaseBuilder(StringBuilder)}
      * @return an empty StringBuilder
-     * @
      */
     public static StringBuilder borrowBuilder() {
         synchronized (builders) {

@@ -1,12 +1,12 @@
 package org.jsoup;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
+
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 public class MultiLocaleRule implements TestRule {
     @Retention(RetentionPolicy.RUNTIME)
