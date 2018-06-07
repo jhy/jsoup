@@ -150,6 +150,30 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>2.5.3</version>
       </plugin>
+      <plugin>
+        <groupId>org.evosuite.plugins</groupId>
+        <artifactId>evosuite-maven-plugin</artifactId>
+        <version>1.0.6</version>
+      </plugin>
+      <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.8</version>
+         <executions>
+           <execution>
+             <id>add-test-source</id>
+             <phase>generate-test-sources</phase>
+             <goals>
+               <goal>add-test-source</goal>
+             </goals>
+             <configuration>
+                <sources>
+                  <source>${targetFolder}</source>
+                </sources>
+             </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <resources>
       <resource>
@@ -256,6 +280,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <targetFolder>src/test/evosuite</targetFolder>
   </properties>
 
   <developers>
@@ -269,5 +294,13 @@
       <timezone>+11</timezone>
     </developer>
   </developers>
+
+  <pluginRepositories>
+  <pluginRepository>
+    <id>EvoSuite</id>
+    <name>EvoSuite Repository</name>
+    <url>http://www.evosuite.org/m2</url>
+  </pluginRepository>
+</pluginRepositories>
 
 </project>
