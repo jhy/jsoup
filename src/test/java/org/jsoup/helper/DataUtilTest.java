@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.jsoup.integration.ParseTest.getFile;
 import static org.junit.Assert.assertEquals;
@@ -162,6 +164,19 @@ public class DataUtilTest {
     public void supportsUTF8BOM() throws IOException {
         File in = getFile("/bomtests/bom_utf8.html");
         Document doc = Jsoup.parse(in, null, "http://example.com");
+        assertEquals("OK", doc.head().select("title").text());
+    }
+    
+    @Test
+    public void supportsUTF8BOMWithNormalStringParse() throws IOException {
+        // the difference of this test from the previous supportsUTF8BOM test is
+        // this test case uses Jsoup.parse(String) function
+        // where the string is directly passed into the parser
+        // instead of processed by DataUtil.parseInputStream()
+        
+        File in = getFile("/bomtests/bom_utf8.html");
+        String fileContent = new String(Files.readAllBytes(Paths.get(in.getPath())));
+        Document doc = Jsoup.parse(fileContent);
         assertEquals("OK", doc.head().select("title").text());
     }
 

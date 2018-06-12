@@ -1,12 +1,19 @@
 package org.jsoup.parser;
 
+import org.jsoup.UncheckedIOException;
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.DataUtil.BomCharset;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.io.IOException;
 import java.io.Reader;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +42,8 @@ abstract class TreeBuilder {
         doc.parser(parser);
         this.parser = parser;
         settings = parser.settings();
+        
+        this.handleSkipBomCharacter(input);
         reader = new CharacterReader(input);
         currentToken = null;
         tokeniser = new Tokeniser(reader, parser.getErrors());
@@ -90,5 +99,38 @@ abstract class TreeBuilder {
     protected Element currentElement() {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : null;
+    }
+    
+    /**
+     * Checks if the first character is the BOM character in the input stream,
+     *  if it is, skip the BOM character to avoid errors in parsing it.
+     * @param input
+     */
+    private void handleSkipBomCharacter(Reader input) {
+        try {
+            // set up a char array buffer of size 10
+            int bufferLength = 10;
+            char[] charArray = new char[bufferLength];
+            
+            // mark the input stream to reset it later
+            input.mark(bufferLength);
+            // read the stream to the char array
+            input.read(charArray, 0, bufferLength);
+            // convert the char array to a byte buffer
+            CharBuffer charBuffer = CharBuffer.wrap(charArray);
+            ByteBuffer byteData = Charset.defaultCharset().encode(charBuffer);
+            // detect BOM charset (reuse same util function)
+            BomCharset bomCharset = DataUtil.detectCharsetFromBom(byteData);
+            
+            // reset the input stream
+            input.reset();
+            // if the first character is BOM character, skip it
+            if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
+                input.skip(1);
+            }
+        } catch (IOException e) {
+            // wrap IOException with jsoup UncheckedIOException
+            throw new UncheckedIOException(e);
+        }
     }
 }

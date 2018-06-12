@@ -238,7 +238,7 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
-    private static BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
+    public static BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
         final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
         buffer.mark();
         byte[] bom = new byte[4];
@@ -259,9 +259,9 @@ public final class DataUtil {
         return null;
     }
 
-    private static class BomCharset {
-        private final String charset;
-        private final boolean offset;
+    public static class BomCharset {
+        public final String charset;
+        public final boolean offset;
 
         public BomCharset(String charset, boolean offset) {
             this.charset = charset;
