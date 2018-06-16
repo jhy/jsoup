@@ -157,7 +157,7 @@
             <plugin>
                 <groupId>org.evosuite.plugins</groupId>
                 <artifactId>evosuite-maven-plugin</artifactId>
-                <version>1.0.5</version>
+                <version>1.0.6</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -291,7 +291,7 @@
         <dependency>
             <groupId>org.evosuite.plugins</groupId>
             <artifactId>evosuite-maven-plugin</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
             <scope>test</scope>
         </dependency>
 
