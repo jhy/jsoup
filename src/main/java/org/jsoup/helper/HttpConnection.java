@@ -7,8 +7,10 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
+import org.jsoup.select.Elements;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
@@ -162,6 +164,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    public Connection followMetaRedirects(boolean followMetaRedirects) {
+        req.followMetaRedirects(followMetaRedirects);
+        return this;
+    }
+
     public Connection referrer(String referrer) {
         Validate.notNull(referrer, "Referrer must not be null");
         req.header("Referer", referrer);
@@ -281,14 +288,70 @@ public class HttpConnection implements Connection {
 
     public Document get() throws IOException {
         req.method(Method.GET);
-        execute();
-        return res.parse();
+        return executeMethod();
     }
 
     public Document post() throws IOException {
         req.method(Method.POST);
+        return executeMethod();
+    }
+
+    /**
+     * Executes the HTTP method and parses the response
+     *
+     * @return parsed document
+     * @throws IOException
+     */
+    private Document executeMethod() throws IOException {
         execute();
-        return res.parse();
+        Document document = res.parse();
+        if (req.followMetaRedirects())
+            return checkMetaRedirect(document);
+        return document;
+    }
+
+    /**
+     * Seeks for meta refresh tag in parsed document. If found, invokes redirect
+     *
+     * @param document parsed document
+     * @return document parsed from the redirect response
+     * @throws IOException
+     */
+    private Document checkMetaRedirect(Document document) throws IOException {
+        Element refreshMetaElement = null;
+        Elements metaElements = document.head().getElementsByTag("meta");
+        for (Element e : metaElements) {
+            if ("refresh".equals(e.attr("http-equiv").toLowerCase())) {
+                refreshMetaElement = e;
+                break;
+            }
+        }
+        if (refreshMetaElement != null) {
+            String content = refreshMetaElement.attr("content");
+            if(!"".equals(content) && content.contains((CharSequence)";")) {
+                // check for url value presence
+                String location = content.split(";")[1];
+
+                if(location.toLowerCase().startsWith("url=")) {
+                    // optional case when url value is preceded with explicit parameter name
+                    if(location.length() > 4)
+                        location = location.substring(4);
+                    else return document;
+                } 
+                                    
+                if(location.charAt(0) == '\'' && location.charAt(location.length() - 1) == '\'') {
+                    // case when url is wrapped in apostrophes
+                    if(location.length() > 2)
+                        location = location.substring(1, location.length() - 1);
+                    else return document;
+                }
+                    
+                res = Response.redirect((Request) req, (Response) res, location);
+                document = res.parse();
+                return checkMetaRedirect(document);
+            }
+        }
+        return document;
     }
 
     public Connection.Response execute() throws IOException {
@@ -535,6 +598,7 @@ public class HttpConnection implements Connection {
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
+        private boolean followMetaRedirects;
         private Collection<Connection.KeyVal> data;
         private String body = null;
         private boolean ignoreHttpErrors = false;
@@ -548,6 +612,7 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
+            followMetaRedirects = false;
             data = new ArrayList<>();
             method = Method.GET;
             addHeader("Accept-Encoding", "gzip");
@@ -593,8 +658,17 @@ public class HttpConnection implements Connection {
             return followRedirects;
         }
 
+        public boolean followMetaRedirects() {
+            return followMetaRedirects;
+        }
+
         public Connection.Request followRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
+            return this;
+        }
+
+        public Connection.Request followMetaRedirects(boolean followMetaRedirects) {
+            this.followMetaRedirects = followMetaRedirects;
             return this;
         }
 
@@ -702,6 +776,24 @@ public class HttpConnection implements Connection {
             return execute(req, null);
         }
 
+        private static Response redirect(HttpConnection.Request req, HttpConnection.Response res, String location) throws IOException {
+            if (res.statusCode() != HTTP_TEMP_REDIR) {
+                req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                req.data().clear();
+                req.requestBody(null);
+                req.removeHeader(CONTENT_TYPE);
+            }
+            if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                location = location.substring(6);
+            URL redir = StringUtil.resolve(req.url(), location);
+            req.url(encodeUrl(redir));
+
+            for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
+                req.cookie(cookie.getKey(), cookie.getValue());
+            }
+            return execute(req, res);
+        }
+
         static Response execute(Connection.Request req, Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
             Validate.notNull(req.url(), "URL must be specified to connect");
@@ -735,23 +827,8 @@ public class HttpConnection implements Connection {
 
                 // redirect if there's a location header (from 3xx, or 201 etc)
                 if (res.hasHeader(LOCATION) && req.followRedirects()) {
-                    if (status != HTTP_TEMP_REDIR) {
-                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
-                        req.data().clear();
-                        req.requestBody(null);
-                        req.removeHeader(CONTENT_TYPE);
-                    }
-
                     String location = res.header(LOCATION);
-                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
-                        location = location.substring(6);
-                    URL redir = StringUtil.resolve(req.url(), location);
-                    req.url(encodeUrl(redir));
-
-                    for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
-                        req.cookie(cookie.getKey(), cookie.getValue());
-                    }
-                    return execute(req, res);
+                    return redirect((HttpConnection.Request)req, res, location);
                 }
                 if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
                         throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());

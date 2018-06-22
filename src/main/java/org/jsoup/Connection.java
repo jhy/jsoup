@@ -120,6 +120,15 @@ public interface Connection {
     Connection followRedirects(boolean followRedirects);
 
     /**
+     * Configures the connection to (not) follow the redirects defined in refresh meta tag of the HTML page.
+     * By default this is <b>false</b>. Note that if {@link #followRedirects(boolean)} is enabled and server redirect
+     * is present - it will override the meta redirect.
+     * @param followMetaRedirects true if meta redirects should be followed.
+     * @return this Connection, for chaining
+     */
+    Connection followMetaRedirects(boolean followMetaRedirects);
+
+    /**
      * Set the request method to use, GET or POST. Default is GET.
      * @param method HTTP request method
      * @return this Connection, for chaining
@@ -542,11 +551,27 @@ public interface Connection {
         boolean followRedirects();
 
         /**
+         * Get the current followMetaRedirects configuration
+         * @return true if followMetaRedirects is enabled.
+         */
+        boolean followMetaRedirects();
+
+        /**
          * Configures the request to (not) follow server redirects. By default this is <b>true</b>.
          * @param followRedirects true if server redirects should be followed.
          * @return this Request, for chaining
          */
         Request followRedirects(boolean followRedirects);
+
+        /**
+         * Configures the request to (not) follow the redirects defined in refresh meta tag of the HTML page.
+         * By default this is <b>false</b>. Note that if {@link #followRedirects(boolean)} is enabled and server redirect
+         * is present - it will override the meta redirect.
+         *
+         * @param followMetaRedirects true if meta redirects should be followed.
+         * @return this Request, for chaining
+         */
+        Request followMetaRedirects(boolean followMetaRedirects);
 
         /**
          * Get the current ignoreHttpErrors configuration.

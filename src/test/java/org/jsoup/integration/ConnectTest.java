@@ -7,6 +7,7 @@ import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
 import org.jsoup.integration.servlets.InterruptedServlet;
+import org.jsoup.integration.servlets.MetaRedirectServlet;
 import org.jsoup.integration.servlets.RedirectServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
@@ -436,6 +437,14 @@ public class ConnectTest {
             threw = true;
         }
         assertTrue(threw);
+    }
+
+    @Test public void handlesMetaRedirect() throws IOException {
+    	Connection con = Jsoup.connect(MetaRedirectServlet.Url)
+    			.followMetaRedirects(true);
+        Document doc = con.get();
+
+        assertEquals(HelloServlet.Url, doc.location());
     }
 
     @Test public void doesNotPostFor302() throws IOException {
