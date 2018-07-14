@@ -99,6 +99,12 @@ public class TextNode extends LeafNode {
 
         boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
                 && !Element.preserveWhitespace(parent());
+
+        if (StringUtil.in(this.parent().nodeName(), "iframe", "xmp","noembed", "noframes")) {
+            accum.append(coreValue());
+            return;
+        }
+
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, false);
     }
 

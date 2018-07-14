@@ -82,4 +82,14 @@ public class TextNodeTest {
         List<Node> nodes = tn.childNodes();
         assertEquals(0, nodes.size());
     }
+
+    @Test public void testRawTest() {
+        String[] samples = new String[] {"iframe","xmp","noembed","noframes"        };
+        final  String expected="a &amp; a";
+        for(String tag: samples) {
+            Document doc = Jsoup.parse("<"+tag+">"+expected+"</"+tag+">");;
+            String html = doc.select(tag).text().trim();
+            assertEquals(expected,html);
+        }
+    }
 }
