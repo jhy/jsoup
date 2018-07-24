@@ -81,7 +81,7 @@ public class DocumentType extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    public void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
@@ -100,7 +100,7 @@ public class DocumentType extends LeafNode {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+    public void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
     }
 
     private boolean has(final String attribute) {

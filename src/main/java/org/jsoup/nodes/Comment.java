@@ -42,7 +42,8 @@ public class Comment extends LeafNode {
         return coreValue();
     }
 
-	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+	@Override
+	public void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint())
             indent(accum, depth, out);
         accum
@@ -51,7 +52,8 @@ public class Comment extends LeafNode {
                 .append("-->");
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+	@Override
+	public void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public String toString() {

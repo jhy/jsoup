@@ -580,9 +580,9 @@ public abstract class Node implements Cloneable {
      @param accum accumulator to place HTML into
      @throws IOException if appending to the given accumulator fails.
      */
-    abstract void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
+    public abstract void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
 
-    abstract void outerHtmlTail(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
+    public abstract void outerHtmlTail(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
 
     /**
      * Write this node and its children to the given {@link Appendable}.
