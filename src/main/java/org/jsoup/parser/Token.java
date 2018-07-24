@@ -8,13 +8,13 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 /**
  * Parse tokens for the Tokeniser.
  */
-abstract class Token {
+public abstract class Token {
     TokenType type;
 
-    private Token() {
+    protected Token() {
     }
     
-    String tokenType() {
+    public String tokenType() {
         return this.getClass().getSimpleName();
     }
 
@@ -30,14 +30,14 @@ abstract class Token {
         }
     }
 
-    static final class Doctype extends Token {
+    public static final class Doctype extends Token {
         final StringBuilder name = new StringBuilder();
         String pubSysKey = null;
         final StringBuilder publicIdentifier = new StringBuilder();
         final StringBuilder systemIdentifier = new StringBuilder();
         boolean forceQuirks = false;
 
-        Doctype() {
+        public Doctype() {
             type = TokenType.Doctype;
         }
 
@@ -51,15 +51,15 @@ abstract class Token {
             return this;
         }
 
-        String getName() {
+        public String getName() {
             return name.toString();
         }
 
-        String getPubSysKey() {
+        public String getPubSysKey() {
             return pubSysKey;
         }
 
-        String getPublicIdentifier() {
+        public String getPublicIdentifier() {
             return publicIdentifier.toString();
         }
 
@@ -72,7 +72,7 @@ abstract class Token {
         }
     }
 
-    static abstract class Tag extends Token {
+    public static abstract class Tag extends Token {
         protected String tagName;
         protected String normalName; // lc version of tag name, for case insensitive tree build
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
@@ -130,12 +130,12 @@ abstract class Token {
             }
         }
 
-        final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
+        public final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
             Validate.isFalse(tagName == null || tagName.length() == 0);
             return tagName;
         }
 
-        final String normalName() { // loses case, used in tree building for working out where in tree it should go
+        public final String normalName() { // loses case, used in tree building for working out where in tree it should go
             return normalName;
         }
 
@@ -145,12 +145,12 @@ abstract class Token {
             return this;
         }
 
-        final boolean isSelfClosing() {
+        public final boolean isSelfClosing() {
             return selfClosing;
         }
 
         @SuppressWarnings({"TypeMayBeWeakened"})
-        final Attributes getAttributes() {
+        public final Attributes getAttributes() {
             return attributes;
         }
 
@@ -212,8 +212,8 @@ abstract class Token {
         }
     }
 
-    final static class StartTag extends Tag {
-        StartTag() {
+    public final static class StartTag extends Tag {
+        public StartTag() {
             super();
             attributes = new Attributes();
             type = TokenType.StartTag;
@@ -243,8 +243,8 @@ abstract class Token {
         }
     }
 
-    final static class EndTag extends Tag{
-        EndTag() {
+    public final static class EndTag extends Tag{
+        public EndTag() {
             super();
             type = TokenType.EndTag;
         }
@@ -255,7 +255,7 @@ abstract class Token {
         }
     }
 
-    final static class Comment extends Token {
+    public final static class Comment extends Token {
         final StringBuilder data = new StringBuilder();
         boolean bogus = false;
 
@@ -266,11 +266,11 @@ abstract class Token {
             return this;
         }
 
-        Comment() {
+        public Comment() {
             type = TokenType.Comment;
         }
 
-        String getData() {
+        public String getData() {
             return data.toString();
         }
 
@@ -280,10 +280,10 @@ abstract class Token {
         }
     }
 
-    static class Character extends Token {
+    public static class Character extends Token {
         private String data;
 
-        Character() {
+        public Character() {
             super();
             type = TokenType.Character;
         }
@@ -299,7 +299,7 @@ abstract class Token {
             return this;
         }
 
-        String getData() {
+        public String getData() {
             return data;
         }
 
@@ -309,8 +309,8 @@ abstract class Token {
         }
     }
 
-    final static class CData extends Character {
-        CData(String data) {
+    public final static class CData extends Character {
+        public CData(String data) {
             super();
             this.data(data);
         }
@@ -322,8 +322,8 @@ abstract class Token {
 
     }
 
-    final static class EOF extends Token {
-        EOF() {
+    public final static class EOF extends Token {
+        public EOF() {
             type = Token.TokenType.EOF;
         }
 
@@ -333,51 +333,51 @@ abstract class Token {
         }
     }
 
-    final boolean isDoctype() {
+    public final boolean isDoctype() {
         return type == TokenType.Doctype;
     }
 
-    final Doctype asDoctype() {
+    public final Doctype asDoctype() {
         return (Doctype) this;
     }
 
-    final boolean isStartTag() {
+    public final boolean isStartTag() {
         return type == TokenType.StartTag;
     }
 
-    final StartTag asStartTag() {
+    public final StartTag asStartTag() {
         return (StartTag) this;
     }
 
-    final boolean isEndTag() {
+    public final boolean isEndTag() {
         return type == TokenType.EndTag;
     }
 
-    final EndTag asEndTag() {
+    public final EndTag asEndTag() {
         return (EndTag) this;
     }
 
-    final boolean isComment() {
+    public final boolean isComment() {
         return type == TokenType.Comment;
     }
 
-    final Comment asComment() {
+    public final Comment asComment() {
         return (Comment) this;
     }
 
-    final boolean isCharacter() {
+    public final boolean isCharacter() {
         return type == TokenType.Character;
     }
 
-    final boolean isCData() {
+    public final boolean isCData() {
         return this instanceof CData;
     }
 
-    final Character asCharacter() {
+    public final Character asCharacter() {
         return (Character) this;
     }
 
-    final boolean isEOF() {
+    public final boolean isEOF() {
         return type == TokenType.EOF;
     }
 

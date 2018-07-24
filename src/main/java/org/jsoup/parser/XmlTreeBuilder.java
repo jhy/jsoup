@@ -22,7 +22,8 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
-    ParseSettings defaultSettings() {
+    @Override
+	protected ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
     }
 
@@ -33,11 +34,11 @@ public class XmlTreeBuilder extends TreeBuilder {
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
     }
 
-    Document parse(Reader input, String baseUri) {
+    protected Document parse(Reader input, String baseUri) {
         return parse(input, baseUri, new Parser(this));
     }
 
-    Document parse(String input, String baseUri) {
+    protected Document parse(String input, String baseUri) {
         return parse(new StringReader(input), baseUri, new Parser(this));
     }
 
@@ -72,7 +73,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         currentElement().appendChild(node);
     }
 
-    Element insert(Token.StartTag startTag) {
+    protected Element insert(Token.StartTag startTag) {
         Tag tag = Tag.valueOf(startTag.name(), settings);
         // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         Element el = new Element(tag, baseUri, settings.normalizeAttributes(startTag.attributes));
@@ -86,7 +87,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    void insert(Token.Comment commentToken) {
+    protected void insert(Token.Comment commentToken) {
         Comment comment = new Comment(commentToken.getData());
         Node insert = comment;
         if (commentToken.bogus && comment.isXmlDeclaration()) {
@@ -99,12 +100,12 @@ public class XmlTreeBuilder extends TreeBuilder {
         insertNode(insert);
     }
 
-    void insert(Token.Character token) {
+    protected void insert(Token.Character token) {
         final String data = token.getData();
         insertNode(token.isCData() ? new CDataNode(data) : new TextNode(data));
     }
 
-    void insert(Token.Doctype d) {
+    protected void insert(Token.Doctype d) {
         DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
         doctypeNode.setPubSysKey(d.getPubSysKey());
         insertNode(doctypeNode);
@@ -139,13 +140,14 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
 
-    List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
+    protected List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
         runParser();
         return doc.childNodes();
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
+    @Override
+	protected List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
         return parseFragment(inputFragment, baseUri, parser);
     }
 }

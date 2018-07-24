@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author Jonathan Hedley
  */
-abstract class TreeBuilder {
+public abstract class TreeBuilder {
     protected Parser parser;
     CharacterReader reader;
     Tokeniser tokeniser;
@@ -25,7 +25,7 @@ abstract class TreeBuilder {
 
     private Token.StartTag start = new Token.StartTag(); // start tag to process
     private Token.EndTag end  = new Token.EndTag();
-    abstract ParseSettings defaultSettings();
+    protected abstract ParseSettings defaultSettings();
 
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNull(input, "String input must not be null");
@@ -42,13 +42,13 @@ abstract class TreeBuilder {
         this.baseUri = baseUri;
     }
 
-    Document parse(Reader input, String baseUri, Parser parser) {
+    protected Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
         return doc;
     }
 
-    abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
+    protected abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
 
     protected void runParser() {
         while (true) {
