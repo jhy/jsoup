@@ -82,4 +82,16 @@ public class TokenQueueTest {
     private static void validateNestedQuotes(String html, String selector) {
         assertEquals("#identifier", Jsoup.parse(html).select(selector).first().cssSelector());
     }
+
+    @Test
+    public void chompBalancedThrowIllegalArgumentException() throws Exception {
+        try {
+            TokenQueue tq = new TokenQueue("unbalanced(something(or another)) else");
+            tq.consumeTo("(");
+            tq.chompBalanced('(', '+');
+            org.junit.Assert.fail("should have thrown IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("Did not find balanced marker at \'something(or another)) else\'", expected.getMessage());
+        }
+    }
 }
