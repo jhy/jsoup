@@ -75,16 +75,30 @@ public abstract class Node implements Cloneable {
     public abstract Attributes attributes();
 
     /**
+     * Set an attribute (key=value) with the given quote type (double-quoted, single-quoted, or unquoted). If the
+     * attribute already exists, it is replaced. The attribute key comparison is <b>case insensitive</b>. The key will
+     * be set with case sensitivity as set in the parser settings.
+     * @param attributeKey The attribute key.
+     * @param attributeValue The attribute value.
+     * @param attributeQuoteType The attribute value's quote type.
+     * @return this (for chaining)
+     */
+    public Node attr(String attributeKey, String attributeValue, Attribute.QuoteType attributeQuoteType) {
+        attributeKey = NodeUtils.parser(this).settings().normalizeAttribute(attributeKey);
+        attributes().putIgnoreCase(attributeKey, attributeValue, attributeQuoteType);
+        return this;
+    }
+
+    /**
      * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
-     * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings.
+     * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings. The attribute's
+     * value's quote type is not set.
      * @param attributeKey The attribute key.
      * @param attributeValue The attribute value.
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        attributeKey = NodeUtils.parser(this).settings().normalizeAttribute(attributeKey);
-        attributes().putIgnoreCase(attributeKey, attributeValue);
-        return this;
+        return attr(attributeKey, attributeValue, null);
     }
 
     /**

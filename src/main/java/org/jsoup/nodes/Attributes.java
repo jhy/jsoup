@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.nodes.Attribute.QuoteType;
 
 /**
  * The attributes of an Element.
@@ -43,6 +44,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     private int size = 0; // number of slots used (not capacity, which is keys.length
     String[] keys = Empty;
     String[] vals = Empty;
+    QuoteType[] quoteTypes = {};
 
     // check there's room for more
     private void checkCapacity(int minNewSize) {
@@ -57,11 +59,20 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
         keys = copyOf(keys, newSize);
         vals = copyOf(vals, newSize);
+        quoteTypes = copyOf(quoteTypes, newSize);
     }
 
     // simple implementation of Arrays.copy, for support of Android API 8.
     private static String[] copyOf(String[] orig, int size) {
         final String[] copy = new String[size];
+        System.arraycopy(orig, 0, copy, 0,
+                Math.min(orig.length, size));
+        return copy;
+    }
+
+    // simple implementation of Arrays.copy, for support of Android API 8.
+    private static QuoteType[] copyOf(QuoteType[] orig, int size) {
+        final QuoteType[] copy = new QuoteType[size];
         System.arraycopy(orig, 0, copy, 0,
                 Math.min(orig.length, size));
         return copy;
@@ -102,47 +113,83 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Get an attribute value's quote type by key.
+     @param key the (case-sensitive) attribute key
+     @return the attribute value's quote type if set; or null if not set.
+     @see #hasKey(String)
+     */
+    public QuoteType getQuoteType(String key) {
+        int i = indexOfKey(key);
+        return i == NotFound ? null : quoteTypes[i];
+    }
+
+    /**
      * Get an attribute's value by case-insensitive key
      * @param key the attribute name
-     * @return the first matching attribute value if set; or empty string if not set (ora boolean attribute).
+     * @return the first matching attribute value if set; or empty string if not set (or boolean attribute).
      */
     public String getIgnoreCase(String key) {
         int i = indexOfKeyIgnoreCase(key);
         return i == NotFound ? EmptyString : checkNotNull(vals[i]);
     }
 
+    /**
+     * Get an attribute's value's quote type by case-insensitive key
+     * @param key the attribute name
+     * @return the first matching attribute value's quote type if set; or null if not set (for boolean attribute).
+     */
+    public QuoteType getQuoteTypeIgnoreCase(String key) {
+        int i = indexOfKeyIgnoreCase(key);
+        return i == NotFound ? null : quoteTypes[i];
+    }
+
     // adds without checking if this key exists
-    private void add(String key, String value) {
+    private void add(String key, String value, QuoteType quoteType) {
         checkCapacity(size + 1);
         keys[size] = key;
         vals[size] = value;
+        quoteTypes[size] = quoteType;
         size++;
     }
 
     /**
-     * Set a new attribute, or replace an existing one by key.
+     * Set a new attribute, or replace an existing one by key, and set the value's quote type.
+     * @param key case sensitive attribute key
+     * @param value attribute value
+     * @param quoteType how the attribute value is quoted
+     * @return these attributes, for chaining
+     */
+    public Attributes put(String key, String value, QuoteType quoteType) {
+        int i = indexOfKey(key);
+        if (i != NotFound) {
+            vals[i] = value;
+            quoteTypes[i] = quoteType;
+        }
+        else
+            add(key, value, quoteType);
+        return this;
+    }
+
+    /**
+     * Set a new attribute, or replace an existing one by key. Does not define the value's quote type.
      * @param key case sensitive attribute key
      * @param value attribute value
      * @return these attributes, for chaining
      */
     public Attributes put(String key, String value) {
-        int i = indexOfKey(key);
-        if (i != NotFound)
-            vals[i] = value;
-        else
-            add(key, value);
-        return this;
+        return put(key, value, null);
     }
 
-    void putIgnoreCase(String key, String value) {
+    void putIgnoreCase(String key, String value, QuoteType quoteType) {
         int i = indexOfKeyIgnoreCase(key);
         if (i != NotFound) {
             vals[i] = value;
+            quoteTypes[i] = quoteType;
             if (!keys[i].equals(key)) // case changed, update
                 keys[i] = key;
         }
         else
-            add(key, value);
+            add(key, value, quoteType);
     }
 
     /**
@@ -153,7 +200,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public Attributes put(String key, boolean value) {
         if (value)
-            putIgnoreCase(key, null);
+            putIgnoreCase(key, null, null);
         else
             remove(key);
         return this;
@@ -166,7 +213,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public Attributes put(Attribute attribute) {
         Validate.notNull(attribute);
-        put(attribute.getKey(), attribute.getValue());
+        put(attribute.getKey(), attribute.getValue(), attribute.getQuoteType());
         attribute.parent = this;
         return this;
     }
@@ -178,10 +225,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (shifted > 0) {
             System.arraycopy(keys, index + 1, keys, index, shifted);
             System.arraycopy(vals, index + 1, vals, index, shifted);
+            System.arraycopy(quoteTypes, index + 1, quoteTypes, index, shifted);
         }
         size--;
         keys[size] = null; // release hold
         vals[size] = null;
+        quoteTypes[size] = null;
     }
 
     /**
@@ -257,7 +306,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
             @Override
             public Attribute next() {
-                final Attribute attr = new Attribute(keys[i], vals[i], Attributes.this);
+                final Attribute attr = new Attribute(keys[i], vals[i], quoteTypes[i], Attributes.this);
                 i++;
                 return attr;
             }
@@ -278,7 +327,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         for (int i = 0; i < size; i++) {
             Attribute attr = vals[i] == null ?
                 new BooleanAttribute(keys[i]) : // deprecated class, but maybe someone still wants it
-                new Attribute(keys[i], vals[i], Attributes.this);
+                new Attribute(keys[i], vals[i], quoteTypes[i], Attributes.this);
             list.add(attr);
         }
         return Collections.unmodifiableList(list);
@@ -344,7 +393,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
         if (size != that.size) return false;
         if (!Arrays.equals(keys, that.keys)) return false;
-        return Arrays.equals(vals, that.vals);
+        if (!Arrays.equals(vals, that.vals)) return false;
+        return Arrays.equals(quoteTypes, that.quoteTypes);
     }
 
     /**
@@ -356,6 +406,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         int result = size;
         result = 31 * result + Arrays.hashCode(keys);
         result = 31 * result + Arrays.hashCode(vals);
+        result = 31 * result + Arrays.hashCode(quoteTypes);
         return result;
     }
 
@@ -370,6 +421,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         clone.size = size;
         keys = copyOf(keys, size);
         vals = copyOf(vals, size);
+        quoteTypes = copyOf(quoteTypes, size);
         return clone;
     }
 
@@ -431,7 +483,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             }
 
             public Entry<String, String> next() {
-                return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
+                return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue(), attr.getQuoteType());
             }
 
             public void remove() {
