@@ -348,6 +348,20 @@ public class ElementsTest {
         assertEquals("1", prevAF.first().text());
     }
 
+    @Test public void siblingsUtil() {
+        Document doc = Jsoup.parse("<p>1<p>2<p>3<p>4<p>5<p>6<p>7<p>8<p>9");
+
+        Elements els0 = doc.select("p:eq(1)");
+        assertEquals(4, els0.nextUntil("p:eq(6)").size());
+        assertEquals("3", els0.nextUntil("p:eq(6)").first().text());
+        assertEquals("6", els0.nextUntil("p:eq(6)").last().text());
+
+        Elements els8 = doc.select("p:eq(6)");
+        assertEquals(4, els8.prevUntil("p:eq(1)").size());
+        assertEquals("6", els8.prevUntil("p:eq(1)").first().text());
+        assertEquals("3", els8.prevUntil("p:eq(1)").last().text());
+    }
+
     @Test public void eachText() {
         Document doc = Jsoup.parse("<div><p>1<p>2<p>3<p>4<p>5<p>6</div><div><p>7<p>8<p>9<p>10<p>11<p>12<p></p></div>");
         List<String> divText = doc.select("div").eachText();

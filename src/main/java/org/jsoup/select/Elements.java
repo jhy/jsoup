@@ -528,6 +528,16 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
+     * Get each of the following element siblings of each element in this list, until match the query.
+     *
+     * @param query CSS query to match siblings against
+     * @return all following element siblings.
+     */
+    public Elements nextUntil(String query) {
+        return siblingsUtil(query, true);
+    }
+
+    /**
      * Get the immediate previous element sibling of each element in this list.
      * @return previous element siblings.
      */
@@ -553,6 +563,16 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
+     * Get the immediate previous element sibling of each element in this list, until by the query.
+     *
+     * @param query CSS query to match siblings against
+     * @return previous element siblings.
+     */
+    public Elements prevUntil(String query) {
+        return siblingsUtil(query, false);
+    }
+
+    /**
      * Get each of the previous element siblings of each element in this list, that match the query.
      * @param query CSS query to match siblings against
      * @return all previous element siblings.
@@ -574,6 +594,23 @@ public class Elements extends ArrayList<Element> {
                     els.add(sib);
                 e = sib;
             } while (all);
+        }
+        return els;
+    }
+
+    private Elements siblingsUtil(String query, boolean next) {
+        Elements els = new Elements();
+        Evaluator eval = query != null ? QueryParser.parse(query) : null;
+        for (Element e : this) {
+            do {
+                Element sib = next ? e.nextElementSibling() : e.previousElementSibling();
+                if (sib == null) break;
+                if (eval == null || !sib.is(eval))
+                    els.add(sib);
+                else if (sib.is(eval))
+                    break;
+                e = sib;
+            } while (true);
         }
         return els;
     }
