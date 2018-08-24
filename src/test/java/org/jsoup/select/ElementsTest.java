@@ -348,7 +348,7 @@ public class ElementsTest {
         assertEquals("1", prevAF.first().text());
     }
 
-    @Test public void siblingsUtil() {
+    @Test public void siblingsUntil() {
         Document doc = Jsoup.parse("<p>1<p>2<p>3<p>4<p>5<p>6<p>7<p>8<p>9");
 
         Elements els0 = doc.select("p:eq(1)");

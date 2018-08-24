@@ -534,7 +534,7 @@ public class Elements extends ArrayList<Element> {
      * @return all following element siblings.
      */
     public Elements nextUntil(String query) {
-        return siblingsUtil(query, true);
+        return siblingsUntil(query, true);
     }
 
     /**
@@ -569,7 +569,7 @@ public class Elements extends ArrayList<Element> {
      * @return previous element siblings.
      */
     public Elements prevUntil(String query) {
-        return siblingsUtil(query, false);
+        return siblingsUntil(query, false);
     }
 
     /**
@@ -598,7 +598,7 @@ public class Elements extends ArrayList<Element> {
         return els;
     }
 
-    private Elements siblingsUtil(String query, boolean next) {
+    private Elements siblingsUntil(String query, boolean next) {
         Elements els = new Elements();
         Evaluator eval = query != null ? QueryParser.parse(query) : null;
         for (Element e : this) {
