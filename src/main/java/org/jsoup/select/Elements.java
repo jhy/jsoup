@@ -1,17 +1,18 @@
 package org.jsoup.select;
 
-import org.jsoup.internal.StringUtil;
-import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.FormElement;
-import org.jsoup.nodes.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
+
+import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -638,6 +639,26 @@ public class Elements extends ArrayList<Element> {
             if (el instanceof FormElement)
                 forms.add((FormElement) el);
         return forms;
+    }
+    
+    /**
+     * Compare all elements by value as per {@link Element#hasSameValue(Object)}
+     * @param elements the elements to compare against
+     * @return <code>true</code> if all elements match the given elements as per <code>(a == null ? b == null : a.hasSameValue(b))</code>
+     */
+    public boolean hasSameValues(Elements elements) {
+        if (elements == this)
+            return true;
+
+        ListIterator<Element> e1 = listIterator(),
+                              e2 = elements.listIterator();
+        while (e1.hasNext() && e2.hasNext()) {
+            Element o1 = e1.next();
+            Element o2 = e2.next();
+            if (!(o1==null ? o2==null : o1.hasSameValue(o2)))
+                return false;
+        }
+        return !(e1.hasNext() || e2.hasNext());
     }
 
 }
