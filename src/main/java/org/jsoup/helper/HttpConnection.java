@@ -990,8 +990,12 @@ public class HttpConnection implements Connection {
                         String cookieVal = cd.consumeTo(";").trim();
                         // ignores path, date, domain, validateTLSCertificates et al. req'd?
                         // name not blank, value not null
-                        if (cookieName.length() > 0)
-                            cookie(cookieName, cookieVal);
+                        if (cookieName.length() > 0){
+                            //if contain same key,save cookie which value is not empty string
+                            if (!hasCookie(cookieName) || (hasCookie(cookieName) && !StringUtil.isBlank(cookieVal))) {
+                                cookie(cookieName, cookieVal);
+                            }
+                        }
                     }
                 }
                 for (String value : values) {
