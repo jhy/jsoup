@@ -1,7 +1,7 @@
 package org.jsoup.examples;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -60,8 +60,7 @@ public class HtmlToPlainText {
      */
     public String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
-        NodeTraversor traversor = new NodeTraversor(formatter);
-        traversor.traverse(element); // walk the DOM, and call .head() and .tail() for each node
+        NodeTraversor.traverse(formatter, element); // walk the DOM, and call .head() and .tail() for each node
 
         return formatter.toString();
     }

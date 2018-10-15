@@ -1,33 +1,36 @@
 package org.jsoup.nodes;
 
-import java.io.IOException;
-
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+
+import java.io.IOException;
 
 /**
  A text node.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class TextNode extends Node {
-    /*
-    TextNode is a node, and so by default comes with attributes and children. The attributes are seldom used, but use
-    memory, and the child nodes are never used. So we don't have them, and override accessors to attributes to create
-    them as needed on the fly.
-     */
-    private static final String TEXT_KEY = "text";
-    String text;
+public class TextNode extends LeafNode {
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
 
      @param text raw text
-     @param baseUri base uri
+     @see #createFromEncoded(String)
+     */
+    public TextNode(String text) {
+        value = text;
+    }
+
+    /**
+     Create a new TextNode representing the supplied (unencoded) text).
+
+     @param text raw text
+     @param baseUri base uri - ignored for this node type
      @see #createFromEncoded(String, String)
+     @deprecated use {@link TextNode#TextNode(String)}
      */
     public TextNode(String text, String baseUri) {
-        this.baseUri = baseUri;
-        this.text = text;
+        this(text);
     }
 
 	public String nodeName() {
@@ -40,7 +43,7 @@ public class TextNode extends Node {
      * @see TextNode#getWholeText()
      */
     public String text() {
-        return normaliseWhitespace(getWholeText());
+        return StringUtil.normaliseWhitespace(getWholeText());
     }
     
     /**
@@ -49,9 +52,7 @@ public class TextNode extends Node {
      * @return this, for chaining
      */
     public TextNode text(String text) {
-        this.text = text;
-        if (attributes != null)
-            attributes.put(TEXT_KEY, text);
+        coreValue(text);
         return this;
     }
 
@@ -60,7 +61,7 @@ public class TextNode extends Node {
      @return text
      */
     public String getWholeText() {
-        return attributes == null ? text : attributes.get(TEXT_KEY);
+        return coreValue();
     }
 
     /**
@@ -68,7 +69,7 @@ public class TextNode extends Node {
      @return true if this document is empty or only whitespace, false if it contains any text content.
      */
     public boolean isBlank() {
-        return StringUtil.isBlank(getWholeText());
+        return StringUtil.isBlank(coreValue());
     }
 
     /**
@@ -78,13 +79,14 @@ public class TextNode extends Node {
      * @return the newly created text node containing the text after the offset.
      */
     public TextNode splitText(int offset) {
+        final String text = coreValue();
         Validate.isTrue(offset >= 0, "Split offset must be not be negative");
         Validate.isTrue(offset < text.length(), "Split offset must not be greater than current text length");
 
-        String head = getWholeText().substring(0, offset);
-        String tail = getWholeText().substring(offset);
+        String head = text.substring(0, offset);
+        String tail = text.substring(offset);
         text(head);
-        TextNode tailNode = new TextNode(tail, this.baseUri());
+        TextNode tailNode = new TextNode(tail);
         if (parent() != null)
             parent().addChildren(siblingIndex()+1, tailNode);
 
@@ -97,7 +99,7 @@ public class TextNode extends Node {
 
         boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
                 && !Element.preserveWhitespace(parent());
-        Entities.escape(accum, getWholeText(), out, false, normaliseWhite, false);
+        Entities.escape(accum, coreValue(), out, false, normaliseWhite, false);
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
@@ -112,10 +114,21 @@ public class TextNode extends Node {
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
      * @param baseUri Base uri
      * @return TextNode containing unencoded data (e.g. &lt;)
+     * @deprecated use {@link TextNode#createFromEncoded(String)} instead, as LeafNodes don't carry base URIs.
      */
     public static TextNode createFromEncoded(String encodedText, String baseUri) {
         String text = Entities.unescape(encodedText);
-        return new TextNode(text, baseUri);
+        return new TextNode(text);
+    }
+
+    /**
+     * Create a new TextNode from HTML encoded (aka escaped) data.
+     * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
+     * @return TextNode containing unencoded data (e.g. &lt;)
+     */
+    public static TextNode createFromEncoded(String encodedText) {
+        String text = Entities.unescape(encodedText);
+        return new TextNode(text);
     }
 
     static String normaliseWhitespace(String text) {
@@ -131,47 +144,5 @@ public class TextNode extends Node {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
 
-    // attribute fiddling. create on first access.
-    private void ensureAttributes() {
-        if (attributes == null) {
-            attributes = new Attributes();
-            attributes.put(TEXT_KEY, text);
-        }
-    }
 
-    @Override
-    public String attr(String attributeKey) {
-        ensureAttributes();
-        return super.attr(attributeKey);
-    }
-
-    @Override
-    public Attributes attributes() {
-        ensureAttributes();
-        return super.attributes();
-    }
-
-    @Override
-    public Node attr(String attributeKey, String attributeValue) {
-        ensureAttributes();
-        return super.attr(attributeKey, attributeValue);
-    }
-
-    @Override
-    public boolean hasAttr(String attributeKey) {
-        ensureAttributes();
-        return super.hasAttr(attributeKey);
-    }
-
-    @Override
-    public Node removeAttr(String attributeKey) {
-        ensureAttributes();
-        return super.removeAttr(attributeKey);
-    }
-
-    @Override
-    public String absUrl(String attributeKey) {
-        ensureAttributes();
-        return super.absUrl(attributeKey);
-    }
 }

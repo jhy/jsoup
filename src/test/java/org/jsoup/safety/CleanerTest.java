@@ -1,10 +1,12 @@
 package org.jsoup.safety;
 
+import org.jsoup.MultiLocaleRule;
+import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -14,6 +16,8 @@ import static org.junit.Assert.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class CleanerTest {
+    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
+
     @Test public void simpleBehaviourTest() {
         String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
         String cleanHtml = Jsoup.clean(h, Whitelist.simpleText());
@@ -77,7 +81,18 @@ public class CleanerTest {
         assertEquals("<p>Contact me <a rel=\"nofollow\">here</a></p>",
                 TextUtil.stripNewlines(cleanHtml));
     }
-    
+
+    @Test @MultiLocaleTest public void whitelistedProtocolShouldBeRetained() {
+        Whitelist whitelist = Whitelist.none()
+                .addTags("a")
+                .addAttributes("a", "href")
+                .addProtocols("a", "href", "something");
+
+        String cleanHtml = Jsoup.clean("<a href=\"SOMETHING://x\"></a>", whitelist);
+
+        assertEquals("<a href=\"SOMETHING://x\"></a>", TextUtil.stripNewlines(cleanHtml));
+    }
+
     @Test public void testDropComments() {
         String h = "<p>Hello<!-- no --></p>";
         String cleanHtml = Jsoup.clean(h, Whitelist.relaxed());
@@ -282,5 +297,12 @@ public class CleanerTest {
         String html = "<a/\06>";
         String clean = Jsoup.clean(html, Whitelist.basic());
         assertEquals("<a rel=\"nofollow\"></a>", clean);
+    }
+
+    @Test public void handlesAttributesWithNoValue() {
+        // https://github.com/jhy/jsoup/issues/973
+        String clean = Jsoup.clean("<a href>Clean</a>", Whitelist.basic());
+
+        assertEquals("<a rel=\"nofollow\">Clean</a>", clean);
     }
 }

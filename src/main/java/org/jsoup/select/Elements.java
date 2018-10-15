@@ -1,11 +1,17 @@
 package org.jsoup.select;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -85,7 +91,7 @@ public class Elements extends ArrayList<Element> {
      * @return a list of each element's attribute value for the attribute
      */
     public List<String> eachAttr(String attributeKey) {
-        List<String> attrs = new ArrayList<String>(size());
+        List<String> attrs = new ArrayList<>(size());
         for (Element element : this) {
             if (element.hasAttr(attributeKey))
                 attrs.add(element.attr(attributeKey));
@@ -200,13 +206,13 @@ public class Elements extends ArrayList<Element> {
      * @see #eachText()
      */
     public String text() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         for (Element element : this) {
             if (sb.length() != 0)
                 sb.append(" ");
             sb.append(element.text());
         }
-        return sb.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
@@ -231,7 +237,7 @@ public class Elements extends ArrayList<Element> {
      * @see #text()
      */
     public List<String> eachText() {
-        ArrayList<String> texts = new ArrayList<String>(size());
+        ArrayList<String> texts = new ArrayList<>(size());
         for (Element el: this) {
             if (el.hasText())
                 texts.add(el.text());
@@ -246,13 +252,13 @@ public class Elements extends ArrayList<Element> {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         for (Element element : this) {
             if (sb.length() != 0)
                 sb.append("\n");
             sb.append(element.html());
         }
-        return sb.toString();
+        return StringUtil.releaseBuilder(sb);
     }
     
     /**
@@ -262,13 +268,13 @@ public class Elements extends ArrayList<Element> {
      * @see #html()
      */
     public String outerHtml() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         for (Element element : this) {
             if (sb.length() != 0)
                 sb.append("\n");
             sb.append(element.outerHtml());
         }
-        return sb.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
@@ -505,7 +511,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Get all of the following element siblings of each element in this list.
+     * Get each of the following element siblings of each element in this list.
      * @return all following element siblings.
      */
     public Elements nextAll() {
@@ -513,7 +519,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Get all of the following element siblings of each element in this list, filtered by the query.
+     * Get each of the following element siblings of each element in this list, that match the query.
      * @param query CSS query to match siblings against
      * @return all following element siblings.
      */
@@ -539,7 +545,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Get all of the previous element siblings of each element in this list.
+     * Get each of the previous element siblings of each element in this list.
      * @return all previous element siblings.
      */
     public Elements prevAll() {
@@ -547,7 +553,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Get all of the previous element siblings of each element in this list, filtered by the query.
+     * Get each of the previous element siblings of each element in this list, that match the query.
      * @param query CSS query to match siblings against
      * @return all previous element siblings.
      */
@@ -577,7 +583,7 @@ public class Elements extends ArrayList<Element> {
      * @return all of the parents and ancestor elements of the matched elements
      */
     public Elements parents() {
-        HashSet<Element> combo = new LinkedHashSet<Element>();
+        HashSet<Element> combo = new LinkedHashSet<>();
         for (Element e: this) {
             combo.addAll(e.parents());
         }
@@ -607,11 +613,17 @@ public class Elements extends ArrayList<Element> {
      * @return this, for chaining
      */
     public Elements traverse(NodeVisitor nodeVisitor) {
-        Validate.notNull(nodeVisitor);
-        NodeTraversor traversor = new NodeTraversor(nodeVisitor);
-        for (Element el: this) {
-            traversor.traverse(el);
-        }
+        NodeTraversor.traverse(nodeVisitor, this);
+        return this;
+    }
+
+    /**
+     * Perform a depth-first filtering on each of the selected elements.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this, for chaining
+     */
+    public Elements filter(NodeFilter nodeFilter) {
+        NodeTraversor.filter(nodeFilter, this);
         return this;
     }
 
@@ -621,7 +633,7 @@ public class Elements extends ArrayList<Element> {
      * no forms.
      */
     public List<FormElement> forms() {
-        ArrayList<FormElement> forms = new ArrayList<FormElement>();
+        ArrayList<FormElement> forms = new ArrayList<>();
         for (Element el: this)
             if (el instanceof FormElement)
                 forms.add((FormElement) el);

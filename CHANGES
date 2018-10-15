@@ -1,12 +1,228 @@
 jsoup changelog
 
-*** Release 1.10.3 [PENDING]
+**** Release 1.12.1 [PENDING]
+  * Change: removed deprecated method to disable TLS cert checking Connection.validateTLSCertificates().
+
+  * Change: some internal methods have been rearranged; if you extended any of the Jsoup internals you may need to make
+    updates.
+
+  * Improvement: documents now remember their parser, so when later manipulating them, the correct HTML or XML tree
+    builder is reused, as are the parser settings like case sensitivity.
+    <https://github.com/jhy/jsoup/issues/769>
+
+  * Improvement: Jsoup now detects the character set of the input if specified in an XML Declaration, when using the
+    HTML parser. Previously that only happened when the XML parser was specified.
+    <https://github.com/jhy/jsoup/issues/1009>
+
+  * Improvement: if the document's input character does not support encoding, flip it to one that does.
+    <https://github.com/jhy/jsoup/issues/1007>
+
+  * Improvement: if a start tag is missing a > and a new tag is seen with a <, treat that as a new tag. (This differs
+    from the HTML5 spec, which would make at attribute with a name beginning with <, but in practice this impacts too
+    many pages.
+    <https://github.com/jhy/jsoup/issues/797>
+
+  * Improvement: performance tweaks when parsing start tags, data, tables.
+
+  * Improvement: added Element.nextElementSiblings() and Element.previousElementSiblings()
+    https://github.com/jhy/jsoup/pull/1054
+
+  * Bugfix: when converting a Jsoup document to a W3C DOM, if an element is namespaced but not in a defined namespace,
+    set it to the global namespace.
+    <https://github.com/jhy/jsoup/issues/848>
+
+*** Release 1.11.3 [2018-Apr-15]
+  * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
+    round-tripped into output HTML.
+    <https://github.com/jhy/jsoup/issues/406>
+    <https://github.com/jhy/jsoup/issues/965>
+
+  * Improvement: added support for Deflate encoding.
+    <https://github.com/jhy/jsoup/pull/982>
+
+  * Improvement: when parsing <pre> tags, skip the first newline if present.
+    <https://github.com/jhy/jsoup/issues/825>
+
+  * Improvement: support nested quotes for attribute selection queries.
+    <https://github.com/jhy/jsoup/pull/988>
+
+  * Improvement: character references from Windows-1252 that are not valid Unicode are mapped to the appropriate
+    Unicode replacement.
+    <https://github.com/jhy/jsoup/pull/1046>
+
+  * Improvement: accept a custom SSL socket factory in Jsoup.Connection.
+    <https://github.com/jhy/jsoup/pull/1038>
+
+  * Bugfix: "Mark has been invalidated" exception was thrown when parsing some URLs on Android <= 6.
+    <https://github.com/jhy/jsoup/issues/990>
+
+  * Bugfix: The Element.text() for <div>One</div>Two was "OneTwo", not "One Two".
+    <https://github.com/jhy/jsoup/issues/812>
+
+  * Bugfix: boolean attributes with empty string values were not collapsing in HTML output.
+    <https://github.com/jhy/jsoup/issues/985>
+
+  * Bugfix: when using the XML Parser set to lowercase normalize tags, uppercase closing tags were not correctly
+    handled.
+    <https://github.com/jhy/jsoup/issues/998>
+
+  * Bugfix: when parsing from a URL, an end tag could be read incorrectly if it started on a buffer boundary.
+    <https://github.com/jhy/jsoup/issues/995>
+
+  * Bugfix: when parsing from a URL, if the remote server failed to complete its write (i.e. it writes less than the
+    Content Length header promised on a gzipped stream), the parse method would incorrectly throw an unchecked
+    exception. It now throws the declared IOException.
+    <https://github.com/jhy/jsoup/issues/980>
+
+  * Bugfix: leaf nodes (such as text nodes) where throwing an unsupported operation exception on childNodes(), instead
+    of just returning an empty list.
+    <https://github.com/jhy/jsoup/issues/1032>
+
+  * Bugfix: documents with a leading UTF-8 BOM did not have that BOM consumed, so it acted as a zero width no-break
+    space, which could impact the parse tree.
+    <https://github.com/jhy/jsoup/issues/1003>
+
+  * Bugfix: when parsing an invalid XML declaration, the parse would fail.
+    <https://github.com/jhy/jsoup/issues/1015>
+
+*** Release 1.11.2 [2017-Nov-19]
+  * Improvement: added a new pseudo selector :matchText, which allows text nodes to match as if they were elements.
+    This enables finding text that is only marked by a "br" tag, for example.
+    <https://github.com/jhy/jsoup/issues/550>
+
+  * Change: marked Connection.validateTLSCertificates() as deprecated.
+
+  * Improvement: normalize invisible characters (like soft-hyphens) in Element.text().
+    <https://github.com/jhy/jsoup/issues/978>
+
+  * Improvement: added Element.wholeText(), to easily get the un-normalized text value of an element and its children.
+    <https://github.com/jhy/jsoup/pull/564>
+    
+  * Bugfix: in a deep DOM stack, a StackOverFlow exception could occur when generating implied end tags.
+    <https://github.com/jhy/jsoup/issues/966>
+
+  * Bugfix: when parsing attribute values that happened to cross a buffer boundary, a character was dropped.
+    <https://github.com/jhy/jsoup/issues/967>
+
+  * Bugfix: fixed an issue that prevented using infinite timeouts in Jsoup.Connection.
+    <https://github.com/jhy/jsoup/issues/968>
+
+  * Bugfix: whitespace preserving tags were not honoured when nested deeper than two levels deep.
+    <https://github.com/jhy/jsoup/issues/722>
+
+  * Bugfix: an unterminated comment token at the end of the HTML input would cause an out of bounds exception.
+    <https://github.com/jhy/jsoup/issues/972>
+
+  * Bugfix: an NPE in the Cleaner which would occur if an <a href> attribute value was missing.
+    <https://github.com/jhy/jsoup/issues/973>
+
+  * Bugfix: when serializing the same document in a multiple threads, on Android, with a character set that is not ascii
+    or UTF-8, an encoding exception could occur.
+    <https://github.com/jhy/jsoup/issues/970>
+
+  * Bugfix: removing a form value from the DOM would not remove it from FormData.
+    <https://github.com/jhy/jsoup/pull/969>
+
+  * Bugfix: in the W3CDom transformer, siblings were incorrectly inheriting namespaces defined on previous siblings.
+    <https://github.com/jhy/jsoup/issues/977>
+
+*** Release 1.11.1 [2017-Nov-06]
+  * Updated language level to Java 7 from Java 5. To maintain Android support (of minversion 8), try-with-resources are
+    not used.
+    <https://github.com/jhy/jsoup/issues/899>
+
+  * When loading content from a URL or a file, the content is now parsed as it streams in from the network or disk,
+    rather than being fully buffered before parsing. This substantially reduces memory consumption & large garbage
+    objects when loading large files. Note that this change means that a response, once parsed, may not be parsed
+    again from the same response object unless you call response.bufferUp() first, which will buffer the full response
+    into memory.
+    <https://github.com/jhy/jsoup/issues/904>
+
+  * Added Connection.Response.bodyStream(), a method to get the response body as an input stream. This is useful for
+    saving a large response straight to a file, without buffering fully into memory first.
+
+  * Performance improvements in text and HTML generation (through less GC).
+
+  * Reduced memory consumption of text, scripts, and comments in the DOM by 40%, by refactoring the node
+    hierarchy to not track childnodes or attributes by default for lead nodes. For the average document, that's about a
+    30% memory reduction.
+    <https://github.com/jhy/jsoup/issues/911>
+
+  * Reduced memory consumption of Elements by refactoring their Attributes to be a simple pair of arrays, vs a
+    LinkedHashSet.
+    <https://github.com/jhy/jsoup/issues/911>
+
+  * Added support for Element.selectFirst(query), to efficiently find the first matching element.
+
+  * Added Element.appendTo(parent) to simplify slinging elements about.
+    <https://github.com/jhy/jsoup/pull/662>
+
+  * Added support for multiple headers with the same name in Jsoup.Connect
+
+  * Added Element.shallowClone() and Node.shallowClone(), to allow cloning nodes without getting all their children.
+    <https://github.com/jhy/jsoup/issues/900>
+
+  * Updated Element.text() and the :contains(text) selector to consider &nbsp; character as spaces.
+
+  * Updated Jsoup.connect().timeout() to implement a total connect + combined read timeout. Previously it specified
+    connect and buffer read times only, so to implement a combined total timeout, you had to have another thread send
+    an interupt.
+
+  * Improved performance of Node.addChildren (was quadratic)
+    <https://github.com/jhy/jsoup/pull/930>
+
+  * Added missing support for template tags in tables
+    <https://github.com/jhy/jsoup/pull/901>
+
+  * In Jsoup.connect file uploads, added the ability to set the uploaded files' mimetype.
+     <https://github.com/jhy/jsoup/issues/936>
+
+  * Improved Node traversal, including less object creation, and partial and filtering traversor support.
+    <https://github.com/jhy/jsoup/pull/849>
+
+  * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
+    which could lead to an incorrect DOM.
+    <https://github.com/jhy/jsoup/issues/877>
+
+  * Bugfix: attributes with the same name but different case would be incorrectly treated as different attributes.
+    <https://github.com/jhy/jsoup/pull/903>
+
+  * Bugfix: self-closing tags for known empty elements were incorrectly treated as errors.
+    <https://github.com/jhy/jsoup/issues/868>
+
+  * Bugfix: fixed an issue where a self-closing title, noframes, or style tag would cause the rest of the page to be
+    incorrectly parsed as data or text.
+    <https://github.com/jhy/jsoup/issues/906>
+
+  * Bugfix: fixed an issue with unknown mixed-case tags
+    <https://github.com/jhy/jsoup/pull/942>
+
+  * Bugfix: fixed an issue where the entity resources were left open after startup, causing a warning.
+    <https://github.com/jhy/jsoup/pull/928>
+
+  * Bugfix: fixed an issue where Element.getElementsByIndexLessThan(index) would incorrectly provide the root element
+    <https://github.com/jhy/jsoup/pull/918>
+
+  * Improved parse time for pages with exceptionally deeply nested tags.
+    <https://github.com/jhy/jsoup/issues/955>
+
+  * Improvement / workaround: modified the Entities implementation to load its data from a .class vs from a jar resource.
+    Faster, and safer on Android.
+    <https://github.com/jhy/jsoup/issues/959>
+
+*** Release 1.10.3 [2017-Jun-11]
   * Added Elements.eachText() and Elements.eachAttr(name), which return a list of Element's text or attribute values,
     respectively. This makes it simpler to for example get a list of each URL on a page:
     List<String> urls = doc.select("a").eachAttr("abs:href"");
 
   * Improved selector validation for :contains(...) with unbalanced quotes.
     <https://github.com/jhy/jsoup/issues/803>
+
+  * Improved the speed of index based CSS selectors and other methods that use elementSiblingIndex, by a factor of 34x.
+    <https://github.com/jhy/jsoup/pull/862>
+
+  * Added Node.clearAttributes(), to simplify removing of all attributes of a Node / Element.
+    <https://github.com/jhy/jsoup/issues/829>
 
   * Bugfix: if an attribute name started or ended with a control character, the parse would fail with a validation
     exception.
@@ -17,6 +233,26 @@ jsoup changelog
 
   * Bugfix: In Jsoup.Connection, if a redirect contained a query string with %xx escapes, they would be double escaped
     before the redirect was followed, leading to fetching an incorrect location.
+
+  * Bugfix: In Jsoup.Connection, if a request body was set and the connection was redirected, the body would incorrectly
+    still be sent.
+    <https://github.com/jhy/jsoup/pull/881>
+
+  * Bugfix: In DataUtil when detecting the character set from meta data, and there are two Content-Types defined, use
+    the one that defines a character set.
+    <https://github.com/jhy/jsoup/pull/835>
+
+  * Bugfix: when parsing unknown tags in case-sensitive HTML mode, end tags would not close scope correctly.
+    <https://github.com/jhy/jsoup/issues/819>
+
+  * In Jsoup.Connection, ensure there is no Content-Type set when being redirected to a GET.
+    <https://github.com/jhy/jsoup/pull/895>
+
+  * Bugfix: in certain locales (Turkey specifically), lowercasing and case insensitivity could fail for specific items.
+    <https://github.com/jhy/jsoup/pull/820>
+
+  * Bugfix: after an element was cloned, changes to its child list where not notifying the element correctly.
+    <https://github.com/jhy/jsoup/issues/951>
 
 *** Release 1.10.2 [2017-Jan-02]
  * Improved startup time, particularly on Android, by reducing garbage generation and CPU execution time when loading

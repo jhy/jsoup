@@ -1,8 +1,9 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
@@ -17,6 +18,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
+    private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
     private boolean updateMetaCharset = false;
@@ -41,6 +43,7 @@ public class Document extends Element {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
+        doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -137,7 +140,7 @@ public class Document extends Element {
 
     // does not recurse.
     private void normaliseTextNodes(Element element) {
-        List<Node> toMove = new ArrayList<Node>();
+        List<Node> toMove = new ArrayList<>();
         for (Node node: element.childNodes) {
             if (node instanceof TextNode) {
                 TextNode tn = (TextNode) node;
@@ -149,7 +152,7 @@ public class Document extends Element {
         for (int i = toMove.size()-1; i >= 0; i--) {
             Node node = toMove.get(i);
             element.removeChild(node);
-            body().prependChild(new TextNode(" ", ""));
+            body().prependChild(new TextNode(" "));
             body().prependChild(node);
         }
     }
@@ -159,11 +162,10 @@ public class Document extends Element {
         Elements elements = this.getElementsByTag(tag);
         Element master = elements.first(); // will always be available as created above if not existent
         if (elements.size() > 1) { // dupes, move contents to master
-            List<Node> toMove = new ArrayList<Node>();
+            List<Node> toMove = new ArrayList<>();
             for (int i = 1; i < elements.size(); i++) {
                 Node dupe = elements.get(i);
-                for (Node node : dupe.childNodes)
-                    toMove.add(node);
+                toMove.addAll(dupe.ensureChildNodes());
                 dupe.remove();
             }
 
@@ -181,8 +183,9 @@ public class Document extends Element {
         if (node.nodeName().equals(tag))
             return (Element) node;
         else {
-            for (Node child: node.childNodes) {
-                Element found = findFirstElementByTagName(tag, child);
+            int size = node.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                Element found = findFirstElementByTagName(tag, node.childNode(i));
                 if (found != null)
                     return found;
             }
@@ -342,14 +345,14 @@ public class Document extends Element {
                             decl.attr("version", "1.0");
                         }
                     } else {
-                        decl = new XmlDeclaration("xml", baseUri, false);
+                        decl = new XmlDeclaration("xml", false);
                         decl.attr("version", "1.0");
                         decl.attr("encoding", charset().displayName());
 
                         prependChild(decl);
                     }
                 } else {
-                    XmlDeclaration decl = new XmlDeclaration("xml", baseUri, false);
+                    XmlDeclaration decl = new XmlDeclaration("xml", false);
                     decl.attr("version", "1.0");
                     decl.attr("encoding", charset().displayName());
 
@@ -370,13 +373,18 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset = Charset.forName("UTF-8");
+        private Charset charset;
+        private ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
+        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
+
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            charset(Charset.forName("UTF8"));
+        }
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -433,8 +441,17 @@ public class Document extends Element {
             return this;
         }
 
+        CharsetEncoder prepareEncoder() {
+            // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            CharsetEncoder encoder = charset.newEncoder();
+            encoderThreadLocal.set(encoder);
+            coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
+            return encoder;
+        }
+
         CharsetEncoder encoder() {
-            return charset.newEncoder();
+            CharsetEncoder encoder = encoderThreadLocal.get();
+            return encoder != null ? encoder : prepareEncoder();
         }
 
         /**
@@ -557,6 +574,25 @@ public class Document extends Element {
 
     public Document quirksMode(QuirksMode quirksMode) {
         this.quirksMode = quirksMode;
+        return this;
+    }
+
+    /**
+     * Get the parser that was used to parse this document.
+     * @return the parser
+     */
+    public Parser parser() {
+        return parser;
+    }
+
+    /**
+     * Set the parser used to create this document. This parser is then used when further parsing within this document
+     * is required.
+     * @param parser the configured parser to use when further parsing is required for this document.
+     * @return this document, for chaining.
+     */
+    public Document parser(Parser parser) {
+        this.parser = parser;
         return this;
     }
 }

@@ -2,11 +2,14 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.select.Elements;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -177,9 +180,18 @@ public class XmlTreeBuilderTest {
 
     @Test
     public void preservesCaseByDefault() {
-        String xml = "<TEST ID=1>Check</TEST>";
+        String xml = "<CHECK>One</CHECK><TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
-        assertEquals("<TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<CHECK>One</CHECK><TEST ID=\"1\">Check</TEST>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test
+    public void appendPreservesCaseByDefault() {
+        String xml = "<One>One</One>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        Elements one = doc.select("One");
+        one.append("<Two ID=2>Two</Two>");
+        assertEquals("<One>One<Two ID=\"2\">Two</Two></One>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test
@@ -187,5 +199,42 @@ public class XmlTreeBuilderTest {
         String xml = "<TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser().settings(ParseSettings.htmlDefault));
         assertEquals("<test id=\"1\">Check</test>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void normalizesDiscordantTags() {
+        Parser parser = Parser.xmlParser().settings(ParseSettings.htmlDefault);
+        Document document = Jsoup.parse("<div>test</DIV><p></p>", "", parser);
+        assertEquals("<div>\n test\n</div>\n<p></p>", document.html());
+        // was failing -> toString() = "<div>\n test\n <p></p>\n</div>"
+    }
+
+    @Test public void roundTripsCdata() {
+        String xml = "<div id=1><![CDATA[\n<html>\n <foo><&amp;]]></div>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        Element div = doc.getElementById("1");
+        assertEquals("<html>\n <foo><&amp;", div.text());
+        assertEquals(0, div.children().size());
+        assertEquals(1, div.childNodeSize()); // no elements, one text node
+
+        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]>\n</div>", div.outerHtml());
+
+        CDataNode cdata = (CDataNode) div.textNodes().get(0);
+        assertEquals("\n<html>\n <foo><&amp;", cdata.text());
+    }
+
+    @Test public void cdataPreservesWhiteSpace() {
+        String xml = "<script type=\"text/javascript\">//<![CDATA[\n\n  foo();\n//]]></script>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals(xml, doc.outerHtml());
+
+        assertEquals("//\n\n  foo();\n//", doc.selectFirst("script").text());
+    }
+
+    @Test
+    public void handlesDodgyXmlDecl() {
+        String xml = "<?xml version='1.0'><val>One</val>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals("One", doc.select("val").text());
     }
 }

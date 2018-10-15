@@ -3,11 +3,14 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import javax.net.ssl.SSLSocketFactory;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -83,14 +86,13 @@ public interface Connection {
     Connection userAgent(String userAgent);
 
     /**
-     * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-     * timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.
-     * <p>Note that a read timeout is not the same as a maximum timeout. As long as the connection is sending bytes at
-     * least every <i>timeout</i> seconds (e.g. in the case of an infinite stream of data, or a slow large download), the
-     * read timeout will not fire. This can be mitigated by using a maximum download size (see {@link #maxBodySize(int)}),
-     * or interrupting the connecting thread after a max timeout.</p>
+     * Set the total request timeout duration. If a timeout occurs, an {@link java.net.SocketTimeoutException} will be thrown.
+     * <p>The default timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.
+     * <p>Note that this timeout specifies the combined maximum duration of the connection time and the time to read
+     * the full response.
      * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
      * @return this Connection, for chaining
+     * @see #maxBodySize(int)
      */
     Connection timeout(int millis);
 
@@ -144,23 +146,11 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     * Disable/enable TLS certificates validation for HTTPS requests.
-     * <p>
-     * By default this is <b>true</b>; all
-     * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
-     * certificate does not validate.
-     * </p>
-     * <p>
-     * Some servers use expired, self-generated certificates; or your JDK may not
-     * support SNI hosts. In which case, you may want to enable this setting.
-     * </p>
-     * <p>
-     * <b>Be careful</b> and understand why you need to disable these validations.
-     * </p>
-     * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
+     * Set custom SSL socket factory
+     * @param sslSocketFactory custom SSL socket factory
      * @return this Connection, for chaining
      */
-    Connection validateTLSCertificates(boolean value);
+    Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -180,8 +170,22 @@ public interface Connection {
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * You must close the InputStream in a {@code finally} block.
      * @return this Connections, for chaining
+     * @see #data(String, String, InputStream, String) if you want to set the uploaded file's mimetype.
      */
     Connection data(String key, String filename, InputStream inputStream);
+
+    /**
+     * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
+     * input stream.
+     * @param key data key (form item name)
+     * @param filename the name of the file to present to the remove server. Typically just the name, not path,
+     * component.
+     * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
+     * @param contentType the Content Type (aka mimetype) to specify for this file.
+     * You must close the InputStream in a {@code finally} block.
+     * @return this Connections, for chaining
+     */
+    Connection data(String key, String filename, InputStream inputStream, String contentType);
 
     /**
      * Adds all of the supplied data to the request data parameters
@@ -364,7 +368,8 @@ public interface Connection {
         T method(Method method);
 
         /**
-         * Get the value of a header. This is a simplified header model, where a header may only have one value.
+         * Get the value of a header. If there is more than one header value with the same name, the headers are returned
+         * comma seperated, per <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2">rfc2616-sec4</a>.
          * <p>
          * Header names are case insensitive.
          * </p>
@@ -376,12 +381,29 @@ public interface Connection {
         String header(String name);
 
         /**
-         * Set a header. This method will overwrite any existing header with the same case insensitive name.
+         * Get the values of a header.
+         * @param name header name, case insensitive.
+         * @return a list of values for this header, or an empty list if not set.
+         */
+        List<String> headers(String name);
+
+        /**
+         * Set a header. This method will overwrite any existing header with the same case insensitive name. (If there
+         * is more than one value for this header, this method will update the first matching header.
          * @param name Name of header
          * @param value Value of header
          * @return this, for chaining
+         * @see #addHeader(String, String)
          */
         T header(String name, String value);
+
+        /**
+         * Add a header. The header will be added regardless of whether a header with the same name already exists.
+         * @param name Name of new header
+         * @param value Value of new header
+         * @return this, for chaining
+         */
+        T addHeader(String name, String value);
 
         /**
          * Check if a header is present
@@ -399,17 +421,28 @@ public interface Connection {
         boolean hasHeaderWithValue(String name, String value);
 
         /**
-         * Remove a header by name
+         * Remove headers by name. If there is more than one header with this name, they will all be removed.
          * @param name name of header to remove (case insensitive)
          * @return this, for chaining
          */
         T removeHeader(String name);
 
         /**
-         * Retrieve all of the request/response headers as a map
+         * Retrieve all of the request/response header names and corresponding values as a map. For headers with multiple
+         * values, only the first header is returned.
+         * <p>Note that this is a view of the headers only, and changes made to this map will not be reflected in the
+         * request/response object.</p>
          * @return headers
+         * @see #multiHeaders()
+
          */
         Map<String, String> headers();
+
+        /**
+         * Retreive all of the headers, keyed by the header name, and with a list of values per header.
+         * @return a list of multiple values per header.
+         */
+        Map<String, List<String>> multiHeaders();
 
         /**
          * Get a cookie value by name from this request/response.
@@ -544,16 +577,16 @@ public interface Connection {
         Request ignoreContentType(boolean ignoreContentType);
 
         /**
-         * Get the current state of TLS (SSL) certificate validation.
-         * @return true if TLS cert validation enabled
+         * Get the current custom SSL socket factory, if any.
+         * @return custom SSL socket factory if set, null otherwise
          */
-        boolean validateTLSCertificates();
+        SSLSocketFactory sslSocketFactory();
 
         /**
-         * Set TLS certificate validation.
-         * @param value set false to ignore TLS (SSL) certificates
+         * Set a custom SSL socket factory.
+         * @param sslSocketFactory SSL socket factory
          */
-        void validateTLSCertificates(boolean value);
+        void sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
         /**
          * Add a data parameter to the request
@@ -651,7 +684,8 @@ public interface Connection {
         String contentType();
 
         /**
-         * Parse the body of the response as a Document.
+         * Read and parse the body of the response as a Document. If you intend to parse the same response multiple
+         * times, you should {@link #bufferUp()} first.
          * @return a parsed Document
          * @throws IOException on error
          */
@@ -668,10 +702,27 @@ public interface Connection {
          * @return body bytes
          */
         byte[] bodyAsBytes();
+
+        /**
+         * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
+         * same connection response (otherwise, once the response is read, its InputStream will have been drained and
+         * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.
+         * @return this response, for chaining
+         * @throws UncheckedIOException if an IO exception occurs during buffering.
+         */
+        Response bufferUp();
+
+        /**
+         * Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done with it.
+         * Other body methods (like bufferUp, body, parse, etc) will not work in conjunction with this method.
+         * <p>This method is useful for writing large responses to disk, without buffering them completely into memory first.</p>
+         * @return the response body input stream
+         */
+        BufferedInputStream bodyStream();
     }
 
     /**
-     * A Key Value tuple.
+     * A Key:Value tuple(+), used for form data.
      */
     interface KeyVal {
 
@@ -719,5 +770,20 @@ public interface Connection {
          * @return true if this keyval does indeed have an input stream
          */
         boolean hasInputStream();
+
+        /**
+         * Set the Content Type header used in the MIME body (aka mimetype) when uploading files.
+         * Only useful if {@link #inputStream(InputStream)} is set.
+         * <p>Will default to {@code application/octet-stream}.</p>
+         * @param contentType the new content type
+         * @return this KeyVal
+         */
+        KeyVal contentType(String contentType);
+
+        /**
+         * Get the current Content Type, or {@code null} if not set.
+         * @return the current Content Type.
+         */
+        String contentType();
     }
 }

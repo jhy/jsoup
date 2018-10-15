@@ -1,6 +1,9 @@
 package org.jsoup.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.StringReader;
 
 import static org.junit.Assert.*;
 
@@ -10,6 +13,7 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class CharacterReaderTest {
+    public final static int maxBufferLen = CharacterReader.maxBufferLen;
 
     @Test public void consume() {
         CharacterReader r = new CharacterReader("one");
@@ -165,6 +169,7 @@ public class CharacterReaderTest {
         assertFalse(r.matches("ne Two Three Four"));
         assertEquals("ne Two Three", r.consumeToEnd());
         assertFalse(r.matches("ne"));
+        assertTrue(r.isEmpty());
     }
 
     @Test
@@ -242,6 +247,42 @@ public class CharacterReaderTest {
 
         assertTrue(r.rangeEquals(18, 5, "CHOKE"));
         assertFalse(r.rangeEquals(18, 5, "CHIKE"));
+    }
+
+    @Test
+    public void empty() {
+        CharacterReader r = new CharacterReader("One");
+        assertTrue(r.matchConsume("One"));
+        assertTrue(r.isEmpty());
+
+        r = new CharacterReader("Two");
+        String two = r.consumeToEnd();
+        assertEquals("Two", two);
+    }
+
+    @Test
+    public void consumeToNonexistentEndWhenAtAnd() {
+        CharacterReader r = new CharacterReader("<!");
+        assertTrue(r.matchConsume("<!"));
+        assertTrue(r.isEmpty());
+
+        String after = r.consumeTo('>');
+        assertEquals("", after);
+
+        assertTrue(r.isEmpty());
+    }
+
+    @Ignore
+    @Test
+    public void notEmptyAtBufferSplitPoint() {
+        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
+        assertEquals("How", r.consumeTo(' '));
+        assertFalse("Should not be empty", r.isEmpty());
+
+        assertEquals(' ', r.consume());
+        assertFalse(r.isEmpty());
+
+        // todo - current consume to won't expand buffer. impl buffer extension and test
     }
 
 

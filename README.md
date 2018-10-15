@@ -16,18 +16,24 @@ jsoup is designed to deal with all varieties of HTML found in the wild; from pri
 See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API documentation](https://jsoup.org/apidocs/).
 
 ## Example
-Fetch the [Wikipedia](http://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/index.html?org/jsoup/select/Elements.html) ([online sample](https://try.jsoup.org/~LGB7rk_atM2roavV0d-czMt3J_g)):
+Fetch the [Wikipedia](http://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/index.html?org/jsoup/select/Elements.html):
 
 ```java
 Document doc = Jsoup.connect("http://en.wikipedia.org/").get();
+log(doc.title());
 Elements newsHeadlines = doc.select("#mp-itn b a");
+for (Element headline : newsHeadlines) {
+  log("%s\n\t%s", 
+    headline.attr("title"), headline.absUrl("href"));
+}
 ```
+[Online sample](https://try.jsoup.org/~LGB7rk_atM2roavV0d-czMt3J_g), [full source](https://github.com/jhy/jsoup/blob/master/src/main/java/org/jsoup/examples/Wikipedia.java).
 
 ## Open source
 jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup/tree/master/src/main/java/org/jsoup).
 
 ## Getting started
-1. [Download](https://jsoup.org/download) the latest jsoup jar (or it add to your Maven/Gradle build)
+1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
 2. Read the [cookbook](https://jsoup.org/cookbook/)
 3. Enjoy!
 

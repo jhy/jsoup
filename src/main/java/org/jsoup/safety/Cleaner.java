@@ -119,11 +119,11 @@ public class Cleaner {
                 }
             } else if (source instanceof TextNode) {
                 TextNode sourceText = (TextNode) source;
-                TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+                TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
             } else if (source instanceof DataNode && whitelist.isSafeTag(source.parent().nodeName())) {
               DataNode sourceData = (DataNode) source;
-              DataNode destData = new DataNode(sourceData.getWholeData(), source.baseUri());
+              DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
                 numDiscarded++;
@@ -139,8 +139,7 @@ public class Cleaner {
 
     private int copySafeNodes(Element source, Element dest) {
         CleaningVisitor cleaningVisitor = new CleaningVisitor(source, dest);
-        NodeTraversor traversor = new NodeTraversor(cleaningVisitor);
-        traversor.traverse(source);
+        NodeTraversor.traverse(cleaningVisitor, source);
         return cleaningVisitor.numDiscarded;
     }
 

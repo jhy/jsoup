@@ -1,6 +1,7 @@
 package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
 import org.junit.Test;
@@ -10,8 +11,8 @@ import org.w3c.dom.Node;
 import java.io.File;
 import java.io.IOException;
 
-import static org.jsoup.TextUtil.LE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class W3CDomTest {
@@ -22,21 +23,13 @@ public class W3CDomTest {
 
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
-        String out = w3c.asString(wDoc);
-        assertEquals(
-                "<html>" + LE +
-                        "<head>" + LE +
-                        "<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">" + LE +
-                        "<title>W3c</title>" + LE +
-                        "</head>" + LE +
-                        "<body>" + LE +
-                        "<p class=\"one\" id=\"12\">Text</p>" + LE +
-                        "<!-- comment -->" + LE +
-                        "<invalid>What<script>alert('!')</script>" + LE +
-                        "</invalid>" + LE +
-                        "</body>" + LE +
-                        "</html>" + LE
-                , out);
+        String out = TextUtil.stripNewlines(w3c.asString(wDoc));
+        String expected = TextUtil.stripNewlines(
+                "<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>W3c</title>" +
+                "</head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script>" +
+                "</invalid></body></html>"
+        );
+        assertEquals(expected, out);
     }
 
     @Test
@@ -54,6 +47,21 @@ public class W3CDomTest {
         String out = w3c.asString(wDoc);
         assertTrue(out.contains("ipod"));
     }
+    
+    
+    @Test
+    public void convertsGoogleLocation() throws IOException {
+        File in = ParseTest.getFile("/htmltests/google-ipod.html");
+        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
+
+        W3CDom w3c = new W3CDom();
+        Document wDoc = w3c.fromJsoup(doc);
+
+        String out = w3c.asString(wDoc);
+        assertEquals(doc.location(), wDoc.getDocumentURI() );
+    }
+    
+    
 
     @Test
     public void namespacePreservation() throws IOException {
@@ -70,7 +78,14 @@ public class W3CDomTest {
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
+        // inherits default namespace
+        Node head = htmlEl.getFirstChild();
+        assertEquals("http://www.w3.org/1999/xhtml", head.getNamespaceURI());
+        assertEquals("head", head.getLocalName());
+        assertEquals("head", head.getNodeName());
+
         Node epubTitle = htmlEl.getChildNodes().item(2).getChildNodes().item(3);
+        assertEquals("Check", epubTitle.getTextContent());
         assertEquals("http://www.idpf.org/2007/ops", epubTitle.getNamespaceURI());
         assertEquals("title", epubTitle.getLocalName());
         assertEquals("epub:title", epubTitle.getNodeName());
@@ -79,6 +94,35 @@ public class W3CDomTest {
         assertEquals("urn:test", xSection.getNamespaceURI());
         assertEquals("section", xSection.getLocalName());
         assertEquals("x:section", xSection.getNodeName());
+
+        // https://github.com/jhy/jsoup/issues/977
+        // does not keep last set namespace
+        Node svg = xSection.getNextSibling().getNextSibling();
+        assertEquals("http://www.w3.org/2000/svg", svg.getNamespaceURI());
+        assertEquals("svg", svg.getLocalName());
+        assertEquals("svg", svg.getNodeName());
+
+        Node path = svg.getChildNodes().item(1);
+        assertEquals("http://www.w3.org/2000/svg", path.getNamespaceURI());
+        assertEquals("path", path.getLocalName());
+        assertEquals("path", path.getNodeName());
+
+        Node clip = path.getChildNodes().item(1);
+        assertEquals("http://example.com/clip", clip.getNamespaceURI());
+        assertEquals("clip", clip.getLocalName());
+        assertEquals("clip", clip.getNodeName());
+        assertEquals("456", clip.getTextContent());
+
+        Node picture = svg.getNextSibling().getNextSibling();
+        assertEquals("http://www.w3.org/1999/xhtml", picture.getNamespaceURI());
+        assertEquals("picture", picture.getLocalName());
+        assertEquals("picture", picture.getNodeName());
+
+        Node img = picture.getFirstChild();
+        assertEquals("http://www.w3.org/1999/xhtml", img.getNamespaceURI());
+        assertEquals("img", img.getLocalName());
+        assertEquals("img", img.getNodeName());
+
     }
 
     @Test
@@ -91,6 +135,24 @@ public class W3CDomTest {
         assertTrue(body.hasAttr("name\""));
 
         Document w3Doc = new W3CDom().fromJsoup(jsoupDoc);
+    }
+
+    @Test public void treatsUndeclaredNamespaceAsLocalName() {
+        String html = "<fb:like>One</fb:like>";
+        org.jsoup.nodes.Document doc = Jsoup.parse(html);
+
+        Document w3Doc = new W3CDom().fromJsoup(doc);
+        Node htmlEl = w3Doc.getFirstChild();
+
+        assertNull(htmlEl.getNamespaceURI());
+        assertEquals("html", htmlEl.getLocalName());
+        assertEquals("html", htmlEl.getNodeName());
+
+        Node fb = htmlEl.getFirstChild().getNextSibling().getFirstChild();
+        assertNull(fb.getNamespaceURI());
+        assertEquals("like", fb.getLocalName());
+        assertEquals("fb:like", fb.getNodeName());
+
     }
 }
 

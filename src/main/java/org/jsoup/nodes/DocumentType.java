@@ -1,14 +1,16 @@
 package org.jsoup.nodes;
 
-import java.io.IOException;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Document.OutputSettings.Syntax;
 
-import org.jsoup.helper.StringUtil;
-import org.jsoup.nodes.Document.OutputSettings.*;
+import java.io.IOException;
 
 /**
  * A {@code <!DOCTYPE>} node.
  */
-public class DocumentType extends Node {
+public class DocumentType extends LeafNode {
+    // todo needs a bit of a chunky cleanup. this level of detail isn't needed
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
     private static final String NAME = "name";
@@ -22,11 +24,11 @@ public class DocumentType extends Node {
      * @param name the doctype's name
      * @param publicId the doctype's public ID
      * @param systemId the doctype's system ID
-     * @param baseUri the doctype's base URI
      */
-    public DocumentType(String name, String publicId, String systemId, String baseUri) {
-        super(baseUri);
-
+    public DocumentType(String name, String publicId, String systemId) {
+        Validate.notNull(name);
+        Validate.notNull(publicId);
+        Validate.notNull(systemId);
         attr(NAME, name);
         attr(PUBLIC_ID, publicId);
         if (has(PUBLIC_ID)) {
@@ -40,17 +42,37 @@ public class DocumentType extends Node {
      * @param name the doctype's name
      * @param publicId the doctype's public ID
      * @param systemId the doctype's system ID
-     * @param baseUri the doctype's base URI
+     * @param baseUri unused
+     * @deprecated
+     */
+    public DocumentType(String name, String publicId, String systemId, String baseUri) {
+        attr(NAME, name);
+        attr(PUBLIC_ID, publicId);
+        if (has(PUBLIC_ID)) {
+            attr(PUB_SYS_KEY, PUBLIC_KEY);
+        }
+        attr(SYSTEM_ID, systemId);
+    }
+
+    /**
+     * Create a new doctype element.
+     * @param name the doctype's name
+     * @param publicId the doctype's public ID
+     * @param systemId the doctype's system ID
+     * @param baseUri unused
+     * @deprecated
      */
     public DocumentType(String name, String pubSysKey, String publicId, String systemId, String baseUri) {
-        super(baseUri);
-
         attr(NAME, name);
         if (pubSysKey != null) {
             attr(PUB_SYS_KEY, pubSysKey);
         }
         attr(PUBLIC_ID, publicId);
         attr(SYSTEM_ID, systemId);
+    }
+    public void setPubSysKey(String value) {
+        if (value != null)
+            attr(PUB_SYS_KEY, value);
     }
 
     @Override

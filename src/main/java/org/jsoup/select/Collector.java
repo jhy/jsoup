@@ -3,6 +3,9 @@ package org.jsoup.select;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
+import static org.jsoup.select.NodeFilter.FilterResult.STOP;
+
 /**
  * Collects a list of elements that match the supplied criteria.
  *
@@ -21,7 +24,7 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         Elements elements = new Elements();
-        new NodeTraversor(new Accumulator(root, elements, eval)).traverse(root);
+        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
         return elements;
     }
 
@@ -48,4 +51,39 @@ public class Collector {
             // void
         }
     }
+
+    public static Element findFirst(Evaluator eval, Element root) {
+        FirstFinder finder = new FirstFinder(root, eval);
+        NodeTraversor.filter(finder, root);
+        return finder.match;
+    }
+
+    private static class FirstFinder implements NodeFilter {
+        private final Element root;
+        private Element match = null;
+        private final Evaluator eval;
+
+        FirstFinder(Element root, Evaluator eval) {
+            this.root = root;
+            this.eval = eval;
+        }
+
+        @Override
+        public FilterResult head(Node node, int depth) {
+            if (node instanceof Element) {
+                Element el = (Element) node;
+                if (eval.matches(root, el)) {
+                    match = el;
+                    return STOP;
+                }
+            }
+            return CONTINUE;
+        }
+
+        @Override
+        public FilterResult tail(Node node, int depth) {
+            return CONTINUE;
+        }
+    }
+
 }

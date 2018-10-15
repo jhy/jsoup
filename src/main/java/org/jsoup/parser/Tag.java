@@ -11,7 +11,7 @@ import java.util.Map;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Tag {
-    private static final Map<String, Tag> tags = new HashMap<String, Tag>(); // map of known tags
+    private static final Map<String, Tag> tags = new HashMap<>(); // map of known tags
 
     private String tagName;
     private boolean isBlock = true; // block or inline

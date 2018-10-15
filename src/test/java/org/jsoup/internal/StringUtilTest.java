@@ -1,11 +1,12 @@
-package org.jsoup.helper;
+package org.jsoup.internal;
 
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.jsoup.helper.StringUtil.*;
+import static org.jsoup.internal.StringUtil.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +24,15 @@ public class StringUtilTest {
         assertEquals(" ", StringUtil.padding(1));
         assertEquals("  ", StringUtil.padding(2));
         assertEquals("               ", StringUtil.padding(15));
+        assertEquals("                                             ", StringUtil.padding(45));
+    }
+
+    @Test public void paddingInACan() {
+        String[] padding = StringUtil.padding;
+        assertEquals(21, padding.length);
+        for (int i = 0; i < padding.length; i++) {
+            assertEquals(i, padding[i].length());
+        }
     }
 
     @Test public void isBlank() {

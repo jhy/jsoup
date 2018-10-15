@@ -1,18 +1,30 @@
 package org.jsoup.helper;
 
-import static org.junit.Assert.*;
-
-import org.jsoup.integration.ParseTest;
-import org.junit.Test;
 import org.jsoup.Connection;
+import org.jsoup.MultiLocaleRule;
+import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.integration.ParseTest;
+import org.junit.Rule;
+import org.junit.Test;
 
 import java.io.IOException;
-import java.util.*;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
+
+    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
 
     @Test(expected=IllegalArgumentException.class) public void throwsExceptionOnParseWithoutExecute() throws IOException {
         Connection con = HttpConnection.connect("http://example.com");
@@ -29,32 +41,36 @@ public class HttpConnectionTest {
         con.response().bodyAsBytes();
     }
 
-    @Test public void caseInsensitiveHeaders() {
+    @Test @MultiLocaleTest public void caseInsensitiveHeaders() {
         Connection.Response res = new HttpConnection.Response();
-        Map<String, String> headers = res.headers();
-        headers.put("Accept-Encoding", "gzip");
-        headers.put("content-type", "text/html");
-        headers.put("refErrer", "http://example.com");
+        res.header("Accept-Encoding", "gzip");
+        res.header("content-type", "text/html");
+        res.header("refErrer", "http://example.com");
 
         assertTrue(res.hasHeader("Accept-Encoding"));
         assertTrue(res.hasHeader("accept-encoding"));
         assertTrue(res.hasHeader("accept-Encoding"));
+        assertTrue(res.hasHeader("ACCEPT-ENCODING"));
 
         assertEquals("gzip", res.header("accept-Encoding"));
+        assertEquals("gzip", res.header("ACCEPT-ENCODING"));
         assertEquals("text/html", res.header("Content-Type"));
         assertEquals("http://example.com", res.header("Referrer"));
 
         res.removeHeader("Content-Type");
         assertFalse(res.hasHeader("content-type"));
 
-        res.header("accept-encoding", "deflate");
+        res.removeHeader("ACCEPT-ENCODING");
+        assertFalse(res.hasHeader("Accept-Encoding"));
+
+        res.header("ACCEPT-ENCODING", "deflate");
         assertEquals("deflate", res.header("Accept-Encoding"));
         assertEquals("deflate", res.header("accept-Encoding"));
     }
 
     @Test public void headers() {
         Connection con = HttpConnection.connect("http://example.com");
-        Map<String, String> headers = new HashMap<String, String>();
+        Map<String, String> headers = new HashMap<>();
         headers.put("content-type", "text/html");
         headers.put("Connection", "keep-alive");
         headers.put("Host", "http://example.com");
@@ -65,8 +81,8 @@ public class HttpConnectionTest {
     }
 
     @Test public void sameHeadersCombineWithComma() {
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        List<String> values = new ArrayList<String>();
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> values = new ArrayList<>();
         values.add("no-cache");
         values.add("no-store");
         headers.put("Cache-Control", values);
@@ -75,9 +91,42 @@ public class HttpConnectionTest {
         assertEquals("no-cache, no-store", res.header("Cache-Control"));
     }
 
+    @Test public void multipleHeaders() {
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("Accept", "Something");
+        req.addHeader("Accept", "Everything");
+        req.addHeader("Foo", "Bar");
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeader("ACCEpt"));
+        assertEquals("Something, Everything", req.header("accept"));
+        assertTrue(req.hasHeader("fOO"));
+        assertEquals("Bar", req.header("foo"));
+
+        List<String> accept = req.headers("accept");
+        assertEquals(2, accept.size());
+        assertEquals("Something", accept.get(0));
+        assertEquals("Everything", accept.get(1));
+
+        Map<String, List<String>> headers = req.multiHeaders();
+        assertEquals(accept, headers.get("Accept"));
+        assertEquals("Bar", headers.get("Foo").get(0));
+
+        assertTrue(req.hasHeader("Accept"));
+        assertTrue(req.hasHeaderWithValue("accept", "Something"));
+        assertTrue(req.hasHeaderWithValue("accept", "Everything"));
+        assertFalse(req.hasHeaderWithValue("accept", "Something for nothing"));
+
+        req.removeHeader("accept");
+        headers = req.multiHeaders();
+        assertEquals("Bar", headers.get("Foo").get(0));
+        assertFalse(req.hasHeader("Accept"));
+        assertTrue(headers.get("Accept") == null);
+    }
+
     @Test public void ignoresEmptySetCookies() {
         // prep http response header map
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
+        Map<String, List<String>> headers = new HashMap<>();
         headers.put("Set-Cookie", Collections.<String>emptyList());
         HttpConnection.Response res = new HttpConnection.Response();
         res.processResponseHeaders(headers);
@@ -86,8 +135,8 @@ public class HttpConnectionTest {
 
     @Test public void ignoresEmptyCookieNameAndVals() {
         // prep http response header map
-        Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        List<String> cookieStrings = new ArrayList<String>();
+        Map<String, List<String>> headers = new HashMap<>();
+        List<String> cookieStrings = new ArrayList<>();
         cookieStrings.add(null);
         cookieStrings.add("");
         cookieStrings.add("one");
@@ -181,5 +230,23 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+
+    @Test public void encodeUrl() throws MalformedURLException {
+        URL url1 = new URL("http://test.com/?q=white space");
+        URL url2 = HttpConnection.encodeUrl(url1);
+        assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
+    }
+
+    @Test public void noUrlThrowsValidationError() throws IOException {
+        HttpConnection con = new HttpConnection();
+        boolean threw = false;
+        try {
+            con.execute();
+        } catch (IllegalArgumentException e) {
+            threw = true;
+            assertEquals("URL must be specified to connect", e.getMessage());
+        }
+        assertTrue(threw);
     }
 }

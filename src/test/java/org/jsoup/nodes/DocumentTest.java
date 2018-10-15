@@ -5,6 +5,7 @@ import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
+import org.jsoup.select.Elements;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -402,8 +404,8 @@ public class DocumentTest {
         doc.appendElement("root").text("node");
         doc.outputSettings().syntax(Syntax.xml);
         
-        if( addDecl == true ) {
-            XmlDeclaration decl = new XmlDeclaration("xml", "", false);
+        if(addDecl) {
+            XmlDeclaration decl = new XmlDeclaration("xml", false);
             decl.attr("version", version);
             decl.attr("encoding", charset);
             doc.prependChild(decl);
@@ -433,5 +435,29 @@ public class DocumentTest {
         assertFalse("Should not have contained a '?'.", output.contains("?"));
         assertTrue("Should have contained a '&#xa0;' or a '&nbsp;'.",
                 output.contains("&#xa0;") || output.contains("&nbsp;"));
+    }
+
+    @Test public void parseAndHtmlOnDifferentThreads() throws InterruptedException {
+        String html = "<p>Alrighty then it's not \uD83D\uDCA9. <span>Next</span></p>"; // 💩
+        String asci = "<p>Alrighty then it's not &#x1f4a9;. <span>Next</span></p>";
+
+        final Document doc = Jsoup.parse(html);
+        final String[] out = new String[1];
+        final Elements p = doc.select("p");
+        assertEquals(html, p.outerHtml());
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                out[0] = p.outerHtml();
+                doc.outputSettings().charset(StandardCharsets.US_ASCII);
+            }
+        });
+        thread.start();
+        thread.join();
+
+        assertEquals(html, out[0]);
+        assertEquals(StandardCharsets.US_ASCII, doc.outputSettings().charset());
+        assertEquals(asci, p.outerHtml());
     }
 }

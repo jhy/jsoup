@@ -9,7 +9,7 @@ import java.util.IdentityHashMap;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
- * 
+ *
  * <h2>Selector syntax</h2>
  * <p>
  * A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case insensitive</b> (including against
@@ -54,6 +54,7 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:matchesOwn(<em>regex</em>)</code></td><td>elements whose own text matches the specified regular expression. The text must appear in the found element, not any of its descendants.</td><td><code>td:matchesOwn(\\d+)</code> finds table cells directly containing digits. <code>div:matchesOwn((?i)login)</code> finds divs containing the text, case insensitively.</td></tr>
  * <tr><td><code>:containsData(<em>data</em>)</code></td><td>elements that contains the specified <em>data</em>. The contents of {@code script} and {@code style} elements, and {@code comment} nodes (etc) are considered data nodes, not text nodes. The search is case insensitive. The data may appear in the found element, or any of its descendants.</td><td><code>script:contains(jsoup)</code> finds script elements containing the data "jsoup".</td></tr>
  * <tr><td></td><td>The above may be combined in any order and with other selectors</td><td><code>.light:contains(name):eq(0)</code></td></tr>
+ * <tr><td><code>:matchText</code></td><td>treats text nodes as elements, and so allows you to match against and select text nodes.<p><b>Note</b> that using this selector will modify the DOM, so you may want to {@code clone} your document before using.</td><td>{@code p:matchText:firstChild} with input {@code <p>One<br />Two</p>} will return one {@link org.jsoup.nodes.PseudoTextElement} with text "{@code One}".</td></tr>
  * <tr><td colspan="3"><h3>Structural pseudo selectors</h3></td></tr>
  * <tr><td><code>:root</code></td><td>The element that is the root of the document. In HTML, this is the <code>html</code> element</td><td><code>:root</code></td></tr>
  * <tr><td><code>:nth-child(<em>a</em>n+<em>b</em>)</code></td><td><p>elements that have <code><em>a</em>n+<em>b</em>-1</code> siblings <b>before</b> it in the document tree, for any positive integer or zero value of <code>n</code>, and has a parent element. For values of <code>a</code> and <code>b</code> greater than zero, this effectively divides the element's children into groups of a elements (the last group taking the remainder), and selecting the <em>b</em>th element of each group. For example, this allows the selectors to address every other row in a table, and could be used to alternate the color of paragraph text in a cycle of four. The <code>a</code> and <code>b</code> values must be integers (positive, negative, or zero). The index of the first child of an element is 1.</p>
@@ -69,32 +70,13 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:only-of-type</code></td><td> an element that has a parent element and whose parent element has no other element children with the same expanded element name</td><td></td></tr>
  * <tr><td><code>:empty</code></td><td>elements that have no children at all</td><td></td></tr>
  * </table>
- * 
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  * @see Element#select(String)
  */
 public class Selector {
-    private final Evaluator evaluator;
-    private final Element root;
-
-    private Selector(String query, Element root) {
-        Validate.notNull(query);
-        query = query.trim();
-        Validate.notEmpty(query);
-        Validate.notNull(root);
-
-        this.evaluator = QueryParser.parse(query);
-
-        this.root = root;
-    }
-
-    private Selector(Evaluator evaluator, Element root) {
-        Validate.notNull(evaluator);
-        Validate.notNull(root);
-
-        this.evaluator = evaluator;
-        this.root = root;
-    }
+    // not instantiable
+    private Selector() {}
 
     /**
      * Find elements matching selector.
@@ -105,7 +87,8 @@ public class Selector {
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public static Elements select(String query, Element root) {
-        return new Selector(query, root).select();
+        Validate.notEmpty(query);
+        return select(QueryParser.parse(query), root);
     }
 
     /**
@@ -116,7 +99,9 @@ public class Selector {
      * @return matching elements, empty if none
      */
     public static Elements select(Evaluator evaluator, Element root) {
-        return new Selector(evaluator, root).select();
+        Validate.notNull(evaluator);
+        Validate.notNull(root);
+        return Collector.collect(evaluator, root);
     }
 
     /**
@@ -130,8 +115,8 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         Evaluator evaluator = QueryParser.parse(query);
-        ArrayList<Element> elements = new ArrayList<Element>();
-        IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<Element, Boolean>();
+        ArrayList<Element> elements = new ArrayList<>();
+        IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<>();
         // dedupe elements by identity, not equality
 
         for (Element root : roots) {
@@ -144,10 +129,6 @@ public class Selector {
             }
         }
         return new Elements(elements);
-    }
-
-    private Elements select() {
-        return Collector.collect(evaluator, root);
     }
 
     // exclude set. package open so that Elements can implement .not() selector.
@@ -165,6 +146,17 @@ public class Selector {
                 output.add(el);
         }
         return output;
+    }
+
+    /**
+     * Find the first element that matches the query.
+     * @param cssQuery CSS selector
+     * @param root root element to descend into
+     * @return the matching element, or <b>null</b> if none.
+     */
+    public static Element selectFirst(String cssQuery, Element root) {
+        Validate.notEmpty(cssQuery);
+        return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
     public static class SelectorParseException extends IllegalStateException {

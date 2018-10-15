@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.jsoup.internal.Normalizer.lowerCase;
+
 
 /**
  Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
@@ -188,10 +190,10 @@ public class Whitelist {
      @see #relaxed()
      */
     public Whitelist() {
-        tagNames = new HashSet<TagName>();
-        attributes = new HashMap<TagName, Set<AttributeKey>>();
-        enforcedAttributes = new HashMap<TagName, Map<AttributeKey, AttributeValue>>();
-        protocols = new HashMap<TagName, Map<AttributeKey, Set<Protocol>>>();
+        tagNames = new HashSet<>();
+        attributes = new HashMap<>();
+        enforcedAttributes = new HashMap<>();
+        protocols = new HashMap<>();
         preserveRelativeLinks = false;
     }
 
@@ -254,9 +256,8 @@ public class Whitelist {
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
         TagName tagName = TagName.valueOf(tag);
-        if (!tagNames.contains(tagName))
-            tagNames.add(tagName);
-        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        tagNames.add(tagName);
+        Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
@@ -291,7 +292,7 @@ public class Whitelist {
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
         TagName tagName = TagName.valueOf(tag);
-        Set<AttributeKey> attributeSet = new HashSet<AttributeKey>();
+        Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
@@ -333,15 +334,14 @@ public class Whitelist {
         Validate.notEmpty(value);
 
         TagName tagName = TagName.valueOf(tag);
-        if (!tagNames.contains(tagName))
-            tagNames.add(tagName);
+        tagNames.add(tagName);
         AttributeKey attrKey = AttributeKey.valueOf(attribute);
         AttributeValue attrVal = AttributeValue.valueOf(value);
 
         if (enforcedAttributes.containsKey(tagName)) {
             enforcedAttributes.get(tagName).put(attrKey, attrVal);
         } else {
-            Map<AttributeKey, AttributeValue> attrMap = new HashMap<AttributeKey, AttributeValue>();
+            Map<AttributeKey, AttributeValue> attrMap = new HashMap<>();
             attrMap.put(attrKey, attrVal);
             enforcedAttributes.put(tagName, attrMap);
         }
@@ -420,13 +420,13 @@ public class Whitelist {
         if (this.protocols.containsKey(tagName)) {
             attrMap = this.protocols.get(tagName);
         } else {
-            attrMap = new HashMap<AttributeKey, Set<Protocol>>();
+            attrMap = new HashMap<>();
             this.protocols.put(tagName, attrMap);
         }
         if (attrMap.containsKey(attrKey)) {
             protSet = attrMap.get(attrKey);
         } else {
-            protSet = new HashSet<Protocol>();
+            protSet = new HashSet<>();
             attrMap.put(attrKey, protSet);
         }
         for (String protocol : protocols) {
@@ -542,7 +542,7 @@ public class Whitelist {
 
             prot += ":";
 
-            if (value.toLowerCase().startsWith(prot)) {
+            if (lowerCase(value).startsWith(prot)) {
                 return true;
             }
         }
@@ -630,9 +630,8 @@ public class Whitelist {
             if (getClass() != obj.getClass()) return false;
             TypedValue other = (TypedValue) obj;
             if (value == null) {
-                if (other.value != null) return false;
-            } else if (!value.equals(other.value)) return false;
-            return true;
+                return other.value == null;
+            } else return value.equals(other.value);
         }
 
         @Override
