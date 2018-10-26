@@ -666,8 +666,8 @@ public class HttpConnection implements Connection {
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
+        public static final String LOCATION = "Location";
         private static final int MAX_REDIRECTS = 20;
-        private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
@@ -734,7 +734,7 @@ public class HttpConnection implements Connection {
                 res.req = req;
 
                 // redirect if there's a location header (from 3xx, or 201 etc)
-                if (res.hasHeader(LOCATION) && req.followRedirects()) {
+                if (shouldRedirect(req, res)) {
                     if (status != HTTP_TEMP_REDIR) {
                         req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
                         req.data().clear();
@@ -1120,6 +1120,23 @@ public class HttpConnection implements Connection {
                 return true;
         }
         return false;
+    }
+
+    private static boolean shouldRedirect(final Connection.Request req, final Connection.Response res) {
+        return req.followRedirects() && is3xxRedirectWithLocation(res);
+    }
+
+    private static boolean is3xxRedirectWithLocation(final Connection.Response res) {
+        final int status = res.statusCode();
+
+        final boolean validRedirectStatus =
+            status == 300        // 300 Multiple Choices
+                || status == 301 // 301 Moved Permanently
+                || status == 302 // 302 Found
+                || status == 303 // 303 See Other
+                || status == 307 // 307 Temporary Redirect
+                || status == 308;// 308 Permanent Redirect
+        return validRedirectStatus && res.headers(Response.LOCATION).size() == 1;
     }
 
     public static class KeyVal implements Connection.KeyVal {
