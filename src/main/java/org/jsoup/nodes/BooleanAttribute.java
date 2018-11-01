@@ -10,7 +10,7 @@ public class BooleanAttribute extends Attribute {
      * @param key attribute key
      */
     public BooleanAttribute(String key) {
-        super(key, null);
+        super(key, null, null);
     }
 
     @Override

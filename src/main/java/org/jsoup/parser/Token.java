@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -78,6 +79,7 @@ abstract class Token {
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
         private String pendingAttributeValueS; // try to get attr vals in one shot, vs Builder
+        private Attribute.QuoteType pendingAttributeValueQuoteType; // remember how attribute values are quoted
         private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
         private boolean hasPendingAttributeValue = false;
         boolean selfClosing = false;
@@ -90,6 +92,7 @@ abstract class Token {
             pendingAttributeName = null;
             reset(pendingAttributeValue);
             pendingAttributeValueS = null;
+            pendingAttributeValueQuoteType = null;
             hasEmptyAttributeValue = false;
             hasPendingAttributeValue = false;
             selfClosing = false;
@@ -112,7 +115,7 @@ abstract class Token {
                         value = "";
                     else
                         value = null;
-                    attributes.put(pendingAttributeName, value);
+                    attributes.put(pendingAttributeName, value, pendingAttributeValueQuoteType);
                 }
             }
             pendingAttributeName = null;
@@ -120,6 +123,7 @@ abstract class Token {
             hasPendingAttributeValue = false;
             reset(pendingAttributeValue);
             pendingAttributeValueS = null;
+            pendingAttributeValueQuoteType = null;
         }
 
         final void finaliseTag() {
@@ -196,6 +200,10 @@ abstract class Token {
             for (int codepoint : appendCodepoints) {
                 pendingAttributeValue.appendCodePoint(codepoint);
             }
+        }
+
+        final void appendAttributeQuoteType(Attribute.QuoteType append) {
+            pendingAttributeValueQuoteType = append;
         }
         
         final void setEmptyAttributeValue() {

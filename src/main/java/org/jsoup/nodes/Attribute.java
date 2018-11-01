@@ -19,31 +19,49 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
             "sortable", "truespeed", "typemustmatch"
     };
 
+    public enum QuoteType {
+        DOUBLE_QUOTED("\""), SINGLE_QUOTED("'"), UNQUOTED("");
+
+        private final String str;
+
+        QuoteType(String str) {
+            this.str = str;
+        }
+
+        public String asString() {
+            return this.str;
+        }
+    }
+
     private String key;
     private String val;
+    private QuoteType quoteType; // stores how this attribute's value is quoted in the parsed DOM
     Attributes parent; // used to update the holding Attributes when the key / value is changed via this interface
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
      * @param key attribute key; case is preserved.
      * @param value attribute value
+     * @param quoteType attribute value's quote type
      * @see #createFromEncoded
      */
-    public Attribute(String key, String value) {
-        this(key, value, null);
+    public Attribute(String key, String value, QuoteType quoteType) {
+        this(key, value, quoteType, null);
     }
 
     /**
      * Create a new attribute from unencoded (raw) key and value.
      * @param key attribute key; case is preserved.
      * @param val attribute value
+     * @param quoteType attribute value's quote type
      * @param parent the containing Attributes (this Attribute is not automatically added to said Attributes)
      * @see #createFromEncoded*/
-    public Attribute(String key, String val, Attributes parent) {
+    public Attribute(String key, String val, QuoteType quoteType, Attributes parent) {
         Validate.notNull(key);
         this.key = key.trim();
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         this.val = val;
+        this.quoteType = quoteType;
         this.parent = parent;
     }
 
@@ -82,6 +100,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     /**
      Set the attribute value.
      @param val the new attribute value; must not be null
+     @return the old attribute value
      */
     public String setValue(String val) {
         String oldVal = parent.get(this.key);
@@ -92,6 +111,30 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         }
         this.val = val;
         return oldVal;
+    }
+
+    /**
+     Get the attribute value's quote type.
+     @return the attribute value's quote type
+     */
+    public QuoteType getQuoteType() {
+        return quoteType;
+    }
+
+    /**
+     Set the attribute value's quote type.
+     @param quoteType the new attribute value; must not be null
+     @return the old attribute value's quote type
+     */
+    public QuoteType setQuoteType(QuoteType quoteType) {
+        QuoteType oldQuoteType = parent.getQuoteType(this.key);
+        if (parent != null) {
+            int i = parent.indexOfKey(this.key);
+            if (i != Attributes.NotFound)
+                parent.quoteTypes[i] = quoteType;
+        }
+        this.quoteType = quoteType;
+        return oldQuoteType;
     }
 
     /**
@@ -186,13 +229,15 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         if (o == null || getClass() != o.getClass()) return false;
         Attribute attribute = (Attribute) o;
         if (key != null ? !key.equals(attribute.key) : attribute.key != null) return false;
-        return val != null ? val.equals(attribute.val) : attribute.val == null;
+        if (val != null ? !val.equals(attribute.val) : attribute.val != null) return false;
+        return quoteType != null ? quoteType.equals(attribute.quoteType) : attribute.quoteType == null;
     }
 
     @Override
     public int hashCode() { // note parent not considered
         int result = key != null ? key.hashCode() : 0;
         result = 31 * result + (val != null ? val.hashCode() : 0);
+        result = 31 * result + (quoteType != null ? quoteType.hashCode() : 0);
         return result;
     }
 

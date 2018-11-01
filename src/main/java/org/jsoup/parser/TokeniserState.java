@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.DocumentType;
 
 /**
@@ -738,8 +739,10 @@ enum TokeniserState {
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAny(attributeDoubleValueCharsSorted);
-            if (value.length() > 0)
+            if (value.length() > 0) {
                 t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeQuoteType(Attribute.QuoteType.DOUBLE_QUOTED);
+            }
             else
                 t.tagPending.setEmptyAttributeValue();
 
@@ -771,8 +774,10 @@ enum TokeniserState {
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAny(attributeSingleValueCharsSorted);
-            if (value.length() > 0)
+            if (value.length() > 0) {
                 t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeQuoteType(Attribute.QuoteType.SINGLE_QUOTED);
+            }
             else
                 t.tagPending.setEmptyAttributeValue();
 
@@ -804,8 +809,10 @@ enum TokeniserState {
     AttributeValue_unquoted {
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAnySorted(attributeValueUnquoted);
-            if (value.length() > 0)
+            if (value.length() > 0) {
                 t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeQuoteType(Attribute.QuoteType.UNQUOTED);
+            }
 
             char c = r.consume();
             switch (c) {
