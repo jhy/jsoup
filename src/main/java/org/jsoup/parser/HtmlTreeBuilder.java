@@ -686,7 +686,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             Element next = formattingElements.get(pos);
             if (next == null) // scope marker
                 break;
-            else if (next.nodeName().equals(nodeName))
+            else if (next.nodeName().equalsIgnoreCase(nodeName))
                 return next;
         }
         return null;
