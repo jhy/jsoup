@@ -131,6 +131,15 @@ public class Element extends Node {
     public String tagName() {
         return tag.getName();
     }
+    
+    /**
+     * Get the name of the tag for this element in lower case
+     * 
+     * @return the lower case tag name
+     */
+    public String normalName() {
+        return tag.normalTagName();
+    }
 
     /**
      * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with

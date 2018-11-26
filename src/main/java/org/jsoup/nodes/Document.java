@@ -211,6 +211,11 @@ public class Document extends Element {
         return "#document";
     }
     
+    @Override
+    public String normalName() {
+        return "#document";
+    }
+    
     /**
      * Sets the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset(java.nio.charset.Charset)

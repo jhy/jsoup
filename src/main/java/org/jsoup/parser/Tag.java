@@ -14,6 +14,7 @@ public class Tag {
     private static final Map<String, Tag> tags = new HashMap<>(); // map of known tags
 
     private String tagName;
+    private String normalTagName;
     private boolean isBlock = true; // block or inline
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean canContainInline = true; // only pcdata if not
@@ -25,6 +26,7 @@ public class Tag {
 
     private Tag(String tagName) {
         this.tagName = tagName;
+        this.normalTagName =  tagName.toLowerCase();
     }
 
     /**
@@ -34,6 +36,15 @@ public class Tag {
      */
     public String getName() {
         return tagName;
+    }
+    
+    /**
+     * Get this tag's name in lower case
+     * 
+     * @return the tag's lower case name
+     */
+    public String normalTagName() {
+        return normalTagName;
     }
 
     /**

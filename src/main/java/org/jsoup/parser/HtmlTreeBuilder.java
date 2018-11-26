@@ -92,7 +92,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
             // initialise the tokeniser state:
-            String contextTag = context.tagName();
+            String contextTag = context.normalName();
             if (StringUtil.in(contextTag, "title", "textarea"))
                 tokeniser.transition(TokeniserState.Rcdata);
             else if (StringUtil.in(contextTag, "iframe", "noembed", "noframes", "style", "xmp"))
@@ -254,7 +254,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         Node node;
         // characters in script and style go in as datanodes, not text nodes
-        final String tagName = currentElement().tagName();
+        final String tagName = currentElement().normalName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
@@ -312,7 +312,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element getFromStack(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (next.nodeName().equals(elName)) {
+            if (next.normalName().equals(elName)) {
                 return next;
             }
         }
@@ -334,7 +334,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (next.nodeName().equals(elName))
+            if (next.normalName().equals(elName))
                 break;
         }
     }
@@ -344,7 +344,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (inSorted(next.nodeName(), elNames))
+            if (inSorted(next.normalName(), elNames))
                 break;
         }
     }
@@ -352,7 +352,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void popStackToBefore(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (next.nodeName().equals(elName)) {
+            if (next.normalName().equals(elName)) {
                 break;
             } else {
                 stack.remove(pos);
@@ -375,7 +375,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private void clearStackToContext(String... nodeNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (StringUtil.in(next.nodeName(), nodeNames) || next.nodeName().equals("html"))
+            if (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html"))
                 break;
             else
                 stack.remove(pos);
@@ -417,7 +417,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 last = true;
                 node = contextElement;
             }
-            String name = node.nodeName();
+            String name = node.normalName();
             if ("select".equals(name)) {
                 transition(HtmlTreeBuilderState.InSelect);
                 break; // frag
@@ -473,7 +473,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // don't walk too far up the tree
 
         for (int pos = bottom; pos >= top; pos--) {
-            final String elName = stack.get(pos).nodeName();
+            final String elName = stack.get(pos).normalName();
             if (inSorted(elName, targetNames))
                 return true;
             if (inSorted(elName, baseTypes))
@@ -514,7 +514,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     boolean inSelectScope(String targetName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
-            String elName = el.nodeName();
+            String elName = el.normalName();
             if (elName.equals(targetName))
                 return true;
             if (!inSorted(elName, TagSearchSelectScope)) // all elements except
@@ -571,7 +571,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     void generateImpliedEndTags(String excludeTag) {
         while ((excludeTag != null && !currentElement().nodeName().equals(excludeTag)) &&
-                inSorted(currentElement().nodeName(), TagSearchEndTags))
+                inSorted(currentElement().normalName(), TagSearchEndTags))
             pop();
     }
 
@@ -582,7 +582,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     boolean isSpecial(Element el) {
         // todo: mathml's mi, mo, mn
         // todo: svg's foreigObject, desc, title
-        String name = el.nodeName();
+        String name = el.normalName();
         return inSorted(name, TagSearchSpecial);
     }
 
@@ -601,7 +601,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     // active formatting elements
     void pushActiveFormattingElements(Element in) {
         int numSeen = 0;
-        for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
+        for (int pos = formattingElements.size() - 1; pos >= 0; pos--) {
             Element el = formattingElements.get(pos);
             if (el == null) // marker
                 break;
@@ -690,7 +690,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             Element next = formattingElements.get(pos);
             if (next == null) // scope marker
                 break;
-            else if (next.nodeName().equalsIgnoreCase(nodeName))
+            else if (next.normalName().equals(nodeName))
                 return next;
         }
         return null;
