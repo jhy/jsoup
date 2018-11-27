@@ -570,7 +570,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
-        while ((excludeTag != null && !currentElement().nodeName().equals(excludeTag)) &&
+        while ((excludeTag != null && !currentElement().normalName().equals(excludeTag)) &&
                 inSorted(currentElement().normalName(), TagSearchEndTags))
             pop();
     }
