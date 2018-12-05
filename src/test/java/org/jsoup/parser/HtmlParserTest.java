@@ -1211,4 +1211,16 @@ public class HtmlParserTest {
         String html = doc.outerHtml();
         assertEquals("<html><head><meta charset=\"UTF-8\"></head><body>One</body></html>", TextUtil.stripNewlines(html));
     }
+
+    @Test public void characterReaderBuffer() throws IOException {
+        File in = ParseTest.getFile("/htmltests/character-reader-buffer.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+
+        String expectedHref = "http://www.domain.com/path?param_one=value&param_two=value";
+
+        Elements links = doc.select("a");
+        assertEquals(2, links.size());
+        assertEquals(expectedHref, links.get(0).attr("href")); // passes
+        assertEquals(expectedHref, links.get(1).attr("href")); // fails, "but was:<...ath?param_one=value&[]_two-value>"
+    }
 }
