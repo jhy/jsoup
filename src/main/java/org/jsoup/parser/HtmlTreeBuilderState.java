@@ -642,7 +642,7 @@ enum HtmlTreeBuilderState {
 
                             Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
                             adopter.attributes().addAll(formatEl.attributes());
-                            Node[] childNodes = furthestBlock.childNodes().toArray(new Node[furthestBlock.childNodeSize()]);
+                            Node[] childNodes = furthestBlock.childNodes().toArray(new Node[0]);
                             for (Node childNode : childNodes) {
                                 adopter.appendChild(childNode); // append will reparent. thus the clone to avoid concurrent mod.
                             }
