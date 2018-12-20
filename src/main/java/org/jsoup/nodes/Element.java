@@ -1042,9 +1042,7 @@ public class Element extends Node {
      * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
      * @return unencoded, normalized text, or empty string if none.
-     * @see #wholeText() if you don't want the text to be normalized.
-     * @see #ownText()
-     * @see #textNodes()
+     * @see #textWithSeparator(String)
      */
     public String text() {
         return textWithSeparator(" ");
