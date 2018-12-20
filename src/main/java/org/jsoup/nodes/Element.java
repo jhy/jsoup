@@ -1035,6 +1035,7 @@ public class Element extends Node {
         return Collector.collect(new Evaluator.AllElements(), this);
     }
 
+
     /**
      * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
      * <p>
@@ -1046,6 +1047,21 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
+        return textWithSeparator(" ");
+    }
+
+    /**
+     * Gets the combined text of this element and all its children and combines them via the given separator. Whitespace is normalized and trimmed.
+     * <p>
+     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.textWithSeparator(",,")} returns {@code "Hello,,there,,now!"}
+     *
+     * @param sep, the separator to separate each text result.
+     * @return unencoded, normalized text, or empty string if none.
+     * @see #wholeText() if you don't want the text to be normalized.
+     * @see #ownText()
+     * @see #textNodes()
+     */
+    public String textWithSeparator(final String sep) {
         final StringBuilder accum = StringUtil.borrowBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
@@ -1057,7 +1073,7 @@ public class Element extends Node {
                     if (accum.length() > 0 &&
                         (element.isBlock() || element.tag.getName().equals("br")) &&
                         !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(' ');
+                        accum.append(sep);
                 }
             }
 
@@ -1066,13 +1082,13 @@ public class Element extends Node {
                 if (node instanceof Element) {
                     Element element = (Element) node;
                     if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(' ');
+                        accum.append(sep);
                 }
 
             }
         }, this);
 
-        return StringUtil.releaseBuilder(accum).trim();
+        return StringUtil.releaseBuilder(accum).trim().replaceAll(sep + "$", "");
     }
 
     /**

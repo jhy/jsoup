@@ -72,6 +72,12 @@ public class ElementTest {
         assertEquals("Another element", doc.getElementsByTag("p").get(1).text());
     }
 
+    @Test public void testGetTextWihSeparator() {
+        Document doc = Jsoup.parse(reference);
+        assertEquals("Hello,,Another element", doc.textWithSeparator(",,"));
+        assertEquals("Another element", doc.getElementsByTag("p").get(1).textWithSeparator("XXX"));
+    }
+
     @Test public void testGetChildText() {
         Document doc = Jsoup.parse("<p>Hello <b>there</b> now");
         Element p = doc.select("p").first();
