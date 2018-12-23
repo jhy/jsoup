@@ -1125,6 +1125,14 @@ public class HtmlParserTest {
         assertEquals("<r> <x> A </x> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
+    @Test public void preservedCaseLinksCantNest() {
+        String html = "<A>ONE <A>Two</A></A>";
+        Document doc = Parser.htmlParser()
+            .settings(ParseSettings.preserveCase)
+            .parseInput(html, "");
+        assertEquals("<A> ONE </A> <A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
+    }
+
     @Test public void normalizesDiscordantTags() {
         Document document = Jsoup.parse("<div>test</DIV><p></p>");
         assertEquals("<div>\n test\n</div>\n<p></p>", document.body().html());

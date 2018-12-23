@@ -312,7 +312,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element getFromStack(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (next.nodeName().equals(elName)) {
+            if (next.normalName().equals(elName)) {
                 return next;
             }
         }
@@ -334,7 +334,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (next.nodeName().equals(elName))
+            if (next.normalName().equals(elName))
                 break;
         }
     }
@@ -344,7 +344,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (inSorted(next.nodeName(), elNames))
+            if (inSorted(next.normalName(), elNames))
                 break;
         }
     }
@@ -352,7 +352,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void popStackToBefore(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (next.nodeName().equals(elName)) {
+            if (next.normalName().equals(elName)) {
                 break;
             } else {
                 stack.remove(pos);
@@ -375,7 +375,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private void clearStackToContext(String... nodeNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (StringUtil.in(next.nodeName(), nodeNames) || next.nodeName().equals("html"))
+            if (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html"))
                 break;
             else
                 stack.remove(pos);
@@ -417,7 +417,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 last = true;
                 node = contextElement;
             }
-            String name = node.nodeName();
+            String name = node.normalName();
             if ("select".equals(name)) {
                 transition(HtmlTreeBuilderState.InSelect);
                 break; // frag
@@ -473,7 +473,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // don't walk too far up the tree
 
         for (int pos = bottom; pos >= top; pos--) {
-            final String elName = stack.get(pos).nodeName();
+            final String elName = stack.get(pos).normalName();
             if (inSorted(elName, targetNames))
                 return true;
             if (inSorted(elName, baseTypes))
@@ -514,7 +514,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     boolean inSelectScope(String targetName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
-            String elName = el.nodeName();
+            String elName = el.normalName();
             if (elName.equals(targetName))
                 return true;
             if (!inSorted(elName, TagSearchSelectScope)) // all elements except
@@ -566,8 +566,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
      process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
-        while ((excludeTag != null && !currentElement().nodeName().equals(excludeTag)) &&
-                inSorted(currentElement().nodeName(), TagSearchEndTags))
+        while ((excludeTag != null && !currentElement().normalName().equals(excludeTag)) &&
+                inSorted(currentElement().normalName(), TagSearchEndTags))
             pop();
     }
 
@@ -578,7 +578,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     boolean isSpecial(Element el) {
         // todo: mathml's mi, mo, mn
         // todo: svg's foreigObject, desc, title
-        String name = el.nodeName();
+        String name = el.normalName();
         return inSorted(name, TagSearchSpecial);
     }
 
@@ -615,7 +615,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     private boolean isSameFormattingElement(Element a, Element b) {
         // same if: same namespace, tag, and attributes. Element.equals only checks tag, might in future check children
-        return a.nodeName().equals(b.nodeName()) &&
+        return a.normalName().equals(b.normalName()) &&
                 // a.namespace().equals(b.namespace()) &&
                 a.attributes().equals(b.attributes());
         // todo: namespaces
@@ -646,7 +646,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = insertStartTag(entry.nodeName()); // todo: avoid fostering here?
+            Element newEl = insertStartTag(entry.normalName()); // todo: avoid fostering here?
             // newEl.namespace(entry.namespace()); // todo: namespaces
             newEl.attributes().addAll(entry.attributes());
 
@@ -686,7 +686,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             Element next = formattingElements.get(pos);
             if (next == null) // scope marker
                 break;
-            else if (next.nodeName().equals(nodeName))
+            else if (next.normalName().equals(nodeName))
                 return next;
         }
         return null;

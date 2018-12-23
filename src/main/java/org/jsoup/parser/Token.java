@@ -130,12 +130,14 @@ abstract class Token {
             }
         }
 
+        /** Preserves case */
         final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
             Validate.isFalse(tagName == null || tagName.length() == 0);
             return tagName;
         }
 
-        final String normalName() { // loses case, used in tree building for working out where in tree it should go
+        /** Lower case */
+        final String normalName() { // lower case, used in tree building for working out where in tree it should go
             return normalName;
         }
 

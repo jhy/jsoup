@@ -27,6 +27,10 @@ jsoup changelog
   * Improvement: added Element.nextElementSiblings() and Element.previousElementSiblings()
     https://github.com/jhy/jsoup/pull/1054
 
+  * Bugfix: when using the tag case preserving parsing settings, certain HTML tree building rules where not followed
+    for upper case tags.
+    <https://github.com/jhy/jsoup/issues/1149>
+
   * Bugfix: when converting a Jsoup document to a W3C DOM, if an element is namespaced but not in a defined namespace,
     set it to the global namespace.
     <https://github.com/jhy/jsoup/issues/848>

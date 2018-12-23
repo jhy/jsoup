@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ public class Tag {
     private static final Map<String, Tag> tags = new HashMap<>(); // map of known tags
 
     private String tagName;
+    private String normalName; // always the lower case version of this tag, regardless of case preservation mode
     private boolean isBlock = true; // block or inline
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean canContainInline = true; // only pcdata if not
@@ -25,6 +27,7 @@ public class Tag {
 
     private Tag(String tagName) {
         this.tagName = tagName;
+        normalName = Normalizer.lowerCase(tagName);
     }
 
     /**
@@ -34,6 +37,14 @@ public class Tag {
      */
     public String getName() {
         return tagName;
+    }
+
+    /**
+     * Get this tag's normalized (lowercased) name.
+     * @return the tag's normal name.
+     */
+    public String normalName() {
+        return normalName;
     }
 
     /**
