@@ -35,6 +35,10 @@ jsoup changelog
     validation.
     <https://github.com/jhy/jsoup/issues/1159>
 
+  * Bugfix: some pseudo XML Declarations were incorrectly handled when using the XML Parser, leading to an IOOB
+    exception when parsing.
+    <https://github.com/jhy/jsoup/issues/1139>
+
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 
 *** Release 1.11.3 [2018-Apr-15]
