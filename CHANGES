@@ -31,6 +31,10 @@ jsoup changelog
     set it to the global namespace.
     <https://github.com/jhy/jsoup/issues/848>
 
+  * Bugfix: attributes created with the Attribute constructor with just spaces for names would incorrectly pass
+    validation.
+    <https://github.com/jhy/jsoup/issues/1159>
+
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 
 *** Release 1.11.3 [2018-Apr-15]
