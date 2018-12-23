@@ -460,7 +460,7 @@ public class Element extends Node {
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
         ArrayList<Node> nodes = new ArrayList<>(children);
-        Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
+        Node[] nodeArray = nodes.toArray(new Node[0]);
         addChildren(index, nodeArray);
         return this;
     }
@@ -545,7 +545,7 @@ public class Element extends Node {
     public Element append(String html) {
         Validate.notNull(html);
         List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
-        addChildren(nodes.toArray(new Node[nodes.size()]));
+        addChildren(nodes.toArray(new Node[0]));
         return this;
     }
     
@@ -558,7 +558,7 @@ public class Element extends Node {
     public Element prepend(String html) {
         Validate.notNull(html);
         List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
-        addChildren(0, nodes.toArray(new Node[nodes.size()]));
+        addChildren(0, nodes.toArray(new Node[0]));
         return this;
     }
 
