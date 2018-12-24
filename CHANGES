@@ -43,6 +43,10 @@ jsoup changelog
     exception when parsing.
     <https://github.com/jhy/jsoup/issues/1139>
 
+  * Bugfix: when parsing URL parameter names in an attribute that is not correctly HTML encoded, and near the end of the
+    current buffer, those parameters may be incorrectly dropped. (Improved CharacterReader mark/reset support.)
+    <https://github.com/jhy/jsoup/pull/1154>
+
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 
 *** Release 1.11.3 [2018-Apr-15]
