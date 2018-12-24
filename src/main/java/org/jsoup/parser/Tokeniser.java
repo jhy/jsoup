@@ -181,7 +181,7 @@ final class Tokeniser {
             if (!found) {
                 reader.rewindToMark();
                 if (looksLegit) // named with semicolon
-                    characterReferenceError(String.format("invalid named referenece '%s'", nameRef));
+                    characterReferenceError(String.format("invalid named reference '%s'", nameRef));
                 return null;
             }
             if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
