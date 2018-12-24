@@ -1,8 +1,16 @@
 package org.jsoup.integration;
 
+import static java.util.Arrays.asList;
+import static org.jsoup.integration.UrlConnectTest.browserUa;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.HelloServlet;
@@ -22,12 +30,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
-
-import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -459,5 +463,64 @@ public class ConnectTest {
         assertEquals(EchoServlet.Url, doc.location());
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("there", ihVal("Hello", doc));
+    }
+
+    /**
+     * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection">3xx Redirection</a>
+     */
+    @Test public void doesRedirectForValid3XXRedirect() throws IOException {
+        final List<String> valid3XX = asList("300", "301", "302", "303", "307", "308");
+        final int expectedStatus = 200;
+
+        for (final String status : valid3XX) {
+            final Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .data(RedirectServlet.LocationParam, HelloServlet.Url)
+                .data(RedirectServlet.CodeParam, status)
+                .execute();
+
+            assertEquals(expectedStatus, res.statusCode());
+            assertFalse(res.hasHeader(HttpConnection.Response.LOCATION));
+        }
+    }
+
+    @Test public void doesNotRedirectWhen2XX() throws IOException {
+        for (int status = 200; status < 300; status++) {
+            final Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .data(RedirectServlet.LocationParam, HelloServlet.Url)
+                .data(RedirectServlet.CodeParam, String.valueOf(status))
+                .execute();
+
+            assertEquals(status, res.statusCode());
+        }
+    }
+
+    @Test public void doesNotRedirectWhenDisabled() throws IOException {
+        final List<String> valid3XX = asList("300", "301", "302", "303", "307", "308");
+
+        for (final String status : valid3XX) {
+            final Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .followRedirects(false)
+                .data(RedirectServlet.LocationParam, HelloServlet.Url)
+                .data(RedirectServlet.CodeParam, status)
+                .execute();
+
+            assertEquals(Integer.parseInt(status), res.statusCode());
+            assertTrue(res.hasHeader(HttpConnection.Response.LOCATION));
+        }
+    }
+
+    @Test public void doesNotRedirectWhenMultipleLocations() throws IOException {
+        final List<String> valid3XX = asList("300", "301", "302", "303", "307", "308");
+
+        for (final String status : valid3XX) {
+            final Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .data(RedirectServlet.LocationParam, HelloServlet.Url)
+                .data(RedirectServlet.LocationParam, EchoServlet.Url)
+                .data(RedirectServlet.CodeParam, status)
+                .execute();
+
+            assertEquals(Integer.parseInt(status), res.statusCode());
+            assertTrue(res.hasHeader(HttpConnection.Response.LOCATION));
+        }
     }
 }
