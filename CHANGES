@@ -47,6 +47,10 @@ jsoup changelog
     current buffer, those parameters may be incorrectly dropped. (Improved CharacterReader mark/reset support.)
     <https://github.com/jhy/jsoup/pull/1154>
 
+  * Bugfix: boolean attribute values would be returned as null, vs an empty string, when accessed via the
+    Attribute#getValue() method.
+    <https://github.com/jhy/jsoup/issues/1065>
+
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 
 *** Release 1.11.3 [2018-Apr-15]

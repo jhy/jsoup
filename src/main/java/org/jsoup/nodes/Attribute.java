@@ -77,7 +77,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return the attribute value
      */
     public String getValue() {
-        return val;
+        return Attributes.checkNotNull(val);
     }
 
     /**
