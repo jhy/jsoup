@@ -51,6 +51,10 @@ jsoup changelog
     Attribute#getValue() method.
     <https://github.com/jhy/jsoup/issues/1065>
 
+  * Bugix: orphan Attribute objects (i.e. created outside of a parse or an Element) would throw an NPE on
+    Attribute#setValue(val)
+    <https://github.com/jhy/jsoup/issues/1107>
+
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 
 *** Release 1.11.3 [2018-Apr-15]
