@@ -1,11 +1,13 @@
 package org.jsoup.parser;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.StringReader;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for character reader.
@@ -272,7 +274,6 @@ public class CharacterReaderTest {
         assertTrue(r.isEmpty());
     }
 
-    @Ignore
     @Test
     public void notEmptyAtBufferSplitPoint() {
         CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
@@ -281,8 +282,29 @@ public class CharacterReaderTest {
 
         assertEquals(' ', r.consume());
         assertFalse(r.isEmpty());
+    }
 
-        // todo - current consume to won't expand buffer. impl buffer extension and test
+    @Test public void bufferUp() {
+        String note = "HelloThere"; // + ! = 11 chars
+        int loopCount = 64;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < loopCount; i++) {
+            sb.append(note);
+            sb.append("!");
+        }
+
+        String s = sb.toString();
+        BufferedReader br = new BufferedReader(new StringReader(s));
+
+        CharacterReader r = new CharacterReader(br);
+        for (int i = 0; i < loopCount; i++) {
+            String pull = r.consumeTo('!');
+            assertEquals(note, pull);
+            assertEquals('!', r.current());
+            r.advance();
+        }
+
+        assertTrue(r.isEmpty());
     }
 
 

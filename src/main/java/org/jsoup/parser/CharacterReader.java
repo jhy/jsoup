@@ -24,7 +24,7 @@ public final class CharacterReader {
     private int bufSplitPoint;
     private int bufPos;
     private int readerPos;
-    private int bufMark;
+    private int bufMark = -1;
     private final String[] stringCache = new String[512]; // holds reused strings in this doc, to lessen garbage
 
     public CharacterReader(Reader input, int sz) {
@@ -57,7 +57,7 @@ public final class CharacterReader {
                 bufLength = read;
                 readerPos += pos;
                 bufPos = 0;
-                bufMark = 0;
+                bufMark = -1;
                 bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
             }
         } catch (IOException e) {
@@ -103,6 +103,9 @@ public final class CharacterReader {
     }
 
     void unconsume() {
+        if (bufPos < 1)
+            throw new UncheckedIOException(new IOException("No buffer left to unconsume"));
+
         bufPos--;
     }
 
@@ -114,10 +117,16 @@ public final class CharacterReader {
     }
 
     void mark() {
+        // extra buffer up, to get as much rewind capacity as possible
+        bufSplitPoint = 0;
+        bufferUp();
         bufMark = bufPos;
     }
 
     void rewindToMark() {
+        if (bufMark == -1)
+            throw new UncheckedIOException(new IOException("Mark invalid"));
+
         bufPos = bufMark;
     }
 
