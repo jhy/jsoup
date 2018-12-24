@@ -11,7 +11,7 @@
   <inceptionYear>2009</inceptionYear>
   <issueManagement>
   	<system>GitHub</system>
-  	<url>http://github.com/jhy/jsoup/issues</url>
+  	<url>https://github.com/jhy/jsoup/issues</url>
   </issueManagement>
   <licenses>
   	<license>
@@ -28,7 +28,7 @@
   </scm>
   <organization>
   	<name>Jonathan Hedley</name>
-  	<url>http://jonathanhedley.com/</url>
+  	<url>https://jhy.io/</url>
   </organization>
 
   <build>

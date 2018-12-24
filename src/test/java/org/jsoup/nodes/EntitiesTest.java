@@ -31,7 +31,7 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
-    @Test public void escapedSupplemtary() {
+    @Test public void escapedSupplementary() {
         String text = "\uD835\uDD59";
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         assertEquals("&#x1d559;", escapedAscii);

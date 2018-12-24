@@ -1,8 +1,8 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
@@ -123,12 +123,22 @@ public class Element extends Node {
     }
 
     /**
-     * Get the name of the tag for this element. E.g. {@code div}
+     * Get the name of the tag for this element. E.g. {@code div}. If you are using {@link ParseSettings#preserveCase
+     * case preserving parsing}, this will return the source's original case.
      * 
      * @return the tag name
      */
     public String tagName() {
         return tag.getName();
+    }
+
+    /**
+     * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
+     * of the tag case preserving setting of the parser.
+     * @return
+     */
+    public String normalName() {
+        return tag.normalName();
     }
 
     /**
@@ -450,7 +460,7 @@ public class Element extends Node {
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
         ArrayList<Node> nodes = new ArrayList<>(children);
-        Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
+        Node[] nodeArray = nodes.toArray(new Node[0]);
         addChildren(index, nodeArray);
         return this;
     }
@@ -535,7 +545,7 @@ public class Element extends Node {
     public Element append(String html) {
         Validate.notNull(html);
         List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
-        addChildren(nodes.toArray(new Node[nodes.size()]));
+        addChildren(nodes.toArray(new Node[0]));
         return this;
     }
     
@@ -548,7 +558,7 @@ public class Element extends Node {
     public Element prepend(String html) {
         Validate.notNull(html);
         List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
-        addChildren(0, nodes.toArray(new Node[nodes.size()]));
+        addChildren(0, nodes.toArray(new Node[0]));
         return this;
     }
 

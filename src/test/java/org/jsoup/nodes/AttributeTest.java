@@ -17,4 +17,13 @@ public class AttributeTest {
         assertEquals(s + "=\"A" + s + "B\"", attr.html());
         assertEquals(attr.html(), attr.toString());
     }
+
+    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmpty() {
+        Attribute attr = new Attribute(" ", "Check");
+    }
+
+    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmptyViaSet() {
+        Attribute attr = new Attribute("One", "Check");
+        attr.setKey(" ");
+    }
 }

@@ -27,9 +27,21 @@ jsoup changelog
   * Improvement: added Element.nextElementSiblings() and Element.previousElementSiblings()
     https://github.com/jhy/jsoup/pull/1054
 
+  * Bugfix: when using the tag case preserving parsing settings, certain HTML tree building rules where not followed
+    for upper case tags.
+    <https://github.com/jhy/jsoup/issues/1149>
+
   * Bugfix: when converting a Jsoup document to a W3C DOM, if an element is namespaced but not in a defined namespace,
     set it to the global namespace.
     <https://github.com/jhy/jsoup/issues/848>
+
+  * Bugfix: attributes created with the Attribute constructor with just spaces for names would incorrectly pass
+    validation.
+    <https://github.com/jhy/jsoup/issues/1159>
+
+  * Bugfix: some pseudo XML Declarations were incorrectly handled when using the XML Parser, leading to an IOOB
+    exception when parsing.
+    <https://github.com/jhy/jsoup/issues/1139>
 
   * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
 

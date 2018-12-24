@@ -230,7 +230,7 @@ public abstract class Node implements Cloneable {
     public abstract int childNodeSize();
 
     protected Node[] childNodesAsArray() {
-        return ensureChildNodes().toArray(new Node[childNodeSize()]);
+        return ensureChildNodes().toArray(new Node[0]);
     }
 
     /**
@@ -333,7 +333,7 @@ public abstract class Node implements Cloneable {
 
         Element context = parent() instanceof Element ? (Element) parent() : null;
         List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
-        parentNode.addChildren(index, nodes.toArray(new Node[nodes.size()]));
+        parentNode.addChildren(index, nodes.toArray(new Node[0]));
     }
 
     /**
