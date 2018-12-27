@@ -30,6 +30,10 @@ jsoup changelog
   * Improvement: treat center tags as block tags.
     <https://github.com/jhy/jsoup/pull/1113>
 
+  * Improvement: allow forms to be submitted with Content-Type=multipart/form-data without requiring a file upload;
+    automatically set the mime boundary.
+    <https://github.com/jhy/jsoup/pull/1058>
+
   * Bugfix: when using the tag case preserving parsing settings, certain HTML tree building rules where not followed
     for upper case tags.
     <https://github.com/jhy/jsoup/issues/1149>

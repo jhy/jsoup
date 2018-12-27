@@ -24,6 +24,8 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Map;
 
+import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
+import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -104,12 +106,14 @@ public class ConnectTest {
     @Test
     public void doesPostMultipartWithoutInputstream() throws IOException {
         Document doc = Jsoup.connect(echoUrl)
-                .header("Content-Type", "multipart/form-data")
+                .header(CONTENT_TYPE, MULTIPART_FORM_DATA)
                 .userAgent(browserUa)
                 .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
                 .post();
 
-        assertTrue(ihVal("Content-Type", doc).contains("boundary"));
+        assertTrue(ihVal("Content-Type", doc).contains(MULTIPART_FORM_DATA));
+
+        assertTrue(ihVal("Content-Type", doc).contains("boundary")); // should be automatically set
         assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
         assertEquals("度一下", ihVal("百", doc));
     }

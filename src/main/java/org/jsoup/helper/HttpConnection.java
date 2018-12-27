@@ -58,9 +58,9 @@ public class HttpConnection implements Connection {
     public static final String DEFAULT_UA =
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
     private static final String USER_AGENT = "User-Agent";
-    private static final String CONTENT_TYPE = "Content-Type";
-    private static final String MULTIPART_FORM_DATA = "multipart/form-data";
-    private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+    public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
 
@@ -1004,12 +1004,9 @@ public class HttpConnection implements Connection {
             String bound = null;
             if (req.hasHeader(CONTENT_TYPE)) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
-                // todo - if content type already set, we could add charset or boundary if those aren't included
+                // todo - if content type already set, we could add charset
 
-                // vcoder4c's patch: 17th May 2018
-                // Description: support for the issue: https://github.com/jhy/jsoup/issues/788
-                // check whether the boundary has been added when the content type is multipart/form-data
-                // For the charset, I think it should be set explicit by the user.
+                // if user has set content type to multipart/form-data, auto add boundary.
                 if(req.header(CONTENT_TYPE).contains(MULTIPART_FORM_DATA) &&
                         !req.header(CONTENT_TYPE).contains("boundary")) {
                     bound = DataUtil.mimeBoundary();
