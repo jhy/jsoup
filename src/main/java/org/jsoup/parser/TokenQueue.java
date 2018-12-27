@@ -365,7 +365,20 @@ public class TokenQueue {
         
         return queue.substring(start, pos);
     }
-
+    
+    /**
+     * is match multiple continuous dot
+     * 
+     * @return continuous multiple dot return true, else false
+     */
+    private boolean matchMultiDot() {
+        if (!isEmpty() && queue.charAt(pos) == '.' 
+                && (pos - 1) >= 0 && queue.charAt(pos - 1) == '.') {
+            return true;
+        }
+        return false;
+    }
+    
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
      http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
@@ -373,7 +386,7 @@ public class TokenQueue {
      */
     public String consumeCssIdentifier() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_') || matchMultiDot()))
             pos++;
 
         return queue.substring(start, pos);
