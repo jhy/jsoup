@@ -1320,6 +1320,12 @@ public class ElementTest {
     }
 
     @Test
+    public void textHasSpaceBetweenDivAndCenterTags() {
+        Document doc = Jsoup.parse("<div>One</div><div>Two</div><center>Three</center><center>Four</center>");
+        assertEquals("One Two Three Four", doc.text());
+    }
+
+    @Test
     public void testNextElementSiblings() {
         Document doc = Jsoup.parse("<ul id='ul'>" +
             "<li id='a'>a</li>" +

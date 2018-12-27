@@ -246,7 +246,7 @@ public class Tag {
             "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
             "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
             "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main",
-            "svg", "math"
+            "svg", "math", "center"
     };
     private static final String[] inlineTags = {
             "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",

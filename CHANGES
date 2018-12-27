@@ -25,7 +25,10 @@ jsoup changelog
   * Improvement: performance tweaks when parsing start tags, data, tables.
 
   * Improvement: added Element.nextElementSiblings() and Element.previousElementSiblings()
-    https://github.com/jhy/jsoup/pull/1054
+    <https://github.com/jhy/jsoup/pull/1054>
+
+  * Improvement: treat center tags as block tags.
+    <https://github.com/jhy/jsoup/pull/1113>
 
   * Bugfix: when using the tag case preserving parsing settings, certain HTML tree building rules where not followed
     for upper case tags.
