@@ -33,8 +33,8 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class HasDirect extends StructuralEvaluator {
-        public HasDirect(Evaluator evaluator){
+    static class HasChild extends StructuralEvaluator {
+        public HasChild(Evaluator evaluator){
             this.evaluator = evaluator;
         }
 

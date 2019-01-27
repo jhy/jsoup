@@ -506,7 +506,7 @@ public class SelectorTest {
         assertEquals("2", els1.get(2).id());
     }
 
-    @Test public void testPseudoHasDirect(){
+    @Test public void testPseudoHasChild(){
         Document doc = Jsoup.parse("<div id='1'><a><p>Non-Direct P</p></a></div>" +
                 "<div id='2'><p>Direct P 0th Child</p></div>" +
                 "<div id='3'><a></a><p>Direct P 1th Child</p></div>");
@@ -518,8 +518,8 @@ public class SelectorTest {
         assertEquals("2", divs1.get(1).id());
         assertEquals("3", divs1.get(2).id());
 
-        //:hasDirect selection, should contain only div#2 and div#3.
-        Elements divs2 = doc.select("div:hasDirect(p)");
+        //:hasChild selection, should contain only div#2 and div#3.
+        Elements divs2 = doc.select("div:hasChild(p)");
         assertEquals(2, divs2.size());
         assertEquals("2", divs2.get(0).id());
         assertEquals("3", divs2.get(1).id());

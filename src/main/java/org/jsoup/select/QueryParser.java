@@ -162,8 +162,8 @@ public class QueryParser {
             indexGreaterThan();
         else if (tq.matchChomp(":eq("))
             indexEquals();
-        else if (tq.matches(":hasDirect("))
-            hasDirect();
+        else if (tq.matches(":hasChild("))
+            hasChild();
         else if (tq.matches(":has("))
             has();
         else if (tq.matches(":contains("))
@@ -340,13 +340,13 @@ public class QueryParser {
         evals.add(new StructuralEvaluator.Has(parse(subQuery)));
     }
 
-    // pseudo selector :hasDirect(el).
+    // pseudo selector :hasChild(el).
     // Works similar to :has(el) but only searches in direct children.
-    private void hasDirect() {
-	    tq.consume(":hasDirect");
+    private void hasChild() {
+	    tq.consume(":hasChild");
         String subQuery = tq.chompBalanced('(', ')');
-        Validate.notEmpty(subQuery, ":hasDirect(el) subselect must not be empty");
-        evals.add(new StructuralEvaluator.HasDirect(parse(subQuery)));
+        Validate.notEmpty(subQuery, ":hasChild(el) subselect must not be empty");
+        evals.add(new StructuralEvaluator.HasChild(parse(subQuery)));
     }
 
     // pseudo selector :contains(text), containsOwn(text)
