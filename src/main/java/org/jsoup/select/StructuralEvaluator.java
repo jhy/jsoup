@@ -33,6 +33,25 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
+    static class HasDirect extends StructuralEvaluator {
+        public HasDirect(Evaluator evaluator){
+            this.evaluator = evaluator;
+        }
+
+        public boolean matches(Element root, Element element){
+            for (Element e : element.children()) {
+                if (evaluator.matches(root, e))
+                    return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString(){
+            return String.format(":hasDirect(%s)", evaluator);
+        }
+    }
+
     static class Not extends StructuralEvaluator {
         public Not(Evaluator evaluator) {
             this.evaluator = evaluator;
