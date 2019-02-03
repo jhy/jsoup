@@ -10,6 +10,7 @@ import org.jsoup.helper.HttpConnection;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.net.URL;
 
 /**
@@ -28,6 +29,18 @@ public class Jsoup {
      @return sane HTML
      */
     public static Document parse(String html, String baseUri) {
+        return Parser.parse(html, baseUri);
+    }
+
+    /**
+     Parse HTML into a Document. The parser will make a sensible, balanced document tree out of any HTML.
+
+     @param html    HTML to parse
+     @param baseUri The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     before the HTML declares a {@code <base href>} tag.
+     @return sane HTML
+     */
+    public static Document parse(Reader html, String baseUri) {
         return Parser.parse(html, baseUri);
     }
 
@@ -55,6 +68,19 @@ public class Jsoup {
      @see #parse(String, String)
      */
     public static Document parse(String html) {
+        return Parser.parse(html, "");
+    }
+
+    /**
+     Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
+     {@code <base href>} tag.
+
+     @param html HTML to parse
+     @return sane HTML
+
+     @see #parse(String, String)
+     */
+    public static Document parse(Reader html) {
         return Parser.parse(html, "");
     }
 

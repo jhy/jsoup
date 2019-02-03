@@ -108,6 +108,19 @@ public class Parser {
     }
 
     /**
+     * Parse HTML into a Document.
+     *
+     * @param html HTML to parse
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     *
+     * @return parsed Document
+     */
+    public static Document parse(Reader html, String baseUri) {
+        TreeBuilder treeBuilder = new HtmlTreeBuilder();
+        return treeBuilder.parse(html, baseUri, new Parser(treeBuilder));
+    }
+
+    /**
      * Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
      *
      * @param fragmentHtml the fragment of HTML to parse
