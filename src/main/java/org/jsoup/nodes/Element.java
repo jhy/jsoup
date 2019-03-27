@@ -1021,7 +1021,7 @@ public class Element extends Node {
     }
     
     /**
-     * Find elements whose text matches the supplied regular expression.
+     * Find elements whose own text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
      * @return elements matching the supplied regular expression.
      * @see Element#ownText()
