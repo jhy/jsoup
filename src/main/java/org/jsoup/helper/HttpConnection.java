@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.Session;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
@@ -63,6 +64,7 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
+    private Session session;
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -74,6 +76,23 @@ public class HttpConnection implements Connection {
         Connection con = new HttpConnection();
         con.url(url);
         return con;
+    }
+
+    public HttpConnection(Session session) {
+        this.session = session;
+        req = new Request();
+        res = new Response();
+    }
+
+    public static Connection connect(String url, Session session) {
+        Connection con = new HttpConnection(session);
+        return con.url(url)
+                .proxy(session.proxy())
+                .timeout(session.timeout())
+                .cookies(session.cookies())
+                .sslSocketFactory(session.sslSocketFactory())
+                .ignoreHttpErrors(session.ignoreHttpErrors())
+                .ignoreContentType(session.ignoreContentType());
     }
 
     public HttpConnection() {
@@ -293,6 +312,7 @@ public class HttpConnection implements Connection {
 
     public Connection.Response execute() throws IOException {
         res = Response.execute(req);
+        if (session != null) this.session.cookies(res.cookies());
         return res;
     }
 
@@ -530,7 +550,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+    public static class Request extends Base<Connection.Request> implements Connection.Request {
         private Proxy proxy; // nullable
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
@@ -665,7 +685,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
+    public static class Response extends Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private static final String LOCATION = "Location";
         private int statusCode;
@@ -769,7 +789,7 @@ public class HttpConnection implements Connection {
                 // switch to the XML parser if content type is xml and not parser not explicitly set
                 if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
                     // only flip it if a HttpConnection.Request (i.e. don't presume other impls want it):
-                    if (req instanceof HttpConnection.Request && !((Request) req).parserDefined) {
+                    if (req instanceof Request && !((Request) req).parserDefined) {
                         req.parser(Parser.xmlParser());
                     }
                 }
@@ -929,7 +949,7 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn, HttpConnection.Response previousResponse) throws IOException {
+        private void setupFromConnection(HttpURLConnection conn, Response previousResponse) throws IOException {
             this.conn = conn;
             method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();

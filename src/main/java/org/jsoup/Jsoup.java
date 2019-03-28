@@ -244,10 +244,18 @@ public class Jsoup {
      @param bodyHtml HTML to test
      @param whitelist whitelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist) 
+     @see #clean(String, Whitelist)
      */
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+    }
+
+    /**
+     * Get new Session
+     * @return
+     */
+    public static Session newSession() {
+        return new Session();
     }
     
 }
