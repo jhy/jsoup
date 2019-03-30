@@ -232,7 +232,16 @@ public class Session implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(ext, cookies, timeoutMilliseconds, proxyHost, proxyPort, proxyType, ignoreHttpErrors, sslSocketFactory, ignoreContentType);
+        int result = ext != null ? ext.hashCode() : 0;
+        result = 31 * result + (cookies != null ? cookies.hashCode() : 0);
+        result = 31 * result + timeoutMilliseconds;
+        result = 31 * result + (proxyHost != null ? proxyHost.hashCode() : 0);
+        result = 31 * result + proxyPort;
+        result = 31 * result + (proxyType != null ? proxyType.hashCode() : 0);
+        result = 31 * result + (ignoreHttpErrors ? 1 : 0);
+        result = 31 * result + (sslSocketFactory != null ? sslSocketFactory.hashCode() : 0);
+        result = 31 * result + (ignoreContentType ? 1 : 0);
+        return result;
     }
 
     @Override
