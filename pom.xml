@@ -56,9 +56,6 @@
               <goal>check</goal>
             </goals>
             <configuration>
-<!--              <ignores>-->
-<!--                <ignore>java.util.concurrent.ConcurrentHashMap</ignore>-->
-<!--              </ignores>-->
               <signature>
                 <groupId>org.codehaus.mojo.signature</groupId>
                 <artifactId>java17</artifactId>
