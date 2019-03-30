@@ -216,16 +216,18 @@ public class Session implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Session session = (Session) o;
-        return timeoutMilliseconds == session.timeoutMilliseconds &&
-                proxyPort == session.proxyPort &&
-                ignoreHttpErrors == session.ignoreHttpErrors &&
-                ignoreContentType == session.ignoreContentType &&
-                Objects.equals(ext, session.ext) &&
-                Objects.equals(cookies, session.cookies) &&
-                Objects.equals(proxyHost, session.proxyHost) &&
-                proxyType == session.proxyType &&
-                Objects.equals(sslSocketFactory, session.sslSocketFactory);
+
+        if (timeoutMilliseconds != session.timeoutMilliseconds) return false;
+        if (proxyPort != session.proxyPort) return false;
+        if (ignoreHttpErrors != session.ignoreHttpErrors) return false;
+        if (ignoreContentType != session.ignoreContentType) return false;
+        if (ext != null ? !ext.equals(session.ext) : session.ext != null) return false;
+        if (cookies != null ? !cookies.equals(session.cookies) : session.cookies != null) return false;
+        if (proxyHost != null ? !proxyHost.equals(session.proxyHost) : session.proxyHost != null) return false;
+        if (proxyType != session.proxyType) return false;
+        return sslSocketFactory != null ? sslSocketFactory.equals(session.sslSocketFactory) : session.sslSocketFactory == null;
     }
 
     @Override
