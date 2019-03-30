@@ -17,24 +17,25 @@ public class SessionTest {
         session.connect("https://github.com/jhy/jsoup").execute();
 
         assertEquals(device_id, session.cookie("_device_id"));
-
     }
 
     @Test public void SessionSerializable() throws IOException, ClassNotFoundException {
-        String tmpdir = System.getProperty("java.io.tmpdir");
+        File file = new File("session.txt");
+
         Session session = Jsoup.newSession();
         session.ext.put("name", "val");
         session.ignoreContentType(true).ignoreHttpErrors(true);
 
-        ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(new File(tmpdir + "session.txt")));
+        ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(file));
         oo.writeObject(session);
         oo.close();
 
-        ObjectInputStream oi = new ObjectInputStream(new FileInputStream(new File(tmpdir + "session.txt")));
+        ObjectInputStream oi = new ObjectInputStream(new FileInputStream(file));
         Object object = oi.readObject();
 
         assertEquals(session, object);
 
+        if (file.exists()) file.delete();
     }
 
 }
