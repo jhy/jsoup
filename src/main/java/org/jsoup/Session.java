@@ -8,10 +8,9 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Borrowing from <a href="http://www.python-requests.org/en/master/user/advanced/#session-objects">python-requests</a>.
@@ -20,11 +19,11 @@ import java.util.Objects;
  */
 public class Session implements Serializable {
     //Custom extension variable
-    public Map<String, Object> ext = Collections.synchronizedMap(new HashMap<String, Object>());
-    private Map<String, String> cookies = Collections.synchronizedMap(new HashMap<String, String>());
+    public Map<String, Object> ext = new ConcurrentHashMap();
+    private Map<String, String> cookies = new ConcurrentHashMap();
     private int timeoutMilliseconds = 30000; // 30 seconds
     private String proxyHost;
-    private int proxyPort;
+    private int proxyPort = -1;
     private Proxy.Type proxyType = Proxy.Type.HTTP;
     private boolean ignoreHttpErrors = false;
     private SSLSocketFactory sslSocketFactory;
@@ -99,7 +98,7 @@ public class Session implements Serializable {
      */
     public Session proxy(Proxy proxy) {
         InetSocketAddress address = (InetSocketAddress) proxy.address();
-        this.proxyHost = address.getHostString();
+        this.proxyHost = address.getHostName();
         this.proxyPort = address.getPort();
         this.proxyType = proxy.type();
         return this;
@@ -125,7 +124,7 @@ public class Session implements Serializable {
      * @return the proxy; <code>null</code> if not enabled.
      */
     public Proxy proxy() {
-        if (proxyPort != 0 && !StringUtil.isBlank(proxyHost)) {
+        if (proxyPort > 0 && !StringUtil.isBlank(proxyHost)) {
             return new Proxy(this.proxyType, InetSocketAddress.createUnresolved(proxyHost, proxyPort));
         }
         return null;
