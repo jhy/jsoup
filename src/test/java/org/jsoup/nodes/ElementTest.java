@@ -668,10 +668,13 @@ public class ElementTest {
 
         assertEquals(1, p.childNodeSize());
         assertEquals(0, p2.childNodeSize());
+
         assertEquals("", p2.text());
+        assertEquals("One", t2.text());
 
         assertEquals("two", p2.className());
-        assertEquals("One", t2.text());
+        p2.removeClass("two");
+        assertEquals("two", p.className());
 
         d2.append("<p id=3>Three");
         assertEquals(1, d2.childNodeSize());
