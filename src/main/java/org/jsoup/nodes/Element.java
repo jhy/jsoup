@@ -1468,7 +1468,7 @@ public class Element extends Node {
     @Override
     public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
-        return new Element(tag, baseUri, attributes);
+        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     @Override
