@@ -13,8 +13,9 @@ import java.io.IOException;
  */
 public class ListLinks {
     public static void main(String[] args) throws IOException {
-        Validate.isTrue(args.length == 1, "usage: supply url to fetch");
-        String url = args[0];
+//        Validate.isTrue(args.length == 1, "usage: supply url to fetch");
+//        String url = args[0];
+        String url = "https://omnieq.com/underlyings/ARCA/SPY/chain/2019/04/03/historical/2019/03/29";
         print("Fetching %s...", url);
 
         Document doc = Jsoup.connect(url).get();
