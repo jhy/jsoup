@@ -753,8 +753,10 @@ public class HttpConnection implements Connection {
                     }
                     return execute(req, res);
                 }
-                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors()) {
+                    conn.disconnect();
+                    throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+                }
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
@@ -762,9 +764,11 @@ public class HttpConnection implements Connection {
                         && !req.ignoreContentType()
                         && !contentType.startsWith("text/")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
-                        )
+                        ) {
+                    conn.disconnect();
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
                             contentType, req.url().toString());
+                }
 
                 // switch to the XML parser if content type is xml and not parser not explicitly set
                 if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
