@@ -7,6 +7,10 @@ public class UncheckedIOException extends RuntimeException {
         super(cause);
     }
 
+    public UncheckedIOException(String message) {
+        super(new IOException(message));
+    }
+
     public IOException ioException() {
         return (IOException) getCause();
     }

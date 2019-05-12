@@ -34,6 +34,10 @@ jsoup changelog
     automatically set the mime boundary.
     <https://github.com/jhy/jsoup/pull/1058>
 
+  * Improvement: Jsoup will now detect if an input file or URL is binary, and will refuse to attempt to parse it, with
+    an IO exception. This prevents runaway processing time and wasted effort creating meaningless parsed DOM trees.
+    <https://github.com/jhy/jsoup/issues/1192>
+
   * Bugfix: when using the tag case preserving parsing settings, certain HTML tree building rules where not followed
     for upper case tags.
     <https://github.com/jhy/jsoup/issues/1149>

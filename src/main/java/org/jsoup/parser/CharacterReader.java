@@ -33,6 +33,10 @@ public final class CharacterReader {
         reader = input;
         charBuf = new char[sz > maxBufferLen ? maxBufferLen : sz];
         bufferUp();
+
+        if (isBinary()) {
+            throw new UncheckedIOException("Input is binary and unsupported");
+        }
     }
 
     public CharacterReader(Reader input) {
@@ -446,6 +450,23 @@ public final class CharacterReader {
         String loScan = seq.toLowerCase(Locale.ENGLISH);
         String hiScan = seq.toUpperCase(Locale.ENGLISH);
         return (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1);
+    }
+
+    private static final int numNullsConsideredBinary = 10; // conservative
+
+    /**
+     *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
+     *  decoded correctly, so a bunch of NULLs indicates a binary file
+     */
+    boolean isBinary() {
+        int nullsSeen = 0;
+
+        for (int i = bufPos; i < bufLength; i++) {
+            if (charBuf[i] == '\0')
+                nullsSeen++;
+        }
+
+        return nullsSeen >= numNullsConsideredBinary;
     }
 
     @Override

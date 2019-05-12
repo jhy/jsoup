@@ -5,6 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
+import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.HelloServlet;
 import org.jsoup.integration.servlets.InterruptedServlet;
 import org.jsoup.integration.servlets.RedirectServlet;
@@ -418,7 +419,7 @@ public class ConnectTest {
     }
 
     @Test
-    public void handlesEmtpyStreamDuringBufferdRead() throws IOException {
+    public void handlesEmtpyStreamDuringBufferedRead() throws IOException {
         Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
             .timeout(200)
             .execute();
@@ -476,5 +477,66 @@ public class ConnectTest {
         assertEquals(EchoServlet.Url, doc.location());
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("there", ihVal("Hello", doc));
+    }
+
+    @Test public void getUtf8Bom() throws IOException {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/bomtests/bom_utf8.html");
+        Document doc = con.get();
+
+        assertEquals("UTF-8", con.response().charset());
+        assertEquals("OK", doc.title());
+    }
+
+    @Test
+    public void testBinaryThrowsExceptionWhenTypeIgnored() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+        con.ignoreContentType(true);
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Input is binary and unsupported", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void testBinaryResultThrows() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "text/html");
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Input is binary and unsupported", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void testBinaryContentTypeThrowsException() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", e.getMessage());
+        }
+        assertTrue(threw);
     }
 }
