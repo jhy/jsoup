@@ -62,7 +62,10 @@ jsoup changelog
     Attribute#setValue(val)
     <https://github.com/jhy/jsoup/issues/1107>
 
-  * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.26.v20180806).
+  * Bugfix: Element.shallowClone() was not making a clone of its attributes.
+    <https://github.com/jhy/jsoup/issues/1201>
+
+  * Updated jetty-server (which is used for integration tests) to latest 9.2 series (9.2.28).
 
 *** Release 1.11.3 [2018-Apr-15]
   * Improvement: CDATA sections are now treated as whitespace preserving (regardless of the containing element), and are
