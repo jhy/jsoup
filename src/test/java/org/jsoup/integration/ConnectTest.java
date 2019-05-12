@@ -539,4 +539,16 @@ public class ConnectTest {
         }
         assertTrue(threw);
     }
+
+    @Test
+    public void canFetchBinaryAsBytes() throws IOException {
+        Connection.Response res = Jsoup.connect(FileServlet.Url)
+            .data(FileServlet.LocationParam, "/htmltests/thumb.jpg")
+            .data(FileServlet.ContentTypeParam, "image/jpeg")
+            .ignoreContentType(true)
+            .execute();
+
+        byte[] bytes = res.bodyAsBytes();
+        assertEquals(1052, bytes.length);
+    }
 }
