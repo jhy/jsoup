@@ -10,25 +10,25 @@
   <url>https://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
   <issueManagement>
-  	<system>GitHub</system>
-  	<url>https://github.com/jhy/jsoup/issues</url>
+    <system>GitHub</system>
+    <url>https://github.com/jhy/jsoup/issues</url>
   </issueManagement>
   <licenses>
-  	<license>
-  		<name>The MIT License</name>
-  		<url>https://jsoup.org/license</url>
-  		<distribution>repo</distribution>
-  	</license>
+    <license>
+      <name>The MIT License</name>
+      <url>https://jsoup.org/license</url>
+      <distribution>repo</distribution>
+    </license>
   </licenses>
   <scm>
-  	<url>https://github.com/jhy/jsoup</url>
+    <url>https://github.com/jhy/jsoup</url>
     <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
     <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
     <tag>HEAD</tag>
   </scm>
   <organization>
-  	<name>Jonathan Hedley</name>
-  	<url>https://jhy.io/</url>
+    <name>Jonathan Hedley</name>
+    <url>https://jhy.io/</url>
   </organization>
 
   <build>
@@ -44,7 +44,7 @@
         </configuration>
       </plugin>
       <plugin>
-      	<!-- this plugin allows us to ensure Java 7 API compatibility -->
+        <!-- this plugin allows us to ensure Java 7 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
         <version>1.16</version>
@@ -92,9 +92,9 @@
         <artifactId>maven-source-plugin</artifactId>
         <version>3.0.1</version>
         <configuration>
-	  <excludes>
-	    <exclude>org/jsoup/examples/**</exclude>
-	  </excludes>
+    <excludes>
+      <exclude>org/jsoup/examples/**</exclude>
+    </excludes>
         </configuration>
         <executions>
           <execution>
@@ -117,9 +117,9 @@
             </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
-	  <excludes>
-	    <exclude>org/jsoup/examples/**</exclude>
-	  </excludes>
+    <excludes>
+      <exclude>org/jsoup/examples/**</exclude>
+    </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -250,8 +250,8 @@
   </dependencies>
 
   <dependencyManagement>
-  	<dependencies>
-  	</dependencies>
+    <dependencies>
+    </dependencies>
   </dependencyManagement>
 
   <properties>
