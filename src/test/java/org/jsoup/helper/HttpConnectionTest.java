@@ -1,6 +1,7 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
@@ -248,5 +249,10 @@ public class HttpConnectionTest {
             assertEquals("URL must be specified to connect", e.getMessage());
         }
         assertTrue(threw);
+    }
+
+    @Test public void handlesHeaderEncodingOnRequest() {
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("xxx", "é");
     }
 }
