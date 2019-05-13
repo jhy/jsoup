@@ -1,6 +1,9 @@
 jsoup changelog
 
-**** Release 1.12.1 [PENDING]
+**** Release 1.12.2 [PENDING]
+  * ...
+
+**** Release 1.12.1 [2019-May12]
   * Change: removed deprecated method to disable TLS cert checking Connection.validateTLSCertificates().
 
   * Change: some internal methods have been rearranged; if you extended any of the Jsoup internals you may need to make
