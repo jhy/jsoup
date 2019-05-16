@@ -21,7 +21,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         public boolean matches(Element root, Element element) {
             for (Element e : element.getAllElements()) {
-                if (e != element && evaluator.matches(root, e))
+                if (e != element && evaluator.matches(element, e))
                     return true;
             }
             return false;
