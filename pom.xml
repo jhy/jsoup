@@ -41,9 +41,6 @@
           <source>1.7</source>
           <target>1.7</target>
           <encoding>UTF-8</encoding>
-          <compilerArgs>
-            <arg>-Xpkginfo:always</arg>
-          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>
