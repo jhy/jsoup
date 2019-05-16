@@ -147,32 +147,6 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void throwsExceptionOnError() {
-        String url = "http://direct.infohound.net/tools/404";
-        Connection con = Jsoup.connect(url);
-        boolean threw = false;
-        try {
-            Document doc = con.get();
-        } catch (HttpStatusException e) {
-            threw = true;
-            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=http://direct.infohound.net/tools/404", e.toString());
-            assertEquals(url, e.getUrl());
-            assertEquals(404, e.getStatusCode());
-        } catch (IOException e) {
-        }
-        assertTrue(threw);
-    }
-
-    @Test
-    public void ignoresExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/404").ignoreHttpErrors(true);
-        Connection.Response res = con.execute();
-        Document doc = res.parse();
-        assertEquals(404, res.statusCode());
-        assertEquals("404 Not Found", doc.select("h1").first().text());
-    }
-
-    @Test
     public void ignores500tExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/500.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();

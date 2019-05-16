@@ -1,6 +1,7 @@
 package org.jsoup.integration;
 
 import org.jsoup.Connection;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.Deflateservlet;
@@ -64,7 +65,7 @@ public class ConnectTest {
     }
 
     @Test
-    public void fetchURIWithWihtespace() throws IOException {
+    public void fetchURIWithWhitespace() throws IOException {
         Connection con = Jsoup.connect(echoUrl + "#with whitespaces");
         Document doc = con.get();
         assertTrue(doc.title().contains("Environment Variables"));
@@ -87,6 +88,36 @@ public class ConnectTest {
     private static String ihVal(String key, Document doc) {
         final Element first = doc.select("th:contains(" + key + ") + td").first();
         return first != null ? first.text() : null;
+    }
+
+    @Test
+    public void throwsExceptionOn404() {
+        String url = EchoServlet.Url;
+        Connection con = Jsoup.connect(url).header(EchoServlet.CodeParam, "404");
+
+        boolean threw = false;
+        try {
+            Document doc = con.get();
+        } catch (HttpStatusException e) {
+            threw = true;
+            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=" + e.getUrl(), e.toString());
+            assertTrue(e.getUrl().startsWith(url));
+            assertEquals(404, e.getStatusCode());
+        } catch (IOException e) {
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void ignoresExceptionIfSoConfigured() throws IOException {
+        String url = EchoServlet.Url;
+        Connection con = Jsoup.connect(url)
+            .header(EchoServlet.CodeParam, "404")
+            .ignoreHttpErrors(true);
+        Connection.Response res = con.execute();
+        Document doc = res.parse();
+        assertEquals(404, res.statusCode());
+        assertEquals("Webserver Environment Variables", doc.title());
     }
 
     @Test

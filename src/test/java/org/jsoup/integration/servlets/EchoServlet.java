@@ -13,13 +13,16 @@ import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Enumeration;
 
 import static org.jsoup.nodes.Entities.escape;
 
 public class EchoServlet extends BaseServlet {
+    public static final String CodeParam = "code";
     public static final String Url = TestServer.map(EchoServlet.class);
+    private static final int DefaultCode = HttpServletResponse.SC_OK;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -37,10 +40,15 @@ public class EchoServlet extends BaseServlet {
     }
 
     private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+        int intCode = DefaultCode;
+        String code = req.getHeader(CodeParam);
+        if (code != null)
+            intCode = Integer.parseInt(code);
+
         boolean isMulti = maybeEnableMultipart(req);
 
         res.setContentType(TextHtml);
-        res.setStatus(HttpServletResponse.SC_OK);
+        res.setStatus(intCode);
         PrintWriter w = res.getWriter();
 
         w.write("<title>Webserver Environment Variables</title>\n" +
@@ -76,7 +84,7 @@ public class EchoServlet extends BaseServlet {
 
         // post body
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(req.getInputStream(), 0);
-        String postData = new String(byteBuffer.array(), "UTF-8");
+        String postData = new String(byteBuffer.array(), StandardCharsets.UTF_8);
         if (!StringUtil.isBlank(postData)) {
             write(w, "Post Data", postData);
         }
