@@ -504,6 +504,11 @@ public class SelectorTest {
         assertEquals("body", els1.first().tagName());
         assertEquals("0", els1.get(1).id());
         assertEquals("2", els1.get(2).id());
+
+        Elements els2 = doc.body().select(":has(> span)");
+        assertEquals(2,els2.size()); // p, div
+        assertEquals("p",els2.first().tagName());
+        assertEquals("1", els2.get(1).id());
     }
 
     @Test public void testNestedHas() {
