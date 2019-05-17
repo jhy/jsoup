@@ -235,7 +235,7 @@ public final class StringUtil {
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
      * <p>
-     * Care must be taken to release the builder once its work has been completed, with {@see #releaseBuilder}
+     * Care must be taken to release the builder once its work has been completed, with {@link #releaseBuilder}
      * @return an empty StringBuilder
      * @
      */
