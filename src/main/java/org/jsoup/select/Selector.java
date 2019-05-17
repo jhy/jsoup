@@ -19,8 +19,8 @@ import java.util.IdentityHashMap;
  * The universal selector (*) is implicit when no element selector is supplied (i.e. {@code *.header} and {@code .header}
  * is equivalent).
  * </p>
- * <style>table tr td {vertical-align: top; padding-right: 2em; padding-top:0.5em; padding-bottom:0.5em; } table tr:hover{background-color: #eee;} table {border-spacing: 0px 0px;}</style>
- * <table summary="" ><colgroup><col span="1" style="width: 20%;"><col span="1" style="width: 40%;"><col span="1" style="width: 40%;"></colgroup>
+ * <style>table.syntax tr td {vertical-align: top; padding-right: 2em; padding-top:0.5em; padding-bottom:0.5em; } table.syntax tr:hover{background-color: #eee;} table.syntax {border-spacing: 0px 0px;}</style>
+ * <table summary="" class="syntax"><colgroup><col span="1" style="width: 20%;"><col span="1" style="width: 40%;"><col span="1" style="width: 40%;"></colgroup>
  * <tr><th align="left">Pattern</th><th align="left">Matches</th><th align="left">Example</th></tr>
  * <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
  * <tr><td><code>tag</code></td><td>elements with the given tag name</td><td><code>div</code></td></tr>
