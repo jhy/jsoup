@@ -8,6 +8,7 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
@@ -1480,6 +1481,32 @@ public class Element extends Node {
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
 
         return clone;
+    }
+
+    // overrides of Node for call chaining
+    @Override
+    public Element clearAttributes() {
+        return (Element) super.clearAttributes();
+    }
+
+    @Override
+    public Element removeAttr(String attributeKey) {
+        return (Element) super.removeAttr(attributeKey);
+    }
+
+    @Override
+    public Element root() {
+        return (Element) super.root(); // probably a document, but always at least an element
+    }
+
+    @Override
+    public Element traverse(NodeVisitor nodeVisitor) {
+        return  (Element) super.traverse(nodeVisitor);
+    }
+
+    @Override
+    public Element filter(NodeFilter nodeFilter) {
+        return  (Element) super.filter(nodeFilter);
     }
 
     private static final class NodeList extends ChangeNotifyingArrayList<Node> {

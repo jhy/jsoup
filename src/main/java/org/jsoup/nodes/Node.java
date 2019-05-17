@@ -104,7 +104,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Remove an attribute from this element.
+     * Remove an attribute from this node.
      * @param attributeKey The attribute to remove.
      * @return this (for chaining)
      */

@@ -5,6 +5,9 @@ jsoup changelog
     "div:has(> a)" will select all "div" elements that have at least one direct child "a" element.
     <https://github.com/jhy/jsoup/pull/1214>
 
+  * Improvement: added Element chaining methods for various overridden methods on Node.
+    <https://github.com/jhy/jsoup/issues/1193>
+
 **** Release 1.12.1 [2019-May12]
   * Change: removed deprecated method to disable TLS cert checking Connection.validateTLSCertificates().
 

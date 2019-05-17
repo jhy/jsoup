@@ -4,6 +4,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.jsoup.select.NodeFilter;
+import org.jsoup.select.NodeVisitor;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
@@ -1398,5 +1401,85 @@ public class ElementTest {
         Element ul = doc.getElementById("ul");
         List<Element> elementSiblings3 = ul.previousElementSiblings();
         assertEquals(0, elementSiblings3.size());
+    }
+
+    @Test
+    public void testClearAttributes() {
+        Element el = new Element("a").attr("href", "http://example.com").text("Hello");
+        assertEquals("<a href=\"http://example.com\">Hello</a>", el.outerHtml());
+        Element el2 = el.clearAttributes(); // really just force testing the return type is Element
+        assertSame(el, el2);
+        assertEquals("<a>Hello</a>", el2.outerHtml());
+    }
+
+    @Test
+    public void testRemoveAttr() {
+        Element el = new Element("a")
+            .attr("href", "http://example.com")
+            .attr("id", "1")
+            .text("Hello");
+        assertEquals("<a href=\"http://example.com\" id=\"1\">Hello</a>", el.outerHtml());
+        Element el2 = el.removeAttr("href"); // really just force testing the return type is Element
+        assertSame(el, el2);
+        assertEquals("<a id=\"1\">Hello</a>", el2.outerHtml());
+    }
+
+    @Test
+    public void testRoot() {
+        Element el = new Element("a");
+        el.append("<span>Hello</span>");
+        assertEquals("<a><span>Hello</span></a>", el.outerHtml());
+        Element span = el.selectFirst("span");
+        assertNotNull(span);
+        Element el2 = span.root();
+        assertSame(el, el2);
+
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        assertSame(doc, div.root());
+        assertSame(doc, div.ownerDocument());
+    }
+
+    @Test
+    public void testTraverse() {
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        final AtomicInteger counter = new AtomicInteger(0);
+
+        Element div2 = div.traverse(new NodeVisitor() {
+
+            @Override
+            public void head(Node node, int depth) {
+                counter.incrementAndGet();
+            }
+
+            @Override
+            public void tail(Node node, int depth) {
+
+            }
+        });
+
+        assertEquals(7, counter.get());
+        assertEquals(div2, div);
+    }
+
+    @Test
+    public void voidTestFilterCallReturnsElement() {
+        // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an acutal test
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        Element div2 = div.filter(new NodeFilter() {
+            @Override
+            public FilterResult head(Node node, int depth) {
+                return FilterResult.CONTINUE;
+            }
+
+            @Override
+            public FilterResult tail(Node node, int depth) {
+                return FilterResult.CONTINUE;
+            }
+        });
+
+        assertSame(div, div2);
     }
 }
