@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.Buffer;
@@ -102,7 +103,8 @@ public class HttpConnection implements Connection {
             urlS = urlS.replaceAll(" ", "%20");
             final URI uri = new URI(urlS);
             return new URL(uri.toASCIIString());
-        } catch (Exception e) {
+        } catch (URISyntaxException | MalformedURLException e) {
+            // give up and return the original input
             return u;
         }
     }

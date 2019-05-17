@@ -53,11 +53,12 @@ public final class CharacterReader {
             return;
 
         try {
-            reader.skip(pos);
+            final long skipped = reader.skip(pos);
             reader.mark(maxBufferLen);
             final int read = reader.read(charBuf);
             reader.reset();
             if (read != -1) {
+                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
                 bufLength = read;
                 readerPos += pos;
                 bufPos = 0;

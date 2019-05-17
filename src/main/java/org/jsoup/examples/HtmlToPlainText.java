@@ -66,7 +66,7 @@ public class HtmlToPlainText {
     }
 
     // the formatting rules, implemented in a breadth-first DOM traverse
-    private class FormattingVisitor implements NodeVisitor {
+    private static class FormattingVisitor implements NodeVisitor {
         private static final int maxWidth = 80;
         private int width = 0;
         private StringBuilder accum = new StringBuilder(); // holds the accumulated text
@@ -102,7 +102,7 @@ public class HtmlToPlainText {
                 return; // don't accumulate long runs of empty spaces
 
             if (text.length() + width > maxWidth) { // won't fit, needs to wrap
-                String words[] = text.split("\\s+");
+                String[] words = text.split("\\s+");
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
                     boolean last = i == words.length - 1;

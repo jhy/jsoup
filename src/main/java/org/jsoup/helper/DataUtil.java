@@ -163,8 +163,10 @@ public final class DataUtil {
             if (charsetName == null)
                 charsetName = defaultCharset;
             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
-            if (bomCharset != null && bomCharset.offset) // creating the buffered reader ignores the input pos, so must skip here
-                reader.skip(1);
+            if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
+                long skipped = reader.skip(1);
+                Validate.isTrue(skipped == 1); // WTF if this fails.
+            }
             try {
                 doc = parser.parseInput(reader, baseUri);
             } catch (UncheckedIOException e) {
