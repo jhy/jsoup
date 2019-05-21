@@ -77,7 +77,7 @@ public class Cleaner {
         Document clean = Document.createShell(dirtyDocument.baseUri());
         int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());
         return numDiscarded == 0
-            && dirtyDocument.head().childNodes().size() == 0; // because we only look at the body, but we start from a shell, make sure there's nothing in the head
+            && dirtyDocument.head().childNodes().isEmpty(); // because we only look at the body, but we start from a shell, make sure there's nothing in the head
     }
 
     public boolean isValidBodyHtml(String bodyHtml) {
@@ -87,7 +87,7 @@ public class Cleaner {
         List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), "", errorList);
         dirty.body().insertChildren(0, nodes);
         int numDiscarded = copySafeNodes(dirty.body(), clean.body());
-        return numDiscarded == 0 && errorList.size() == 0;
+        return numDiscarded == 0 && errorList.isEmpty();
     }
 
     /**
