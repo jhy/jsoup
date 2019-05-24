@@ -1,11 +1,14 @@
 package org.jsoup.parser;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.Test;
 
 import java.util.Arrays;
-
-import static org.junit.Assert.assertArrayEquals;
 
 public class HtmlTreeBuilderStateTest {
     @Test
