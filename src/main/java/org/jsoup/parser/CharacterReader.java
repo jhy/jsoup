@@ -16,12 +16,10 @@ public final class CharacterReader {
     static final char EOF = (char) -1;
     private static final int maxStringCacheLen = 12;
     static final int maxBufferLen = 1024 * 32; // visible for testing
-    private static final int readAheadLimit = (int) (maxBufferLen * 0.75);
 
     private final char[] charBuf;
     private final Reader reader;
     private int bufLength;
-    private int bufSplitPoint;
     private int bufPos;
     private int readerPos;
     private int bufMark = -1;
@@ -69,7 +67,7 @@ public final class CharacterReader {
 
     private void bufferUp() {
         final int pos = bufPos;
-        if (pos < bufSplitPoint)
+        if (pos != bufLength)   // pos > bufLength is possible after consuming an EOF, but there's no point in buffering up in that case
             return;
 
         if (consumeStartPos >= 0) {
@@ -78,18 +76,24 @@ public final class CharacterReader {
             }
             consumptionMemory.append(charBuf, consumeStartPos, pos - consumeStartPos);
         }
+        // Make sure to keep the marked characters. We also need to keep the last byte of the old buffer around to make sure unconsume() works.
+        int charsToKeep = 1;
+        if (bufMark >= 0) {
+            charsToKeep = Math.max(charsToKeep, bufPos - bufMark);
+        }
+        charsToKeep = Math.min(charsToKeep, bufLength);
+        int copyStart = bufPos - charsToKeep;
+        System.arraycopy(charBuf, copyStart, charBuf, 0, charsToKeep);
+        bufPos = charsToKeep;
+        bufLength = charsToKeep;
+        if (bufMark >= 0) {
+            bufMark -= copyStart;
+        }
         try {
-            final long skipped = reader.skip(pos);
-            reader.mark(maxBufferLen);
-            final int read = reader.read(charBuf);
-            reader.reset();
+            final int read = reader.read(charBuf, bufPos, charBuf.length - bufPos);
             if (read != -1) {
-                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
-                bufLength = read;
-                readerPos += pos;
-                bufPos = 0;
-                bufMark = -1;
-                bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
+                bufLength += read;
+                readerPos += read;
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -104,7 +108,7 @@ public final class CharacterReader {
      * @return current position
      */
     public int pos() {
-        return readerPos + bufPos;
+        return readerPos - bufLength + bufPos;
     }
 
     /**
@@ -151,8 +155,6 @@ public final class CharacterReader {
     }
 
     void mark() {
-        // extra buffer up, to get as much rewind capacity as possible
-        bufSplitPoint = 0;
         bufferUp();
         bufMark = bufPos;
     }
@@ -162,6 +164,11 @@ public final class CharacterReader {
             throw new UncheckedIOException(new IOException("Mark invalid"));
 
         bufPos = bufMark;
+        bufMark = -1;
+    }
+    
+    void releaseMark() {
+        bufMark = -1;
     }
 
     /**

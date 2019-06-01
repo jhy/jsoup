@@ -147,6 +147,7 @@ final class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
+            reader.releaseMark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
             int charval = -1;
@@ -189,6 +190,7 @@ final class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
+            reader.releaseMark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
             int numChars = Entities.codepointsForName(nameRef, multipointHolder);
