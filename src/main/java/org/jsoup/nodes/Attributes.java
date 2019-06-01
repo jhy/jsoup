@@ -416,8 +416,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             public int size() {
                 int count = 0;
                 Iterator<Map.Entry<String, String>> iter = new DatasetIterator();
-                while (iter.hasNext())
+                while (iter.hasNext()) {
                     count++;
+                    iter.next();
+                }
                 return count;
             }
         }
@@ -425,11 +427,14 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
             private Iterator<Attribute> attrIter = attributes.iterator();
             private Attribute attr;
+            private Attribute nextAttr;
             @Override
             public boolean hasNext() {
+                if (nextAttr != null)
+                    return true;
                 while (attrIter.hasNext()) {
-                    attr = attrIter.next();
-                    if (attr.isDataAttribute()) return true;
+                    nextAttr = attrIter.next();
+                    if (nextAttr.isDataAttribute()) return true;
                 }
                 return false;
             }
@@ -439,6 +444,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
+                attr = nextAttr;
+                nextAttr = null;
                 return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
             }
 
