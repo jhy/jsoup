@@ -57,7 +57,7 @@ public class W3CDomTest {
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
 
-        String out = w3c.asString(wDoc);
+        w3c.asString(wDoc);
         assertEquals(doc.location(), wDoc.getDocumentURI() );
     }
     
@@ -134,7 +134,7 @@ public class W3CDomTest {
         assertTrue(body.hasAttr("\"")); // actually an attribute with key '"'. Correct per HTML5 spec, but w3c xml dom doesn't dig it
         assertTrue(body.hasAttr("name\""));
 
-        Document w3Doc = new W3CDom().fromJsoup(jsoupDoc);
+        new W3CDom().fromJsoup(jsoupDoc);
     }
 
     @Test public void treatsUndeclaredNamespaceAsLocalName() {

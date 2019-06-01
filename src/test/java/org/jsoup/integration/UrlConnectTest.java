@@ -1,7 +1,6 @@
 package org.jsoup.integration;
 
 import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.StringUtil;
@@ -53,7 +52,7 @@ public class UrlConnectTest {
         String url = "http://direct.jsoup.org/rez/osi_logo.png"; // not text/* but image/png, should throw
         boolean threw = false;
         try {
-            Document doc = Jsoup.parse(new URL(url), 3000);
+            Jsoup.parse(new URL(url), 3000);
         } catch (UnsupportedMimeTypeException e) {
             threw = true;
             assertEquals("org.jsoup.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://direct.jsoup.org/rez/osi_logo.png", e.toString());
@@ -160,7 +159,7 @@ public class UrlConnectTest {
     public void ignores500WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/500-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
-        Document doc = res.parse();
+        res.parse();
         assertEquals(500, res.statusCode());
         assertEquals("Application Error", res.statusMessage());
     }
@@ -169,7 +168,7 @@ public class UrlConnectTest {
     public void ignores200WithNoContentExceptionIfSoConfigured() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/tools/200-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
-        Document doc = res.parse();
+        res.parse();
         assertEquals(200, res.statusCode());
         assertEquals("All Good", res.statusMessage());
     }
@@ -180,7 +179,7 @@ public class UrlConnectTest {
             .connect("http://direct.infohound.net/tools/200-no-content.pl")
             .userAgent(browserUa);
         Connection.Response res = con.execute();
-        Document doc = res.parse();
+        res.parse();
         assertEquals(200, res.statusCode());
 
         con = Jsoup
@@ -188,7 +187,7 @@ public class UrlConnectTest {
             .parser(Parser.xmlParser())
             .userAgent(browserUa);
         res = con.execute();
-        doc = res.parse();
+        res.parse();
         assertEquals(200, res.statusCode());
     }
 
@@ -213,7 +212,7 @@ public class UrlConnectTest {
     public void maximumRedirects() {
         boolean threw = false;
         try {
-            Document doc = Jsoup.connect("http://direct.infohound.net/tools/loop.pl").get();
+            Jsoup.connect("http://direct.infohound.net/tools/loop.pl").get();
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("Too many redirects"));
             threw = true;
@@ -283,7 +282,7 @@ public class UrlConnectTest {
     @Test
     public void shouldWorkForCharsetInExtraAttribute() throws IOException {
         Connection.Response res = Jsoup.connect("https://www.creditmutuel.com/groupe/fr/").execute();
-        Document doc = res.parse(); // would throw an error if charset unsupported
+        res.parse(); // would throw an error if charset unsupported
         assertEquals("ISO-8859-1", res.charset());
     }
 
@@ -315,7 +314,7 @@ public class UrlConnectTest {
     @Test
     public void shouldWorkForDuplicateCharsetInTag() throws IOException {
         Connection.Response res = Jsoup.connect("http://aaptsdassn.org").execute();
-        Document doc = res.parse(); // would throw an error if charset unsupported
+        res.parse(); // would throw an error if charset unsupported
         assertEquals("ISO-8859-1", res.charset());
     }
 
@@ -447,7 +446,7 @@ public class UrlConnectTest {
         boolean caught = false;
         String url = "https://jsoup.org";
         try {
-            Document doc = Jsoup.connect(url).proxy("localhost", 8889).get();
+            Jsoup.connect(url).proxy("localhost", 8889).get();
         } catch (IOException e) {
             caught = e instanceof ConnectException;
         }
@@ -471,7 +470,7 @@ public class UrlConnectTest {
         boolean caught = false;
         String url = "https://jsoup.org";
         try {
-            Document doc = Jsoup.connect(url).requestBody("fail").get();
+            Jsoup.connect(url).requestBody("fail").get();
         } catch (IllegalArgumentException e) {
             caught = true;
         }
@@ -580,7 +579,7 @@ public class UrlConnectTest {
         Connection.Response res = Jsoup.connect(url)
                 .proxy("localhost", 8888)
                 .execute();
-        Document doc = res.parse();
+        res.parse();
         assertEquals(200, res.statusCode());
     }
 

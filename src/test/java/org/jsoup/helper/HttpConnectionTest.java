@@ -1,7 +1,6 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
-import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
@@ -161,7 +160,7 @@ public class HttpConnectionTest {
     }
 
     @Test(expected=IllegalArgumentException.class) public void throwsOnMalformedUrl() {
-        Connection con = HttpConnection.connect("bzzt");
+        HttpConnection.connect("bzzt");
     }
 
     @Test public void userAgent() {

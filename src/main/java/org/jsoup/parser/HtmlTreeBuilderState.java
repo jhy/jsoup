@@ -120,7 +120,7 @@ enum HtmlTreeBuilderState {
                         if (name.equals("base") && el.hasAttr("href"))
                             tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
-                        Element meta = tb.insertEmpty(start);
+                        tb.insertEmpty(start);
                         // todo: charset switches
                     } else if (name.equals("title")) {
                         handleRcData(start, tb);

@@ -131,7 +131,7 @@ public class HtmlParserTest {
     @Test public void testSelectWithOption() {
         Parser parser = Parser.htmlParser();
         parser.setTrackErrors(10);
-        Document document = parser.parseInput("<select><option>Option 1</option></select>", "http://jsoup.org");
+        parser.parseInput("<select><option>Option 1</option></select>", "http://jsoup.org");
         assertEquals(0, parser.getErrors().size());
     }
 
@@ -804,7 +804,7 @@ public class HtmlParserTest {
     @Test public void tracksErrorsWhenRequested() {
         String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(500);
-        Document doc = Jsoup.parse(html, "http://example.com", parser);
+        Jsoup.parse(html, "http://example.com", parser);
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(5, errors.size());
@@ -818,7 +818,7 @@ public class HtmlParserTest {
     @Test public void tracksLimitedErrorsWhenRequested() {
         String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(3);
-        Document doc = parser.parseInput(html, "http://example.com");
+        parser.parseInput(html, "http://example.com");
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(3, errors.size());
@@ -830,7 +830,7 @@ public class HtmlParserTest {
     @Test public void noErrorsByDefault() {
         String html = "<p>One</p href='no'>&arrgh;<font /><br /><foo";
         Parser parser = Parser.htmlParser();
-        Document doc = Jsoup.parse(html, "http://example.com", parser);
+        Jsoup.parse(html, "http://example.com", parser);
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(0, errors.size());
@@ -1013,7 +1013,7 @@ public class HtmlParserTest {
 
     @Test public void testNormalisesIsIndex() {
         Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
-        String html = doc.outerHtml();
+        doc.outerHtml();
         assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
             StringUtil.normaliseWhitespace(doc.body().html()));
     }

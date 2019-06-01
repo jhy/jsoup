@@ -71,7 +71,7 @@ public class ParseTest {
 
         boolean threw = false;
         try {
-            Document doc = Jsoup.parse(in, "UTF-8");
+            Jsoup.parse(in, "UTF-8");
         } catch (IOException e) {
             threw = true;
             assertEquals("Input is binary and unsupported", e.getMessage());

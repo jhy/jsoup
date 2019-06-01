@@ -67,10 +67,6 @@ public class Entities {
             }
             return emptyName;
         }
-
-        private int size() {
-            return nameKeys.length;
-        }
     }
 
     private Entities() {

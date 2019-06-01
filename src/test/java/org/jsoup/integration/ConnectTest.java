@@ -76,7 +76,7 @@ public class ConnectTest {
         String url = "file://etc/passwd";
         boolean threw = false;
         try {
-            Document doc = Jsoup.connect(url).get();
+            Jsoup.connect(url).get();
         } catch (MalformedURLException e) {
             threw = true;
             assertEquals("java.net.MalformedURLException: Only http & https protocols supported", e.toString());
@@ -97,7 +97,7 @@ public class ConnectTest {
 
         boolean threw = false;
         try {
-            Document doc = con.get();
+            con.get();
         } catch (HttpStatusException e) {
             threw = true;
             assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=" + e.getUrl(), e.toString());
@@ -384,8 +384,8 @@ public class ConnectTest {
 
     @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute();
-        Document doc = res.parse();
-        String body = res.body();
+        res.parse();
+        res.body();
     }
 
     @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
@@ -403,7 +403,7 @@ public class ConnectTest {
         Connection.Response res = Jsoup.connect(echoUrl).execute();
         Document doc = res.parse();
         assertTrue(doc.title().contains("Environment"));
-        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
+        res.parse(); // should blow up because the response input stream has been drained
     }
 
 
@@ -478,8 +478,7 @@ public class ConnectTest {
     @Test public void handlesEmptyRedirect() throws IOException {
         boolean threw = false;
         try {
-            Connection.Response res = Jsoup.connect(RedirectServlet.Url)
-                .execute();
+            Jsoup.connect(RedirectServlet.Url).execute();
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("Too many redirects"));
             threw = true;
@@ -529,7 +528,7 @@ public class ConnectTest {
         boolean threw = false;
         try {
             con.execute();
-            Document doc = con.response().parse();
+            con.response().parse();
         } catch (IOException e) {
             threw = true;
             assertEquals("Input is binary and unsupported", e.getMessage());
@@ -546,7 +545,7 @@ public class ConnectTest {
         boolean threw = false;
         try {
             con.execute();
-            Document doc = con.response().parse();
+            con.response().parse();
         } catch (IOException e) {
             threw = true;
             assertEquals("Input is binary and unsupported", e.getMessage());
@@ -563,7 +562,7 @@ public class ConnectTest {
         boolean threw = false;
         try {
             con.execute();
-            Document doc = con.response().parse();
+            con.response().parse();
         } catch (IOException e) {
             threw = true;
             assertEquals("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", e.getMessage());

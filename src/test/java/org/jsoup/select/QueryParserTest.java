@@ -41,10 +41,10 @@ public class QueryParserTest {
     }
 
     @Test(expected = Selector.SelectorParseException.class) public void exceptionOnUncloseAttribute() {
-        Evaluator parse = QueryParser.parse("section > a[href=\"]");
+        QueryParser.parse("section > a[href=\"]");
     }
 
     @Test(expected = Selector.SelectorParseException.class)  public void testParsesSingleQuoteInContains() {
-        Evaluator parse = QueryParser.parse("p:contains(One \" One)");
+        QueryParser.parse("p:contains(One \" One)");
     }
 }

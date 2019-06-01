@@ -10,8 +10,6 @@ import java.io.IOException;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Comment extends LeafNode {
-    private static final String COMMENT_KEY = "comment";
-
     /**
      Create a new comment node.
      @param data The contents of the comment
