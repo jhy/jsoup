@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -435,6 +436,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
             @Override
             public Entry<String, String> next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
             }
 
