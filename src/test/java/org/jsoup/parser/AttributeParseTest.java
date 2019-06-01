@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
  Test suite for attribute parser.
 
  @author Jonathan Hedley, jonathan@hedley.net */
+@SuppressWarnings("deprecation")
 public class AttributeParseTest {
 
     @Test public void parsesRoughAttributeString() {

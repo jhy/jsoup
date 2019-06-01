@@ -271,13 +271,14 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      Get the attributes as a List, for iteration.
-     @return an view of the attributes as an unmodifialbe List.
+     @return an view of the attributes as an unmodifiable List.
      */
+    @SuppressWarnings("deprecation") // deprecated class, but maybe someone still wants it
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Attribute attr = vals[i] == null ?
-                new BooleanAttribute(keys[i]) : // deprecated class, but maybe someone still wants it
+                new BooleanAttribute(keys[i]) :
                 new Attribute(keys[i], vals[i], Attributes.this);
             list.add(attr);
         }
