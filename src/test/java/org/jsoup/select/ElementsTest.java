@@ -272,10 +272,12 @@ public class ElementsTest {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         doc.select("div").traverse(new NodeVisitor() {
+            @Override
             public void head(Node node, int depth) {
                 accum.append("<" + node.nodeName() + ">");
             }
 
+            @Override
             public void tail(Node node, int depth) {
                 accum.append("</" + node.nodeName() + ">");
             }

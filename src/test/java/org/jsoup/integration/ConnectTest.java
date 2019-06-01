@@ -239,6 +239,7 @@ public class ConnectTest {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     Connection.Response res = Jsoup.connect(SlowRider.Url)
@@ -267,6 +268,7 @@ public class ConnectTest {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     Connection.Response res = Jsoup.connect(SlowRider.Url)

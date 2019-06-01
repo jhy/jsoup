@@ -39,6 +39,7 @@ public class Collector {
             this.eval = eval;
         }
 
+        @Override
         public void head(Node node, int depth) {
             if (node instanceof Element) {
                 Element el = (Element) node;
@@ -47,6 +48,7 @@ public class Collector {
             }
         }
 
+        @Override
         public void tail(Node node, int depth) {
             // void
         }

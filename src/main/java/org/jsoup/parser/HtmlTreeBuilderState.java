@@ -15,6 +15,7 @@ import java.util.ArrayList;
  */
 enum HtmlTreeBuilderState {
     Initial {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return true; // ignore whitespace
@@ -40,6 +41,7 @@ enum HtmlTreeBuilderState {
         }
     },
     BeforeHtml {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isDoctype()) {
                 tb.error(this);
@@ -69,6 +71,7 @@ enum HtmlTreeBuilderState {
         }
     },
     BeforeHead {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return true;
@@ -97,6 +100,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InHead {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
@@ -169,6 +173,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InHeadNoscript {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isDoctype()) {
                 tb.error(this);
@@ -198,6 +203,7 @@ enum HtmlTreeBuilderState {
         }
     },
     AfterHead {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
@@ -249,6 +255,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InBody {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character: {
@@ -787,6 +794,7 @@ enum HtmlTreeBuilderState {
     },
     Text {
         // in script, style etc. normally treated as data tags
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter()) {
                 tb.insert(t.asCharacter());
@@ -805,6 +813,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InTable {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter()) {
                 tb.newPendingTableCharacters();
@@ -905,6 +914,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InTableText {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character:
@@ -942,6 +952,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InCaption {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isEndTag() && t.asEndTag().normalName().equals("caption")) {
                 Token.EndTag endTag = t.asEndTag();
@@ -977,6 +988,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InColumnGroup {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
@@ -1033,6 +1045,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InTableBody {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case StartTag:
@@ -1095,6 +1108,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InRow {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag()) {
                 Token.StartTag startTag = t.asStartTag();
@@ -1158,6 +1172,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InCell {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isEndTag()) {
                 Token.EndTag endTag = t.asEndTag();
@@ -1214,6 +1229,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InSelect {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             switch (t.type) {
                 case Character:
@@ -1308,6 +1324,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InSelectInTable {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag() && StringUtil.in(t.asStartTag().normalName(), "caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th")) {
                 tb.error(this);
@@ -1326,6 +1343,7 @@ enum HtmlTreeBuilderState {
         }
     },
     AfterBody {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 return tb.process(t, InBody);
@@ -1354,6 +1372,7 @@ enum HtmlTreeBuilderState {
         }
     },
     InFrameset {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
@@ -1402,6 +1421,7 @@ enum HtmlTreeBuilderState {
         }
     },
     AfterFrameset {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
                 tb.insert(t.asCharacter());
@@ -1426,6 +1446,7 @@ enum HtmlTreeBuilderState {
         }
     },
     AfterAfterBody {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
                 tb.insert(t.asComment());
@@ -1442,6 +1463,7 @@ enum HtmlTreeBuilderState {
         }
     },
     AfterAfterFrameset {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
                 tb.insert(t.asComment());
@@ -1459,6 +1481,7 @@ enum HtmlTreeBuilderState {
         }
     },
     ForeignContent {
+        @Override
         boolean process(Token t, HtmlTreeBuilder tb) {
             return true;
             // todo: implement. Also; how do we get here?

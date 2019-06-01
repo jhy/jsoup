@@ -8,6 +8,7 @@ import org.jsoup.nodes.DocumentType;
 enum TokeniserState {
     Data {
         // in data state, gather characters until a character reference or tag is found
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
                 case '&':
@@ -32,12 +33,14 @@ enum TokeniserState {
     },
     CharacterReferenceInData {
         // from & in data
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readCharRef(t, Data);
         }
     },
     Rcdata {
         /// handles data in title, textarea etc
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
                 case '&':
@@ -62,21 +65,25 @@ enum TokeniserState {
         }
     },
     CharacterReferenceInRcdata {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readCharRef(t, Rcdata);
         }
     },
     Rawtext {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readData(t, r, this, RawtextLessthanSign);
         }
     },
     ScriptData {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readData(t, r, this, ScriptDataLessthanSign);
         }
     },
     PLAINTEXT {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
                 case nullChar:
@@ -96,6 +103,7 @@ enum TokeniserState {
     },
     TagOpen {
         // from < in data
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {
                 case '!':
@@ -121,6 +129,7 @@ enum TokeniserState {
         }
     },
     EndTagOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -140,6 +149,7 @@ enum TokeniserState {
     },
     TagName {
         // from < or </ in data, will have start or end tag pending
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
             //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
@@ -180,6 +190,7 @@ enum TokeniserState {
     },
     RcdataLessthanSign {
         // from < in rcdata
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.createTempBuffer();
@@ -198,6 +209,7 @@ enum TokeniserState {
         }
     },
     RCDATAEndTagOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTagPending(false);
@@ -211,6 +223,7 @@ enum TokeniserState {
         }
     },
     RCDATAEndTagName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 String name = r.consumeLetterSequence();
@@ -257,6 +270,7 @@ enum TokeniserState {
         }
     },
     RawtextLessthanSign {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.createTempBuffer();
@@ -268,16 +282,19 @@ enum TokeniserState {
         }
     },
     RawtextEndTagOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readEndTag(t, r, RawtextEndTagName, Rawtext);
         }
     },
     RawtextEndTagName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, Rawtext);
         }
     },
     ScriptDataLessthanSign {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             switch (r.consume()) {
                 case '/':
@@ -296,16 +313,19 @@ enum TokeniserState {
         }
     },
     ScriptDataEndTagOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             readEndTag(t, r, ScriptDataEndTagName, ScriptData);
         }
     },
     ScriptDataEndTagName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, ScriptData);
         }
     },
     ScriptDataEscapeStart {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('-')) {
                 t.emit('-');
@@ -316,6 +336,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapeStartDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('-')) {
                 t.emit('-');
@@ -326,6 +347,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscaped {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -353,6 +375,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapedDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -381,6 +404,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapedDashDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -412,6 +436,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapedLessthanSign {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTempBuffer();
@@ -428,6 +453,7 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapedEndTagOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createTagPending(false);
@@ -441,16 +467,19 @@ enum TokeniserState {
         }
     },
     ScriptDataEscapedEndTagName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, ScriptDataEscaped);
         }
     },
     ScriptDataDoubleEscapeStart {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             handleDataDoubleEscapeTag(t, r, ScriptDataDoubleEscaped, ScriptDataEscaped);
         }
     },
     ScriptDataDoubleEscaped {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.current();
             switch (c) {
@@ -478,6 +507,7 @@ enum TokeniserState {
         }
     },
     ScriptDataDoubleEscapedDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -505,6 +535,7 @@ enum TokeniserState {
         }
     },
     ScriptDataDoubleEscapedDashDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -535,6 +566,7 @@ enum TokeniserState {
         }
     },
     ScriptDataDoubleEscapedLessthanSign {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.emit('/');
@@ -546,12 +578,14 @@ enum TokeniserState {
         }
     },
     ScriptDataDoubleEscapeEnd {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             handleDataDoubleEscapeTag(t,r, ScriptDataEscaped, ScriptDataDoubleEscaped);
         }
     },
     BeforeAttributeName {
         // from tagname <xxx
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -599,6 +633,7 @@ enum TokeniserState {
     },
     AttributeName {
         // from before attribute name
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             String name = r.consumeToAnySorted(attributeNameCharsSorted);
             t.tagPending.appendAttributeName(name);
@@ -642,6 +677,7 @@ enum TokeniserState {
         }
     },
     AfterAttributeName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -687,6 +723,7 @@ enum TokeniserState {
         }
     },
     BeforeAttributeValue {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -736,6 +773,7 @@ enum TokeniserState {
         }
     },
     AttributeValue_doubleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAny(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
@@ -769,6 +807,7 @@ enum TokeniserState {
         }
     },
     AttributeValue_singleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAny(attributeSingleValueCharsSorted);
             if (value.length() > 0)
@@ -802,6 +841,7 @@ enum TokeniserState {
         }
     },
     AttributeValue_unquoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAnySorted(attributeValueUnquoted);
             if (value.length() > 0)
@@ -851,6 +891,7 @@ enum TokeniserState {
     },
     // CharacterReferenceInAttributeValue state handled inline
     AfterAttributeValue_quoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -881,6 +922,7 @@ enum TokeniserState {
         }
     },
     SelfClosingStartTag {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -901,6 +943,7 @@ enum TokeniserState {
         }
     },
     BogusComment {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             // todo: handle bogus comment starting from eof. when does that trigger?
             // rewind to capture character that lead us here
@@ -914,6 +957,7 @@ enum TokeniserState {
         }
     },
     MarkupDeclarationOpen {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchConsume("--")) {
                 t.createCommentPending();
@@ -933,6 +977,7 @@ enum TokeniserState {
         }
     },
     CommentStart {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -961,6 +1006,7 @@ enum TokeniserState {
         }
     },
     CommentStartDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -989,6 +1035,7 @@ enum TokeniserState {
         }
     },
     Comment {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.current();
             switch (c) {
@@ -1011,6 +1058,7 @@ enum TokeniserState {
         }
     },
     CommentEndDash {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1034,6 +1082,7 @@ enum TokeniserState {
         }
     },
     CommentEnd {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1067,6 +1116,7 @@ enum TokeniserState {
         }
     },
     CommentEndBang {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1095,6 +1145,7 @@ enum TokeniserState {
         }
     },
     Doctype {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1122,6 +1173,7 @@ enum TokeniserState {
         }
     },
     BeforeDoctypeName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 t.createDoctypePending();
@@ -1157,6 +1209,7 @@ enum TokeniserState {
         }
     },
     DoctypeName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 String name = r.consumeLetterSequence();
@@ -1192,6 +1245,7 @@ enum TokeniserState {
         }
     },
     AfterDoctypeName {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -1220,6 +1274,7 @@ enum TokeniserState {
         }
     },
     AfterDoctypePublicKeyword {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1260,6 +1315,7 @@ enum TokeniserState {
         }
     },
     BeforeDoctypePublicIdentifier {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1297,6 +1353,7 @@ enum TokeniserState {
         }
     },
     DoctypePublicIdentifier_doubleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1325,6 +1382,7 @@ enum TokeniserState {
         }
     },
     DoctypePublicIdentifier_singleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1353,6 +1411,7 @@ enum TokeniserState {
         }
     },
     AfterDoctypePublicIdentifier {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1391,6 +1450,7 @@ enum TokeniserState {
         }
     },
     BetweenDoctypePublicAndSystemIdentifiers {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1428,6 +1488,7 @@ enum TokeniserState {
         }
     },
     AfterDoctypeSystemKeyword {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1468,6 +1529,7 @@ enum TokeniserState {
         }
     },
     BeforeDoctypeSystemIdentifier {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1505,6 +1567,7 @@ enum TokeniserState {
         }
     },
     DoctypeSystemIdentifier_doubleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1533,6 +1596,7 @@ enum TokeniserState {
         }
     },
     DoctypeSystemIdentifier_singleQuoted {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1561,6 +1625,7 @@ enum TokeniserState {
         }
     },
     AfterDoctypeSystemIdentifier {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1588,6 +1653,7 @@ enum TokeniserState {
         }
     },
     BogusDoctype {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
@@ -1606,6 +1672,7 @@ enum TokeniserState {
         }
     },
     CdataSection {
+        @Override
         void read(Tokeniser t, CharacterReader r) {
             String data = r.consumeTo("]]>");
             t.dataBuffer.append(data);

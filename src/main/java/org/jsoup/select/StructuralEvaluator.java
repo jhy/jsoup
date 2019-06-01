@@ -9,6 +9,7 @@ abstract class StructuralEvaluator extends Evaluator {
     Evaluator evaluator;
 
     static class Root extends Evaluator {
+        @Override
         public boolean matches(Element root, Element element) {
             return root == element;
         }
@@ -19,6 +20,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             for (Element e : element.getAllElements()) {
                 if (e != element && evaluator.matches(element, e))
@@ -38,6 +40,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element node) {
             return !evaluator.matches(root, node);
         }
@@ -53,6 +56,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -79,6 +83,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -98,6 +103,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -124,6 +130,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;

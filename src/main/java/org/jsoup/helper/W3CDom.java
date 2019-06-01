@@ -80,6 +80,7 @@ public class W3CDom {
             this.namespacesStack.push(new HashMap<String, String>());
         }
 
+        @Override
         public void head(org.jsoup.nodes.Node source, int depth) {
             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
             if (source instanceof org.jsoup.nodes.Element) {
@@ -116,6 +117,7 @@ public class W3CDom {
             }
         }
 
+        @Override
         public void tail(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
                 dest = (Element) dest.getParentNode(); // undescend. cromulent.

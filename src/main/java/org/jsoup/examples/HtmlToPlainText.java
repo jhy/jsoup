@@ -72,6 +72,7 @@ public class HtmlToPlainText {
         private StringBuilder accum = new StringBuilder(); // holds the accumulated text
 
         // hit when the node is first seen
+        @Override
         public void head(Node node, int depth) {
             String name = node.nodeName();
             if (node instanceof TextNode)
@@ -85,6 +86,7 @@ public class HtmlToPlainText {
         }
 
         // hit when all of the node's children (if any) have been visited
+        @Override
         public void tail(Node node, int depth) {
             String name = node.nodeName();
             if (StringUtil.in(name, "br", "dd", "dt", "p", "h1", "h2", "h3", "h4", "h5"))

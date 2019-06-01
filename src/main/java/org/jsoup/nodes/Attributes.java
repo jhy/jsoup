@@ -246,6 +246,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     }
 
+    @Override
     public Iterator<Attribute> iterator() {
         return new Iterator<Attribute>() {
             int i = 0;
@@ -423,6 +424,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
             private Iterator<Attribute> attrIter = attributes.iterator();
             private Attribute attr;
+            @Override
             public boolean hasNext() {
                 while (attrIter.hasNext()) {
                     attr = attrIter.next();
@@ -431,10 +433,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 return false;
             }
 
+            @Override
             public Entry<String, String> next() {
                 return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
             }
 
+            @Override
             public void remove() {
                 attributes.remove(attr.getKey());
             }

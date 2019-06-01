@@ -10,6 +10,7 @@ abstract class LeafNode extends Node {
 
     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
 
+    @Override
     protected final boolean hasAttributes() {
         return value instanceof Attributes;
     }

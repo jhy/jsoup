@@ -84,6 +84,7 @@ public class Element extends Node {
         this(tag, baseUri, null);
     }
 
+    @Override
     protected List<Node> ensureChildNodes() {
         if (childNodes == EMPTY_NODES) {
             childNodes = new NodeList(this, 4);
@@ -189,6 +190,7 @@ public class Element extends Node {
      * 
      * @return this element
      */
+    @Override
     public Element attr(String attributeKey, String attributeValue) {
         super.attr(attributeKey, attributeValue);
         return this;
@@ -1059,6 +1061,7 @@ public class Element extends Node {
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
+            @Override
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -1072,6 +1075,7 @@ public class Element extends Node {
                 }
             }
 
+            @Override
             public void tail(Node node, int depth) {
                 // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
                 if (node instanceof Element) {
@@ -1096,6 +1100,7 @@ public class Element extends Node {
     public String wholeText() {
         final StringBuilder accum = StringUtil.borrowBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
+            @Override
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
@@ -1103,6 +1108,7 @@ public class Element extends Node {
                 }
             }
 
+            @Override
             public void tail(Node node, int depth) {
             }
         }, this);
@@ -1393,6 +1399,7 @@ public class Element extends Node {
         return this;
     }
 
+    @Override
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
             if (accum instanceof StringBuilder) {
@@ -1416,7 +1423,8 @@ public class Element extends Node {
             accum.append('>');
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+	@Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
@@ -1519,6 +1527,7 @@ public class Element extends Node {
             this.owner = owner;
         }
 
+        @Override
         public void onContentsChanged() {
             owner.nodelistChanged();
         }
