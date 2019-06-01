@@ -37,11 +37,11 @@ public class DataUtilTest {
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
 
-    private InputStream stream(String data) {
+    private static InputStream stream(String data) {
         return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
     }
 
-    private InputStream stream(String data, String charset) {
+    private static InputStream stream(String data, String charset) {
         try {
             return new ByteArrayInputStream(data.getBytes(charset));
         } catch (UnsupportedEncodingException e) {

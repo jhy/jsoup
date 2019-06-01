@@ -299,7 +299,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return isElementInQueue(stack, el);
     }
 
-    private boolean isElementInQueue(ArrayList<Element> queue, Element element) {
+    private static boolean isElementInQueue(ArrayList<Element> queue, Element element) {
         for (int pos = queue.size() -1; pos >= 0; pos--) {
             Element next = queue.get(pos);
             if (next == element) {
@@ -403,7 +403,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         replaceInQueue(stack, out, in);
     }
 
-    private void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
+    private static void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
         int i = queue.lastIndexOf(out);
         Validate.isTrue(i != -1);
         queue.set(i, in);
@@ -613,7 +613,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(in);
     }
 
-    private boolean isSameFormattingElement(Element a, Element b) {
+    private static boolean isSameFormattingElement(Element a, Element b) {
         // same if: same namespace, tag, and attributes. Element.equals only checks tag, might in future check children
         return a.normalName().equals(b.normalName()) &&
                 // a.namespace().equals(b.namespace()) &&

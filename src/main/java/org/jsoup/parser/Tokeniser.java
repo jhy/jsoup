@@ -262,7 +262,7 @@ final class Tokeniser {
             errors.add(new ParseError(reader.pos(), errorMsg));
     }
 
-    boolean currentNodeInHtmlNS() {
+    static boolean currentNodeInHtmlNS() {
         // todo: implement namespaces correctly
         return true;
         // Element currentNode = currentNode();
