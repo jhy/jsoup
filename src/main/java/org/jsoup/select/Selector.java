@@ -161,6 +161,8 @@ public class Selector {
     }
 
     public static class SelectorParseException extends IllegalStateException {
+        private static final long serialVersionUID = 6783779045816850092L;
+
         public SelectorParseException(String msg, Object... params) {
             super(String.format(msg, params));
         }

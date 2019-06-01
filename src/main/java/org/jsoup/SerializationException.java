@@ -5,6 +5,8 @@ package org.jsoup;
  * {@link java.io.IOException} that may be thrown due to an inaccessible output stream.
  */
 public final class SerializationException extends RuntimeException {
+	private static final long serialVersionUID = -6182985863817230363L;
+
 	/**
 	 * Creates and initializes a new serialization exception with no error message and cause.
 	 */

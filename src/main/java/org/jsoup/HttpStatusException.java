@@ -6,6 +6,8 @@ import java.io.IOException;
  * Signals that a HTTP request resulted in a not OK HTTP response.
  */
 public class HttpStatusException extends IOException {
+    private static final long serialVersionUID = 3405529344782807120L;
+
     private int statusCode;
     private String url;
 

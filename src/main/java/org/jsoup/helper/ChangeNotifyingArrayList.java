@@ -7,6 +7,8 @@ import java.util.Collection;
  * Implementation of ArrayList that watches out for changes to the contents.
  */
 public abstract class ChangeNotifyingArrayList<E> extends ArrayList<E> {
+    private static final long serialVersionUID = 1131209593864817279L;
+
     public ChangeNotifyingArrayList(int initialCapacity) {
         super(initialCapacity);
     }

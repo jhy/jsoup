@@ -1510,6 +1510,8 @@ public class Element extends Node {
     }
 
     private static final class NodeList extends ChangeNotifyingArrayList<Node> {
+        private static final long serialVersionUID = -3893562248148844791L;
+
         private final Element owner;
 
         NodeList(Element owner, int initialCapacity) {

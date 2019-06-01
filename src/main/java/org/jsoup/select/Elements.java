@@ -21,6 +21,8 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Elements extends ArrayList<Element> {
+    private static final long serialVersionUID = 1879776221938789068L;
+
     public Elements() {
     }
 
