@@ -21,7 +21,7 @@ public class Wikipedia {
         }
     }
 
-    private static void log(String msg, String... vals) {
+    private static void log(String msg, Object... vals) {
         System.out.println(String.format(msg, vals));
     }
 }
