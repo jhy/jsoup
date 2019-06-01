@@ -24,7 +24,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Collection strings, String sep) {
+    public static String join(Collection<?> strings, String sep) {
         return join(strings.iterator(), sep);
     }
 
@@ -34,7 +34,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Iterator strings, String sep) {
+    public static String join(Iterator<?> strings, String sep) {
         if (!strings.hasNext())
             return "";
 

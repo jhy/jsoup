@@ -339,7 +339,7 @@ public interface Connection {
      * Common methods for Requests and Responses
      * @param <T> Type of Base, either Request or Response
      */
-    interface Base<T extends Base> {
+    interface Base<T extends Base<T>> {
 
         /**
          * Get the URL

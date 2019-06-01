@@ -322,7 +322,7 @@ public class HttpConnection implements Connection {
     }
 
     @SuppressWarnings({"unchecked"})
-    private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
+    private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
         URL url;
         Method method;
         Map<String, List<String>> headers;
