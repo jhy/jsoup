@@ -161,8 +161,8 @@ enum TokeniserState {
                 case '<': // NOTE: out of spec, but clear author intent
                     t.error(this);
                     r.unconsume();
-                    // intended fall through to next >
-                case '>':
+					//$FALL-THROUGH$
+				case '>':
                     t.emitTagPending();
                     t.transition(Data);
                     break;
@@ -567,8 +567,8 @@ enum TokeniserState {
                 case '<': // NOTE: out of spec, but clear (spec has this as a part of the attribute name)
                     t.error(this);
                     r.unconsume();
-                    // intended fall through as if >
-                case '>':
+					//$FALL-THROUGH$
+				case '>':
                     t.emitTagPending();
                     t.transition(Data);
                     break;
@@ -1107,8 +1107,8 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
-                    // note: fall through to > case
-                case '>': // catch invalid <!DOCTYPE>
+					//$FALL-THROUGH$
+				case '>': // catch invalid <!DOCTYPE>
                     t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.forceQuirks = true;
