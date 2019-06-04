@@ -33,7 +33,7 @@ public class TokeniserTest {
             }
 
             sb.append('X'); // First character to cross character buffer boundary
-            sb.append(tail + quote + ">\n");
+            sb.append(tail).append(quote).append(">\n");
 
             String html = sb.toString();
             Document doc = Jsoup.parse(html);

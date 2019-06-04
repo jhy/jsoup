@@ -18,13 +18,13 @@ public class TraversorTest {
         NodeTraversor.filter(new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
         }, doc.select("div"));
@@ -38,14 +38,14 @@ public class TraversorTest {
         NodeTraversor.filter(new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
                 // OMIT contents of p:
                 return ("p".equals(node.nodeName())) ? FilterResult.SKIP_CHILDREN : FilterResult.CONTINUE;
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
         }, doc.select("div"));
@@ -62,13 +62,13 @@ public class TraversorTest {
                 // OMIT p:
                 if ("p".equals(node.nodeName()))
                     return FilterResult.SKIP_ENTIRELY;
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
         }, doc.select("div"));
@@ -101,13 +101,13 @@ public class TraversorTest {
         NodeTraversor.filter(new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
                 return FilterResult.CONTINUE;
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
                 // Stop after p.
                 return ("p".equals(node.nodeName())) ? FilterResult.STOP : FilterResult.CONTINUE;
             }

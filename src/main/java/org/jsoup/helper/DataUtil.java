@@ -100,12 +100,11 @@ public final class DataUtil {
             input = ConstrainableInputStream.wrap(input, bufferSize, 0);
     
             Document doc = null;
-            boolean fullyRead = false;
     
             // read the start of the stream and look for a BOM or meta charset
             input.mark(bufferSize);
             ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
-            fullyRead = input.read() == -1;
+            boolean fullyRead = (input.read() == -1);
             input.reset();
     
             // look for BOM - overrides any other header or input

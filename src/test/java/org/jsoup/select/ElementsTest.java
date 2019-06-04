@@ -46,7 +46,7 @@ public class ElementsTest {
         assertEquals("classy", ps.last().attr("style"));
         assertEquals("bar", ps.last().attr("class"));
     }
-    
+
     @Test public void hasAttr() {
         Document doc = Jsoup.parse("<p title=foo><p title=bar><p class=foo><p class=bar>");
         Elements ps = doc.select("p");
@@ -63,7 +63,7 @@ public class ElementsTest {
         assertTrue(two.hasAttr("abs:href"));
         assertTrue(both.hasAttr("abs:href")); // hits on #2
     }
-    
+
     @Test public void attr() {
         Document doc = Jsoup.parse("<p title=foo><p title=bar><p class=foo><p class=bar>");
         String classVal = doc.select("p").attr("class");
@@ -110,7 +110,7 @@ public class ElementsTest {
         assertTrue(thr.hasClass("ThreE"));
         assertTrue(thr.hasClass("three"));
     }
-    
+
     @Test public void text() {
         String h = "<div><p>Hello<p>there<p>world</div>";
         Document doc = Jsoup.parse(h);
@@ -123,49 +123,49 @@ public class ElementsTest {
         assertTrue(divs.hasText());
         assertFalse(doc.select("div + div").hasText());
     }
-    
+
     @Test public void html() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div><p>There</p></div>");
         Elements divs = doc.select("div");
         assertEquals("<p>Hello</p>\n<p>There</p>", divs.html());
     }
-    
+
     @Test public void outerHtml() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div><p>There</p></div>");
         Elements divs = doc.select("div");
         assertEquals("<div><p>Hello</p></div><div><p>There</p></div>", TextUtil.stripNewlines(divs.outerHtml()));
     }
-    
+
     @Test public void setHtml() {
         Document doc = Jsoup.parse("<p>One</p><p>Two</p><p>Three</p>");
         Elements ps = doc.select("p");
-        
+
         ps.prepend("<b>Bold</b>").append("<i>Ital</i>");
         assertEquals("<p><b>Bold</b>Two<i>Ital</i></p>", TextUtil.stripNewlines(ps.get(1).outerHtml()));
-        
+
         ps.html("<span>Gone</span>");
         assertEquals("<p><span>Gone</span></p>", TextUtil.stripNewlines(ps.get(1).outerHtml()));
     }
-    
+
     @Test public void val() {
         Document doc = Jsoup.parse("<input value='one' /><textarea>two</textarea>");
         Elements els = doc.select("input, textarea");
         assertEquals(2, els.size());
         assertEquals("one", els.val());
         assertEquals("two", els.last().val());
-        
+
         els.val("three");
         assertEquals("three", els.first().val());
         assertEquals("three", els.last().val());
         assertEquals("<textarea>three</textarea>", els.last().outerHtml());
     }
-    
+
     @Test public void before() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").before("<span>foo</span>");
         assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
-    
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");
@@ -219,18 +219,18 @@ public class ElementsTest {
     @Test public void remove() {
         Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> jsoup <p>now!</p></div>");
         doc.outputSettings().prettyPrint(false);
-        
+
         doc.select("p").remove();
         assertEquals("<div> jsoup </div>", doc.body().html());
     }
-    
+
     @Test public void eq() {
         String h = "<p>Hello<p>there<p>world";
         Document doc = Jsoup.parse(h);
         assertEquals("there", doc.select("p").eq(1).text());
         assertEquals("there", doc.select("p").get(1).text());
     }
-    
+
     @Test public void is() {
         String h = "<p>Hello<p title=foo>there<p>world";
         Document doc = Jsoup.parse(h);
@@ -274,12 +274,12 @@ public class ElementsTest {
         doc.select("div").traverse(new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
             }
 
             @Override
             public void tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
             }
         });
         assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString());

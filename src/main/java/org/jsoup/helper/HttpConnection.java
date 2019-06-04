@@ -486,7 +486,7 @@ public class HttpConnection implements Connection {
         @Override
         public boolean hasHeader(String name) {
             Validate.notEmpty(name, "Header name must not be empty");
-            return getHeadersCaseInsensitive(name).size() != 0;
+            return !getHeadersCaseInsensitive(name).isEmpty();
         }
 
         /**
