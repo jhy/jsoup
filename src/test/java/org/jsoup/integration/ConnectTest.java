@@ -76,7 +76,7 @@ public class ConnectTest {
         String url = "file://etc/passwd";
         boolean threw = false;
         try {
-            Document doc = Jsoup.connect(url).get();
+            Document doc = Jsoup.connect(url).timeout(5000).get();
         } catch (MalformedURLException e) {
             threw = true;
             assertEquals("java.net.MalformedURLException: Only http & https protocols supported", e.toString());
@@ -432,6 +432,7 @@ public class ConnectTest {
     }
 
     @Test
+    @Ignore
     public void handlesEmptyStreamDuringParseRead() throws IOException {
         // this handles situations where the remote server sets a content length greater than it actually writes
 

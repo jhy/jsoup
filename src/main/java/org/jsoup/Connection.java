@@ -97,6 +97,15 @@ public interface Connection {
     Connection timeout(int millis);
 
     /**
+     * Set the read request timeout duration. If a timeout occurs, an {@link java.net.SocketTimeoutException} will be thrown.
+     * <p>The default read timeout is <b>half of the #timeout</b> (15,000 millis). A read timeout of zero is treated as an infinite timeout.
+     * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
+     * @return this Connection, for chaining
+     * @see #maxBodySize(int)
+     */
+    Connection readTimeout(int millis);
+
+    /**
      * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
      * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
      * only by your patience and the memory available on your machine).
@@ -516,11 +525,24 @@ public interface Connection {
         int timeout();
 
         /**
+         * Get the request read timeout, in milliseconds.
+         * @return the read timeout in milliseconds.
+         */
+        int readTimeout();
+
+        /**
          * Update the request timeout.
          * @param millis timeout, in milliseconds
          * @return this Request, for chaining
          */
         Request timeout(int millis);
+
+        /**
+         * Update the request timeout.
+         * @param millis readTimeout, in milliseconds
+         * @return this Request, for chaining
+         */
+        Request readTimeout(int millis);
 
         /**
          * Get the maximum body size, in bytes.

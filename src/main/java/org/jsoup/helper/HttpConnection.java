@@ -154,6 +154,12 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override
+    public Connection readTimeout(int millis) {
+        req.readTimeout(millis);
+        return this;
+    }
+
     public Connection maxBodySize(int bytes) {
         req.maxBodySize(bytes);
         return this;
@@ -538,6 +544,7 @@ public class HttpConnection implements Connection {
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
         private Proxy proxy; // nullable
         private int timeoutMilliseconds;
+        private int readTimeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
         private Collection<Connection.KeyVal> data;
@@ -551,6 +558,7 @@ public class HttpConnection implements Connection {
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
+            readTimeoutMilliseconds = timeoutMilliseconds/2;
             maxBodySizeBytes = 1024 * 1024; // 1MB
             followRedirects = true;
             data = new ArrayList<>();
@@ -578,9 +586,20 @@ public class HttpConnection implements Connection {
             return timeoutMilliseconds;
         }
 
+        public int readTimeout() {
+            return readTimeoutMilliseconds;
+        }
+
         public Request timeout(int millis) {
             Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
             timeoutMilliseconds = millis;
+            return this;
+        }
+
+        public Request readTimeout(int millis) {
+            Validate.isTrue(millis >= 0, "readTimeout milliseconds must be 0 (infinite) or greater");
+            Validate.isTrue(millis <= timeoutMilliseconds, "readTimeout milliseconds must be less or equals then Timeout");
+            readTimeoutMilliseconds = millis;
             return this;
         }
 
@@ -898,7 +917,7 @@ public class HttpConnection implements Connection {
             conn.setRequestMethod(req.method().name());
             conn.setInstanceFollowRedirects(false); // don't rely on native redirection support
             conn.setConnectTimeout(req.timeout());
-            conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
+            conn.setReadTimeout(req.readTimeout()); // gets reduced after connection is made and status is read
 
             if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
                 ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
