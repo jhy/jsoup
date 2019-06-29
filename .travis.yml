@@ -1,13 +1,15 @@
 language: java
+dist: xenial
 
 jdk:
-    - openjdk7
-    - oraclejdk8
-    - oraclejdk9
+    - openjdk9
     - openjdk10
-    - oraclejdk11
+    - openjdk11
     - openjdk12
 
 cache:
     directories:
         - $HOME/.m2
+
+script:
+    - mvn verify -B
