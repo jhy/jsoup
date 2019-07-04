@@ -46,6 +46,13 @@ public class FormElementTest {
         // ten should not appear, disabled
     }
 
+    @Test public void formDataUsesFirstAttribute() {
+        String html = "<form><input name=test value=foo name=test2 value=bar>";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement) doc.selectFirst("form");
+        assertEquals("test=foo", form.formData().get(0).toString());
+    }
+
     @Test public void createsSubmitableConnection() {
         String html = "<form action='/search'><input name='q'></form>";
         Document doc = Jsoup.parse(html, "http://example.com/");
