@@ -91,4 +91,15 @@ abstract class TreeBuilder {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : null;
     }
+
+
+    /**
+     * If the parser is tracking errors, and an error at the current position.
+     * @param msg error message
+     */
+    protected void error(String msg) {
+        ParseErrorList errors = parser.getErrors();
+        if (errors.canAddError())
+            errors.add(new ParseError(reader.pos(), msg));
+    }
 }

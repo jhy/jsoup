@@ -1,7 +1,7 @@
 package org.jsoup.parser;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -194,7 +194,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
             parser.getErrors().add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
 
-    Element insert(Token.StartTag startTag) {
+    Element insert(final Token.StartTag startTag) {
+        // cleanup duplicate attributes:
+        if (!startTag.attributes.isEmpty()) {
+            int dupes = startTag.attributes.deduplicate(settings);
+            if (dupes > 0) {
+                error("Duplicate attribute");
+            }
+        }
+
         // handle empty unknown tags
         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {

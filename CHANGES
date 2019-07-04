@@ -8,6 +8,10 @@ jsoup changelog
   * Improvement: added Element chaining methods for various overridden methods on Node.
     <https://github.com/jhy/jsoup/issues/1193>
 
+  * Bugfix: if duplicate attributes in an element exist, retain the first vs the last attribute with the same name. Case
+    aware (HTML case-insensitive names, XML are case-sensitive).
+    <https://github.com/jhy/jsoup/issues/1219>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May12]

@@ -112,7 +112,8 @@ abstract class Token {
                         value = "";
                     else
                         value = null;
-                    attributes.put(pendingAttributeName, value);
+                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known (the appropriate tree builder).
+                    attributes.add(pendingAttributeName, value);
                 }
             }
             pendingAttributeName = null;
@@ -125,7 +126,6 @@ abstract class Token {
         final void finaliseTag() {
             // finalises for emit
             if (pendingAttributeName != null) {
-                // todo: check if attribute name exists; if so, drop and error
                 newAttribute();
             }
         }
