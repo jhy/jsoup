@@ -12,6 +12,9 @@ jsoup changelog
     aware (HTML case-insensitive names, XML are case-sensitive).
     <https://github.com/jhy/jsoup/issues/1219>
 
+  * Bugfix: don't submit input type=button form elements.
+    <https://github.com/jhy/jsoup/issues/1231>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May12]

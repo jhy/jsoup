@@ -86,7 +86,9 @@ public class FormElement extends Element {
             if (name.length() == 0) continue;
             String type = el.attr("type");
 
-            if ("select".equals(el.tagName())) {
+            if (type.equalsIgnoreCase("button")) continue; // browsers don't submit these
+
+            if ("select".equals(el.normalName())) {
                 Elements options = el.select("option[selected]");
                 boolean set = false;
                 for (Element option: options) {

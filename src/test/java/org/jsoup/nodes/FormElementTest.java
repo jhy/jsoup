@@ -30,6 +30,7 @@ public class FormElementTest {
                 "<input name='seven' type='radio' value='on' checked><input name='seven' type='radio' value='off'>" +
                 "<input name='eight' type='checkbox' checked><input name='nine' type='checkbox' value='unset'>" +
                 "<input name='ten' value='text' disabled>" +
+                "<input name='eleven' value='text' type='button'>" +
                 "</form>";
         Document doc = Jsoup.parse(html);
         FormElement form = (FormElement) doc.select("form").first();
@@ -44,6 +45,7 @@ public class FormElementTest {
         assertEquals("eight=on", data.get(5).toString()); // default
         // nine should not appear, not checked checkbox
         // ten should not appear, disabled
+        // eleven should not appear, button
     }
 
     @Test public void formDataUsesFirstAttribute() {
