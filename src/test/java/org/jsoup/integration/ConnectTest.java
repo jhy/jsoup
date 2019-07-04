@@ -415,7 +415,7 @@ public class ConnectTest {
     }
 
     @Test public void getUtf8Bom() throws IOException {
-        Connection con = Jsoup.connect(FileServlet.Url);
+        Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
         con.data(FileServlet.LocationParam, "/bomtests/bom_utf8.html");
         Document doc = con.get();
 
@@ -425,8 +425,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryThrowsExceptionWhenTypeIgnored() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
         con.ignoreContentType(true);
 
@@ -443,8 +442,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryResultThrows() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "text/html");
 
         boolean threw = false;
@@ -460,8 +458,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryContentTypeThrowsException() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
 
         boolean threw = false;
@@ -477,8 +474,7 @@ public class ConnectTest {
 
     @Test
     public void canFetchBinaryAsBytes() throws IOException {
-        Connection.Response res = Jsoup.connect(FileServlet.Url)
-            .data(FileServlet.LocationParam, "/htmltests/thumb.jpg")
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"))
             .data(FileServlet.ContentTypeParam, "image/jpeg")
             .ignoreContentType(true)
             .execute();

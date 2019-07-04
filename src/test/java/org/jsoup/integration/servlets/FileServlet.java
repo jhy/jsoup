@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+
 
 public class FileServlet extends BaseServlet {
     public static final String Url = TestServer.map(FileServlet.class);
@@ -23,7 +23,7 @@ public class FileServlet extends BaseServlet {
         String contentType = req.getParameter(ContentTypeParam);
         if (contentType == null)
             contentType = DefaultType;
-        String location = req.getParameter(LocationParam);
+        String location = req.getPathInfo();
 
         File file = ParseTest.getFile(location);
         if (file.exists()) {
@@ -36,6 +36,10 @@ public class FileServlet extends BaseServlet {
         } else {
             res.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    public static String urlTo(String path) {
+        return Url + path;
     }
 
     @Override
