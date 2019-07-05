@@ -24,6 +24,7 @@ cache:
     # Avoid re-downloading the JDK every time
     - $HOME/.jabba/
     - $HOME/.m2/
+    - /usr/local/maven/
 
 before_install:
   # Sets up the Java environment
