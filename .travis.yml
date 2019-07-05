@@ -35,4 +35,4 @@ before_script:
   - bash .install-jdk-travis.sh
 
 script:
-  - /usr/local/maven/mvn verify -B
+  - /usr/local/maven/bin/mvn verify -B
