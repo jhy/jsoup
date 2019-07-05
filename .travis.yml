@@ -28,6 +28,8 @@ cache:
 before_install:
   # Sets up the Java environment
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
+  # Get maven 3.1.1
+  - "wget http://apache.mirror.iphh.net/maven/maven-3/3.1.1/binaries/apache-maven-3.1.1-bin.tar.gz && tar xfz apache-maven-3.1.1-bin.tar.gz && sudo mv apache-maven-3.1.1 /usr/local/maven-3.1.1 && sudo rm -f /usr/local/maven && sudo ln -s /usr/local/maven-3.1.1 /usr/local/maven"
 
 before_script:
   - bash .install-jdk-travis.sh
