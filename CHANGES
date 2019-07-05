@@ -8,6 +8,9 @@ jsoup changelog
   * Improvement: added Element chaining methods for various overridden methods on Node.
     <https://github.com/jhy/jsoup/issues/1193>
 
+  * Improvement: ensure HTTP keepalives work when fetching content via body() and bodyAsBytes().
+    <https://github.com/jhy/jsoup/issues/1232>
+
   * Bugfix: if duplicate attributes in an element exist, retain the first vs the last attribute with the same name. Case
     aware (HTML case-insensitive names, XML are case-sensitive).
     <https://github.com/jhy/jsoup/issues/1219>

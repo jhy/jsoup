@@ -915,13 +915,10 @@ public class HttpConnection implements Connection {
         }
 
         /**
-         * Call on completion of stream read, to close the body (or error) stream
+         * Call on completion of stream read, to close the body (or error) stream. The connection.disconnect allows
+         * keep-alives to work (as the underlying connection is actually held open, despite the name).
          */
         private void safeClose() {
-            if (conn != null) {
-                conn.disconnect();
-                conn = null;
-            }
             if (bodyStream != null) {
                 try {
                     bodyStream.close();
@@ -930,6 +927,10 @@ public class HttpConnection implements Connection {
                 } finally {
                     bodyStream = null;
                 }
+            }
+            if (conn != null) {
+                conn.disconnect();
+                conn = null;
             }
         }
 
