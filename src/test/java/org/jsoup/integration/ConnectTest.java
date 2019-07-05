@@ -313,7 +313,11 @@ public class ConnectTest {
 
     @Test
     public void multiCookieSet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
+        Connection con = Jsoup
+                .connect(RedirectServlet.Url)
+                .data(RedirectServlet.CodeParam, "302")
+                .data(RedirectServlet.SetCookiesParam, "true")
+                .data(RedirectServlet.LocationParam, echoUrl);
         Connection.Response res = con.execute();
 
         // test cookies set by redirect:
