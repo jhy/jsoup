@@ -10,9 +10,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -215,5 +217,22 @@ public class TokeniserTest {
         Node commentNode = doc.body().childNode(0);
         assertTrue("Expected comment node", commentNode instanceof Comment);
         assertEquals(expectedCommentData, ((Comment)commentNode).getData());
+    }
+    
+    @Test public void canParseCdataEndingAtEdgeOfBuffer() {
+        String cdataStart = "<![CDATA[";
+        String cdataEnd = "]]>";
+        int bufLen = maxBufferLen - cdataStart.length() - 1;    // also breaks with -2, but not with -3 or 0
+        char[] cdataContentsArray = new char[bufLen];
+        Arrays.fill(cdataContentsArray, 'x');
+        String cdataContents = new String(cdataContentsArray);
+        String testMarkup = cdataStart + cdataContents + cdataEnd;
+        Parser parser = new Parser(new HtmlTreeBuilder());
+        
+        Document doc = parser.parseInput(testMarkup, "");
+        
+        Node cdataNode = doc.body().childNode(0);
+        assertTrue("Expected CDATA node", cdataNode instanceof CDataNode);
+        assertEquals(cdataContents, ((CDataNode)cdataNode).text());
     }
 }
