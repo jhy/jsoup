@@ -1,13 +1,16 @@
 package org.jsoup.parser;
 
-import org.junit.Test;
-
-import java.io.BufferedReader;
-import java.io.StringReader;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.FilterReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.junit.Test;
 
 /**
  * Test suite for character reader.
@@ -307,5 +310,22 @@ public class CharacterReaderTest {
         assertTrue(r.isEmpty());
     }
 
+    @Test public void rewindWorksAcrossReadCalls() {
+        String text = "one two three four";
+        final int readLimit = 3;
+        Reader obstructiveReader = new FilterReader(new StringReader(text)) {
+            @Override
+            public int read(char[] cbuf, int off, int len) throws IOException {
+                return super.read(cbuf, off, Math.min(len, readLimit));
+            }
+        };
+        CharacterReader r = new CharacterReader(obstructiveReader);
+        
+        r.mark();
+        assertEquals("one two three ", r.consumeTo("four"));
+        r.rewindToMark();
+        
+        assertEquals("one", r.consumeTo(' '));
+    }
 
 }

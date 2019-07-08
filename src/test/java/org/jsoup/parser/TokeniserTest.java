@@ -1,6 +1,16 @@
 package org.jsoup.parser;
 
+import static org.jsoup.parser.CharacterReader.maxBufferLen;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.FilterReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
@@ -9,11 +19,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
-
-import static org.jsoup.parser.CharacterReader.maxBufferLen;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class TokeniserTest {
     @Test
@@ -179,5 +184,19 @@ public class TokeniserTest {
 
             assertEquals("At: " + i, s.charAt(0), Tokeniser.win1252Extensions[i]);
         }
+    }
+    
+    @Test public void handlesSmallReads() {
+        final String testMarkup = "<html><body>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</body></html>";
+        final int readLimit = 3;
+        Reader obstructiveReader = new FilterReader(new StringReader(testMarkup)) {
+            @Override
+            public int read(char[] cbuf, int off, int len) throws IOException {
+                return super.read(cbuf, off, Math.min(len, readLimit));
+            }
+        };
+        Parser parser = new Parser(new HtmlTreeBuilder());
+        Document document = parser.parseInput(obstructiveReader, "");
+        assertEquals("\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0", document.body().textNodes().get(0).getWholeText());
     }
 }
