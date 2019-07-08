@@ -16,6 +16,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
@@ -198,5 +199,21 @@ public class TokeniserTest {
         Parser parser = new Parser(new HtmlTreeBuilder());
         Document document = parser.parseInput(obstructiveReader, "");
         assertEquals("\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0", document.body().textNodes().get(0).getWholeText());
+    }
+    
+    @Test public void canParseVeryLongBogusComment() {
+        StringBuilder commentData = new StringBuilder(maxBufferLen);
+        do {
+            commentData.append("blah blah blah blah ");
+        } while (commentData.length() < maxBufferLen);
+        String expectedCommentData = commentData.toString();
+        String testMarkup = "<html><body><!" + expectedCommentData + "></body></html>";
+        Parser parser = new Parser(new HtmlTreeBuilder());
+        
+        Document doc = parser.parseInput(testMarkup, "");
+        
+        Node commentNode = doc.body().childNode(0);
+        assertTrue("Expected comment node", commentNode instanceof Comment);
+        assertEquals(expectedCommentData, ((Comment)commentNode).getData());
     }
 }
