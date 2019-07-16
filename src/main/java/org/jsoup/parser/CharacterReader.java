@@ -55,9 +55,9 @@ public final class CharacterReader {
         try {
             final long skipped = reader.skip(pos);
             reader.mark(maxBufferLen);
-            final int read = reader.read(charBuf);
+            final int read = readEagerly();
             reader.reset();
-            if (read != -1) {
+            if (read != 0) {
                 Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
                 bufLength = read;
                 readerPos += pos;
@@ -68,6 +68,18 @@ public final class CharacterReader {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+    
+    private int readEagerly() throws IOException {
+        int readPos = 0;
+        while (readPos < charBuf.length) {
+            int charsRead = reader.read(charBuf, readPos, charBuf.length - readPos);
+            if (charsRead == -1) {
+                break;
+            }
+            readPos += charsRead;
+        }
+        return readPos;
     }
 
     /**
