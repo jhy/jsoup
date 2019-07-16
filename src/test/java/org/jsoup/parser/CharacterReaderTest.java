@@ -125,7 +125,15 @@ public class CharacterReaderTest {
         assertEquals('T', r.consume());
         assertEquals("wo ", r.consumeTo("Two"));
         assertEquals('T', r.consume());
-        assertEquals("wo Four", r.consumeTo("Qux"));
+        // To handle strings straddling across buffers, consumeTo() may return the
+        // data in multiple pieces near EOF.
+        StringBuilder builder = new StringBuilder();
+        String part;
+        do {
+            part = r.consumeTo("Qux");
+            builder.append(part);
+        } while (!part.isEmpty());
+        assertEquals("wo Four", builder.toString());
     }
 
     @Test public void advance() {
