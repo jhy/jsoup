@@ -100,4 +100,13 @@ public class StringUtilTest {
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "./two.c"));
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "two.c"));
     }
+    
+    @Test public void isInvisibleChar() {
+        assertTrue(StringUtil.isInvisibleChar('\u200B'));
+        assertTrue(StringUtil.isInvisibleChar('\u200D'));
+        assertTrue(StringUtil.isInvisibleChar('\u00AD'));
+        
+        assertFalse(StringUtil.isInvisibleChar('\u200C'));
+        assertFalse(StringUtil.isInvisibleChar(' '));
+    }
 }
