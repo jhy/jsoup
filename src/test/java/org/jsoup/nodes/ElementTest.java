@@ -1214,7 +1214,7 @@ public class ElementTest {
     }
 
     @Test public void testNormalizesInvisiblesInText() {
-        // return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
+        // return Character.getType(c) == 16 && (c == 8203 || c == 8205 || c == 173);
         String escaped = "This&shy;is&#x200b;one&#x200d;word";
         String decoded = "This\u00ADis\u200Bone\u200Dword"; // browser would not display those soft hyphens / other chars, so we don't want them in the text
 
