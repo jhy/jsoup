@@ -206,4 +206,47 @@ public class TokeniserStateTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<p></p><p></p><div id=\"one\"><span>Two</span></div>", TextUtil.stripNewlines(doc.body().html()));
     }
+    
+    @Test
+    public void testUnconsumeAtBufferBoundary() {
+        String triggeringSnippet = "<a href=\"\"foo";
+        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
+        Arrays.fill(padding, ' ');
+        String paddedSnippet = new StringBuilder().append(padding).append(triggeringSnippet).toString();
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        
+        Parser.parseFragment(paddedSnippet, null, "", errorList);
+        
+        assertEquals(CharacterReader.readAheadLimit - 1, errorList.get(0).getPosition());
+    }
+    
+    @Test
+    public void testOpeningAngleBracketInsteadOfAttribute() {
+        String triggeringSnippet = "<html <";
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        
+        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        
+        assertEquals(6, errorList.get(0).getPosition());
+    }
+    
+    @Test
+    public void testMalformedSelfClosingTag() {
+        String triggeringSnippet = "<html /ouch";
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        
+        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        
+        assertEquals(7, errorList.get(0).getPosition());
+    }
+
+    @Test
+    public void testOpeningAngleBracketInTagName() {
+        String triggeringSnippet = "<html<";
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        
+        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        
+        assertEquals(5, errorList.get(0).getPosition());
+    }
 }
