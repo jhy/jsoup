@@ -17,7 +17,9 @@ env:
     - JDK="adopt@1.8.212-04"
     - JDK="amazon-corretto@1.8.212-04.2"
     - JDK="openjdk@1.9.0-4"
-    - JDK="1.12.0-1"
+    - JDK="openjdk@1.11.0-2"
+    - JDK="openjdk@1.12.0-2"
+    - JDK="openjdk@1.13.0"
 
 cache:
   directories:
