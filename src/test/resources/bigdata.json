@@ -1,0 +1,3551 @@
+// https://github.com/Stvad/Software_Engineering__git/blob/master/Software_Engineering__git.json
+{
+    "__type__": "Deck", 
+    "children": [
+        {
+            "__type__": "Deck", 
+            "children": [], 
+            "crowdanki_uuid": "a69e2b7a-6d5b-11e6-adf3-8c705a50cbf0", 
+            "deck_config_uuid": "a69e3016-6d5b-11e6-adf3-8c705a50cbf0", 
+            "desc": "Please see the <a href='https://ankiweb.net/shared/info/2107904924'>shared deck page</a> for more info.", 
+            "dyn": 0, 
+            "extendNew": 10, 
+            "extendRev": 50, 
+            "media_files": [], 
+            "mid": 1408638528289, 
+            "name": "General Information", 
+            "notes": [
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the main characteristic of a  <b>distributed\n                  version control system\n                  (DVCS)</b>?", 
+                        "A distributed version control system has no\n                  central server which\n                  stores the data. Every local copy contains the full history of the\n                  source code.\n                  \n               "
+                    ], 
+                    "flags": 0, 
+                    "guid": "b#GLS`mD*f", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Does the use of a\n                  <b>DVCS</b> require a\n                  central\n                  code\n                  repository?\n                  \n               ", 
+                        "No."
+                    ], 
+                    "flags": 0, 
+                    "guid": "CPlCr{/4m(", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Where does Git\n                  <b>commit</b> file changes to?<br />", 
+                        "To the local repository."
+                    ], 
+                    "flags": 0, 
+                    "guid": "O9BDWhx,@(", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What happens when you <b>clone</b> a\n                  repository with                    Git?", 
+                        "An exact copy of the\n                  repository is created locally.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "Dkiv9+0iTX", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Does the local clone of a remote repository include the\n                  complete history of the source code?", 
+                        "Yes."
+                    ], 
+                    "flags": 0, 
+                    "guid": "M,[&ZR-I$S", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What's the meaning of <b>master branch</b>?", 
+                        "The \"master\" in Git is the default branch, which generally represents the most stable code."
+                    ], 
+                    "flags": 0, 
+                    "guid": "bm{uO(^4b/", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a <b>commit</b>?", 
+                        "A commit is a pointer to a spot&nbsp;(revision)&nbsp;on the code history."
+                    ], 
+                    "flags": 0, 
+                    "guid": "LknXA>P{gu", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How are Git commits <b>identified</b>?", 
+                        "Instead of numbering commits, Git uses the code contents of the commit to create a unique, 40 character SHA-1 hash."
+                    ], 
+                    "flags": 0, 
+                    "guid": "M!|;;-isLS", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Does a branch created in a repository,&nbsp;which was cloned from another repository, need to have a&nbsp;counterpart in the&nbsp;remote repository?<br /> ", 
+                        "No it doesn't."
+                    ], 
+                    "flags": 0, 
+                    "guid": "cr,S-na/4y", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which two steps are neccessary to persist modifications on a file in the repository?<br />", 
+                        "1. Staging (mark the file to be relevant for Git) = adding the file to the index.<br />2. Commiting: storing the changes in the Git repository.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "wp*ChGY&nd", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the term <b>staging</b> describe?", 
+                        "Marking changes as relevant for the version control, by adding them to the index."
+                    ], 
+                    "flags": 0, 
+                    "guid": "s2b*|BtuO2", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a <b>Revision</b>?<br />", 
+                        "A revision represents a version of the source code. Git identifies\n                                               revisions\n                                               with SHA-1 IDs using a commit object. SHA-1 IDs are 160 bits long and are\n                                               represented\n                                               in\n                                               hexadecimal. The latest version can be addressed\n                                               via\n                                               HEAD, the version before that via\n                                               HEAD~1\n                                               and so on."
+                    ], 
+                    "flags": 0, 
+                    "guid": "DF$yg5cnTs", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "In which file does Git store <b>global settings</b>?<br />", 
+                        "In the <b>.gitconfig</b> file.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "cq9}90`8%l", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which file tells Git which files and directories to <b>ignore</b>?<br />", 
+                        "<pre>.gitignore</pre>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "p{@pLqf8~)", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the difference between <b>local .gitignore</b> and <b>global .gitignore</b> files, regarding visibility?<br />", 
+                        "The local\n               .gitignore\n               file can be committed into the Git repository and\n               therefore is visible\n               to everyone who clones the repository. The\n               global\n               .gitignore\n               file is only\n               locally visible.\n               \n            "
+                    ], 
+                    "flags": 0, 
+                    "guid": "bALcFrS[,0", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How are <b>empty directories</b> handled under Git version control / by common practice?", 
+                        "Git ignores empty directories, i.e. it does not put them under version control. Common practice for tracking an empty directory though, is to put a file called <b>.gitkeep</b> into such a directory.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "julVRci`rj", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the command <b>git reflog</b>&nbsp;do?<br />", 
+                        "It displays the history of the complete changes of the current branch, based on the HEAD revision.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "s$go8!a4M`", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Does <b>git reflog</b>&nbsp;also contain deleted commits?", 
+                        "Yes."
+                    ], 
+                    "flags": 0, 
+                    "guid": "o7*md3rMpY", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How is the <b>default branch</b> called in Git?<br />", 
+                        "Master."
+                    ], 
+                    "flags": 0, 
+                    "guid": "KQ=K|X^!V@", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the term <b>merging</b>&nbsp;describe?<br />", 
+                        "The process of combining changes of two branches."
+                    ], 
+                    "flags": 0, 
+                    "guid": "IMAr1$Qa%~", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a <b>merge conflict</b>?<br />", 
+                        "A merge conflict occurs, if two people have modified the same content and Git cannot automatically determine how both changes should be applied.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "u}r83:+:~S", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the <b>rebase</b>&nbsp;command do?<br>", 
+                        "In general terms - rewrites history. E.g: Combining several commits into<br>                  one commit. Or replaying changes from one branch on top of the other."
+                    ], 
+                    "flags": 0, 
+                    "guid": "ioQ[YMk002", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What functionality does the <b>stash</b> command add?<br />", 
+                        "Saving the current uncommmitted changes and&nbsp;checkout&nbsp;the last committed revision. This allows pulling-in the latest changes or to develop an urgent fix. Afterwards the stashed changes can be restored, which will reapply the changes to the current version of the source code.<br /> "
+                    ], 
+                    "flags": 0, 
+                    "guid": "i`-!UI5`9n", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What's the rule of thumb, concerning the <b>stash</b>&nbsp;command?<br />", 
+                        "It should be the exception to using Git. Typically you would create new branches for new features and switch between branches.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "My4;,HZvH:", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a <b>patch file</b>?<br />", 
+                        "A text file that contains changes to the source code."
+                    ], 
+                    "flags": 0, 
+                    "guid": "m5arfU*|ZX", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is an <b>alias</b> in Git?", 
+                        "An alias in Git allows you to setup your own Git command. E.g. you can define an alias which is a short form of your own favorite commands or you can combine several commands with an alias."
+                    ], 
+                    "flags": 0, 
+                    "guid": "PE`j{-UNE?", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Name two <b>transport types</b>&nbsp;that are supported protocols for Git checkouts", 
+                        "The native Git protocol is <b>git</b>, alternatively the <b>http</b> protocol is also supported."
+                    ], 
+                    "flags": 0, 
+                    "guid": "BKdJz<y,i?", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What happens in regards to naming of the original repository, when <b>cloning</b> a remote repository?<br />", 
+                        "The original repository will automatically be called \"origin\".<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "xDNKnks;P;", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the possibility of using the <b>HTTP protocol</b> with Git especially helpful for?", 
+                        "If a firewall blocks all requests other than http.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "ykx4hD1f`?", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which are the two variants of <b>ssh keys</b>?<br />", 
+                        "Public and private.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "K5v/_?3y;F", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does <b>rev~</b> stand for?", 
+                        "The first parent of a revision \"rev\""
+                    ], 
+                    "flags": 0, 
+                    "guid": "NvGA`?8=%", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the starting point of the scope of <b>.gitignore</b> files?", 
+                        "They define ignore definitions for the whole directory tree, starting from the point where the .gitignore file itself resides."
+                    ], 
+                    "flags": 0, 
+                    "guid": "op.FKBEm<w", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What's the difference between <b>git pull</b> and <b>git fetch</b>? (<span style=\" font-style: normal; font-weight: normal;\">In the simplest terms)</span>", 
+                        "git pull does a git fetch followed by a git merge."
+                    ], 
+                    "flags": 0, 
+                    "guid": "j@2Mww$9I{", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the difference between <b>git commit</b> and <b>git push</b>?", 
+                        "<b>commit:</b> adding changes to the repository.<div><b>push</b>: to transfer the last commit(s) to a remote server</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "n/=o]SCdPT", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the <b>head</b> in Git?", 
+                        "The head is a pointer to the current branch, which is in turn the last commit you made or checked out into your working directory."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Dgx!t", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the <b>index</b> in Git?", 
+                        "It's a snapshot of changes contained in your next commit, this way it's the \"<b>proposed next commit</b>\"."
+                    ], 
+                    "flags": 0, 
+                    "guid": "KRd1.", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does <b>head^</b> mean?", 
+                        "It means the first parent of the tip of the current branch."
+                    ], 
+                    "flags": 0, 
+                    "guid": "gTh:E.xGT7", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the difference between <b>head~</b> and <b>head^</b> ?", 
+                        "&nbsp;~&lt;n&gt; means the revision that is the &lt;n&gt;th generation ancestor of the named revision, following only the first parents.<div>^&lt;n&gt; means the &lt;n&gt;th parent of that revision.</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "oSbQ@6YX3O", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a local version control system?", 
+                        "A database of changes kept on the same computer as the files being versioned."
+                    ], 
+                    "flags": 0, 
+                    "guid": "lyLiO", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How is a distributed version control system different from others?", 
+                        "Every client has a full backup of all the data."
+                    ], 
+                    "flags": 0, 
+                    "guid": "vL>PF", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the \"snapshot\" concept?", 
+                        "In Git, the data is more like a stream of complete snapshots of a mini filesystem rather than a list of file changes like you'll see in SVN, Perforce, etc."
+                    ], 
+                    "flags": 0, 
+                    "guid": "[=E+4", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Why are most git operations so fast?<br>", 
+                        "They happen on the local disk, rather than over a network<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "nWWq:b)^~N", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How does git maintain file integrity?<br>", 
+                        "Everything is SHA-1 checksummed and stored not by filename, but rather hash value of each file's contents.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "j-w#1jS:X.", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are the 3 git states your files can reside in?<br>", 
+                        "committed, modified, and staged<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "C4^;Av:G|V", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does it mean when a file is in the \"committed\" state?<br>", 
+                        "The data is safely stored in your local database<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "d1B#YWuY@B", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does it mean if a file is in the \"modified\" state?<br>", 
+                        "You have changed the file, but not yet committed it.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "B*=9usvjro", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does it mean if a file is in the \"staged\" state?<br>", 
+                        "You have marked a file in its current state to go into the next commit snapshot.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "fZB+bI=,I[", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are the 3 sections of a git project?<br />", 
+                        "the Git directory (repository), the working directory, and the staging area<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "exQD~)OGAp", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is stored in the Git directory?<br>", 
+                        "The metadata and object database for your project<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "tE7lTjYc[[", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is copied when you clone a repository from another computer?<br>", 
+                        "the Git directory<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "k,m+XqcVpU", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the working directory?<br>", 
+                        "A single checkout of one version of the project. These files are pulled out of the compressed database in the git directory and placed on disk for you to use and modify.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "K.$%A~oaD9", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the staging area?", 
+                        "It is a file in the git directory that stores information about what goes into the next commit. It is sometimes referred to as the \"index\"."
+                    ], 
+                    "flags": 0, 
+                    "guid": "L41A}A*]ro", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the 3-step basic git workflow?", 
+                        "1. modify files in working directory<div>2. stage files, adding snapshots of them to the staging area</div><div>3. commit, which takes the files in the staging area and stores that snapshot permanently to your git directory</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "F*ctH#)=J&", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Where are the three places that git config variables can be stored?", 
+                        "1. systemwide: &nbsp;/etc/gitconfig<div>2. per user: ~/.gitconfig or ~/.config/git/config</div><div>3. per project: .git/config</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "u(@cQ<B8CM", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What option do you pass to git config to modify system-level configs?", 
+                        "--system"
+                    ], 
+                    "flags": 0, 
+                    "guid": "i})V+Dzh9J", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What option do you pass to git config to make changes for specific to your user?", 
+                        "--global"
+                    ], 
+                    "flags": 0, 
+                    "guid": "BarEPJKq84", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are three ways to get help on a git verb?", 
+                        "1. git help &lt;verb&gt;<div>2. git &lt;verb&gt; --help</div><div>3. man git-&lt;verb&gt;</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "O`8m5XL4n_", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you get a copy of an existing git repository, say https://github.com/libgit2/libgit2<span style=\"line-height: 1.1;\">?</span><br>", 
+                        "git clone&nbsp;https://github.com/libgit2/libgit2"
+                    ], 
+                    "flags": 0, 
+                    "guid": "o=}nL8EYm$", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are a couple different transfer protocols used by git?", 
+                        "https://<div>git://</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "A}1)?]T`vM", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the difference between a tracked and untracked file?", 
+                        "Tracked files are all files that were in the last snapshot. They can be unmodified, modified, or staged. Untracked files are not in the latest snapshot or staged."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q`hDEs1([I", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Why is it possible for a tracked file to be both in staging and modified state?", 
+                        "Because the staged version is the contents of the file at the exact time you ran \"git add\" to stage the file. You have to run \"git add\" again if you've modified it and want to stage the latest contents of the file."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Ft&|}kHYmQ", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What file is used to ignore some untracked files?", 
+                        ".gitignore"
+                    ], 
+                    "flags": 0, 
+                    "guid": "A(Pz~1U7<!", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the default shortname for cloned repositories?", 
+                        "origin"
+                    ], 
+                    "flags": 0, 
+                    "guid": "t;V;(s*,@A", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How does git fetch affect your local repository?", 
+                        "It pulls the data, but does not merge or modify your working copy. To actually merge, it must be manually done."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Pj#|SXYy$f", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is stored in a git commit object?", 
+                        "* pointer to the snapshot of the staged content<div>* author's name and email</div><div>* commit message</div><div>* pointer to the commit(s) directly before this one</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "s]So><?rVW", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a branch in terms of git commit objects?", 
+                        "A lightweight movable pointer to one of the commits"
+                    ], 
+                    "flags": 0, 
+                    "guid": "B0mlW%vB3_", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the name of the special pointer which tells you which local branch you're currently on?", 
+                        "HEAD"
+                    ], 
+                    "flags": 0, 
+                    "guid": "wx>?/9M3;E", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What happens to the HEAD pointer when you create a new branch?", 
+                        "Nothing, it continues to point to the existing branch (such as master, if you haven't changed it yet). It does not switch to the new branch automatically."
+                    ], 
+                    "flags": 0, 
+                    "guid": "rSIJ1yGYe", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What happens to the working directory when you switch branches?", 
+                        "The files are updated to reflect the last commit of the branch. If it cannot be updated cleanly, git will not let you switch."
+                    ], 
+                    "flags": 0, 
+                    "guid": "uZYKi_w!c;", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Why is a git branch cheap?", 
+                        "A branch is a simple file that contains the 40 character SHA-1 checksum of the commit it points to."
+                    ], 
+                    "flags": 0, 
+                    "guid": "i}td:;X-$8", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a \"fast-forward\" merge?", 
+                        "When you try to merge a commit that can be reached by following the first commit's history, git will simply move the pointer forward because there is no divergent work to merge together. This is known as a \"fast-forward\" merge."
+                    ], 
+                    "flags": 0, 
+                    "guid": "rVbh7YpG/J", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a merge commit?", 
+                        "When two divergent branches are merged, git creates a new snapshot and a new commit that points to it. A merge commit has more than one parent."
+                    ], 
+                    "flags": 0, 
+                    "guid": "I_KQ5^#C&9", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How is git different in dealing with the merge base when merging branches?", 
+                        "Git determines the best common ancestor to use for its merge base, which is a lot simpler than many other VCSes."
+                    ], 
+                    "flags": 0, 
+                    "guid": "tgr3Vb|<^/", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the leading * character mean in the output of git branch?", 
+                        "It indicates the branch you have currently checked out (that HEAD points to)."
+                    ], 
+                    "flags": 0, 
+                    "guid": "B@=#&gvD8$", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the name used for a branching workflow where sets of commits graduate to a more stable silo when they're fully tested?<br>", 
+                        "progressive-stability branching<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "z/@Lr]Q(#S", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the name for a short-lived branch for a single particular feature or related work?<br>", 
+                        "topic branch<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "i!X._o?lw1", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are remote branches?<br>", 
+                        "Pointers to the state of branches in remote repositories. They are local branches that you cannot move.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "G#8JF}nb2h", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "When are remote branch pointers updated?<br>", 
+                        "They are automatically moved when you do any network communication.<br>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "J6*@RPtUh1", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "When you fetch a remote branch, will it automatically set up a local branch with the same name?", 
+                        "No. You must either merge it or create your own branch from it."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q5})51ApH+", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the shorthand for referencing the tracking remote and branch?", 
+                        "@{u} or @{upstream}"
+                    ], 
+                    "flags": 0, 
+                    "guid": "tK3qT-!z5k", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How does rebasing affect the commit history differently than a merge?", 
+                        "A rebase will make the commit history look linear/clean rather than a bunch of branch merges. This is often done to make sure your commits apply cleanly to a remote branch."
+                    ], 
+                    "flags": 0, 
+                    "guid": "zcp*jH9a&8", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What one tip should you follow to avoid a drawback of rebasing?", 
+                        "Do not rebase commits that exist outside of your repository."
+                    ], 
+                    "flags": 0, 
+                    "guid": "ATWa!RS=Z&", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a good general rule for deciding when to rebase or to merge?", 
+                        "Rebase local changes you haven't shared yet in order to clean up, but never rebase anything you pushed somewhere."
+                    ], 
+                    "flags": 0, 
+                    "guid": "xN+rNGwU1e", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is a \"bare repository\"?", 
+                        "A repository that doesn't contain a working directory"
+                    ], 
+                    "flags": 0, 
+                    "guid": "uN=LqKN.,h", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }
+            ]
+        }, 
+        {
+            "__type__": "Deck", 
+            "children": [], 
+            "crowdanki_uuid": "a6a24430-6d5b-11e6-adf3-8c705a50cbf0", 
+            "deck_config_uuid": "a69dd698-6d5b-11e6-adf3-8c705a50cbf0", 
+            "desc": "Please see the <a href='https://ankiweb.net/shared/info/'>shared deck page</a> for more info.", 
+            "dyn": 0, 
+            "extendNew": 1, 
+            "extendRev": 50, 
+            "media_files": [], 
+            "mid": "1467568254113", 
+            "name": "Commands", 
+            "notes": [
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will <b>initialize a new, empty repository</b> in the current working directory?", 
+                        "<pre>git init</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "vd<-:IY:nA", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What command is used to configure the local user's email (\"email\"), that are used when committing to Git repositories?", 
+                        "<pre><span style=\"font-family: Arial\">git config --global user.email \"email\"</span></pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Oy*>$5ZF=,", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does this command do:&nbsp;<b>git add . &nbsp;</b>", 
+                        "It adds everything inside the current working directory to the index."
+                    ], 
+                    "flags": 0, 
+                    "guid": "bFER[=-<|E", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which commands are needed to <b>add</b> <b>all .js files </b>to the local Git repository?", 
+                        "<pre>git add *.js</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ybvT<[dy(K", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will <b>commit</b> to the local repository, including a <b>commit message </b>(\"message\")?", 
+                        "<pre>git commit -m \"message\"</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "db&Hk]Np30", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command prints&nbsp;&nbsp;the <b>current state</b> of your code/repository?", 
+                        "<pre style=\"text-align: justify;\">git status</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "yl]3.#F=wd", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which Git command is used to <b>list the existing branches</b>?", 
+                        "<pre>git branch</pre>", 
+                        "", 
+                        "Ommitting all options to the \"git branch\" command, will list the existing branches."
+                    ], 
+                    "flags": 0, 
+                    "guid": "xx=?AKe[yR", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command <b>creates</b> a new branch (\"branchname\")?", 
+                        "<pre>git branch branchname</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "P~gJ-(ZRpb", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will switch to the branch \"myotherbranch\"?", 
+                        "<pre style=\"line-height: 25px;\">git checkout myotherbranch</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "A;K+h*%{g+", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What commands will join everything from the branch \"bigIdea\" to be part of the \"master\" branch?", 
+                        "<pre>git checkout master</pre>\n<pre>git merge bigIdea</pre>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "xj?aKvn]u;", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will delete (even) an unmerged branch (\"branchname\")?", 
+                        "git branch -D branchname", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "cy@|.4O)Rb", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays the existing <b>global Git settings</b>?<br />", 
+                        "<pre>git config --list</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "gCNrkn8>}D", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command shows<b> commit logs </b>(list of all commits, starting with newest)?<br />", 
+                        "<pre>git log</pre>", 
+                        "<div>For each commit the following info would be displayed</div>1. SHA-1 identifier<br />2. Author and Email<br />3. Date + time of the commit<br />4. Commit message header", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "F.SR4G,Gfi", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays all <b>changes to tracked files since the last commit</b>?<br />", 
+                        "<pre>git diff</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "gz>^p#~9is", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays the changes in a <b>specific commit </b>(\"commitid\")?", 
+                        "<pre>git show commitid</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Km<`;Sy=)R", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays the <b>change history</b> of a specific file (\"filename\")?", 
+                        "<pre>git log filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "c|}&67Vq<k", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays which commit and author modified a file (\"filename\") on a line by line basis?", 
+                        "<pre>git blame filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "zhQu]56^%W", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command deletes a file (\"filename\")&nbsp;from the working directory and at the same time marks it for the next commit?<br />", 
+                        "<pre>git rm filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "jPCDaOPH-e", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays the existing defined <b>remote repositories</b>?<br />", 
+                        "<pre>git remote</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "BW0mPtV2np", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command <b>cleans</b>&nbsp;untracked changes in the working directory?", 
+                        "<pre>git clean -f</pre>", 
+                        "optional:<div>-d to remove untracked directories</div><div>-x remove also \"ignored files\"</div>", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "tLncJ/l5g8", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How can you <b>revert a deleted or changed file </b>(\"filename\")<b> that has not yet been added to the index</b>?<br />", 
+                        "git checkout filename", 
+                        "Add -- after checkout to avoid naming conflicts if you have tag or branch with the same name", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "fB~P#a9Rr9", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How can you checkout older revisions of your source code (revision \"commitid\")?<br />", 
+                        "git checkout commitid", 
+                        "Via checking out specific commit id", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "mO83Khi,Bp", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command removes an added file (\"filename\") from the index again?<br />", 
+                        "<pre>git reset filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "r9_$:6`{&]", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How can all changes of a commit (\"commitid\") be reverted and a new commit be recorded, which documents that the other commit was reverted?<br />", 
+                        "<pre>git revert commitid</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "IkdEc`A5@C", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command lists the <b>available tags</b>?<br />", 
+                        "<pre>git tag</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "C%6YFoMT|@", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command creates a <b>new tag </b>(\"tagname\") <b>with a description&nbsp;</b>(description)?", 
+                        "<pre>git tag tagname -m 'description'</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "QXr(!z{!JN", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will <b>check out a specific tag </b>(\"tagname\")?", 
+                        "<pre>git checkout tagname</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "px*W<u78A!", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command / parameter <b>lists all branches, including remote</b> branches?", 
+                        "<pre>git branch -a</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Lh{-~`~T,3", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command <b>creates a new branch </b>(branchname)<b> and switches to it</b>?", 
+                        "git checkout -b branchname", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "M|AX8qt~>O", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command would <b>delete </b>the local \"testing\" branch (if it is merged)?<br />", 
+                        "<pre>git branch -d testing</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "E$0ONs0VO;", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command <b>merges differences</b> of the \"testing\" branch into the current active branch?<br />", 
+                        "<pre>git merge testing</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "BX2UBkW5(_", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which default Git tool exists for <b>resolving conflicts</b>, which command starts it?<br />", 
+                        "git mergetool", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "wV]w?R>lcp", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command would <b>start interactive rebase </b>of the last seven commits?", 
+                        "<pre>git rebase -i HEAD~7</pre>", 
+                        "", 
+                        "More info on interactive mode here:&nbsp;<a href=\"https://git-scm.com/docs/git-rebase\">https://git-scm.com/docs/git-rebase</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "rYX3zdLiLv", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command displays <b>which commit deleted a specific file </b>(\"filename\")?<br />", 
+                        "<pre>git log -- filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "qT8-CD>aCh", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the <b>--</b> option in <b>git log</b>&nbsp;used for?<br />", 
+                        "To see the commit history for a file, even if the file has been deleted.<br />"
+                    ], 
+                    "flags": 0, 
+                    "guid": "en>uh_WPEG", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will define an alias \"add-commit\", which<br />                  combines<br /> <b>git add . -A</b><br />                  and<br /> <b>git commit</b>?", 
+                        "<pre class=\"programlisting\">git config --global alias.add-commit <span class=\"hl-string\">'!git add . -A &amp;&amp; git commit'</span></pre>", 
+                        "! is to specify that it's an external command", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "v4!4YvMOyH", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does the command do: <b>git reset --soft HEAD~</b>", 
+                        "Undo the last commit. The affected files will be back on stage again."
+                    ], 
+                    "flags": 0, 
+                    "guid": "Bb9(y,?O!N", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What does <b>git reset --hard HEAD~</b>&nbsp;do? (instead of HEAD~ it could be also a commit SHA-1 or another reference)", 
+                        "Undo the last commit, unstage files AND undo any changes in the working directory. (Not tracked files won't be affected)"
+                    ], 
+                    "flags": 0, 
+                    "guid": "e?#@Ae7yYi", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which parameter allows you to <b>stage an ignored file</b>?", 
+                        "<pre>--force</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "t#C`2kFJh%", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which Git command <b>newly stages a specific file </b>(\"filename\")?", 
+                        "<pre>git add filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "F9hBmh|l1!", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will <b>undo the checking-in of an unwanted change </b>in a file \"filename\"&nbsp;(remove the respective file from the index), but keep the changes in the filesystem?", 
+                        "<pre>git reset filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "K&{Me3,SpN", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What is the difference between:<br><pre>git checkout -f</pre> and <pre>git reset --hard HEAD</pre>?", 
+                        "None, with these parameters they do exactly the same."
+                    ], 
+                    "flags": 0, 
+                    "guid": "v*,Ks", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Remove main.txt from staging but keep in working (untrack file, after this and commit file would be remove from repo)", 
+                        "git rm --cached main.txt", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q+7&uzQT|w", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command / parameter changes the message of the last commit? (for \"newmessage\")<br />", 
+                        "<code>git commit --amend -m \"newmessage\"</code><br />", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "PI~KTfs,vb", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Clone an existing repository (address: \"url\")", 
+                        "git clone url", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "G82n[7RC-w", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Create a new local repository", 
+                        "git init", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "q@#s*s3u]g", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Add some (allows you interactively to choose which) changes in <i>file</i> to the next commit", 
+                        "git add -p <i>file</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "PMP7kE]98_", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Commit all local changes in tracked files", 
+                        "git commit -a", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "u.R(/o`lN5", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Commit previously staged changes", 
+                        "git commit", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "CD?#JCMZQT", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Change the last commit [only before pushing]", 
+                        "git commit --amend", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "AuqfF!TJF|", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show changes over time (diffs) for a specific file (\"filename\")", 
+                        "git log -p <i>filename</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "LXatc~.8(T", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Switch HEAD to <i>branch</i>", 
+                        "git checkout<i>&nbsp;branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "oQvc(-wSfJ", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Create a new branch (name \"nbranch\") based on current HEAD", 
+                        "git branch n<i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "D@AO#)N}^n", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Create a new tracking branch (\"tbranch\") based on a remote branch (\"rbranch\")", 
+                        "git branch --track t<i>branch</i> <i>rbranch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "iSDwh!LidQ", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Delete a local branch (\"branch\")", 
+                        "git branch -d <i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "kFL]Z[c?WW", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Mark the current commit with a tag (\"tagname\")", 
+                        "git tag <i>tagname</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "s!ZB.hS(-G", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show information about a remote&nbsp;(\"origin\")", 
+                        "git remote show <i>origin</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "tF=*UV)5N=", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Add remote server 'url' with shortname 'myurl'", 
+                        "git remote add myurl url", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "HoFoQWIJch", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Download all changes from <i>remote&nbsp;</i>(\"origin\")&nbsp;but don't integrate into HEAD", 
+                        "git fetch <i>origin</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "fANXqT[p/F", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Download changes from remote&nbsp;(\"origin\")&nbsp;branch \"branch\" and directly merge into HEAD", 
+                        "git pull <i>origin</i> <i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "u82$&koLO+", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Publish local changes (for a branch \"branch\") on a remote (\"origin\")", 
+                        "git push <i>origin</i>&nbsp;<i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Ln4&)EH3[6", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Delete a \"branch\" on the remote&nbsp;(\"origin\") (old way)", 
+                        "git push <i>origin</i>&nbsp;:<i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "b:dG)*p%)g", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Publish your tags", 
+                        "git push --tags", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "lapc;rQKP$", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Merge <i>branch</i> into your current HEAD", 
+                        "git merge <i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "AKq80IBb}P", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Rebase your current HEAD onto <i>branch</i>", 
+                        "git rebase <i>branch</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "J<:a=e?`oZ", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Abort a rebase", 
+                        "git rebase --abort", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q8k(Cko^;c", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Continue a rebase after resolving conflicts", 
+                        "git rebase --continue", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "P}-RgapC#;", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Use your configured merge tool to solve conflicts", 
+                        "git mergetool", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ktUT0Y8n@/", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Use your editor to manually solve conflicts during merge/rebase and after resolving mark file as resolved with:", 
+                        "git add <i>resolved-file or</i><div>git rm <i>resolved-file</i></div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "x:&=qX<?g[", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "uncertain"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Discard all local changes in working directory", 
+                        "git reset --hard HEAD", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "z4bjQlX^a)", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Discard local changes in a specific file (\"filename\")", 
+                        "git checkout&nbsp;<i>filename</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "AiXZD7qnCt", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reset your HEAD pointer to some previous <i>commit</i> (and discard all changes since then)", 
+                        "git reset --hard <i>commit</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "i[4p_Cw|hU", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reset your HEAD pointer to some previous commit, and preserve all changes as unstaged changes", 
+                        "git reset <i>commit</i>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "f.*![R]E|?", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reset your HEAD pointer to some previous commit (\"commit\") and preserve uncommited local changes", 
+                        "git reset --keep <i>commit</i>", 
+                        "If a file that is different between &lt;commit&gt; and HEAD has local changes, reset is aborted.", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "R|LmdnJ,y", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What tool is used to get and set configuration variables that control how git looks and operates?", 
+                        "git config", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "fxZQIT(,(b", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What .gitignore pattern would you use to ignore all .txt files in the doc folder?", 
+                        "doc/**/*.txt", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/gitignore\">https://git-scm.com/docs/gitignore</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "EADNWO/y%=", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How can you skip the staging area for modified, tracked files when doing a commit?", 
+                        "git commit -a", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "v].?TQ-:3w", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you delete a <i>file</i> that has been modified and already added to the staging area?", 
+                        "git rm -f file", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "t-q}2tG:=X", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you rename or move a file in git (\"src\" to \"target\")?", 
+                        "git mv src target", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "hwwyi_%Pd8", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are some of the options to view the commit log history in different formats?", 
+                        "--pretty=[oneline | short | full | fuller]<div>--pretty=format:\"...\"</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "mqXLAB~pFz", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you view the history for author jdoe with keyword potato in the commit message made in the last two weeks that added or removed a reference to the function mashThePotato that were not merges?", 
+                        "git log --author jdoe --grep potato --all-match -SmashThePotato --since=2.weeks --no-merges"
+                    ], 
+                    "flags": 0, 
+                    "guid": "eh}B.z/n^;", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Why is git reset considered safe without \"--hard\" option?", 
+                        "It only affects your staging area"
+                    ], 
+                    "flags": 0, 
+                    "guid": "JC%^;+L+{p", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you tag revision 0123abc with the name v1.0?", 
+                        "git tag v1.0 0123abc", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "wi-I)r_kC{", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What happens if you try to delete a branch with \"git branch -d &lt;name&gt;\" that has not yet been merged?", 
+                        "It will fail, and offer -D if you really want to lose your branch."
+                    ], 
+                    "flags": 0, 
+                    "guid": "u)(3>G(PkD", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "If you want to use a different name than \"origin\" (eg \"norig\") for the remote when cloning a repository (\"repo\"), what parameter would you use?<br />", 
+                        "git clone -o norig repo<br />", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ce?E649%xX", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How would you share a local branch called \"badname\" as \"goodname\" on a remote called \"origin\"?<br>", 
+                        "git push origin badname:goodname<br>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "K7n]nn1&|k", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How would you set up a credential cache so that you don't have to keep typing your password for git push?", 
+                        "git config --global credential.helper cache", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "p2[Clw3O~<", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "If you have a local branch and you want it to use a remote branch (say origin/hotfix) as upstream, how would you set it?", 
+                        "git branch -u origin/hotfix", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "m8|o{YV!nU", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you see what tracking branches you have set up?", 
+                        "git branch -vv", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "LRM3~SSVl%", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How would you delete a remote branch (\"serverfix\") from the server (\"origin\")?", 
+                        "git push origin --delete serverfix", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Igy_c!s=?[", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How would you use rebase to apply master changes to branch b1, then apply b1 changes to master? The result being a linear history.", 
+                        "<div># method: 1</div>git checkout b1<div>git rebase master</div><div>git checkout master</div><div>git merge b1</div><div><br></div><div># method: 2</div><div>git rebase b1 master</div><div>git checkout master</div><div>git merge b1</div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "BU,]d;k1vy", 
+                    "note_model_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "If you have changes on commits that no longer exist upstream (due to a remote rebase), how can you pull in those changes and avoid conflicts that would happen with git pull origin/master?", 
+                        "<div>git pull --rebase origin/master</div>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "r&Du}9yV]>", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": []
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What are limitations of the command that changes the message of the last commit (<span style=\"font-family: monospace\">git commit --amend</span>)?", 
+                        "It only works before the commit has been pushed to remote repo."
+                    ], 
+                    "flags": 0, 
+                    "guid": "p}K},k:N*K", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What command is used to configure the local user's name (\"Name\"), that are used when committing to Git repositories?", 
+                        "<pre>git config --global user.name \"Name\"</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "tc$Es;:D1%", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show what file would be delited with \"git clean\" (dry run)", 
+                        "git clean -n", 
+                        "(or --dry-run)", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "e%>lbo,!2:", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What option should you add to \"git clean\" in order to remove untracked directories", 
+                        "-d", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q`Z}4EnZK~", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What option should you add to \"git clean\" in order to remove \"ignored\" files", 
+                        "-x", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "dk~4Dx5y5N", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Which command will&nbsp;<b>show the entire history (</b>including renames<b>)&nbsp;</b>for the file (\"filename\")?", 
+                        "<pre>git log --follow -p filename</pre>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "k`%2n:=CjO", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<b>Create a stash</b>&nbsp;with uncommitted changes (analogous to save uncommited changes, and do reset hard)", 
+                        "git stash", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ez-t2N[Xx1", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell", 
+                        "stash"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<b>Reapply the stashed changes</b>&nbsp;<b>and</b>&nbsp;<b>delete the stash&nbsp;</b>from the list of stashes", 
+                        "git stash pop", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "h?w8D]L^FH", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell", 
+                        "stash"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<b>Reapply the stashed changes</b>&nbsp;without deleting<b>&nbsp;stash&nbsp;</b>from the list of stashes", 
+                        "git stash apply", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "s]W5g${#u#", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell", 
+                        "stash"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show git stash stack (list of stashes)", 
+                        "git stash list", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Pd,w:x7/_-", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell", 
+                        "stash"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show branches already merged into current branch", 
+                        "git branch --merged", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "r6fVPW{|To", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show branches not yet merged into current branch", 
+                        "git branch --no-merged", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "c@|3gg#;C]", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Rebase master onto develop without checking it out", 
+                        "git rebase master develop", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "zi:*@|txPH", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show remote servers with URL displayed", 
+                        "git remote -v", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "B*+[Z2P7KB", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Rename remote 'server1' to 'server2'", 
+                        "git remote rename server1 server2", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ti2E88+S5G", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Remove remote 'server1'", 
+                        "git remote rm server1", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "NeFQQhW5^#", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show last two commits with diffs", 
+                        "git log -p -2", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "jEwY}^Te}u", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show commit logs with stats", 
+                        "git log --stat", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "8.]Jh.QO$", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<div>Show commit logs one per line</div>", 
+                        "git log --pretty=oneline", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Nt[d(Wa#l9", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show commit logs with ascii graph", 
+                        "git log --graph", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "N3Nv.H3g;i", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show commit log for the last week", 
+                        "git log --since=1.week", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "K9W#BB4D6c", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<div>Show prev commits for each lines 10-15 of file.rb</div>", 
+                        "git blame -L 10,15 file.rb", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "DpA{?G=4xx", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reapply stash 2", 
+                        "git stash apply stash@{2}", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "ASur]9.2r1", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reapply stashed changes along with the changes in index (staging the changes, for example)", 
+                        "git stash apply --index", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "z0v]ev^m&4", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Drop stash 2", 
+                        "git stash drop stash@{2}", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "K?U.M_8qGm", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Create branch 'mybranch' from stash", 
+                        "git stash branch mybranch", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "frj9MIHYN;", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Delete all stashes", 
+                        "git stash clear", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "vMkxJ_N}WR", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show what's staged but not yet committed", 
+                        "git diff --staged", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "C=%4u;E{qS", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Start binary search of commits to find bad commit", 
+                        "git bisect start", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "I;|,m~EPM+", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Mark current commit as broken during bisect", 
+                        "git bisect bad", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "snS(|j2h+c", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "<div>Mark current commit as good during bisect</div>", 
+                        "git bisect good", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "nV[EjN,:@f", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Mark v2.2 as last known good commit during bisect (beginning of binary search)", 
+                        "git bisect good v2.2", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "B&(BK&(f`i", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "How do you initiate bisect algorithm in git (several commands)", 
+                        "<div><div>Suppose you are trying to find the commit that broke a feature that was known to work in version v2.6.13-rc2 of your project. You start a bisect session as follows:</div><div><br /></div><div>$ git bisect start</div><div>$ git bisect bad # Current version is bad</div><div>$ git bisect good v2.6.13-rc2 # v2.6.13-rc2 is known to be good</div></div><div><br /></div><a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "z+Mb^@:H2B", 
+                    "note_model_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Reset to original&nbsp;HEAD when finished with bisect", 
+                        "git bisect reset", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "zT>)P:<]^A", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Run 'test.sh' on each commit during bisect (automates designation of commit as \"good\" or \"bad\")", 
+                        "git bisect run test.sh", 
+                        "Note that the script should exit with code 0 if the current source code is good/old, and exit with a code between 1 and 127 (inclusive), except 125, if the current source code is bad/new.", 
+                        "<div><a href=\"https://git-scm.com/docs/git-bisect\">https://git-scm.com/docs/git-bisect</a></div>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "P375+&ZLLM", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Search the working directory for \"foo()\"", 
+                        "git grep \"foo()\"", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "w/@P4=C{XI", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "View all the merge conflicts (if your working tree is in corresponding state)", 
+                        "git diff", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "goZxIb4w*t", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "See differences between two commits (\"commitid1\", \"commitid2\")", 
+                        "git diff commitid1 commitid2", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "wb7|*(on45", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "See the files (only filenames) changed between two commits (\"commitid1\", \"commitid2\")", 
+                        "git diff&nbsp;--name-only&nbsp;commitid1 commitid2&nbsp;", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "D-cA<mm5S>", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Undo non-pushed commits (if you are tracking branch origin/master)", 
+                        "git reset origin/master", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "j+p@19O^.m", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Apply a patch (\"patchname.patch\")", 
+                        "<div>git apply -v patchname.patch</div>", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "nsS,t6r6k~", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Re-checkout file (\"filename\") or files specified by path to version specified by <i>rev</i> (which may be specified using a SHA1 commit ID, branch name, or tag), overwriting any local changes.", 
+                        "git checkout rev filename", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "rZOpQ[aZ<4", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Check out the client branch, figure out the patches from the common ancestor of the client and server branches (the common ancestor branched from master in the past), and then replay the patches from client that are not into common ancestor onto master.", 
+                        "git rebase --onto master server client", 
+                        "", 
+                        "Here are some diargrams:&nbsp;<a href=\"https://git-scm.com/book/ch3-6.html\">https://git-scm.com/book/ch3-6.html</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "dOe.P/`?3w", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Create alias \"co\" for git checkout", 
+                        "git config --global alias.co checkout", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Q00f>K3|x]", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "commands", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Add \"unstage\" alias to git (for current user)", 
+                        "git config --global alias.unstage 'reset HEAD --'", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "H+[B`$4X}+", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "commands", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Filter commit by author ('jdoe') in git log", 
+                        "git log --author jdoe", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "OK9(#LMJ]r", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "log", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Filter commit by presense of \"pattern\" in commit message in git log", 
+                        "git log --grep pattern", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "Oe9~pAq==p", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "log", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "What parameter of git log should you use to specify that you want to see only commits matching all given patterns (with --grep option)?", 
+                        "--all-match", 
+                        "", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "L%bpn*{MB[", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "log", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Look for differences whose patch text contains added/removed lines that match &lt;regex&gt;.", 
+                        "git log -G&lt;regex&gt;", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-log\">https://git-scm.com/docs/git-log</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "D]39x!74>j", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "log", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Stash all changes (including untracked and ignored files)", 
+                        "git stash --all", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-stash\">https://git-scm.com/docs/git-stash</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "bf+S])w`{#", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Stash files in repo including untracked files (but not ignored ones)", 
+                        "git stash&nbsp;--include-untracked", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-stash\">https://git-scm.com/docs/git-stash</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "H[wLNmJhnn", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Start git stash interactive mode (allows you to &nbsp;interactively select changes, that would be stashed)", 
+                        "git stash -p", 
+                        "", 
+                        "<a href=\"https://git-scm.com/docs/git-stash\">https://git-scm.com/docs/git-stash</a>"
+                    ], 
+                    "flags": 0, 
+                    "guid": "tnbnb&KWxw", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }, 
+                {
+                    "__type__": "Note", 
+                    "data": "", 
+                    "fields": [
+                        "Show status of the repository, ignoring untracked files", 
+                        "git status -uno", 
+                        "or&nbsp;--untracked-files=no. Other options - normal (Shows untracked files and directories),&nbsp;all (default, Also shows individual files in untracked directories).", 
+                        ""
+                    ], 
+                    "flags": 0, 
+                    "guid": "sG?>pdX-Dy", 
+                    "note_model_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+                    "tags": [
+                        "command", 
+                        "git", 
+                        "shell"
+                    ]
+                }
+            ]
+        }
+    ], 
+    "crowdanki_uuid": "a69dcedc-6d5b-11e6-adf3-8c705a50cbf0", 
+    "deck_config_uuid": "a69dd698-6d5b-11e6-adf3-8c705a50cbf0", 
+    "deck_configurations": [
+        {
+            "__type__": "DeckConfig", 
+            "autoplay": true, 
+            "crowdanki_uuid": "a69dd698-6d5b-11e6-adf3-8c705a50cbf0", 
+            "dyn": false, 
+            "lapse": {
+                "delays": [
+                    10
+                ], 
+                "leechAction": 0, 
+                "leechFails": 8, 
+                "minInt": 1, 
+                "mult": 0.0
+            }, 
+            "maxTaken": 60, 
+            "name": "Default", 
+            "new": {
+                "bury": true, 
+                "delays": [
+                    1, 
+                    10
+                ], 
+                "initialFactor": 2500, 
+                "ints": [
+                    1, 
+                    4, 
+                    7
+                ], 
+                "order": 1, 
+                "perDay": 20, 
+                "separate": true
+            }, 
+            "replayq": true, 
+            "rev": {
+                "bury": true, 
+                "ease4": 1.3, 
+                "fuzz": 0.05, 
+                "ivlFct": 1.0, 
+                "maxIvl": 36500, 
+                "minSpace": 1, 
+                "perDay": 100
+            }, 
+            "timer": 0
+        }, 
+        {
+            "__type__": "DeckConfig", 
+            "autoplay": true, 
+            "crowdanki_uuid": "a69e3016-6d5b-11e6-adf3-8c705a50cbf0", 
+            "dyn": false, 
+            "lapse": {
+                "delays": [
+                    10
+                ], 
+                "leechAction": 0, 
+                "leechFails": 8, 
+                "minInt": 1, 
+                "mult": 0
+            }, 
+            "maxTaken": 60, 
+            "name": "Git", 
+            "new": {
+                "bury": true, 
+                "delays": [
+                    1, 
+                    10
+                ], 
+                "initialFactor": 2500, 
+                "ints": [
+                    1, 
+                    4, 
+                    7
+                ], 
+                "order": 1, 
+                "perDay": 20, 
+                "separate": true
+            }, 
+            "replayq": true, 
+            "rev": {
+                "bury": true, 
+                "ease4": 1.3, 
+                "fuzz": 0.05, 
+                "ivlFct": 1, 
+                "maxIvl": 36500, 
+                "minSpace": 1, 
+                "perDay": 100
+            }, 
+            "timer": 0
+        }
+    ], 
+    "desc": "", 
+    "dyn": 0, 
+    "extendNew": 10, 
+    "extendRev": 50, 
+    "media_files": [], 
+    "name": "Software Engineering::git", 
+    "note_models": [
+        {
+            "__type__": "NoteModel", 
+            "crowdanki_uuid": "a6a07e16-6d5b-11e6-adf3-8c705a50cbf0", 
+            "css": ".card {\n font-familiy: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}", 
+            "flds": [
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Front", 
+                    "ord": 0, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }, 
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Back", 
+                    "ord": 1, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }
+            ], 
+            "latexPost": "\\end{document}", 
+            "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n", 
+            "name": "Basic-61fb1", 
+            "req": [
+                [
+                    0, 
+                    "all", 
+                    [
+                        0
+                    ]
+                ]
+            ], 
+            "sortf": 0, 
+            "tags": [], 
+            "tmpls": [
+                {
+                    "afmt": "{{FrontSide}}\n\n<hr id=answer>\n\n{{Back}}", 
+                    "bafmt": "", 
+                    "bfont": "Arial", 
+                    "bqfmt": "", 
+                    "bsize": 12, 
+                    "did": null, 
+                    "name": "Card 1", 
+                    "ord": 0, 
+                    "qfmt": "{{Front}}"
+                }
+            ], 
+            "type": 0, 
+            "vers": []
+        }, 
+        {
+            "__type__": "NoteModel", 
+            "crowdanki_uuid": "a6a2f2e0-6d5b-11e6-adf3-8c705a50cbf0", 
+            "css": ".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n", 
+            "flds": [
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Purpose", 
+                    "ord": 0, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }, 
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Command", 
+                    "ord": 1, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }, 
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Extra", 
+                    "ord": 2, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }, 
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Source", 
+                    "ord": 3, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": true
+                }
+            ], 
+            "latexPost": "\\end{document}", 
+            "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n", 
+            "name": "Command line", 
+            "req": [
+                [
+                    0, 
+                    "all", 
+                    [
+                        0
+                    ]
+                ]
+            ], 
+            "sortf": 0, 
+            "tags": [
+                "Linux", 
+                "bash", 
+                "command", 
+                "tar"
+            ], 
+            "tmpls": [
+                {
+                    "afmt": "{{FrontSide}}\n\n<hr id=answer>\n<br>\n{{Extra}}\n<br>\n<a href=\"{{text:Source}}\">{{Source}}</a>", 
+                    "bafmt": "", 
+                    "bqfmt": "", 
+                    "did": null, 
+                    "name": "TypeCard", 
+                    "ord": 0, 
+                    "qfmt": "{{Purpose}}\n<br>\n{{type:Command}}"
+                }
+            ], 
+            "type": 0, 
+            "vers": []
+        }, 
+        {
+            "__type__": "NoteModel", 
+            "crowdanki_uuid": "a69ea2c6-6d5b-11e6-adf3-8c705a50cbf0", 
+            "css": ".card {\n font-familiy: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}", 
+            "flds": [
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Front", 
+                    "ord": 0, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }, 
+                {
+                    "font": "Arial", 
+                    "media": [], 
+                    "name": "Back", 
+                    "ord": 1, 
+                    "rtl": false, 
+                    "size": 20, 
+                    "sticky": false
+                }
+            ], 
+            "latexPost": "\\end{document}", 
+            "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n", 
+            "name": "Basic", 
+            "req": [
+                [
+                    0, 
+                    "all", 
+                    [
+                        0
+                    ]
+                ]
+            ], 
+            "sortf": 0, 
+            "tags": [
+                "bash"
+            ], 
+            "tmpls": [
+                {
+                    "afmt": "{{FrontSide}}\n\n<hr id=answer>\n\n{{Back}}", 
+                    "bafmt": "", 
+                    "bfont": "Arial", 
+                    "bqfmt": "", 
+                    "bsize": 12, 
+                    "did": null, 
+                    "name": "Card 1", 
+                    "ord": 0, 
+                    "qfmt": "{{Front}}"
+                }
+            ], 
+            "type": 0, 
+            "vers": []
+        }
+    ], 
+    "notes": []
+}
