@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import static org.jsoup.parser.JsonTreeBuilder.jsonParser;
+import static org.jsoup.parser.Parser.jsonParser;
 import static org.jsoup.parser.JsonTreeBuilder.jsonToXml;
 
 @SuppressWarnings({"resource", "EmptyCatchBlock", "ProhibitedExceptionCaught",
@@ -974,15 +975,15 @@ public final class JsonTreeBuilderTest extends TestCase {
   public void testLenientPartialNonExecutePrefix() {
     String json = ")]}' []";
     String xml = "<val>)</val>" +
-        "<unk pos=\"1\" char=\"]\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"2\" />" +
-        "<unk pos=\"2\" char=\"}\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"3\" />" +
+        "<unk pos=\"1\" char=\"]\" hex=\"5d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"2\" />" +
+        "<unk pos=\"2\" char=\"}\" hex=\"7d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"3\" />" +
         "<val> []</val>";
     assertEquals(xml, jsonToXml(json));
 
     json = ")]} []";
     xml = "<val>)</val>" +
-        "<unk pos=\"1\" char=\"]\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"2\" />" +
-        "<unk pos=\"2\" char=\"}\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"3\" /><arr></arr>";
+        "<unk pos=\"1\" char=\"]\" hex=\"5d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"2\" />" +
+        "<unk pos=\"2\" char=\"}\" hex=\"7d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"3\" /><arr></arr>";
     assertEquals(xml, jsonToXml(json));
   }
 
@@ -1006,7 +1007,8 @@ public final class JsonTreeBuilderTest extends TestCase {
   public void testFailWithPosition() {
     //gson: Expected value at line 6 column 5 path $[1]
     String json = "[\n\n\n\n\n\"a\",}]";
-    String xml = "<arr><val>a</val><val class=\"null\" /></arr><unk pos=\"11\" char=\"]\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
+    String xml = "<arr><val>a</val><val class=\"null\" /></arr><unk pos=\"11\" char=\"]\" hex=\"5d\" " +
+            "scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
     assertEquals(xml, jsonToXml(json));
   }
 
@@ -1014,7 +1016,7 @@ public final class JsonTreeBuilderTest extends TestCase {
     String spaces = repeat(' ', 123456);
     String json = "[\n\n"+spaces+"\n\n\n\"a\",}]";//Expected value at line 6 column 5 path $[1]
     String xml = "<arr><val>a</val><val class=\"null\" /></arr>" +
-        "<unk pos=\"123467\" char=\"]\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
+        "<unk pos=\"123467\" char=\"]\" hex=\"5d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
     assertEquals(xml, jsonToXml(json));
   }
 
@@ -1059,7 +1061,7 @@ public final class JsonTreeBuilderTest extends TestCase {
   public void testFailWithPositionIsOffsetByBom() {
     String json = "\ufeff[\"a\",}]";//Expected value at line 1 column 6 path $[1]
     String xml = "<arr><val>a</val><val class=\"null\" /></arr>" +
-        "<unk pos=\"7\" char=\"]\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
+        "<unk pos=\"7\" char=\"]\" hex=\"5d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"5\" />";
     assertEquals(xml, jsonToXml(json));
   }
 
@@ -1121,19 +1123,19 @@ public final class JsonTreeBuilderTest extends TestCase {
 
   public void testStringEndingInSlash() {
     String json = "/";//MalformedJsonException: Expected value at line 1 column 1 path $
-    String xml = "<unk pos=\"0\" char=\"/\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" />";
+    String xml = "<unk pos=\"0\" char=\"/\" hex=\"2f\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" />";
     assertEquals(xml, jsonToXml(json));
   }
 
   public void testDocumentWithCommentEndingInSlash() {
     String json = "/* foo *//";//MalformedJsonException: Expected value at line 1 column 10 path $
-    String xml = "<!-- foo --><unk pos=\"9\" char=\"/\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" />";
+    String xml="<!-- foo --><unk pos=\"9\" char=\"/\" hex=\"2f\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" />";
     assertEquals(xml, jsonToXml(json));
   }
 
   public void testStringWithLeadingSlash() {
     String json = "/x";
-    String xml = "<unk pos=\"0\" char=\"/\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" /><val>x</val>";
+    String xml = "<unk pos=\"0\" char=\"/\" hex=\"2f\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"1\" /><val>x</val>";
     //gson: JsonSyntaxException: MalformedJsonException: Expected value at line 1 column 1 path $
     assertEquals(xml, jsonToXml(json));
   }
@@ -1345,7 +1347,7 @@ public final class JsonTreeBuilderTest extends TestCase {
         "<val>But...</val><val>Try</val><val>it</val><val>ok?</val>" +
         "<val>42</val><val>1</val><val>2</val><val>tester</val><val>17</val>" +
         "<val>95</val><val>foo</val>" +
-        "<unk pos=\"70\" char=\"=\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"17\" />" +
+        "<unk pos=\"70\" char=\"=\" hex=\"3d\" scope=\"NONEMPTY_DOCUMENT\" stack=\"1\" tokens=\"17\" />" +
         "<val>bar</val><val class=\"bool\">true</val>";
     assertEquals(xml, jsonToXml(json));
   }
@@ -1700,13 +1702,13 @@ public final class JsonTreeBuilderTest extends TestCase {
     System.out.println(repeat('#', 100)+doc.html()+repeat('#', 100));
     doc.outputSettings().prettyPrint(false);
     assertEquals("<obj><arr id=\"projects\">" +
-        "<obj><val id=\"project_name\" class=\"quot quoted str\">Google Gson</val>" +
+        "<obj><val id=\"project_name\" class=\"apos quoted str\">Google Gson</val>" +
         "<val id=\"url\" class=\"quot quoted str\">https://github.com/google/gson</val>" +
         "<val id=\"rating\" class=\"unquoted num\">4.956</val>"+
         "<arr id=\"contributors\"><obj><val id=\"first_name\" class=\"quot quoted str\">Jesse</val>" +
         "<val id=\"last_name\" class=\"quot quoted str\">Wilson</val>" +
         "<val id=\"home_page\" class=\"quot quoted str\">https://medium.com/@swankjesse</val></obj></arr></obj>" +
-        "<obj><val id=\"project_name\" class=\"quot quoted str\">jsoup</val>" +
+        "<obj><val id=\"project_name\" class=\"unquoted str\">jsoup</val>" +
         "<val id=\"url\" class=\"quot quoted str\">https://jsoup.org</val>" +
         "<val id=\"rating\" class=\"unquoted num\">5e10</val>"+
         "<arr id=\"contributors\"><obj><val id=\"first_name\" class=\"quot quoted str\">Jonathan</val>" +
@@ -1715,6 +1717,9 @@ public final class JsonTreeBuilderTest extends TestCase {
         "<obj><val id=\"first_name\" class=\"quot quoted str\">Andrej</val><val id=\"last_name\" class=\"quot quoted str\">Fink</val>" +
         "<val id=\"home_page\" class=\"quot quoted str\">https://github.com/magicprinc</val></obj></arr></obj></arr></obj>", doc.html());
     assertEquals("Fink", doc.select("#contributors obj:eq(1) #last_name").text());
+    assertEquals("jsoup", doc.select("#projects #project_name.str.unquoted").text());
+    assert "Fink".equals(doc.select("#contributors obj:eq(1) #last_name").text());
+    assert "jsoup".equals(doc.select("#projects #project_name.str.unquoted").text());
   }
 
 
@@ -1798,26 +1803,16 @@ public final class JsonTreeBuilderTest extends TestCase {
     treeBuilder = new JsonTreeBuilder();
     treeBuilder.initialiseParse(new StringReader(json), "", new Parser(treeBuilder));
     assertEquals(NEXT_TOKEN.UNQUOTED, treeBuilder.nextToken());
-    assertEquals("JsonTreeBuilder @ 5 ='5' scope=NONEMPTY_DOCUMENT, name='null', tokens: 1, stack: 1 >>5", treeBuilder.toString());
+    assertEquals("JsonTreeBuilder@ 5 ='5' U+35 scope=NONEMPTY_DOCUMENT, name='null', tokens: 1, stack: 1 >>5",
+            treeBuilder.toString());
 
     assertEquals("<val>\u00ff</val>", jsonToXml("'\\uff"));
 
     treeBuilder = new JsonTreeBuilder();
     treeBuilder.initialiseParse(new StringReader("z,"+repeat('x', 100)), "", new Parser(treeBuilder));
     assertEquals(NEXT_TOKEN.UNQUOTED, treeBuilder.nextToken());
-    assertEquals("JsonTreeBuilder @ 0 ='z' scope=NONEMPTY_DOCUMENT, name='null', tokens: 1, stack: 1 >>z,"+repeat('x', 78)+"...",
-        treeBuilder.toString());
-  }
-
-
-  public void testAttrEscape () {
-    JsonTreeBuilder j = new JsonTreeBuilder();
-    assertEquals(" ", j.attrEscape(' '));
-    assertEquals("&quot;", j.attrEscape('"'));
-    assertEquals("'", j.attrEscape('\''));
-    assertEquals("&#xa;", j.attrEscape('\n'));
-    assertEquals("&nbsp;", j.attrEscape('\u00A0'));
-    assertEquals("&#x1c;", j.attrEscape('\u001C'));
+    assertEquals("JsonTreeBuilder@ 0 ='z' U+7a scope=NONEMPTY_DOCUMENT, name='null', tokens: 1, stack: 1 >>z,"+
+                    repeat('x', 78)+"...", treeBuilder.toString());
   }
 
 

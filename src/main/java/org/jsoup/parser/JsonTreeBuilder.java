@@ -93,7 +93,8 @@ import java.util.Arrays;
  * &lt;/arr>&lt;/obj>
  * </pre>
  * <pre>
- * assert "Fink".equals(doc.select("#contributors obj:eq(1) #last_name").text()));
+ * assert "Fink".equals(doc.select("#contributors obj:eq(1) #last_name").text());
+ * assert "jsoup".equals(doc.select("#projects #project_name.str.unquoted").text());
  * </pre>
  *
  * <pre>
@@ -103,7 +104,7 @@ import java.util.Arrays;
  *
  * @author Andrej Fink [aprpda@gmail.com]
  * @author Jesse Wilson
- * <br>>see also com.google.gson.stream.JsonReader, com.google.gson.stream.JsonReader#setLenient
+ * <br>see also com.google.gson.stream.JsonReader, com.google.gson.stream.JsonReader#setLenient
  */
 @SuppressWarnings("fallthrough")
 public class JsonTreeBuilder extends XmlTreeBuilder {
@@ -165,6 +166,14 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         public String str () { return cssClassString;}
         public String num () { return cssClassNumeric;}
     }
+
+    static final Token.EndTag endTagObj = new Token.EndTag();
+    static final Token.EndTag endTagArr = new Token.EndTag();
+    static {
+        endTagObj.name(STR_OBJ);
+        endTagArr.name(STR_ARR);
+    }
+
 
     boolean qclass = true;
 
@@ -500,8 +509,8 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         if (s.length() > 80) {
             s = s.substring(0, 80) + "...";
         }
-        return getClass().getSimpleName() + " @ " + reader.pos()
-                + " ='" + attrEscape(reader.current()) + "' scope=" + currentScope
+        return getClass().getSimpleName() + "@ " + reader.pos()
+                + " ='" + reader.current() + "' U+"+Integer.toHexString(reader.current()) + " scope=" + currentScope
                 + ", name='" + currentName + "', tokens: " + tokensCount
                 + ", stack: " + stack.size() + " >>" + s;
     }
@@ -583,7 +592,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
                     break;
 
                 case END_OBJECT:
-                    popStack2Close(STR_OBJ);
+                    popStackToClose(endTagObj);
                     detectCurrentScope();
                     break;
 
@@ -593,7 +602,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
                     break;
 
                 case END_ARRAY:
-                    popStack2Close(STR_ARR);
+                    popStackToClose(endTagArr);
                     detectCurrentScope();
                     break;
 
@@ -652,15 +661,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         }
     }
 
-    void insert(Node node) {
-        int size = stack.size();
-        Element currentElement = size > 0 ? stack.get(size - 1) : doc;
-
-        currentElement.appendChild(node);
-    }
-
-
-    Element insertStartTag(String tagName) {
+    void insertStartTag(String tagName) {
         Tag tag = Tag.valueOf(tagName, settings);
 
         Element el;
@@ -673,13 +674,12 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
             el = new Element(tag, baseUri);
         }
 
-        insert(el);
+        insertNode(el);
         stack.add(el);
-        return el;
     }
 
 
-    Element insertBoolean(boolean value) {
+    void insertBoolean(boolean value) {
         Tag tag = Tag.valueOf(STR_VAL, settings);
 
         Attributes attr = new Attributes();
@@ -697,8 +697,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         }
         el.appendText(s);
 
-        insert(el);
-        return el;
+        insertNode(el);
     }
 
 
@@ -715,7 +714,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         }
         attr.put(STR_CLASS, "null");
 
-        insert(el);
+        insertNode(el);
     }
 
 
@@ -732,7 +731,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
             el.appendText(value);
         }
         addMetaDataToValue(el, value, typeClass);
-        insert(el);
+        insertNode(el);
     }
 
 
@@ -747,7 +746,7 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
 
     void insertComments() {
         for (String s : comment) {
-            insert(new Comment(s));
+            insertNode(new Comment(s));
         }
         comment.clear();
     }
@@ -765,58 +764,14 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         }
         attr.put("pos", Integer.toString(reader.pos()));
         char bad = reader.consume();
-        attr.put("char", attrEscape(bad));
+        attr.put("char", String.valueOf(bad));
+        attr.put("hex", Integer.toHexString(bad));
         attr.put("scope", currentScope.toString());
         attr.put("stack", Integer.toString(stack.size()));
         attr.put("tokens", Integer.toString(tokensCount));
 
         Element el = new Element(tag, baseUri, attr);
-        insert(el);
-    }
-
-
-    /**
-     * If the stack contains an element with this tag's name, pop up the stack to remove the first occurrence. If not
-     * found, skips.
-     *
-     * @param endTag tag to close: obj/arr
-     */
-    void popStack2Close(String endTag) {
-        Element firstFound = null;
-
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
-            Element next = stack.get(pos);
-            if (next.nodeName().equals(endTag)) {
-                firstFound = next;
-                break;
-            }
-        }
-        if (firstFound == null) {
-            return; // not found, skip
-        }
-
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
-            Element next = stack.get(pos);
-            stack.remove(pos);
-            if (next == firstFound) {
-                break;
-            }
-        }
-    }
-
-    String attrEscape(char c) {
-        switch (c) {
-            case ' ':
-                return " ";
-            case '"':
-                return "&quot;";
-            case '\u00A0':
-                return "&nbsp;";
-        }
-        if (isSpace(c)) {
-            return "&#x" + Integer.toHexString(c) + ';';
-        }
-        return String.valueOf(c);
+        insertNode(el);
     }
 
     protected boolean isNumeric(CharSequence s) {
@@ -901,16 +856,6 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
         JsonTreeBuilder treeBuilder = new JsonTreeBuilder();
         treeBuilder.qclass = extraInfoInAttrs;
         return new Parser(treeBuilder);
-    }
-
-    /**
-     * Create a new JSON parser. This parser reads almost every JSON and creates a simple [xml] tree.
-     *
-     * @return a JSON parser
-     * @see org.jsoup.parser.XmlTreeBuilder
-     */
-    public static Parser jsonParser() {
-        return jsonParser(true);
     }
 
 

@@ -68,7 +68,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         return true;
     }
 
-    private void insertNode(Node node) {
+    void insertNode(Node node) {
         currentElement().appendChild(node);
     }
 
@@ -118,7 +118,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      *
      * @param endTag tag to close
      */
-    private void popStackToClose(Token.EndTag endTag) {
+    void popStackToClose(Token.EndTag endTag) {
         String elName = settings.normalizeTag(endTag.tagName);
         Element firstFound = null;
 

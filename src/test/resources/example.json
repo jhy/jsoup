@@ -1,7 +1,7 @@
-{"projects": [
+{projects: [
 	{
-		"project_name": "Google Gson",
-		"url": "https://github.com/google/gson",
+		project_name = 'Google Gson',
+		'url': "https://github.com/google/gson",
 		"rating": 4.956,
 		"contributors": [{
 				"first_name": "Jesse", "last_name": "Wilson",
@@ -9,7 +9,7 @@
 			}]
 	},
 	{
-		"project_name": "jsoup",
+		"project_name" => jsoup,
 		"url": "https://jsoup.org",
 		"rating": 5e10,
 		"contributors": [

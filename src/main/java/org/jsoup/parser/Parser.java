@@ -215,4 +215,14 @@ public class Parser {
     public static Parser xmlParser() {
         return new Parser(new XmlTreeBuilder());
     }
+
+    /**
+     * Create a new JSON parser. This parser reads almost every text as JSON and creates a simple [xml] tree.
+     *
+     * @return a JSON parser
+     * @see org.jsoup.parser.XmlTreeBuilder
+     */
+    public static Parser jsonParser() {
+        return JsonTreeBuilder.jsonParser(true);
+    }
 }
