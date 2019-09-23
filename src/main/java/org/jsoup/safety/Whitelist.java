@@ -10,6 +10,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -69,24 +70,50 @@ public class Whitelist {
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
+    private boolean isCaseSensitive; // option to regard/disregard case sensitivity
 
     /**
      This whitelist allows only text nodes: all HTML will be stripped.
 
+     <p>Whitelist is case-sensitive.</p>
+
      @return whitelist
      */
     public static Whitelist none() {
-        return new Whitelist();
+        return none(true);
+    }
+
+    /**
+     This whitelist allows only text nodes: all HTML will be stripped.
+
+     @param isCaseSensitive sets the case sensitivity
+     @return whitelist
+     */
+    public static Whitelist none(boolean isCaseSensitive) {
+        return new Whitelist(isCaseSensitive);
     }
 
     /**
      This whitelist allows only simple text formatting: <code>b, em, i, strong, u</code>. All other HTML (tags and
      attributes) will be removed.
 
+     <p>Whitelist is case-sensitive.</p>
+
      @return whitelist
      */
     public static Whitelist simpleText() {
-        return new Whitelist()
+        return simpleText(true);
+    }
+
+    /**
+     This whitelist allows only simple text formatting: <code>b, em, i, strong, u</code>. All other HTML (tags and
+     attributes) will be removed.
+
+     @param isCaseSensitive sets the case sensitivity
+     @return whitelist
+     */
+    public static Whitelist simpleText(boolean isCaseSensitive) {
+        return new Whitelist(isCaseSensitive)
                 .addTags("b", "em", "i", "strong", "u")
                 ;
     }
@@ -104,10 +131,32 @@ public class Whitelist {
      Does not allow images.
      </p>
 
+     <p>Whitelist is case-sensitive.</p>
+
      @return whitelist
      */
     public static Whitelist basic() {
-        return new Whitelist()
+        return basic(true);
+    }
+
+    /**
+     <p>
+     This whitelist allows a fuller range of text nodes: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li,
+     ol, p, pre, q, small, span, strike, strong, sub, sup, u, ul</code>, and appropriate attributes.
+     </p>
+     <p>
+     Links (<code>a</code> elements) can point to <code>http, https, ftp, mailto</code>, and have an enforced
+     <code>rel=nofollow</code> attribute.
+     </p>
+     <p>
+     Does not allow images.
+     </p>
+
+     @param isCaseSensitive sets the case sensitivity
+     @return whitelist
+     */
+    public static Whitelist basic(boolean isCaseSensitive) {
+        return new Whitelist(isCaseSensitive)
                 .addTags(
                         "a", "b", "blockquote", "br", "cite", "code", "dd", "dl", "dt", "em",
                         "i", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong", "sub",
@@ -130,10 +179,23 @@ public class Whitelist {
      This whitelist allows the same text tags as {@link #basic}, and also allows <code>img</code> tags, with appropriate
      attributes, with <code>src</code> pointing to <code>http</code> or <code>https</code>.
 
+     <p>Whitelist is case-sensitive.</p>
+
      @return whitelist
      */
     public static Whitelist basicWithImages() {
-        return basic()
+        return basicWithImages(true);
+    }
+
+    /**
+     This whitelist allows the same text tags as {@link #basic}, and also allows <code>img</code> tags, with appropriate
+     attributes, with <code>src</code> pointing to <code>http</code> or <code>https</code>.
+
+     @param isCaseSensitive sets the case sensitivity
+     @return whitelist
+     */
+    public static Whitelist basicWithImages(boolean isCaseSensitive) {
+        return basic(isCaseSensitive)
                 .addTags("img")
                 .addAttributes("img", "align", "alt", "height", "src", "title", "width")
                 .addProtocols("img", "src", "http", "https")
@@ -148,10 +210,27 @@ public class Whitelist {
      Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
      </p>
 
+     <p>Whitelist is case-sensitive.</p>
+
      @return whitelist
      */
     public static Whitelist relaxed() {
-        return new Whitelist()
+        return relaxed(true);
+    }
+
+    /**
+     This whitelist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
+     code, col, colgroup, dd, div, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, span, strike, strong, sub,
+     sup, table, tbody, td, tfoot, th, thead, tr, u, ul</code>
+     <p>
+     Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
+     </p>
+
+     @param isCaseSensitive sets the case sensitivity
+     @return whitelist
+     */
+    public static Whitelist relaxed(boolean isCaseSensitive) {
+        return new Whitelist(isCaseSensitive)
                 .addTags(
                         "a", "b", "blockquote", "br", "caption", "cite", "code", "col",
                         "colgroup", "dd", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -184,6 +263,8 @@ public class Whitelist {
     /**
      Create a new, empty whitelist. Generally it will be better to start with a default prepared whitelist instead.
 
+     <p>Whitelist is case-sensitive.</p>
+
      @see #basic()
      @see #basicWithImages()
      @see #simpleText()
@@ -195,6 +276,24 @@ public class Whitelist {
         enforcedAttributes = new HashMap<>();
         protocols = new HashMap<>();
         preserveRelativeLinks = false;
+        this.isCaseSensitive = true;
+    }
+
+    /**
+     Create a new, empty whitelist. Generally it will be better to start with a default prepared whitelist instead.
+
+     @see #basic()
+     @see #basicWithImages()
+     @see #simpleText()
+     @see #relaxed()
+     */
+    public Whitelist(boolean isCaseSensitive) {
+        tagNames = new HashSet<>();
+        attributes = new HashMap<>();
+        enforcedAttributes = new HashMap<>();
+        protocols = new HashMap<>();
+        preserveRelativeLinks = false;
+        this.isCaseSensitive = isCaseSensitive;
     }
 
     /**
@@ -208,7 +307,7 @@ public class Whitelist {
 
         for (String tagName : tags) {
             Validate.notEmpty(tagName);
-            tagNames.add(TagName.valueOf(tagName));
+            tagNames.add(TagName.valueOf(tagName, isCaseSensitive));
         }
         return this;
     }
@@ -224,7 +323,7 @@ public class Whitelist {
 
         for(String tag: tags) {
             Validate.notEmpty(tag);
-            TagName tagName = TagName.valueOf(tag);
+            TagName tagName = TagName.valueOf(tag, isCaseSensitive);
 
             if(tagNames.remove(tagName)) { // Only look in sub-maps if tag was allowed
                 attributes.remove(tagName);
@@ -255,12 +354,12 @@ public class Whitelist {
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
-        TagName tagName = TagName.valueOf(tag);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
         tagNames.add(tagName);
         Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
-            attributeSet.add(AttributeKey.valueOf(key));
+            attributeSet.add(AttributeKey.valueOf(key, isCaseSensitive));
         }
         if (this.attributes.containsKey(tagName)) {
             Set<AttributeKey> currentSet = this.attributes.get(tagName);
@@ -291,11 +390,11 @@ public class Whitelist {
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
-        TagName tagName = TagName.valueOf(tag);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
         Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
-            attributeSet.add(AttributeKey.valueOf(key));
+            attributeSet.add(AttributeKey.valueOf(key, isCaseSensitive));
         }
         if(tagNames.contains(tagName) && this.attributes.containsKey(tagName)) { // Only look in sub-maps if tag was allowed
             Set<AttributeKey> currentSet = this.attributes.get(tagName);
@@ -333,10 +432,10 @@ public class Whitelist {
         Validate.notEmpty(attribute);
         Validate.notEmpty(value);
 
-        TagName tagName = TagName.valueOf(tag);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
         tagNames.add(tagName);
-        AttributeKey attrKey = AttributeKey.valueOf(attribute);
-        AttributeValue attrVal = AttributeValue.valueOf(value);
+        AttributeKey attrKey = AttributeKey.valueOf(attribute, isCaseSensitive);
+        AttributeValue attrVal = AttributeValue.valueOf(value, isCaseSensitive);
 
         if (enforcedAttributes.containsKey(tagName)) {
             enforcedAttributes.get(tagName).put(attrKey, attrVal);
@@ -359,9 +458,9 @@ public class Whitelist {
         Validate.notEmpty(tag);
         Validate.notEmpty(attribute);
 
-        TagName tagName = TagName.valueOf(tag);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
         if(tagNames.contains(tagName) && enforcedAttributes.containsKey(tagName)) {
-            AttributeKey attrKey = AttributeKey.valueOf(attribute);
+            AttributeKey attrKey = AttributeKey.valueOf(attribute, isCaseSensitive);
             Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.get(tagName);
             attrMap.remove(attrKey);
 
@@ -412,8 +511,8 @@ public class Whitelist {
         Validate.notEmpty(attribute);
         Validate.notNull(protocols);
 
-        TagName tagName = TagName.valueOf(tag);
-        AttributeKey attrKey = AttributeKey.valueOf(attribute);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
+        AttributeKey attrKey = AttributeKey.valueOf(attribute, isCaseSensitive);
         Map<AttributeKey, Set<Protocol>> attrMap;
         Set<Protocol> protSet;
 
@@ -431,7 +530,7 @@ public class Whitelist {
         }
         for (String protocol : protocols) {
             Validate.notEmpty(protocol);
-            Protocol prot = Protocol.valueOf(protocol);
+            Protocol prot = Protocol.valueOf(protocol, isCaseSensitive);
             protSet.add(prot);
         }
         return this;
@@ -454,8 +553,8 @@ public class Whitelist {
         Validate.notEmpty(attribute);
         Validate.notNull(removeProtocols);
 
-        TagName tagName = TagName.valueOf(tag);
-        AttributeKey attr = AttributeKey.valueOf(attribute);
+        TagName tagName = TagName.valueOf(tag, isCaseSensitive);
+        AttributeKey attr = AttributeKey.valueOf(attribute, isCaseSensitive);
 
         // make sure that what we're removing actually exists; otherwise can open the tag to any data and that can
         // be surprising
@@ -466,7 +565,7 @@ public class Whitelist {
         Set<Protocol> attrProtocols = tagProtocols.get(attr);
         for (String protocol : removeProtocols) {
             Validate.notEmpty(protocol);
-            attrProtocols.remove(Protocol.valueOf(protocol));
+            attrProtocols.remove(Protocol.valueOf(protocol, isCaseSensitive));
         }
 
         if (attrProtocols.isEmpty()) { // Remove protocol set if empty
@@ -483,7 +582,7 @@ public class Whitelist {
      * @return true if allowed
      */
     protected boolean isSafeTag(String tag) {
-        return tagNames.contains(TagName.valueOf(tag));
+        return tagNames.contains(TagName.valueOf(tag, isCaseSensitive));
     }
 
     /**
@@ -494,8 +593,8 @@ public class Whitelist {
      * @return true if allowed
      */
     protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
-        TagName tag = TagName.valueOf(tagName);
-        AttributeKey key = AttributeKey.valueOf(attr.getKey());
+        TagName tag = TagName.valueOf(tagName, isCaseSensitive);
+        AttributeKey key = AttributeKey.valueOf(attr.getKey(), isCaseSensitive);
 
         Set<AttributeKey> okSet = attributes.get(tag);
         if (okSet != null && okSet.contains(key)) {
@@ -555,7 +654,7 @@ public class Whitelist {
 
     Attributes getEnforcedAttributes(String tagName) {
         Attributes attrs = new Attributes();
-        TagName tag = TagName.valueOf(tagName);
+        TagName tag = TagName.valueOf(tagName, isCaseSensitive);
         if (enforcedAttributes.containsKey(tag)) {
             Map<AttributeKey, AttributeValue> keyVals = enforcedAttributes.get(tag);
             for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
@@ -571,9 +670,13 @@ public class Whitelist {
         TagName(String value) {
             super(value);
         }
+        TagName(String value, boolean isCaseSensitive) { super(value, isCaseSensitive); }
 
         static TagName valueOf(String value) {
             return new TagName(value);
+        }
+        static TagName valueOf(String value, boolean isCaseSensitive) {
+            return new TagName(value, isCaseSensitive);
         }
     }
 
@@ -581,9 +684,13 @@ public class Whitelist {
         AttributeKey(String value) {
             super(value);
         }
+        AttributeKey(String value, boolean isCaseSensitive) { super(value, isCaseSensitive); }
 
         static AttributeKey valueOf(String value) {
             return new AttributeKey(value);
+        }
+        static AttributeKey valueOf(String value, boolean isCaseSensitive) {
+            return new AttributeKey(value, isCaseSensitive);
         }
     }
 
@@ -591,9 +698,13 @@ public class Whitelist {
         AttributeValue(String value) {
             super(value);
         }
+        AttributeValue(String value, boolean isCaseSensitive) { super(value, isCaseSensitive); }
 
         static AttributeValue valueOf(String value) {
             return new AttributeValue(value);
+        }
+        static AttributeValue valueOf(String value, boolean isCaseSensitive) {
+            return new AttributeValue(value, isCaseSensitive);
         }
     }
 
@@ -601,25 +712,41 @@ public class Whitelist {
         Protocol(String value) {
             super(value);
         }
+        Protocol(String value, boolean isCaseSensitive) { super(value, isCaseSensitive); }
 
         static Protocol valueOf(String value) {
             return new Protocol(value);
+        }
+        static Protocol valueOf(String value, boolean isCaseSensitive) {
+            return new Protocol(value, isCaseSensitive);
         }
     }
 
     abstract static class TypedValue {
         private String value;
+        private boolean isCaseSensitive = true;
 
         TypedValue(String value) {
             Validate.notNull(value);
             this.value = value;
         }
 
+        TypedValue(String value, boolean isCaseSensitive) {
+            Validate.notNull(value);
+            this.value = value;
+            this.isCaseSensitive = isCaseSensitive;
+        }
+
+        public void setCaseSensitivity(boolean isCaseSensitive) {
+            this.isCaseSensitive = isCaseSensitive;
+        }
+
         @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((value == null) ? 0 : value.hashCode());
+            int hashVal = (value == null) ? 0 : (isCaseSensitive ? value : value.toLowerCase()).hashCode();
+            result = prime * result + hashVal;
             return result;
         }
 
@@ -631,7 +758,12 @@ public class Whitelist {
             TypedValue other = (TypedValue) obj;
             if (value == null) {
                 return other.value == null;
-            } else return value.equals(other.value);
+            } else {
+                if(isCaseSensitive)
+                    return value.equals(other.value);
+                else
+                    return value.toLowerCase().equals(other.value.toLowerCase());
+            }
         }
 
         @Override
