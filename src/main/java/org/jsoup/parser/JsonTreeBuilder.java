@@ -834,9 +834,6 @@ public class JsonTreeBuilder extends XmlTreeBuilder {
                     if (c == '+' || c == '-') {
                         i++;
                     }
-                    if (dec == 1) {
-                        dec--;
-                    }//second chance for .
                     break;
                 default:
                     boolean spaceOrDigit = isSpace(c) || Character.isDigit(c);
