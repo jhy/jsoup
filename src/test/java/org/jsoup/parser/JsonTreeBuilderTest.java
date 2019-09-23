@@ -1821,4 +1821,25 @@ public final class JsonTreeBuilderTest extends TestCase {
     doc.outputSettings().prettyPrint(false);
     return doc.html();
   }
+
+    /** https://github.com/magicprinc/JSONTestSuite */
+    public void testFullJSONTestSuiteOnline() throws Exception {
+        String[] testSrcs = {"https://github.com/magicprinc/JSONTestSuite/tree/master/test_parsing",
+                "https://github.com/magicprinc/JSONTestSuite/tree/master/test_transform"};
+
+        for (String u : testSrcs) {
+            Document doc = Jsoup.connect(u).get();
+            Elements a = doc.select("td span a[href$=.json]");
+            //System.out.println(a);
+            System.out.println(a.size());
+            for (Element e : a) {
+                String url = e.absUrl("href").replace("/blob/", "/raw/");
+                System.out.println(url);
+                Document d2 = Jsoup.connect(url).ignoreHttpErrors(true).ignoreContentType(true)
+                        .parser(Parser.jsonParser()).get();
+                d2.outputSettings().prettyPrint(false);
+                //System.out.println(d2.html()+"\n");
+            }
+        }
+    }
 }
