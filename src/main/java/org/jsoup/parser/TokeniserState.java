@@ -573,9 +573,9 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 case nullChar:
+                    r.unconsume();
                     t.error(this);
                     t.tagPending.newAttribute();
-                    r.unconsume();
                     t.transition(AttributeName);
                     break;
                 case eof:
