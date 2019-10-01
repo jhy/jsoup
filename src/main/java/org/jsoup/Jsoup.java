@@ -74,6 +74,22 @@ public class Jsoup {
     }
 
     /**
+     * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
+     * <p>
+     * Use examples:
+     * <ul>
+     *  <li>{@code Document doc = Jsoup.connect(new URL("http://example.com")).userAgent("Mozilla").data("name", "jsoup").get();}</li>
+     *  <li>{@code Document doc = Jsoup.connect(new URL("http://example.com")).cookie("auth", "token").post();}</li>
+     * </ul>
+     * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
+     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     */
+    public static Connection connect(URL url) {
+        return HttpConnection.connect(url);
+    }
+
+
+    /**
      Parse the contents of a file as HTML.
 
      @param in          file to load HTML from
