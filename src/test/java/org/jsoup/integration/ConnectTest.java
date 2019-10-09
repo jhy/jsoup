@@ -21,17 +21,13 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
+import java.net.*;
 import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -485,5 +481,31 @@ public class ConnectTest {
 
         byte[] bytes = res.bodyAsBytes();
         assertEquals(1052, bytes.length);
+    }
+
+    @Test
+    public void connectUsingHttpProxyTest() {
+        try {
+            String url = "https://api.ipify.org";
+            String host = "92.247.127.114";
+            int port = 61218;
+
+            // The proxy was found in a free online list
+            // Probably better to replace with one that persists?
+            Proxy workingProxy = new Proxy(
+                    Proxy.Type.HTTP,
+                    new InetSocketAddress(host, port)
+            );
+
+            Document doc = Jsoup.connect(url)
+                    .proxy(workingProxy)
+                    .get();
+
+            String body = doc.body().toString();
+            assertTrue(body.contains(host));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 }
