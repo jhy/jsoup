@@ -45,10 +45,9 @@ public class Comment extends LeafNode {
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint())
             indent(accum, depth, out);
-        accum
-                .append("<!--")
-                .append(getData())
-                .append("-->");
+        accum.append("<!--");
+        Entities.escape(accum, coreValue(), out, false, false, false);
+        accum.append("-->");
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
