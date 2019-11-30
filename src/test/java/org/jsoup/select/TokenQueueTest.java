@@ -1,4 +1,4 @@
-package org.jsoup.parser;
+package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.junit.Test;

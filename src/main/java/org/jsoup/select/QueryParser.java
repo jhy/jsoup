@@ -2,7 +2,6 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
-import org.jsoup.parser.TokenQueue;
 
 import java.util.ArrayList;
 import java.util.List;

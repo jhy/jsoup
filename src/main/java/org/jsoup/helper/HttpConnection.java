@@ -8,7 +8,7 @@ import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
-import org.jsoup.parser.TokenQueue;
+import org.jsoup.select.TokenQueue;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
