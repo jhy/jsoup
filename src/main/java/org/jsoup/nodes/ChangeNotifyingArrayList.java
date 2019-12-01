@@ -1,4 +1,4 @@
-package org.jsoup.helper;
+package org.jsoup.nodes;
 
 import java.util.ArrayList;
 import java.util.Collection;
