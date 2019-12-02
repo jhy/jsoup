@@ -31,11 +31,11 @@ public class Elements extends ArrayList<Element> {
     public Elements(Collection<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(List<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(Element... elements) {
     	super(Arrays.asList(elements));
     }
@@ -50,7 +50,7 @@ public class Elements extends ArrayList<Element> {
 
         for(Element e : this)
     		clone.add(e.clone());
-    	
+
     	return clone;
 	}
 
@@ -172,7 +172,7 @@ public class Elements extends ArrayList<Element> {
         }
         return false;
     }
-    
+
     /**
      * Get the form element's value of the first matched element.
      * @return The form element's value, or empty if not set.
@@ -184,7 +184,7 @@ public class Elements extends ArrayList<Element> {
         else
             return "";
     }
-    
+
     /**
      * Set the form element's value in each of the matched elements.
      * @param value The value to set into each matched element
@@ -195,7 +195,7 @@ public class Elements extends ArrayList<Element> {
             element.val(value);
         return this;
     }
-    
+
     /**
      * Get the combined text of all the matched elements.
      * <p>
@@ -244,7 +244,7 @@ public class Elements extends ArrayList<Element> {
         }
         return texts;
     }
-    
+
     /**
      * Get the combined inner HTML of all matched elements.
      * @return string of all element's inner HTML.
@@ -260,7 +260,7 @@ public class Elements extends ArrayList<Element> {
         }
         return StringUtil.releaseBuilder(sb);
     }
-    
+
     /**
      * Get the combined outer HTML of all matched elements.
      * @return string of all element's outer HTML.
@@ -301,7 +301,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Set the inner HTML of each matched element.
      * @param html HTML to parse and set into each matched element.
@@ -314,7 +314,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Add the supplied HTML to the start of each matched element's inner HTML.
      * @param html HTML to add inside each element, before the existing HTML
@@ -327,7 +327,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Add the supplied HTML to the end of each matched element's inner HTML.
      * @param html HTML to add inside each element, after the existing HTML
@@ -340,7 +340,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Insert the supplied HTML before each matched element's outer HTML.
      * @param html HTML to insert before each element
@@ -353,7 +353,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Insert the supplied HTML after each matched element's outer HTML.
      * @param html HTML to insert after each element
@@ -390,7 +390,7 @@ public class Elements extends ArrayList<Element> {
      * <p>
      * This is useful for e.g removing unwanted formatting elements but keeping their contents.
      * </p>
-     * 
+     *
      * E.g. with HTML: <p>{@code <div><font>One</font> <font><a href="/">Two</a></font></div>}</p>
      * <p>{@code doc.select("font").unwrap();}</p>
      * <p>HTML = {@code <div>One <a href="/">Two</a></div>}</p>
@@ -441,9 +441,9 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     // filters
-    
+
     /**
      * Find matching elements within this element list.
      * @param query A {@link Selector} query
@@ -467,7 +467,7 @@ public class Elements extends ArrayList<Element> {
         Elements out = Selector.select(query, this);
         return Selector.filterOut(this, out);
     }
-    
+
     /**
      * Get the <i>nth</i> matched element as an Elements object.
      * <p>
@@ -478,7 +478,7 @@ public class Elements extends ArrayList<Element> {
     public Elements eq(int index) {
         return size() > index ? new Elements(get(index)) : new Elements();
     }
-    
+
     /**
      * Test if any of the matched elements match the supplied query.
      * @param query A selector
@@ -612,8 +612,8 @@ public class Elements extends ArrayList<Element> {
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this, for chaining
      */
-    public Elements traverse(NodeVisitor nodeVisitor) {
-        NodeTraversor.traverse(nodeVisitor, this);
+    public Elements traverse(NodeTraversor nodeTraversor, NodeVisitor nodeVisitor) {
+        nodeTraversor.traverse(nodeVisitor, this);
         return this;
     }
 
@@ -622,8 +622,8 @@ public class Elements extends ArrayList<Element> {
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this, for chaining
      */
-    public Elements filter(NodeFilter nodeFilter) {
-        NodeTraversor.filter(nodeFilter, this);
+    public Elements filter(NodeTraversor nodeTraversor, NodeFilter nodeFilter) {
+        nodeTraversor.filter(nodeFilter, this);
         return this;
     }
 

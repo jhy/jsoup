@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.jsoup.select.PreorderNodeTraversor;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -24,7 +25,7 @@ import java.io.IOException;
  * To invoke from the command line, assuming you've downloaded the jsoup jar to your current directory:</p>
  * <p><code>java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]</code></p>
  * where <i>url</i> is the URL to fetch, and <i>selector</i> is an optional CSS selector.
- * 
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class HtmlToPlainText {
@@ -60,7 +61,8 @@ public class HtmlToPlainText {
      */
     public String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
-        NodeTraversor.traverse(formatter, element); // walk the DOM, and call .head() and .tail() for each node
+        NodeTraversor nodeTraversor = new PreorderNodeTraversor();
+        nodeTraversor.traverse(formatter, element); // walk the DOM, and call .head() and .tail() for each node
 
         return formatter.toString();
     }

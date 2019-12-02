@@ -271,7 +271,7 @@ public class ElementsTest {
     @Test public void traverse() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
-        doc.select("div").traverse(new NodeVisitor() {
+        doc.select("div").traverse(new PreorderNodeTraversor(), new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {
                 accum.append("<").append(node.nodeName()).append(">");

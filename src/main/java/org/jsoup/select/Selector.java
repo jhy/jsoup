@@ -160,6 +160,17 @@ public class Selector {
         return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
+    /**
+     * Find the last element that matches the query.
+     * @param cssQuery CSS selector
+     * @param root root element to descend into
+     * @return the matching element, or <b>null</b> if none.
+     */
+    public static Element selectLast(String cssQuery, Element root) {
+        Validate.notEmpty(cssQuery);
+        return Collector.findLast(QueryParser.parse(cssQuery), root);
+    }
+
     public static class SelectorParseException extends IllegalStateException {
         public SelectorParseException(String msg, Object... params) {
             super(String.format(msg, params));
