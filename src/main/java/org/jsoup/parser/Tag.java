@@ -253,8 +253,7 @@ public class Tag {
             "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "a", "img", "br", "wbr", "map", "q",
             "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
-            "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
-            "data", "bdi", "s"
+            "summary", "command", "device", "basefont", "bgsound", "menuitem", "data", "bdi", "s"
     };
     private static final String[] emptyTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
