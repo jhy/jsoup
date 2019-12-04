@@ -14,6 +14,7 @@ public class ImageDownloader extends Downloader {
     /**
      * Download all the images in the given URL, store them into given storePath.
      */
+    @Override
     public void downloadTarget() {
 
 
@@ -30,7 +31,7 @@ public class ImageDownloader extends Downloader {
         String imgName = imgURL.substring(imgURL.lastIndexOf("/") + 1);
         System.out.println("Saving: " + imgName + ", from" + imgURL);
 
-        try (OutputStream out = new FileOutputStream(storePath + "/" + imgName)) {
+        try (OutputStream out = new FileOutputStream(storePath  + imgName)) {
 
             URL urlImage = new URL(imgURL);
             InputStream in = urlImage.openStream();

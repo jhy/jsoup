@@ -11,7 +11,7 @@ public class DownloaderTest {
 
         DownloaderFactory df = new DownloaderFactory();
 
-        String ImgStorePath = "/Users/zgy/Downloads/imageDownloaderTEst";
+        String ImgStorePath = "/Users/zgy/Downloads/imageDownloaderTEst/";
         Downloader ImgDl = df.create("ImageDownloader");
         ImgDl.download(url, ImgStorePath);
 
@@ -19,6 +19,11 @@ public class DownloaderTest {
         String UrlStorePath = "/Users/zgy/Downloads/imageDownloaderTEst/urls.txt";
         Downloader UrlDl = df.create("UrlsDownloader");
         UrlDl.download(url, UrlStorePath);
+
+        String htmlStorePath = "/Users/zgy/Downloads/imageDownloaderTEst/";
+        Downloader htmlDl = df.create("HtmlDownloader");
+        htmlDl.download(url, htmlStorePath);
+
 
     }
 

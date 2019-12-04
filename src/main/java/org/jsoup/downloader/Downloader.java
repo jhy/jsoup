@@ -1,17 +1,13 @@
 package org.jsoup.downloader;
 
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.util.List;
-import java.io.FileOutputStream;
 
 public abstract class Downloader {
 
     protected String url;
-    protected String userAgent;
     protected String storePath;
     protected Document doc;
 
@@ -24,7 +20,11 @@ public abstract class Downloader {
     private void initial(String url, String storePath) {
         // todo: check if the given url is valid
         this.url = url;
-        this.storePath = storePath;
+
+        if (storePath.substring(storePath.length() - 1) != "/")
+            this.storePath = storePath + "/";
+        else
+            this.storePath = storePath;
     }
 
     private void connect() {

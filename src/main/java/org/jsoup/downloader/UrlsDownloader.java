@@ -13,6 +13,7 @@ public class UrlsDownloader extends Downloader{
     /**
      * Download all the images in the given URL, store them into given storePath.
      */
+    @Override
     public void downloadTarget() {
         Set<String> urls = new HashSet<>();
         Elements urlsOnPage = doc.select("a[href]");
