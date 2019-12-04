@@ -3,6 +3,7 @@ package org.jsoup.helper;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.select.HeadToTailTraversor;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.w3c.dom.Comment;
@@ -61,7 +62,8 @@ public class W3CDom {
             out.setDocumentURI(in.location());
 
         org.jsoup.nodes.Element rootEl = in.child(0); // skip the #root node
-        NodeTraversor.traverse(new W3CBuilder(out), rootEl);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.traverse(new W3CBuilder(out), rootEl);
     }
 
     /**

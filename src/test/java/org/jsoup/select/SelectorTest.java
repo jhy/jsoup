@@ -240,7 +240,7 @@ public class SelectorTest {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
         Element root = doc.getElementsByClass("HEAD").first();
-        
+
         Elements els = root.select(".head p");
         assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
@@ -252,7 +252,7 @@ public class SelectorTest {
 
         Elements empty = root.select("p .first"); // self, not descend, should not match
         assertEquals(0, empty.size());
-        
+
         Elements aboveRoot = root.select("body div.head");
         assertEquals(0, aboveRoot.size());
     }
@@ -680,24 +680,24 @@ public class SelectorTest {
         assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
         assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
     }
-    
+
     @Test
     public void selectClassWithSpace() {
         final String html = "<div class=\"value\">class without space</div>\n"
                           + "<div class=\"value \">class with space</div>";
-        
+
         Document doc = Jsoup.parse(html);
-        
+
         Elements found = doc.select("div[class=value ]");
         assertEquals(2, found.size());
         assertEquals("class without space", found.get(0).text());
         assertEquals("class with space", found.get(1).text());
-        
+
         found = doc.select("div[class=\"value \"]");
         assertEquals(2, found.size());
         assertEquals("class without space", found.get(0).text());
         assertEquals("class with space", found.get(1).text());
-        
+
         found = doc.select("div[class=\"value\\ \"]");
         assertEquals(0, found.size());
     }
@@ -770,6 +770,24 @@ public class SelectorTest {
         String html = "<p>One<p>Two<p>Three<div>Four";
         Document doc = Jsoup.parse(html);
         assertEquals("One", doc.selectFirst("p, div").text());
+    }
+
+    @Test public void selectLast() {
+        String html = "<p>One<p>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("Three", doc.selectLast("p").text());
+    }
+
+    @Test public void selectLastWithAnd() {
+        String html = "<p>One<p class=foo>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+        assertEquals("Two", doc.selectLast("p.foo").text());
+    }
+
+    @Test public void selectLastWithOr() {
+        String html = "<p>One<p>Two<p>Three<div>Four";
+        Document doc = Jsoup.parse(html);
+        assertEquals("Four", doc.selectLast("p, div").text());
     }
 
     @Test public void matchText() {

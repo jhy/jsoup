@@ -5,6 +5,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.HeadToTailTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
@@ -146,7 +147,9 @@ public abstract class Node implements Cloneable {
     public void setBaseUri(final String baseUri) {
         Validate.notNull(baseUri);
 
-        traverse(new NodeVisitor() {
+        traverse(
+        	new HeadToTailTraversor(),
+        	new NodeVisitor() {
             public void head(Node node, int depth) {
                 node.doSetBaseUri(baseUri);
             }
@@ -463,7 +466,7 @@ public abstract class Node implements Cloneable {
         nodes.addAll(index, Arrays.asList(children));
         reindexChildren(index);
     }
-    
+
     protected void reparentChild(Node child) {
         child.setParentNode(this);
     }
@@ -542,9 +545,10 @@ public abstract class Node implements Cloneable {
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining
      */
-    public Node traverse(NodeVisitor nodeVisitor) {
+    public Node traverse(NodeTraversor nodeTraversor, NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeTraversor);
         Validate.notNull(nodeVisitor);
-        NodeTraversor.traverse(nodeVisitor, this);
+        nodeTraversor.traverse(nodeVisitor, this);
         return this;
     }
 
@@ -553,9 +557,10 @@ public abstract class Node implements Cloneable {
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
      */
-    public Node filter(NodeFilter nodeFilter) {
+    public Node filter(NodeTraversor nodeTraversor, NodeFilter nodeFilter) {
+        Validate.notNull(nodeTraversor);
         Validate.notNull(nodeFilter);
-        NodeTraversor.filter(nodeFilter, this);
+        nodeTraversor.filter(nodeFilter, this);
         return this;
     }
 
@@ -572,7 +577,8 @@ public abstract class Node implements Cloneable {
     }
 
     protected void outerHtml(Appendable accum) {
-        NodeTraversor.traverse(new OuterHtmlVisitor(accum, NodeUtils.outputSettings(this)), this);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.traverse(new OuterHtmlVisitor(accum, NodeUtils.outputSettings(this)), this);
     }
 
     /**

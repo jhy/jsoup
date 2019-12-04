@@ -24,7 +24,8 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         Elements elements = new Elements();
-        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.traverse(new Accumulator(root, elements, eval), root);
         return elements;
     }
 
@@ -52,9 +53,11 @@ public class Collector {
         }
     }
 
+
     public static Element findFirst(Evaluator eval, Element root) {
-        FirstFinder finder = new FirstFinder(root, eval);
-        NodeTraversor.filter(finder, root);
+    	FirstFinder finder = new FirstFinder(root, eval);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.filter(finder, root);
         return finder.match;
     }
 
@@ -86,4 +89,38 @@ public class Collector {
         }
     }
 
+    public static Element findLast(Evaluator eval, Element root) {
+    	LastFinder finder = new LastFinder(root, eval);
+        NodeTraversor nodeTraversor = new TailToHeadTraversor();
+        nodeTraversor.filter(finder, root);
+        return finder.match;
+    }
+
+    private static class LastFinder implements NodeFilter {
+        private final Element root;
+        private Element match = null;
+        private final Evaluator eval;
+
+        LastFinder(Element root, Evaluator eval) {
+            this.root = root;
+            this.eval = eval;
+        }
+
+        @Override
+        public FilterResult head(Node node, int depth) {
+            return CONTINUE;
+        }
+
+        @Override
+        public FilterResult tail(Node node, int depth) {
+            if (node instanceof Element) {
+                Element el = (Element) node;
+                if (eval.matches(root, el)) {
+                    match = el;
+                    return STOP;
+                }
+            }
+            return CONTINUE;
+        }
+    }
 }
