@@ -11,7 +11,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.PreorderNodeTraversor;
+import org.jsoup.select.HeadToTailTraversor;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -140,7 +140,7 @@ public class Cleaner {
 
     private int copySafeNodes(Element source, Element dest) {
         CleaningVisitor cleaningVisitor = new CleaningVisitor(source, dest);
-        NodeTraversor nodeTraversor = new PreorderNodeTraversor();
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
         nodeTraversor.traverse(cleaningVisitor, source);
         return cleaningVisitor.numDiscarded;
     }

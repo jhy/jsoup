@@ -5,7 +5,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeFilter.FilterResult;
 
-public class TailFirstPreorderNodeTraversor implements NodeTraversor {
+public class TailToHeadTraversor implements NodeTraversor {
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param visitor Node visitor.

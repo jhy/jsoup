@@ -24,7 +24,7 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         Elements elements = new Elements();
-        NodeTraversor nodeTraversor = new PreorderNodeTraversor();
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
         nodeTraversor.traverse(new Accumulator(root, elements, eval), root);
         return elements;
     }
@@ -56,7 +56,7 @@ public class Collector {
 
     public static Element findFirst(Evaluator eval, Element root) {
     	FirstFinder finder = new FirstFinder(root, eval);
-        NodeTraversor nodeTraversor = new PreorderNodeTraversor();
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
         nodeTraversor.filter(finder, root);
         return finder.match;
     }
@@ -91,7 +91,7 @@ public class Collector {
 
     public static Element findLast(Evaluator eval, Element root) {
     	LastFinder finder = new LastFinder(root, eval);
-        NodeTraversor nodeTraversor = new TailFirstPreorderNodeTraversor();
+        NodeTraversor nodeTraversor = new TailToHeadTraversor();
         nodeTraversor.filter(finder, root);
         return finder.match;
     }

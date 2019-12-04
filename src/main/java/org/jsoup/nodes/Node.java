@@ -5,7 +5,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
-import org.jsoup.select.PreorderNodeTraversor;
+import org.jsoup.select.HeadToTailTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
@@ -148,7 +148,7 @@ public abstract class Node implements Cloneable {
         Validate.notNull(baseUri);
 
         traverse(
-        	new PreorderNodeTraversor(),
+        	new HeadToTailTraversor(),
         	new NodeVisitor() {
             public void head(Node node, int depth) {
                 node.doSetBaseUri(baseUri);
@@ -577,7 +577,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void outerHtml(Appendable accum) {
-        NodeTraversor nodeTraversor = new PreorderNodeTraversor();
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
         nodeTraversor.traverse(new OuterHtmlVisitor(accum, NodeUtils.outputSettings(this)), this);
     }
 

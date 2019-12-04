@@ -11,7 +11,7 @@ import org.jsoup.select.NodeFilter.FilterResult;
  * This implementation does not use recursion, so a deep DOM does not risk blowing the stack.
  * </p>
  */
-public class PreorderNodeTraversor implements NodeTraversor {
+public class HeadToTailTraversor implements NodeTraversor {
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param visitor Node visitor.

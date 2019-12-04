@@ -4,7 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.PreorderNodeTraversor;
+import org.jsoup.select.HeadToTailTraversor;
 import org.junit.Test;
 
 import java.util.List;
@@ -221,7 +221,7 @@ public class NodeTest {
     @Test public void traverse() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
-        doc.select("div").first().traverse(new PreorderNodeTraversor(), new NodeVisitor() {
+        doc.select("div").first().traverse(new HeadToTailTraversor(), new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {
                 accum.append("<").append(node.nodeName()).append(">");

@@ -6,7 +6,7 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.PreorderNodeTraversor;
+import org.jsoup.select.HeadToTailTraversor;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -1447,7 +1447,7 @@ public class ElementTest {
         Element div = doc.selectFirst("div");
         final AtomicInteger counter = new AtomicInteger(0);
 
-        Element div2 = div.traverse(new PreorderNodeTraversor(), new NodeVisitor() {
+        Element div2 = div.traverse(new HeadToTailTraversor(), new NodeVisitor() {
 
             @Override
             public void head(Node node, int depth) {
@@ -1469,7 +1469,7 @@ public class ElementTest {
         // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an acutal test
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
         Element div = doc.selectFirst("div");
-        Element div2 = div.filter(new PreorderNodeTraversor(), new NodeFilter() {
+        Element div2 = div.filter(new HeadToTailTraversor(), new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
                 return FilterResult.CONTINUE;
