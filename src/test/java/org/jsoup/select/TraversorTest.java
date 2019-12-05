@@ -12,7 +12,7 @@ public class TraversorTest {
     // ElementsTest#traverse()
 
     @Test
-    public void preorderFilterVisit() {
+    public void HeadToTailFilterVisit() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new HeadToTailTraversor();
@@ -33,7 +33,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void preorderFilterSkipChildren() {
+    public void HeadToTailFilterSkipChildren() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new HeadToTailTraversor();
@@ -55,7 +55,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void preorderFilterSkipEntirely() {
+    public void HeadToTailFilterSkipEntirely() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new HeadToTailTraversor();
@@ -79,7 +79,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void preorderFilterRemove() {
+    public void HeadToTailFilterRemove() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There be <b>bold</b></div>");
         NodeTraversor nodeTraversor = new HeadToTailTraversor();
         nodeTraversor.filter(new NodeFilter() {
@@ -99,7 +99,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void preorderFilterStop() {
+    public void HeadToTailFilterStop() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new HeadToTailTraversor();
@@ -121,7 +121,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void tailFirstPreorderFilterVisit() {
+    public void TailToHeadPreorderFilterVisit() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new TailToHeadTraversor();
@@ -142,7 +142,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void tailFirstPreorderFilterSkipChildren() {
+    public void TailToHeadFilterSkipChildren() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new TailToHeadTraversor();
@@ -164,7 +164,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void tailFirstPreorderFilterSkipEntirely() {
+    public void TailToHeadFilterSkipEntirely() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new TailToHeadTraversor();
@@ -188,7 +188,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void tailFirstPreorderFilterRemove() {
+    public void TailToHeadFilterRemove() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There be <b>bold</b></div>");
         NodeTraversor nodeTraversor = new TailToHeadTraversor();
         nodeTraversor.filter(new NodeFilter() {
@@ -208,7 +208,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void tailFirstPreorderFilterStop() {
+    public void TailToHeadFilterStop() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new TailToHeadTraversor();
