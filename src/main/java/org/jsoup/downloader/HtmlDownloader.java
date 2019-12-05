@@ -11,8 +11,6 @@ import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.Set;
 
-import static javafx.application.Platform.exit;
-
 public class HtmlDownloader extends Downloader {
 
     @Override
@@ -28,13 +26,13 @@ public class HtmlDownloader extends Downloader {
                 downloadHtml(url);
             }
         }
-
-
     }
 
     private void downloadHtml(String url) {
 
         String name = url.substring(url.lastIndexOf("/") + 1);
+        name = name.replace('?', '_');
+
         if (name == "" || name == null)
             return;
 
@@ -50,7 +48,6 @@ public class HtmlDownloader extends Downloader {
             System.out.println("HTML saved");
         } catch (IOException e) {
             e.printStackTrace();
-            exit();
         }
     }
 
