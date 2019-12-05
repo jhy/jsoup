@@ -7,4 +7,4 @@ target/
 .project
 .settings/
 *Thrash*
-
+.vscode/
