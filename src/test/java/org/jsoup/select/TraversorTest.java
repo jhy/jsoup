@@ -121,7 +121,7 @@ public class TraversorTest {
     }
 
     @Test
-    public void TailToHeadPreorderFilterVisit() {
+    public void TailToHeadFilterVisit() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         NodeTraversor nodeTraversor = new TailToHeadTraversor();

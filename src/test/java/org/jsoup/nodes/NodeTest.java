@@ -221,7 +221,7 @@ public class NodeTest {
     @Test public void traverse() {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
-        doc.select("div").first().traverse(new HeadToTailTraversor(), new NodeVisitor() {
+        doc.select("div").first().traverse(new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {
                 accum.append("<").append(node.nodeName()).append(">");
