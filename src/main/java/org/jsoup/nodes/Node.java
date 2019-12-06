@@ -545,6 +545,31 @@ public abstract class Node implements Cloneable {
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining
      */
+    public Node traverse(NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeVisitor);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.traverse(nodeVisitor, this);
+        return this;
+    }
+
+    /**
+     * Perform a depth-first filtering through this node and its descendants.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public Node filter(NodeFilter nodeFilter) {
+        Validate.notNull(nodeFilter);
+        NodeTraversor nodeTraversor = new HeadToTailTraversor();
+        nodeTraversor.filter(nodeFilter, this);
+        return this;
+    }
+
+    /**
+     * Perform a depth-first traversal through this node and its descendants.
+     * @param nodeTraversor the traversor calls visitor
+     * @param nodeVisitor the visitor callbacks to perform on each node
+     * @return this node, for chaining
+     */
     public Node traverse(NodeTraversor nodeTraversor, NodeVisitor nodeVisitor) {
         Validate.notNull(nodeTraversor);
         Validate.notNull(nodeVisitor);
@@ -554,6 +579,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Perform a depth-first filtering through this node and its descendants.
+     * @param nodeTraversor the traversor calls visitor
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
      */
