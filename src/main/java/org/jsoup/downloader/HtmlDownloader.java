@@ -33,7 +33,7 @@ public class HtmlDownloader extends Downloader {
         String name = url.substring(url.lastIndexOf("/") + 1);
         name = name.replace('?', '_');
 
-        if (name == "" || name == null)
+        if (name.equalsIgnoreCase("") || name == null)
             return;
 
         System.out.println("Saving: " + name);

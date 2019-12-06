@@ -30,6 +30,10 @@ public class ImageDownloader extends Downloader {
     private void downloadImage(String imgURL) {
         String imgName = imgURL.substring(imgURL.lastIndexOf("/") + 1);
         imgName = imgName.replace('?', '_');
+
+        if (imgName.equalsIgnoreCase("") || imgName == null)
+            return;
+
         System.out.println("Saving: " + imgName + ", from " + imgURL);
 
         try (OutputStream out = new FileOutputStream(storePath  + imgName)) {
