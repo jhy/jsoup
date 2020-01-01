@@ -1482,4 +1482,12 @@ public class ElementTest {
 
         assertSame(div, div2);
     }
+
+    @Test
+    public void testChildMixedContent() {
+        Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
+        Element row = doc.selectFirst("table tbody tr");
+        assertSame(2, row.childrenCount());
+        assertFalse(row.childrenCount() == row.childNodeSize());
+    }
 }
