@@ -41,6 +41,7 @@ public class Tag {
 
     /**
      * Get this tag's normalized (lowercased) name.
+     *
      * @return the tag's normal name.
      */
     public String normalName() {
@@ -52,8 +53,8 @@ public class Tag {
      * <p>
      * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
      * </p>
-     * 
-     * @param tagName Name of tag, e.g. "p". Case insensitive.
+     *
+     * @param tagName  Name of tag, e.g. "p". Case insensitive.
      * @param settings used to control tag name sensitivity
      * @return The tag, either defined or new generic.
      */
@@ -112,6 +113,7 @@ public class Tag {
      * @return if tag can contain block tags
      * @deprecated No longer used, and no different result than {{@link #isBlock()}}
      */
+    @Deprecated
     public boolean canContainBlock() {
         return isBlock;
     }
@@ -182,6 +184,7 @@ public class Tag {
 
     /**
      * Get if this tag represents a control associated with a form. E.g. input, textarea, output
+     *
      * @return if associated with a form
      */
     public boolean isFormListed() {
@@ -190,6 +193,7 @@ public class Tag {
 
     /**
      * Get if this tag represents an element that should be submitted with a form. E.g. input, option
+     *
      * @return if submittable with a form
      */
     public boolean isFormSubmittable() {
