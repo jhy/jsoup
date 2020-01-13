@@ -354,7 +354,7 @@ public class HtmlParserTest {
 
     @Test public void handlesCdataAcrossBuffer() {
         StringBuilder sb = new StringBuilder();
-        while (sb.length() <= CharacterReader.maxBufferLen) {
+        while (sb.length() <= CharacterReader.MAX_BUFFER_LEN) {
             sb.append("A suitable amount of CData.\n");
         }
         String cdata = sb.toString();

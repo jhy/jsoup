@@ -10,7 +10,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
-import static org.jsoup.parser.CharacterReader.maxBufferLen;
+import static org.jsoup.parser.CharacterReader.MAX_BUFFER_LEN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +27,7 @@ public class TokeniserTest {
             String tail = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
             StringBuilder sb = new StringBuilder(preamble);
 
-            final int charsToFillBuffer = maxBufferLen - preamble.length();
+            final int charsToFillBuffer = MAX_BUFFER_LEN - preamble.length();
             for (int i = 0; i < charsToFillBuffer; i++) {
                 sb.append('a');
             }
@@ -47,10 +47,10 @@ public class TokeniserTest {
     @Test public void handleSuperLargeTagNames() {
         // unlikely, but valid. so who knows.
 
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("LargeTagName");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String tag = sb.toString();
         String html = "<" + tag + ">One</" + tag + ">";
 
@@ -64,10 +64,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleSuperLargeAttributeName() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("LargAttributeName");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String attrName = sb.toString();
         String html = "<p " + attrName + "=foo>One</p>";
 
@@ -83,10 +83,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeText() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("A Large Amount of Text");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String text = sb.toString();
         String html = "<p>" + text + "</p>";
 
@@ -100,10 +100,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeComment() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("Quite a comment ");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String comment = sb.toString();
         String html = "<p><!-- " + comment + " --></p>";
 
@@ -118,10 +118,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeCdata() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("Quite a lot of CDATA <><><><>");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String cdata = sb.toString();
         String html = "<p><![CDATA[" + cdata + "]]></p>";
 
@@ -137,10 +137,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeTitle() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(MAX_BUFFER_LEN);
         do {
             sb.append("Quite a long title");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < MAX_BUFFER_LEN);
         String title = sb.toString();
         String html = "<title>" + title + "</title>";
 

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class CharacterReaderTest {
-    public final static int maxBufferLen = CharacterReader.maxBufferLen;
+    public final static int maxBufferLen = CharacterReader.MAX_BUFFER_LEN;
 
     @Test public void consume() {
         CharacterReader r = new CharacterReader("one");

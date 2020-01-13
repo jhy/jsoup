@@ -14,9 +14,9 @@ import java.util.Locale;
  */
 public final class CharacterReader {
     static final char EOF = (char) -1;
-    private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 32; // visible for testing
-    private static final int readAheadLimit = (int) (maxBufferLen * 0.75);
+    private static final int MAX_STRING_CACHE_LEN = 12;
+    static final int MAX_BUFFER_LEN = 1024 * 32; // visible for testing
+    private static final int READ_AHEAD_LIMIT = (int) (MAX_BUFFER_LEN * 0.75);
 
     private final char[] charBuf;
     private final Reader reader;
@@ -31,7 +31,7 @@ public final class CharacterReader {
         Validate.notNull(input);
         Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = new char[sz > maxBufferLen ? maxBufferLen : sz];
+        charBuf = new char[sz > MAX_BUFFER_LEN ? MAX_BUFFER_LEN : sz];
         bufferUp();
 
         if (isBinary()) {
@@ -40,7 +40,7 @@ public final class CharacterReader {
     }
 
     public CharacterReader(Reader input) {
-        this(input, maxBufferLen);
+        this(input, MAX_BUFFER_LEN);
     }
 
     public CharacterReader(String input) {
@@ -54,7 +54,7 @@ public final class CharacterReader {
 
         try {
             final long skipped = reader.skip(pos);
-            reader.mark(maxBufferLen);
+            reader.mark(MAX_BUFFER_LEN);
             final int read = reader.read(charBuf);
             reader.reset();
             if (read != -1) {
@@ -63,7 +63,7 @@ public final class CharacterReader {
                 readerPos += pos;
                 bufPos = 0;
                 bufMark = -1;
-                bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
+                bufSplitPoint = java.lang.Math.min(bufLength, READ_AHEAD_LIMIT);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -453,7 +453,7 @@ public final class CharacterReader {
         return (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1);
     }
 
-    private static final int numNullsConsideredBinary = 10; // conservative
+    private static final int NUM_NULLS_CONSIDERED_BINARY = 10; // conservative
 
     /**
      *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
@@ -467,7 +467,7 @@ public final class CharacterReader {
                 nullsSeen++;
         }
 
-        return nullsSeen >= numNullsConsideredBinary;
+        return nullsSeen >= NUM_NULLS_CONSIDERED_BINARY;
     }
 
     @Override
@@ -484,7 +484,7 @@ public final class CharacterReader {
      */
     private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
         // limit (no cache):
-        if (count > maxStringCacheLen)
+        if (count > MAX_STRING_CACHE_LEN)
             return new String(charBuf, start, count);
         if (count < 1)
             return "";
