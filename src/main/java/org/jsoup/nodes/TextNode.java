@@ -29,6 +29,7 @@ public class TextNode extends LeafNode {
      @see #createFromEncoded(String, String)
      @deprecated use {@link TextNode#TextNode(String)}
      */
+    @Deprecated
     public TextNode(String text, String baseUri) {
         this(text);
     }
@@ -116,6 +117,7 @@ public class TextNode extends LeafNode {
      * @return TextNode containing unencoded data (e.g. &lt;)
      * @deprecated use {@link TextNode#createFromEncoded(String)} instead, as LeafNodes don't carry base URIs.
      */
+    @Deprecated
     public static TextNode createFromEncoded(String encodedText, String baseUri) {
         String text = Entities.unescape(encodedText);
         return new TextNode(text);

@@ -104,6 +104,7 @@ public class Entities {
      * @return the Character value of the named entity (e.g. '{@literal <}' or '{@literal &}')
      * @deprecated does not support characters outside the BMP or multiple character names
      */
+    @Deprecated
     public static Character getCharacterByName(String name) {
         return (char) extended.codepointForName(name);
     }

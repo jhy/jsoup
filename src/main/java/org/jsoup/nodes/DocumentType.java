@@ -45,6 +45,7 @@ public class DocumentType extends LeafNode {
      * @param baseUri unused
      * @deprecated
      */
+    @Deprecated
     public DocumentType(String name, String publicId, String systemId, String baseUri) {
         attr(NAME, name);
         attr(PUBLIC_ID, publicId);
@@ -62,6 +63,7 @@ public class DocumentType extends LeafNode {
      * @param baseUri unused
      * @deprecated
      */
+    @Deprecated
     public DocumentType(String name, String pubSysKey, String publicId, String systemId, String baseUri) {
         attr(NAME, name);
         if (pubSysKey != null) {

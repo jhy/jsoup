@@ -22,6 +22,7 @@ public class DataNode extends LeafNode {
      @param baseUri Unused, Leaf Nodes do not hold base URis
      @deprecated use {@link #DataNode(String)} instead
      */
+    @Deprecated
     public DataNode(String data, String baseUri) {
         this(data);
     }

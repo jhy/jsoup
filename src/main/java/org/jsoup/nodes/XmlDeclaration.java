@@ -32,6 +32,7 @@ public class XmlDeclaration extends LeafNode {
      * @see XmlDeclaration#XmlDeclaration(String, boolean)
      * @deprecated
      */
+    @Deprecated
     public XmlDeclaration(String name, String baseUri, boolean isProcessingInstruction) {
         this(name, isProcessingInstruction);
     }

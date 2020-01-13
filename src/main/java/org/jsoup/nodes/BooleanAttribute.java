@@ -4,6 +4,7 @@ package org.jsoup.nodes;
  * A boolean attribute that is written out without any value.
  * @deprecated just use null values (vs empty string) for booleans.
  */
+@Deprecated
 public class BooleanAttribute extends Attribute {
     /**
      * Create a new boolean attribute from unencoded (raw) key.

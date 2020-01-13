@@ -171,6 +171,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     /**
      * @deprecated
      */
+    @Deprecated
     protected boolean isBooleanAttribute() {
         return Arrays.binarySearch(booleanAttributes, key) >= 0 || val == null;
     }
