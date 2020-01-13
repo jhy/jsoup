@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /**
- CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
+ * CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
 public final class CharacterReader {
     static final char EOF = (char) -1;
@@ -31,7 +31,7 @@ public final class CharacterReader {
         Validate.notNull(input);
         Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = new char[sz > MAX_BUFFER_LEN ? MAX_BUFFER_LEN : sz];
+        charBuf = new char[Math.min(sz, MAX_BUFFER_LEN)];
         bufferUp();
 
         if (isBinary()) {
@@ -72,6 +72,7 @@ public final class CharacterReader {
 
     /**
      * Gets the current cursor position in the content.
+     *
      * @return current position
      */
     public int pos() {
@@ -80,6 +81,7 @@ public final class CharacterReader {
 
     /**
      * Tests if all the content has been read.
+     *
      * @return true if nothing left to read.
      */
     public boolean isEmpty() {
@@ -93,6 +95,7 @@ public final class CharacterReader {
 
     /**
      * Get the char at the current position.
+     *
      * @return char
      */
     public char current() {
@@ -137,6 +140,7 @@ public final class CharacterReader {
 
     /**
      * Returns the number of characters between the current position and the next instance of the input char
+     *
      * @param c scan target
      * @return offset between current position and next instance of target. -1 if not found.
      */
@@ -163,9 +167,9 @@ public final class CharacterReader {
         for (int offset = bufPos; offset < bufLength; offset++) {
             // scan to first instance of startchar:
             if (startChar != charBuf[offset])
-                while(++offset < bufLength && startChar != charBuf[offset]) { /* empty */ }
+                while (++offset < bufLength && startChar != charBuf[offset]) { /* empty */ }
             int i = offset + 1;
-            int last = i + seq.length()-1;
+            int last = i + seq.length() - 1;
             if (offset < bufLength && last <= bufLength) {
                 for (int j = 1; i < last && seq.charAt(j) == charBuf[i]; i++, j++) { /* empty */ }
                 if (i == last) // found full sequence
@@ -177,6 +181,7 @@ public final class CharacterReader {
 
     /**
      * Reads characters up to the specific char.
+     *
      * @param c the delimiter
      * @return the chars read
      */
@@ -204,6 +209,7 @@ public final class CharacterReader {
 
     /**
      * Read characters until the first of any delimiters is found.
+     *
      * @param chars delimiters to scan for
      * @return characters read up to the matched delimiter.
      */
@@ -216,7 +222,8 @@ public final class CharacterReader {
         final int charLen = chars.length;
         int i;
 
-        OUTER: while (pos < remaining) {
+        OUTER:
+        while (pos < remaining) {
             for (i = 0; i < charLen; i++) {
                 if (val[pos] == chars[i])
                     break OUTER;
@@ -225,7 +232,7 @@ public final class CharacterReader {
         }
 
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeToAnySorted(final char... chars) {
@@ -241,7 +248,7 @@ public final class CharacterReader {
             pos++;
         }
         bufPos = pos;
-        return bufPos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeData() {
@@ -252,7 +259,8 @@ public final class CharacterReader {
         final int remaining = bufLength;
         final char[] val = charBuf;
 
-        OUTER: while (pos < remaining) {
+        OUTER:
+        while (pos < remaining) {
             switch (val[pos]) {
                 case '&':
                 case '<':
@@ -263,7 +271,7 @@ public final class CharacterReader {
             }
         }
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeTagName() {
@@ -275,7 +283,8 @@ public final class CharacterReader {
         final int remaining = bufLength;
         final char[] val = charBuf;
 
-        OUTER: while (pos < remaining) {
+        OUTER:
+        while (pos < remaining) {
             switch (val[pos]) {
                 case '\t':
                 case '\n':
@@ -292,7 +301,7 @@ public final class CharacterReader {
         }
 
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeToEnd() {
@@ -375,7 +384,7 @@ public final class CharacterReader {
             return false;
 
         for (int offset = 0; offset < scanLength; offset++)
-            if (seq.charAt(offset) != charBuf[bufPos +offset])
+            if (seq.charAt(offset) != charBuf[bufPos + offset])
                 return false;
         return true;
     }
@@ -456,8 +465,8 @@ public final class CharacterReader {
     private static final int NUM_NULLS_CONSIDERED_BINARY = 10; // conservative
 
     /**
-     *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
-     *  decoded correctly, so a bunch of NULLs indicates a binary file
+     * Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
+     * decoded correctly, so a bunch of NULLs indicates a binary file
      */
     boolean isBinary() {
         int nullsSeen = 0;
@@ -477,7 +486,7 @@ public final class CharacterReader {
 
     /**
      * Caches short strings, as a flywheel pattern, to reduce GC load. Just for this doc, to prevent leaks.
-     * <p />
+     * <p/>
      * Simplistic, and on hash collisions just falls back to creating a new string, vs a full HashMap with Entry list.
      * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
      * some more duplicates.
