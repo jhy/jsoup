@@ -20,14 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -75,6 +68,47 @@ public class HttpConnection implements Connection {
         Connection con = new HttpConnection();
         con.url(url);
         return con;
+    }
+
+    public static Connection connect(String url, Boolean toPunycode) {
+        Connection con = new HttpConnection();
+        if (toPunycode != null && toPunycode) {
+            con.url(getPunycodeUrl(url));
+        } else {
+            con.url(url);
+        }
+        return con;
+    }
+
+    public static Connection connect(URL url, Boolean toPunycode) {
+        Connection con = new HttpConnection();
+        if (toPunycode != null && toPunycode) {
+            con.url(getPunycodeUrl(url));
+        } else {
+            con.url(url);
+        }
+        return con;
+    }
+
+    /**
+     * Encodes the input IDN URL into a Punycode URL string
+     * @param url IDN URL
+     * @return Punycoded URL
+     */
+    private static URL getPunycodeUrl(String url) {
+        try {
+            return getPunycodeUrl(new URL(url));
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Malformed URL: " + url, e);
+        }
+    }
+
+    private static URL getPunycodeUrl(URL url) {
+        try {
+            return new URL(url.getProtocol() + "://" + IDN.toASCII(url.getHost()) + url.getPath());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Malformed URL: " + url, e);
+        }
     }
 
     public HttpConnection() {

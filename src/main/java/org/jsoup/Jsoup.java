@@ -74,6 +74,22 @@ public class Jsoup {
     }
 
     /**
+     * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
+     * <p>
+     * Use examples:
+     * <ul>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "jsoup").get();</code></li>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();</code></li>
+     * </ul>
+     * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
+     * @param toPunycode a flag if you need to encode the URL into Punycode in order to connect to IDN (Internationalized Domain Names).
+     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     */
+    public static Connection connect(String url, Boolean toPunycode) {
+        return HttpConnection.connect(url, toPunycode);
+    }
+
+    /**
      Parse the contents of a file as HTML.
 
      @param in          file to load HTML from

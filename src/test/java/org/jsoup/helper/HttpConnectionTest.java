@@ -9,6 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.IDN;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -158,6 +159,13 @@ public class HttpConnectionTest {
     @Test public void connectWithUrl() throws MalformedURLException {
         Connection con = HttpConnection.connect(new URL("http://example.com"));
         assertEquals("http://example.com", con.request().url().toExternalForm());
+    }
+
+    @Test public void connectWithIdnUrl() throws MalformedURLException {
+        URL url = new URL("https://тест.рф");
+        Connection con = HttpConnection.connect(url, true);
+        String expectedUrl = url.getProtocol() + "://" + IDN.toASCII(url.getHost()) + url.getPath();
+        assertEquals(expectedUrl, con.request().url().toExternalForm());
     }
 
     @Test(expected=IllegalArgumentException.class) public void throwsOnMalformedUrl() {
