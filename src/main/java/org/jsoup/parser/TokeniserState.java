@@ -288,6 +288,11 @@ enum TokeniserState {
                     t.emit("<!");
                     t.transition(ScriptDataEscapeStart);
                     break;
+                case eof:
+                    t.emit("<");
+                    t.eofError(this);
+                    t.transition(Data);
+                    break;
                 default:
                     t.emit("<");
                     r.unconsume();
