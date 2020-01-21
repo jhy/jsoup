@@ -234,6 +234,11 @@ final class Tokeniser {
         emit(commentPending);
     }
 
+    void createBogusCommentPending() {
+        commentPending.reset();
+        commentPending.bogus = true;
+    }
+
     void createDoctypePending() {
         doctypePending.reset();
     }

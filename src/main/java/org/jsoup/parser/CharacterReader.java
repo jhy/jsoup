@@ -217,8 +217,16 @@ public final class CharacterReader {
             String consumed = cacheString(charBuf, stringCache, bufPos, offset);
             bufPos += offset;
             return consumed;
-        } else {
+        } else if (bufLength - bufPos < seq.length()) {
+            // nextIndexOf() did a bufferUp(), so if the buffer is shorter than the search string, we must be at EOF
             return consumeToEnd();
+        } else {
+            // the string we're looking for may be straddling a buffer boundary, so keep (length - 1) characters
+            // unread in case they contain the beginning of the search string
+            int endPos = bufLength - seq.length() + 1;
+            String consumed = cacheString(charBuf, stringCache, bufPos, endPos - bufPos);
+            bufPos = endPos;
+            return consumed;
         }
     }
 
