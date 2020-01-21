@@ -1,7 +1,7 @@
 package org.jsoup.parser;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
 
 import java.util.Arrays;
@@ -53,8 +53,16 @@ final class Tokeniser {
     }
 
     Token read() {
-        while (!isEmitPending)
+        int pos = reader.pos(); // count how many reads we do in a row without making progress, and bail if stuck in a loop
+        int consecutiveReads = 0;
+        while (!isEmitPending) {
             state.read(this, reader);
+            if (reader.pos() <= pos) {
+                consecutiveReads++;
+            }
+            Validate.isTrue(consecutiveReads < 10,
+                "BUG: Not making progress from state: " + this.state.name() + " with current char=" + reader.current());
+        }
 
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
         if (charsBuilder.length() > 0) {
@@ -147,6 +155,8 @@ final class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
+
+            reader.unmark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
             int charval = -1;
@@ -189,6 +199,8 @@ final class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
+
+            reader.unmark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon"); // missing semi
             int numChars = Entities.codepointsForName(nameRef, multipointHolder);

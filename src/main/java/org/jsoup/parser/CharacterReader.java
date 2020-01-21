@@ -17,6 +17,7 @@ public final class CharacterReader {
     private static final int maxStringCacheLen = 12;
     static final int maxBufferLen = 1024 * 32; // visible for testing
     static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
+    private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
 
     private final char[] charBuf;
     private final Reader reader;
@@ -47,7 +48,11 @@ public final class CharacterReader {
         this(new StringReader(input), input.length());
     }
 
+    private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
     private void bufferUp() {
+        if (readFully)
+            return;
+
         final int pos = bufPos;
         if (pos < bufSplitPoint)
             return;
@@ -55,9 +60,17 @@ public final class CharacterReader {
         try {
             final long skipped = reader.skip(pos);
             reader.mark(maxBufferLen);
-            final int read = reader.read(charBuf);
+            int read = 0;
+            while (read <= minReadAheadLen) {
+                int thisRead = reader.read(charBuf, read, charBuf.length - read);
+                if (thisRead == -1)
+                    readFully = true;
+                if (thisRead <= 0)
+                    break;
+                read += thisRead;
+            }
             reader.reset();
-            if (read != -1) {
+            if (read > 0) {
                 Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
                 bufLength = read;
                 readerPos += pos;
@@ -122,10 +135,16 @@ public final class CharacterReader {
     }
 
     void mark() {
-        // extra buffer up, to get as much rewind capacity as possible
-        bufSplitPoint = 0;
+        // make sure there is enough look ahead capacity
+        if (bufLength - bufPos < minReadAheadLen)
+            bufSplitPoint = 0;
+
         bufferUp();
         bufMark = bufPos;
+    }
+
+    void unmark() {
+        bufMark = -1;
     }
 
     void rewindToMark() {
@@ -133,6 +152,7 @@ public final class CharacterReader {
             throw new UncheckedIOException(new IOException("Mark invalid"));
 
         bufPos = bufMark;
+        unmark();
     }
 
     /**
