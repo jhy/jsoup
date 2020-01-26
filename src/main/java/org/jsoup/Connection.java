@@ -98,8 +98,10 @@ public interface Connection {
 
     /**
      * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
-     * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
-     * only by your patience and the memory available on your machine).
+     * and the input truncated (i.e. the body content will be trimmed). <b>The default maximum is 2MB</b>. A max size of
+     * <code>0</code> is treated as an infinite amount (bounded only by your patience and the memory available on your
+     * machine).
+     *
      * @param bytes number of bytes to read from the input before truncating
      * @return this Connection, for chaining
      */
