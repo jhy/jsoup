@@ -310,6 +310,6 @@ public class CleanerTest {
         String dirty = "<a>One</a> <a href>Two</a>";
         Whitelist relaxedWithAnchor = Whitelist.relaxed().addProtocols("a", "href", "#");
         String clean = Jsoup.clean(dirty, relaxedWithAnchor);
-        assertEquals("<a>One</a> \n<a>Two</a>", clean);
+        assertEquals("<a>One</a> <a>Two</a>", clean);
     }
 }
