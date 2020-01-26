@@ -16,7 +16,7 @@ public class Tag {
 
     private String tagName;
     private String normalName; // always the lower case version of this tag, regardless of case preservation mode
-    private boolean isBlock = true; // block or inline
+    private boolean isBlock = true; // block
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean canContainInline = true; // only pcdata if not
     private boolean empty = false; // can hold nothing; e.g. img
@@ -24,6 +24,7 @@ public class Tag {
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
     private boolean formList = false; // a control that appears in forms: input, textarea, output etc
     private boolean formSubmit = false; // a control that can be submitted in a form: input etc
+    private boolean inlineTag = false; // an inline tag
 
     private Tag(String tagName) {
         this.tagName = tagName;
@@ -122,7 +123,7 @@ public class Tag {
      * @return if this tag is an inline tag.
      */
     public boolean isInline() {
-        return !isBlock;
+        return inlineTag;
     }
 
     /**
@@ -216,7 +217,8 @@ public class Tag {
         if (preserveWhitespace != tag.preserveWhitespace) return false;
         if (selfClosing != tag.selfClosing) return false;
         if (formList != tag.formList) return false;
-        return formSubmit == tag.formSubmit;
+        if (formSubmit != tag.formSubmit) return false;
+        return inlineTag == tag.inlineTag;
     }
 
     @Override
@@ -230,6 +232,7 @@ public class Tag {
         result = 31 * result + (preserveWhitespace ? 1 : 0);
         result = 31 * result + (formList ? 1 : 0);
         result = 31 * result + (formSubmit ? 1 : 0);
+        result = 31 * result + (inlineTag ? 1 : 0);
         return result;
     }
 
@@ -286,6 +289,7 @@ public class Tag {
             Tag tag = new Tag(tagName);
             tag.isBlock = false;
             tag.formatAsBlock = false;
+            tag.inlineTag = true;
             register(tag);
         }
 

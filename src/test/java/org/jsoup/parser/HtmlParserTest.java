@@ -694,8 +694,7 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p>\n" +
-            "<b> \n" +
+        String want = "<p><b>One</b></p><b> \n" +
             " <table>\n" +
             "  <tbody>\n" +
             "   <tr>\n" +
@@ -1033,7 +1032,7 @@ public class HtmlParserTest {
     @Test public void testNormalisesIsIndex() {
         Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
         String html = doc.outerHtml();
-        assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
+        assertEquals("<form action=\"/submit\"> <hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
             StringUtil.normaliseWhitespace(doc.body().html()));
     }
 

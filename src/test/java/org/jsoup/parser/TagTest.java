@@ -64,7 +64,7 @@ public class TagTest {
         Tag foo2 = Tag.valueOf("FOO");
 
         assertEquals(foo, foo2);
-        assertTrue(foo.isInline());
+        assertFalse(foo.isInline());
         assertTrue(foo.formatAsBlock());
     }
 

@@ -347,6 +347,29 @@ public class ElementTest {
         Element div = doc.select("div").first();
         assertEquals("   \n<p>Hello\n there\n</p>", div.html());
     }
+
+    @Test public void testNotPrettyWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+        document.outputSettings().prettyPrint(false);
+
+        assertEquals("<div><span>1:15</span>–<span>2:15</span>&nbsp;p.m.</div>", document.body().html());
+    }
+
+    @Test public void testPrettyWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+
+        assertEquals("<div>\n <span>1:15</span>–<span>2:15</span>&nbsp;p.m.\n</div>", document.body().html());
+    }
+
+    @Test public void testPrettyAndOutlineWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+        document.outputSettings().outline(true);
+
+        assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n &nbsp;p.m.\n</div>", document.body().html());
+    }
     
     @Test public void testEmptyElementFormatHtml() {
         // don't put newlines into empty blocks
@@ -1136,8 +1159,7 @@ public class ElementTest {
         assertEquals("Another", els3.get(2).text());
 
         assertEquals("<p><a>One</a></p>\n" +
-            "<p>P3</p>\n" +
-            "<span>Another</span>\n" +
+            "<p>P3</p><span>Another</span>\n" +
             "<p><a>Two</a></p>\n" +
             "<p>P4</p>Three", div.html());
     }

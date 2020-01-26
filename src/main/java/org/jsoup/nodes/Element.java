@@ -1395,7 +1395,7 @@ public class Element extends Node {
     }
 
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && (tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline())) {
+        if (out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out)) {
             if (accum instanceof StringBuilder) {
                 if (((StringBuilder) accum).length() > 0)
                     indent(accum, depth, out);
@@ -1417,7 +1417,7 @@ public class Element extends Node {
             accum.append('>');
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
                     tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
@@ -1521,5 +1521,17 @@ public class Element extends Node {
         public void onContentsChanged() {
             owner.nodelistChanged();
         }
+    }
+
+    private boolean isFormatAsBlock(Document.OutputSettings out) {
+        return tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
+    }
+
+    private boolean isInlineable(Document.OutputSettings out) {
+        return tag().isInline()
+                && !tag().isEmpty()
+                && parent().isBlock()
+                && previousElementSibling() != null
+                && !out.outline();
     }
 }
