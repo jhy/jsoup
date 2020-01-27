@@ -161,8 +161,8 @@ enum TokeniserState {
                     t.transition(SelfClosingStartTag);
                     break;
                 case '<': // NOTE: out of spec, but clear author intent
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     // intended fall through to next >
                 case '>':
                     t.emitTagPending();
@@ -572,17 +572,17 @@ enum TokeniserState {
                     t.transition(SelfClosingStartTag);
                     break;
                 case '<': // NOTE: out of spec, but clear (spec has this as a part of the attribute name)
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     // intended fall through as if >
                 case '>':
                     t.emitTagPending();
                     t.transition(Data);
                     break;
                 case nullChar:
+                    r.unconsume();
                     t.error(this);
                     t.tagPending.newAttribute();
-                    r.unconsume();
                     t.transition(AttributeName);
                     break;
                 case eof:
@@ -880,8 +880,8 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     t.transition(BeforeAttributeName);
             }
 
@@ -901,8 +901,8 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     t.transition(BeforeAttributeName);
             }
         }
