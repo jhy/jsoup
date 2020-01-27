@@ -31,6 +31,9 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/1251>
     <https://github.com/jhy/jsoup/pull/1253>
 
+  * Bugfix: handle the ^= (starts with) selector correctly when the prefix starts with a space.
+    <https://github.com/jhy/jsoup/pull/1280>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]

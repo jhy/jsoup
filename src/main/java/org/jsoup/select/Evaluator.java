@@ -237,7 +237,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
         public AttributeWithValueEnding(String key, String value) {
-            super(key, value);
+            super(key, value, false);
         }
 
         @Override
