@@ -27,6 +27,10 @@ jsoup changelog
   * Bugfix: don't submit input type=button form elements.
     <https://github.com/jhy/jsoup/issues/1231>
 
+  * Bugfix: handle error position reporting correctly and don't blow up in some edge cases.
+    <https://github.com/jhy/jsoup/issues/1251>
+    <https://github.com/jhy/jsoup/pull/1253>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]
