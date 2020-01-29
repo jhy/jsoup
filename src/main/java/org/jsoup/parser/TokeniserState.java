@@ -105,6 +105,7 @@ enum TokeniserState {
                     t.advanceTransition(EndTagOpen);
                     break;
                 case '?':
+                    t.createBogusCommentPending();
                     t.advanceTransition(BogusComment);
                     break;
                 default:
@@ -134,6 +135,7 @@ enum TokeniserState {
                 t.advanceTransition(Data);
             } else {
                 t.error(this);
+                t.createBogusCommentPending();
                 t.advanceTransition(BogusComment);
             }
         }
@@ -159,8 +161,8 @@ enum TokeniserState {
                     t.transition(SelfClosingStartTag);
                     break;
                 case '<': // NOTE: out of spec, but clear author intent
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     // intended fall through to next >
                 case '>':
                     t.emitTagPending();
@@ -287,6 +289,11 @@ enum TokeniserState {
                 case '!':
                     t.emit("<!");
                     t.transition(ScriptDataEscapeStart);
+                    break;
+                case eof:
+                    t.emit("<");
+                    t.eofError(this);
+                    t.transition(Data);
                     break;
                 default:
                     t.emit("<");
@@ -565,17 +572,17 @@ enum TokeniserState {
                     t.transition(SelfClosingStartTag);
                     break;
                 case '<': // NOTE: out of spec, but clear (spec has this as a part of the attribute name)
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     // intended fall through as if >
                 case '>':
                     t.emitTagPending();
                     t.transition(Data);
                     break;
                 case nullChar:
+                    r.unconsume();
                     t.error(this);
                     t.tagPending.newAttribute();
-                    r.unconsume();
                     t.transition(AttributeName);
                     break;
                 case eof:
@@ -873,8 +880,8 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     t.transition(BeforeAttributeName);
             }
 
@@ -894,8 +901,8 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.error(this);
                     r.unconsume();
+                    t.error(this);
                     t.transition(BeforeAttributeName);
             }
         }
@@ -905,12 +912,13 @@ enum TokeniserState {
             // todo: handle bogus comment starting from eof. when does that trigger?
             // rewind to capture character that lead us here
             r.unconsume();
-            Token.Comment comment = new Token.Comment();
-            comment.bogus = true;
-            comment.data.append(r.consumeTo('>'));
+            t.commentPending.data.append(r.consumeTo('>'));
             // todo: replace nullChar with replaceChar
-            t.emit(comment);
-            t.advanceTransition(Data);
+            char next = r.consume();
+            if (next == '>' || next == eof) {
+                t.emitCommentPending();
+                t.transition(Data);
+            }
         }
     },
     MarkupDeclarationOpen {
@@ -928,6 +936,7 @@ enum TokeniserState {
                 t.transition(CdataSection);
             } else {
                 t.error(this);
+                t.createBogusCommentPending();
                 t.advanceTransition(BogusComment); // advance so this character gets in bogus comment data's rewind
             }
         }

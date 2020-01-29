@@ -814,4 +814,18 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("Two", els.text());
     }
+
+    @Test public void startsWithBeginsWithSpace() {
+        Document doc = Jsoup.parse("<small><a href=\" mailto:abc@def.net\">(abc@def.net)</a></small>");
+        Elements els = doc.select("a[href^=' mailto']");
+
+        assertEquals(1, els.size());
+    }
+
+    @Test public void endsWithEndsWithSpaces() {
+        Document doc = Jsoup.parse("<small><a href=\" mailto:abc@def.net \">(abc@def.net)</a></small>");
+        Elements els = doc.select("a[href$='.net ']");
+
+        assertEquals(1, els.size());
+    }
 }

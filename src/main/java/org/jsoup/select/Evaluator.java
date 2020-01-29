@@ -217,7 +217,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueStarting extends AttributeKeyPair {
         public AttributeWithValueStarting(String key, String value) {
-            super(key, value);
+            super(key, value, false);
         }
 
         @Override
@@ -237,7 +237,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
         public AttributeWithValueEnding(String key, String value) {
-            super(key, value);
+            super(key, value, false);
         }
 
         @Override
@@ -304,15 +304,21 @@ public abstract class Evaluator {
         String value;
 
         public AttributeKeyPair(String key, String value) {
+            this(key, value, true);
+        }
+
+        public AttributeKeyPair(String key, String value, boolean trimValue) {
             Validate.notEmpty(key);
             Validate.notEmpty(value);
 
             this.key = normalize(key);
-            if (value.startsWith("\"") && value.endsWith("\"")
-                    || value.startsWith("'") && value.endsWith("'")) {
+            boolean isStringLiteral = value.startsWith("'") && value.endsWith("'")
+                                        || value.startsWith("\"") && value.endsWith("\"");
+            if (isStringLiteral) {
                 value = value.substring(1, value.length()-1);
             }
-            this.value = normalize(value);
+
+            this.value = trimValue ? normalize(value) : normalize(value, isStringLiteral);
         }
     }
 
