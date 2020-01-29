@@ -20,6 +20,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.net.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -60,33 +68,13 @@ public class HttpConnection implements Connection {
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
-        con.url(url);
+        con.url(getPunycodeUrl(url));
         return con;
     }
 
     public static Connection connect(URL url) {
         Connection con = new HttpConnection();
-        con.url(url);
-        return con;
-    }
-
-    public static Connection connect(String url, Boolean toPunycode) {
-        Connection con = new HttpConnection();
-        if (toPunycode != null && toPunycode) {
-            con.url(getPunycodeUrl(url));
-        } else {
-            con.url(url);
-        }
-        return con;
-    }
-
-    public static Connection connect(URL url, Boolean toPunycode) {
-        Connection con = new HttpConnection();
-        if (toPunycode != null && toPunycode) {
-            con.url(getPunycodeUrl(url));
-        } else {
-            con.url(url);
-        }
+        con.url(getPunycodeUrl(url));
         return con;
     }
 

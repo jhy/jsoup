@@ -163,7 +163,7 @@ public class HttpConnectionTest {
 
     @Test public void connectWithIdnUrl() throws MalformedURLException {
         URL url = new URL("https://тест.рф");
-        Connection con = HttpConnection.connect(url, true);
+        Connection con = HttpConnection.connect(url);
         String expectedUrl = url.getProtocol() + "://" + IDN.toASCII(url.getHost()) + url.getPath();
         assertEquals(expectedUrl, con.request().url().toExternalForm());
     }
