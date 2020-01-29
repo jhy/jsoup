@@ -58,7 +58,7 @@ public class HttpConnection implements Connection {
      * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
      */
     public static final String DEFAULT_UA =
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
     private static final String USER_AGENT = "User-Agent";
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String MULTIPART_FORM_DATA = "multipart/form-data";
@@ -573,7 +573,7 @@ public class HttpConnection implements Connection {
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
-            maxBodySizeBytes = 1024 * 1024; // 1MB
+            maxBodySizeBytes = 1024 * 1024 * 2; // 2MB
             followRedirects = true;
             data = new ArrayList<>();
             method = Method.GET;

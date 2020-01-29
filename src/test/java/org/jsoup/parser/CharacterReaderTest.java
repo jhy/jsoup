@@ -51,20 +51,31 @@ public class CharacterReaderTest {
         assertTrue(r.isEmpty());
 
         assertEquals(CharacterReader.EOF, r.consume());
-        r.unconsume();
+        r.unconsume(); // read past, so have to eat again
         assertTrue(r.isEmpty());
-        assertEquals(CharacterReader.EOF, r.current());
+        r.unconsume();
+        assertFalse(r.isEmpty());
+
+        assertEquals('e', r.consume());
+        assertTrue(r.isEmpty());
+
+        assertEquals(CharacterReader.EOF, r.consume());
+        assertTrue(r.isEmpty());
     }
 
     @Test public void mark() {
         CharacterReader r = new CharacterReader("one");
         r.consume();
         r.mark();
+        assertEquals(1, r.pos());
         assertEquals('n', r.consume());
         assertEquals('e', r.consume());
         assertTrue(r.isEmpty());
         r.rewindToMark();
+        assertEquals(1, r.pos());
         assertEquals('n', r.consume());
+        assertFalse(r.isEmpty());
+        assertEquals(2, r.pos());
     }
 
     @Test public void consumeToEnd() {
@@ -122,7 +133,15 @@ public class CharacterReaderTest {
         assertEquals('T', r.consume());
         assertEquals("wo ", r.consumeTo("Two"));
         assertEquals('T', r.consume());
-        assertEquals("wo Four", r.consumeTo("Qux"));
+        // To handle strings straddling across buffers, consumeTo() may return the
+        // data in multiple pieces near EOF.
+        StringBuilder builder = new StringBuilder();
+        String part;
+        do {
+            part = r.consumeTo("Qux");
+            builder.append(part);
+        } while (!part.isEmpty());
+        assertEquals("wo Four", builder.toString());
     }
 
     @Test public void advance() {
@@ -282,6 +301,18 @@ public class CharacterReaderTest {
 
         assertEquals(' ', r.consume());
         assertFalse(r.isEmpty());
+        assertEquals(4, r.pos());
+        assertEquals('a', r.consume());
+        assertEquals(5, r.pos());
+        assertEquals('b', r.consume());
+        assertEquals('o', r.consume());
+        assertEquals('u', r.consume());
+        assertEquals('t', r.consume());
+        assertEquals(' ', r.consume());
+        assertEquals('n', r.consume());
+        assertEquals('o', r.consume());
+        assertEquals('w', r.consume());
+        assertTrue(r.isEmpty());
     }
 
     @Test public void bufferUp() {
