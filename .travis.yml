@@ -14,8 +14,8 @@ env:
     # You can see the list of supported environments by installing Jabba and using ls-remote:
     # https://github.com/shyiko/jabba#usage
     - JDK="openjdk-ri@1.7.75"
-    - JDK="adopt@1.8.212-04"
-    - JDK="amazon-corretto@1.8.212-04.2"
+    - JDK="adopt@1.8.0-212"
+    - JDK="amazon-corretto@1.8.232-09.1"
     - JDK="openjdk@1.9.0-4"
     - JDK="1.12.0-1"
 
