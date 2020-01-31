@@ -47,7 +47,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().equalsIgnoreCase(tagName));
+            return (element.normalName().equals(tagName));
         }
 
         @Override
@@ -69,7 +69,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().endsWith(tagName));
+            return (element.normalName().endsWith(tagName));
         }
 
         @Override

@@ -1,10 +1,11 @@
 package org.jsoup.select;
 
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -144,6 +145,46 @@ public class SelectorTest {
         assertEquals(2, byContains.size());
         assertEquals("1", byContains.first().id());
         assertEquals("2", byContains.last().id());
+    }
+
+    @Test public void testWildcardNamespacedXmlTag() {
+        Document doc = Jsoup.parse(
+            "<div><Abc:Def id=1>Hello</Abc:Def></div> <Abc:Def class=bold id=2>There</abc:def>",
+            "", Parser.xmlParser()
+        );
+
+        Elements byTag = doc.select("*|Def");
+        assertEquals(2, byTag.size());
+        assertEquals("1", byTag.first().id());
+        assertEquals("2", byTag.last().id());
+
+        Elements byAttr = doc.select(".bold");
+        assertEquals(1, byAttr.size());
+        assertEquals("2", byAttr.last().id());
+
+        Elements byTagAttr = doc.select("*|Def.bold");
+        assertEquals(1, byTagAttr.size());
+        assertEquals("2", byTagAttr.last().id());
+
+        Elements byContains = doc.select("*|Def:contains(e)");
+        assertEquals(2, byContains.size());
+        assertEquals("1", byContains.first().id());
+        assertEquals("2", byContains.last().id());
+    }
+
+    @Test public void testWildCardNamespacedCaseVariations() {
+        Document doc = Jsoup.parse("<One:Two>One</One:Two><three:four>Two</three:four>", "", Parser.xmlParser());
+        Elements els1 = doc.select("One|Two");
+        Elements els2 = doc.select("one|two");
+        Elements els3 = doc.select("Three|Four");
+        Elements els4 = doc.select("three|Four");
+
+        assertEquals(els1, els2);
+        assertEquals(els3, els4);
+        assertEquals("One", els1.text());
+        assertEquals(1, els1.size());
+        assertEquals("Two", els3.text());
+        assertEquals(1, els2.size());
     }
 
     @Test @MultiLocaleTest public void testByAttributeStarting() {
@@ -827,5 +868,60 @@ public class SelectorTest {
         Elements els = doc.select("a[href$='.net ']");
 
         assertEquals(1, els.size());
+    }
+
+    // https://github.com/jhy/jsoup/issues/1257
+    private final String mixedCase =
+        "<html xmlns:n=\"urn:ns\"><n:mixedCase>text</n:mixedCase></html>";
+    private final String lowercase =
+        "<html xmlns:n=\"urn:ns\"><n:lowercase>text</n:lowercase></html>";
+
+    @Test
+    public void html_mixed_case_simple_name() {
+        Document doc = Jsoup.parse(mixedCase, "", Parser.htmlParser());
+        assertEquals(0, doc.select("mixedCase").size());
+    }
+
+    @Test
+    public void html_mixed_case_wildcard_name() {
+        Document doc = Jsoup.parse(mixedCase, "", Parser.htmlParser());
+        assertEquals(1, doc.select("*|mixedCase").size());
+    }
+
+    @Test
+    public void html_lowercase_simple_name() {
+        Document doc = Jsoup.parse(lowercase, "", Parser.htmlParser());
+        assertEquals(0, doc.select("lowercase").size());
+    }
+
+    @Test
+    public void html_lowercase_wildcard_name() {
+        Document doc = Jsoup.parse(lowercase, "", Parser.htmlParser());
+        assertEquals(1, doc.select("*|lowercase").size());
+    }
+
+    @Test
+    public void xml_mixed_case_simple_name() {
+        Document doc = Jsoup.parse(mixedCase, "", Parser.xmlParser());
+        assertEquals(0, doc.select("mixedCase").size());
+    }
+
+    @Test
+    public void xml_mixed_case_wildcard_name() {
+        Document doc = Jsoup.parse(mixedCase, "", Parser.xmlParser());
+        // FIXME: should be 1, to behave in the same way as lowercase_wildcard_name.
+        assertEquals(1, doc.select("*|mixedCase").size());
+    }
+
+    @Test
+    public void xml_lowercase_simple_name() {
+        Document doc = Jsoup.parse(lowercase, "", Parser.xmlParser());
+        assertEquals(0, doc.select("lowercase").size());
+    }
+
+    @Test
+    public void xml_lowercase_wildcard_name() {
+        Document doc = Jsoup.parse(lowercase, "", Parser.xmlParser());
+        assertEquals(1, doc.select("*|lowercase").size());
     }
 }

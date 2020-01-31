@@ -38,6 +38,10 @@ jsoup changelog
     emoji (and other text semantics). 🤦‍♂️
     <https://github.com/jhy/jsoup/issues/1269>
 
+  * Bugfix: Evaluator.TagEndsWith (namespaced elements) and Tag disagreed in case-sensitivity. Now correctly matches
+    case-insensitively.
+    <https://github.com/jhy/jsoup/issues/1257>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]
