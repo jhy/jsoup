@@ -34,6 +34,10 @@ jsoup changelog
   * Bugfix: handle the ^= (starts with) selector correctly when the prefix starts with a space.
     <https://github.com/jhy/jsoup/pull/1280>
 
+  * Bugfix: don't strip out zero-width-joiners (or zero-width-non-joiners- when normalizing text. That breaks combined
+    emoji (and other text semantics). 🤦‍♂️
+    <https://github.com/jhy/jsoup/issues/1269>
+    
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]
