@@ -1214,9 +1214,8 @@ public class ElementTest {
     }
 
     @Test public void testNormalizesInvisiblesInText() {
-        // return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
-        String escaped = "This&shy;is&#x200b;one&#x200c;long&#x200d;word";
-        String decoded = "This\u00ADis\u200Bone\u200Clong\u200Dword"; // browser would not display those soft hyphens / other chars, so we don't want them in the text
+        String escaped = "This&shy;is&#x200b;one&shy;long&shy;word";
+        String decoded = "This\u00ADis\u200Bone\u00ADlong\u00ADword"; // browser would not display those soft hyphens / other chars, so we don't want them in the text
 
         Document doc = Jsoup.parse("<p>" + escaped);
         Element p = doc.select("p").first();
@@ -1481,5 +1480,21 @@ public class ElementTest {
         });
 
         assertSame(div, div2);
+    }
+
+    @Test
+    public void doesntDeleteZWJWhenNormalizingText() {
+        String text = "\uD83D\uDC69\u200D\uD83D\uDCBB\uD83E\uDD26\uD83C\uDFFB\u200D\u2642\uFE0F";
+
+        Document doc = Jsoup.parse("<p>" + text + "</p><div>One&zwj;Two</div>");
+        Element p = doc.selectFirst("p");
+        Element d = doc.selectFirst("div");
+
+        assertEquals(12, p.text().length());
+        assertEquals(text, p.text());
+        assertEquals(7, d.text().length());
+        assertEquals("One\u200DTwo", d.text());
+        Element found = doc.selectFirst("div:contains(One\u200DTwo)");
+        assertTrue(found.hasSameValue(d));
     }
 }
