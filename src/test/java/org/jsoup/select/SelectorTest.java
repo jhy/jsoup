@@ -924,4 +924,13 @@ public class SelectorTest {
         Document doc = Jsoup.parse(lowercase, "", Parser.xmlParser());
         assertEquals(1, doc.select("*|lowercase").size());
     }
+
+    @Test
+    public void trimSelector() {
+        // https://github.com/jhy/jsoup/issues/1274
+        Document doc = Jsoup.parse("<p><span>Hello");
+        Elements els = doc.select(" p span ");
+        assertEquals(1, els.size());
+        assertEquals("Hello", els.first().text());
+    }
 }

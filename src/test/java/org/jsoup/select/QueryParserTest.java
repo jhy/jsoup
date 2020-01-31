@@ -47,4 +47,20 @@ public class QueryParserTest {
     @Test(expected = Selector.SelectorParseException.class)  public void testParsesSingleQuoteInContains() {
         Evaluator parse = QueryParser.parse("p:contains(One \" One)");
     }
+
+
+    @Test(expected = Selector.SelectorParseException.class)
+    public void exceptOnEmptySelector() {
+        Evaluator parse = QueryParser.parse("");
+    }
+
+    @Test(expected = Selector.SelectorParseException.class)
+    public void exceptOnNullSelector() {
+        Evaluator parse = QueryParser.parse(null);
+    }
+
+    @Test public void okOnSpacesForeAndAft() {
+        Evaluator parse = QueryParser.parse(" span div  ");
+        assertEquals("div :parentspan", parse.toString()); // TODO - don't really love that toString() result...
+    }
 }

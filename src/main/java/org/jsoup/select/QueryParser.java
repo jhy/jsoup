@@ -27,6 +27,8 @@ public class QueryParser {
      * @param query CSS query
      */
     private QueryParser(String query) {
+        Validate.notEmpty(query);
+        query = query.trim();
         this.query = query;
         this.tq = new TokenQueue(query);
     }

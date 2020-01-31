@@ -42,6 +42,9 @@ jsoup changelog
     case-insensitively.
     <https://github.com/jhy/jsoup/issues/1257>
 
+  * Bugfix: Don't throw an exception if a selector ends in a space, just trim it.
+    <https://github.com/jhy/jsoup/issues/1274>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]
