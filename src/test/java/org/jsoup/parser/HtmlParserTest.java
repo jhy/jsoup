@@ -1287,4 +1287,11 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("test on fire", doc.text());
     }
+
+    @Test public void testFarsi() {
+        // https://github.com/jhy/jsoup/issues/1227
+        String text = "نیمه\u200Cشب";
+        Document doc = Jsoup.parse("<p>" + text);
+        assertEquals(text, doc.text());
+    }
 }
