@@ -92,6 +92,11 @@ abstract class LeafNode extends Node {
     }
 
     @Override
+    public Node empty() {
+        return this;
+    }
+
+    @Override
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
     }
