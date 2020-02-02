@@ -933,4 +933,14 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("Hello", els.first().text());
     }
+
+    @Test
+    public void xmlWildcardNamespaceTest() {
+        // https://github.com/jhy/jsoup/issues/1208
+        Document doc = Jsoup.parse("<ns1:MyXmlTag>1111</ns1:MyXmlTag><ns2:MyXmlTag>2222</ns2:MyXmlTag>", "", Parser.xmlParser());
+        Elements select = doc.select("*|MyXmlTag");
+        assertEquals(2, select.size());
+        assertEquals("1111", select.get(0).text());
+        assertEquals("2222", select.get(1).text());
+    }
 }
