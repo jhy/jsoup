@@ -40,4 +40,5 @@ public class HtmlTreeBuilderStateTest {
             assertArrayEquals(array, copy);
         }
     }
+
 }

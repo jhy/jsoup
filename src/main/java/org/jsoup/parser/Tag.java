@@ -16,9 +16,8 @@ public class Tag {
 
     private String tagName;
     private String normalName; // always the lower case version of this tag, regardless of case preservation mode
-    private boolean isBlock = true; // block or inline
+    private boolean isBlock = true; // block
     private boolean formatAsBlock = true; // should be formatted as a block
-    private boolean canContainInline = true; // only pcdata if not
     private boolean empty = false; // can hold nothing; e.g. img
     private boolean selfClosing = false; // can self close (<foo />). used for unknown tags that self close, without forcing them as empty.
     private boolean preserveWhitespace = false; // for pre, textarea, script etc
@@ -129,9 +128,10 @@ public class Tag {
      * Gets if this tag is a data only tag.
      *
      * @return if this tag is a data only tag
+     * @deprecated use data nodes instead
      */
     public boolean isData() {
-        return !canContainInline && !isEmpty();
+        return isBlock && !empty;
     }
 
     /**
@@ -209,7 +209,6 @@ public class Tag {
         Tag tag = (Tag) o;
 
         if (!tagName.equals(tag.tagName)) return false;
-        if (canContainInline != tag.canContainInline) return false;
         if (empty != tag.empty) return false;
         if (formatAsBlock != tag.formatAsBlock) return false;
         if (isBlock != tag.isBlock) return false;
@@ -224,7 +223,6 @@ public class Tag {
         int result = tagName.hashCode();
         result = 31 * result + (isBlock ? 1 : 0);
         result = 31 * result + (formatAsBlock ? 1 : 0);
-        result = 31 * result + (canContainInline ? 1 : 0);
         result = 31 * result + (empty ? 1 : 0);
         result = 31 * result + (selfClosing ? 1 : 0);
         result = 31 * result + (preserveWhitespace ? 1 : 0);
@@ -260,6 +258,7 @@ public class Tag {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
             "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
     };
+    // todo - rework this to format contents as inline; and update html emitter in Element. Same output, just neater.
     private static final String[] formatAsInlineTags = {
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
             "ins", "del", "s"
@@ -293,7 +292,6 @@ public class Tag {
         for (String tagName : emptyTags) {
             Tag tag = tags.get(tagName);
             Validate.notNull(tag);
-            tag.canContainInline = false;
             tag.empty = true;
         }
 

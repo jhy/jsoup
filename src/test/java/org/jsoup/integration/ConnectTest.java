@@ -428,39 +428,6 @@ public class ConnectTest {
     }
 
     @Test
-    public void testBinaryThrowsExceptionWhenTypeIgnored() {
-        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
-        con.data(FileServlet.ContentTypeParam, "image/jpeg");
-        con.ignoreContentType(true);
-
-        boolean threw = false;
-        try {
-            con.execute();
-            Document doc = con.response().parse();
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
-    public void testBinaryResultThrows() {
-        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
-        con.data(FileServlet.ContentTypeParam, "text/html");
-
-        boolean threw = false;
-        try {
-            con.execute();
-            Document doc = con.response().parse();
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void testBinaryContentTypeThrowsException() {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
@@ -485,5 +452,22 @@ public class ConnectTest {
 
         byte[] bytes = res.bodyAsBytes();
         assertEquals(1052, bytes.length);
+    }
+
+    @Test
+    public void handlesUnknownEscapesAcrossBuffer() throws IOException {
+        String localPath = "/htmltests/escapes-across-buffer.html";
+        String url =
+            "https://gist.githubusercontent.com/krystiangorecki/d3bad50ef5615f06b077438607423533/raw/71adfdf81121282ea936510ed6cfe440adeb2d83/JsoupIssue1218.html";
+        String localUrl = FileServlet.urlTo(localPath);
+
+        Document docFromGithub = Jsoup.connect(url).get(); // different chunks meant GH would error but local not...
+        Document docFromLocalServer = Jsoup.connect(localUrl).get();
+        Document docFromFileRead = Jsoup.parse(ParseTest.getFile(localPath), "UTF-8");
+
+        String text = docFromGithub.body().text();
+        assertEquals(14766, text.length());
+        assertEquals(text, docFromLocalServer.body().text());
+        assertEquals(text, docFromFileRead.body().text());
     }
 }

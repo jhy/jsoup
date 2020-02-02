@@ -11,6 +11,18 @@ jsoup changelog
   * Improvement: ensure HTTP keepalives work when fetching content via body() and bodyAsBytes().
     <https://github.com/jhy/jsoup/issues/1232>
 
+  * Improvement: set the default max body size in Jsoup.Connection to 2MB (up from 1MB) so fewer people get trimmed
+    content if they have not set it, but still in sensible bounds. Also updated the default user-agent to improve
+    default compatibility.
+
+  * Improvement: dramatic speed improvement when bulk inserting child nodes into an element (wrapping contents).
+    <https://github.com/jhy/jsoup/issues/1281>
+
+  * Bugfix: on pages fetch by Jsoup.Connection, a "Mark Invalid" exception might be incorrectly thrown, or the page may
+    miss some data. This occurred on larger pages when the file transfer was chunked, and an invalid HTML entity
+    happened to cross a chunk boundary.
+    <https://github.com/jhy/jsoup/issues/1218>
+
   * Bugfix: if duplicate attributes in an element exist, retain the first vs the last attribute with the same name. Case
     aware (HTML case-insensitive names, XML are case-sensitive).
     <https://github.com/jhy/jsoup/issues/1219>
@@ -18,9 +30,40 @@ jsoup changelog
   * Bugfix: don't submit input type=button form elements.
     <https://github.com/jhy/jsoup/issues/1231>
 
+  * Bugfix: handle error position reporting correctly and don't blow up in some edge cases.
+    <https://github.com/jhy/jsoup/issues/1251>
+    <https://github.com/jhy/jsoup/pull/1253>
+
+  * Bugfix: handle the ^= (starts with) selector correctly when the prefix starts with a space.
+    <https://github.com/jhy/jsoup/pull/1280>
+
+  * Bugfix: don't strip out zero-width-joiners (or zero-width-non-joiners) when normalizing text. That breaks combined
+    emoji (and other text semantics). 🤦‍♂️
+    <https://github.com/jhy/jsoup/issues/1269>
+
+  * Bugfix: Evaluator.TagEndsWith (namespaced elements) and Tag disagreed in case-sensitivity. Now correctly matches
+    case-insensitively.
+    <https://github.com/jhy/jsoup/issues/1257>
+
+  * Bugfix: Don't throw an exception if a selector ends in a space, just trim it.
+    <https://github.com/jhy/jsoup/issues/1274>
+    
+  * Bugfix: HTML parser adds redundant text when parsing self-closing textarea.
+    <https://github.com/jhy/jsoup/issues/1220>
+
+  * Bugfix: Don't add spurious whitespace or newlines to HTML or text for inline tags.
+    <https://github.com/jhy/jsoup/issues/1305>
+    <https://github.com/jhy/jsoup/issues/731>
+
+  * Bugfix: TextNode.outerHtml() wouldn't normalize correctly without a parent.
+    <https://github.com/jhy/jsoup/issues/1309>
+
+  * Bugfix: Removed binary input detection as it was causing too many false positives.
+    <https://github.com/jhy/jsoup/issues/1250>
+
   * Various code hygiene updates.
 
-**** Release 1.12.1 [2019-May12]
+**** Release 1.12.1 [2019-May-12]
   * Change: removed deprecated method to disable TLS cert checking Connection.validateTLSCertificates().
 
   * Change: some internal methods have been rearranged; if you extended any of the Jsoup internals you may need to make

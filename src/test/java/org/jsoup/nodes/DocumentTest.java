@@ -17,11 +17,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  Tests for Document.
@@ -127,8 +123,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"\n" +
-                "  <foo />bar\n" +
+                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"<foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
 
@@ -137,8 +132,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"\n" +
-                "  <foo />bar\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
     }

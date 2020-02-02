@@ -694,8 +694,7 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p>\n" +
-            "<b> \n" +
+        String want = "<p><b>One</b></p><b> \n" +
             " <table>\n" +
             "  <tbody>\n" +
             "   <tr>\n" +
@@ -1033,7 +1032,7 @@ public class HtmlParserTest {
     @Test public void testNormalisesIsIndex() {
         Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
         String html = doc.outerHtml();
-        assertEquals("<form action=\"/submit\"> <hr> <label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
+        assertEquals("<form action=\"/submit\"> <hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
             StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
@@ -1149,7 +1148,7 @@ public class HtmlParserTest {
         Document doc = Parser.htmlParser()
             .settings(ParseSettings.preserveCase)
             .parseInput(html, "");
-        assertEquals("<A> ONE </A> <A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        assertEquals("<A> ONE </A><A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
     @Test public void normalizesDiscordantTags() {
@@ -1249,5 +1248,50 @@ public class HtmlParserTest {
         assertEquals(2, links.size());
         assertEquals(expectedHref, links.get(0).attr("href")); // passes
         assertEquals(expectedHref, links.get(1).attr("href")); // fails, "but was:<...ath?param_one=value&[]_two-value>"
+    }
+
+    @Test
+    public void selfClosingTextAreaDoesntLeaveDroppings() {
+        // https://github.com/jhy/jsoup/issues/1220
+        Document doc = Jsoup.parse("<div><div><textarea/></div></div>");
+        assertFalse(doc.body().html().contains("&lt;"));
+        assertFalse(doc.body().html().contains("&gt;"));
+        assertEquals("<div><div><textarea></textarea></div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    public void testNoSpuriousSpace() {
+        Document doc = Jsoup.parse("Just<a>One</a><a>Two</a>");
+        assertEquals("Just<a>One</a><a>Two</a>", doc.body().html());
+        assertEquals("JustOneTwo", doc.body().text());
+    }
+
+    @Test
+    public void testH20() {
+        // https://github.com/jhy/jsoup/issues/731
+        String html = "H<sub>2</sub>O";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("H<sub>2</sub>O", clean);
+
+        Document doc = Jsoup.parse(html);
+        assertEquals("H2O", doc.text());
+    }
+
+    @Test
+    public void testUNewlines() {
+        // https://github.com/jhy/jsoup/issues/851
+        String html = "t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e", clean);
+
+        Document doc = Jsoup.parse(html);
+        assertEquals("test on fire", doc.text());
+    }
+
+    @Test public void testFarsi() {
+        // https://github.com/jhy/jsoup/issues/1227
+        String text = "نیمه\u200Cشب";
+        Document doc = Jsoup.parse("<p>" + text);
+        assertEquals(text, doc.text());
     }
 }

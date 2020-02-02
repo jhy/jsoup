@@ -499,11 +499,12 @@ enum HtmlTreeBuilderState {
                         tb.processEndTag("form");
                     } else if (name.equals("textarea")) {
                         tb.insert(startTag);
-                        // todo: If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
-                        tb.tokeniser.transition(TokeniserState.Rcdata);
-                        tb.markInsertionMode();
-                        tb.framesetOk(false);
-                        tb.transition(Text);
+                        if (!startTag.isSelfClosing()) {
+                            tb.tokeniser.transition(TokeniserState.Rcdata);
+                            tb.markInsertionMode();
+                            tb.framesetOk(false);
+                            tb.transition(Text);
+                        }
                     } else if (name.equals("xmp")) {
                         if (tb.inButtonScope("p")) {
                             tb.processEndTag("p");
