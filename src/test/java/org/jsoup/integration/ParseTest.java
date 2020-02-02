@@ -66,20 +66,6 @@ public class ParseTest {
     }
 
     @Test
-    public void testBinaryThrowsException() throws IOException {
-        File in = getFile("/htmltests/thumb.jpg");
-
-        boolean threw = false;
-        try {
-            Document doc = Jsoup.parse(in, "UTF-8");
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void testYahooJp() throws IOException {
         File in = getFile("/htmltests/yahoo-jp.html");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html"); // http charset is utf-8.

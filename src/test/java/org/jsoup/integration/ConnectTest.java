@@ -428,39 +428,6 @@ public class ConnectTest {
     }
 
     @Test
-    public void testBinaryThrowsExceptionWhenTypeIgnored() {
-        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
-        con.data(FileServlet.ContentTypeParam, "image/jpeg");
-        con.ignoreContentType(true);
-
-        boolean threw = false;
-        try {
-            con.execute();
-            Document doc = con.response().parse();
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
-    public void testBinaryResultThrows() {
-        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
-        con.data(FileServlet.ContentTypeParam, "text/html");
-
-        boolean threw = false;
-        try {
-            con.execute();
-            Document doc = con.response().parse();
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void testBinaryContentTypeThrowsException() {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");

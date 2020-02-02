@@ -58,6 +58,9 @@ jsoup changelog
   * Bugfix: TextNode.outerHtml() wouldn't normalize correctly without a parent.
     <https://github.com/jhy/jsoup/issues/1309>
 
+  * Bugfix: Removed binary input detection as it was causing too many false positives.
+    <https://github.com/jhy/jsoup/issues/1250>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]
