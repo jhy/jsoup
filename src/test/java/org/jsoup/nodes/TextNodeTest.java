@@ -82,4 +82,27 @@ public class TextNodeTest {
         List<Node> nodes = tn.childNodes();
         assertEquals(0, nodes.size());
     }
+
+    @Test public void testSpaceNormalise() {
+        // https://github.com/jhy/jsoup/issues/1309
+        String whole = "Two  spaces";
+        String norm = "Two spaces";
+        TextNode tn = new TextNode(whole); // there are 2 spaces between the words
+        assertEquals(whole, tn.getWholeText());
+        assertEquals(norm, tn.text());
+        assertEquals(norm, tn.outerHtml());
+        assertEquals(norm, tn.toString());
+
+        Element el = new Element("p");
+        el.appendChild(tn); // this used to change the context
+        //tn.setParentNode(el); // set any parent
+        assertEquals(whole, tn.getWholeText());
+        assertEquals(norm, tn.text());
+        assertEquals(norm, tn.outerHtml());
+        assertEquals(norm, tn.toString());
+
+        assertEquals("<p>" + norm + "</p>", el.outerHtml());
+        assertEquals(norm, el.html());
+        assertEquals(whole, el.wholeText());
+    }
 }

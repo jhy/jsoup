@@ -97,8 +97,7 @@ public class TextNode extends LeafNode {
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
 
-        boolean normaliseWhite = out.prettyPrint() && parent() instanceof Element
-                && !Element.preserveWhitespace(parent());
+        boolean normaliseWhite = out.prettyPrint() && !Element.preserveWhitespace(parent());
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, false);
     }
 
