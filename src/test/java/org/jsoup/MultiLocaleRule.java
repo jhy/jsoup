@@ -13,6 +13,7 @@ public class MultiLocaleRule implements TestRule {
     public @interface MultiLocaleTest {
     }
 
+    @Override
     public Statement apply(final Statement statement, final Description description) {
         return new Statement() {
             @Override

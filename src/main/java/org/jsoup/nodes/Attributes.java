@@ -1,8 +1,9 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.parser.ParseSettings;
 
 import java.io.IOException;
 import java.util.AbstractMap;
@@ -111,12 +112,16 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return i == NotFound ? EmptyString : checkNotNull(vals[i]);
     }
 
-    // adds without checking if this key exists
-    private void add(String key, String value) {
+    /**
+     * Adds a new attribute. Will produce duplicates if the key already exists.
+     * @see Attributes#put(String, String)
+     */
+    public Attributes add(String key, String value) {
         checkCapacity(size + 1);
         keys[size] = key;
         vals[size] = value;
         size++;
+        return this;
     }
 
     /**
@@ -228,6 +233,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public int size() {
         return size;
+    }
+
+    /**
+     * Test if this Attributes list is empty (size==0).
+     */
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     /**
@@ -380,6 +392,30 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         for (int i = 0; i < size; i++) {
             keys[i] = lowerCase(keys[i]);
         }
+    }
+
+    /**
+     * Internal method. Removes duplicate attribute by name. Settings for case sensitivity of key names.
+     * @param settings case sensitivity
+     * @return number of removed dupes
+     */
+    public int deduplicate(ParseSettings settings) {
+        if (isEmpty())
+            return 0;
+        boolean preserve = settings.preserveAttributeCase();
+        int dupes = 0;
+        OUTER: for (int i = 0; i < keys.length; i++) {
+            for (int j = i + 1; j < keys.length; j++) {
+                if (keys[j] == null)
+                    continue OUTER; // keys.length doesn't shrink when removing, so re-test
+                if ((preserve && keys[i].equals(keys[j])) || (!preserve && keys[i].equalsIgnoreCase(keys[j]))) {
+                    dupes++;
+                    remove(j);
+                    j--;
+                }
+            }
+        }
+        return dupes;
     }
 
     private static class Dataset extends AbstractMap<String, String> {

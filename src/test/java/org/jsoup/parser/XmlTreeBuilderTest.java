@@ -245,4 +245,14 @@ public class XmlTreeBuilderTest {
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
         assertEquals("<script> var a=\"\n <!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
     }
+
+    @Test public void dropsDuplicateAttributes() {
+        // case sensitive, so should drop Four and Five
+        String html = "<p One=One ONE=Two one=Three One=Four ONE=Five two=Six two=Seven Two=Eight>Text</p>";
+        Parser parser = Parser.xmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput(html, "");
+
+        assertEquals("<p One=\"One\" ONE=\"Two\" one=\"Three\" two=\"Six\" Two=\"Eight\">Text</p>", doc.selectFirst("p").outerHtml());
+    }
+
 }

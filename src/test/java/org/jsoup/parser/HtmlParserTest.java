@@ -55,6 +55,25 @@ public class HtmlParserTest {
         assertEquals("foo > bar", p.attr("class"));
     }
 
+    @Test public void dropsDuplicateAttributes() {
+        String html = "<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput(html, "");
+
+        Element p = doc.selectFirst("p");
+        assertEquals("<p one=\"One\" two=\"two\">Text</p>", p.outerHtml()); // normalized names due to lower casing
+
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("Duplicate attribute", parser.getErrors().get(0).getErrorMessage());
+    }
+
+    @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
+        String html = "<p One=One One=Two one=Three two=Four two=Five Two=Six>Text</p>";
+        Parser parser = Parser.htmlParser().settings(ParseSettings.preserveCase);
+        Document doc = parser.parseInput(html, "");
+        assertEquals("<p One=\"One\" one=\"Three\" two=\"Four\" Two=\"Six\">Text</p>", doc.selectFirst("p").outerHtml());
+    }
+
     @Test public void parsesQuiteRoughAttributes() {
         String html = "<p =a>One<a <p>Something</p>Else";
         // this (used to; now gets cleaner) gets a <p> with attr '=a' and an <a tag with an attribue named '<p'; and then auto-recreated

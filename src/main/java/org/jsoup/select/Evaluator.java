@@ -47,7 +47,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().equalsIgnoreCase(tagName));
+            return (element.normalName().equals(tagName));
         }
 
         @Override
@@ -69,7 +69,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.tagName().endsWith(tagName));
+            return (element.normalName().endsWith(tagName));
         }
 
         @Override
@@ -217,7 +217,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueStarting extends AttributeKeyPair {
         public AttributeWithValueStarting(String key, String value) {
-            super(key, value);
+            super(key, value, false);
         }
 
         @Override
@@ -237,7 +237,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
         public AttributeWithValueEnding(String key, String value) {
-            super(key, value);
+            super(key, value, false);
         }
 
         @Override
@@ -304,15 +304,21 @@ public abstract class Evaluator {
         String value;
 
         public AttributeKeyPair(String key, String value) {
+            this(key, value, true);
+        }
+
+        public AttributeKeyPair(String key, String value, boolean trimValue) {
             Validate.notEmpty(key);
             Validate.notEmpty(value);
 
             this.key = normalize(key);
-            if (value.startsWith("\"") && value.endsWith("\"")
-                    || value.startsWith("'") && value.endsWith("'")) {
+            boolean isStringLiteral = value.startsWith("'") && value.endsWith("'")
+                                        || value.startsWith("\"") && value.endsWith("\"");
+            if (isStringLiteral) {
                 value = value.substring(1, value.length()-1);
             }
-            this.value = normalize(value);
+
+            this.value = trimValue ? normalize(value) : normalize(value, isStringLiteral);
         }
     }
 
@@ -391,7 +397,7 @@ public abstract class Evaluator {
         }
 
     }
-    
+
     /**
      * Evaluator for matching the last sibling (css :last-child)
      */
@@ -401,13 +407,13 @@ public abstract class Evaluator {
 			final Element p = element.parent();
 			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
 		}
-    	
+
 		@Override
 		public String toString() {
 			return ":last-child";
 		}
     }
-    
+
     public static final class IsFirstOfType extends IsNthOfType {
 		public IsFirstOfType() {
 			super(0,1);
@@ -417,7 +423,7 @@ public abstract class Evaluator {
 			return ":first-of-type";
 		}
     }
-    
+
     public static final class IsLastOfType extends IsNthLastOfType {
 		public IsLastOfType() {
 			super(0,1);
@@ -428,10 +434,10 @@ public abstract class Evaluator {
 		}
     }
 
-    
+
     public static abstract class CssNthEvaluator extends Evaluator {
     	protected final int a, b;
-    	
+
     	public CssNthEvaluator(int a, int b) {
     		this.a = a;
     		this.b = b;
@@ -439,18 +445,18 @@ public abstract class Evaluator {
     	public CssNthEvaluator(int b) {
     		this(0,b);
     	}
-    	
+
     	@Override
     	public boolean matches(Element root, Element element) {
     		final Element p = element.parent();
     		if (p == null || (p instanceof Document)) return false;
-    		
+
     		final int pos = calculatePosition(root, element);
     		if (a == 0) return pos == b;
-    		
+
     		return (pos-b)*a >= 0 && (pos-b)%a==0;
     	}
-    	
+
 		@Override
 		public String toString() {
 			if (a == 0)
@@ -459,15 +465,15 @@ public abstract class Evaluator {
 				return String.format(":%s(%dn)",getPseudoClass(), a);
 			return String.format(":%s(%dn%+d)", getPseudoClass(),a, b);
 		}
-    	
+
 		protected abstract String getPseudoClass();
 		protected abstract int calculatePosition(Element root, Element element);
     }
-    
-    
+
+
     /**
      * css-compatible Evaluator for :eq (css :nth-child)
-     * 
+     *
      * @see IndexEquals
      */
     public static final class IsNthChild extends CssNthEvaluator {
@@ -480,15 +486,15 @@ public abstract class Evaluator {
 			return element.elementSiblingIndex()+1;
 		}
 
-		
+
 		protected String getPseudoClass() {
 			return "nth-child";
 		}
     }
-    
+
     /**
      * css pseudo class :nth-last-child)
-     * 
+     *
      * @see IndexEquals
      */
     public static final class IsNthLastChild extends CssNthEvaluator {
@@ -500,16 +506,16 @@ public abstract class Evaluator {
         protected int calculatePosition(Element root, Element element) {
         	return element.parent().children().size() - element.elementSiblingIndex();
         }
-        
+
 		@Override
 		protected String getPseudoClass() {
 			return "nth-last-child";
 		}
     }
-    
+
     /**
      * css pseudo class nth-of-type
-     * 
+     *
      */
     public static class IsNthOfType extends CssNthEvaluator {
     	public IsNthOfType(int a, int b) {
@@ -531,13 +537,13 @@ public abstract class Evaluator {
 			return "nth-of-type";
 		}
     }
-    
+
     public static class IsNthLastOfType extends CssNthEvaluator {
 
 		public IsNthLastOfType(int a, int b) {
 			super(a, b);
 		}
-		
+
 		@Override
 		protected int calculatePosition(Element root, Element element) {
 			int pos = 0;
@@ -563,13 +569,13 @@ public abstract class Evaluator {
     		final Element p = element.parent();
     		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
     	}
-    	
+
     	@Override
     	public String toString() {
     		return ":first-child";
     	}
     }
-    
+
     /**
      * css3 pseudo-class :root
      * @see <a href="http://www.w3.org/TR/selectors/#root-pseudo">:root selector</a>
@@ -591,7 +597,7 @@ public abstract class Evaluator {
 		@Override
 		public boolean matches(Element root, Element element) {
 			final Element p = element.parent();
-			return p!=null && !(p instanceof Document) && element.siblingElements().size() == 0;
+			return p!=null && !(p instanceof Document) && element.siblingElements().isEmpty();
 		}
     	@Override
     	public String toString() {
@@ -604,7 +610,7 @@ public abstract class Evaluator {
 		public boolean matches(Element root, Element element) {
 			final Element p = element.parent();
 			if (p==null || p instanceof Document) return false;
-			
+
 			int pos = 0;
         	Elements family = p.children();
             for (Element el : family) {

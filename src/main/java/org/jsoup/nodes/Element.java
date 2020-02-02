@@ -613,6 +613,7 @@ public class Element extends Node {
      * Remove all of the element's child nodes. Any attributes are left as-is.
      * @return this element
      */
+    @Override
     public Element empty() {
         childNodes.clear();
         return this;

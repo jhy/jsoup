@@ -26,6 +26,20 @@ public class ParseSettings {
     private final boolean preserveAttributeCase;
 
     /**
+     * Returns true if preserving tag name case.
+     */
+    public boolean preserveTagCase() {
+        return preserveTagCase;
+    }
+
+    /**
+     * Returns true if preserving attribute case.
+     */
+    public boolean preserveAttributeCase() {
+        return preserveAttributeCase;
+    }
+
+    /**
      * Define parse settings.
      * @param tag preserve tag case?
      * @param attribute preserve attribute name case?

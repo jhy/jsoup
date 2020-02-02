@@ -233,102 +233,6 @@ public class ConnectTest {
         assertEquals("auth=token", ihVal("Cookie", doc));
     }
 
-    // Slow Rider tests. Ignored by default so tests don't take aaages
-    @Ignore
-    @Test public void canInterruptBodyStringRead() throws IOException, InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
-        final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.body();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        });
-
-        runner.start();
-        Thread.sleep(1000 * 3);
-        runner.interrupt();
-        assertTrue(runner.isInterrupted());
-        runner.join();
-
-        assertTrue(body[0].length() > 0);
-        assertTrue(body[0].contains("<p>Are you still there?"));
-    }
-
-    @Ignore
-    @Test public void canInterruptDocumentRead() throws IOException, InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
-        final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.parse().text();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        });
-
-        runner.start();
-        Thread.sleep(1000 * 3);
-        runner.interrupt();
-        assertTrue(runner.isInterrupted());
-        runner.join();
-
-        assertTrue(body[0].length() == 0); // doesn't ready a failed doc
-    }
-
-    @Ignore
-    @Test public void totalTimeout() throws IOException {
-        int timeout = 3 * 1000;
-        long start = System.currentTimeMillis();
-        boolean threw = false;
-        try {
-            Jsoup.connect(SlowRider.Url).timeout(timeout).get();
-        } catch (SocketTimeoutException e) {
-            long end = System.currentTimeMillis();
-            long took = end - start;
-            assertTrue(("Time taken was " + took), took > timeout);
-            assertTrue(("Time taken was " + took), took < timeout * 1.2);
-            threw = true;
-        }
-
-        assertTrue(threw);
-    }
-
-    @Ignore
-    @Test public void slowReadOk() throws IOException {
-        // make sure that a slow read that is under the request timeout is still OK
-        Document doc = Jsoup.connect(SlowRider.Url)
-            .data(SlowRider.MaxTimeParam, "2000") // the request completes in 2 seconds
-            .get();
-
-        Element h1 = doc.selectFirst("h1");
-        assertEquals("outatime", h1.text());
-    }
-
-    @Ignore
-    @Test public void infiniteReadSupported() throws IOException {
-        Document doc = Jsoup.connect(SlowRider.Url)
-            .timeout(0)
-            .data(SlowRider.MaxTimeParam, "2000")
-            .get();
-
-        Element h1 = doc.selectFirst("h1");
-        assertEquals("outatime", h1.text());
-    }
-
     /**
      * Tests upload of content to a remote service.
      */
@@ -409,7 +313,11 @@ public class ConnectTest {
 
     @Test
     public void multiCookieSet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
+        Connection con = Jsoup
+                .connect(RedirectServlet.Url)
+                .data(RedirectServlet.CodeParam, "302")
+                .data(RedirectServlet.SetCookiesParam, "true")
+                .data(RedirectServlet.LocationParam, echoUrl);
         Connection.Response res = con.execute();
 
         // test cookies set by redirect:
@@ -511,7 +419,7 @@ public class ConnectTest {
     }
 
     @Test public void getUtf8Bom() throws IOException {
-        Connection con = Jsoup.connect(FileServlet.Url);
+        Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
         con.data(FileServlet.LocationParam, "/bomtests/bom_utf8.html");
         Document doc = con.get();
 
@@ -521,8 +429,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryThrowsExceptionWhenTypeIgnored() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
         con.ignoreContentType(true);
 
@@ -539,8 +446,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryResultThrows() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "text/html");
 
         boolean threw = false;
@@ -556,8 +462,7 @@ public class ConnectTest {
 
     @Test
     public void testBinaryContentTypeThrowsException() {
-        Connection con = Jsoup.connect(FileServlet.Url);
-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
 
         boolean threw = false;
@@ -573,13 +478,29 @@ public class ConnectTest {
 
     @Test
     public void canFetchBinaryAsBytes() throws IOException {
-        Connection.Response res = Jsoup.connect(FileServlet.Url)
-            .data(FileServlet.LocationParam, "/htmltests/thumb.jpg")
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"))
             .data(FileServlet.ContentTypeParam, "image/jpeg")
             .ignoreContentType(true)
             .execute();
 
         byte[] bytes = res.bodyAsBytes();
         assertEquals(1052, bytes.length);
+    }
+
+    @Test
+    public void handlesUnknownEscapesAcrossBuffer() throws IOException {
+        String localPath = "/htmltests/escapes-across-buffer.html";
+        String url =
+            "https://gist.githubusercontent.com/krystiangorecki/d3bad50ef5615f06b077438607423533/raw/71adfdf81121282ea936510ed6cfe440adeb2d83/JsoupIssue1218.html";
+        String localUrl = FileServlet.urlTo(localPath);
+
+        Document docFromGithub = Jsoup.connect(url).get(); // different chunks meant GH would error but local not...
+        Document docFromLocalServer = Jsoup.connect(localUrl).get();
+        Document docFromFileRead = Jsoup.parse(ParseTest.getFile(localPath), "UTF-8");
+
+        String text = docFromGithub.body().text();
+        assertEquals(14766, text.length());
+        assertEquals(text, docFromLocalServer.body().text());
+        assertEquals(text, docFromFileRead.body().text());
     }
 }

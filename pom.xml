@@ -73,9 +73,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.0.0-M1</version>
+        <version>3.1.0</version>
         <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
+            <doclint>none</doclint>
+            <source>7</source>
         </configuration>
         <executions>
           <execution>
@@ -92,9 +93,9 @@
         <artifactId>maven-source-plugin</artifactId>
         <version>3.0.1</version>
         <configuration>
-    <excludes>
-      <exclude>org/jsoup/examples/**</exclude>
-    </excludes>
+          <excludes>
+            <exclude>org/jsoup/examples/**</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>
@@ -117,9 +118,9 @@
             </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
-    <excludes>
-      <exclude>org/jsoup/examples/**</exclude>
-    </excludes>
+          <excludes>
+            <exclude>org/jsoup/examples/**</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>
@@ -149,6 +150,22 @@
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
         <version>2.5.3</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.0.0-M3</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <parallel>methods</parallel>
+          <threadCount>8</threadCount>
+        </configuration>
       </plugin>
     </plugins>
     <resources>
@@ -204,6 +221,25 @@
                 <phase>verify</phase>
                 <goals>
                   <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>failsafe</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>2.22.0</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
                 </goals>
               </execution>
             </executions>

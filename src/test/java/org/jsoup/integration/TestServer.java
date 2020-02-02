@@ -51,7 +51,7 @@ public class TestServer {
                 start(); // if running out of the test cases
 
             String path = "/" + servletClass.getSimpleName();
-            handler.addServletWithMapping(servletClass, path);
+            handler.addServletWithMapping(servletClass, path + "/*");
             int port = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();
             return "http://localhost:" + port + path;
         }

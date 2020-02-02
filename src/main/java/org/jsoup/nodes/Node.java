@@ -1,14 +1,19 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -234,6 +239,13 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     * Delete all this node's children.
+     * @return this node, for chaining
+     */
+    public abstract Node empty();
+
+
+    /**
      Gets this node's parent node.
      @return parent node; or null if no parent.
      */
@@ -454,9 +466,36 @@ public abstract class Node implements Cloneable {
     }
 
     protected void addChildren(int index, Node... children) {
-        Validate.noNullElements(children);
+        Validate.notNull(children);
+        if (children.length == 0) {
+            return;
+        }
         final List<Node> nodes = ensureChildNodes();
 
+        // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
+        final Node firstParent = children[0].parent();
+        if (firstParent != null && firstParent.childNodeSize() == children.length) {
+            boolean sameList = true;
+            final List<Node> firstParentNodes = firstParent.childNodes();
+            // identity check contents to see if same
+            int i = children.length;
+            while (i-- > 0) {
+                if (children[i] != firstParentNodes.get(i)) {
+                    sameList = false;
+                    break;
+                }
+            }
+            firstParent.empty();
+            nodes.addAll(index, Arrays.asList(children));
+            i = children.length;
+            while (i-- > 0) {
+                children[i].parentNode = this;
+            }
+            reindexChildren(index);
+            return;
+        }
+
+        Validate.noNullElements(children);
         for (Node child : children) {
             reparentChild(child);
         }

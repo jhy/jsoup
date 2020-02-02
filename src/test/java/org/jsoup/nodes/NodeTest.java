@@ -31,14 +31,14 @@ public class NodeTest {
 
         Element dodgyBase = new Element(tag, "wtf://no-such-protocol/", attribs);
         assertEquals("http://bar/qux", dodgyBase.absUrl("absHref")); // base fails, but href good, so get that
-        assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing 
+        assertEquals("", dodgyBase.absUrl("relHref")); // base fails, only rel href, so return nothing
     }
 
     @Test public void setBaseUriIsRecursive() {
         Document doc = Jsoup.parse("<div><p></p></div>");
         String baseUri = "https://jsoup.org";
         doc.setBaseUri(baseUri);
-        
+
         assertEquals(baseUri, doc.baseUri());
         assertEquals(baseUri, doc.select("div").first().baseUri());
         assertEquals(baseUri, doc.select("p").first().baseUri());
@@ -130,25 +130,25 @@ public class NodeTest {
         Element a1 = doc.select("a").first();
         assertEquals("http://example.com/one/two.html", a1.absUrl("href"));
     }
-    
+
     @Test public void testRemove() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();
         p.childNode(0).remove();
-        
+
         assertEquals("two three", p.text());
         assertEquals("<span>two</span> three", TextUtil.stripNewlines(p.html()));
     }
-    
+
     @Test public void testReplace() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();
         Element insert = doc.createElement("em").text("foo");
         p.childNode(1).replaceWith(insert);
-        
+
         assertEquals("One <em>foo</em> three", p.html());
     }
-    
+
     @Test public void ownerDocument() {
         Document doc = Jsoup.parse("<p>Hello");
         Element p = doc.select("p").first();
@@ -221,12 +221,14 @@ public class NodeTest {
         Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div>");
         final StringBuilder accum = new StringBuilder();
         doc.select("div").first().traverse(new NodeVisitor() {
+            @Override
             public void head(Node node, int depth) {
-                accum.append("<" + node.nodeName() + ">");
+                accum.append("<").append(node.nodeName()).append(">");
             }
 
+            @Override
             public void tail(Node node, int depth) {
-                accum.append("</" + node.nodeName() + ">");
+                accum.append("</").append(node.nodeName()).append(">");
             }
         });
         assertEquals("<div><p><#text></#text></p></div>", accum.toString());
