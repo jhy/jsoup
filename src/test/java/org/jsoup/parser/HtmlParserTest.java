@@ -1276,4 +1276,15 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertEquals("H2O", doc.text());
     }
+
+    @Test
+    public void testUNewlines() {
+        // https://github.com/jhy/jsoup/issues/851
+        String html = "t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e", clean);
+
+        Document doc = Jsoup.parse(html);
+        assertEquals("test on fire", doc.text());
+    }
 }
