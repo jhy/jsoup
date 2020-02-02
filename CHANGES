@@ -51,6 +51,10 @@ jsoup changelog
   * Bugfix: HTML parser adds redundant text when parsing self-closing textarea.
     <https://github.com/jhy/jsoup/issues/1220>
 
+  * Bugfix: Don't add spurious whitespace or newlines to HTML or text for inline tags.
+    <https://github.com/jhy/jsoup/issues/1305>
+    <https://github.com/jhy/jsoup/issues/731>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]

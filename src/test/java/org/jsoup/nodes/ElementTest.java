@@ -370,6 +370,20 @@ public class ElementTest {
 
         assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n &nbsp;p.m.\n</div>", document.body().html());
     }
+
+    @Test public void testBasicFormats() {
+        String html = "<span>0</span>.<div><span>1</span>-<span>2</span><p><span>3</span>-<span>4</span><div>5</div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(
+            "<span>0</span>.\n" +
+            "<div>\n" +
+            " <span>1</span>-<span>2</span>\n" +
+            " <p><span>3</span>-<span>4</span></p>\n" +
+            " <div>\n" +
+            "  5\n" +
+            " </div>\n" +
+            "</div>", doc.body().html());
+    }
     
     @Test public void testEmptyElementFormatHtml() {
         // don't put newlines into empty blocks

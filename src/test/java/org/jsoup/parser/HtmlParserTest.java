@@ -1148,7 +1148,7 @@ public class HtmlParserTest {
         Document doc = Parser.htmlParser()
             .settings(ParseSettings.preserveCase)
             .parseInput(html, "");
-        assertEquals("<A> ONE </A> <A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        assertEquals("<A> ONE </A><A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
     @Test public void normalizesDiscordantTags() {
@@ -1257,5 +1257,23 @@ public class HtmlParserTest {
         assertFalse(doc.body().html().contains("&lt;"));
         assertFalse(doc.body().html().contains("&gt;"));
         assertEquals("<div><div><textarea></textarea></div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    public void testNoSpuriousSpace() {
+        Document doc = Jsoup.parse("Just<a>One</a><a>Two</a>");
+        assertEquals("Just<a>One</a><a>Two</a>", doc.body().html());
+        assertEquals("JustOneTwo", doc.body().text());
+    }
+
+    @Test
+    public void testH20() {
+        // https://github.com/jhy/jsoup/issues/731
+        String html = "H<sub>2</sub>O";
+        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertEquals("H<sub>2</sub>O", clean);
+
+        Document doc = Jsoup.parse(html);
+        assertEquals("H2O", doc.text());
     }
 }
