@@ -265,6 +265,21 @@ public class Element extends Node {
     }
 
     /**
+     * Get the number of child nodes of this element that are elements.
+     * <p>
+     * This method works on the same filtered list like {@link #child(int)}. Use {@link #childNodes()} and {@link
+     * #childNodeSize()} to get the unfiltered Nodes (e.g. includes TextNodes etc.)
+     * </p>
+     *
+     * @return the number of child nodes that are elements
+     * @see #children()
+     * @see #child(int)
+     */
+    public int childrenSize() {
+        return childElementsList().size();
+    }
+
+    /**
      * Get this element's child elements.
      * <p>
      * This is effectively a filter on {@link #childNodes()} to get Element nodes.

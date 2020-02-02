@@ -18,6 +18,9 @@ jsoup changelog
   * Improvement: dramatic speed improvement when bulk inserting child nodes into an element (wrapping contents).
     <https://github.com/jhy/jsoup/issues/1281>
 
+  * Improvement: added Element#childrenSize() as a convenience to get the size of an element's element children.
+    <https://github.com/jhy/jsoup/pull/1291>
+
   * Bugfix: on pages fetch by Jsoup.Connection, a "Mark Invalid" exception might be incorrectly thrown, or the page may
     miss some data. This occurred on larger pages when the file transfer was chunked, and an invalid HTML entity
     happened to cross a chunk boundary.

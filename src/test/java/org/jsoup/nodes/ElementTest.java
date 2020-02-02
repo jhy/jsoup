@@ -2,7 +2,6 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
@@ -1612,17 +1611,24 @@ public class ElementTest {
         Element new2 = new Element("p").text("Four");
 
         doc.body().insertChildren(-1, new1, new2);
-        assertEquals("<div><p>One</p><p>Two</p></div><p>Three</p><p>Four</p>",  TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div><p>One</p><p>Two</p></div><p>Three</p><p>Four</p>", TextUtil.stripNewlines(doc.body().html()));
 
         // note that these get moved from the above - as not copied
         doc.body().insertChildren(0, new1, new2);
-        assertEquals("<p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>",  TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(doc.body().html()));
 
         doc.body().insertChildren(0, new2.clone(), new1.clone());
-        assertEquals("<p>Four</p><p>Three</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>",  TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p>Four</p><p>Three</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(doc.body().html()));
 
         // shifted to end
         doc.body().appendChild(new1);
-        assertEquals("<p>Four</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div><p>Three</p>",  TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p>Four</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div><p>Three</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    public void testChildSizeWithMixedContent() {
+        Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
+        Element row = doc.selectFirst("table tbody tr");
+        assertEquals(2, row.childrenSize());
+        assertEquals(5, row.childNodeSize());
     }
 }
