@@ -14,12 +14,12 @@ env:
     # You can see the list of supported environments by installing Jabba and using ls-remote:
     # https://github.com/shyiko/jabba#usage
     - JDK="openjdk-ri@1.7."
-    - JDK="adopt@~1.8."
-    - JDK="amazon-corretto@~1.8."
-    - JDK="openjdk@~1.9."
-    - JDK="openjdk@~1.11."
-    - JDK="openjdk@~1.12."
-    - JDK="openjdk@~1.13."
+    - JDK="adopt@1.8."
+    - JDK="amazon-corretto@1.8."
+    - JDK="openjdk@1.9."
+    - JDK="openjdk@1.11."
+    - JDK="openjdk@1.12."
+    - JDK="openjdk@1.13."
 
 cache:
   directories:
