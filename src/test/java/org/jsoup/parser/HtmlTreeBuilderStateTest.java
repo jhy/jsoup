@@ -1,11 +1,14 @@
 package org.jsoup.parser;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.Test;
 
 import java.util.Arrays;
-
-import static org.junit.Assert.assertArrayEquals;
 
 public class HtmlTreeBuilderStateTest {
     @Test
@@ -40,4 +43,12 @@ public class HtmlTreeBuilderStateTest {
             assertArrayEquals(array, copy);
         }
     }
+
+    @Test
+    public void testSelfclosingTextareaIssue1220() {
+        Document doc = Jsoup.parse("<div><div><textarea/></div></div>");
+        assertFalse(doc.body().toString().contains("&lt;"));
+        assertFalse(doc.body().toString().contains("&gt;"));
+    }
+
 }

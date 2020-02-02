@@ -47,6 +47,9 @@ jsoup changelog
 
   * Bugfix: Don't throw an exception if a selector ends in a space, just trim it.
     <https://github.com/jhy/jsoup/issues/1274>
+    
+  * Bugfix: HTML parser adds redundant text when parsing self-closing textarea.
+    <https://github.com/jhy/jsoup/issues/1220>
 
   * Various code hygiene updates.
 
