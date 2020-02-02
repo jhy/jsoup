@@ -11,6 +11,9 @@ jsoup changelog
   * Improvement: ensure HTTP keepalives work when fetching content via body() and bodyAsBytes().
     <https://github.com/jhy/jsoup/issues/1232>
 
+  * Improvement: added Element#childrenSize() as a convenience to get the size of an element's element children.
+    <https://github.com/jhy/jsoup/pull/1291>
+
   * Bugfix: if duplicate attributes in an element exist, retain the first vs the last attribute with the same name. Case
     aware (HTML case-insensitive names, XML are case-sensitive).
     <https://github.com/jhy/jsoup/issues/1219>

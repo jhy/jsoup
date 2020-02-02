@@ -1484,10 +1484,10 @@ public class ElementTest {
     }
 
     @Test
-    public void testChildMixedContent() {
+    public void testChildSizeWithMixedContent() {
         Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
         Element row = doc.selectFirst("table tbody tr");
-        assertSame(2, row.childrenCount());
-        assertFalse(row.childrenCount() == row.childNodeSize());
+        assertEquals(2, row.childrenSize());
+        assertEquals(5, row.childNodeSize());
     }
 }
