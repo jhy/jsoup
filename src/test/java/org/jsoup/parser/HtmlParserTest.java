@@ -1250,4 +1250,13 @@ public class HtmlParserTest {
         assertEquals(expectedHref, links.get(0).attr("href")); // passes
         assertEquals(expectedHref, links.get(1).attr("href")); // fails, "but was:<...ath?param_one=value&[]_two-value>"
     }
+
+    @Test
+    public void selfClosingTextAreaDoesntLeaveDroppings() {
+        // https://github.com/jhy/jsoup/issues/1220
+        Document doc = Jsoup.parse("<div><div><textarea/></div></div>");
+        assertFalse(doc.body().html().contains("&lt;"));
+        assertFalse(doc.body().html().contains("&gt;"));
+        assertEquals("<div><div><textarea></textarea></div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }
