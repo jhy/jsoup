@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
@@ -1565,5 +1566,27 @@ public class ElementTest {
         assertEquals("End Content", wrapperAcutal.children().get(rows + 1).text());
 
         assertTrue(runtime <= 1000);
+    }
+
+    @Test
+    public void testReparentSeperateNodes() {
+        String html = "<div><p>One<p>Two";
+        Document doc = Jsoup.parse(html);
+        Element new1 = new Element("p").text("Three");
+        Element new2 = new Element("p").text("Four");
+
+        doc.body().insertChildren(-1, new1, new2);
+        assertEquals("<div><p>One</p><p>Two</p></div><p>Three</p><p>Four</p>",  TextUtil.stripNewlines(doc.body().html()));
+
+        // note that these get moved from the above - as not copied
+        doc.body().insertChildren(0, new1, new2);
+        assertEquals("<p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>",  TextUtil.stripNewlines(doc.body().html()));
+
+        doc.body().insertChildren(0, new2.clone(), new1.clone());
+        assertEquals("<p>Four</p><p>Three</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>",  TextUtil.stripNewlines(doc.body().html()));
+
+        // shifted to end
+        doc.body().appendChild(new1);
+        assertEquals("<p>Four</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div><p>Three</p>",  TextUtil.stripNewlines(doc.body().html()));
     }
 }
