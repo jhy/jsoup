@@ -20,7 +20,11 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Stack;
+
+import static javax.xml.transform.OutputKeys.INDENT;
+import static javax.xml.transform.OutputKeys.METHOD;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -165,12 +169,25 @@ public class W3CDom {
      * @return Document as string
      */
     public String asString(Document doc) {
+        return asString(doc, null);
+    }
+
+    /**
+     * Serialize a W3C document to a String.
+     *
+     * @param doc Document
+     * @param properties the transformer output properties to use. See {@link Transformer#setOutputProperties(Properties)}
+     * @return Document as string
+     */
+    public String asString(Document doc, Properties properties) {
         try {
             DOMSource domSource = new DOMSource(doc);
             StringWriter writer = new StringWriter();
             StreamResult result = new StreamResult(writer);
             TransformerFactory tf = TransformerFactory.newInstance();
             Transformer transformer = tf.newTransformer();
+            transformer.setOutputProperties(properties);
+            transformer.setOutputProperty(METHOD, "xml");
             transformer.transform(domSource, result);
             return writer.toString();
         } catch (TransformerException e) {

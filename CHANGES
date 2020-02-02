@@ -64,6 +64,10 @@ jsoup changelog
   * Bugfix: Removed binary input detection as it was causing too many false positives.
     <https://github.com/jhy/jsoup/issues/1250>
 
+  * Bugfix: The W3CDom#asString method (that converts a Jsoup Document to a W3C DOM and outputs it as a String) would
+    make invalid XML output (the Transformer was switching into HTML output mode).
+    <https://github.com/jhy/jsoup/issues/1098>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]

@@ -7,15 +7,30 @@ import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class W3CDomTest {
+    private static Document parseXml(String xml) {
+        DocumentBuilder documentBuilder = null;
+        try {
+            documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            return documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     @Test
     public void simpleConversion() {
         String html = "<html><head><title>W3c</title></head><body><p class='one' id=12>Text</p><!-- comment --><invalid>What<script>alert('!')";
@@ -23,13 +38,36 @@ public class W3CDomTest {
 
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
-        String out = TextUtil.stripNewlines(w3c.asString(wDoc));
-        String expected = TextUtil.stripNewlines(
-                "<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>W3c</title>" +
-                "</head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script>" +
-                "</invalid></body></html>"
-        );
+        NodeList meta = wDoc.getElementsByTagName("META");
+        assertEquals(0, meta.getLength());
+
+        String out = w3c.asString(wDoc);
+        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(expected, out);
+
+        Document roundTrip = parseXml(out);
+        assertEquals("Text", roundTrip.getElementsByTagName("p").item(0).getTextContent());
+
+        // check we can set properties
+        Properties properties = new Properties();
+        properties.put(OutputKeys.INDENT, "yes");
+        String furtherOut = w3c.asString(wDoc, properties);
+        String furtherExpected =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
+            "<html>\n" +
+            "    <head>\n" +
+            "        <title>W3c</title>\n" +
+            "    </head>\n" +
+            "    <body>\n" +
+            "        <p class=\"one\" id=\"12\">Text</p>\n" +
+            "        <!-- comment -->\n" +
+            "        <invalid>\n" +
+            "            What\n" +
+            "            <script>alert('!')</script>\n" +
+            "        </invalid>\n" +
+            "    </body>\n" +
+            "</html>\n";
+        assertEquals(furtherExpected, TextUtil.stripCRs(furtherOut)); // on windows, DOM will write newlines as \r\n
     }
 
     @Test
@@ -40,12 +78,15 @@ public class W3CDomTest {
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
         Node htmlEl = wDoc.getChildNodes().item(0);
-        assertEquals(null, htmlEl.getNamespaceURI());
+        assertNull(htmlEl.getNamespaceURI());
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
         String out = w3c.asString(wDoc);
         assertTrue(out.contains("ipod"));
+
+        Document roundTrip = parseXml(out);
+        assertEquals("Images", roundTrip.getElementsByTagName("a").item(0).getTextContent());
     }
     
     
