@@ -500,7 +500,6 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("textarea")) {
                         tb.insert(startTag);
                         if (!startTag.isSelfClosing()) {
-                            // todo: If the next token is a U+000A LINE FEED (LF) character token, then ignore that token and move on to the next one. (Newlines at the start of textarea elements are ignored as an authoring convenience.)
                             tb.tokeniser.transition(TokeniserState.Rcdata);
                             tb.markInsertionMode();
                             tb.framesetOk(false);
