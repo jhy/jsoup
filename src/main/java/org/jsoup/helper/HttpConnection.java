@@ -727,7 +727,7 @@ public class HttpConnection implements Connection {
 
             long startTime = System.nanoTime();
             HttpURLConnection conn = createConnection(req);
-            Response res;
+            Response res = null;
             try {
                 conn.connect();
                 if (conn.getDoOutput())
@@ -795,10 +795,8 @@ public class HttpConnection implements Connection {
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
-            } catch (IOException e){
-                // per Java's documentation, this is not necessary, and precludes keepalives. However in practice,
-                // connection errors will not be released quickly enough and can cause a too many open files error.
-                conn.disconnect();
+            } catch (IOException e) {
+                if (res != null) res.safeClose(); // will be non-null if got to conn
                 throw e;
             }
 
