@@ -6,6 +6,7 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.w3c.dom.Comment;
+import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
@@ -23,8 +24,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.Stack;
 
-import static javax.xml.transform.OutputKeys.INDENT;
-import static javax.xml.transform.OutputKeys.METHOD;
+import static javax.xml.transform.OutputKeys.*;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -46,6 +46,7 @@ public class W3CDom {
         	factory.setNamespaceAware(true);
             builder = factory.newDocumentBuilder();
             Document out = builder.newDocument();
+            out.setXmlStandalone(true);
             convert(in, out);
             return out;
         } catch (ParserConfigurationException e) {

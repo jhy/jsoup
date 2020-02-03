@@ -12,6 +12,10 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -21,11 +25,15 @@ import java.util.Properties;
 import static org.junit.Assert.*;
 
 public class W3CDomTest {
-    private static Document parseXml(String xml) {
-        DocumentBuilder documentBuilder = null;
+
+    private static Document parseXml(String xml, boolean nameSpaceAware) {
         try {
-            documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            return documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(nameSpaceAware);
+            DocumentBuilder documentBuilder = factory.newDocumentBuilder();
+            Document dom = documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            dom.normalizeDocument();
+            return dom;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -42,10 +50,11 @@ public class W3CDomTest {
         assertEquals(0, meta.getLength());
 
         String out = w3c.asString(wDoc);
-        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
-        assertEquals(expected, out);
+        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out));
 
-        Document roundTrip = parseXml(out);
+        String xml = w3c.asString(wDoc);
+        Document roundTrip = parseXml(xml, true);
         assertEquals("Text", roundTrip.getElementsByTagName("p").item(0).getTextContent());
 
         // check we can set properties
@@ -53,20 +62,19 @@ public class W3CDomTest {
         properties.put(OutputKeys.INDENT, "yes");
         String furtherOut = w3c.asString(wDoc, properties);
         String furtherExpected =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-            "<html>\n" +
-            "    <head>\n" +
-            "        <title>W3c</title>\n" +
-            "    </head>\n" +
-            "    <body>\n" +
-            "        <p class=\"one\" id=\"12\">Text</p>\n" +
-            "        <!-- comment -->\n" +
-            "        <invalid>\n" +
-            "            What\n" +
-            "            <script>alert('!')</script>\n" +
-            "        </invalid>\n" +
-            "    </body>\n" +
-            "</html>\n";
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html>\n" +
+                "    <head>\n" +
+                "        <title>W3c</title>\n" +
+                "    </head>\n" +
+                "    <body>\n" +
+                "        <p class=\"one\" id=\"12\">Text</p>\n" +
+                "        <!-- comment -->\n" +
+                "        <invalid>\n" +
+                "            What\n" +
+                "            <script>alert('!')</script>\n" +
+                "        </invalid>\n" +
+                "    </body>\n" +
+                "</html>\n";
         assertEquals(furtherExpected, TextUtil.stripCRs(furtherOut)); // on windows, DOM will write newlines as \r\n
     }
 
@@ -82,14 +90,13 @@ public class W3CDomTest {
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
-        String out = w3c.asString(wDoc);
-        assertTrue(out.contains("ipod"));
+        String xml = w3c.asString(wDoc);
+        assertTrue(xml.contains("ipod"));
 
-        Document roundTrip = parseXml(out);
+        Document roundTrip = parseXml(xml, true);
         assertEquals("Images", roundTrip.getElementsByTagName("a").item(0).getTextContent());
     }
-    
-    
+
     @Test
     public void convertsGoogleLocation() throws IOException {
         File in = ParseTest.getFile("/htmltests/google-ipod.html");
@@ -99,10 +106,8 @@ public class W3CDomTest {
         Document wDoc = w3c.fromJsoup(doc);
 
         String out = w3c.asString(wDoc);
-        assertEquals(doc.location(), wDoc.getDocumentURI() );
+        assertEquals(doc.location(), wDoc.getDocumentURI());
     }
-    
-    
 
     @Test
     public void namespacePreservation() throws IOException {
@@ -178,7 +183,8 @@ public class W3CDomTest {
         Document w3Doc = new W3CDom().fromJsoup(jsoupDoc);
     }
 
-    @Test public void treatsUndeclaredNamespaceAsLocalName() {
+    @Test
+    public void treatsUndeclaredNamespaceAsLocalName() {
         String html = "<fb:like>One</fb:like>";
         org.jsoup.nodes.Document doc = Jsoup.parse(html);
 
@@ -193,7 +199,47 @@ public class W3CDomTest {
         assertNull(fb.getNamespaceURI());
         assertEquals("like", fb.getLocalName());
         assertEquals("fb:like", fb.getNodeName());
+    }
 
+    @Test
+    public void xmlnsXpathTest() throws XPathExpressionException {
+        W3CDom w3c = new W3CDom();
+        String html = "<html><body><div>hello</div></body></html>";
+        Document dom = w3c.fromJsoup(Jsoup.parse(html));
+        NodeList nodeList = xpath(dom, "//body");// no ns, so needs no prefix
+        assertEquals("div", nodeList.item(0).getLocalName());
+
+        // default output is namespace aware, so query needs to be as well
+        html = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";
+        dom = w3c.fromJsoup(Jsoup.parse(html));
+        nodeList = xpath(dom, "//body");
+        assertNull(nodeList); // no matches
+
+        dom = w3c.fromJsoup(Jsoup.parse(html));
+        nodeList = xpath(dom, "//*[local-name()=\"body\"]");
+        assertNotNull(nodeList);
+        assertEquals(1, nodeList.getLength());
+        assertEquals("div", nodeList.item(0).getLocalName());
+        assertEquals("http://www.w3.org/1999/xhtml", nodeList.item(0).getNamespaceURI());
+        assertNull(nodeList.item(0).getPrefix());
+
+        // get rid of the name space awareness
+        String xml = w3c.asString(dom);
+        dom = parseXml(xml, false);
+        Node item = (Node) xpath(dom, "//body");
+        assertEquals("body", item.getNodeName());
+        assertNull(item.getNamespaceURI());
+        assertNull(item.getPrefix());
+
+        // put back, will get zero
+        dom = parseXml(xml, true);
+        nodeList = xpath(dom, "//body");
+        assertNull(nodeList);
+    }
+
+    private NodeList xpath(Document w3cDoc, String query) throws XPathExpressionException {
+        XPathExpression xpath = XPathFactory.newInstance().newXPath().compile(query);
+        return ((NodeList) xpath.evaluate(w3cDoc, XPathConstants.NODE));
     }
 }
 
