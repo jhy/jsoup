@@ -100,7 +100,7 @@ public class HttpConnection implements Connection {
         try {
             //  odd way to encode urls, but it works!
             String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
-            urlS = urlS.replaceAll(" ", "%20");
+            urlS = urlS.replace(" ", "%20");
             final URI uri = new URI(urlS);
             return new URL(uri.toASCIIString());
         } catch (URISyntaxException | MalformedURLException e) {
@@ -112,7 +112,7 @@ public class HttpConnection implements Connection {
     private static String encodeMimeName(String val) {
         if (val == null)
             return null;
-        return val.replaceAll("\"", "%22");
+        return val.replace("\"", "%22");
     }
 
     private Connection.Request req;
