@@ -170,12 +170,6 @@
     </plugins>
     <resources>
       <resource>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-      </resource>
-      <resource>
         <directory>./</directory>
         <targetPath>META-INF/</targetPath>
         <filtering>false</filtering>
@@ -271,15 +265,16 @@
       <!-- jetty for webserver integration tests. 9.2 is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.2.28.v20190418</version>
+      <version>9.4.26.v20200117</version>
       <scope>test</scope>
     </dependency>
+
 
     <dependency>
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.2.28.v20190418</version>
+      <version>9.4.26.v20200117</version>
       <scope>test</scope>
     </dependency>
 

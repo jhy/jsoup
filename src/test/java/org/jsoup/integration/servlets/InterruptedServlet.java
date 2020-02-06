@@ -10,9 +10,14 @@ import java.io.IOException;
 
 public class InterruptedServlet extends BaseServlet {
     public static final String Url = TestServer.map(InterruptedServlet.class);
+    public static final String Magnitude = "magnitude";
+    public static final String Larger = "larger";
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        String magnitude = req.getParameter(Magnitude);
+        magnitude  = magnitude == null ? "" : magnitude;
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);
 
@@ -21,9 +26,11 @@ public class InterruptedServlet extends BaseServlet {
         while (sb.length() <= CharacterReaderTest.maxBufferLen) {
             sb.append("A suitable amount of data. \n");
         }
+        sb.append("<p>Finale.</p>");
         String data = sb.toString();
 
-        res.setContentLength(data.length() * 2);
+        int contentLength = magnitude.equals(Larger) ? data.length() * 2 : data.length() / 2;
+        res.setContentLength(contentLength);
 
         res.getWriter().write(data);
 

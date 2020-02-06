@@ -340,36 +340,32 @@ public class ConnectTest {
     }
 
     @Test
-    public void handlesEmptyStreamDuringParseRead() throws IOException {
+    public void handlesLargerContentLengthParseRead() throws IOException {
         // this handles situations where the remote server sets a content length greater than it actually writes
 
         Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
-            .timeout(200)
+            .data(InterruptedServlet.Magnitude, InterruptedServlet.Larger)
+            .timeout(400)
             .execute();
 
-        boolean threw = false;
-        try {
-            Document document = res.parse();
-            assertEquals("Something", document.title());
-        } catch (IOException e) {
-            threw = true;
-        }
-        assertTrue(threw);
+        Document document = res.parse();
+        assertEquals("Something", document.title());
+        assertEquals(0, document.select("p").size());
+        // current impl, jetty won't write past content length
+        // todo - find way to trick jetty into writing larger than set header. Take over the stream?
     }
 
     @Test
-    public void handlesEmtpyStreamDuringBufferedRead() throws IOException {
+    public void handlesWrongContentLengthDuringBufferedRead() throws IOException {
         Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
-            .timeout(200)
-            .execute();
+                .timeout(400)
+                .execute();
+        // this servlet writes max_buffer data, but sets content length to max_buffer/2. So will read up to that.
+        // previous versions of jetty would allow to write less, and would throw except here
 
-        boolean threw = false;
-        try {
-            res.bufferUp();
-        } catch (UncheckedIOException e) {
-            threw = true;
-        }
-        assertTrue(threw);
+        res.bufferUp();
+        Document doc = res.parse();
+        assertEquals(0, doc.select("p").size());
     }
 
     @Test public void handlesRedirect() throws IOException {
