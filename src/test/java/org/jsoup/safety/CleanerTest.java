@@ -9,8 +9,6 @@ import org.jsoup.nodes.Entities;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.xml.soap.Text;
-
 import static org.junit.Assert.*;
 
 /**
