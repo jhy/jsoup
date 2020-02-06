@@ -68,6 +68,10 @@ jsoup changelog
     make invalid XML output (the Transformer was switching into HTML output mode).
     <https://github.com/jhy/jsoup/issues/1098>
 
+  * Bugfix: when cloning a TextNode, if .attributes() was hit before the clone() method, the text value would only be a
+    shallow clone.
+    <https://github.com/jhy/jsoup/issues/1176>
+
   * Various code hygiene updates.
 
 **** Release 1.12.1 [2019-May-12]

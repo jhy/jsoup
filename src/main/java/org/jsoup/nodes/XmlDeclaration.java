@@ -89,4 +89,9 @@ public class XmlDeclaration extends LeafNode {
     public String toString() {
         return outerHtml();
     }
+
+    @Override
+    public XmlDeclaration clone() {
+        return (XmlDeclaration) super.clone();
+    }
 }

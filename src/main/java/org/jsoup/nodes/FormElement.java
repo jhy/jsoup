@@ -112,4 +112,9 @@ public class FormElement extends Element {
         }
         return data;
     }
+
+    @Override
+    public FormElement clone() {
+        return (FormElement) super.clone();
+    }
 }

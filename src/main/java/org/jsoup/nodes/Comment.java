@@ -58,6 +58,11 @@ public class Comment extends LeafNode {
         return outerHtml();
     }
 
+    @Override
+    public Comment clone() {
+        return (Comment) super.clone();
+    }
+
     /**
      * Check if this comment looks like an XML Declaration.
      * @return true if it looks like, maybe, it's an XML Declaration.

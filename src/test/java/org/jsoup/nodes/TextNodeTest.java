@@ -105,4 +105,34 @@ public class TextNodeTest {
         assertEquals(norm, el.html());
         assertEquals(whole, el.wholeText());
     }
+
+    @Test
+    public void testClone() {
+        // https://github.com/jhy/jsoup/issues/1176
+        TextNode x = new TextNode("zzz");
+        TextNode y = x.clone();
+
+        assertNotSame(x, y);
+        assertEquals(x.outerHtml(), y.outerHtml());
+
+        y.text("yyy");
+        assertNotEquals(x.outerHtml(), y.outerHtml());
+        assertEquals("zzz", x.text());
+
+        x.attributes(); // already cloned so no impact
+        y.text("xxx");
+        assertEquals("zzz", x.text());
+        assertEquals("xxx", y.text());
+    }
+
+    @Test
+    public void testCloneAfterAttributesHit() {
+        // https://github.com/jhy/jsoup/issues/1176
+        TextNode x = new TextNode("zzz");
+        x.attributes(); // moves content from leafnode value to attributes, which were missed in clone
+        TextNode y = x.clone();
+        y.text("xxx");
+        assertEquals("zzz", x.text());
+        assertEquals("xxx", y.text());
+    }
 }

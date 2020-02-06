@@ -59,6 +59,11 @@ public class DataNode extends LeafNode {
         return outerHtml();
     }
 
+    @Override
+    public DataNode clone() {
+        return (DataNode) super.clone();
+    }
+
     /**
      Create a new DataNode from HTML encoded data.
      @param encodedData encoded data

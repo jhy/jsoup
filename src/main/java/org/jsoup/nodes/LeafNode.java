@@ -100,4 +100,15 @@ abstract class LeafNode extends Node {
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
     }
+
+    @Override
+    protected LeafNode doClone(Node parent) {
+        LeafNode clone = (LeafNode) super.doClone(parent);
+
+        // Object value could be plain string or attributes - need to clone
+        if (hasAttributes())
+            clone.value = ((Attributes) value).clone();
+
+        return clone;
+    }
 }

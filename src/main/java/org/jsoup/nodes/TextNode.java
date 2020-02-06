@@ -108,6 +108,11 @@ public class TextNode extends LeafNode {
         return outerHtml();
     }
 
+    @Override
+    public TextNode clone() {
+        return (TextNode) super.clone();
+    }
+
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
      * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
