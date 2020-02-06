@@ -706,8 +706,7 @@ public class Element extends Node {
     public Element nextElementSibling() {
         if (parentNode == null) return null;
         List<Element> siblings = parent().childElementsList();
-        Integer index = indexInList(this, siblings);
-        Validate.notNull(index);
+        int index = indexInList(this, siblings);
         if (siblings.size() > index+1)
             return siblings.get(index+1);
         else
@@ -731,8 +730,7 @@ public class Element extends Node {
     public Element previousElementSibling() {
         if (parentNode == null) return null;
         List<Element> siblings = parent().childElementsList();
-        Integer index = indexInList(this, siblings);
-        Validate.notNull(index);
+        int index = indexInList(this, siblings);
         if (index > 0)
             return siblings.get(index-1);
         else
