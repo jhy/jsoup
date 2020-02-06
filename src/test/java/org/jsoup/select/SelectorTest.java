@@ -261,7 +261,7 @@ public class SelectorTest {
         assertEquals("div", els.get(1).tagName());
         assertEquals("bar", els.get(1).attr("title"));
         assertEquals("div", els.get(2).tagName());
-        assertTrue(els.get(2).attr("title").length() == 0); // missing attributes come back as empty string
+        assertEquals(0, els.get(2).attr("title").length()); // missing attributes come back as empty string
         assertFalse(els.get(2).hasAttr("title"));
         assertEquals("p", els.get(3).tagName());
         assertEquals("span", els.get(4).tagName());
@@ -909,7 +909,6 @@ public class SelectorTest {
     @Test
     public void xml_mixed_case_wildcard_name() {
         Document doc = Jsoup.parse(mixedCase, "", Parser.xmlParser());
-        // FIXME: should be 1, to behave in the same way as lowercase_wildcard_name.
         assertEquals(1, doc.select("*|mixedCase").size());
     }
 
