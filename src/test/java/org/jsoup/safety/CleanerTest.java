@@ -9,6 +9,8 @@ import org.jsoup.nodes.Entities;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.xml.soap.Text;
+
 import static org.junit.Assert.*;
 
 /**
@@ -311,5 +313,18 @@ public class CleanerTest {
         Whitelist relaxedWithAnchor = Whitelist.relaxed().addProtocols("a", "href", "#");
         String clean = Jsoup.clean(dirty, relaxedWithAnchor);
         assertEquals("<a>One</a> <a>Two</a>", clean);
+    }
+
+    @Test public void handlesNestedQuotesInAttribute() {
+        // https://github.com/jhy/jsoup/issues/1243 - no repro
+        String orig = "<div style=\"font-family: 'Calibri'\">Will (not) fail</div>";
+        Whitelist allow = Whitelist.relaxed()
+            .addAttributes("div", "style");
+
+        String clean = Jsoup.clean(orig, allow);
+        boolean isValid = Jsoup.isValid(orig, allow);
+
+        assertEquals(orig, TextUtil.stripNewlines(clean)); // only difference is pretty print wrap & indent
+        assertTrue(isValid);
     }
 }
