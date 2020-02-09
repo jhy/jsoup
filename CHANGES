@@ -1,6 +1,9 @@
 jsoup changelog
 
-**** Release 1.12.2 [PENDING]
+***
+  * Release 1.13.1 [PENDING]
+
+**** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query
     "div:has(> a)" will select all "div" elements that have at least one direct child "a" element.
     <https://github.com/jhy/jsoup/pull/1214>
