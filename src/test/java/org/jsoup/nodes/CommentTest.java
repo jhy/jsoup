@@ -21,9 +21,14 @@ public class CommentTest {
 
     @Test
     public void testToString() {
-        // todo - want indent to check if inlining element and not add newline.
-        //  also so <p>One<!-- comment -->Two</p> == "OneTwo"
-        assertEquals("\n<!-- This is one heck of a comment! -->", comment.toString());
+        assertEquals("<!-- This is one heck of a comment! -->", comment.toString());
+
+        Document doc = Jsoup.parse("<div><!-- comment--></div>");
+        assertEquals("<div>\n <!-- comment-->\n</div>", doc.body().html());
+
+        doc = Jsoup.parse("<p>One<!-- comment -->Two</p>");
+        assertEquals("<p>One<!-- comment -->Two</p>", doc.body().html());
+        assertEquals("OneTwo", doc.text());
     }
 
     @Test

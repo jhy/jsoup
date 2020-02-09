@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.13.1 [PENDING]
+  * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
+
   * Removed old methods and classes that were marked deprecated in previous releases.
 
 **** Release 1.12.2 [2020-Feb-08]
