@@ -30,6 +30,11 @@ public class Comment extends LeafNode {
         return coreValue();
     }
 
+    public Comment setData(String data) {
+        coreValue(data);
+        return this;
+    }
+
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint())
             indent(accum, depth, out);
