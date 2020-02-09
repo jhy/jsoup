@@ -51,7 +51,7 @@ public class Element extends Node {
      * @param tag tag name
      */
     public Element(String tag) {
-        this(Tag.valueOf(tag), "", new Attributes());
+        this(Tag.valueOf(tag), "", null);
     }
 
     /**
@@ -180,7 +180,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return attributes().getIgnoreCase("id");
+        return hasAttributes() ? attributes.getIgnoreCase("id") :"";
     }
 
     /**
@@ -1293,7 +1293,10 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        final String classAttr = attributes().getIgnoreCase("class");
+        if (!hasAttributes())
+            return false;
+
+        final String classAttr = attributes.getIgnoreCase("class");
         final int len = classAttr.length();
         final int wantLen = className.length();
 

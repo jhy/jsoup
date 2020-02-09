@@ -152,6 +152,8 @@ abstract class Token {
         }
 
         final Attributes getAttributes() {
+            if (attributes == null)
+                attributes = new Attributes();
             return attributes;
         }
 
@@ -216,15 +218,14 @@ abstract class Token {
     final static class StartTag extends Tag {
         StartTag() {
             super();
-            attributes = new Attributes();
+            //attributes = new Attributes();
             type = TokenType.StartTag;
         }
 
         @Override
         Tag reset() {
             super.reset();
-            attributes = new Attributes();
-            // todo - would prefer these to be null, but need to check Element assertions
+            attributes = null;
             return this;
         }
 

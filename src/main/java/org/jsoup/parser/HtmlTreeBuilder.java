@@ -196,7 +196,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     Element insert(final Token.StartTag startTag) {
         // cleanup duplicate attributes:
-        if (!startTag.attributes.isEmpty()) {
+        if (startTag.attributes != null && !startTag.attributes.isEmpty()) {
             int dupes = startTag.attributes.deduplicate(settings);
             if (dupes > 0) {
                 error("Duplicate attribute");

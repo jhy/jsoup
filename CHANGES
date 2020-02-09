@@ -1,7 +1,13 @@
 jsoup changelog
 
 *** Release 1.13.1 [PENDING]
+  * Improvement: decent memory optimization by not creating Attribute objects for each Element unless/until the Element
+    gets an attribute.
+
   * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
+
+  * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
+    <https://github.com/jhy/jsoup/issues/1313>
 
   * Removed old methods and classes that were marked deprecated in previous releases.
 
@@ -9,9 +15,6 @@ jsoup changelog
   * Improvement: the :has() selector now supports relative selectors. For example, the query
     "div:has(> a)" will select all "div" elements that have at least one direct child "a" element.
     <https://github.com/jhy/jsoup/pull/1214>
-
-  * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
-    <https://github.com/jhy/jsoup/issues/1313>
 
   * Improvement: added Element chaining methods for various overridden methods on Node.
     <https://github.com/jhy/jsoup/issues/1193>
