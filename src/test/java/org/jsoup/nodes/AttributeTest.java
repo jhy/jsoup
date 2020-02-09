@@ -3,8 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class AttributeTest {
     @Test public void html() {
@@ -37,6 +36,7 @@ public class AttributeTest {
         Attribute first = attributes.iterator().next();
         assertEquals("hidden", first.getKey());
         assertEquals("", first.getValue());
+        assertFalse(first.hasValue());
         assertTrue(Attribute.isBooleanAttribute(first.getKey()));
     }
 
@@ -48,5 +48,15 @@ public class AttributeTest {
         assertEquals("three", attr.getKey());
         assertEquals("four", attr.getValue());
         assertEquals(null, attr.parent);
+    }
+
+    @Test public void hasValue() {
+        Attribute a1 = new Attribute("one", "");
+        Attribute a2 = new Attribute("two", null);
+        Attribute a3 = new Attribute("thr", "thr");
+
+        assertTrue(a1.hasValue());
+        assertFalse(a2.hasValue());
+        assertTrue(a3.hasValue());
     }
 }

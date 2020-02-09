@@ -126,11 +126,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Set a new attribute, or replace an existing one by key.
-     * @param key case sensitive attribute key
-     * @param value attribute value
+     * @param key case sensitive attribute key (not null)
+     * @param value attribute value (may be null, to set a boolean attribute)
      * @return these attributes, for chaining
      */
     public Attributes put(String key, String value) {
+        Validate.notNull(key);
         int i = indexOfKey(key);
         if (i != NotFound)
             vals[i] = value;
@@ -225,6 +226,26 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public boolean hasKeyIgnoreCase(String key) {
         return indexOfKeyIgnoreCase(key) != NotFound;
+    }
+
+    /**
+     * Check if these attributes contain an attribute with a value for this key.
+     * @param key key to check for
+     * @return true if key exists, and it has a value
+     */
+    public boolean hasValue(String key) {
+        int i = indexOfKey(key);
+        return i != NotFound && vals[i] != null;
+    }
+
+    /**
+     * Check if these attributes contain an attribute with a value for this key.
+     * @param key case-insensitive key to check for
+     * @return true if key exists, and it has a value
+     */
+    public boolean hasValueIgnoreCase(String key) {
+        int i = indexOfKeyIgnoreCase(key);
+        return i != NotFound && vals[i] != null;
     }
 
     /**

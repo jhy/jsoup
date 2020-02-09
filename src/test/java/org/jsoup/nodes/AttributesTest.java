@@ -155,4 +155,20 @@ public class AttributesTest {
         assertFalse("Attribute 'a' not correctly removed", a.hasKey("a"));
         assertTrue("Attribute 'b' not present after renaming", a.hasKey("b"));
     }
+
+    @Test
+    public void testBoolean() {
+        Attributes ats = new Attributes();
+        ats.put("a", "a");
+        ats.put("B", "b");
+        ats.put("c", null);
+
+        assertTrue(ats.hasValue("a"));
+        assertFalse(ats.hasValue("A"));
+        assertTrue(ats.hasValueIgnoreCase("A"));
+
+        assertFalse(ats.hasValue("c"));
+        assertFalse(ats.hasValue("C"));
+        assertFalse(ats.hasValueIgnoreCase("C"));
+    }
 }
