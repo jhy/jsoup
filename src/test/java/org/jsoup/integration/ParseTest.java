@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 
@@ -172,19 +174,15 @@ public class ParseTest {
 
     public static File getFile(String resourceName) {
         try {
-            File file = new File(ParseTest.class.getResource(resourceName).toURI());
-            return file;
+            URL resource = ParseTest.class.getResource(resourceName);
+            return resource != null ? new File(resource.toURI()) : new File("/404");
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }
     }
 
     public static InputStream inputStreamFrom(String s) {
-        try {
-            return new ByteArrayInputStream(s.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 
 }

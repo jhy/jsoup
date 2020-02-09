@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+
+  <channel>
+    <title>jsoup RSS news</title>
+    <link>https://jsoup.org/</link>
+    <description>jsoup HTML Parser News</description>
+    <item>
+      <title>jsoup Java HTML Parser release 1.12.2</title>
+      <link>https://jsoup.org/news/release-1.12.2</link>
+      <description>jsoup 1.12.2 is out now, with a great set of improvements to connections, W3C interoperability, speed, and many bug fixes.</description>
+    </item>
+    <item>
+      <title>jsoup Java HTML Parser release 1.12.1</title>
+      <link>https://jsoup.org/news/release-1.12.1</link>
+      <description>jsoup 1.12.1 is out now, with a great set of improvements to connections, W3C interoperability, speed, and many bug fixes.</description>
+    </item>
+  </channel>
+
+</rss>

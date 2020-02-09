@@ -3,35 +3,29 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
-import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.HelloServlet;
 import org.jsoup.integration.servlets.InterruptedServlet;
 import org.jsoup.integration.servlets.RedirectServlet;
-import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -416,7 +410,6 @@ public class ConnectTest {
 
     @Test public void getUtf8Bom() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
-        con.data(FileServlet.LocationParam, "/bomtests/bom_utf8.html");
         Document doc = con.get();
 
         assertEquals("UTF-8", con.response().charset());
@@ -434,9 +427,23 @@ public class ConnectTest {
             Document doc = con.response().parse();
         } catch (IOException e) {
             threw = true;
-            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", e.getMessage());
+            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/*+xml", e.getMessage());
         }
         assertTrue(threw);
+    }
+
+    @Test public void testParseRss() throws IOException {
+        // test that we switch automatically to xml, and we support application/rss+xml
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/test-rss.xml"));
+        con.data(FileServlet.ContentTypeParam, "application/rss+xml");
+        Document doc = con.get();
+        Element title = doc.selectFirst("title");
+        assertEquals("jsoup RSS news", title.text());
+        assertEquals("channel", title.parent().nodeName());
+        assertEquals("jsoup RSS news", doc.title());
+        assertEquals(3, doc.select("link").size());
+        assertEquals("application/rss+xml", con.response().contentType());
+        assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
     }
 
     @Test
