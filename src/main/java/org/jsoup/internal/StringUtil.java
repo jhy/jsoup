@@ -237,7 +237,6 @@ public final class StringUtil {
      * <p>
      * Care must be taken to release the builder once its work has been completed, with {@link #releaseBuilder}
      * @return an empty StringBuilder
-     * @
      */
     public static StringBuilder borrowBuilder() {
         synchronized (builders) {

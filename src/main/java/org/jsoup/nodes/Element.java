@@ -135,8 +135,9 @@ public class Element extends Node {
 
     /**
      * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
-     * of the tag case preserving setting of the parser.
-     * @return
+     * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
+     * normal name of {@code div}.
+     * @return normal name
      */
     public String normalName() {
         return tag.normalName();
