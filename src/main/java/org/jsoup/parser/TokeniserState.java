@@ -55,7 +55,7 @@ enum TokeniserState {
                     t.emit(new Token.EOF());
                     break;
                 default:
-                    String data = r.consumeToAny('&', '<', nullChar);
+                    String data = r.consumeData();
                     t.emit(data);
                     break;
             }
@@ -68,12 +68,12 @@ enum TokeniserState {
     },
     Rawtext {
         void read(Tokeniser t, CharacterReader r) {
-            readData(t, r, this, RawtextLessthanSign);
+            readRawData(t, r, this, RawtextLessthanSign);
         }
     },
     ScriptData {
         void read(Tokeniser t, CharacterReader r) {
-            readData(t, r, this, ScriptDataLessthanSign);
+            readRawData(t, r, this, ScriptDataLessthanSign);
         }
     },
     PLAINTEXT {
@@ -744,7 +744,7 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny(attributeDoubleValueCharsSorted);
+            String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -777,7 +777,7 @@ enum TokeniserState {
     },
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny(attributeSingleValueCharsSorted);
+            String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -1683,7 +1683,7 @@ enum TokeniserState {
         }
     }
 
-    private static void readData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
+    private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
         switch (r.current()) {
             case '<':
                 t.advanceTransition(advance);
@@ -1697,7 +1697,7 @@ enum TokeniserState {
                 t.emit(new Token.EOF());
                 break;
             default:
-                String data = r.consumeToAny('<', nullChar); // todo - why hunt for null here? Just consumeTo'<'?
+                String data = r.consumeRawData();
                 t.emit(data);
                 break;
         }
