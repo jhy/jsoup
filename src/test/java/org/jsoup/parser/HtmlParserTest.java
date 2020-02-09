@@ -1309,7 +1309,7 @@ public class HtmlParserTest {
             "</select>";
         Document doc = Jsoup.parse(html);
         Element select = doc.selectFirst("select");
-        //assertEquals(2, select.childrenSize());
+        assertEquals(2, select.childrenSize());
 
         assertEquals("<optgroup label=\"a\"> <option>one </option><option>two </option><option>three </option></optgroup><optgroup label=\"b\"> <option>four </option><option>fix </option><option>six </option></optgroup>", select.html());
     }
