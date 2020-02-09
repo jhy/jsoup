@@ -1,7 +1,7 @@
 jsoup changelog
 
-***
-  * Release 1.13.1 [PENDING]
+*** Release 1.13.1 [PENDING]
+  * Removed old methods and classes that were marked deprecated in previous releases.
 
 **** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query

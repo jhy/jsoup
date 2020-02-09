@@ -106,32 +106,12 @@ public class Tag {
     }
 
     /**
-     * Gets if this tag can contain block tags.
-     *
-     * @return if tag can contain block tags
-     * @deprecated No longer used, and no different result than {{@link #isBlock()}}
-     */
-    public boolean canContainBlock() {
-        return isBlock;
-    }
-
-    /**
      * Gets if this tag is an inline tag.
      *
      * @return if this tag is an inline tag.
      */
     public boolean isInline() {
         return !isBlock;
-    }
-
-    /**
-     * Gets if this tag is a data only tag.
-     *
-     * @return if this tag is a data only tag
-     * @deprecated use data nodes instead
-     */
-    public boolean isData() {
-        return isBlock && !empty;
     }
 
     /**

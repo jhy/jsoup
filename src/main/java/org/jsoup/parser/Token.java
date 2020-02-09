@@ -151,7 +151,6 @@ abstract class Token {
             return selfClosing;
         }
 
-        @SuppressWarnings({"TypeMayBeWeakened"})
         final Attributes getAttributes() {
             return attributes;
         }

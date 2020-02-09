@@ -169,13 +169,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     * @deprecated
-     */
-    protected boolean isBooleanAttribute() {
-        return Arrays.binarySearch(booleanAttributes, key) >= 0 || val == null;
-    }
-
-    /**
      * Checks if this attribute name is defined as a boolean attribute in HTML5
      */
     protected static boolean isBooleanAttribute(final String key) {

@@ -12,26 +12,6 @@ import org.jsoup.select.NodeFilter.FilterResult;
  * </p>
  */
 public class NodeTraversor {
-    private NodeVisitor visitor;
-
-    /**
-     * Create a new traversor.
-     * @param visitor a class implementing the {@link NodeVisitor} interface, to be called when visiting each node.
-     * @deprecated Just use the static {@link NodeTraversor#filter(NodeFilter, Node)} method.
-     */
-    public NodeTraversor(NodeVisitor visitor) {
-        this.visitor = visitor;
-    }
-
-    /**
-     * Start a depth-first traverse of the root and all of its descendants.
-     * @param root the root node point to traverse.
-     * @deprecated Just use the static {@link NodeTraversor#filter(NodeFilter, Node)} method.
-     */
-    public void traverse(Node root) {
-        traverse(visitor, root);
-    }
-
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param visitor Node visitor.

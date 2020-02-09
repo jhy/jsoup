@@ -10,7 +10,6 @@ import java.io.IOException;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class TextNode extends LeafNode {
-
     /**
      Create a new TextNode representing the supplied (unencoded) text).
 
@@ -19,18 +18,6 @@ public class TextNode extends LeafNode {
      */
     public TextNode(String text) {
         value = text;
-    }
-
-    /**
-     Create a new TextNode representing the supplied (unencoded) text).
-
-     @param text raw text
-     @param baseUri base uri - ignored for this node type
-     @see #createFromEncoded(String, String)
-     @deprecated use {@link TextNode#TextNode(String)}
-     */
-    public TextNode(String text, String baseUri) {
-        this(text);
     }
 
 	public String nodeName() {
@@ -111,18 +98,6 @@ public class TextNode extends LeafNode {
     @Override
     public TextNode clone() {
         return (TextNode) super.clone();
-    }
-
-    /**
-     * Create a new TextNode from HTML encoded (aka escaped) data.
-     * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
-     * @param baseUri Base uri
-     * @return TextNode containing unencoded data (e.g. &lt;)
-     * @deprecated use {@link TextNode#createFromEncoded(String)} instead, as LeafNodes don't carry base URIs.
-     */
-    public static TextNode createFromEncoded(String encodedText, String baseUri) {
-        String text = Entities.unescape(encodedText);
-        return new TextNode(text);
     }
 
     /**

@@ -35,35 +35,6 @@ public class DocumentType extends LeafNode {
         updatePubSyskey();
     }
 
-    /**
-     * Create a new doctype element.
-     * @param name the doctype's name
-     * @param publicId the doctype's public ID
-     * @param systemId the doctype's system ID
-     * @param baseUri unused
-     * @deprecated
-     */
-    public DocumentType(String name, String publicId, String systemId, String baseUri) {
-        attr(NAME, name);
-        attr(PUBLIC_ID, publicId);
-        attr(SYSTEM_ID, systemId);
-        updatePubSyskey();
-    }
-
-    /**
-     * Create a new doctype element.
-     * @param name the doctype's name
-     * @param publicId the doctype's public ID
-     * @param systemId the doctype's system ID
-     * @param baseUri unused
-     * @deprecated
-     */
-    public DocumentType(String name, String pubSysKey, String publicId, String systemId, String baseUri) {
-        attr(NAME, name);
-        attr(PUBLIC_ID, publicId);
-        attr(SYSTEM_ID, systemId);
-        updatePubSyskey();
-    }
     public void setPubSysKey(String value) {
         if (value != null)
             attr(PUB_SYS_KEY, value);

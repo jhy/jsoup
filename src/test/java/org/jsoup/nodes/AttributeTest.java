@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AttributeTest {
     @Test public void html() {
@@ -36,6 +37,7 @@ public class AttributeTest {
         Attribute first = attributes.iterator().next();
         assertEquals("hidden", first.getKey());
         assertEquals("", first.getValue());
+        assertTrue(Attribute.isBooleanAttribute(first.getKey()));
     }
 
     @Test public void settersOnOrphanAttribute() {

@@ -288,9 +288,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Attribute attr = vals[i] == null ?
-                new BooleanAttribute(keys[i]) : // deprecated class, but maybe someone still wants it
-                new Attribute(keys[i], vals[i], Attributes.this);
+            Attribute attr = new Attribute(keys[i], vals[i], Attributes.this);
             list.add(attr);
         }
         return Collections.unmodifiableList(list);
