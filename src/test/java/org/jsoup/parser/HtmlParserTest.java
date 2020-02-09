@@ -1294,4 +1294,23 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse("<p>" + text);
         assertEquals(text, doc.text());
     }
+
+    @Test public void testStartOptGroup() {
+        // https://github.com/jhy/jsoup/issues/1313
+        String html = "<select>\n" +
+            "  <optgroup label=\"a\">\n" +
+            "  <option>one\n" +
+            "  <option>two\n" +
+            "  <option>three\n" +
+            "  <optgroup label=\"b\">\n" +
+            "  <option>four\n" +
+            "  <option>fix\n" +
+            "  <option>six\n" +
+            "</select>";
+        Document doc = Jsoup.parse(html);
+        Element select = doc.selectFirst("select");
+        //assertEquals(2, select.childrenSize());
+
+        assertEquals("<optgroup label=\"a\"> <option>one </option><option>two </option><option>three </option></optgroup><optgroup label=\"b\"> <option>four </option><option>fix </option><option>six </option></optgroup>", select.html());
+    }
 }

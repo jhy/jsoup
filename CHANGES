@@ -10,6 +10,9 @@ jsoup changelog
     "div:has(> a)" will select all "div" elements that have at least one direct child "a" element.
     <https://github.com/jhy/jsoup/pull/1214>
 
+  * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
+    <https://github.com/jhy/jsoup/issues/1313>
+
   * Improvement: added Element chaining methods for various overridden methods on Node.
     <https://github.com/jhy/jsoup/issues/1193>
 

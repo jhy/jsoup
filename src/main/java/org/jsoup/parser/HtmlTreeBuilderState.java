@@ -1243,8 +1243,8 @@ enum HtmlTreeBuilderState {
                         tb.insert(start);
                     } else if (name.equals("optgroup")) {
                         if (tb.currentElement().normalName().equals("option"))
-                            tb.processEndTag("option");
-                        else if (tb.currentElement().normalName().equals("optgroup"))
+                            tb.processEndTag("option"); // pop option and flow to pop optgroup
+                        if (tb.currentElement().normalName().equals("optgroup"))
                             tb.processEndTag("optgroup");
                         tb.insert(start);
                     } else if (name.equals("select")) {
