@@ -21,6 +21,16 @@ jsoup changelog
   * Improvement: added Element#childrenSize() as a convenience to get the size of an element's element children.
     <https://github.com/jhy/jsoup/pull/1291>
 
+  * Improvement: in W3CDom.asString, allow the output mode to be specified as HTML or as XML. It will default to
+    checking the content, and automatically selecting.
+
+  * Improvement: added a Document#documentType() method, to get a doc's doctype.
+
+  * Improvement: To DocumentType, added #name(), #publicID(), and #systemId() methods to fetch those fields.
+
+  * Improvement: in W3CDom conversions from jsoup documents, retain the DocumentType, and be able to serialize it.
+    <https://github.com/jhy/jsoup/issues/1183>
+
   * Bugfix: on pages fetch by Jsoup.Connection, a "Mark Invalid" exception might be incorrectly thrown, or the page may
     miss some data. This occurred on larger pages when the file transfer was chunked, and an invalid HTML entity
     happened to cross a chunk boundary.
@@ -63,10 +73,6 @@ jsoup changelog
 
   * Bugfix: Removed binary input detection as it was causing too many false positives.
     <https://github.com/jhy/jsoup/issues/1250>
-
-  * Bugfix: The W3CDom#asString method (that converts a Jsoup Document to a W3C DOM and outputs it as a String) would
-    make invalid XML output (the Transformer was switching into HTML output mode).
-    <https://github.com/jhy/jsoup/issues/1098>
 
   * Bugfix: when cloning a TextNode, if .attributes() was hit before the clone() method, the text value would only be a
     shallow clone.

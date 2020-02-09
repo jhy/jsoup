@@ -6,8 +6,12 @@ import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -19,8 +23,9 @@ import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -30,8 +35,19 @@ public class W3CDomTest {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(nameSpaceAware);
-            DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-            Document dom = documentBuilder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setEntityResolver(new EntityResolver() {
+                @Override
+                public InputSource resolveEntity(String publicId, String systemId)
+                    throws SAXException, IOException {
+                    if (systemId.contains("about:legacy-compat")) { // <!doctype html>
+                        return new InputSource(new StringReader(""));
+                    } else {
+                        return null;
+                    }
+                }
+            });
+            Document dom = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
             dom.normalizeDocument();
             return dom;
         } catch (Exception e) {
@@ -49,18 +65,17 @@ public class W3CDomTest {
         NodeList meta = wDoc.getElementsByTagName("META");
         assertEquals(0, meta.getLength());
 
-        String out = w3c.asString(wDoc);
+        String out = W3CDom.asString(wDoc, W3CDom.OutputXml());
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(expected, TextUtil.stripNewlines(out));
 
-        String xml = w3c.asString(wDoc);
-        Document roundTrip = parseXml(xml, true);
+        Document roundTrip = parseXml(out, true);
         assertEquals("Text", roundTrip.getElementsByTagName("p").item(0).getTextContent());
 
         // check we can set properties
-        Properties properties = new Properties();
+        Map<String, String> properties = W3CDom.OutputXml();
         properties.put(OutputKeys.INDENT, "yes");
-        String furtherOut = w3c.asString(wDoc, properties);
+        String furtherOut = W3CDom.asString(wDoc, properties);
         assertTrue(furtherOut.length() > out.length()); // wanted to assert formatting, but actual indentation is platform specific so breaks in CI
         String furtherExpected =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
@@ -74,12 +89,17 @@ public class W3CDomTest {
 
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
-        Node htmlEl = wDoc.getChildNodes().item(0);
+        Node htmlEl = wDoc.getChildNodes().item(1);
         assertNull(htmlEl.getNamespaceURI());
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
-        String xml = w3c.asString(wDoc);
+        DocumentType doctype = wDoc.getDoctype();
+        Node doctypeNode = wDoc.getChildNodes().item(0);
+        assertSame(doctype, doctypeNode);
+        assertEquals("html", doctype.getName());
+
+        String xml = W3CDom.asString(wDoc, W3CDom.OutputXml());
         assertTrue(xml.contains("ipod"));
 
         Document roundTrip = parseXml(xml, true);
@@ -230,5 +250,39 @@ public class W3CDomTest {
         XPathExpression xpath = XPathFactory.newInstance().newXPath().compile(query);
         return ((NodeList) xpath.evaluate(w3cDoc, XPathConstants.NODE));
     }
+
+    @Test
+    public void testRoundTripDoctype() {
+        // TODO - not super happy with this output - but plain DOM doesn't let it out, and don't want to rebuild the writer
+        String base = "<!DOCTYPE html><p>One</p>";
+        assertEquals("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>",
+            output(base, true));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head/><body><p>One</p></body></html>", output(base, false));
+
+        String publicDoc = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+        assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(publicDoc, true));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html><head /><body /></html>", output(publicDoc, false));
+
+        String systemDoc = "<!DOCTYPE html SYSTEM \"exampledtdfile.dtd\">";
+        assertEquals("<!DOCTYPE html SYSTEM \"exampledtdfile.dtd\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(systemDoc, true));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"exampledtdfile.dtd\"><html><head/><body/></html>", output(systemDoc, false));
+
+        String legacyDoc = "<!DOCTYPE html SYSTEM \"about:legacy-compat\">";
+        assertEquals("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(legacyDoc, true));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head/><body/></html>", output(legacyDoc, false));
+
+        String noDoctype = "<p>One</p>";
+        assertEquals("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>", output(noDoctype, true));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body><p>One</p></body></html>", output(noDoctype, false));
+    }
+
+    private String output(String in, boolean modeHtml) {
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(in);
+        Document w3c = W3CDom.convert(jdoc);
+
+        Map<String, String> properties = modeHtml ? W3CDom.OutputHtml() : W3CDom.OutputXml();
+        return TextUtil.stripNewlines(W3CDom.asString(w3c, properties));
+    }
+
 }
 

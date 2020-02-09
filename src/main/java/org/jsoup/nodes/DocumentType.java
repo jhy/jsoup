@@ -31,10 +31,8 @@ public class DocumentType extends LeafNode {
         Validate.notNull(systemId);
         attr(NAME, name);
         attr(PUBLIC_ID, publicId);
-        if (has(PUBLIC_ID)) {
-            attr(PUB_SYS_KEY, PUBLIC_KEY);
-        }
         attr(SYSTEM_ID, systemId);
+        updatePubSyskey();
     }
 
     /**
@@ -48,10 +46,8 @@ public class DocumentType extends LeafNode {
     public DocumentType(String name, String publicId, String systemId, String baseUri) {
         attr(NAME, name);
         attr(PUBLIC_ID, publicId);
-        if (has(PUBLIC_ID)) {
-            attr(PUB_SYS_KEY, PUBLIC_KEY);
-        }
         attr(SYSTEM_ID, systemId);
+        updatePubSyskey();
     }
 
     /**
@@ -64,15 +60,44 @@ public class DocumentType extends LeafNode {
      */
     public DocumentType(String name, String pubSysKey, String publicId, String systemId, String baseUri) {
         attr(NAME, name);
-        if (pubSysKey != null) {
-            attr(PUB_SYS_KEY, pubSysKey);
-        }
         attr(PUBLIC_ID, publicId);
         attr(SYSTEM_ID, systemId);
+        updatePubSyskey();
     }
     public void setPubSysKey(String value) {
         if (value != null)
             attr(PUB_SYS_KEY, value);
+    }
+
+    private void updatePubSyskey() {
+        if (has(PUBLIC_ID)) {
+            attr(PUB_SYS_KEY, PUBLIC_KEY);
+        } else if (has(SYSTEM_ID))
+            attr(PUB_SYS_KEY, SYSTEM_KEY);
+    }
+
+    /**
+     * Get this doctype's name (when set, or empty string)
+     * @return doctype name
+     */
+    public String name() {
+        return attr(NAME);
+    }
+
+    /**
+     * Get this doctype's Public ID (when set, or empty string)
+     * @return doctype Public ID
+     */
+    public String publicId() {
+        return attr(PUBLIC_ID);
+    }
+
+    /**
+     * Get this doctype's System ID (when set, or empty string)
+     * @return doctype System ID
+     */
+    public String systemId() {
+        return attr(SYSTEM_ID);
     }
 
     @Override

@@ -59,6 +59,21 @@ public class Document extends Element {
     public String location() {
      return location;
     }
+
+    /**
+     * Returns this Document's doctype.
+     * @return document type, or null if not set
+     */
+    public DocumentType documentType() {
+        for (Node node : childNodes) {
+            if (node instanceof DocumentType)
+                return (DocumentType) node;
+            else if (!(node instanceof LeafNode)) // scans forward across comments, text, processing instructions etc
+                break;
+        }
+        return null;
+        // todo - add a set document type?
+    }
     
     /**
      Accessor to the document's {@code head} element.
