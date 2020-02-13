@@ -218,7 +218,6 @@ abstract class Token {
     final static class StartTag extends Tag {
         StartTag() {
             super();
-            //attributes = new Attributes();
             type = TokenType.StartTag;
         }
 

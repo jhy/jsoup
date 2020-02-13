@@ -5,8 +5,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 public class LeafNodeTest {
 
@@ -32,6 +31,18 @@ public class LeafNodeTest {
         assertEquals("", id);
         assertFalse(p.hasClass("Foobs"));
         assertFalse(hasAnyAttributes(doc));
+
+        p.addClass("Foobs");
+        assertTrue(p.hasClass("Foobs"));
+        assertTrue(hasAnyAttributes(doc));
+        assertTrue(hasAnyAttributes(p));
+
+        Attributes attributes = p.attributes();
+        assertTrue(attributes.hasKey("class"));
+        p.clearAttributes();
+        assertFalse(hasAnyAttributes(p));
+        assertFalse(hasAnyAttributes(doc));
+        assertFalse(attributes.hasKey("class"));
     }
 
     private boolean hasAnyAttributes(Node node) {

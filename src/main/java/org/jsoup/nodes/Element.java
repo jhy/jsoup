@@ -1504,7 +1504,12 @@ public class Element extends Node {
     // overrides of Node for call chaining
     @Override
     public Element clearAttributes() {
-        return (Element) super.clearAttributes();
+        if (attributes != null) {
+            super.clearAttributes();
+            attributes = null;
+        }
+
+        return this;
     }
 
     @Override
