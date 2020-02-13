@@ -163,12 +163,12 @@ public class AttributesTest {
         ats.put("B", "b");
         ats.put("c", null);
 
-        assertTrue(ats.hasValue("a"));
-        assertFalse(ats.hasValue("A"));
-        assertTrue(ats.hasValueIgnoreCase("A"));
+        assertTrue(ats.hasKeyWithDefinedValue("a"));
+        assertFalse(ats.hasKeyWithDefinedValue("A"));
+        assertTrue(ats.hasKeyIgnoreCaseWithDefinedValue("A"));
 
-        assertFalse(ats.hasValue("c"));
-        assertFalse(ats.hasValue("C"));
-        assertFalse(ats.hasValueIgnoreCase("C"));
+        assertFalse(ats.hasKeyWithDefinedValue("c"));
+        assertFalse(ats.hasKeyWithDefinedValue("C"));
+        assertFalse(ats.hasKeyIgnoreCaseWithDefinedValue("C"));
     }
 }
