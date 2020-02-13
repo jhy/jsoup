@@ -14,34 +14,37 @@ public class LeafNodeTest {
         // test to make sure we're not setting attributes on all nodes right away
         String body = "<p>One <!-- Two --> Three<![CDATA[Four]]></p>";
         Document doc = Jsoup.parse(body);
-        assertFalse(hasAnyAttributes(doc));
+        assertTrue(hasAnyAttributes(doc)); // should have one - the base uri on the doc
+
+        Element html = doc.child(0);
+        assertFalse(hasAnyAttributes(html));
 
         String s = doc.outerHtml();
-        assertFalse(hasAnyAttributes(doc));
+        assertFalse(hasAnyAttributes(html));
 
         Elements els = doc.select("p");
         Element p = els.first();
         assertEquals(1, els.size());
-        assertFalse(hasAnyAttributes(doc));
+        assertFalse(hasAnyAttributes(html));
 
         els = doc.select("p.none");
-        assertFalse(hasAnyAttributes(doc));
+        assertFalse(hasAnyAttributes(html));
 
         String id = p.id();
         assertEquals("", id);
         assertFalse(p.hasClass("Foobs"));
-        assertFalse(hasAnyAttributes(doc));
+        assertFalse(hasAnyAttributes(html));
 
         p.addClass("Foobs");
         assertTrue(p.hasClass("Foobs"));
-        assertTrue(hasAnyAttributes(doc));
+        assertTrue(hasAnyAttributes(html));
         assertTrue(hasAnyAttributes(p));
 
         Attributes attributes = p.attributes();
         assertTrue(attributes.hasKey("class"));
         p.clearAttributes();
         assertFalse(hasAnyAttributes(p));
-        assertFalse(hasAnyAttributes(doc));
+        assertFalse(hasAnyAttributes(html));
         assertFalse(attributes.hasKey("class"));
     }
 

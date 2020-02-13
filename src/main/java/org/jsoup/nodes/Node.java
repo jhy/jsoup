@@ -133,7 +133,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the base URI of this node.
+     Get the base URI that applies to this node. Empty string if not defined. Used to make relative links absolute to.
      @return base URI
      */
     public abstract String baseUri();
@@ -150,15 +150,7 @@ public abstract class Node implements Cloneable {
      */
     public void setBaseUri(final String baseUri) {
         Validate.notNull(baseUri);
-
-        traverse(new NodeVisitor() {
-            public void head(Node node, int depth) {
-                node.doSetBaseUri(baseUri);
-            }
-
-            public void tail(Node node, int depth) {
-            }
-        });
+        doSetBaseUri(baseUri);
     }
 
     /**

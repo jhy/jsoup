@@ -40,11 +40,11 @@ import static org.jsoup.internal.Normalizer.normalize;
 public class Element extends Node {
     private static final List<Node> EMPTY_NODES = Collections.emptyList();
     private static final Pattern classSplit = Pattern.compile("\\s+");
+    private static final String baseUriKey = Attributes.internalKey("baseUri");
     private Tag tag;
     private WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
     private Attributes attributes;
-    private String baseUri;
 
     /**
      * Create a new, standalone element.
@@ -58,26 +58,25 @@ public class Element extends Node {
      * Create a new, standalone Element. (Standalone in that is has no parent.)
      * 
      * @param tag tag of this element
-     * @param baseUri the base URI
-     * @param attributes initial attributes
+     * @param baseUri the base URI (optional, may be null to inherit from parent, or "" to clear parent's)
+     * @param attributes initial attributes (optional, may be null)
      * @see #appendChild(Node)
      * @see #appendElement(String)
      */
     public Element(Tag tag, String baseUri, Attributes attributes) {
         Validate.notNull(tag);
-        Validate.notNull(baseUri);
         childNodes = EMPTY_NODES;
-        this.baseUri = baseUri;
         this.attributes = attributes;
         this.tag = tag;
+        if (baseUri != null)
+            this.setBaseUri(baseUri);
     }
-    
+
     /**
-     * Create a new Element from a tag and a base URI.
+     * Create a new Element from a Tag and a base URI.
      * 
      * @param tag element tag
-     * @param baseUri the base URI of this element. It is acceptable for the base URI to be an empty
-     *            string, but not null.
+     * @param baseUri the base URI of this element. Optional, and will inherit from its parent, if any.
      * @see Tag#valueOf(String, ParseSettings)
      */
     public Element(Tag tag, String baseUri) {
@@ -105,12 +104,22 @@ public class Element extends Node {
 
     @Override
     public String baseUri() {
-        return baseUri;
+        return searchUpForAttribute(this, baseUriKey);
+    }
+
+    private static String searchUpForAttribute(final Element start, final String key) {
+        Element el = start;
+        while (el != null) {
+            if (el.hasAttributes() && el.attributes.hasKey(key))
+                return el.attributes.get(key);
+            el = el.parent();
+        }
+        return "";
     }
 
     @Override
     protected void doSetBaseUri(String baseUri) {
-        this.baseUri = baseUri;
+        attributes().put(baseUriKey, baseUri);
     }
 
     @Override
@@ -1487,16 +1496,16 @@ public class Element extends Node {
     @Override
     public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
-        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
+        return new Element(tag, baseUri(), attributes == null ? null : attributes.clone());
     }
 
     @Override
     protected Element doClone(Node parent) {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
-        clone.baseUri = baseUri;
         clone.childNodes = new NodeList(clone, childNodes.size());
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
+        clone.setBaseUri(baseUri());
 
         return clone;
     }

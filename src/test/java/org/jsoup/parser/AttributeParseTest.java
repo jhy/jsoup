@@ -51,6 +51,8 @@ public class AttributeParseTest {
 
     @Test public void canStartWithEq() {
         String html = "<a =empty />";
+        // TODO this is the weirdest thing in the spec - why not consider this an attribute with an empty name, not where name is '='?
+        // am I reading it wrong? https://html.spec.whatwg.org/multipage/parsing.html#before-attribute-name-state
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
         Attributes attr = el.attributes();
         assertEquals(1, attr.size());

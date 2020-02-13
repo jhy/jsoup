@@ -33,6 +33,9 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Attributes implements Iterable<Attribute>, Cloneable {
     protected static final String dataPrefix = "data-";
+    // Indicates a jsoup internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
+    // that. Suppressed from list, iter.
+    static final char InternalPrefix = '/';
     private static final int InitialCapacity = 4; // todo - analyze Alexa 1MM sites, determine best setting
 
     // manages the key/val arrays
@@ -253,7 +256,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @return size
      */
     public int size() {
-        return size;
+        int s = 0;
+        for (int i = 0; i < size; i++) {
+            if (!isInternalKey(keys[i]))
+                s++;
+        }
+        return s;
     }
 
     /**
@@ -285,6 +293,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
             @Override
             public boolean hasNext() {
+                while (i < size) {
+                    if (isInternalKey(keys[i])) // skip over internal keys
+                        i++;
+                    else
+                        break;
+                }
+
                 return i < size;
             }
 
@@ -304,11 +319,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      Get the attributes as a List, for iteration.
-     @return an view of the attributes as an unmodifialbe List.
+     @return an view of the attributes as an unmodifiable List.
      */
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
+            if (isInternalKey(keys[i]))
+                continue; // skip internal keys
             Attribute attr = new Attribute(keys[i], vals[i], Attributes.this);
             list.add(attr);
         }
@@ -327,7 +344,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      Get the HTML representation of these attributes.
      @return HTML
-     @throws SerializationException if the HTML representation of the attributes cannot be constructed.
      */
     public String html() {
         StringBuilder sb = StringUtil.borrowBuilder();
@@ -342,6 +358,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     final void html(final Appendable accum, final Document.OutputSettings out) throws IOException {
         final int sz = size;
         for (int i = 0; i < sz; i++) {
+            if (isInternalKey(keys[i]))
+                continue;
+
             // inlined from Attribute.html()
             final String key = keys[i];
             final String val = vals[i];
@@ -497,5 +516,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     private static String dataKey(String key) {
         return dataPrefix + key;
+    }
+
+    static String internalKey(String key) {
+        return InternalPrefix + key;
+    }
+
+    private boolean isInternalKey(String key) {
+        return key != null && key.length() > 1 && key.charAt(0) == InternalPrefix;
     }
 }

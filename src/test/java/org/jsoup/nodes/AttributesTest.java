@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.junit.Test;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -121,6 +122,52 @@ public class AttributesTest {
     }
 
     @Test
+    public void testIteratorSkipsInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        Iterator<Attribute> it = a.iterator();
+        assertTrue(it.hasNext());
+        assertEquals("One", it.next().getKey());
+        assertTrue(it.hasNext());
+        assertEquals("Two", it.next().getKey());
+        assertFalse(it.hasNext());
+
+        int seen = 0;
+        for (Attribute attribute : a) {
+            seen++;
+        }
+        assertEquals(2, seen);
+    }
+
+    @Test
+    public void testListSkipsInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        List<Attribute> attributes = a.asList();
+        assertEquals(2, attributes.size());
+        assertEquals("One", attributes.get(0).getKey());
+        assertEquals("Two", attributes.get(1). getKey());
+    }
+
+    @Test public void htmlSkipsInternals() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        assertEquals(" One=\"One\" Two=\"Two\"", a.html());
+    }
+
+    @Test
     public void testIteratorEmpty() {
         Attributes a = new Attributes();
 
@@ -170,5 +217,16 @@ public class AttributesTest {
         assertFalse(ats.hasKeyWithDefinedValue("c"));
         assertFalse(ats.hasKeyWithDefinedValue("C"));
         assertFalse(ats.hasKeyIgnoreCaseWithDefinedValue("C"));
+    }
+
+    @Test public void testSizeWhenHasInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put("Two", "Two");
+        assertEquals(2, a.size());
+
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put(Attributes.internalKey("another"), "example.com");
+        assertEquals(2, a.size());
     }
 }
