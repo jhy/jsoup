@@ -1090,6 +1090,12 @@ public class HtmlParserTest {
         assertEquals("<tag>One</tag>", TextUtil.stripNewlines(div.nextElementSibling().outerHtml()));
     }
 
+    @Test public void testHtmlLowerCaseOfVoidTags() {
+        String html = "<!doctype HTML><IMG ALT=One></DIV>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<!doctype html> <html> <head></head> <body> <img alt=\"One\"> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+    }
+
     @Test public void canPreserveTagCase() {
         Parser parser = Parser.htmlParser();
         parser.settings(new ParseSettings(true, false));
