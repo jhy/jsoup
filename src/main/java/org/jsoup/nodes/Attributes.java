@@ -236,7 +236,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @param key key to check for
      * @return true if key exists, and it has a value
      */
-    public boolean hasKeyWithDefinedValue(String key) {
+    public boolean hasDeclaredValueForKey(String key) {
         int i = indexOfKey(key);
         return i != NotFound && vals[i] != null;
     }
@@ -246,7 +246,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @param key case-insensitive key to check for
      * @return true if key exists, and it has a value
      */
-    public boolean hasKeyIgnoreCaseWithDefinedValue(String key) {
+    public boolean hasDeclaredValueForKeyIgnoreCase(String key) {
         int i = indexOfKeyIgnoreCase(key);
         return i != NotFound && vals[i] != null;
     }

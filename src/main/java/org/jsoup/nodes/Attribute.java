@@ -84,7 +84,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * Check if this Attribute has a value. Set boolean attributes have no value.
      * @return if this is a boolean attribute / attribute without a value
      */
-    public boolean hasValue() {
+    public boolean hasDeclaredValue() {
         return val != null;
     }
 

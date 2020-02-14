@@ -36,7 +36,7 @@ public class AttributeTest {
         Attribute first = attributes.iterator().next();
         assertEquals("hidden", first.getKey());
         assertEquals("", first.getValue());
-        assertFalse(first.hasValue());
+        assertFalse(first.hasDeclaredValue());
         assertTrue(Attribute.isBooleanAttribute(first.getKey()));
     }
 
@@ -55,8 +55,8 @@ public class AttributeTest {
         Attribute a2 = new Attribute("two", null);
         Attribute a3 = new Attribute("thr", "thr");
 
-        assertTrue(a1.hasValue());
-        assertFalse(a2.hasValue());
-        assertTrue(a3.hasValue());
+        assertTrue(a1.hasDeclaredValue());
+        assertFalse(a2.hasDeclaredValue());
+        assertTrue(a3.hasDeclaredValue());
     }
 }

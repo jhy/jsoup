@@ -210,13 +210,13 @@ public class AttributesTest {
         ats.put("B", "b");
         ats.put("c", null);
 
-        assertTrue(ats.hasKeyWithDefinedValue("a"));
-        assertFalse(ats.hasKeyWithDefinedValue("A"));
-        assertTrue(ats.hasKeyIgnoreCaseWithDefinedValue("A"));
+        assertTrue(ats.hasDeclaredValueForKey("a"));
+        assertFalse(ats.hasDeclaredValueForKey("A"));
+        assertTrue(ats.hasDeclaredValueForKeyIgnoreCase("A"));
 
-        assertFalse(ats.hasKeyWithDefinedValue("c"));
-        assertFalse(ats.hasKeyWithDefinedValue("C"));
-        assertFalse(ats.hasKeyIgnoreCaseWithDefinedValue("C"));
+        assertFalse(ats.hasDeclaredValueForKey("c"));
+        assertFalse(ats.hasDeclaredValueForKey("C"));
+        assertFalse(ats.hasDeclaredValueForKeyIgnoreCase("C"));
     }
 
     @Test public void testSizeWhenHasInternal() {

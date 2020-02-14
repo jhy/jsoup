@@ -6,7 +6,7 @@ jsoup changelog
 
   * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
 
-  * Improvement: added Attributes#hasKeyWithDefinedValue(key) and Attribute#hasKeyIgnoreCaseWithDefinedValue(), to check
+  * Improvement: added Attributes#hasDeclaredValueForKey(key) and Attribute#hasDeclaredValueForKeyIgnoreCase(), to check
     if an attribute is set but has no value. Useful in place of the deprecated and removed BooleanAttribute class and
     instanceof test.
 
