@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
-public class Tag {
+public class Tag implements Cloneable {
     private static final Map<String, Tag> tags = new HashMap<>(); // map of known tags
 
     private String tagName;
@@ -61,14 +61,18 @@ public class Tag {
         Tag tag = tags.get(tagName);
 
         if (tag == null) {
-            tagName = settings.normalizeTag(tagName);
+            tagName = settings.normalizeTag(tagName); // the name we'll use
             Validate.notEmpty(tagName);
-            tag = tags.get(tagName);
+            String normalName = Normalizer.lowerCase(tagName); // the lower-case name to get tag settings off
+            tag = tags.get(normalName);
 
             if (tag == null) {
                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
                 tag = new Tag(tagName);
                 tag.isBlock = false;
+            } else if (settings.preserveTagCase() && !tagName.equals(normalName))  {
+                tag = tag.clone(); // get a new version vs the static one, so name update doesn't reset all
+                tag.tagName = tagName;
             }
         }
         return tag;
@@ -214,6 +218,15 @@ public class Tag {
     @Override
     public String toString() {
         return tagName;
+    }
+
+    @Override
+    protected Tag clone() {
+        try {
+            return (Tag) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // internal static initialisers:

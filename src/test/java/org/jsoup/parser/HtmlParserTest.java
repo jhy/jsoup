@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import static org.jsoup.parser.ParseSettings.preserveCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -69,7 +70,7 @@ public class HtmlParserTest {
 
     @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
         String html = "<p One=One One=Two one=Three two=Four two=Five Two=Six>Text</p>";
-        Parser parser = Parser.htmlParser().settings(ParseSettings.preserveCase);
+        Parser parser = Parser.htmlParser().settings(preserveCase);
         Document doc = parser.parseInput(html, "");
         assertEquals("<p One=\"One\" one=\"Three\" two=\"Four\" Two=\"Six\">Text</p>", doc.selectFirst("p").outerHtml());
     }
@@ -1143,7 +1144,7 @@ public class HtmlParserTest {
     @Test public void caseSensitiveParseTree() {
         String html = "<r><X>A</X><y>B</y></r>";
         Parser parser = Parser.htmlParser();
-        parser.settings(ParseSettings.preserveCase);
+        parser.settings(preserveCase);
         Document doc = parser.parseInput(html, "");
         assertEquals("<r> <X> A </X> <y> B </y> </r>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
@@ -1158,9 +1159,9 @@ public class HtmlParserTest {
     @Test public void preservedCaseLinksCantNest() {
         String html = "<A>ONE <A>Two</A></A>";
         Document doc = Parser.htmlParser()
-            .settings(ParseSettings.preserveCase)
+            .settings(preserveCase)
             .parseInput(html, "");
-        assertEquals("<A> ONE </A><A> Two </A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        assertEquals("<A>ONE </A><A>Two</A>", StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
     @Test public void normalizesDiscordantTags() {
@@ -1286,6 +1287,24 @@ public class HtmlParserTest {
             " <p><a href=\"one\">One</a></p>\n" +
             " <p><a href=\"two\">Two</a></p>\n" +
             "</div>", doc.body().html());
+    }
+
+    @Test
+    public void indentRegardlessOfCase() {
+        String html = "<p>1</p><P>2</P>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(
+            "<body>\n" +
+            " <p>1</p>\n" +
+            " <p>2</p>\n" +
+            "</body>", doc.body().outerHtml());
+
+        Document caseDoc = Jsoup.parse(html, "", Parser.htmlParser().settings(preserveCase));
+        assertEquals(
+            "<body>\n" +
+            " <p>1</p>\n" +
+            " <P>2</P>\n" +
+            "</body>", caseDoc.body().outerHtml());
     }
 
     @Test

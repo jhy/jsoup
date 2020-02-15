@@ -20,6 +20,8 @@ jsoup changelog
   * Bugfix: empty tags and form tags did not have their attributes normalized (lower-cased by default)
     <https://github.com/jhy/jsoup/pull/1323>
 
+  * Bugfix: when preserve case was set to on, the HTML pretty-print formatter didn't indent capitalized tags correctly.
+
   * Removed old methods and classes that were marked deprecated in previous releases.
 
 **** Release 1.12.2 [2020-Feb-08]
