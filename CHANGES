@@ -17,6 +17,9 @@ jsoup changelog
     marked, a bufferUp occurred, and then the reader was rewound.
     <https://github.com/jhy/jsoup/issues/1324>
 
+  * Bugfix: empty tags and form tags did not have their attributes normalized (lower-cased by default)
+    <https://github.com/jhy/jsoup/pull/1323>
+
   * Removed old methods and classes that were marked deprecated in previous releases.
 
 **** Release 1.12.2 [2020-Feb-08]

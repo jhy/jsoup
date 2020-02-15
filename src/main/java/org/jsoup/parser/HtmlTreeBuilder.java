@@ -246,7 +246,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack) {
         Tag tag = Tag.valueOf(startTag.name(), settings);
-        FormElement el = new FormElement(tag, null, startTag.attributes);
+        FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         setFormElement(el);
         insertNode(el);
         if (onStack)
