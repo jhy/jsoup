@@ -1279,6 +1279,16 @@ public class HtmlParserTest {
     }
 
     @Test
+    public void pTagsGetIndented() {
+        String html = "<div><p><a href=one>One</a><p><a href=two>Two</a></p></div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<div>\n" +
+            " <p><a href=\"one\">One</a></p>\n" +
+            " <p><a href=\"two\">Two</a></p>\n" +
+            "</div>", doc.body().html());
+    }
+
+    @Test
     public void testH20() {
         // https://github.com/jhy/jsoup/issues/731
         String html = "H<sub>2</sub>O";
