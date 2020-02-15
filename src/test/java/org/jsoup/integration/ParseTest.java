@@ -172,6 +172,19 @@ public class ParseTest {
         assertEquals("UTF-8", doc.outputSettings().charset().name());
     }
 
+    @Test
+    public void testXwiki() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1324
+        File in = getFile("/htmltests/xwiki-1324.html");
+        Document doc = Jsoup.parse(in, null, "https://localhost/");
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+
+        // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
+        // updated to preserve the mark.
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
+        assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
+    }
+
     public static File getFile(String resourceName) {
         try {
             URL resource = ParseTest.class.getResource(resourceName);

@@ -13,6 +13,10 @@ jsoup changelog
   * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
     <https://github.com/jhy/jsoup/issues/1313>
 
+  * Bugfix: in CharacterReader when parsing an input stream, could throw a Mark Invalid exception if the reader was
+    marked, a bufferUp occurred, and then the reader was rewound.
+    <https://github.com/jhy/jsoup/issues/1324>
+
   * Removed old methods and classes that were marked deprecated in previous releases.
 
 **** Release 1.12.2 [2020-Feb-08]

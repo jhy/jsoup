@@ -252,7 +252,7 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "</" + name() + ">";
+            return "</" + (tagName != null ? tagName : "(unset)") + ">";
         }
     }
 

@@ -46,12 +46,18 @@ public final class CharacterReader {
 
     private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
     private void bufferUp() {
-        if (readFully)
+        if (readFully || bufPos < bufSplitPoint)
             return;
 
-        final int pos = bufPos;
-        if (pos < bufSplitPoint)
-            return;
+        final int pos;
+        final int offset;
+        if (bufMark != -1) {
+            pos = bufMark;
+            offset = bufPos - bufMark;
+        } else {
+            pos = bufPos;
+            offset = 0;
+        }
 
         try {
             final long skipped = reader.skip(pos);
@@ -70,8 +76,9 @@ public final class CharacterReader {
                 Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
                 bufLength = read;
                 readerPos += pos;
-                bufPos = 0;
-                bufMark = -1;
+                bufPos = offset;
+                if (bufMark != -1)
+                    bufMark = 0;
                 bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
             }
         } catch (IOException e) {
