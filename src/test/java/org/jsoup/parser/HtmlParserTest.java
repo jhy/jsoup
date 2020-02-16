@@ -1369,4 +1369,13 @@ public class HtmlParserTest {
         assertTrue(doc.selectFirst("script").childNode(0) instanceof DataNode);
         assertTrue(doc.selectFirst("style").childNode(0) instanceof DataNode);
     }
+
+    @Test public void textareaValue() {
+        String html = "<TEXTAREA>YES YES</TEXTAREA>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("YES YES", doc.selectFirst("textarea").val());
+
+        doc = Jsoup.parse(html, "", Parser.htmlParser().settings(preserveCase));
+        assertEquals("YES YES", doc.selectFirst("textarea").val());
+    }
 }

@@ -92,7 +92,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
             // initialise the tokeniser state:
-            String contextTag = context.tagName();
+            String contextTag = context.normalName();
             if (StringUtil.in(contextTag, "title", "textarea"))
                 tokeniser.transition(TokeniserState.Rcdata);
             else if (StringUtil.in(contextTag, "iframe", "noembed", "noframes", "style", "xmp"))

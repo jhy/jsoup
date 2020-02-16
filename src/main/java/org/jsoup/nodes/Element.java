@@ -1401,7 +1401,7 @@ public class Element extends Node {
      * @return the value of the form element, or empty string if not set.
      */
     public String val() {
-        if (tagName().equals("textarea"))
+        if (normalName().equals("textarea"))
             return text();
         else
             return attr("value");
@@ -1413,7 +1413,7 @@ public class Element extends Node {
      * @return this element (for chaining)
      */
     public Element val(String value) {
-        if (tagName().equals("textarea"))
+        if (normalName().equals("textarea"))
             text(value);
         else
             attr("value", value);
