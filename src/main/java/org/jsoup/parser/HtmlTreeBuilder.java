@@ -262,7 +262,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         final Node node;
         final Element el = currentElement();
-        final String tagName = el.tagName();
+        final String tagName = el.normalName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())

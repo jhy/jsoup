@@ -1359,4 +1359,14 @@ public class HtmlParserTest {
         assertNull(treeBuilder.reader);
         assertNull(treeBuilder.tokeniser);
     }
+
+    @Test public void scriptInDataNode() {
+        Document doc = Jsoup.parse("<script>Hello</script><style>There</style>");
+        assertTrue(doc.selectFirst("script").childNode(0) instanceof DataNode);
+        assertTrue(doc.selectFirst("style").childNode(0) instanceof DataNode);
+
+        doc = Jsoup.parse("<SCRIPT>Hello</SCRIPT><STYLE>There</STYLE>", "", Parser.htmlParser().settings(preserveCase));
+        assertTrue(doc.selectFirst("script").childNode(0) instanceof DataNode);
+        assertTrue(doc.selectFirst("style").childNode(0) instanceof DataNode);
+    }
 }

@@ -12,6 +12,8 @@ jsoup changelog
     if an attribute is set but has no value. Useful in place of the deprecated and removed BooleanAttribute class and
     instanceof test.
 
+  * Improvement: removed old methods and classes that were marked deprecated in previous releases.
+
   * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
     <https://github.com/jhy/jsoup/issues/1313>
 
@@ -24,7 +26,9 @@ jsoup changelog
 
   * Bugfix: when preserve case was set to on, the HTML pretty-print formatter didn't indent capitalized tags correctly.
 
-  * Removed old methods and classes that were marked deprecated in previous releases.
+  * Bugfix: ensure that script and style contents are parsed into DataNodes, not TextNodes, when in case-sensitive
+    parse mode.
+
 
 **** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query
