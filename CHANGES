@@ -1,7 +1,7 @@
 jsoup changelog
 
 *** Release 1.13.1 [PENDING]
-  * Improvement: memory optimizations, reducing the retained size of a Document by ~ 39%, and allocations by ~ 5%:
+  * Improvement: memory optimizations, reducing the retained size of a Document by ~ 39%, and allocations by ~ 9%:
       1. Attributes holder in Elements is only created if the element has attributes
       2. Only track the baseUri in an element when it is set via DOM to a new value for a given tree
       3. After parsing, do not retain the input character reader (and associated buffers) in the Document#parser

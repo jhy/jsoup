@@ -36,7 +36,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     // Indicates a jsoup internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
     // that. Suppressed from list, iter.
     static final char InternalPrefix = '/';
-    private static final int InitialCapacity = 4; // todo - analyze Alexa 1MM sites, determine best setting
+    private static final int InitialCapacity = 2; // sampling found mean count when attrs present = 1.49; 1.08 overall. 2.6:1 have attrs.
 
     // manages the key/val arrays
     private static final int GrowthFactor = 2;
