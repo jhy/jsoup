@@ -19,14 +19,14 @@ public final class CharacterReader {
     static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
     private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
 
-    private final char[] charBuf;
-    private final Reader reader;
+    private char[] charBuf;
+    private Reader reader;
     private int bufLength;
     private int bufSplitPoint;
     private int bufPos;
     private int readerPos;
     private int bufMark = -1;
-    private final String[] stringCache = new String[512]; // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache = new String[512]; // holds reused strings in this doc, to lessen garbage
 
     public CharacterReader(Reader input, int sz) {
         Validate.notNull(input);
@@ -42,6 +42,19 @@ public final class CharacterReader {
 
     public CharacterReader(String input) {
         this(new StringReader(input), input.length());
+    }
+
+    public void close() {
+        if (reader == null)
+            return;
+        try {
+            reader.close();
+        } catch (IOException ignored) {
+        } finally {
+            reader = null;
+            charBuf = null;
+            stringCache = null;
+        }
     }
 
     private boolean readFully; // if the underlying stream has been completely read, no value in further buffering

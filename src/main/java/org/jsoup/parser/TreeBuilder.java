@@ -45,6 +45,13 @@ abstract class TreeBuilder {
     Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
+
+        // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
+        reader.close();
+        reader = null;
+        tokeniser = null;
+        stack = null;
+
         return doc;
     }
 

@@ -24,9 +24,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.jsoup.parser.ParseSettings.preserveCase;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the Parser
@@ -1353,5 +1351,12 @@ public class HtmlParserTest {
         assertEquals(2, select.childrenSize());
 
         assertEquals("<optgroup label=\"a\"> <option>one </option><option>two </option><option>three </option></optgroup><optgroup label=\"b\"> <option>four </option><option>fix </option><option>six </option></optgroup>", select.html());
+    }
+
+    @Test public void readerClosedAfterParse() {
+        Document doc = Jsoup.parse("Hello");
+        TreeBuilder treeBuilder = doc.parser().getTreeBuilder();
+        assertNull(treeBuilder.reader);
+        assertNull(treeBuilder.tokeniser);
     }
 }

@@ -22,8 +22,8 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests XmlTreeBuilder.
@@ -253,6 +253,13 @@ public class XmlTreeBuilderTest {
         Document doc = parser.parseInput(html, "");
 
         assertEquals("<p One=\"One\" ONE=\"Two\" one=\"Three\" two=\"Six\" Two=\"Eight\">Text</p>", doc.selectFirst("p").outerHtml());
+    }
+
+    @Test public void readerClosedAfterParse() {
+        Document doc = Jsoup.parse("Hello", "", Parser.xmlParser());
+        TreeBuilder treeBuilder = doc.parser().getTreeBuilder();
+        assertNull(treeBuilder.reader);
+        assertNull(treeBuilder.tokeniser);
     }
 
 }

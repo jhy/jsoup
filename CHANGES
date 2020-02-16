@@ -1,8 +1,10 @@
 jsoup changelog
 
 *** Release 1.13.1 [PENDING]
-  * Improvement: decent memory optimization by not creating Attribute objects for each Element unless/until the Element
-    gets an attribute.
+  * Improvement: memory optimizations, reducing the retained size of a Document by ~ 39%, and allocations by ~ 5%:
+      1. Attributes holder in Elements is only created if the element has attributes
+      2. Only track the baseUri in an element when it is set via DOM to a new value for a given tree
+      3. After parsing, do not retain the input character reader (and associated buffers) in the Document#parser
 
   * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
 
