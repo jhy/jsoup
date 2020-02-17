@@ -26,7 +26,8 @@ public final class CharacterReader {
     private int bufPos;
     private int readerPos;
     private int bufMark = -1;
-    private String[] stringCache = new String[512]; // holds reused strings in this doc, to lessen garbage
+    private static final int stringCacheSize = 512;
+    private String[] stringCache = new String[stringCacheSize]; // holds reused strings in this doc, to lessen garbage
 
     public CharacterReader(Reader input, int sz) {
         Validate.notNull(input);
@@ -520,6 +521,8 @@ public final class CharacterReader {
 
     @Override
     public String toString() {
+        if (bufLength - bufPos < 0)
+            return "";
         return new String(charBuf, bufPos, bufLength - bufPos);
     }
 
@@ -538,14 +541,14 @@ public final class CharacterReader {
             return "";
 
         // calculate hash:
-        int hash = 0;
+        int hash = 31 * count;
         int offset = start;
         for (int i = 0; i < count; i++) {
             hash = 31 * hash + charBuf[offset++];
         }
 
         // get from cache
-        final int index = hash & stringCache.length - 1;
+        final int index = hash & stringCacheSize - 1;
         String cached = stringCache[index];
 
         if (cached == null) { // miss, add
