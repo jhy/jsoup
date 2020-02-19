@@ -377,21 +377,19 @@ public class Element extends Node {
     /**
      * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
      * may include this element, or any of its children.
-     * <p>
-     * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:
-     * </p>
+     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined, e.g.:</p>
      * <ul>
      * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
      * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
      * </ul>
-     * <p>
-     * See the query syntax documentation in {@link org.jsoup.select.Selector}.
-     * </p>
+     * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
+     * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
      * 
      * @param cssQuery a {@link Selector} CSS-like query
-     * @return elements that match the query (empty if none match)
-     * @see org.jsoup.select.Selector
+     * @return an {@link Elements} list containing elements that match the query (empty if none match)
+     * @see Selector selector query syntax
+     * @see QueryParser#parse(String)
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public Elements select(String cssQuery) {
@@ -399,9 +397,22 @@ public class Element extends Node {
     }
 
     /**
+     * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
+     * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
+     * repeatedly parsing the CSS query.
+     * @param evaluator an element evaluator
+     * @return an {@link Elements} list containing elements that match the query (empty if none match)
+     */
+    public Elements select(Evaluator evaluator) {
+        return Selector.select(evaluator, this);
+    }
+
+
+    /**
      * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
      * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
      * execution stops on the first hit.</p>
+     * <p>Also known as {@code querySelector()} in the Web DOM.</p>
      * @param cssQuery cssQuery a {@link Selector} CSS-like query
      * @return the first matching element, or <b>{@code null}</b> if there is no match.
      */
@@ -410,7 +421,21 @@ public class Element extends Node {
     }
 
     /**
-     * Check if this element matches the given {@link Selector} CSS query.
+     * Finds the first Element that matches the supplied Evaluator, with this element as the starting context, or
+     * {@code null} if none match.
+     *
+     * @param evaluator an element evaluator
+     * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
+     *     matchn.
+     */
+    public Element selectFirst(Evaluator evaluator) {
+        return Collector.findFirst(evaluator, this);
+    }
+
+    /**
+     * Checks if this element matches the given {@link Selector} CSS query. Also knows as {@code matches()} in the Web
+     * DOM.
+     *
      * @param cssQuery a {@link Selector} CSS query
      * @return if this element matches the query
      */
@@ -424,7 +449,37 @@ public class Element extends Node {
      * @return if this element matches
      */
     public boolean is(Evaluator evaluator) {
-        return evaluator.matches((Element)this.root(), this);
+        return evaluator.matches(this.root(), this);
+    }
+
+    /**
+     * Find the closest element up the tree of parents that matches the specified CSS query. Will return itself, an
+     * ancestor, or {@code null} if there is no such matching element.
+     * @param cssQuery a {@link Selector} CSS query
+     * @return the closest ancestor element (possibly itself) that matches the provided evaluator. {@code null} if not
+     * found.
+     */
+    public Element closest(String cssQuery) {
+        return closest(QueryParser.parse(cssQuery));
+    }
+
+    /**
+     * Find the closest element up the tree of parents that matches the specified evaluator. Will return itself, an
+     * ancestor, or {@code null} if there is no such matching element.
+     * @param evaluator a query evaluator
+     * @return the closest ancestor element (possibly itself) that matches the provided evaluator. {@code null} if not
+     * found.
+     */
+    public Element closest(Evaluator evaluator) {
+        Validate.notNull(evaluator);
+        Element el = this;
+        final Element root = root();
+        do {
+            if (evaluator.matches(root, el))
+                return el;
+            el = el.parent();
+        } while (el != null);
+        return null;
     }
     
     /**

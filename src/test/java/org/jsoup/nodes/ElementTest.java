@@ -4,8 +4,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.QueryParser;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -1086,6 +1088,7 @@ public class ElementTest {
         assertTrue(p.is("p"));
         assertFalse(p.is("div"));
         assertTrue(p.is("p:has(a)"));
+        assertFalse(p.is("a")); // does not descend
         assertTrue(p.is("p:first-child"));
         assertFalse(p.is("p:last-child"));
         assertTrue(p.is("*"));
@@ -1100,10 +1103,48 @@ public class ElementTest {
         assertFalse(q.is("a"));
     }
 
+    @Test
+    public void testEvalMethods() {
+        Document doc = Jsoup.parse("<div><p>One <a class=big>Two</a> Three</p><p>Another</p>");
+        Element p = doc.selectFirst(QueryParser.parse(("p")));
+        assertEquals("One Three", p.ownText());
+
+        assertTrue(p.is(QueryParser.parse("p")));
+        Evaluator aEval = QueryParser.parse("a");
+        assertFalse(p.is(aEval));
+
+        Element a = p.selectFirst(aEval);
+        assertEquals("div", a.closest(QueryParser.parse("div:has( > p)")).tagName());
+        Element body = p.closest(QueryParser.parse("body"));
+        assertEquals("body", body.nodeName());
+    }
+
+    @Test
+    public void testClosest() {
+        String html = "<article>\n" +
+            "  <div id=div-01>Here is div-01\n" +
+            "    <div id=div-02>Here is div-02\n" +
+            "      <div id=div-03>Here is div-03</div>\n" +
+            "    </div>\n" +
+            "  </div>\n" +
+            "</article>";
+
+        Document doc = Jsoup.parse(html);
+        Element el = doc.selectFirst("#div-03");
+        assertEquals("Here is div-03", el.text());
+        assertEquals("div-03", el.id());
+
+        assertEquals("div-02", el.closest("#div-02").id());
+        assertEquals(el, el.closest("div div")); // closest div in a div is itself
+        assertEquals("div-01", el.closest("article > div").id());
+        assertEquals("article", el.closest(":not(div)").tagName());
+        assertNull(el.closest("p"));
+    }
+
 
     @Test public void elementByTagName() {
         Element a = new Element("P");
-        assertTrue(a.tagName().equals("P"));
+        assertEquals("P", a.tagName());
     }
 
     @Test public void testChildrenElements() {

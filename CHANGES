@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.13.1 [PENDING]
+  * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
+    selector.
+
   * Improvement: memory optimizations, reducing the retained size of a Document by ~ 39%, and allocations by ~ 9%:
       1. Attributes holder in Elements is only created if the element has attributes
       2. Only track the baseUri in an element when it is set via DOM to a new value for a given tree
@@ -13,6 +16,10 @@ jsoup changelog
     instanceof test.
 
   * Improvement: removed old methods and classes that were marked deprecated in previous releases.
+
+  * Improvement: added Element#select(Evaluator) and Element#selectFirst(Evaluator), to allow re-use of a parsed CSS
+    selector if using the same evaluator many times.
+    <https://github.com/jhy/jsoup/issues/1319>
 
   * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
     <https://github.com/jhy/jsoup/issues/1313>
