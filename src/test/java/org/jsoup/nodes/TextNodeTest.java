@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.internal.StringUtil;
 import org.junit.Test;
 
 import java.util.List;
@@ -134,5 +135,26 @@ public class TextNodeTest {
         y.text("xxx");
         assertEquals("zzz", x.text());
         assertEquals("xxx", y.text());
+    }
+
+    @Test
+    public void testHasTextWhenIterating() {
+        // https://github.com/jhy/jsoup/issues/1170
+        Document doc = Jsoup.parse("<div>One <p>Two <p>Three");
+        boolean foundFirst = false;
+        for (Element el : doc.getAllElements()) {
+            for (Node node : el.childNodes()) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    assertFalse(StringUtil.isBlank(textNode.text()));
+                    if (!foundFirst) {
+                        foundFirst = true;
+                        assertEquals("One ", textNode.text());
+                        assertEquals("One ", textNode.getWholeText());
+                    }
+                }
+            }
+        }
+        assertTrue(foundFirst);
     }
 }
