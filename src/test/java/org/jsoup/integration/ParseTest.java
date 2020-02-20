@@ -12,6 +12,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import static org.junit.Assert.*;
 
@@ -207,6 +208,24 @@ public class ParseTest {
         assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
     }
 
+    @Test public void testWikiExpandedFromString() throws IOException {
+        File in = getFile("/htmltests/xwiki-edit.html");
+        String html = getFileAsString(in);
+        Document doc = Jsoup.parse(html);
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;RIGHTHERERIGHTHERERIGHTHERERIGHTHERE";
+        assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
+    }
+
+    @Test public void testWikiFromString() throws IOException {
+        File in = getFile("/htmltests/xwiki-1324.html");
+        String html = getFileAsString(in);
+        Document doc = Jsoup.parse(html);
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
+        assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
+    }
+
     public static File getFile(String resourceName) {
         try {
             URL resource = ParseTest.class.getResource(resourceName);
@@ -218,6 +237,11 @@ public class ParseTest {
 
     public static InputStream inputStreamFrom(String s) {
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String getFileAsString(File file) throws IOException {
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        return new String(bytes);
     }
 
 }
