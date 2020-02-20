@@ -3,6 +3,8 @@ package org.jsoup.integration;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.ParseErrorList;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
@@ -175,6 +177,7 @@ public class ParseTest {
     @Test
     public void testXwiki() throws IOException {
         // https://github.com/jhy/jsoup/issues/1324
+        // this tests that when in CharacterReader we hit a buffer while marked, we preserve the mark when buffered up and can rewind
         File in = getFile("/htmltests/xwiki-1324.html");
         Document doc = Jsoup.parse(in, null, "https://localhost/");
         assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
@@ -183,6 +186,25 @@ public class ParseTest {
         // updated to preserve the mark.
         String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
         assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
+    }
+
+    @Test
+    public void testXwikiExpanded() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1324
+        // this tests that if there is a huge illegal character reference, we can get through a buffer and rewind, and still catch that it's an invalid refence,
+        // and the parse tree is correct.
+        File in = getFile("/htmltests/xwiki-edit.html");
+        Parser parser = Parser.htmlParser();
+        Document doc = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://localhost/", parser.setTrackErrors(100));
+        ParseErrorList errors = parser.getErrors();
+
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        assertEquals(0, errors.size()); // not an invalid reference because did not look legit
+
+        // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
+        // updated to preserve the mark.
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;RIGHTHERERIGHTHERERIGHTHERERIGHTHERE";
+        assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
     }
 
     public static File getFile(String resourceName) {
