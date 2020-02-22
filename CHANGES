@@ -22,6 +22,9 @@ jsoup changelog
     selector if using the same evaluator many times.
     <https://github.com/jhy/jsoup/issues/1319>
 
+  * Improvement: added Elements#forms(), Elements#textNodes(), Elements#dataNodes(), and Elements#comments(), as a
+    convenient way to get access to these node types directly from an element selection.
+
   * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
     <https://github.com/jhy/jsoup/issues/1313>
 
