@@ -257,12 +257,14 @@ abstract class Token {
     }
 
     final static class Comment extends Token {
-        final StringBuilder data = new StringBuilder();
+        private final StringBuilder data = new StringBuilder();
+        private String dataS; // try to get in one shot
         boolean bogus = false;
 
         @Override
         Token reset() {
             reset(data);
+            dataS = null;
             bogus = false;
             return this;
         }
@@ -272,8 +274,33 @@ abstract class Token {
         }
 
         String getData() {
-            return data.toString();
+            return dataS != null ? dataS : data.toString();
         }
+
+        final Comment append(String append) {
+            ensureData();
+            if (data.length() == 0) {
+                dataS = append;
+            } else {
+                data.append(append);
+            }
+            return this;
+        }
+
+        final Comment append(char append) {
+            ensureData();
+            data.append(append);
+            return this;
+        }
+
+        private void ensureData() {
+            // if on second hit, we'll need to move to the builder
+            if (dataS != null) {
+                data.append(dataS);
+                dataS = null;
+            }
+        }
+
 
         @Override
         public String toString() {
