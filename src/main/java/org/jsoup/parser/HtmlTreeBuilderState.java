@@ -250,6 +250,9 @@ enum HtmlTreeBuilderState {
     },
     InBody {
         boolean process(Token t, HtmlTreeBuilder tb) {
+            ArrayList<Element> stack;
+            Element el;
+
             switch (t.type) {
                 case Character: {
                     Token.Character c = t.asCharacter();
@@ -277,485 +280,546 @@ enum HtmlTreeBuilderState {
                 }
                 case StartTag:
                     Token.StartTag startTag = t.asStartTag();
-                    // todo - refactor to a switch statement
                     String name = startTag.normalName();
-                    if (name.equals("a")) {
-                        if (tb.getActiveFormattingElement("a") != null) {
-                            tb.error(this);
-                            tb.processEndTag("a");
 
-                            // still on stack?
-                            Element remainingA = tb.getFromStack("a");
-                            if (remainingA != null) {
-                                tb.removeFromActiveFormattingElements(remainingA);
-                                tb.removeFromStack(remainingA);
+                    switch (name) {
+                        case "a":
+                            if (tb.getActiveFormattingElement("a") != null) {
+                                tb.error(this);
+                                tb.processEndTag("a");
+
+                                // still on stack?
+                                Element remainingA = tb.getFromStack("a");
+                                if (remainingA != null) {
+                                    tb.removeFromActiveFormattingElements(remainingA);
+                                    tb.removeFromStack(remainingA);
+                                }
                             }
-                        }
-                        tb.reconstructFormattingElements();
-                        Element a = tb.insert(startTag);
-                        tb.pushActiveFormattingElements(a);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartEmptyFormatters)) {
-                        tb.reconstructFormattingElements();
-                        tb.insertEmpty(startTag);
-                        tb.framesetOk(false);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartPClosers)) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                    } else if (name.equals("span")) {
-                        // same as final else, but short circuits lots of checks
-                        tb.reconstructFormattingElements();
-                        tb.insert(startTag);
-                    } else if (name.equals("li")) {
-                        tb.framesetOk(false);
-                        ArrayList<Element> stack = tb.getStack();
-                        for (int i = stack.size() - 1; i > 0; i--) {
-                            Element el = stack.get(i);
-                            if (el.normalName().equals("li")) {
-                                tb.processEndTag("li");
-                                break;
-                            }
-                            if (tb.isSpecial(el) && !StringUtil.inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
-                                break;
-                        }
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                    } else if (name.equals("html")) {
-                        tb.error(this);
-                        // merge attributes onto real html
-                        Element html = tb.getStack().get(0);
-                        for (Attribute attribute : startTag.getAttributes()) {
-                            if (!html.hasAttr(attribute.getKey()))
-                                html.attributes().put(attribute);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartToHead)) {
-                        return tb.process(t, InHead);
-                    } else if (name.equals("body")) {
-                        tb.error(this);
-                        ArrayList<Element> stack = tb.getStack();
-                        if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body"))) {
-                            // only in fragment case
-                            return false; // ignore
-                        } else {
+                            tb.reconstructFormattingElements();
+                            Element a = tb.insert(startTag);
+                            tb.pushActiveFormattingElements(a);
+                            break;
+                        case "span":
+                            // same as final else, but short circuits lots of checks
+                            tb.reconstructFormattingElements();
+                            tb.insert(startTag);
+                            break;
+                        case "li":
                             tb.framesetOk(false);
-                            Element body = stack.get(1);
+                            stack = tb.getStack();
+                            for (int i = stack.size() - 1; i > 0; i--) {
+                                el = stack.get(i);
+                                if (el.normalName().equals("li")) {
+                                    tb.processEndTag("li");
+                                    break;
+                                }
+                                if (tb.isSpecial(el) && !StringUtil.inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
+                                    break;
+                            }
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.insert(startTag);
+                            break;
+                        case "html":
+                            tb.error(this);
+                            // merge attributes onto real html
+                            Element html = tb.getStack().get(0);
                             for (Attribute attribute : startTag.getAttributes()) {
-                                if (!body.hasAttr(attribute.getKey()))
-                                    body.attributes().put(attribute);
+                                if (!html.hasAttr(attribute.getKey()))
+                                    html.attributes().put(attribute);
                             }
-                        }
-                    } else if (name.equals("frameset")) {
-                        tb.error(this);
-                        ArrayList<Element> stack = tb.getStack();
-                        if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body"))) {
-                            // only in fragment case
-                            return false; // ignore
-                        } else if (!tb.framesetOk()) {
-                            return false; // ignore frameset
-                        } else {
-                            Element second = stack.get(1);
-                            if (second.parent() != null)
-                                second.remove();
-                            // pop up to html element
-                            while (stack.size() > 1)
-                                stack.remove(stack.size()-1);
+                            break;
+                        case "body":
+                            tb.error(this);
+                            stack = tb.getStack();
+                            if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body"))) {
+                                // only in fragment case
+                                return false; // ignore
+                            } else {
+                                tb.framesetOk(false);
+                                Element body = stack.get(1);
+                                for (Attribute attribute : startTag.getAttributes()) {
+                                    if (!body.hasAttr(attribute.getKey()))
+                                        body.attributes().put(attribute);
+                                }
+                            }
+                            break;
+                        case "frameset":
+                            tb.error(this);
+                            stack = tb.getStack();
+                            if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body"))) {
+                                // only in fragment case
+                                return false; // ignore
+                            } else if (!tb.framesetOk()) {
+                                return false; // ignore frameset
+                            } else {
+                                Element second = stack.get(1);
+                                if (second.parent() != null)
+                                    second.remove();
+                                // pop up to html element
+                                while (stack.size() > 1)
+                                    stack.remove(stack.size() - 1);
+                                tb.insert(startTag);
+                                tb.transition(InFrameset);
+                            }
+                            break;
+                        case "form":
+                            if (tb.getFormElement() != null) {
+                                tb.error(this);
+                                return false;
+                            }
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.insertForm(startTag, true);
+                            break;
+                        case "plaintext":
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
                             tb.insert(startTag);
-                            tb.transition(InFrameset);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.Headings)) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        if (StringUtil.inSorted(tb.currentElement().normalName(), Constants.Headings)) {
-                            tb.error(this);
-                            tb.pop();
-                        }
-                        tb.insert(startTag);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartPreListing)) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                        tb.reader.matchConsume("\n"); // ignore LF if next token
-                        tb.framesetOk(false);
-                    } else if (name.equals("form")) {
-                        if (tb.getFormElement() != null) {
-                            tb.error(this);
-                            return false;
-                        }
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insertForm(startTag, true);
-                    } else if (StringUtil.inSorted(name, Constants.DdDt)) {
-                        tb.framesetOk(false);
-                        ArrayList<Element> stack = tb.getStack();
-                        for (int i = stack.size() - 1; i > 0; i--) {
-                            Element el = stack.get(i);
-                            if (StringUtil.inSorted(el.normalName(), Constants.DdDt)) {
-                                tb.processEndTag(el.normalName());
-                                break;
+                            tb.tokeniser.transition(TokeniserState.PLAINTEXT); // once in, never gets out
+                            break;
+                        case "button":
+                            if (tb.inButtonScope("button")) {
+                                // close and reprocess
+                                tb.error(this);
+                                tb.processEndTag("button");
+                                tb.process(startTag);
+                            } else {
+                                tb.reconstructFormattingElements();
+                                tb.insert(startTag);
+                                tb.framesetOk(false);
                             }
-                            if (tb.isSpecial(el) && !StringUtil.inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
-                                break;
-                        }
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                    } else if (name.equals("plaintext")) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                        tb.tokeniser.transition(TokeniserState.PLAINTEXT); // once in, never gets out
-                    } else if (name.equals("button")) {
-                        if (tb.inButtonScope("button")) {
-                            // close and reprocess
-                            tb.error(this);
-                            tb.processEndTag("button");
-                            tb.process(startTag);
-                        } else {
+                            break;
+                        case "nobr":
                             tb.reconstructFormattingElements();
+                            if (tb.inScope("nobr")) {
+                                tb.error(this);
+                                tb.processEndTag("nobr");
+                                tb.reconstructFormattingElements();
+                            }
+                            el = tb.insert(startTag);
+                            tb.pushActiveFormattingElements(el);
+                            break;
+                        case "table":
+                            if (tb.getDocument().quirksMode() != Document.QuirksMode.quirks && tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
                             tb.insert(startTag);
                             tb.framesetOk(false);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.Formatters)) {
-                        tb.reconstructFormattingElements();
-                        Element el = tb.insert(startTag);
-                        tb.pushActiveFormattingElements(el);
-                    } else if (name.equals("nobr")) {
-                        tb.reconstructFormattingElements();
-                        if (tb.inScope("nobr")) {
-                            tb.error(this);
-                            tb.processEndTag("nobr");
+                            tb.transition(InTable);
+                            break;
+                        case "input":
                             tb.reconstructFormattingElements();
-                        }
-                        Element el = tb.insert(startTag);
-                        tb.pushActiveFormattingElements(el);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartApplets)) {
-                        tb.reconstructFormattingElements();
-                        tb.insert(startTag);
-                        tb.insertMarkerToFormattingElements();
-                        tb.framesetOk(false);
-                    } else if (name.equals("table")) {
-                        if (tb.getDocument().quirksMode() != Document.QuirksMode.quirks && tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insert(startTag);
-                        tb.framesetOk(false);
-                        tb.transition(InTable);
-                    } else if (name.equals("input")) {
-                        tb.reconstructFormattingElements();
-                        Element el = tb.insertEmpty(startTag);
-                        if (!el.attr("type").equalsIgnoreCase("hidden"))
+                            el = tb.insertEmpty(startTag);
+                            if (!el.attr("type").equalsIgnoreCase("hidden"))
+                                tb.framesetOk(false);
+                            break;
+                        case "hr":
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.insertEmpty(startTag);
                             tb.framesetOk(false);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartMedia)) {
-                        tb.insertEmpty(startTag);
-                    } else if (name.equals("hr")) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.insertEmpty(startTag);
-                        tb.framesetOk(false);
-                    } else if (name.equals("image")) {
-                        if (tb.getFromStack("svg") == null)
-                            return tb.process(startTag.name("img")); // change <image> to <img>, unless in svg
-                        else
-                            tb.insert(startTag);
-                    } else if (name.equals("isindex")) {
-                        // how much do we care about the early 90s?
-                        tb.error(this);
-                        if (tb.getFormElement() != null)
-                            return false;
+                            break;
+                        case "image":
+                            if (tb.getFromStack("svg") == null)
+                                return tb.process(startTag.name("img")); // change <image> to <img>, unless in svg
+                            else
+                                tb.insert(startTag);
+                            break;
+                        case "isindex":
+                            // how much do we care about the early 90s?
+                            tb.error(this);
+                            if (tb.getFormElement() != null)
+                                return false;
 
-                        tb.processStartTag("form");
-                        if (startTag.attributes.hasKey("action")) {
-                            Element form = tb.getFormElement();
-                            form.attr("action", startTag.attributes.get("action"));
-                        }
-                        tb.processStartTag("hr");
-                        tb.processStartTag("label");
-                        // hope you like english.
-                        String prompt = startTag.attributes.hasKey("prompt") ?
+                            tb.processStartTag("form");
+                            if (startTag.attributes.hasKey("action")) {
+                                Element form = tb.getFormElement();
+                                form.attr("action", startTag.attributes.get("action"));
+                            }
+                            tb.processStartTag("hr");
+                            tb.processStartTag("label");
+                            // hope you like english.
+                            String prompt = startTag.attributes.hasKey("prompt") ?
                                 startTag.attributes.get("prompt") :
                                 "This is a searchable index. Enter search keywords: ";
 
-                        tb.process(new Token.Character().data(prompt));
+                            tb.process(new Token.Character().data(prompt));
 
-                        // input
-                        Attributes inputAttribs = new Attributes();
-                        for (Attribute attr : startTag.attributes) {
-                            if (!StringUtil.inSorted(attr.getKey(), Constants.InBodyStartInputAttribs))
-                                inputAttribs.put(attr);
-                        }
-                        inputAttribs.put("name", "isindex");
-                        tb.processStartTag("input", inputAttribs);
-                        tb.processEndTag("label");
-                        tb.processStartTag("hr");
-                        tb.processEndTag("form");
-                    } else if (name.equals("textarea")) {
-                        tb.insert(startTag);
-                        if (!startTag.isSelfClosing()) {
-                            tb.tokeniser.transition(TokeniserState.Rcdata);
-                            tb.markInsertionMode();
+                            // input
+                            Attributes inputAttribs = new Attributes();
+                            for (Attribute attr : startTag.attributes) {
+                                if (!StringUtil.inSorted(attr.getKey(), Constants.InBodyStartInputAttribs))
+                                    inputAttribs.put(attr);
+                            }
+                            inputAttribs.put("name", "isindex");
+                            tb.processStartTag("input", inputAttribs);
+                            tb.processEndTag("label");
+                            tb.processStartTag("hr");
+                            tb.processEndTag("form");
+                            break;
+                        case "textarea":
+                            tb.insert(startTag);
+                            if (!startTag.isSelfClosing()) {
+                                tb.tokeniser.transition(TokeniserState.Rcdata);
+                                tb.markInsertionMode();
+                                tb.framesetOk(false);
+                                tb.transition(Text);
+                            }
+                            break;
+                        case "xmp":
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.reconstructFormattingElements();
                             tb.framesetOk(false);
-                            tb.transition(Text);
-                        }
-                    } else if (name.equals("xmp")) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
-                        tb.reconstructFormattingElements();
-                        tb.framesetOk(false);
-                        handleRawtext(startTag, tb);
-                    } else if (name.equals("iframe")) {
-                        tb.framesetOk(false);
-                        handleRawtext(startTag, tb);
-                    } else if (name.equals("noembed")) {
-                        // also handle noscript if script enabled
-                        handleRawtext(startTag, tb);
-                    } else if (name.equals("select")) {
-                        tb.reconstructFormattingElements();
-                        tb.insert(startTag);
-                        tb.framesetOk(false);
+                            handleRawtext(startTag, tb);
+                            break;
+                        case "iframe":
+                            tb.framesetOk(false);
+                            handleRawtext(startTag, tb);
+                            break;
+                        case "noembed":
+                            // also handle noscript if script enabled
+                            handleRawtext(startTag, tb);
+                            break;
+                        case "select":
+                            tb.reconstructFormattingElements();
+                            tb.insert(startTag);
+                            tb.framesetOk(false);
 
-                        HtmlTreeBuilderState state = tb.state();
-                        if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
-                            tb.transition(InSelectInTable);
-                        else
-                            tb.transition(InSelect);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartOptions)) {
-                        if (tb.currentElement().normalName().equals("option"))
-                            tb.processEndTag("option");
-                        tb.reconstructFormattingElements();
-                        tb.insert(startTag);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartRuby)) {
-                        if (tb.inScope("ruby")) {
-                            tb.generateImpliedEndTags();
-                            if (!tb.currentElement().normalName().equals("ruby")) {
+                            HtmlTreeBuilderState state = tb.state();
+                            if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
+                                tb.transition(InSelectInTable);
+                            else
+                                tb.transition(InSelect);
+                            break;
+                        case "math":
+                            tb.reconstructFormattingElements();
+                            // todo: handle A start tag whose tag name is "math" (i.e. foreign, mathml)
+                            tb.insert(startTag);
+                            break;
+                        case "svg":
+                            tb.reconstructFormattingElements();
+                            // todo: handle A start tag whose tag name is "svg" (xlink, svg)
+                            tb.insert(startTag);
+                            break;
+                        // static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
+                        case "h1":
+                        case "h2":
+                        case "h3":
+                        case "h4":
+                        case "h5":
+                        case "h6":
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            if (StringUtil.inSorted(tb.currentElement().normalName(), Constants.Headings)) {
                                 tb.error(this);
-                                tb.popStackToBefore("ruby"); // i.e. close up to but not include name
+                                tb.pop();
                             }
                             tb.insert(startTag);
-                        }
-                    } else if (name.equals("math")) {
-                        tb.reconstructFormattingElements();
-                        // todo: handle A start tag whose tag name is "math" (i.e. foreign, mathml)
-                        tb.insert(startTag);
-                    } else if (name.equals("svg")) {
-                        tb.reconstructFormattingElements();
-                        // todo: handle A start tag whose tag name is "svg" (xlink, svg)
-                        tb.insert(startTag);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartDrop)) {
-                        tb.error(this);
-                        return false;
-                    } else {
-                        tb.reconstructFormattingElements();
-                        tb.insert(startTag);
+                            break;
+                        // static final String[] InBodyStartPreListing = new String[]{"listing", "pre"};
+                        case "pre":
+                        case "listing":
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.insert(startTag);
+                            tb.reader.matchConsume("\n"); // ignore LF if next token
+                            tb.framesetOk(false);
+                            break;
+                        // static final String[] DdDt = new String[]{"dd", "dt"};
+                        case "dd":
+                        case "dt":
+                            tb.framesetOk(false);
+                            stack = tb.getStack();
+                            for (int i = stack.size() - 1; i > 0; i--) {
+                                el = stack.get(i);
+                                if (StringUtil.inSorted(el.normalName(), Constants.DdDt)) {
+                                    tb.processEndTag(el.normalName());
+                                    break;
+                                }
+                                if (tb.isSpecial(el) && !StringUtil.inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
+                                    break;
+                            }
+                            if (tb.inButtonScope("p")) {
+                                tb.processEndTag("p");
+                            }
+                            tb.insert(startTag);
+                            break;
+                        // static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
+                        case "optgroup":
+                        case "option":
+                            if (tb.currentElement().normalName().equals("option"))
+                                tb.processEndTag("option");
+                            tb.reconstructFormattingElements();
+                            tb.insert(startTag);
+                            break;
+                        // static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
+                        case "rp":
+                        case "rt":
+                            if (tb.inScope("ruby")) {
+                                tb.generateImpliedEndTags();
+                                if (!tb.currentElement().normalName().equals("ruby")) {
+                                    tb.error(this);
+                                    tb.popStackToBefore("ruby"); // i.e. close up to but not include name
+                                }
+                                tb.insert(startTag);
+                            }
+                            // todo - is this right? drops rp, rt if ruby not in scope?
+                            break;
+                        default:
+                            // todo - bring scan groups in if desired
+                            if (StringUtil.inSorted(name, Constants.InBodyStartEmptyFormatters)) {
+                                tb.reconstructFormattingElements();
+                                tb.insertEmpty(startTag);
+                                tb.framesetOk(false);
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartPClosers)) {
+                                if (tb.inButtonScope("p")) {
+                                    tb.processEndTag("p");
+                                }
+                                tb.insert(startTag);
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartToHead)) {
+                                return tb.process(t, InHead);
+                            } else if (StringUtil.inSorted(name, Constants.Formatters)) {
+                                tb.reconstructFormattingElements();
+                                el = tb.insert(startTag);
+                                tb.pushActiveFormattingElements(el);
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartApplets)) {
+                                tb.reconstructFormattingElements();
+                                tb.insert(startTag);
+                                tb.insertMarkerToFormattingElements();
+                                tb.framesetOk(false);
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartMedia)) {
+                                tb.insertEmpty(startTag);
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartDrop)) {
+                                tb.error(this);
+                                return false;
+                            } else {
+                                tb.reconstructFormattingElements();
+                                tb.insert(startTag);
+                            }
                     }
                     break;
 
                 case EndTag:
                     Token.EndTag endTag = t.asEndTag();
                     name = endTag.normalName();
-                    if (StringUtil.inSorted(name, Constants.InBodyEndAdoptionFormatters)) {
-                        // Adoption Agency Algorithm.
-                        for (int i = 0; i < 8; i++) {
-                            Element formatEl = tb.getActiveFormattingElement(name);
-                            if (formatEl == null)
-                                return anyOtherEndTag(t, tb);
-                            else if (!tb.onStack(formatEl)) {
-                                tb.error(this);
-                                tb.removeFromActiveFormattingElements(formatEl);
-                                return true;
-                            } else if (!tb.inScope(formatEl.normalName())) {
+                    switch (name) {
+                        case "sarcasm": // *sigh*
+                        case "span":
+                            // same as final fall through, but saves short circuit
+                            return anyOtherEndTag(t, tb);
+                        case "li":
+                            if (!tb.inListItemScope(name)) {
                                 tb.error(this);
                                 return false;
-                            } else if (tb.currentElement() != formatEl)
-                                tb.error(this);
-
-                            Element furthestBlock = null;
-                            Element commonAncestor = null;
-                            boolean seenFormattingElement = false;
-                            ArrayList<Element> stack = tb.getStack();
-                            // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
-                            // run-aways
-                            final int stackSize = stack.size();
-                            for (int si = 0; si < stackSize && si < 64; si++) {
-                                Element el = stack.get(si);
-                                if (el == formatEl) {
-                                    commonAncestor = stack.get(si - 1);
-                                    seenFormattingElement = true;
-                                } else if (seenFormattingElement && tb.isSpecial(el)) {
-                                    furthestBlock = el;
-                                    break;
-                                }
-                            }
-                            if (furthestBlock == null) {
-                                tb.popStackToClose(formatEl.normalName());
-                                tb.removeFromActiveFormattingElements(formatEl);
-                                return true;
-                            }
-
-                            // todo: Let a bookmark note the position of the formatting element in the list of active formatting elements relative to the elements on either side of it in the list.
-                            // does that mean: int pos of format el in list?
-                            Element node = furthestBlock;
-                            Element lastNode = furthestBlock;
-                            for (int j = 0; j < 3; j++) {
-                                if (tb.onStack(node))
-                                    node = tb.aboveOnStack(node);
-                                if (!tb.isInActiveFormattingElements(node)) { // note no bookmark check
-                                    tb.removeFromStack(node);
-                                    continue;
-                                } else if (node == formatEl)
-                                    break;
-
-                                Element replacement = new Element(Tag.valueOf(node.nodeName(), ParseSettings.preserveCase), tb.getBaseUri());
-                                // case will follow the original node (so honours ParseSettings)
-                                tb.replaceActiveFormattingElement(node, replacement);
-                                tb.replaceOnStack(node, replacement);
-                                node = replacement;
-
-                                if (lastNode == furthestBlock) {
-                                    // todo: move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
-                                    // not getting how this bookmark both straddles the element above, but is inbetween here...
-                                }
-                                if (lastNode.parent() != null)
-                                    lastNode.remove();
-                                node.appendChild(lastNode);
-
-                                lastNode = node;
-                            }
-
-                            if (StringUtil.inSorted(commonAncestor.normalName(), Constants.InBodyEndTableFosters)) {
-                                if (lastNode.parent() != null)
-                                    lastNode.remove();
-                                tb.insertInFosterParent(lastNode);
                             } else {
-                                if (lastNode.parent() != null)
-                                    lastNode.remove();
-                                commonAncestor.appendChild(lastNode);
+                                tb.generateImpliedEndTags(name);
+                                if (!tb.currentElement().normalName().equals(name))
+                                    tb.error(this);
+                                tb.popStackToClose(name);
                             }
-
-                            Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
-                            adopter.attributes().addAll(formatEl.attributes());
-                            Node[] childNodes = furthestBlock.childNodes().toArray(new Node[0]);
-                            for (Node childNode : childNodes) {
-                                adopter.appendChild(childNode); // append will reparent. thus the clone to avoid concurrent mod.
+                            break;
+                        case "body":
+                            if (!tb.inScope("body")) {
+                                tb.error(this);
+                                return false;
+                            } else {
+                                // todo: error if stack contains something not dd, dt, li, optgroup, option, p, rp, rt, tbody, td, tfoot, th, thead, tr, body, html
+                                tb.transition(AfterBody);
                             }
-                            furthestBlock.appendChild(adopter);
-                            tb.removeFromActiveFormattingElements(formatEl);
-                            // todo: insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
-                            tb.removeFromStack(formatEl);
-                            tb.insertOnStackAfter(furthestBlock, adopter);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.InBodyEndClosers)) {
-                        if (!tb.inScope(name)) {
-                            // nothing to close
-                            tb.error(this);
-                            return false;
-                        } else {
-                            tb.generateImpliedEndTags();
-                            if (!tb.currentElement().normalName().equals(name))
+                            break;
+                        case "html":
+                            boolean notIgnored = tb.processEndTag("body");
+                            if (notIgnored)
+                                return tb.process(endTag);
+                            break;
+                        case "form":
+                            Element currentForm = tb.getFormElement();
+                            tb.setFormElement(null);
+                            if (currentForm == null || !tb.inScope(name)) {
                                 tb.error(this);
-                            tb.popStackToClose(name);
-                        }
-                    } else if (name.equals("span")) {
-                        // same as final fall through, but saves short circuit
-                        return anyOtherEndTag(t, tb);
-                    } else if (name.equals("li")) {
-                        if (!tb.inListItemScope(name)) {
-                            tb.error(this);
-                            return false;
-                        } else {
-                            tb.generateImpliedEndTags(name);
-                            if (!tb.currentElement().normalName().equals(name))
+                                return false;
+                            } else {
+                                tb.generateImpliedEndTags();
+                                if (!tb.currentElement().normalName().equals(name))
+                                    tb.error(this);
+                                // remove currentForm from stack. will shift anything under up.
+                                tb.removeFromStack(currentForm);
+                            }
+                            break;
+                        case "p":
+                            if (!tb.inButtonScope(name)) {
                                 tb.error(this);
-                            tb.popStackToClose(name);
-                        }
-                    } else if (name.equals("body")) {
-                        if (!tb.inScope("body")) {
-                            tb.error(this);
-                            return false;
-                        } else {
-                            // todo: error if stack contains something not dd, dt, li, optgroup, option, p, rp, rt, tbody, td, tfoot, th, thead, tr, body, html
-                            tb.transition(AfterBody);
-                        }
-                    } else if (name.equals("html")) {
-                        boolean notIgnored = tb.processEndTag("body");
-                        if (notIgnored)
-                            return tb.process(endTag);
-                    } else if (name.equals("form")) {
-                        Element currentForm = tb.getFormElement();
-                        tb.setFormElement(null);
-                        if (currentForm == null || !tb.inScope(name)) {
-                            tb.error(this);
-                            return false;
-                        } else {
-                            tb.generateImpliedEndTags();
-                            if (!tb.currentElement().normalName().equals(name))
-                                tb.error(this);
-                            // remove currentForm from stack. will shift anything under up.
-                            tb.removeFromStack(currentForm);
-                        }
-                    } else if (name.equals("p")) {
-                        if (!tb.inButtonScope(name)) {
-                            tb.error(this);
-                            tb.processStartTag(name); // if no p to close, creates an empty <p></p>
-                            return tb.process(endTag);
-                        } else {
-                            tb.generateImpliedEndTags(name);
-                            if (!tb.currentElement().normalName().equals(name))
-                                tb.error(this);
-                            tb.popStackToClose(name);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.DdDt)) {
-                        if (!tb.inScope(name)) {
-                            tb.error(this);
-                            return false;
-                        } else {
-                            tb.generateImpliedEndTags(name);
-                            if (!tb.currentElement().normalName().equals(name))
-                                tb.error(this);
-                            tb.popStackToClose(name);
-                        }
-                    } else if (StringUtil.inSorted(name, Constants.Headings)) {
-                        if (!tb.inScope(Constants.Headings)) {
-                            tb.error(this);
-                            return false;
-                        } else {
-                            tb.generateImpliedEndTags(name);
-                            if (!tb.currentElement().normalName().equals(name))
-                                tb.error(this);
-                            tb.popStackToClose(Constants.Headings);
-                        }
-                    } else if (name.equals("sarcasm")) {
-                        // *sigh*
-                        return anyOtherEndTag(t, tb);
-                    } else if (StringUtil.inSorted(name, Constants.InBodyStartApplets)) {
-                        if (!tb.inScope("name")) {
+                                tb.processStartTag(name); // if no p to close, creates an empty <p></p>
+                                return tb.process(endTag);
+                            } else {
+                                tb.generateImpliedEndTags(name);
+                                if (!tb.currentElement().normalName().equals(name))
+                                    tb.error(this);
+                                tb.popStackToClose(name);
+                            }
+                            break;
+                        case "dd":
+                        case "dt":
                             if (!tb.inScope(name)) {
                                 tb.error(this);
                                 return false;
+                            } else {
+                                tb.generateImpliedEndTags(name);
+                                if (!tb.currentElement().normalName().equals(name))
+                                    tb.error(this);
+                                tb.popStackToClose(name);
                             }
-                            tb.generateImpliedEndTags();
-                            if (!tb.currentElement().normalName().equals(name))
+                            break;
+                        case "h1":
+                        case "h2":
+                        case "h3":
+                        case "h4":
+                        case "h5":
+                        case "h6":
+                            if (!tb.inScope(Constants.Headings)) {
                                 tb.error(this);
-                            tb.popStackToClose(name);
-                            tb.clearFormattingElementsToLastMarker();
-                        }
-                    } else if (name.equals("br")) {
-                        tb.error(this);
-                        tb.processStartTag("br");
-                        return false;
-                    } else {
-                        return anyOtherEndTag(t, tb);
-                    }
+                                return false;
+                            } else {
+                                tb.generateImpliedEndTags(name);
+                                if (!tb.currentElement().normalName().equals(name))
+                                    tb.error(this);
+                                tb.popStackToClose(Constants.Headings);
+                            }
+                            break;
+                        case "br":
+                            tb.error(this);
+                            tb.processStartTag("br");
+                            return false;
+                        default:
+                            // todo - move rest to switch if desired
+                            if (StringUtil.inSorted(name, Constants.InBodyEndAdoptionFormatters)) {
+                                // Adoption Agency Algorithm.
+                                for (int i = 0; i < 8; i++) {
+                                    Element formatEl = tb.getActiveFormattingElement(name);
+                                    if (formatEl == null)
+                                        return anyOtherEndTag(t, tb);
+                                    else if (!tb.onStack(formatEl)) {
+                                        tb.error(this);
+                                        tb.removeFromActiveFormattingElements(formatEl);
+                                        return true;
+                                    } else if (!tb.inScope(formatEl.normalName())) {
+                                        tb.error(this);
+                                        return false;
+                                    } else if (tb.currentElement() != formatEl)
+                                        tb.error(this);
 
+                                    Element furthestBlock = null;
+                                    Element commonAncestor = null;
+                                    boolean seenFormattingElement = false;
+                                    stack = tb.getStack();
+                                    // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
+                                    // run-aways
+                                    final int stackSize = stack.size();
+                                    for (int si = 0; si < stackSize && si < 64; si++) {
+                                        el = stack.get(si);
+                                        if (el == formatEl) {
+                                            commonAncestor = stack.get(si - 1);
+                                            seenFormattingElement = true;
+                                        } else if (seenFormattingElement && tb.isSpecial(el)) {
+                                            furthestBlock = el;
+                                            break;
+                                        }
+                                    }
+                                    if (furthestBlock == null) {
+                                        tb.popStackToClose(formatEl.normalName());
+                                        tb.removeFromActiveFormattingElements(formatEl);
+                                        return true;
+                                    }
+
+                                    // todo: Let a bookmark note the position of the formatting element in the list of active formatting elements relative to the elements on either side of it in the list.
+                                    // does that mean: int pos of format el in list?
+                                    Element node = furthestBlock;
+                                    Element lastNode = furthestBlock;
+                                    for (int j = 0; j < 3; j++) {
+                                        if (tb.onStack(node))
+                                            node = tb.aboveOnStack(node);
+                                        if (!tb.isInActiveFormattingElements(node)) { // note no bookmark check
+                                            tb.removeFromStack(node);
+                                            continue;
+                                        } else if (node == formatEl)
+                                            break;
+
+                                        Element replacement = new Element(Tag.valueOf(node.nodeName(), ParseSettings.preserveCase), tb.getBaseUri());
+                                        // case will follow the original node (so honours ParseSettings)
+                                        tb.replaceActiveFormattingElement(node, replacement);
+                                        tb.replaceOnStack(node, replacement);
+                                        node = replacement;
+
+                                        //noinspection StatementWithEmptyBody
+                                        if (lastNode == furthestBlock) {
+                                            // todo: move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
+                                            // not getting how this bookmark both straddles the element above, but is inbetween here...
+                                        }
+                                        if (lastNode.parent() != null)
+                                            lastNode.remove();
+                                        node.appendChild(lastNode);
+
+                                        lastNode = node;
+                                    }
+
+                                    if (StringUtil.inSorted(commonAncestor.normalName(), Constants.InBodyEndTableFosters)) {
+                                        if (lastNode.parent() != null)
+                                            lastNode.remove();
+                                        tb.insertInFosterParent(lastNode);
+                                    } else {
+                                        if (lastNode.parent() != null)
+                                            lastNode.remove();
+                                        commonAncestor.appendChild(lastNode);
+                                    }
+
+                                    Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
+                                    adopter.attributes().addAll(formatEl.attributes());
+                                    Node[] childNodes = furthestBlock.childNodes().toArray(new Node[0]);
+                                    for (Node childNode : childNodes) {
+                                        adopter.appendChild(childNode); // append will reparent. thus the clone to avoid concurrent mod.
+                                    }
+                                    furthestBlock.appendChild(adopter);
+                                    tb.removeFromActiveFormattingElements(formatEl);
+                                    // todo: insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
+                                    tb.removeFromStack(formatEl);
+                                    tb.insertOnStackAfter(furthestBlock, adopter);
+                                }
+                            } else if (StringUtil.inSorted(name, Constants.InBodyEndClosers)) {
+                                if (!tb.inScope(name)) {
+                                    // nothing to close
+                                    tb.error(this);
+                                    return false;
+                                } else {
+                                    tb.generateImpliedEndTags();
+                                    if (!tb.currentElement().normalName().equals(name))
+                                        tb.error(this);
+                                    tb.popStackToClose(name);
+                                }
+                            } else if (StringUtil.inSorted(name, Constants.InBodyStartApplets)) {
+                                if (!tb.inScope("name")) {
+                                    if (!tb.inScope(name)) {
+                                        tb.error(this);
+                                        return false;
+                                    }
+                                    tb.generateImpliedEndTags();
+                                    if (!tb.currentElement().normalName().equals(name))
+                                        tb.error(this);
+                                    tb.popStackToClose(name);
+                                    tb.clearFormattingElementsToLastMarker();
+                                }
+                            } else {
+                                return anyOtherEndTag(t, tb);
+                            }
+                    }
                     break;
                 case EOF:
                     // todo: error if stack contains something not dd, dt, li, p, tbody, td, tfoot, th, thead, tr, body, html
@@ -907,37 +971,34 @@ enum HtmlTreeBuilderState {
     },
     InTableText {
         boolean process(Token t, HtmlTreeBuilder tb) {
-            switch (t.type) {
-                case Character:
-                    Token.Character c = t.asCharacter();
-                    if (c.getData().equals(nullString)) {
-                        tb.error(this);
-                        return false;
-                    } else {
-                        tb.getPendingTableCharacters().add(c.getData());
+            if (t.type == Token.TokenType.Character) {
+                Token.Character c = t.asCharacter();
+                if (c.getData().equals(nullString)) {
+                    tb.error(this);
+                    return false;
+                } else {
+                    tb.getPendingTableCharacters().add(c.getData());
+                }
+            } else {// todo - don't really like the way these table character data lists are built
+                if (tb.getPendingTableCharacters().size() > 0) {
+                    for (String character : tb.getPendingTableCharacters()) {
+                        if (!isWhitespace(character)) {
+                            // InTable anything else section:
+                            tb.error(this);
+                            if (StringUtil.in(tb.currentElement().normalName(), "table", "tbody", "tfoot", "thead", "tr")) {
+                                tb.setFosterInserts(true);
+                                tb.process(new Token.Character().data(character), InBody);
+                                tb.setFosterInserts(false);
+                            } else {
+                                tb.process(new Token.Character().data(character), InBody);
+                            }
+                        } else
+                            tb.insert(new Token.Character().data(character));
                     }
-                    break;
-                default:
-                    // todo - don't really like the way these table character data lists are built
-                    if (tb.getPendingTableCharacters().size() > 0) {
-                        for (String character : tb.getPendingTableCharacters()) {
-                            if (!isWhitespace(character)) {
-                                // InTable anything else section:
-                                tb.error(this);
-                                if (StringUtil.in(tb.currentElement().normalName(), "table", "tbody", "tfoot", "thead", "tr")) {
-                                    tb.setFosterInserts(true);
-                                    tb.process(new Token.Character().data(character), InBody);
-                                    tb.setFosterInserts(false);
-                                } else {
-                                    tb.process(new Token.Character().data(character), InBody);
-                                }
-                            } else
-                                tb.insert(new Token.Character().data(character));
-                        }
-                        tb.newPendingTableCharacters();
-                    }
-                    tb.transition(tb.originalState());
-                    return tb.process(t);
+                    tb.newPendingTableCharacters();
+                }
+                tb.transition(tb.originalState());
+                return tb.process(t);
             }
             return true;
         }
@@ -1466,7 +1527,7 @@ enum HtmlTreeBuilderState {
         }
     };
 
-    private static String nullString = String.valueOf('\u0000');
+    private static final String nullString = String.valueOf('\u0000');
 
     abstract boolean process(Token t, HtmlTreeBuilder tb);
 
