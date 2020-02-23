@@ -53,13 +53,8 @@ final class Tokeniser {
     }
 
     Token read() {
-        final CharacterReader r = this.reader;
-        final int pos = r.pos(); // count how many reads we do in a row without making progress, and bail if stuck in a loop
-        int consecutiveReads = 0;
         while (!isEmitPending) {
-            state.read(this, r);
-            if (++consecutiveReads > 10 && r.pos() <= pos)
-                Validate.wtf("BUG: Not making progress from state: " + this.state.name() + " with current char=" + r.current());
+            state.read(this, reader);
         }
 
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
@@ -80,7 +75,7 @@ final class Tokeniser {
     }
 
     void emit(Token token) {
-        Validate.isFalse(isEmitPending, "There is an unread token pending!");
+        Validate.isFalse(isEmitPending);
 
         emitPending = token;
         isEmitPending = true;
