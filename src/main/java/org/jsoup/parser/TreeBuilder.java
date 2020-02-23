@@ -58,12 +58,15 @@ abstract class TreeBuilder {
     abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
 
     protected void runParser() {
+        final Tokeniser tokeniser = this.tokeniser;
+        final Token.TokenType eof = Token.TokenType.EOF;
+
         while (true) {
             Token token = tokeniser.read();
             process(token);
             token.reset();
 
-            if (token.type == Token.TokenType.EOF)
+            if (token.type == eof)
                 break;
         }
     }
@@ -71,6 +74,7 @@ abstract class TreeBuilder {
     protected abstract boolean process(Token token);
 
     protected boolean processStartTag(String name) {
+        final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
             return process(new Token.StartTag().name(name));
         }
@@ -78,6 +82,7 @@ abstract class TreeBuilder {
     }
 
     public boolean processStartTag(String name, Attributes attrs) {
+        final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
             return process(new Token.StartTag().nameAttr(name, attrs));
         }

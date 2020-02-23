@@ -53,21 +53,20 @@ final class Tokeniser {
     }
 
     Token read() {
-        int pos = reader.pos(); // count how many reads we do in a row without making progress, and bail if stuck in a loop
+        final CharacterReader r = this.reader;
+        final int pos = r.pos(); // count how many reads we do in a row without making progress, and bail if stuck in a loop
         int consecutiveReads = 0;
         while (!isEmitPending) {
-            state.read(this, reader);
-            if (reader.pos() <= pos) {
-                consecutiveReads++;
-            }
-            Validate.isTrue(consecutiveReads < 10,
-                "BUG: Not making progress from state: " + this.state.name() + " with current char=" + reader.current());
+            state.read(this, r);
+            if (++consecutiveReads > 10 && r.pos() <= pos)
+                Validate.wtf("BUG: Not making progress from state: " + this.state.name() + " with current char=" + r.current());
         }
 
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
-        if (charsBuilder.length() > 0) {
-            String str = charsBuilder.toString();
-            charsBuilder.delete(0, charsBuilder.length());
+        final StringBuilder cb = this.charsBuilder;
+        if (cb.length() != 0) {
+            String str = cb.toString();
+            cb.delete(0, cb.length());
             charsString = null;
             return charPending.data(str);
         } else if (charsString != null) {
