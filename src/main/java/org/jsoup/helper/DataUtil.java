@@ -12,6 +12,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
+import java.io.CharArrayReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.util.Locale;
@@ -112,9 +114,12 @@ public final class DataUtil {
             charsetName = bomCharset.charset;
 
         if (charsetName == null) { // determine from meta. safe first parse as UTF-8
-            String docData = Charset.forName(defaultCharset).decode(firstBytes).toString();
             try {
-                doc = parser.parseInput(docData, baseUri);
+                CharBuffer defaultDecoded = Charset.forName(defaultCharset).decode(firstBytes);
+                if (defaultDecoded.hasArray())
+                    doc = parser.parseInput(new CharArrayReader(defaultDecoded.array()), baseUri);
+                else
+                    doc = parser.parseInput(defaultDecoded.toString(), baseUri);
             } catch (UncheckedIOException e) {
                 throw e.ioException();
             }
