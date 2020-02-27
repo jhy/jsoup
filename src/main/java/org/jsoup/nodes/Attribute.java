@@ -26,7 +26,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     /**
      * Create a new attribute from unencoded (raw) key and value.
      * @param key attribute key; case is preserved.
-     * @param value attribute value
+     * @param value attribute value (may be null)
      * @see #createFromEncoded
      */
     public Attribute(String key, String value) {
@@ -73,11 +73,19 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     Get the attribute value.
+     Get the attribute value. Will return an empty string if the value is not set.
      @return the attribute value
      */
     public String getValue() {
         return Attributes.checkNotNull(val);
+    }
+
+    /**
+     * Check if this Attribute has a value. Set boolean attributes have no value.
+     * @return if this is a boolean attribute / attribute without a value
+     */
+    public boolean hasDeclaredValue() {
+        return val != null;
     }
 
     /**
@@ -166,13 +174,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return (
             out.syntax() == Document.OutputSettings.Syntax.html &&
                 (val == null || ("".equals(val) || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
-    }
-
-    /**
-     * @deprecated
-     */
-    protected boolean isBooleanAttribute() {
-        return Arrays.binarySearch(booleanAttributes, key) >= 0 || val == null;
     }
 
     /**

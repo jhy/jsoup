@@ -84,7 +84,7 @@ public class ConnectIT {
             long end = System.currentTimeMillis();
             long took = end - start;
             assertTrue(("Time taken was " + took), took > timeout);
-            assertTrue(("Time taken was " + took), took < timeout * 1.2);
+            assertTrue(("Time taken was " + took), took < timeout * 1.8);
             threw = true;
         }
 

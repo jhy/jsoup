@@ -92,7 +92,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
             // initialise the tokeniser state:
-            String contextTag = context.tagName();
+            String contextTag = context.normalName();
             if (StringUtil.in(contextTag, "title", "textarea"))
                 tokeniser.transition(TokeniserState.Rcdata);
             else if (StringUtil.in(contextTag, "iframe", "noembed", "noframes", "style", "xmp"))
@@ -196,7 +196,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     Element insert(final Token.StartTag startTag) {
         // cleanup duplicate attributes:
-        if (!startTag.attributes.isEmpty()) {
+        if (startTag.attributes != null && !startTag.attributes.isEmpty()) {
             int dupes = startTag.attributes.deduplicate(settings);
             if (dupes > 0) {
                 error("Duplicate attribute");
@@ -213,13 +213,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
             return el;
         }
 
-        Element el = new Element(Tag.valueOf(startTag.name(), settings), baseUri, settings.normalizeAttributes(startTag.attributes));
+        Element el = new Element(Tag.valueOf(startTag.name(), settings), null, settings.normalizeAttributes(startTag.attributes));
         insert(el);
         return el;
     }
 
     Element insertStartTag(String startTagName) {
-        Element el = new Element(Tag.valueOf(startTagName, settings), baseUri);
+        Element el = new Element(Tag.valueOf(startTagName, settings), null);
         insert(el);
         return el;
     }
@@ -231,7 +231,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     Element insertEmpty(Token.StartTag startTag) {
         Tag tag = Tag.valueOf(startTag.name(), settings);
-        Element el = new Element(tag, baseUri, startTag.attributes);
+        Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el);
         if (startTag.isSelfClosing()) {
             if (tag.isKnownTag()) {
@@ -246,7 +246,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack) {
         Tag tag = Tag.valueOf(startTag.name(), settings);
-        FormElement el = new FormElement(tag, baseUri, startTag.attributes);
+        FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         setFormElement(el);
         insertNode(el);
         if (onStack)
@@ -262,7 +262,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insert(Token.Character characterToken) {
         final Node node;
         final Element el = currentElement();
-        final String tagName = el.tagName();
+        final String tagName = el.normalName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())

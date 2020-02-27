@@ -5,7 +5,6 @@ import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.BooleanAttribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -52,6 +51,8 @@ public class AttributeParseTest {
 
     @Test public void canStartWithEq() {
         String html = "<a =empty />";
+        // TODO this is the weirdest thing in the spec - why not consider this an attribute with an empty name, not where name is '='?
+        // am I reading it wrong? https://html.spec.whatwg.org/multipage/parsing.html#before-attribute-name-state
         Element el = Jsoup.parse(html).getElementsByTag("a").get(0);
         Attributes attr = el.attributes();
         assertEquals(1, attr.size());
@@ -83,12 +84,7 @@ public class AttributeParseTest {
         List<Attribute> attributes = el.attributes().asList();
         assertEquals("There should be 3 attribute present", 3, attributes.size());
 
-        // Assuming the list order always follows the parsed html
-		assertFalse("'normal' attribute should not be boolean", attributes.get(0) instanceof BooleanAttribute);
-		assertTrue("'boolean' attribute should be boolean", attributes.get(1) instanceof BooleanAttribute);
-		assertFalse("'empty' attribute should not be boolean", attributes.get(2) instanceof BooleanAttribute);
-
-        assertEquals(html, el.outerHtml());
+        assertEquals(html, el.outerHtml()); // vets boolean syntax
     }
 
     @Test public void dropsSlashFromAttributeName() {

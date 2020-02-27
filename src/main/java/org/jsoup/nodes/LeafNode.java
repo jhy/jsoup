@@ -92,7 +92,23 @@ abstract class LeafNode extends Node {
     }
 
     @Override
+    public Node empty() {
+        return this;
+    }
+
+    @Override
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
+    }
+
+    @Override
+    protected LeafNode doClone(Node parent) {
+        LeafNode clone = (LeafNode) super.doClone(parent);
+
+        // Object value could be plain string or attributes - need to clone
+        if (hasAttributes())
+            clone.value = ((Attributes) value).clone();
+
+        return clone;
     }
 }

@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.internal.StringUtil;
 import org.junit.Test;
 
 import java.util.List;
@@ -81,5 +82,79 @@ public class TextNodeTest {
         TextNode tn = (TextNode) div.childNode(0);
         List<Node> nodes = tn.childNodes();
         assertEquals(0, nodes.size());
+    }
+
+    @Test public void testSpaceNormalise() {
+        // https://github.com/jhy/jsoup/issues/1309
+        String whole = "Two  spaces";
+        String norm = "Two spaces";
+        TextNode tn = new TextNode(whole); // there are 2 spaces between the words
+        assertEquals(whole, tn.getWholeText());
+        assertEquals(norm, tn.text());
+        assertEquals(norm, tn.outerHtml());
+        assertEquals(norm, tn.toString());
+
+        Element el = new Element("p");
+        el.appendChild(tn); // this used to change the context
+        //tn.setParentNode(el); // set any parent
+        assertEquals(whole, tn.getWholeText());
+        assertEquals(norm, tn.text());
+        assertEquals(norm, tn.outerHtml());
+        assertEquals(norm, tn.toString());
+
+        assertEquals("<p>" + norm + "</p>", el.outerHtml());
+        assertEquals(norm, el.html());
+        assertEquals(whole, el.wholeText());
+    }
+
+    @Test
+    public void testClone() {
+        // https://github.com/jhy/jsoup/issues/1176
+        TextNode x = new TextNode("zzz");
+        TextNode y = x.clone();
+
+        assertNotSame(x, y);
+        assertEquals(x.outerHtml(), y.outerHtml());
+
+        y.text("yyy");
+        assertNotEquals(x.outerHtml(), y.outerHtml());
+        assertEquals("zzz", x.text());
+
+        x.attributes(); // already cloned so no impact
+        y.text("xxx");
+        assertEquals("zzz", x.text());
+        assertEquals("xxx", y.text());
+    }
+
+    @Test
+    public void testCloneAfterAttributesHit() {
+        // https://github.com/jhy/jsoup/issues/1176
+        TextNode x = new TextNode("zzz");
+        x.attributes(); // moves content from leafnode value to attributes, which were missed in clone
+        TextNode y = x.clone();
+        y.text("xxx");
+        assertEquals("zzz", x.text());
+        assertEquals("xxx", y.text());
+    }
+
+    @Test
+    public void testHasTextWhenIterating() {
+        // https://github.com/jhy/jsoup/issues/1170
+        Document doc = Jsoup.parse("<div>One <p>Two <p>Three");
+        boolean foundFirst = false;
+        for (Element el : doc.getAllElements()) {
+            for (Node node : el.childNodes()) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    assertFalse(StringUtil.isBlank(textNode.text()));
+                    if (!foundFirst) {
+                        foundFirst = true;
+                        assertEquals("One ", textNode.text());
+                        assertEquals("One ", textNode.getWholeText());
+                    }
+                }
+            }
+        }
+        assertTrue(foundFirst);
     }
 }

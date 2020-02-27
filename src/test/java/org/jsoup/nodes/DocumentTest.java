@@ -17,11 +17,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  Tests for Document.
@@ -104,13 +100,13 @@ public class DocumentTest {
     }
     
     @Test public void testLocation() throws IOException {
-    	File in = new ParseTest().getFile("/htmltests/yahoo-jp.html");
+    	File in = ParseTest.getFile("/htmltests/yahoo-jp.html");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html");
         String location = doc.location();
         String baseUri = doc.baseUri();
         assertEquals("http://www.yahoo.co.jp/index.html",location);
         assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/",baseUri);
-        in = new ParseTest().getFile("/htmltests/nyt-article-1.html");
+        in = ParseTest.getFile("/htmltests/nyt-article-1.html");
         doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
         location = doc.location();
         baseUri = doc.baseUri();
@@ -127,8 +123,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"\n" +
-                "  <foo />bar\n" +
+                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"<foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
 
@@ -137,8 +132,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"\n" +
-                "  <foo />bar\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
     }
@@ -182,7 +176,7 @@ public class DocumentTest {
         assertFalse(docA.hashCode() == docC.hashCode());
     }
 
-    @Test public void DocumentsWithSameContentAreVerifialbe() throws Exception {
+    @Test public void DocumentsWithSameContentAreVerifiable() throws Exception {
         Document docA = Jsoup.parse("<div/>One");
         Document docB = Jsoup.parse("<div/>One");
         Document docC = Jsoup.parse("<div/>Two");
@@ -459,5 +453,13 @@ public class DocumentTest {
         assertEquals(html, out[0]);
         assertEquals(StandardCharsets.US_ASCII, doc.outputSettings().charset());
         assertEquals(asci, p.outerHtml());
+    }
+
+    @Test public void testDocumentTypeGet() {
+        String html = "\n\n<!-- comment -->  <!doctype html><p>One</p>";
+        Document doc = Jsoup.parse(html);
+        DocumentType documentType = doc.documentType();
+        assertNotNull(documentType);
+        assertEquals("html", documentType.name());
     }
 }

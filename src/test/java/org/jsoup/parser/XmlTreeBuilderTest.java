@@ -22,8 +22,8 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests XmlTreeBuilder.
@@ -109,7 +109,7 @@ public class XmlTreeBuilderTest {
     @Test public void handlesXmlDeclarationAsDeclaration() {
         String html = "<?xml encoding='UTF-8' ?><body>One</body><!-- comment -->";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body> <!-- comment -->",
+        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body><!-- comment -->",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
         assertEquals("#declaration", doc.childNode(0).nodeName());
         assertEquals("#comment", doc.childNode(2).nodeName());
@@ -243,7 +243,7 @@ public class XmlTreeBuilderTest {
         // https://github.com/jhy/jsoup/issues/1139
         String html = "<script> var a=\"<?\"; var b=\"?>\"; </script>";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<script> var a=\"\n <!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
+        assertEquals("<script> var a=\"<!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
     }
 
     @Test public void dropsDuplicateAttributes() {
@@ -253,6 +253,13 @@ public class XmlTreeBuilderTest {
         Document doc = parser.parseInput(html, "");
 
         assertEquals("<p One=\"One\" ONE=\"Two\" one=\"Three\" two=\"Six\" Two=\"Eight\">Text</p>", doc.selectFirst("p").outerHtml());
+    }
+
+    @Test public void readerClosedAfterParse() {
+        Document doc = Jsoup.parse("Hello", "", Parser.xmlParser());
+        TreeBuilder treeBuilder = doc.parser().getTreeBuilder();
+        assertNull(treeBuilder.reader);
+        assertNull(treeBuilder.tokeniser);
     }
 
 }

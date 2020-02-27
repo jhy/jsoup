@@ -4,8 +4,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.QueryParser;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -346,6 +348,43 @@ public class ElementTest {
         Element div = doc.select("div").first();
         assertEquals("   \n<p>Hello\n there\n</p>", div.html());
     }
+
+    @Test public void testNotPrettyWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+        document.outputSettings().prettyPrint(false);
+
+        assertEquals("<div><span>1:15</span>–<span>2:15</span>&nbsp;p.m.</div>", document.body().html());
+    }
+
+    @Test public void testPrettyWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+
+        assertEquals("<div>\n <span>1:15</span>–<span>2:15</span>&nbsp;p.m.\n</div>", document.body().html());
+    }
+
+    @Test public void testPrettyAndOutlineWithEnDashBody() {
+        String html = "<div><span>1:15</span>&ndash;<span>2:15</span>&nbsp;p.m.</div>";
+        Document document = Jsoup.parse(html);
+        document.outputSettings().outline(true);
+
+        assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n &nbsp;p.m.\n</div>", document.body().html());
+    }
+
+    @Test public void testBasicFormats() {
+        String html = "<span>0</span>.<div><span>1</span>-<span>2</span><p><span>3</span>-<span>4</span><div>5</div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(
+            "<span>0</span>.\n" +
+            "<div>\n" +
+            " <span>1</span>-<span>2</span>\n" +
+            " <p><span>3</span>-<span>4</span></p>\n" +
+            " <div>\n" +
+            "  5\n" +
+            " </div>\n" +
+            "</div>", doc.body().html());
+    }
     
     @Test public void testEmptyElementFormatHtml() {
         // don't put newlines into empty blocks
@@ -406,8 +445,6 @@ public class ElementTest {
         
         List<Attribute> attributes = div.attributes().asList();
         assertEquals("There should be one attribute", 1, attributes.size());
-		assertTrue("Attribute should be boolean", attributes.get(0) instanceof BooleanAttribute);
-        
         assertFalse(div.hasAttr("false"));
  
         assertEquals("<div true></div>", div.outerHtml());
@@ -1051,6 +1088,7 @@ public class ElementTest {
         assertTrue(p.is("p"));
         assertFalse(p.is("div"));
         assertTrue(p.is("p:has(a)"));
+        assertFalse(p.is("a")); // does not descend
         assertTrue(p.is("p:first-child"));
         assertFalse(p.is("p:last-child"));
         assertTrue(p.is("*"));
@@ -1065,10 +1103,48 @@ public class ElementTest {
         assertFalse(q.is("a"));
     }
 
+    @Test
+    public void testEvalMethods() {
+        Document doc = Jsoup.parse("<div><p>One <a class=big>Two</a> Three</p><p>Another</p>");
+        Element p = doc.selectFirst(QueryParser.parse(("p")));
+        assertEquals("One Three", p.ownText());
+
+        assertTrue(p.is(QueryParser.parse("p")));
+        Evaluator aEval = QueryParser.parse("a");
+        assertFalse(p.is(aEval));
+
+        Element a = p.selectFirst(aEval);
+        assertEquals("div", a.closest(QueryParser.parse("div:has( > p)")).tagName());
+        Element body = p.closest(QueryParser.parse("body"));
+        assertEquals("body", body.nodeName());
+    }
+
+    @Test
+    public void testClosest() {
+        String html = "<article>\n" +
+            "  <div id=div-01>Here is div-01\n" +
+            "    <div id=div-02>Here is div-02\n" +
+            "      <div id=div-03>Here is div-03</div>\n" +
+            "    </div>\n" +
+            "  </div>\n" +
+            "</article>";
+
+        Document doc = Jsoup.parse(html);
+        Element el = doc.selectFirst("#div-03");
+        assertEquals("Here is div-03", el.text());
+        assertEquals("div-03", el.id());
+
+        assertEquals("div-02", el.closest("#div-02").id());
+        assertEquals(el, el.closest("div div")); // closest div in a div is itself
+        assertEquals("div-01", el.closest("article > div").id());
+        assertEquals("article", el.closest(":not(div)").tagName());
+        assertNull(el.closest("p"));
+    }
+
 
     @Test public void elementByTagName() {
         Element a = new Element("P");
-        assertTrue(a.tagName().equals("P"));
+        assertEquals("P", a.tagName());
     }
 
     @Test public void testChildrenElements() {
@@ -1135,8 +1211,7 @@ public class ElementTest {
         assertEquals("Another", els3.get(2).text());
 
         assertEquals("<p><a>One</a></p>\n" +
-            "<p>P3</p>\n" +
-            "<span>Another</span>\n" +
+            "<p>P3</p><span>Another</span>\n" +
             "<p><a>Two</a></p>\n" +
             "<p>P4</p>Three", div.html());
     }
@@ -1214,9 +1289,8 @@ public class ElementTest {
     }
 
     @Test public void testNormalizesInvisiblesInText() {
-        // return Character.getType(c) == 16 && (c == 8203 || c == 8204 || c == 8205 || c == 173);
-        String escaped = "This&shy;is&#x200b;one&#x200c;long&#x200d;word";
-        String decoded = "This\u00ADis\u200Bone\u200Clong\u200Dword"; // browser would not display those soft hyphens / other chars, so we don't want them in the text
+        String escaped = "This&shy;is&#x200b;one&shy;long&shy;word";
+        String decoded = "This\u00ADis\u200Bone\u00ADlong\u00ADword"; // browser would not display those soft hyphens / other chars, so we don't want them in the text
 
         Document doc = Jsoup.parse("<p>" + escaped);
         Element p = doc.select("p").first();
@@ -1481,5 +1555,51 @@ public class ElementTest {
         });
 
         assertSame(div, div2);
+    }
+
+    @Test
+    public void doesntDeleteZWJWhenNormalizingText() {
+        String text = "\uD83D\uDC69\u200D\uD83D\uDCBB\uD83E\uDD26\uD83C\uDFFB\u200D\u2642\uFE0F";
+
+        Document doc = Jsoup.parse("<p>" + text + "</p><div>One&zwj;Two</div>");
+        Element p = doc.selectFirst("p");
+        Element d = doc.selectFirst("div");
+
+        assertEquals(12, p.text().length());
+        assertEquals(text, p.text());
+        assertEquals(7, d.text().length());
+        assertEquals("One\u200DTwo", d.text());
+        Element found = doc.selectFirst("div:contains(One\u200DTwo)");
+        assertTrue(found.hasSameValue(d));
+    }
+
+
+    @Test
+    public void testReparentSeperateNodes() {
+        String html = "<div><p>One<p>Two";
+        Document doc = Jsoup.parse(html);
+        Element new1 = new Element("p").text("Three");
+        Element new2 = new Element("p").text("Four");
+
+        doc.body().insertChildren(-1, new1, new2);
+        assertEquals("<div><p>One</p><p>Two</p></div><p>Three</p><p>Four</p>", TextUtil.stripNewlines(doc.body().html()));
+
+        // note that these get moved from the above - as not copied
+        doc.body().insertChildren(0, new1, new2);
+        assertEquals("<p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(doc.body().html()));
+
+        doc.body().insertChildren(0, new2.clone(), new1.clone());
+        assertEquals("<p>Four</p><p>Three</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(doc.body().html()));
+
+        // shifted to end
+        doc.body().appendChild(new1);
+        assertEquals("<p>Four</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div><p>Three</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    public void testChildSizeWithMixedContent() {
+        Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
+        Element row = doc.selectFirst("table tbody tr");
+        assertEquals(2, row.childrenSize());
+        assertEquals(5, row.childNodeSize());
     }
 }

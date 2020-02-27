@@ -185,17 +185,6 @@ public class Parser {
         return tokeniser.unescapeEntities(inAttribute);
     }
 
-    /**
-     * @param bodyHtml HTML to parse
-     * @param baseUri baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
-     *
-     * @return parsed Document
-     * @deprecated Use {@link #parseBodyFragment} or {@link #parseFragment} instead.
-     */
-    public static Document parseBodyFragmentRelaxed(String bodyHtml, String baseUri) {
-        return parse(bodyHtml, baseUri);
-    }
-    
     // builders
 
     /**

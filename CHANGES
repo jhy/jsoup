@@ -1,6 +1,47 @@
 jsoup changelog
 
-**** Release 1.12.2 [PENDING]
+*** Release 1.13.1 [PENDING]
+  * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
+    selector.
+    <https://github.com/jhy/jsoup/issues/1326>
+
+  * Improvement: memory optimizations, reducing the retained size of a Document by ~ 39%, and allocations by ~ 9%:
+      1. Attributes holder in Elements is only created if the element has attributes
+      2. Only track the baseUri in an element when it is set via DOM to a new value for a given tree
+      3. After parsing, do not retain the input character reader (and associated buffers) in the Document#parser
+
+  * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
+
+  * Improvement: added Attributes#hasDeclaredValueForKey(key) and Attribute#hasDeclaredValueForKeyIgnoreCase(), to check
+    if an attribute is set but has no value. Useful in place of the deprecated and removed BooleanAttribute class and
+    instanceof test.
+
+  * Improvement: removed old methods and classes that were marked deprecated in previous releases.
+
+  * Improvement: added Element#select(Evaluator) and Element#selectFirst(Evaluator), to allow re-use of a parsed CSS
+    selector if using the same evaluator many times.
+    <https://github.com/jhy/jsoup/issues/1319>
+
+  * Improvement: added Elements#forms(), Elements#textNodes(), Elements#dataNodes(), and Elements#comments(), as a
+    convenient way to get access to these node types directly from an element selection.
+
+  * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
+    <https://github.com/jhy/jsoup/issues/1313>
+
+  * Bugfix: in CharacterReader when parsing an input stream, could throw a Mark Invalid exception if the reader was
+    marked, a bufferUp occurred, and then the reader was rewound.
+    <https://github.com/jhy/jsoup/issues/1324>
+
+  * Bugfix: empty tags and form tags did not have their attributes normalized (lower-cased by default)
+    <https://github.com/jhy/jsoup/pull/1323>
+
+  * Bugfix: when preserve case was set to on, the HTML pretty-print formatter didn't indent capitalized tags correctly.
+
+  * Bugfix: ensure that script and style contents are parsed into DataNodes, not TextNodes, when in case-sensitive
+    parse mode.
+
+
+**** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query
     "div:has(> a)" will select all "div" elements that have at least one direct child "a" element.
     <https://github.com/jhy/jsoup/pull/1214>
@@ -15,9 +56,25 @@ jsoup changelog
     content if they have not set it, but still in sensible bounds. Also updated the default user-agent to improve
     default compatibility.
 
+  * Improvement: dramatic speed improvement when bulk inserting child nodes into an element (wrapping contents).
+    <https://github.com/jhy/jsoup/issues/1281>
+
+  * Improvement: added Element#childrenSize() as a convenience to get the size of an element's element children.
+    <https://github.com/jhy/jsoup/pull/1291>
+
+  * Improvement: in W3CDom.asString, allow the output mode to be specified as HTML or as XML. It will default to
+    checking the content, and automatically selecting.
+
+  * Improvement: added a Document#documentType() method, to get a doc's doctype.
+
+  * Improvement: To DocumentType, added #name(), #publicID(), and #systemId() methods to fetch those fields.
+
+  * Improvement: in W3CDom conversions from jsoup documents, retain the DocumentType, and be able to serialize it.
+    <https://github.com/jhy/jsoup/issues/1183>
+
   * Bugfix: on pages fetch by Jsoup.Connection, a "Mark Invalid" exception might be incorrectly thrown, or the page may
-    miss some data. This occurred on larger pages when the file transfer was chunked, an an invalid HTML entity happened
-    to cross a chunk boundary.
+    miss some data. This occurred on larger pages when the file transfer was chunked, and an invalid HTML entity
+    happened to cross a chunk boundary.
     <https://github.com/jhy/jsoup/issues/1218>
 
   * Bugfix: if duplicate attributes in an element exist, retain the first vs the last attribute with the same name. Case
@@ -33,6 +90,34 @@ jsoup changelog
 
   * Bugfix: handle the ^= (starts with) selector correctly when the prefix starts with a space.
     <https://github.com/jhy/jsoup/pull/1280>
+
+  * Bugfix: don't strip out zero-width-joiners (or zero-width-non-joiners) when normalizing text. That breaks combined
+    emoji (and other text semantics). 🤦‍♂️
+    <https://github.com/jhy/jsoup/issues/1269>
+
+  * Bugfix: Evaluator.TagEndsWith (namespaced elements) and Tag disagreed in case-sensitivity. Now correctly matches
+    case-insensitively.
+    <https://github.com/jhy/jsoup/issues/1257>
+
+  * Bugfix: Don't throw an exception if a selector ends in a space, just trim it.
+    <https://github.com/jhy/jsoup/issues/1274>
+    
+  * Bugfix: HTML parser adds redundant text when parsing self-closing textarea.
+    <https://github.com/jhy/jsoup/issues/1220>
+
+  * Bugfix: Don't add spurious whitespace or newlines to HTML or text for inline tags.
+    <https://github.com/jhy/jsoup/issues/1305>
+    <https://github.com/jhy/jsoup/issues/731>
+
+  * Bugfix: TextNode.outerHtml() wouldn't normalize correctly without a parent.
+    <https://github.com/jhy/jsoup/issues/1309>
+
+  * Bugfix: Removed binary input detection as it was causing too many false positives.
+    <https://github.com/jhy/jsoup/issues/1250>
+
+  * Bugfix: when cloning a TextNode, if .attributes() was hit before the clone() method, the text value would only be a
+    shallow clone.
+    <https://github.com/jhy/jsoup/issues/1176>
 
   * Various code hygiene updates.
 

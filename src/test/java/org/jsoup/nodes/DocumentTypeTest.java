@@ -35,10 +35,13 @@ public class DocumentTypeTest {
         assertEquals("<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML//\">", publicDocType.outerHtml());
 
         DocumentType systemDocType = new DocumentType("html", "", "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd");
-        assertEquals("<!DOCTYPE html \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
+        assertEquals("<!DOCTYPE html SYSTEM \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
 
         DocumentType combo = new DocumentType("notHtml", "--public", "--system");
         assertEquals("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">", combo.outerHtml());
+        assertEquals("notHtml", combo.name());
+        assertEquals("--public", combo.publicId());
+        assertEquals("--system", combo.systemId());
     }
 
     @Test public void testRoundTrip() {

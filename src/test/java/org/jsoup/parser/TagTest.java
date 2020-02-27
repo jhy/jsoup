@@ -16,7 +16,7 @@ public class TagTest {
     @Test public void isCaseSensitive() {
         Tag p1 = Tag.valueOf("P");
         Tag p2 = Tag.valueOf("p");
-        assertFalse(p1.equals(p2));
+        assertNotEquals(p1, p2);
     }
 
     @Test @MultiLocaleTest public void canBeInsensitive() {
@@ -34,8 +34,8 @@ public class TagTest {
     @Test public void equality() {
         Tag p1 = Tag.valueOf("p");
         Tag p2 = Tag.valueOf("p");
-        assertTrue(p1.equals(p2));
-        assertTrue(p1 == p2);
+        assertEquals(p1, p2);
+        assertSame(p1, p2);
     }
 
     @Test public void divSemantics() {
@@ -74,5 +74,10 @@ public class TagTest {
 
     @Test(expected = IllegalArgumentException.class) public void valueOfChecksNotEmpty() {
         Tag.valueOf(" ");
+    }
+
+    @Test public void knownTags() {
+        assertTrue(Tag.isKnownTag("div"));
+        assertFalse(Tag.isKnownTag("explain"));
     }
 }

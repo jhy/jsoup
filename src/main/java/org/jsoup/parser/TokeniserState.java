@@ -55,7 +55,7 @@ enum TokeniserState {
                     t.emit(new Token.EOF());
                     break;
                 default:
-                    String data = r.consumeToAny('&', '<', nullChar);
+                    String data = r.consumeData();
                     t.emit(data);
                     break;
             }
@@ -68,12 +68,12 @@ enum TokeniserState {
     },
     Rawtext {
         void read(Tokeniser t, CharacterReader r) {
-            readData(t, r, this, RawtextLessthanSign);
+            readRawData(t, r, this, RawtextLessthanSign);
         }
     },
     ScriptData {
         void read(Tokeniser t, CharacterReader r) {
-            readData(t, r, this, ScriptDataLessthanSign);
+            readRawData(t, r, this, ScriptDataLessthanSign);
         }
     },
     PLAINTEXT {
@@ -744,7 +744,7 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny(attributeDoubleValueCharsSorted);
+            String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -777,7 +777,7 @@ enum TokeniserState {
     },
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAny(attributeSingleValueCharsSorted);
+            String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -912,7 +912,7 @@ enum TokeniserState {
             // todo: handle bogus comment starting from eof. when does that trigger?
             // rewind to capture character that lead us here
             r.unconsume();
-            t.commentPending.data.append(r.consumeTo('>'));
+            t.commentPending.append(r.consumeTo('>'));
             // todo: replace nullChar with replaceChar
             char next = r.consume();
             if (next == '>' || next == eof) {
@@ -950,7 +950,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.commentPending.data.append(replacementChar);
+                    t.commentPending.append(replacementChar);
                     t.transition(Comment);
                     break;
                 case '>':
@@ -964,7 +964,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.data.append(c);
+                    r.unconsume();
                     t.transition(Comment);
             }
         }
@@ -978,7 +978,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.commentPending.data.append(replacementChar);
+                    t.commentPending.append(replacementChar);
                     t.transition(Comment);
                     break;
                 case '>':
@@ -992,7 +992,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.data.append(c);
+                    t.commentPending.append(c);
                     t.transition(Comment);
             }
         }
@@ -1007,7 +1007,7 @@ enum TokeniserState {
                 case nullChar:
                     t.error(this);
                     r.advance();
-                    t.commentPending.data.append(replacementChar);
+                    t.commentPending.append(replacementChar);
                     break;
                 case eof:
                     t.eofError(this);
@@ -1015,7 +1015,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.data.append(r.consumeToAny('-', nullChar));
+                    t.commentPending.append(r.consumeToAny('-', nullChar));
             }
         }
     },
@@ -1028,7 +1028,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.commentPending.data.append('-').append(replacementChar);
+                    t.commentPending.append('-').append(replacementChar);
                     t.transition(Comment);
                     break;
                 case eof:
@@ -1037,7 +1037,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.data.append('-').append(c);
+                    t.commentPending.append('-').append(c);
                     t.transition(Comment);
             }
         }
@@ -1052,7 +1052,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.commentPending.data.append("--").append(replacementChar);
+                    t.commentPending.append("--").append(replacementChar);
                     t.transition(Comment);
                     break;
                 case '!':
@@ -1061,7 +1061,7 @@ enum TokeniserState {
                     break;
                 case '-':
                     t.error(this);
-                    t.commentPending.data.append('-');
+                    t.commentPending.append('-');
                     break;
                 case eof:
                     t.eofError(this);
@@ -1070,7 +1070,7 @@ enum TokeniserState {
                     break;
                 default:
                     t.error(this);
-                    t.commentPending.data.append("--").append(c);
+                    t.commentPending.append("--").append(c);
                     t.transition(Comment);
             }
         }
@@ -1080,7 +1080,7 @@ enum TokeniserState {
             char c = r.consume();
             switch (c) {
                 case '-':
-                    t.commentPending.data.append("--!");
+                    t.commentPending.append("--!");
                     t.transition(CommentEndDash);
                     break;
                 case '>':
@@ -1089,7 +1089,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.commentPending.data.append("--!").append(replacementChar);
+                    t.commentPending.append("--!").append(replacementChar);
                     t.transition(Comment);
                     break;
                 case eof:
@@ -1098,7 +1098,7 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.commentPending.data.append("--!").append(c);
+                    t.commentPending.append("--!").append(c);
                     t.transition(Comment);
             }
         }
@@ -1683,7 +1683,7 @@ enum TokeniserState {
         }
     }
 
-    private static void readData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
+    private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
         switch (r.current()) {
             case '<':
                 t.advanceTransition(advance);
@@ -1697,7 +1697,7 @@ enum TokeniserState {
                 t.emit(new Token.EOF());
                 break;
             default:
-                String data = r.consumeToAny('<', nullChar); // todo - why hunt for null here? Just consumeTo'<'?
+                String data = r.consumeRawData();
                 t.emit(data);
                 break;
         }

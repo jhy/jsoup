@@ -122,7 +122,7 @@ public class HttpConnection implements Connection {
         try {
             //  odd way to encode urls, but it works!
             String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
-            urlS = urlS.replaceAll(" ", "%20");
+            urlS = urlS.replace(" ", "%20");
             final URI uri = new URI(urlS);
             return new URL(uri.toASCIIString());
         } catch (URISyntaxException | MalformedURLException e) {
@@ -134,7 +134,7 @@ public class HttpConnection implements Connection {
     private static String encodeMimeName(String val) {
         if (val == null)
             return null;
-        return val.replaceAll("\"", "%22");
+        return val.replace("\"", "%22");
     }
 
     private Connection.Request req;
@@ -749,7 +749,7 @@ public class HttpConnection implements Connection {
 
             long startTime = System.nanoTime();
             HttpURLConnection conn = createConnection(req);
-            Response res;
+            Response res = null;
             try {
                 conn.connect();
                 if (conn.getDoOutput())
@@ -790,7 +790,7 @@ public class HttpConnection implements Connection {
                         && !contentType.startsWith("text/")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
                         )
-                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml",
+                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml",
                             contentType, req.url().toString());
 
                 // switch to the XML parser if content type is xml and not parser not explicitly set
@@ -817,10 +817,8 @@ public class HttpConnection implements Connection {
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
-            } catch (IOException e){
-                // per Java's documentation, this is not necessary, and precludes keepalives. However in practice,
-                // connection errors will not be released quickly enough and can cause a too many open files error.
-                conn.disconnect();
+            } catch (IOException e) {
+                if (res != null) res.safeClose(); // will be non-null if got to conn
                 throw e;
             }
 

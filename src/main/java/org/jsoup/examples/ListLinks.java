@@ -24,7 +24,7 @@ public class ListLinks {
 
         print("\nMedia: (%d)", media.size());
         for (Element src : media) {
-            if (src.tagName().equals("img"))
+            if (src.normalName().equals("img"))
                 print(" * %s: <%s> %sx%s (%s)",
                         src.tagName(), src.attr("abs:src"), src.attr("width"), src.attr("height"),
                         trim(src.attr("alt"), 20));

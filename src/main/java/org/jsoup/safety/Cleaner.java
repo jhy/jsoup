@@ -107,7 +107,7 @@ public class Cleaner {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
-                if (whitelist.isSafeTag(sourceEl.tagName())) { // safe, clone and copy safe attrs
+                if (whitelist.isSafeTag(sourceEl.normalName())) { // safe, clone and copy safe attrs
                     ElementMeta meta = createSafeElement(sourceEl);
                     Element destChild = meta.el;
                     destination.appendChild(destChild);
