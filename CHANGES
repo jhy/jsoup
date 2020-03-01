@@ -1,5 +1,8 @@
 jsoup changelog
 
+*** Release 1.13.2 [PENDING]
+  * Improvement: added support for loading and parsing gzipped HTML files in Jsoup.parse(File in, charset, baseUri).
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.

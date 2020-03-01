@@ -100,13 +100,13 @@ public class DocumentTest {
     }
     
     @Test public void testLocation() throws IOException {
-    	File in = ParseTest.getFile("/htmltests/yahoo-jp.html");
+    	File in = ParseTest.getFile("/htmltests/yahoo-jp.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html");
         String location = doc.location();
         String baseUri = doc.baseUri();
         assertEquals("http://www.yahoo.co.jp/index.html",location);
         assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/",baseUri);
-        in = ParseTest.getFile("/htmltests/nyt-article-1.html");
+        in = ParseTest.getFile("/htmltests/nyt-article-1.html.gz");
         doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
         location = doc.location();
         baseUri = doc.baseUri();

@@ -84,7 +84,7 @@ public class W3CDomTest {
 
     @Test
     public void convertsGoogle() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html");
+        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
         org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
 
         W3CDom w3c = new W3CDom();
@@ -108,7 +108,7 @@ public class W3CDomTest {
 
     @Test
     public void convertsGoogleLocation() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html");
+        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
         org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
 
         W3CDom w3c = new W3CDom();

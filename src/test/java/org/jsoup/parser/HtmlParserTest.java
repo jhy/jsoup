@@ -1227,7 +1227,7 @@ public class HtmlParserTest {
     }
 
     @Test public void characterReaderBuffer() throws IOException {
-        File in = ParseTest.getFile("/htmltests/character-reader-buffer.html");
+        File in = ParseTest.getFile("/htmltests/character-reader-buffer.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8");
 
         String expectedHref = "http://www.domain.com/path?param_one=value&param_two=value";
@@ -1360,7 +1360,6 @@ public class HtmlParserTest {
         String html = "\n<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n";
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        System.out.println(doc.outerHtml());
         assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n\n</body></html>\n", doc.outerHtml());
     }
 
@@ -1369,7 +1368,6 @@ public class HtmlParserTest {
         // todo - ideally would move that space afer /html to the body when the There <p> is seen
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        System.out.println(doc.outerHtml());
         assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
     }
 }
