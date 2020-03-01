@@ -261,7 +261,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void insert(Token.Character characterToken) {
         final Node node;
-        final Element el = currentElement();
+        Element el = currentElement();
+        if (el == null)
+            el = doc; // allows for whitespace to be inserted into the doc root object (not on the stack)
         final String tagName = el.normalName();
         final String data = characterToken.getData();
 
@@ -338,13 +340,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
-    void popStackToClose(String elName) {
+    Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element next = stack.get(pos);
+            Element el = stack.get(pos);
             stack.remove(pos);
-            if (next.normalName().equals(elName))
-                break;
+            if (el.normalName().equals(elName))
+                return el;
         }
+        return null;
     }
 
     // elnames is sorted, comes from Constants

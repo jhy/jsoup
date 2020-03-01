@@ -81,11 +81,13 @@ public class TextNode extends LeafNode {
     }
 
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
+        final boolean prettyPrint = out.prettyPrint();
+        if (prettyPrint && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
 
-        boolean normaliseWhite = out.prettyPrint() && !Element.preserveWhitespace(parent());
-        Entities.escape(accum, coreValue(), out, false, normaliseWhite, false);
+        final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
+        final boolean stripWhite = prettyPrint && parentNode instanceof Document;
+        Entities.escape(accum, coreValue(), out, false, normaliseWhite, stripWhite);
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}

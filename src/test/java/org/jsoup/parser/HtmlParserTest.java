@@ -1355,4 +1355,21 @@ public class HtmlParserTest {
         doc = Jsoup.parse(html, "", Parser.htmlParser().settings(preserveCase));
         assertEquals("YES YES", doc.selectFirst("textarea").val());
     }
+
+    @Test public void preserveWhitespaceInHead() {
+        String html = "\n<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+        System.out.println(doc.outerHtml());
+        assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n\n</body></html>\n", doc.outerHtml());
+    }
+
+    @Test public void handleContentAfterBody() {
+        String html = "<body>One</body>  <p>Hello!</p></html> <p>There</p>";
+        // todo - ideally would move that space afer /html to the body when the There <p> is seen
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+        System.out.println(doc.outerHtml());
+        assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
+    }
 }

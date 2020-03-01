@@ -25,6 +25,8 @@ jsoup changelog
   * Improvement: added Elements#forms(), Elements#textNodes(), Elements#dataNodes(), and Elements#comments(), as a
     convenient way to get access to these node types directly from an element selection.
 
+  * Improvement: preserve whitespace before html and head tag, if pretty-printing is off.
+
   * Bugfix: in a <select> tag, a second <optgroup> would not automatically close an earlier open <optgroup>
     <https://github.com/jhy/jsoup/issues/1313>
 

@@ -20,7 +20,7 @@ enum HtmlTreeBuilderState {
     Initial {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
-                return true; // ignore whitespace
+                return true; // ignore whitespace until we get the first content
             } else if (t.isComment()) {
                 tb.insert(t.asComment());
             } else if (t.isDoctype()) {
@@ -50,7 +50,7 @@ enum HtmlTreeBuilderState {
             } else if (t.isComment()) {
                 tb.insert(t.asComment());
             } else if (isWhitespace(t)) {
-                return true; // ignore whitespace
+                tb.insert(t.asCharacter()); // out of spec - include whitespace
             } else if (t.isStartTag() && t.asStartTag().normalName().equals("html")) {
                 tb.insert(t.asStartTag());
                 tb.transition(BeforeHead);
@@ -74,7 +74,7 @@ enum HtmlTreeBuilderState {
     BeforeHead {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
-                return true;
+                tb.insert(t.asCharacter()); // out of spec - include whitespace
             } else if (t.isComment()) {
                 tb.insert(t.asComment());
             } else if (t.isDoctype()) {
@@ -102,7 +102,7 @@ enum HtmlTreeBuilderState {
     InHead {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
-                tb.insert(t.asCharacter());
+                tb.insert(t.asCharacter()); // out of spec - include whitespace
                 return true;
             }
             switch (t.type) {
@@ -1406,7 +1406,7 @@ enum HtmlTreeBuilderState {
     AfterBody {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
-                return tb.process(t, InBody);
+                tb.insert(t.asCharacter()); // out of spec - include whitespace. spec would move into body
             } else if (t.isComment()) {
                 tb.insert(t.asComment()); // into html node
             } else if (t.isDoctype()) {
@@ -1507,9 +1507,17 @@ enum HtmlTreeBuilderState {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isComment()) {
                 tb.insert(t.asComment());
-            } else if (t.isDoctype() || isWhitespace(t) || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
+            } else if (t.isDoctype() || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
                 return tb.process(t, InBody);
-            } else if (t.isEOF()) {
+            } else if (isWhitespace(t)) {
+                // allows space after </html>, and put the body back on stack to allow subsequent tags if any
+                // todo - might be better for </body> and </html> to close them, allow trailing space, and then reparent
+                //  that space into body if other tags get re-added. but that's overkill for now
+                Element html = tb.popStackToClose("html");
+                tb.insert(t.asCharacter());
+                tb.stack.add(html);
+                tb.stack.add(html.selectFirst("body"));
+            }else if (t.isEOF()) {
                 // nice work chuck
             } else {
                 tb.error(this);
@@ -1550,7 +1558,7 @@ enum HtmlTreeBuilderState {
     private static boolean isWhitespace(Token t) {
         if (t.isCharacter()) {
             String data = t.asCharacter().getData();
-            return isWhitespace(data);
+            return StringUtil.isBlank(data);
         }
         return false;
     }

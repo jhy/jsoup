@@ -134,12 +134,12 @@ public class W3CDomTest {
         assertEquals("html", htmlEl.getNodeName());
 
         // inherits default namespace
-        Node head = htmlEl.getFirstChild();
+        Node head = htmlEl.getFirstChild().getNextSibling();
         assertEquals("http://www.w3.org/1999/xhtml", head.getNamespaceURI());
         assertEquals("head", head.getLocalName());
         assertEquals("head", head.getNodeName());
 
-        Node epubTitle = htmlEl.getChildNodes().item(2).getChildNodes().item(3);
+        Node epubTitle = htmlEl.getChildNodes().item(3).getChildNodes().item(3);
         assertEquals("Check", epubTitle.getTextContent());
         assertEquals("http://www.idpf.org/2007/ops", epubTitle.getNamespaceURI());
         assertEquals("title", epubTitle.getLocalName());
