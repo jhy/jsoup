@@ -942,4 +942,21 @@ public class SelectorTest {
         assertEquals("1111", select.get(0).text());
         assertEquals("2222", select.get(1).text());
     }
+
+    @Test
+    public void childElements() {
+        // https://github.com/jhy/jsoup/issues/1292
+        String html = "<body><span id=1>One <span id=2>Two</span></span></body>";
+        Document doc = Jsoup.parse(html);
+
+        Element outer = doc.selectFirst("span");
+        Element span = outer.selectFirst("span");
+        Element inner = outer.selectFirst("* span");
+
+        assertEquals("1", outer.id());
+        assertEquals("1", span.id());
+        assertEquals("2", inner.id());
+        assertEquals(outer, span);
+        assertNotEquals(outer, inner);
+    }
 }
