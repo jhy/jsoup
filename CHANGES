@@ -10,6 +10,9 @@ jsoup changelog
       2. Only track the baseUri in an element when it is set via DOM to a new value for a given tree
       3. After parsing, do not retain the input character reader (and associated buffers) in the Document#parser
 
+  * Improvement: substantial parse speed improvements vs 1.12.x (bringing back to par with previous releases).
+    <https://github.com/jhy/jsoup/issues/1327>
+
   * Improvement: when pretty-printing, comments in inline tags are not pushed to a newline
 
   * Improvement: added Attributes#hasDeclaredValueForKey(key) and Attribute#hasDeclaredValueForKeyIgnoreCase(), to check
