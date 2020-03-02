@@ -41,6 +41,12 @@
           <source>1.7</source>
           <target>1.7</target>
           <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!-- saves output for package-info.java, so mvn sees it has completed it, so incremental compile works -->
+            <arg>-Xpkginfo:always</arg>
+          </compilerArgs>
+          <!-- this means incremental = true... -->
+          <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
       </plugin>
       <plugin>
