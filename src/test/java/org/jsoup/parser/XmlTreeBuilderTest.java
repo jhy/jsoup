@@ -80,7 +80,7 @@ public class XmlTreeBuilderTest {
 
         assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
                 TextUtil.stripNewlines(xmlDoc.html()));
-        assertFalse(htmlDoc.equals(xmlDoc));
+        assertNotEquals(htmlDoc, xmlDoc);
         assertEquals(xmlDoc, autoXmlDoc);
         assertEquals(1, htmlDoc.select("head").size()); // html parser normalises
         assertEquals(0, xmlDoc.select("head").size()); // xml parser does not

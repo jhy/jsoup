@@ -293,8 +293,8 @@ public class ElementsTest {
 
         List<FormElement> forms = els.forms();
         assertEquals(2, forms.size());
-        assertTrue(forms.get(0) != null);
-        assertTrue(forms.get(1) != null);
+        assertNotNull(forms.get(0));
+        assertNotNull(forms.get(1));
         assertEquals("1", forms.get(0).id());
         assertEquals("2", forms.get(1).id());
     }

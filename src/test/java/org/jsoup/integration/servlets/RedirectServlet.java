@@ -16,7 +16,7 @@ public class RedirectServlet extends BaseServlet {
     private static final int DefaultCode = HttpServletResponse.SC_MOVED_TEMPORARILY;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) {
         String location = req.getParameter(LocationParam);
         if (location == null)
             location = "";
@@ -36,7 +36,7 @@ public class RedirectServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         doGet(req, res);
     }
 }

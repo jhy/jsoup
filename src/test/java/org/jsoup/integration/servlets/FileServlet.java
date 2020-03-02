@@ -15,7 +15,6 @@ import java.nio.file.Files;
 public class FileServlet extends BaseServlet {
     public static final String Url = TestServer.map(FileServlet.class);
     public static final String ContentTypeParam = "contentType";
-    public static final String LocationParam = "loc";
     public static final String DefaultType = "text/html";
 
     @Override
@@ -43,7 +42,7 @@ public class FileServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         doGet(req, res);
     }
 }

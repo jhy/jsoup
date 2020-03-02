@@ -131,7 +131,7 @@ public class ParseTest {
         in = getFile("/htmltests/meta-charset-2.html"); //
         doc = Jsoup.parse(in, null, "http://example.com"); // gb2312, no charset
         assertEquals("UTF-8", doc.outputSettings().charset().displayName());
-        assertFalse("新".equals(doc.text()));
+        assertNotEquals("新", doc.text());
 
         // confirm fallback to utf8
         in = getFile("/htmltests/meta-charset-3.html");

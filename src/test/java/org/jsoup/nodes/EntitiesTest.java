@@ -51,7 +51,6 @@ public class EntitiesTest {
     }
 
     @Test public void xhtml() {
-        String text = "&amp; &gt; &lt; &quot;";
         assertEquals(38, xhtml.codepointForName("amp"));
         assertEquals(62, xhtml.codepointForName("gt"));
         assertEquals(60, xhtml.codepointForName("lt"));
@@ -104,20 +103,20 @@ public class EntitiesTest {
         assertEquals("Hello &= &", Entities.unescape(text, false));
     }
 
-    
+
     @Test public void caseSensitive() {
         String unescaped = "Ü ü & &";
         assertEquals("&Uuml; &uuml; &amp; &amp;",
                 Entities.escape(unescaped, new OutputSettings().charset("ascii").escapeMode(extended)));
-        
+
         String escaped = "&Uuml; &uuml; &amp; &AMP";
         assertEquals("Ü ü & &", Entities.unescape(escaped));
     }
-    
+
     @Test public void quoteReplacements() {
         String escaped = "&#92; &#36;";
         String unescaped = "\\ $";
-        
+
         assertEquals(unescaped, Entities.unescape(escaped));
     }
 

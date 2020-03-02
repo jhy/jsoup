@@ -244,10 +244,10 @@ public class CharacterReaderTest {
         assertEquals("Check", two);
         assertEquals("Check", three);
         assertEquals("CHOKE", four);
-        assertTrue(one == two);
-        assertTrue(two == three);
-        assertTrue(three != four);
-        assertTrue(four != five);
+        assertSame(one, two);
+        assertSame(two, three);
+        assertNotSame(three, four);
+        assertNotSame(four, five);
         assertEquals(five, "A string that is longer than 16 chars");
     }
 

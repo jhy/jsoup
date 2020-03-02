@@ -27,7 +27,7 @@ public class TextNodeTest {
         assertFalse(four.isBlank());
         assertFalse(five.isBlank());
     }
-    
+
     @Test public void testTextBean() {
         Document doc = Jsoup.parse("<p>One <span>two &amp;</span> three &amp;</p>");
         Element p = doc.select("p").first();
@@ -36,10 +36,10 @@ public class TextNodeTest {
         assertEquals("two &", span.text());
         TextNode spanText = (TextNode) span.childNode(0);
         assertEquals("two &", spanText.text());
-        
+
         TextNode tn = (TextNode) p.childNode(2);
         assertEquals(" three &", tn.text());
-        
+
         tn.text(" POW!");
         assertEquals("One <span>two &amp;</span> POW!", TextUtil.stripNewlines(p.html()));
 
@@ -57,7 +57,7 @@ public class TextNodeTest {
         assertEquals("there", tail.getWholeText());
         tail.text("there!");
         assertEquals("Hello there!", div.text());
-        assertTrue(tn.parent() == tail.parent());
+        assertSame(tn.parent(), tail.parent());
     }
 
     @Test public void testSplitAnEmbolden() {

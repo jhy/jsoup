@@ -173,6 +173,6 @@ public class FormElementTest {
         assertEquals(2, data.size());
         assertEquals("user", data.get(0).key());
         assertEquals("login", data.get(1).key());
-        assertEquals(null, doc.selectFirst("input[name=pass]"));
+        assertNull(doc.selectFirst("input[name=pass]"));
     }
 }
