@@ -14,7 +14,7 @@ public class Deflateservlet extends BaseServlet {
     public static final String Url = TestServer.map(Deflateservlet.class);
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);
         res.setHeader("Content-Encoding", "deflate");

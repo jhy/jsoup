@@ -47,7 +47,7 @@ public class AttributeTest {
         assertEquals("two", oldVal);
         assertEquals("three", attr.getKey());
         assertEquals("four", attr.getValue());
-        assertEquals(null, attr.parent);
+        assertNull(attr.parent);
     }
 
     @Test public void hasValue() {

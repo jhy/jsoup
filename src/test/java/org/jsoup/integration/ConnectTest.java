@@ -373,7 +373,7 @@ public class ConnectTest {
         assertEquals(HelloServlet.Url, doc.location());
     }
 
-    @Test public void handlesEmptyRedirect() throws IOException {
+    @Test public void handlesEmptyRedirect() {
         boolean threw = false;
         try {
             Connection.Response res = Jsoup.connect(RedirectServlet.Url)

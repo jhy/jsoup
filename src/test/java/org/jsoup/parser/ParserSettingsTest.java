@@ -30,7 +30,7 @@ public class ParserSettingsTest {
         assertEquals("ID", attrOn.normalizeAttribute("ID"));
     }
 
-    @Test @MultiLocaleTest public void attributeCaseNormalization() throws Exception {
+    @Test @MultiLocaleTest public void attributeCaseNormalization() {
         ParseSettings parseSettings = new ParseSettings(false, false);
 
         String normalizedAttribute = parseSettings.normalizeAttribute("HIDDEN");
@@ -38,7 +38,7 @@ public class ParserSettingsTest {
         assertEquals("hidden", normalizedAttribute);
     }
 
-    @Test @MultiLocaleTest public void attributesCaseNormalization() throws Exception {
+    @Test @MultiLocaleTest public void attributesCaseNormalization() {
         ParseSettings parseSettings = new ParseSettings(false, false);
         Attributes attributes = new Attributes();
         attributes.put("ITEM", "1");

@@ -84,14 +84,14 @@ public class TokenQueueTest {
     }
 
     @Test
-    public void chompBalancedThrowIllegalArgumentException() throws Exception {
+    public void chompBalancedThrowIllegalArgumentException() {
         try {
             TokenQueue tq = new TokenQueue("unbalanced(something(or another)) else");
             tq.consumeTo("(");
             tq.chompBalanced('(', '+');
             org.junit.Assert.fail("should have thrown IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
-            assertEquals("Did not find balanced marker at \'something(or another)) else\'", expected.getMessage());
+            assertEquals("Did not find balanced marker at 'something(or another)) else'", expected.getMessage());
         }
     }
 }

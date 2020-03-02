@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 public class ConnectIT {
     // Slow Rider tests. Ignored by default so tests don't take aaages
     @Test
-    public void canInterruptBodyStringRead() throws IOException, InterruptedException {
+    public void canInterruptBodyStringRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
@@ -47,7 +47,7 @@ public class ConnectIT {
     }
 
     @Test
-    public void canInterruptDocumentRead() throws IOException, InterruptedException {
+    public void canInterruptDocumentRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(new Runnable() {
@@ -70,7 +70,7 @@ public class ConnectIT {
         assertTrue(runner.isInterrupted());
         runner.join();
 
-        assertTrue(body[0].length() == 0); // doesn't ready a failed doc
+        assertEquals(0, body[0].length()); // doesn't ready a failed doc
     }
 
     @Test
