@@ -3,8 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AttributeTest {
     @Test

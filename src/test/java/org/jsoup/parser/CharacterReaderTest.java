@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.io.BufferedReader;
 import java.io.StringReader;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test suite for character reader.
@@ -295,7 +295,7 @@ public class CharacterReaderTest {
     public void notEmptyAtBufferSplitPoint() {
         CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
         assertEquals("How", r.consumeTo(' '));
-        assertFalse("Should not be empty", r.isEmpty());
+        assertFalse(r.isEmpty(), "Should not be empty");
 
         assertEquals(' ', r.consume());
         assertFalse(r.isEmpty());

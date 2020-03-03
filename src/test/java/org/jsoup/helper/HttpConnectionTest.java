@@ -11,8 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
@@ -40,7 +39,9 @@ public class HttpConnectionTest {
 
     @ParameterizedTest
     @MultiLocaleExtension.MultiLocale
-    public void caseInsensitiveHeaders() {
+    public void caseInsensitiveHeaders(Locale locale) {
+        Locale.setDefault(locale);
+
         Connection.Response res = new HttpConnection.Response();
         res.header("Accept-Encoding", "gzip");
         res.header("content-type", "text/html");

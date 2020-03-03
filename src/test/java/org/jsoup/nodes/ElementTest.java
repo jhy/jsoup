@@ -3,24 +3,13 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.NodeFilter;
-import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.QueryParser;
+import org.jsoup.select.*;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -445,7 +434,7 @@ public class ElementTest {
         assertEquals("", div.attr("true"));
 
         List<Attribute> attributes = div.attributes().asList();
-        assertEquals("There should be one attribute", 1, attributes.size());
+        assertEquals(1, attributes.size(), "There should be one attribute");
         assertFalse(div.hasAttr("false"));
 
         assertEquals("<div true></div>", div.outerHtml());

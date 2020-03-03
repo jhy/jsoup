@@ -6,7 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ParserSettingsTest {
     @ParameterizedTest

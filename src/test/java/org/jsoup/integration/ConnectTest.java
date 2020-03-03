@@ -3,12 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
-import org.jsoup.integration.servlets.Deflateservlet;
-import org.jsoup.integration.servlets.EchoServlet;
-import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.integration.servlets.HelloServlet;
-import org.jsoup.integration.servlets.InterruptedServlet;
-import org.jsoup.integration.servlets.RedirectServlet;
+import org.jsoup.integration.servlets.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.AfterAll;
@@ -25,8 +20,7 @@ import java.util.Map;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests Jsoup.connect against a local server.

@@ -3,8 +3,8 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.W3CDom;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.parser.HtmlTreeBuilder;
@@ -22,8 +22,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.

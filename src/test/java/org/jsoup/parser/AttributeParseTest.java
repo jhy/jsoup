@@ -1,7 +1,5 @@
 package org.jsoup.parser;
 
-import java.util.List;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -10,7 +8,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  Test suite for attribute parser.
@@ -82,7 +82,7 @@ public class AttributeParseTest {
         assertEquals("", el.attr("empty"));
 
         List<Attribute> attributes = el.attributes().asList();
-        assertEquals("There should be 3 attribute present", 3, attributes.size());
+        assertEquals(3, attributes.size(), "There should be 3 attribute present");
 
         assertEquals(html, el.outerHtml()); // vets boolean syntax
     }
@@ -90,7 +90,7 @@ public class AttributeParseTest {
     @Test public void dropsSlashFromAttributeName() {
         String html = "<img /onerror='doMyJob'/>";
         Document doc = Jsoup.parse(html);
-        assertFalse("SelfClosingStartTag ignores last character", doc.select("img[onerror]").isEmpty());
+        assertFalse(doc.select("img[onerror]").isEmpty(), "SelfClosingStartTag ignores last character");
         assertEquals("<img onerror=\"doMyJob\">", doc.body().html());
 
         doc = Jsoup.parse(html, "", Parser.xmlParser());

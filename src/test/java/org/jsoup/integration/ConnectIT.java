@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Failsafe integration tests for Connect methods. These take a bit longer to run, so included as Integ, not Unit, tests.
@@ -79,8 +79,8 @@ public class ConnectIT {
         } catch (SocketTimeoutException e) {
             long end = System.currentTimeMillis();
             long took = end - start;
-            assertTrue(("Time taken was " + took), took > timeout);
-            assertTrue(("Time taken was " + took), took < timeout * 1.8);
+            assertTrue(took > timeout, ("Time taken was " + took));
+            assertTrue(took < timeout * 1.8, ("Time taken was " + took));
             threw = true;
         }
 

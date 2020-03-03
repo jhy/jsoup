@@ -1,13 +1,13 @@
 package org.jsoup.select;
 
-import static org.junit.Assert.*;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Tag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class CssTest {
@@ -198,10 +198,10 @@ public class CssTest {
 	}
 
 	protected void check(Elements result, String...expectedContent ) {
-		assertEquals("Number of elements", expectedContent.length, result.size());
+		assertEquals(expectedContent.length, result.size(), "Number of elements");
 		for (int i = 0; i < expectedContent.length; i++) {
 			assertNotNull(result.get(i));
-			assertEquals("Expected element",expectedContent[i], result.get(i).ownText());
+			assertEquals(expectedContent[i], result.get(i).ownText(), "Expected element");
 		}
 	}
 

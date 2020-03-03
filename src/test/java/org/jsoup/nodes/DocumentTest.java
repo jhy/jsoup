@@ -9,15 +9,11 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  Tests for Document.
@@ -426,9 +422,9 @@ public class DocumentTest {
 
         String output = new String(doc.html().getBytes(doc.outputSettings().charset()), doc.outputSettings().charset());
 
-        assertFalse("Should not have contained a '?'.", output.contains("?"));
-        assertTrue("Should have contained a '&#xa0;' or a '&nbsp;'.",
-                output.contains("&#xa0;") || output.contains("&nbsp;"));
+        assertFalse(output.contains("?"), "Should not have contained a '?'.");
+        assertTrue(output.contains("&#xa0;") || output.contains("&nbsp;"),
+                "Should have contained a '&#xa0;' or a '&nbsp;'.");
     }
 
     @Test public void parseAndHtmlOnDifferentThreads() throws InterruptedException {

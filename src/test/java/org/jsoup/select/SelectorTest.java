@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that the selector selects correctly.

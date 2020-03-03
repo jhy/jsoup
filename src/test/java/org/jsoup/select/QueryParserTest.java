@@ -2,8 +2,7 @@ package org.jsoup.select;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the Selector Query Parser.
