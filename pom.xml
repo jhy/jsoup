@@ -275,12 +275,6 @@
       <version>5.6.0</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <!-- junit -->
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-    </dependency>
 
     <dependency>
       <!-- gson, to fetch entities from w3.org -->
