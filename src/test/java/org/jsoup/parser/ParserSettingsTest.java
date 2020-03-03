@@ -1,17 +1,19 @@
 package org.jsoup.parser;
 
-import org.jsoup.MultiLocaleRule;
-import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.MultiLocaleExtension.MultiLocale;
 import org.jsoup.nodes.Attributes;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
 public class ParserSettingsTest {
-    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
+    @ParameterizedTest
+    @MultiLocale
+    public void caseSupport(Locale locale) {
+        Locale.setDefault(locale);
 
-    @Test @MultiLocaleTest public void caseSupport() {
         ParseSettings bothOn = new ParseSettings(true, true);
         ParseSettings bothOff = new ParseSettings(false, false);
         ParseSettings tagOn = new ParseSettings(true, false);
@@ -30,15 +32,22 @@ public class ParserSettingsTest {
         assertEquals("ID", attrOn.normalizeAttribute("ID"));
     }
 
-    @Test @MultiLocaleTest public void attributeCaseNormalization() {
-        ParseSettings parseSettings = new ParseSettings(false, false);
+    @ParameterizedTest
+    @MultiLocale
+    public void attributeCaseNormalization(Locale locale) {
+        Locale.setDefault(locale);
 
+        ParseSettings parseSettings = new ParseSettings(false, false);
         String normalizedAttribute = parseSettings.normalizeAttribute("HIDDEN");
 
         assertEquals("hidden", normalizedAttribute);
     }
 
-    @Test @MultiLocaleTest public void attributesCaseNormalization() {
+    @ParameterizedTest
+    @MultiLocale
+    public void attributesCaseNormalization(Locale locale) {
+        Locale.setDefault(locale);
+
         ParseSettings parseSettings = new ParseSettings(false, false);
         Attributes attributes = new Attributes();
         attributes.put("ITEM", "1");

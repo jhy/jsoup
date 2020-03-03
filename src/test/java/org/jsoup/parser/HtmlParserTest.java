@@ -15,8 +15,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -634,7 +634,7 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
-    @Ignore // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
+    @Disabled // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
     @Test public void handlesMisnestedAInDivs() {
         String h = "<a href='#1'><div><div><a href='#2'>child</a</div</div></a>";
         String w = "<a href=\"#1\"></a><div><a href=\"#1\"></a><div><a href=\"#1\"></a><a href=\"#2\">child</a></div></div>";

@@ -4,7 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -298,22 +298,22 @@ public class NodeTest {
 
         inputElement.attr("value","bar");
 
-        assertEquals(singletonAttributes("value", "bar"), getAttributesCaseInsensitive(inputElement, "value"));
+        assertEquals(singletonAttributes(), getAttributesCaseInsensitive(inputElement));
     }
 
-    private Attributes getAttributesCaseInsensitive(Element element, String attributeName) {
+    private Attributes getAttributesCaseInsensitive(Element element) {
         Attributes matches = new Attributes();
         for (Attribute attribute : element.attributes()) {
-            if (attribute.getKey().equalsIgnoreCase(attributeName)) {
+            if (attribute.getKey().equalsIgnoreCase("value")) {
                 matches.put(attribute);
             }
         }
         return matches;
     }
 
-    private Attributes singletonAttributes(String key, String value) {
+    private Attributes singletonAttributes() {
         Attributes attributes = new Attributes();
-        attributes.put(key, value);
+        attributes.put("value", "bar");
         return attributes;
     }
 }

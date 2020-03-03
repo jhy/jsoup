@@ -1,7 +1,9 @@
 package org.jsoup.select;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for the Selector Query Parser.
@@ -40,23 +42,21 @@ public class QueryParserTest {
         assertEquals(2, andLeft.evaluators.size());
     }
 
-    @Test(expected = Selector.SelectorParseException.class) public void exceptionOnUncloseAttribute() {
-        Evaluator parse = QueryParser.parse("section > a[href=\"]");
+    @Test public void exceptionOnUncloseAttribute() {
+        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("section > a[href=\"]"));
     }
 
-    @Test(expected = Selector.SelectorParseException.class)  public void testParsesSingleQuoteInContains() {
-        Evaluator parse = QueryParser.parse("p:contains(One \" One)");
+    @Test public void testParsesSingleQuoteInContains() {
+        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("p:contains(One \" One)"));
     }
 
 
-    @Test(expected = Selector.SelectorParseException.class)
-    public void exceptOnEmptySelector() {
-        Evaluator parse = QueryParser.parse("");
+    @Test public void exceptOnEmptySelector() {
+        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse(""));
     }
 
-    @Test(expected = Selector.SelectorParseException.class)
-    public void exceptOnNullSelector() {
-        Evaluator parse = QueryParser.parse(null);
+    @Test public void exceptOnNullSelector() {
+        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse(null));
     }
 
     @Test public void okOnSpacesForeAndAft() {

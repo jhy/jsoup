@@ -5,7 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -22,18 +22,16 @@ public class ConnectIT {
     public void canInterruptBodyStringRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.body();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
+        Thread runner = new Thread(() -> {
+            try {
+                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                    .timeout(15 * 1000)
+                    .execute();
+                body[0] = res.body();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+
         });
 
         runner.start();
@@ -50,18 +48,16 @@ public class ConnectIT {
     public void canInterruptDocumentRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.parse().text();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
+        Thread runner = new Thread(() -> {
+            try {
+                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                    .timeout(15 * 1000)
+                    .execute();
+                body[0] = res.parse().text();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+
         });
 
         runner.start();

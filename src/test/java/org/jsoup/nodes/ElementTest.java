@@ -8,7 +8,7 @@ import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for Element (DOM stuff mostly).
@@ -495,16 +496,20 @@ public class ElementTest {
         assertEquals("there &amp; now &gt; <p>Hello</p>", TextUtil.stripNewlines(div.html()));
     }
 
-    @Test(expected = IllegalArgumentException.class) public void testThrowsOnAddNullText() {
-        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
-        Element div = doc.getElementById("1");
-        div.appendText(null);
+    @Test public void testThrowsOnAddNullText() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+            Element div = doc.getElementById("1");
+            div.appendText(null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)  public void testThrowsOnPrependNullText() {
-        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
-        Element div = doc.getElementById("1");
-        div.prependText(null);
+    @Test public void testThrowsOnPrependNullText() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+            Element div = doc.getElementById("1");
+            div.prependText(null);
+        });
     }
 
     @Test public void testAddNewHtml() {

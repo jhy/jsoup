@@ -9,7 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

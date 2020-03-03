@@ -1,48 +1,46 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.MultiLocaleRule;
-import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.MultiLocaleExtension;
 import org.jsoup.integration.ParseTest;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
 
-    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
-
-    @Test(expected=IllegalArgumentException.class) public void throwsExceptionOnParseWithoutExecute() throws IOException {
-        Connection con = HttpConnection.connect("http://example.com");
-        con.response().parse();
+    @Test public void throwsExceptionOnParseWithoutExecute() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com");
+            con.response().parse();
+        });
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsExceptionOnBodyWithoutExecute() throws IOException {
-        Connection con = HttpConnection.connect("http://example.com");
-        con.response().body();
+    @Test public void throwsExceptionOnBodyWithoutExecute() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com");
+            con.response().body();
+        });
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsExceptionOnBodyAsBytesWithoutExecute() throws IOException {
-        Connection con = HttpConnection.connect("http://example.com");
-        con.response().bodyAsBytes();
+    @Test public void throwsExceptionOnBodyAsBytesWithoutExecute() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com");
+            con.response().bodyAsBytes();
+        });
     }
 
-    @Test @MultiLocaleTest public void caseInsensitiveHeaders() {
+    @ParameterizedTest
+    @MultiLocaleExtension.MultiLocale
+    public void caseInsensitiveHeaders() {
         Connection.Response res = new HttpConnection.Response();
         res.header("Accept-Encoding", "gzip");
         res.header("content-type", "text/html");
@@ -122,13 +120,13 @@ public class HttpConnectionTest {
         headers = req.multiHeaders();
         assertEquals("Bar", headers.get("Foo").get(0));
         assertFalse(req.hasHeader("Accept"));
-        assertTrue(headers.get("Accept") == null);
+        assertNull(headers.get("Accept"));
     }
 
     @Test public void ignoresEmptySetCookies() {
         // prep http response header map
         Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Set-Cookie", Collections.<String>emptyList());
+        headers.put("Set-Cookie", Collections.emptyList());
         HttpConnection.Response res = new HttpConnection.Response();
         res.processResponseHeaders(headers);
         assertEquals(0, res.cookies().size());
@@ -160,8 +158,8 @@ public class HttpConnectionTest {
         assertEquals("http://example.com", con.request().url().toExternalForm());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsOnMalformedUrl() {
-        Connection con = HttpConnection.connect("bzzt");
+    @Test public void throwsOnMalformedUrl() {
+        assertThrows(IllegalArgumentException.class, () -> HttpConnection.connect("bzzt"));
     }
 
     @Test public void userAgent() {
@@ -191,9 +189,11 @@ public class HttpConnectionTest {
         assertEquals(Connection.Method.POST, con.request().method());
     }
 
-    @Test(expected=IllegalArgumentException.class) public void throwsOnOddData() {
-        Connection con = HttpConnection.connect("http://example.com/");
-        con.data("Name", "val", "what");
+    @Test public void throwsOnOddData() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com/");
+            con.data("Name", "val", "what");
+        });
     }
 
     @Test public void data() {

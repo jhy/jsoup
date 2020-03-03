@@ -2,11 +2,9 @@ package org.jsoup.integration.servlets;
 
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 public class RedirectServlet extends BaseServlet {
     public static final String Url = TestServer.map(RedirectServlet.class);
@@ -36,7 +34,7 @@ public class RedirectServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) {
         doGet(req, res);
     }
 }

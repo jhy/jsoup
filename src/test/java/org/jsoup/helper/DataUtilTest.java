@@ -3,7 +3,7 @@ package org.jsoup.helper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13,10 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import static org.jsoup.integration.ParseTest.getFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class DataUtilTest {
     @Test
@@ -24,16 +21,17 @@ public class DataUtilTest {
         assertEquals("utf-8", DataUtil.getCharsetFromContentType("text/html;charset=utf-8 "));
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset=UTF-8"));
         assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1"));
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html"));
-        assertEquals(null, DataUtil.getCharsetFromContentType(null));
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html;charset=Unknown"));
+        assertNull(DataUtil.getCharsetFromContentType("text/html"));
+        assertNull(DataUtil.getCharsetFromContentType(null));
+        assertNull(DataUtil.getCharsetFromContentType("text/html;charset=Unknown"));
     }
 
-    @Test public void testQuotedCharset() {
+    @Test
+    public void testQuotedCharset() {
         assertEquals("utf-8", DataUtil.getCharsetFromContentType("text/html; charset=\"utf-8\""));
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html;charset=\"UTF-8\""));
         assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=\"ISO-8859-1\""));
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=\"Unsupported\""));
+        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=\"Unsupported\""));
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
 
@@ -50,13 +48,15 @@ public class DataUtilTest {
         return null;
     }
 
-    @Test public void discardsSpuriousByteOrderMark() throws IOException {
+    @Test
+    public void discardsSpuriousByteOrderMark() throws IOException {
         String html = "\uFEFF<html><head><title>One</title></head><body>Two</body></html>";
         Document doc = DataUtil.parseInputStream(stream(html), "UTF-8", "http://foo.com/", Parser.htmlParser());
         assertEquals("One", doc.head().text());
     }
 
-    @Test public void discardsSpuriousByteOrderMarkWhenNoCharsetSet() throws IOException {
+    @Test
+    public void discardsSpuriousByteOrderMarkWhenNoCharsetSet() throws IOException {
         String html = "\uFEFF<html><head><title>One</title></head><body>Two</body></html>";
         Document doc = DataUtil.parseInputStream(stream(html), null, "http://foo.com/", Parser.htmlParser());
         assertEquals("One", doc.head().text());
@@ -65,8 +65,8 @@ public class DataUtilTest {
 
     @Test
     public void shouldNotThrowExceptionOnEmptyCharset() {
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset="));
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=;"));
+        assertNull(DataUtil.getCharsetFromContentType("text/html; charset="));
+        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=;"));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class DataUtilTest {
 
     @Test
     public void shouldReturnNullForIllegalCharsetNames() {
-        assertEquals(null, DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
+        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class DataUtilTest {
         assertEquals(DataUtil.boundaryLength, m2.length());
         assertNotSame(m1, m2);
     }
-    
+
     @Test
     public void wrongMetaCharsetFallback() throws IOException {
         String html = "<html><head><meta charset=iso-8></head><body></body></html>";
@@ -101,11 +101,11 @@ public class DataUtilTest {
         Document doc = DataUtil.parseInputStream(stream(html), null, "http://example.com", Parser.htmlParser());
 
         final String expected = "<html>\n" +
-            " <head>\n" +
-            "  <meta charset=\"iso-8\">\n" +
-            " </head>\n" +
-            " <body></body>\n" +
-            "</html>";
+                " <head>\n" +
+                "  <meta charset=\"iso-8\">\n" +
+                " </head>\n" +
+                " <body></body>\n" +
+                "</html>";
 
         assertEquals(expected, doc.toString());
     }
@@ -177,9 +177,9 @@ public class DataUtilTest {
     public void supportsXmlCharsetDeclaration() throws IOException {
         String encoding = "iso-8859-1";
         InputStream soup = new ByteArrayInputStream((
-            "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" +
-                "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" +
-                "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">Hellö Wörld!</html>"
+                "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" +
+                        "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" +
+                        "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">Hellö Wörld!</html>"
         ).getBytes(encoding));
 
         Document doc = Jsoup.parse(soup, null, "");
@@ -187,14 +187,16 @@ public class DataUtilTest {
     }
 
 
-    @Test public void lLoadsGzipFile() throws IOException {
+    @Test
+    public void lLoadsGzipFile() throws IOException {
         File in = getFile("/htmltests/gzip.html.gz");
         Document doc = Jsoup.parse(in, null);
         assertEquals("Gzip test", doc.title());
         assertEquals("This is a gzipped HTML file.", doc.selectFirst("p").text());
     }
 
-    @Test public void loadsZGzipFile() throws IOException {
+    @Test
+    public void loadsZGzipFile() throws IOException {
         // compressed on win, with z suffix
         File in = getFile("/htmltests/gzip.html.z");
         Document doc = Jsoup.parse(in, null);
@@ -202,7 +204,8 @@ public class DataUtilTest {
         assertEquals("This is a gzipped HTML file.", doc.selectFirst("p").text());
     }
 
-    @Test public void handlesFakeGzipFile () throws IOException {
+    @Test
+    public void handlesFakeGzipFile() throws IOException {
         File in = getFile("/htmltests/fake-gzip.html.gz");
         Document doc = Jsoup.parse(in, null);
         assertEquals("This is not gzipped", doc.title());

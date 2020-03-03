@@ -10,8 +10,8 @@ import org.jsoup.nodes.FormElement;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,12 +23,13 @@ import java.net.URL;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  Tests the URL connection. Not enabled by default, so tests don't require network connection.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-@Ignore // ignored by default so tests don't require network access. comment out to enable.
+@Disabled // ignored by default so tests don't require network access. comment out to enable.
 // todo: rebuild these into a local Jetty test server, so not reliant on the vagaries of the internet.
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
@@ -256,10 +257,10 @@ public class UrlConnectTest {
      *
      * @throws Exception
      */
-    @Test(expected = IOException.class)
+    @Test
     public void testUnsafeFail() throws Exception {
         String url = WEBSITE_WITH_INVALID_CERTIFICATE;
-        Jsoup.connect(url).execute();
+        assertThrows(IOException.class, () -> Jsoup.connect(url).execute());
     }
 
 
@@ -272,9 +273,9 @@ public class UrlConnectTest {
      * Test is ignored independent from others as it requires JDK 1.6
      * @throws Exception
      */
-    @Test(expected = IOException.class)
+    @Test
     public void testSNIFail() throws Exception {
-        Jsoup.connect(WEBSITE_WITH_SNI).execute();
+        assertThrows(IOException.class, () -> Jsoup.connect(WEBSITE_WITH_SNI).execute());
     }
 
     @Test

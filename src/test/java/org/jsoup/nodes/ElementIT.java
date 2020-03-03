@@ -1,7 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

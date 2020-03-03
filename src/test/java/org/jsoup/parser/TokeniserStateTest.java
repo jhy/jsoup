@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
@@ -143,7 +143,7 @@ public class TokeniserStateTest {
         String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
-                String[] htmls = { 
+                String[] htmls = {
                         String.format("<!DOCTYPE html%cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
                         String.format("<!DOCTYPE html %cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
                         String.format("<!DOCTYPE html PUBLIC%c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
@@ -212,7 +212,7 @@ public class TokeniserStateTest {
         String triggeringSnippet = "<a href=\"\"foo";
         char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
         Arrays.fill(padding, ' ');
-        String paddedSnippet = new StringBuilder().append(padding).append(triggeringSnippet).toString();
+        String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
         Parser.parseFragment(paddedSnippet, null, "", errorList);

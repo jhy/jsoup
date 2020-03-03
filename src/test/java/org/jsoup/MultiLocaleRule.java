@@ -8,7 +8,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
+@Deprecated
 public class MultiLocaleRule implements TestRule {
+    @Deprecated
     @Retention(RetentionPolicy.RUNTIME)
     public @interface MultiLocaleTest {
     }

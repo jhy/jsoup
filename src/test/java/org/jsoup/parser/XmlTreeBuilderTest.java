@@ -10,15 +10,15 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
@@ -68,7 +68,7 @@ public class XmlTreeBuilderTest {
                 TextUtil.stripNewlines(doc.html()));
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testSupplyParserToConnection() throws IOException {
         String xmlUrl = "http://direct.infohound.net/tools/jsoup-xml-test.xml";
@@ -170,7 +170,7 @@ public class XmlTreeBuilderTest {
     public void testCreatesValidProlog() {
         Document document = Document.createShell("");
         document.outputSettings().syntax(Syntax.xml);
-        document.charset(Charset.forName("utf-8"));
+        document.charset(StandardCharsets.UTF_8);
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<html>\n" +
             " <head></head>\n" +
