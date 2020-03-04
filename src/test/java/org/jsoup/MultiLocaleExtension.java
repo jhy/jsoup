@@ -3,6 +3,7 @@ package org.jsoup;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
@@ -30,7 +31,8 @@ public class MultiLocaleExtension implements AfterEachCallback, ArgumentsProvide
     @Retention(RetentionPolicy.RUNTIME)
     @ArgumentsSource(MultiLocaleExtension.class)
     @ExtendWith(MultiLocaleExtension.class)
-    public @interface MultiLocale {
+    @ParameterizedTest
+    public @interface MultiLocaleTest {
     }
 
 }

@@ -1,12 +1,11 @@
 package org.jsoup.select;
 
 import org.jsoup.Jsoup;
-import org.jsoup.MultiLocaleExtension.MultiLocale;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
@@ -64,8 +63,7 @@ public class SelectorTest {
     }
 
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void testByAttribute(Locale locale) {
         Locale.setDefault(locale);
 
@@ -191,8 +189,7 @@ public class SelectorTest {
         assertEquals(1, els2.size());
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void testByAttributeStarting(Locale locale) {
         Locale.setDefault(locale);
 
@@ -579,8 +576,7 @@ public class SelectorTest {
         assertEquals("Two", divs.first().text());
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void testPseudoContains(Locale locale) {
         Locale.setDefault(locale);
 
@@ -621,8 +617,7 @@ public class SelectorTest {
         assertEquals("2", ps2.first().id());
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void containsOwn(Locale locale) {
         Locale.setDefault(locale);
 
@@ -779,8 +774,7 @@ public class SelectorTest {
         assertEquals("Two", doc.select("div[data=\"[Another)]]\"]").first().text());
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void containsData(Locale locale) {
         Locale.setDefault(locale);
 

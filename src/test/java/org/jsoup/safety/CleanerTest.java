@@ -1,12 +1,11 @@
 package org.jsoup.safety;
 
 import org.jsoup.Jsoup;
-import org.jsoup.MultiLocaleExtension.MultiLocale;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
@@ -81,8 +80,7 @@ public class CleanerTest {
                 TextUtil.stripNewlines(cleanHtml));
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void whitelistedProtocolShouldBeRetained(Locale locale) {
         Locale.setDefault(locale);
 

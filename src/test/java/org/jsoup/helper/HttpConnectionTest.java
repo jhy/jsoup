@@ -1,10 +1,9 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
-import org.jsoup.MultiLocaleExtension;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -37,8 +36,7 @@ public class HttpConnectionTest {
         });
     }
 
-    @ParameterizedTest
-    @MultiLocaleExtension.MultiLocale
+    @MultiLocaleTest
     public void caseInsensitiveHeaders(Locale locale) {
         Locale.setDefault(locale);
 

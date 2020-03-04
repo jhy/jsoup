@@ -1,16 +1,14 @@
 package org.jsoup.parser;
 
-import org.jsoup.MultiLocaleExtension.MultiLocale;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.nodes.Attributes;
-import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ParserSettingsTest {
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void caseSupport(Locale locale) {
         Locale.setDefault(locale);
 
@@ -32,8 +30,7 @@ public class ParserSettingsTest {
         assertEquals("ID", attrOn.normalizeAttribute("ID"));
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void attributeCaseNormalization(Locale locale) {
         Locale.setDefault(locale);
 
@@ -43,8 +40,7 @@ public class ParserSettingsTest {
         assertEquals("hidden", normalizedAttribute);
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void attributesCaseNormalization(Locale locale) {
         Locale.setDefault(locale);
 

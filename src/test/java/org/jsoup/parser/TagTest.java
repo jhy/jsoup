@@ -1,8 +1,7 @@
 package org.jsoup.parser;
 
-import org.jsoup.MultiLocaleExtension.MultiLocale;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 
 import java.util.Locale;
 
@@ -18,8 +17,7 @@ public class TagTest {
         assertNotEquals(p1, p2);
     }
 
-    @ParameterizedTest
-    @MultiLocale
+    @MultiLocaleTest
     public void canBeInsensitive(Locale locale) {
         Locale.setDefault(locale);
 
