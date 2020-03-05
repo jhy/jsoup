@@ -104,16 +104,37 @@ final class Tokeniser {
         }
     }
 
+    // variations to limit need to create temp strings
+    void emit(final StringBuilder str) {
+        if (charsString == null) {
+            charsString = str.toString();
+        }
+        else {
+            if (charsBuilder.length() == 0) {
+                charsBuilder.append(charsString);
+            }
+            charsBuilder.append(str);
+        }
+    }
+
+    void emit(char c) {
+        if (charsString == null) {
+            charsString = String.valueOf(c);
+        }
+        else {
+            if (charsBuilder.length() == 0) {
+                charsBuilder.append(charsString);
+            }
+            charsBuilder.append(c);
+        }
+    }
+
     void emit(char[] chars) {
         emit(String.valueOf(chars));
     }
 
     void emit(int[] codepoints) {
         emit(new String(codepoints, 0, codepoints.length));
-    }
-
-    void emit(char c) {
-        emit(String.valueOf(c));
     }
 
     TokeniserState getState() {

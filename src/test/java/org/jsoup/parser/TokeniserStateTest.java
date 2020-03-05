@@ -22,8 +22,6 @@ public class TokeniserStateTest {
     @Test
     public void ensureSearchArraysAreSorted() {
         char[][] arrays = {
-            TokeniserState.attributeSingleValueCharsSorted,
-            TokeniserState.attributeDoubleValueCharsSorted,
             TokeniserState.attributeNameCharsSorted,
             TokeniserState.attributeValueUnquoted
         };

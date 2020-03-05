@@ -311,6 +311,32 @@ public final class CharacterReader {
         return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
 
+    String consumeAttributeQuoted(final boolean single) {
+        // null, " or ', &
+        //bufferUp(); // no need to bufferUp, just called consume()
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '&':
+                case TokeniserState.nullChar:
+                    break OUTER;
+                case '\'':
+                    if (single) break OUTER;
+                case '"':
+                    if (!single) break OUTER;;
+                default:
+                    pos++;
+            }
+        }
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+
+
     String consumeRawData() {
         // <, null
         //bufferUp(); // no need to bufferUp, just called consume()

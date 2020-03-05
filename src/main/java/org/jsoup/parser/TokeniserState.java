@@ -253,7 +253,8 @@ enum TokeniserState {
         }
 
         private void anythingElse(Tokeniser t, CharacterReader r) {
-            t.emit("</" + t.dataBuffer.toString());
+            t.emit("</");
+            t.emit(t.dataBuffer);
             r.unconsume();
             t.transition(Rcdata);
         }
@@ -423,7 +424,8 @@ enum TokeniserState {
             if (r.matchesLetter()) {
                 t.createTempBuffer();
                 t.dataBuffer.append(r.current());
-                t.emit("<" + r.current());
+                t.emit("<");
+                t.emit(r.current());
                 t.advanceTransition(ScriptDataDoubleEscapeStart);
             } else if (r.matches('/')) {
                 t.createTempBuffer();
@@ -744,7 +746,7 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAnySorted(attributeDoubleValueCharsSorted);
+            String value = r.consumeAttributeQuoted(false);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -777,7 +779,7 @@ enum TokeniserState {
     },
     AttributeValue_singleQuoted {
         void read(Tokeniser t, CharacterReader r) {
-            String value = r.consumeToAnySorted(attributeSingleValueCharsSorted);
+            String value = r.consumeAttributeQuoted(true);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
@@ -1630,8 +1632,6 @@ enum TokeniserState {
 
     static final char nullChar = '\u0000';
     // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
-    static final char[] attributeSingleValueCharsSorted = new char[]{nullChar, '&', '\''};
-    static final char[] attributeDoubleValueCharsSorted = new char[]{nullChar, '"', '&'};
     static final char[] attributeNameCharsSorted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
     static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
 
@@ -1678,7 +1678,8 @@ enum TokeniserState {
         }
 
         if (needsExitTransition) {
-            t.emit("</" + t.dataBuffer.toString());
+            t.emit("</");
+            t.emit(t.dataBuffer);
             t.transition(elseTransition);
         }
     }
