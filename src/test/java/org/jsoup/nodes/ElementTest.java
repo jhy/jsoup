@@ -1590,6 +1590,7 @@ public class ElementTest {
         assertEquals("<p>Four</p><p>Three</p><p>Four</p><div><p>One</p><p>Two</p></div><p>Three</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test
     public void testChildSizeWithMixedContent() {
         Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
         Element row = doc.selectFirst("table tbody tr");
