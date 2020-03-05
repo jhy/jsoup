@@ -1,12 +1,13 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AttributeTest {
-    @Test public void html() {
+    @Test
+    public void html() {
         Attribute attr = new Attribute("key", "value &");
         assertEquals("key=\"value &amp;\"", attr.html());
         assertEquals(attr.html(), attr.toString());
@@ -19,13 +20,15 @@ public class AttributeTest {
         assertEquals(attr.html(), attr.toString());
     }
 
-    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmpty() {
-        Attribute attr = new Attribute(" ", "Check");
+    @Test public void validatesKeysNotEmpty() {
+        assertThrows(IllegalArgumentException.class, () -> new Attribute(" ", "Check"));
     }
 
-    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmptyViaSet() {
-        Attribute attr = new Attribute("One", "Check");
-        attr.setKey(" ");
+    @Test public void validatesKeysNotEmptyViaSet() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Attribute attr = new Attribute("One", "Check");
+            attr.setKey(" ");
+        });
     }
 
     @Test public void booleanAttributesAreEmptyStringValues() {

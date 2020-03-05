@@ -3,17 +3,12 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
-import org.jsoup.integration.servlets.Deflateservlet;
-import org.jsoup.integration.servlets.EchoServlet;
-import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.integration.servlets.HelloServlet;
-import org.jsoup.integration.servlets.InterruptedServlet;
-import org.jsoup.integration.servlets.RedirectServlet;
+import org.jsoup.integration.servlets.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +20,7 @@ import java.util.Map;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -33,13 +28,13 @@ import static org.junit.Assert.*;
 public class ConnectTest {
     private static String echoUrl;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         TestServer.stop();
     }
@@ -270,7 +265,8 @@ public class ConnectTest {
          */
     }
 
-    @Test public void multipleParsesOkAfterBufferUp() throws IOException {
+    @Test
+    public void multipleParsesOkAfterBufferUp() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
 
         Document doc = res.parse();
@@ -280,13 +276,17 @@ public class ConnectTest {
         assertTrue(doc2.title().contains("Environment"));
     }
 
-    @Test(expected=IllegalArgumentException.class) public void bodyAfterParseThrowsValidationError() throws IOException {
-        Connection.Response res = Jsoup.connect(echoUrl).execute();
-        Document doc = res.parse();
-        String body = res.body();
+    @Test
+    public void bodyAfterParseThrowsValidationError() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection.Response res = Jsoup.connect(echoUrl).execute();
+            Document doc = res.parse();
+            String body = res.body();
+        });
     }
 
-    @Test public void bodyAndBytesAvailableBeforeParse() throws IOException {
+    @Test
+    public void bodyAndBytesAvailableBeforeParse() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute();
         String body = res.body();
         assertTrue(body.contains("Environment"));
@@ -297,11 +297,14 @@ public class ConnectTest {
         assertTrue(doc.title().contains("Environment"));
     }
 
-    @Test(expected=IllegalArgumentException.class) public void parseParseThrowsValidates() throws IOException {
-        Connection.Response res = Jsoup.connect(echoUrl).execute();
-        Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
-        Document doc2 = res.parse(); // should blow up because the response input stream has been drained
+    @Test
+    public void parseParseThrowsValidates() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection.Response res = Jsoup.connect(echoUrl).execute();
+            Document doc = res.parse();
+            assertTrue(doc.title().contains("Environment"));
+            Document doc2 = res.parse(); // should blow up because the response input stream has been drained
+        });
     }
 
 

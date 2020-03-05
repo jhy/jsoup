@@ -2,21 +2,13 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.integration.ParseTest;
-import org.jsoup.nodes.CDataNode;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.DataNode;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
-import org.jsoup.nodes.FormElement;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.*;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -24,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static org.jsoup.parser.ParseSettings.preserveCase;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the Parser
@@ -634,7 +626,7 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
-    @Ignore // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
+    @Disabled // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
     @Test public void handlesMisnestedAInDivs() {
         String h = "<a href='#1'><div><div><a href='#2'>child</a</div</div></a>";
         String w = "<a href=\"#1\"></a><div><a href=\"#1\"></a><div><a href=\"#1\"></a><a href=\"#2\">child</a></div></div>";
@@ -915,7 +907,7 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         Element el = doc.select("form").first();
 
-        assertTrue("Is form element", el instanceof FormElement);
+        assertTrue(el instanceof FormElement, "Is form element");
         FormElement form = (FormElement) el;
         Elements controls = form.elements();
         assertEquals(2, controls.size());
@@ -929,7 +921,7 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         Element el = doc.select("form").first();
 
-        assertTrue("Is form element", el instanceof FormElement);
+        assertTrue(el instanceof FormElement, "Is form element");
         FormElement form = (FormElement) el;
         Elements controls = form.elements();
         assertEquals(2, controls.size());
@@ -1000,9 +992,9 @@ public class HtmlParserTest {
         String rendered = doc.toString();
         int endOfEmail = rendered.indexOf("Comment");
         int guarantee = rendered.indexOf("Why am I here?");
-        assertTrue("Comment not found", endOfEmail > -1);
-        assertTrue("Search text not found", guarantee > -1);
-        assertTrue("Search text did not come after comment", guarantee > endOfEmail);
+        assertTrue(endOfEmail > -1, "Comment not found");
+        assertTrue(guarantee > -1, "Search text not found");
+        assertTrue(guarantee > endOfEmail, "Search text did not come after comment");
     }
 
     @Test public void testNormalisesIsIndex() {

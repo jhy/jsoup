@@ -2,11 +2,11 @@ package org.jsoup.nodes;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for FormElement
@@ -90,7 +90,7 @@ public class FormElementTest {
 
         boolean threw = false;
         try {
-            Connection con = form.submit();
+            form.submit();
         } catch (IllegalArgumentException e) {
             threw = true;
             assertEquals("Could not determine a form action URL for submit. Ensure you set a base URI when parsing.",

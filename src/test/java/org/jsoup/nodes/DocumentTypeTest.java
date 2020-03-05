@@ -2,9 +2,10 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for the DocumentType node
@@ -14,17 +15,17 @@ import static org.junit.Assert.*;
 public class DocumentTypeTest {
     @Test
     public void constructorValidationOkWithBlankName() {
-        DocumentType fail = new DocumentType("","", "");
+        new DocumentType("","", "");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void constructorValidationThrowsExceptionOnNulls() {
-        DocumentType fail = new DocumentType("html", null, null);
+        assertThrows(IllegalArgumentException.class, () -> new DocumentType("html", null, null));
     }
 
     @Test
     public void constructorValidationOkWithBlankPublicAndSystemIds() {
-        DocumentType fail = new DocumentType("html","", "");
+        new DocumentType("html","", "");
     }
 
     @Test public void outerHtmlGeneration() {

@@ -3,9 +3,9 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LeafNodeTest {
 

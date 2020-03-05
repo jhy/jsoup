@@ -1,14 +1,12 @@
 package org.jsoup.nodes;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Attributes.
@@ -199,8 +197,8 @@ public class AttributesTest {
         for(Attribute at : a) {
             at.setKey("b");
         }
-        assertFalse("Attribute 'a' not correctly removed", a.hasKey("a"));
-        assertTrue("Attribute 'b' not present after renaming", a.hasKey("b"));
+        assertFalse(a.hasKey("a"), "Attribute 'a' not correctly removed");
+        assertTrue(a.hasKey("b"), "Attribute 'b' not present after renaming");
     }
 
     @Test

@@ -1,15 +1,15 @@
 package org.jsoup.select;
 
 import org.jsoup.Jsoup;
-import org.jsoup.MultiLocaleRule;
-import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import java.util.Locale;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that the selector selects correctly.
@@ -17,8 +17,6 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class SelectorTest {
-    @Rule public MultiLocaleRule rule = new MultiLocaleRule();
-
     @Test public void testByTag() {
         // should be case insensitive
         Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><DIV id=3>").select("DIV");
@@ -64,7 +62,11 @@ public class SelectorTest {
         assertEquals("Two", elsFromClass.get(1).text());
     }
 
-    @Test @MultiLocaleTest public void testByAttribute() {
+
+    @MultiLocaleTest
+    public void testByAttribute(Locale locale) {
+        Locale.setDefault(locale);
+
         String h = "<div Title=Foo /><div Title=Bar /><div Style=Qux /><div title=Balim /><div title=SLIM />" +
                 "<div data-name='with spaces'/>";
         Document doc = Jsoup.parse(h);
@@ -187,7 +189,10 @@ public class SelectorTest {
         assertEquals(1, els2.size());
     }
 
-    @Test @MultiLocaleTest public void testByAttributeStarting() {
+    @MultiLocaleTest
+    public void testByAttributeStarting(Locale locale) {
+        Locale.setDefault(locale);
+
         Document doc = Jsoup.parse("<div id=1 ATTRIBUTE data-name=jsoup>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>");
         Elements withData = doc.select("[^data-]");
         assertEquals(2, withData.size());
@@ -281,7 +286,7 @@ public class SelectorTest {
         String h = "<div class=head><p class=first>Hello</p><p>There</p></div><p>None</p>";
         Document doc = Jsoup.parse(h);
         Element root = doc.getElementsByClass("HEAD").first();
-        
+
         Elements els = root.select(".head p");
         assertEquals(2, els.size());
         assertEquals("Hello", els.get(0).text());
@@ -293,7 +298,7 @@ public class SelectorTest {
 
         Elements empty = root.select("p .first"); // self, not descend, should not match
         assertEquals(0, empty.size());
-        
+
         Elements aboveRoot = root.select("body div.head");
         assertEquals(0, aboveRoot.size());
     }
@@ -571,7 +576,10 @@ public class SelectorTest {
         assertEquals("Two", divs.first().text());
     }
 
-    @Test @MultiLocaleTest public void testPseudoContains() {
+    @MultiLocaleTest
+    public void testPseudoContains(Locale locale) {
+        Locale.setDefault(locale);
+
         Document doc = Jsoup.parse("<div><p>The Rain.</p> <p class=light>The <i>RAIN</i>.</p> <p>Rain, the.</p></div>");
 
         Elements ps1 = doc.select("p:contains(Rain)");
@@ -609,7 +617,10 @@ public class SelectorTest {
         assertEquals("2", ps2.first().id());
     }
 
-    @Test @MultiLocaleTest public void containsOwn() {
+    @MultiLocaleTest
+    public void containsOwn(Locale locale) {
+        Locale.setDefault(locale);
+
         Document doc = Jsoup.parse("<p id=1>Hello <b>there</b> igor</p>");
         Elements ps = doc.select("p:containsOwn(Hello IGOR)");
         assertEquals(1, ps.size());
@@ -721,24 +732,24 @@ public class SelectorTest {
         assertEquals("div", doc.select("div[k" + s + "]").first().tagName());
         assertEquals("div", doc.select("div:containsOwn(" + s + ")").first().tagName());
     }
-    
+
     @Test
     public void selectClassWithSpace() {
         final String html = "<div class=\"value\">class without space</div>\n"
                           + "<div class=\"value \">class with space</div>";
-        
+
         Document doc = Jsoup.parse(html);
-        
+
         Elements found = doc.select("div[class=value ]");
         assertEquals(2, found.size());
         assertEquals("class without space", found.get(0).text());
         assertEquals("class with space", found.get(1).text());
-        
+
         found = doc.select("div[class=\"value \"]");
         assertEquals(2, found.size());
         assertEquals("class without space", found.get(0).text());
         assertEquals("class with space", found.get(1).text());
-        
+
         found = doc.select("div[class=\"value\\ \"]");
         assertEquals(0, found.size());
     }
@@ -763,7 +774,10 @@ public class SelectorTest {
         assertEquals("Two", doc.select("div[data=\"[Another)]]\"]").first().text());
     }
 
-    @Test @MultiLocaleTest public void containsData() {
+    @MultiLocaleTest
+    public void containsData(Locale locale) {
+        Locale.setDefault(locale);
+
         String html = "<p>function</p><script>FUNCTION</script><style>item</style><span><!-- comments --></span>";
         Document doc = Jsoup.parse(html);
         Element body = doc.body();

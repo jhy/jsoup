@@ -4,14 +4,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,7 +25,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class W3CDomTest {
 
@@ -36,15 +34,11 @@ public class W3CDomTest {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(nameSpaceAware);
             DocumentBuilder builder = factory.newDocumentBuilder();
-            builder.setEntityResolver(new EntityResolver() {
-                @Override
-                public InputSource resolveEntity(String publicId, String systemId)
-                    throws SAXException, IOException {
-                    if (systemId.contains("about:legacy-compat")) { // <!doctype html>
-                        return new InputSource(new StringReader(""));
-                    } else {
-                        return null;
-                    }
+            builder.setEntityResolver((publicId, systemId) -> {
+                if (systemId.contains("about:legacy-compat")) { // <!doctype html>
+                    return new InputSource(new StringReader(""));
+                } else {
+                    return null;
                 }
             });
             Document dom = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
