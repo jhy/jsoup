@@ -1,6 +1,10 @@
 jsoup changelog
 
-*** Release 1.13.2 [PENDING]
+*** Release 1.14.1 [PENDING]
+  * Change: updated the minimum supported Java version from Java 7 to Java 8.
+
+  * Change: updated the minimum Android API level from 8 to 10.
+
   * Improvement: added support for loading and parsing gzipped HTML files in Jsoup.parse(File in, charset, baseUri).
 
 *** Release 1.13.1 [2020-Feb-29]
