@@ -1,23 +1,15 @@
 package org.jsoup.parser;
 
-import static org.jsoup.parser.CharacterReader.maxBufferLen;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.*;
+import org.jsoup.select.Elements;
+import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.CDataNode;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-import org.junit.Test;
+import static org.jsoup.parser.CharacterReader.maxBufferLen;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TokeniserTest {
     @Test
@@ -43,7 +35,7 @@ public class TokeniserTest {
             Document doc = Jsoup.parse(html);
             String src = doc.select("img").attr("src");
 
-            assertTrue("Handles for quote " + quote, src.contains("X"));
+            assertTrue(src.contains("X"), "Handles for quote " + quote);
             assertTrue(src.contains(tail));
         }
     }
@@ -181,7 +173,7 @@ public class TokeniserTest {
             // some of these characters are illegal
             if (s.charAt(0) == '\ufffd') { continue; }
 
-            assertEquals("At: " + i, s.charAt(0), Tokeniser.win1252Extensions[i]);
+            assertEquals(s.charAt(0), Tokeniser.win1252Extensions[i], "At: " + i);
         }
     }
 
@@ -197,7 +189,7 @@ public class TokeniserTest {
         Document doc = parser.parseInput(testMarkup, "");
 
         Node commentNode = doc.body().childNode(0);
-        assertTrue("Expected comment node", commentNode instanceof Comment);
+        assertTrue(commentNode instanceof Comment, "Expected comment node");
         assertEquals(expectedCommentData, ((Comment)commentNode).getData());
     }
 
@@ -214,7 +206,7 @@ public class TokeniserTest {
         Document doc = parser.parseInput(testMarkup, "");
 
         Node cdataNode = doc.body().childNode(0);
-        assertTrue("Expected CDATA node", cdataNode instanceof CDataNode);
+        assertTrue(cdataNode instanceof CDataNode, "Expected CDATA node");
         assertEquals(cdataContents, ((CDataNode)cdataNode).text());
     }
 }

@@ -2,17 +2,12 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.FormElement;
-import org.jsoup.nodes.Node;
-import org.junit.Test;
+import org.jsoup.nodes.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  Tests for ElementList.
@@ -292,10 +287,59 @@ public class ElementsTest {
 
         List<FormElement> forms = els.forms();
         assertEquals(2, forms.size());
-        assertTrue(forms.get(0) != null);
-        assertTrue(forms.get(1) != null);
+        assertNotNull(forms.get(0));
+        assertNotNull(forms.get(1));
         assertEquals("1", forms.get(0).id());
         assertEquals("2", forms.get(1).id());
+    }
+
+    @Test public void comments() {
+        Document doc = Jsoup.parse("<!-- comment1 --><p><!-- comment2 --><p class=two><!-- comment3 -->");
+        List<Comment> comments = doc.select("p").comments();
+        assertEquals(2, comments.size());
+        assertEquals(" comment2 ", comments.get(0).getData());
+        assertEquals(" comment3 ", comments.get(1).getData());
+
+        List<Comment> comments1 = doc.select("p.two").comments();
+        assertEquals(1, comments1.size());
+        assertEquals(" comment3 ", comments1.get(0).getData());
+    }
+
+    @Test public void textNodes() {
+        Document doc = Jsoup.parse("One<p>Two<a>Three</a><p>Four</p>Five");
+        List<TextNode> textNodes = doc.select("p").textNodes();
+        assertEquals(2, textNodes.size());
+        assertEquals("Two", textNodes.get(0).text());
+        assertEquals("Four", textNodes.get(1).text());
+    }
+
+    @Test public void dataNodes() {
+        Document doc = Jsoup.parse("<p>One</p><script>Two</script><style>Three</style>");
+        List<DataNode> dataNodes = doc.select("p, script, style").dataNodes();
+        assertEquals(2, dataNodes.size());
+        assertEquals("Two", dataNodes.get(0).getWholeData());
+        assertEquals("Three", dataNodes.get(1).getWholeData());
+
+        doc = Jsoup.parse("<head><script type=application/json><crux></script><script src=foo>Blah</script>");
+        Elements script = doc.select("script[type=application/json]");
+        List<DataNode> scriptNode = script.dataNodes();
+        assertEquals(1, scriptNode.size());
+        DataNode dataNode = scriptNode.get(0);
+        assertEquals("<crux>", dataNode.getWholeData());
+
+        // check if they're live
+        dataNode.setWholeData("<cromulent>");
+        assertEquals("<script type=\"application/json\"><cromulent></script>", script.outerHtml());
+    }
+
+    @Test public void nodesEmpty() {
+        Document doc = Jsoup.parse("<p>");
+        assertEquals(0, doc.select("form").textNodes().size());
+    }
+
+    @Test public void formElementsDescendButNotAccumulate() {
+        Document doc = Jsoup.parse("<div><div><form id=1>");
+        assertEquals(1, doc.select("div").forms().size());
     }
 
     @Test public void classWithHyphen() {

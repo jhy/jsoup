@@ -122,7 +122,7 @@ public class EchoServlet extends BaseServlet {
             && req.getContentType().startsWith("multipart/form-data");
 
         if (isMulti) {
-            req.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, new MultipartConfigElement(
+            req.setAttribute(Request.MULTIPART_CONFIG_ELEMENT, new MultipartConfigElement(
                 System.getProperty("java.io.tmpdir")));
         }
         return isMulti;

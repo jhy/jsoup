@@ -1,11 +1,11 @@
 package org.jsoup.select;
 
-import static org.junit.Assert.assertEquals;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TraversorTest {
     // Note: NodeTraversor.traverse(new NodeVisitor) is tested in

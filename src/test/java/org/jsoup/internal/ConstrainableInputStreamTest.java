@@ -1,18 +1,17 @@
 package org.jsoup.internal;
 
 import org.jsoup.Jsoup;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-@Ignore
+@Disabled
 public class ConstrainableInputStreamTest {
     // todo - move these all to local jetty, don't ignore
 
@@ -33,7 +32,7 @@ public class ConstrainableInputStreamTest {
         ByteBuffer firstBytes = stream.readToByteBuffer(bufferSize);
 
         byte[] array = firstBytes.array();
-        String firstText = new String(array, "UTF-8");
+        String firstText = new String(array, StandardCharsets.UTF_8);
         assertTrue(firstText.startsWith("<html><head><title>Large"));
         assertEquals(bufferSize, array.length);
 
@@ -45,7 +44,7 @@ public class ConstrainableInputStreamTest {
         ByteBuffer fullRead = stream.readToByteBuffer(0);
         byte[] fullArray = fullRead.array();
         assertEquals(capSize, fullArray.length);
-        String fullText = new String(fullArray, "UTF-8");
+        String fullText = new String(fullArray, StandardCharsets.UTF_8);
         assertTrue(fullText.startsWith(firstText));
     }
 
@@ -63,7 +62,7 @@ public class ConstrainableInputStreamTest {
         stream.mark(bufferSize);
         ByteBuffer firstBytes = stream.readToByteBuffer(bufferSize);
         byte[] array = firstBytes.array();
-        String firstText = new String(array, "UTF-8");
+        String firstText = new String(array, StandardCharsets.UTF_8);
         assertTrue(firstText.startsWith("<html><head><title>Large"));
         assertEquals(bufferSize, array.length);
 
@@ -72,7 +71,7 @@ public class ConstrainableInputStreamTest {
         ByteBuffer fullRead = stream.readToByteBuffer(0);
         byte[] fullArray = fullRead.array();
         assertEquals(280735, fullArray.length);
-        String fullText = new String(fullArray, "UTF-8");
+        String fullText = new String(fullArray, StandardCharsets.UTF_8);
         assertTrue(fullText.startsWith(firstText));
 
     }

@@ -1,43 +1,48 @@
 package org.jsoup.parser;
 
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HtmlTreeBuilderStateTest {
-    @Test
-    public void ensureArraysAreSorted() {
-        String[][] arrays = {
-            Constants.InBodyStartToHead,
-            Constants.InBodyStartPClosers,
-            Constants.Headings,
-            Constants.InBodyStartPreListing,
-            Constants.InBodyStartLiBreakers,
-            Constants.DdDt,
-            Constants.Formatters,
-            Constants.InBodyStartApplets,
-            Constants.InBodyStartEmptyFormatters,
-            Constants.InBodyStartMedia,
-            Constants.InBodyStartInputAttribs,
-            Constants.InBodyStartOptions,
-            Constants.InBodyStartRuby,
-            Constants.InBodyStartDrop,
-            Constants.InBodyEndClosers,
-            Constants.InBodyEndAdoptionFormatters,
-            Constants.InBodyEndTableFosters,
-            Constants.InCellNames,
-            Constants.InCellBody,
-            Constants.InCellTable,
-            Constants.InCellCol,
-        };
+    static List<Object[]> findArrays() {
+        ArrayList<Object[]> array = new ArrayList<>();
+        Field[] fields = Constants.class.getDeclaredFields();
 
-        for (String[] array : arrays) {
-            String[] copy = Arrays.copyOf(array, array.length);
+        for (Field field : fields) {
+            if (Modifier.isStatic(field.getModifiers()) && field.getType().isArray()) {
+                try {
+                    array.add((Object[]) field.get(null));
+                } catch (IllegalAccessException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+
+        return array;
+    }
+
+    static void ensureSorted(List<Object[]> constants) {
+        for (Object[] array : constants) {
+            Object[] copy = Arrays.copyOf(array, array.length);
             Arrays.sort(array);
             assertArrayEquals(array, copy);
         }
     }
+
+    @Test
+    public void ensureArraysAreSorted() {
+        List<Object[]> constants = findArrays();
+        ensureSorted(constants);
+        assertEquals(38, constants.size());
+    }
+
 }

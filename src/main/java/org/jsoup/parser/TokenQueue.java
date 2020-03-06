@@ -267,21 +267,21 @@ public class TokenQueue {
 
         do {
             if (isEmpty()) break;
-            Character c = consume();
+            char c = consume();
             if (last == 0 || last != ESC) {
-                if (c.equals('\'') && c != open && !inDoubleQuote)
+                if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
-                else if (c.equals('"') && c != open && !inSingleQuote)
+                else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
                 if (inSingleQuote || inDoubleQuote)
                     continue;
 
-                if (c.equals(open)) {
+                if (c == open) {
                     depth++;
                     if (start == -1)
                         start = pos;
                 }
-                else if (c.equals(close))
+                else if (c == close)
                     depth--;
             }
 

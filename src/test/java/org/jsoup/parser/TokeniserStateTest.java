@@ -7,12 +7,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TokeniserStateTest {
 
@@ -22,8 +22,6 @@ public class TokeniserStateTest {
     @Test
     public void ensureSearchArraysAreSorted() {
         char[][] arrays = {
-            TokeniserState.attributeSingleValueCharsSorted,
-            TokeniserState.attributeDoubleValueCharsSorted,
             TokeniserState.attributeNameCharsSorted,
             TokeniserState.attributeValueUnquoted
         };
@@ -143,7 +141,7 @@ public class TokeniserStateTest {
         String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
-                String[] htmls = { 
+                String[] htmls = {
                         String.format("<!DOCTYPE html%cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
                         String.format("<!DOCTYPE html %cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
                         String.format("<!DOCTYPE html PUBLIC%c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
@@ -212,7 +210,7 @@ public class TokeniserStateTest {
         String triggeringSnippet = "<a href=\"\"foo";
         char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
         Arrays.fill(padding, ' ');
-        String paddedSnippet = new StringBuilder().append(padding).append(triggeringSnippet).toString();
+        String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
         Parser.parseFragment(paddedSnippet, null, "", errorList);
@@ -248,5 +246,33 @@ public class TokeniserStateTest {
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
 
         assertEquals(5, errorList.get(0).getPosition());
+    }
+
+    @Test
+    public void rcData() {
+        Document doc = Jsoup.parse("<title>One \0Two</title>");
+        assertEquals("One �Two", doc.title());
+    }
+
+    @Test
+    public void plaintext() {
+        Document doc = Jsoup.parse("<div>One<plaintext><div>Two</plaintext>\0no < Return");
+        assertEquals("<html><head></head><body><div>One<plaintext>&lt;div&gt;Two&lt;/plaintext&gt;�no &lt; Return</plaintext></div></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test
+    public void nullInTag() {
+        Document doc = Jsoup.parse("<di\0v>One</di\0v>Two");
+        assertEquals("<di�v>\n One\n</di�v>Two", doc.body().html());
+    }
+
+    @Test
+    public void attributeValUnquoted() {
+        Document doc = Jsoup.parse("<p name=foo&lt;bar>");
+        Element p = doc.selectFirst("p");
+        assertEquals("foo<bar", p.attr("name"));
+
+        doc = Jsoup.parse("<p foo=");
+        assertEquals("<p foo></p>", doc.body().html());
     }
 }

@@ -37,6 +37,7 @@ public class QueryParser {
      * Parse a CSS query into an Evaluator.
      * @param query CSS query
      * @return Evaluator
+     * @see Selector selector query syntax
      */
     public static Evaluator parse(String query) {
         try {

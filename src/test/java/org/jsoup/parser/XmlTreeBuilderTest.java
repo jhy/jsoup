@@ -3,27 +3,21 @@ package org.jsoup.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.internal.StringUtil;
-import org.jsoup.nodes.CDataNode;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests XmlTreeBuilder.
@@ -68,7 +62,7 @@ public class XmlTreeBuilderTest {
                 TextUtil.stripNewlines(doc.html()));
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testSupplyParserToConnection() throws IOException {
         String xmlUrl = "http://direct.infohound.net/tools/jsoup-xml-test.xml";
@@ -80,7 +74,7 @@ public class XmlTreeBuilderTest {
 
         assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
                 TextUtil.stripNewlines(xmlDoc.html()));
-        assertFalse(htmlDoc.equals(xmlDoc));
+        assertNotEquals(htmlDoc, xmlDoc);
         assertEquals(xmlDoc, autoXmlDoc);
         assertEquals(1, htmlDoc.select("head").size()); // html parser normalises
         assertEquals(0, xmlDoc.select("head").size()); // xml parser does not
@@ -109,7 +103,7 @@ public class XmlTreeBuilderTest {
     @Test public void handlesXmlDeclarationAsDeclaration() {
         String html = "<?xml encoding='UTF-8' ?><body>One</body><!-- comment -->";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body> <!-- comment -->",
+        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body><!-- comment -->",
                 StringUtil.normaliseWhitespace(doc.outerHtml()));
         assertEquals("#declaration", doc.childNode(0).nodeName());
         assertEquals("#comment", doc.childNode(2).nodeName());
@@ -143,7 +137,7 @@ public class XmlTreeBuilderTest {
         InputStream inStream = new FileInputStream(xmlFile);
         Document doc = Jsoup.parse(inStream, null, "http://example.com/", Parser.xmlParser());
         assertEquals("ISO-8859-1", doc.charset().name());
-        assertEquals("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> <data>äöåéü</data>",
+        assertEquals("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><data>äöåéü</data>",
             TextUtil.stripNewlines(doc.html()));
     }
 
@@ -170,7 +164,7 @@ public class XmlTreeBuilderTest {
     public void testCreatesValidProlog() {
         Document document = Document.createShell("");
         document.outputSettings().syntax(Syntax.xml);
-        document.charset(Charset.forName("utf-8"));
+        document.charset(StandardCharsets.UTF_8);
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<html>\n" +
             " <head></head>\n" +
@@ -243,7 +237,7 @@ public class XmlTreeBuilderTest {
         // https://github.com/jhy/jsoup/issues/1139
         String html = "<script> var a=\"<?\"; var b=\"?>\"; </script>";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<script> var a=\"\n <!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
+        assertEquals("<script> var a=\"<!--?\"; var b=\"?-->\"; </script>", doc.html()); // converted from pseudo xmldecl to comment
     }
 
     @Test public void dropsDuplicateAttributes() {
@@ -253,6 +247,13 @@ public class XmlTreeBuilderTest {
         Document doc = parser.parseInput(html, "");
 
         assertEquals("<p One=\"One\" ONE=\"Two\" one=\"Three\" two=\"Six\" Two=\"Eight\">Text</p>", doc.selectFirst("p").outerHtml());
+    }
+
+    @Test public void readerClosedAfterParse() {
+        Document doc = Jsoup.parse("Hello", "", Parser.xmlParser());
+        TreeBuilder treeBuilder = doc.parser().getTreeBuilder();
+        assertNull(treeBuilder.reader);
+        assertNull(treeBuilder.tokeniser);
     }
 
 }

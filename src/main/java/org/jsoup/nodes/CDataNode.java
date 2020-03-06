@@ -41,4 +41,9 @@ public class CDataNode extends TextNode {
             throw new UncheckedIOException(e);
         }
     }
+
+    @Override
+    public CDataNode clone() {
+        return (CDataNode) super.clone();
+    }
 }

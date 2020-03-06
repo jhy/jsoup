@@ -1,13 +1,12 @@
 package org.jsoup.nodes;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for Attributes.
@@ -121,6 +120,52 @@ public class AttributesTest {
     }
 
     @Test
+    public void testIteratorSkipsInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        Iterator<Attribute> it = a.iterator();
+        assertTrue(it.hasNext());
+        assertEquals("One", it.next().getKey());
+        assertTrue(it.hasNext());
+        assertEquals("Two", it.next().getKey());
+        assertFalse(it.hasNext());
+
+        int seen = 0;
+        for (Attribute attribute : a) {
+            seen++;
+        }
+        assertEquals(2, seen);
+    }
+
+    @Test
+    public void testListSkipsInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        List<Attribute> attributes = a.asList();
+        assertEquals(2, attributes.size());
+        assertEquals("One", attributes.get(0).getKey());
+        assertEquals("Two", attributes.get(1). getKey());
+    }
+
+    @Test public void htmlSkipsInternals() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put("Two", "Two");
+        a.put(Attributes.internalKey("another"), "example.com");
+
+        assertEquals(" One=\"One\" Two=\"Two\"", a.html());
+    }
+
+    @Test
     public void testIteratorEmpty() {
         Attributes a = new Attributes();
 
@@ -152,7 +197,34 @@ public class AttributesTest {
         for(Attribute at : a) {
             at.setKey("b");
         }
-        assertFalse("Attribute 'a' not correctly removed", a.hasKey("a"));
-        assertTrue("Attribute 'b' not present after renaming", a.hasKey("b"));
+        assertFalse(a.hasKey("a"), "Attribute 'a' not correctly removed");
+        assertTrue(a.hasKey("b"), "Attribute 'b' not present after renaming");
+    }
+
+    @Test
+    public void testBoolean() {
+        Attributes ats = new Attributes();
+        ats.put("a", "a");
+        ats.put("B", "b");
+        ats.put("c", null);
+
+        assertTrue(ats.hasDeclaredValueForKey("a"));
+        assertFalse(ats.hasDeclaredValueForKey("A"));
+        assertTrue(ats.hasDeclaredValueForKeyIgnoreCase("A"));
+
+        assertFalse(ats.hasDeclaredValueForKey("c"));
+        assertFalse(ats.hasDeclaredValueForKey("C"));
+        assertFalse(ats.hasDeclaredValueForKeyIgnoreCase("C"));
+    }
+
+    @Test public void testSizeWhenHasInternal() {
+        Attributes a = new Attributes();
+        a.put("One", "One");
+        a.put("Two", "Two");
+        assertEquals(2, a.size());
+
+        a.put(Attributes.internalKey("baseUri"), "example.com");
+        a.put(Attributes.internalKey("another"), "example.com");
+        assertEquals(2, a.size());
     }
 }

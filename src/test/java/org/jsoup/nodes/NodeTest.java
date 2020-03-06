@@ -4,11 +4,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  Tests Nodes
 
@@ -152,8 +153,8 @@ public class NodeTest {
     @Test public void ownerDocument() {
         Document doc = Jsoup.parse("<p>Hello");
         Element p = doc.select("p").first();
-        assertTrue(p.ownerDocument() == doc);
-        assertTrue(doc.ownerDocument() == doc);
+        assertSame(p.ownerDocument(), doc);
+        assertSame(doc.ownerDocument(), doc);
         assertNull(doc.parent());
     }
 
@@ -161,15 +162,15 @@ public class NodeTest {
         Document doc = Jsoup.parse("<div><p>Hello");
         Element p = doc.select("p").first();
         Node root = p.root();
-        assertTrue(doc == root);
+        assertSame(doc, root);
         assertNull(root.parent());
-        assertTrue(doc.root() == doc);
-        assertTrue(doc.root() == doc.ownerDocument());
+        assertSame(doc.root(), doc);
+        assertSame(doc.root(), doc.ownerDocument());
 
         Element standAlone = new Element(Tag.valueOf("p"), "");
-        assertTrue(standAlone.parent() == null);
-        assertTrue(standAlone.root() == standAlone);
-        assertTrue(standAlone.ownerDocument() == null);
+        assertNull(standAlone.parent());
+        assertSame(standAlone.root(), standAlone);
+        assertNull(standAlone.ownerDocument());
     }
 
     @Test public void before() {
@@ -214,7 +215,7 @@ public class NodeTest {
         Element span = doc.select("span").first();
         Node node = span.unwrap();
         assertEquals("<div>One  Two</div>", TextUtil.stripNewlines(doc.body().html()));
-        assertTrue(node == null);
+        assertNull(node);
     }
 
     @Test public void traverse() {
@@ -282,14 +283,14 @@ public class NodeTest {
 
         Element elClone = doc.clone().select("div").first();
         assertTrue(elClone.hasClass("foo"));
-        assertTrue(elClone.text().equals("Text"));
+        assertEquals("Text", elClone.text());
 
         el.removeClass("foo");
         el.text("None");
         assertFalse(el.hasClass("foo"));
         assertTrue(elClone.hasClass("foo"));
-        assertTrue(el.text().equals("None"));
-        assertTrue(elClone.text().equals("Text"));
+        assertEquals("None", el.text());
+        assertEquals("Text", elClone.text());
     }
 
     @Test public void changingAttributeValueShouldReplaceExistingAttributeCaseInsensitive() {
@@ -298,22 +299,22 @@ public class NodeTest {
 
         inputElement.attr("value","bar");
 
-        assertEquals(singletonAttributes("value", "bar"), getAttributesCaseInsensitive(inputElement, "value"));
+        assertEquals(singletonAttributes(), getAttributesCaseInsensitive(inputElement));
     }
 
-    private Attributes getAttributesCaseInsensitive(Element element, String attributeName) {
+    private Attributes getAttributesCaseInsensitive(Element element) {
         Attributes matches = new Attributes();
         for (Attribute attribute : element.attributes()) {
-            if (attribute.getKey().equalsIgnoreCase(attributeName)) {
+            if (attribute.getKey().equalsIgnoreCase("value")) {
                 matches.put(attribute);
             }
         }
         return matches;
     }
 
-    private Attributes singletonAttributes(String key, String value) {
+    private Attributes singletonAttributes() {
         Attributes attributes = new Attributes();
-        attributes.put(key, value);
+        attributes.put("value", "bar");
         return attributes;
     }
 }

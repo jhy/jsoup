@@ -1,15 +1,23 @@
 package org.jsoup.integration;
 
 import org.jsoup.Jsoup;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.ParseErrorList;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test: parses from real-world example HTML.
@@ -20,7 +28,7 @@ public class ParseTest {
 
     @Test
     public void testSmhBizArticle() throws IOException {
-        File in = getFile("/htmltests/smh-biz-article-1.html");
+        File in = getFile("/htmltests/smh-biz-article-1.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8",
                 "http://www.smh.com.au/business/the-boards-next-fear-the-female-quota-20100106-lteq.html");
         assertEquals("The board’s next fear: the female quota",
@@ -35,7 +43,7 @@ public class ParseTest {
 
     @Test
     public void testNewsHomepage() throws IOException {
-        File in = getFile("/htmltests/news-com-au-home.html");
+        File in = getFile("/htmltests/news-com-au-home.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.news.com.au/");
         assertEquals("News.com.au | News from Australia and around the world online | NewsComAu", doc.title());
         assertEquals("Brace yourself for Metro meltdown", doc.select(".id1225817868581 h4").text().trim());
@@ -53,7 +61,7 @@ public class ParseTest {
 
     @Test
     public void testGoogleSearchIpod() throws IOException {
-        File in = getFile("/htmltests/google-ipod.html");
+        File in = getFile("/htmltests/google-ipod.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.google.com/search?hl=en&q=ipod&aq=f&oq=&aqi=g10");
         assertEquals("ipod - Google Search", doc.title());
         Elements results = doc.select("h3.r > a");
@@ -66,22 +74,8 @@ public class ParseTest {
     }
 
     @Test
-    public void testBinaryThrowsException() throws IOException {
-        File in = getFile("/htmltests/thumb.jpg");
-
-        boolean threw = false;
-        try {
-            Document doc = Jsoup.parse(in, "UTF-8");
-        } catch (IOException e) {
-            threw = true;
-            assertEquals("Input is binary and unsupported", e.getMessage());
-        }
-        assertTrue(threw);
-    }
-
-    @Test
     public void testYahooJp() throws IOException {
-        File in = getFile("/htmltests/yahoo-jp.html");
+        File in = getFile("/htmltests/yahoo-jp.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html"); // http charset is utf-8.
         assertEquals("Yahoo! JAPAN", doc.title());
         Element a = doc.select("a[href=t/2322m2]").first();
@@ -137,7 +131,7 @@ public class ParseTest {
         in = getFile("/htmltests/meta-charset-2.html"); //
         doc = Jsoup.parse(in, null, "http://example.com"); // gb2312, no charset
         assertEquals("UTF-8", doc.outputSettings().charset().displayName());
-        assertFalse("新".equals(doc.text()));
+        assertNotEquals("新", doc.text());
 
         // confirm fallback to utf8
         in = getFile("/htmltests/meta-charset-3.html");
@@ -159,7 +153,7 @@ public class ParseTest {
     @Test
     public void testNytArticle() throws IOException {
         // has tags like <nyt_text>
-        File in = getFile("/htmltests/nyt-article-1.html");
+        File in = getFile("/htmltests/nyt-article-1.html.gz");
         Document doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
 
         Element headline = doc.select("nyt_headline[version=1.0]").first();
@@ -168,7 +162,7 @@ public class ParseTest {
 
     @Test
     public void testYahooArticle() throws IOException {
-        File in = getFile("/htmltests/yahoo-article-1.html");
+        File in = getFile("/htmltests/yahoo-article-1.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8", "http://news.yahoo.com/s/nm/20100831/bs_nm/us_gm_china");
         Element p = doc.select("p:contains(Volt will be sold in the United States)").first();
         assertEquals("In July, GM said its electric Chevrolet Volt will be sold in the United States at $41,000 -- $8,000 more than its nearest competitor, the Nissan Leaf.", p.text());
@@ -184,21 +178,80 @@ public class ParseTest {
         assertEquals("UTF-8", doc.outputSettings().charset().name());
     }
 
+    @Test
+    public void testXwiki() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1324
+        // this tests that when in CharacterReader we hit a buffer while marked, we preserve the mark when buffered up and can rewind
+        File in = getFile("/htmltests/xwiki-1324.html.gz");
+        Document doc = Jsoup.parse(in, null, "https://localhost/");
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+
+        // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
+        // updated to preserve the mark.
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
+        assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
+    }
+
+    @Test
+    public void testXwikiExpanded() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1324
+        // this tests that if there is a huge illegal character reference, we can get through a buffer and rewind, and still catch that it's an invalid refence,
+        // and the parse tree is correct.
+        File in = getFile("/htmltests/xwiki-edit.html.gz");
+        Parser parser = Parser.htmlParser();
+        Document doc = Jsoup.parse(new GZIPInputStream(new FileInputStream(in)), "UTF-8", "https://localhost/", parser.setTrackErrors(100));
+        ParseErrorList errors = parser.getErrors();
+
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        assertEquals(0, errors.size()); // not an invalid reference because did not look legit
+
+        // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
+        // updated to preserve the mark.
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;RIGHTHERERIGHTHERERIGHTHERERIGHTHERE";
+        assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
+    }
+
+    @Test public void testWikiExpandedFromString() throws IOException {
+        File in = getFile("/htmltests/xwiki-edit.html.gz");
+        String html = getFileAsString(in);
+        Document doc = Jsoup.parse(html);
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;RIGHTHERERIGHTHERERIGHTHERERIGHTHERE";
+        assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
+    }
+
+    @Test public void testWikiFromString() throws IOException {
+        File in = getFile("/htmltests/xwiki-1324.html.gz");
+        String html = getFileAsString(in);
+        Document doc = Jsoup.parse(html);
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+        String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
+        assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
+    }
+
     public static File getFile(String resourceName) {
         try {
-            File file = new File(ParseTest.class.getResource(resourceName).toURI());
-            return file;
+            URL resource = ParseTest.class.getResource(resourceName);
+            return resource != null ? new File(resource.toURI()) : new File("/404");
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }
     }
 
     public static InputStream inputStreamFrom(String s) {
-        try {
-            return new ByteArrayInputStream(s.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+        return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String getFileAsString(File file) throws IOException {
+        byte[] bytes;
+        if (file.getName().endsWith(".gz")) {
+            InputStream stream = new GZIPInputStream(new FileInputStream(file));
+            ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
+            bytes = byteBuffer.array();
+        } else {
+            bytes = Files.readAllBytes(file.toPath());
         }
+        return new String(bytes);
     }
 
 }

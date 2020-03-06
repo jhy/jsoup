@@ -11,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -49,14 +48,14 @@ class BuildEntities {
             }
             ref.name = name;
         }
-        Collections.sort(base, byName);
-        Collections.sort(full, byName);
+        base.sort(byName);
+        full.sort(byName);
 
         // now determine code point order
         ArrayList<CharacterRef> baseByCode = new ArrayList<>(base);
         ArrayList<CharacterRef> fullByCode = new ArrayList<>(full);
-        Collections.sort(baseByCode, byCode);
-        Collections.sort(fullByCode, byCode);
+        baseByCode.sort(byCode);
+        fullByCode.sort(byCode);
 
         // and update their codepoint index.
         @SuppressWarnings("unchecked") ArrayList<CharacterRef>[] codelists = new ArrayList[]{baseByCode, fullByCode};

@@ -1,9 +1,10 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Token queue tests.
@@ -84,14 +85,14 @@ public class TokenQueueTest {
     }
 
     @Test
-    public void chompBalancedThrowIllegalArgumentException() throws Exception {
+    public void chompBalancedThrowIllegalArgumentException() {
         try {
             TokenQueue tq = new TokenQueue("unbalanced(something(or another)) else");
             tq.consumeTo("(");
             tq.chompBalanced('(', '+');
-            org.junit.Assert.fail("should have thrown IllegalArgumentException");
+            fail("should have thrown IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
-            assertEquals("Did not find balanced marker at \'something(or another)) else\'", expected.getMessage());
+            assertEquals("Did not find balanced marker at 'something(or another)) else'", expected.getMessage());
         }
     }
 }

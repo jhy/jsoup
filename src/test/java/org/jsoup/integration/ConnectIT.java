@@ -5,13 +5,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Failsafe integration tests for Connect methods. These take a bit longer to run, so included as Integ, not Unit, tests.
@@ -19,21 +19,19 @@ import static org.junit.Assert.assertTrue;
 public class ConnectIT {
     // Slow Rider tests. Ignored by default so tests don't take aaages
     @Test
-    public void canInterruptBodyStringRead() throws IOException, InterruptedException {
+    public void canInterruptBodyStringRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.body();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
+        Thread runner = new Thread(() -> {
+            try {
+                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                    .timeout(15 * 1000)
+                    .execute();
+                body[0] = res.body();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+
         });
 
         runner.start();
@@ -47,21 +45,19 @@ public class ConnectIT {
     }
 
     @Test
-    public void canInterruptDocumentRead() throws IOException, InterruptedException {
+    public void canInterruptDocumentRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
-        Thread runner = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Connection.Response res = Jsoup.connect(SlowRider.Url)
-                        .timeout(15 * 1000)
-                        .execute();
-                    body[0] = res.parse().text();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
+        Thread runner = new Thread(() -> {
+            try {
+                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                    .timeout(15 * 1000)
+                    .execute();
+                body[0] = res.parse().text();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+
         });
 
         runner.start();
@@ -70,7 +66,7 @@ public class ConnectIT {
         assertTrue(runner.isInterrupted());
         runner.join();
 
-        assertTrue(body[0].length() == 0); // doesn't ready a failed doc
+        assertEquals(0, body[0].length()); // doesn't ready a failed doc
     }
 
     @Test
@@ -83,8 +79,8 @@ public class ConnectIT {
         } catch (SocketTimeoutException e) {
             long end = System.currentTimeMillis();
             long took = end - start;
-            assertTrue(("Time taken was " + took), took > timeout);
-            assertTrue(("Time taken was " + took), took < timeout * 1.2);
+            assertTrue(took > timeout, ("Time taken was " + took));
+            assertTrue(took < timeout * 1.8, ("Time taken was " + took));
             threw = true;
         }
 

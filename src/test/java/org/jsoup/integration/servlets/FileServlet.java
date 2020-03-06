@@ -3,7 +3,6 @@ package org.jsoup.integration.servlets;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 public class FileServlet extends BaseServlet {
     public static final String Url = TestServer.map(FileServlet.class);
     public static final String ContentTypeParam = "contentType";
-    public static final String LocationParam = "loc";
     public static final String DefaultType = "text/html";
 
     @Override
@@ -43,7 +41,7 @@ public class FileServlet extends BaseServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         doGet(req, res);
     }
 }

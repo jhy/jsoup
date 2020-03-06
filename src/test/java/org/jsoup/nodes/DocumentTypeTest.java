@@ -2,9 +2,10 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for the DocumentType node
@@ -14,17 +15,17 @@ import static org.junit.Assert.*;
 public class DocumentTypeTest {
     @Test
     public void constructorValidationOkWithBlankName() {
-        DocumentType fail = new DocumentType("","", "");
+        new DocumentType("","", "");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void constructorValidationThrowsExceptionOnNulls() {
-        DocumentType fail = new DocumentType("html", null, null);
+        assertThrows(IllegalArgumentException.class, () -> new DocumentType("html", null, null));
     }
 
     @Test
     public void constructorValidationOkWithBlankPublicAndSystemIds() {
-        DocumentType fail = new DocumentType("html","", "");
+        new DocumentType("html","", "");
     }
 
     @Test public void outerHtmlGeneration() {
@@ -35,10 +36,13 @@ public class DocumentTypeTest {
         assertEquals("<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML//\">", publicDocType.outerHtml());
 
         DocumentType systemDocType = new DocumentType("html", "", "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd");
-        assertEquals("<!DOCTYPE html \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
+        assertEquals("<!DOCTYPE html SYSTEM \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
 
         DocumentType combo = new DocumentType("notHtml", "--public", "--system");
         assertEquals("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">", combo.outerHtml());
+        assertEquals("notHtml", combo.name());
+        assertEquals("--public", combo.publicId());
+        assertEquals("--system", combo.systemId());
     }
 
     @Test public void testRoundTrip() {

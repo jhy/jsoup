@@ -25,7 +25,7 @@ public class SlowRider extends BaseServlet {
         int maxTime = -1;
         String maxTimeP = req.getParameter(MaxTimeParam);
         if (maxTimeP != null) {
-            maxTime = Integer.valueOf(maxTimeP);
+            maxTime = Integer.parseInt(maxTimeP);
         }
 
         long startTime = System.currentTimeMillis();

@@ -70,7 +70,7 @@ public class ParseSettings {
     }
 
     Attributes normalizeAttributes(Attributes attributes) {
-        if (!preserveAttributeCase) {
+        if (attributes != null && !preserveAttributeCase) {
             attributes.normalize();
         }
         return attributes;

@@ -1,13 +1,11 @@
 package org.jsoup.parser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test suite for character reader.
@@ -246,10 +244,10 @@ public class CharacterReaderTest {
         assertEquals("Check", two);
         assertEquals("Check", three);
         assertEquals("CHOKE", four);
-        assertTrue(one == two);
-        assertTrue(two == three);
-        assertTrue(three != four);
-        assertTrue(four != five);
+        assertSame(one, two);
+        assertSame(two, three);
+        assertNotSame(three, four);
+        assertNotSame(four, five);
         assertEquals(five, "A string that is longer than 16 chars");
     }
 
@@ -297,7 +295,7 @@ public class CharacterReaderTest {
     public void notEmptyAtBufferSplitPoint() {
         CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
         assertEquals("How", r.consumeTo(' '));
-        assertFalse("Should not be empty", r.isEmpty());
+        assertFalse(r.isEmpty(), "Should not be empty");
 
         assertEquals(' ', r.consume());
         assertFalse(r.isEmpty());
@@ -337,6 +335,5 @@ public class CharacterReaderTest {
 
         assertTrue(r.isEmpty());
     }
-
 
 }

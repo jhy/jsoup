@@ -1,12 +1,13 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AttributeTest {
-    @Test public void html() {
+    @Test
+    public void html() {
         Attribute attr = new Attribute("key", "value &");
         assertEquals("key=\"value &amp;\"", attr.html());
         assertEquals(attr.html(), attr.toString());
@@ -19,13 +20,15 @@ public class AttributeTest {
         assertEquals(attr.html(), attr.toString());
     }
 
-    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmpty() {
-        Attribute attr = new Attribute(" ", "Check");
+    @Test public void validatesKeysNotEmpty() {
+        assertThrows(IllegalArgumentException.class, () -> new Attribute(" ", "Check"));
     }
 
-    @Test(expected = IllegalArgumentException.class) public void validatesKeysNotEmptyViaSet() {
-        Attribute attr = new Attribute("One", "Check");
-        attr.setKey(" ");
+    @Test public void validatesKeysNotEmptyViaSet() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Attribute attr = new Attribute("One", "Check");
+            attr.setKey(" ");
+        });
     }
 
     @Test public void booleanAttributesAreEmptyStringValues() {
@@ -36,6 +39,8 @@ public class AttributeTest {
         Attribute first = attributes.iterator().next();
         assertEquals("hidden", first.getKey());
         assertEquals("", first.getValue());
+        assertFalse(first.hasDeclaredValue());
+        assertTrue(Attribute.isBooleanAttribute(first.getKey()));
     }
 
     @Test public void settersOnOrphanAttribute() {
@@ -45,6 +50,16 @@ public class AttributeTest {
         assertEquals("two", oldVal);
         assertEquals("three", attr.getKey());
         assertEquals("four", attr.getValue());
-        assertEquals(null, attr.parent);
+        assertNull(attr.parent);
+    }
+
+    @Test public void hasValue() {
+        Attribute a1 = new Attribute("one", "");
+        Attribute a2 = new Attribute("two", null);
+        Attribute a3 = new Attribute("thr", "thr");
+
+        assertTrue(a1.hasDeclaredValue());
+        assertFalse(a2.hasDeclaredValue());
+        assertTrue(a3.hasDeclaredValue());
     }
 }
