@@ -19,6 +19,7 @@ env:
     - JDK="openjdk@1.11."
     - JDK="openjdk@1.12."
     - JDK="openjdk@1.13."
+    - JDK="openjdk@1.14."
 
 cache:
   directories:
