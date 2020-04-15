@@ -457,6 +457,16 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
+     * Find matching elements within this element list.
+     *
+     * @param evaluator an element evaluator
+     * @return the filtered list of elements, or an empty list if none match.
+     */
+    public Elements select(Evaluator evaluator) {
+        return Selector.select(evaluator, this);
+    }
+
+    /**
      * Remove elements from this list that match the {@link Selector} query.
      * <p>
      * E.g. HTML: {@code <div class=logo>One</div> <div>Two</div>}<br>
