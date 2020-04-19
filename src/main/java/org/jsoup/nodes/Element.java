@@ -251,6 +251,11 @@ public class Element extends Node {
         return parents;
     }
 
+    public Element firstParent(String query) {
+        Elements parents = parents();
+        return parents.select(query).first();
+    }
+
     private static void accumulateParents(Element el, Elements parents) {
         Element parent = el.parent();
         if (parent != null && !parent.tagName().equals("#root")) {

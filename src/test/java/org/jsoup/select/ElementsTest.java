@@ -244,6 +244,14 @@ public class ElementsTest {
         assertEquals("html", parents.get(2).tagName());
     }
 
+    @Test public void firstParent() {
+        Document doc = Jsoup.parse("<div><ul><p>hi</p><p>Hello</p></ul></div><p>There</p>");
+        Element p0 = doc.select("p").get(0);
+
+        assertEquals("div", p0.firstParent("div").tagName());
+        assertEquals("ul", p0.firstParent("ul").tagName());
+    }
+
     @Test public void not() {
         Document doc = Jsoup.parse("<div id=1><p>One</p></div> <div id=2><p><span>Two</span></p></div>");
 
