@@ -59,6 +59,19 @@ public class Jsoup {
     }
 
     /**
+     Parse HTML into a Document with only legal tags by encoding illegal ones.
+     As no base URI is specified, absolute URL detection relies on the HTML including a {@code <base href>} tag.
+
+     @param html HTML to parse
+     @return sane HTML
+
+     @see #parse(String, String)
+     */
+    public static Document parseLegalTag(String html) {
+        return Parser.parseLegalTag(html, "");
+    }
+
+    /**
      * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
      * <p>
      * Use examples:

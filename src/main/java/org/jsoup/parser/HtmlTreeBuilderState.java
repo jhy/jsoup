@@ -8,6 +8,7 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import static org.jsoup.internal.StringUtil.inSorted;
@@ -253,6 +254,20 @@ enum HtmlTreeBuilderState {
     },
     InBody {
         boolean process(Token t, HtmlTreeBuilder tb) {
+            if (tb.legalize) {
+                if (t.type == Token.TokenType.StartTag && !islegal(t.asStartTag().normalName)) {
+                    Token.StartTag st = t.asStartTag();
+                    Token.Character newT = new Token.Character();
+                    newT.data("<" + st.tagName + ">");
+                    t = newT;
+                } else if (t.type == Token.TokenType.EndTag && !islegal(t.asEndTag().normalName)) {
+                    Token.EndTag et = t.asEndTag();
+                    Token.Character newT = new Token.Character();
+                    newT.data("</" + et.tagName + ">");
+                    t = newT;
+                }
+            }
+
             switch (t.type) {
                 case Character: {
                     Token.Character c = t.asCharacter();
@@ -867,6 +882,38 @@ enum HtmlTreeBuilderState {
                 tb.insertOnStackAfter(furthestBlock, adopter);
             }
             return true;
+        }
+
+        private boolean islegal(String tagName) {
+            try {
+                // check tags in Constants
+                Field[] fields = Constants.class.getDeclaredFields();
+                Constants _const = new Constants();
+                for (Field item: fields) {
+                    String[] tags = (String[]) item.get(_const);
+                    if (inSorted(tagName, tags))
+                        return true;
+                }
+
+                // check tags in Tag.java
+                Tag _tag = Tag.valueOf("noMeaning");
+                String[] checkList = {"blockTags", "inlineTags", "emptyTags", "formatAsInlineTags",
+                "preserveWhitespaceTags", "formListedTags", "formSubmitTags"};
+                for (String name: checkList) {
+                    Field field = Tag.class.getDeclaredField(name);
+                    field.setAccessible(true);
+                    if (inSorted(tagName, (String[]) field.get(_tag))) {
+                        field.setAccessible(false);
+                        return true;
+                    }
+                    field.setAccessible(false);
+                }
+            } catch (IllegalAccessException e) {
+                System.err.println("IllegalAccessException");
+            } catch (NoSuchFieldException e) {
+                System.err.println("NoSuchFieldException");
+            }
+            return false;
         }
     },
     Text {

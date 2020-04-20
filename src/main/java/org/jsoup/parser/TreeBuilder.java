@@ -22,6 +22,7 @@ abstract class TreeBuilder {
     protected String baseUri; // current base uri, for creating new elements
     protected Token currentToken; // currentToken is used only for error tracking.
     protected ParseSettings settings;
+    protected boolean legalize; // if encoding illegal tags
 
     private Token.StartTag start = new Token.StartTag(); // start tag to process
     private Token.EndTag end  = new Token.EndTag();
@@ -40,6 +41,7 @@ abstract class TreeBuilder {
         tokeniser = new Tokeniser(reader, parser.getErrors());
         stack = new ArrayList<>(32);
         this.baseUri = baseUri;
+        legalize = false;
     }
 
     Document parse(Reader input, String baseUri, Parser parser) {
@@ -47,6 +49,19 @@ abstract class TreeBuilder {
         runParser();
 
         // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
+        reader.close();
+        reader = null;
+        tokeniser = null;
+        stack = null;
+
+        return doc;
+    }
+
+    Document parseLegalTag(Reader input, String baseUri, Parser parser) {
+        initialiseParse(input, baseUri, parser);
+        this.legalize = true;
+        runParser();
+
         reader.close();
         reader = null;
         tokeniser = null;

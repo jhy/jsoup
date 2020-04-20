@@ -1362,4 +1362,11 @@ public class HtmlParserTest {
         doc.outputSettings().prettyPrint(false);
         assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
     }
+
+    @Test public void testParseLegalTag() {
+        String html = "<p>Try <aaa>jsoup</aaa></p><div><hello></div>";
+        Document doc = Jsoup.parseLegalTag(html);
+        doc.outputSettings().prettyPrint(false);
+        assertEquals("<html><head></head><body><p>Try &lt;aaa&gt;jsoup&lt;/aaa&gt;</p><div>&lt;hello&gt;</div></body></html>", doc.outerHtml());
+    }
 }

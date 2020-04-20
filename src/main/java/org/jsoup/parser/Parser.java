@@ -108,6 +108,19 @@ public class Parser {
     }
 
     /**
+     * Parse HTML into a Document with encoding illegal tags.
+     *
+     * @param html HTML to parse
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     *
+     * @return parsed Document
+     */
+    public static Document parseLegalTag(String html, String baseUri) {
+        TreeBuilder treeBuilder = new HtmlTreeBuilder();
+        return treeBuilder.parseLegalTag(new StringReader(html), baseUri, new Parser(treeBuilder));
+    }
+
+    /**
      * Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
      *
      * @param fragmentHtml the fragment of HTML to parse
