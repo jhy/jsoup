@@ -6,6 +6,7 @@ import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.w3c.dom.Text;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -98,7 +99,17 @@ public class Document extends Element {
     public String title() {
         // title is a preserve whitespace tag (for document output), but normalised here
         Element titleEl = getElementsByTag("title").first();
-        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+//        int size = titleEl.childrenSize();
+//       Elements test =  titleEl.children();
+       List<TextNode> all_text = titleEl.textNodes();
+
+//        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+        StringBuilder stringBuilder = new StringBuilder();
+        for(TextNode textNode:all_text){
+            if(!textNode.text().equals(" "))
+            stringBuilder.append(textNode.text());
+        }
+        return stringBuilder.toString();
     }
 
     /**

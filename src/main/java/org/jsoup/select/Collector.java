@@ -49,6 +49,10 @@ public class Collector {
 
         public void tail(Node node, int depth) {
             // void
+//            if(node instanceof Element){
+//                Element el = (Element) node;
+//
+//            }
         }
     }
 
