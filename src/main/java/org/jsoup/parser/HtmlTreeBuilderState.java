@@ -579,12 +579,14 @@ enum HtmlTreeBuilderState {
                 case "rp":
                 case "rt":
                     if (tb.inScope("ruby")) {
-                        tb.generateImpliedEndTags();
-                        if (!tb.currentElement().normalName().equals("ruby")) {
-                            tb.error(this);
-                            tb.popStackToBefore("ruby"); // i.e. close up to but not include name
-                        }
+                        tb.reconstructFormattingElements();
                         tb.insert(startTag);
+//                        tb.generateImpliedEndTags();
+//                        if (!tb.currentElement().normalName().equals("ruby")) {
+//                            tb.error(this);
+//                            tb.popStackToBefore("ruby"); // i.e. close up to but not include name
+//                        }
+//                        tb.insert(startTag);
                     }
                     // todo - is this right? drops rp, rt if ruby not in scope?
                     break;
