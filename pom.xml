@@ -67,6 +67,7 @@
                 <artifactId>java18</artifactId>
                 <version>1.0</version>
               </signature>
+              
               <signature>
                 <groupId>net.sf.androidscents.signature</groupId>
                 <artifactId>android-api-level-10</artifactId>
