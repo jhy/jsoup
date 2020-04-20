@@ -99,11 +99,10 @@ public class Document extends Element {
     public String title() {
         // title is a preserve whitespace tag (for document output), but normalised here
         Element titleEl = getElementsByTag("title").first();
-//        int size = titleEl.childrenSize();
-//       Elements test =  titleEl.children();
+
        List<TextNode> all_text = titleEl.textNodes();
 
-//        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+
         StringBuilder stringBuilder = new StringBuilder();
         for(TextNode textNode:all_text){
             if(!textNode.text().equals(" "))
