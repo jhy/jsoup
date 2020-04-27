@@ -2,6 +2,8 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
 
+import java.util.Objects;
+
 /**
  * States and transition activations for the Tokeniser.
  */
@@ -14,6 +16,7 @@ enum TokeniserState {
                     t.advanceTransition(CharacterReferenceInData);
                     break;
                 case '<':
+                    r.savePos();
                     t.advanceTransition(TagOpen);
                     break;
                 case nullChar:
@@ -24,7 +27,9 @@ enum TokeniserState {
                     t.emit(new Token.EOF());
                     break;
                 default:
-                    String data = r.consumeData();
+                    String data = "";
+                    if (r.shouldAddlt()) data += '<';
+                    data += r.consumeData();
                     t.emit(data);
                     break;
             }
@@ -115,6 +120,7 @@ enum TokeniserState {
                     } else {
                         t.error(this);
                         t.emit('<'); // char that got us here
+                        r.clearPos();
                         t.transition(Data);
                     }
                     break;
@@ -144,7 +150,8 @@ enum TokeniserState {
         // from < or </ in data, will have start or end tag pending
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
-            //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
+            // String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
+
             String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
 
@@ -243,8 +250,7 @@ enum TokeniserState {
                     if (t.isAppropriateEndTagToken()) {
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
+                    } else
                         anythingElse(t, r);
                     break;
                 default:
@@ -556,7 +562,7 @@ enum TokeniserState {
     },
     ScriptDataDoubleEscapeEnd {
         void read(Tokeniser t, CharacterReader r) {
-            handleDataDoubleEscapeTag(t,r, ScriptDataEscaped, ScriptDataDoubleEscaped);
+            handleDataDoubleEscapeTag(t, r, ScriptDataEscaped, ScriptDataDoubleEscaped);
         }
     },
     BeforeAttributeName {
@@ -637,13 +643,19 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
+                    if (!Objects.equals(t.tagPending.tagName, "script")) r.setSavePos();
                     t.transition(Data);
                     break;
                 case '"':
                 case '\'':
-                case '<':
                     t.error(this);
                     t.tagPending.appendAttributeName(c);
+                    break;
+                case '<':
+                    t.error(this);
+                    r.setSavePos();
+                    t.tagPending.appendAttributeName(c);
+                    t.transition(Data);
                     break;
                 default: // buffer underrun
                     t.tagPending.appendAttributeName(c);
