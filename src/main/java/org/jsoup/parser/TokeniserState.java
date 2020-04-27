@@ -2,8 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
 
-import java.util.Objects;
-
 /**
  * States and transition activations for the Tokeniser.
  */
@@ -643,7 +641,7 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
-                    if (!Objects.equals(t.tagPending.tagName, "script")) r.setSavePos();
+                    if (!t.tagPending.tagName.equals("script")) r.setSavePos();
                     t.transition(Data);
                     break;
                 case '"':
