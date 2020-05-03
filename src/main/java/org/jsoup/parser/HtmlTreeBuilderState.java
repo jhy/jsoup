@@ -580,7 +580,7 @@ enum HtmlTreeBuilderState {
                 case "rt":
                     if (tb.inScope("ruby")) {
                         tb.generateImpliedEndTags();
-                        if (!tb.currentElement().normalName().equals("ruby")) {
+                        if (!tb.currentElement().normalName().equals("ruby") && !tb.currentElement().normalName().equals("rtc")) {
                             tb.error(this);
                             tb.popStackToBefore("ruby"); // i.e. close up to but not include name
                         }
