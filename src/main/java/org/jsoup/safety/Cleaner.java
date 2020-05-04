@@ -90,6 +90,16 @@ public class Cleaner {
         return numDiscarded == 0 && errorList.isEmpty();
     }
 
+    public boolean isValidBodyHtml(String bodyHtml,String baseurl) {
+        Document clean = Document.createShell("");
+        Document dirty = Document.createShell("");
+        ParseErrorList errorList = ParseErrorList.tracking(1);
+        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), baseurl, errorList);
+        dirty.body().insertChildren(0, nodes);
+        int numDiscarded = copySafeNodes(dirty.body(), clean.body());
+        return numDiscarded == 0 && errorList.isEmpty();
+    }
+
     /**
      Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
      */

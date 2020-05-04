@@ -1,15 +1,20 @@
 package org.jsoup;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
+import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -248,6 +253,62 @@ public class Jsoup {
      */
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+    }
+    /**
+     Test if the input body HTML has only tags and attributes allowed by the Whitelist. Useful for form validation.
+     <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
+     <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
+     @param bodyHtml HTML to test
+     @param whitelist whitelist to test against
+     @param baseurl The URL where the HTML was retrieved from. Used to resolve relative URLs to absolute URLs, that occur
+     before the HTML declares a {@code <base href>} tag.
+     @return true if no tags or attributes were removed; false otherwise
+     @see #clean(String, org.jsoup.safety.Whitelist)
+     */
+
+    public static boolean isValid(String bodyHtml, String baseurl,Whitelist whitelist) {
+        String newContent = "";
+        StringBuilder body = new StringBuilder();
+//        if (bodyHtml !=null && !bodyHtml.trim().equals("")){
+//            try{
+//            URI base = new URI(baseurl);
+//            Document doc = Jsoup.parse(bodyHtml);
+//                for (Element ele : doc.getElementsByTag("a"))
+//                {
+//                    String elePropValue = ele.attr("href");
+//                    if (!elePropValue.matches("^(https?|ftp):(\\\\|//).*$")) {
+//                        URI abs = base.resolve(elePropValue);// 解析相对URL，得到绝对URI
+//                        ele.attr("href",abs.toURL().toString());
+//                    }
+//                }
+//
+//
+//                }
+//            } catch (URISyntaxException | MalformedURLException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+        //TODO:more tag,this funcion can move to isValidBodyHtml() I guess
+        Document doc = Jsoup.parse(bodyHtml,baseurl);
+        Elements links = doc.getElementsByTag("a");
+
+        if(links != null && !links.isEmpty()){
+            int flag = 0;
+            for (Element link : links){
+                if(flag ==1)
+                    body.append("\n");
+                flag=1;
+                String linkText = link.text();
+                link.attr("href",link.absUrl("href"));
+                System.out.println(link);
+                body.append(link.toString());
+            }
+
+            }
+
+        System.out.println(body);
+        return new Cleaner(whitelist).isValidBodyHtml(body.toString());
     }
     
 }
