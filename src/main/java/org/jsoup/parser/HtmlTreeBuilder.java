@@ -108,6 +108,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             root = new Element(Tag.valueOf("html", settings), baseUri);
             doc.appendChild(root);
+
             stack.add(root);
             resetInsertionMode();
 

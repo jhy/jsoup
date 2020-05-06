@@ -29,7 +29,7 @@ public class cpp {public static void main(String[] args) throws IOException {
 //    Element link = doc.select("a").first();
 //    System.out.println(link.toString());
     String HTML2="<a href='/xxx'> 百度首页 </a>";
-//    System.out.println(Jsoup.isValid(HTML, Whitelist.));
+//   System.out.println(Jsoup.isValid(HTML2, Whitelist.basic()));
    System.out.println(Jsoup.isValid(HTML2, baseurl,Whitelist.basic()));
     Document doc=Jsoup.parse(HTML2,baseurl);
     Element link = doc.select("a").first();
