@@ -1,9 +1,10 @@
 # From https://github.com/DanySK/Gravis-CI
 
 language: bash
+
+os: linux
+
 dist: xenial
-os:
-  - linux
 
 env:
   global:
@@ -20,12 +21,6 @@ env:
     - JDK="openjdk@1.12."
     - JDK="openjdk@1.13."
 
-cache:
-  directories:
-    # Avoid re-downloading the JDK every time
-    - $HOME/.jabba/
-    - $HOME/.m2/
-
 before_install:
   # Sets up the Java environment
   - curl "${GRAVIS}.install-jdk-travis.sh" --output .install-jdk-travis.sh
@@ -37,3 +32,9 @@ before_script:
 
 script:
   - /usr/local/maven/bin/mvn verify -B
+
+cache:
+  directories:
+    # Avoid re-downloading the JDK every time
+    - $HOME/.jabba/
+    - $HOME/.m2/
