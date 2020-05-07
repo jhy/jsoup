@@ -15,6 +15,14 @@ public class cpp {public static void main(String[] args) throws IOException {
 //        System.out.println(doc.select("div:matches(" + "1" + ")"));
 //    System.out.println(doc.select("div:matches(" + "\\)" + ")"));
 
+    String html = "<div>"
+            + "<![if true]>1<![endif]>" // downlevel-revealed
+            + "<!--[if true]>2<![endif]-->" // downlevel-hidden
+            + "</div>";
+    Document document = Jsoup.parse(html);
+
+
+
     String HTML="<html>\n" +
             " <head></head>\n" +
             " <body>\n" +
@@ -28,12 +36,13 @@ public class cpp {public static void main(String[] args) throws IOException {
 //    Document doc = Jsoup.parse(url, 5000);
 //    Element link = doc.select("a").first();
 //    System.out.println(link.toString());
-    String HTML2="<a href='/xxx'> 百度首页 </a>";
+    String HTML2="<a href='http://www.baidu.com/xxx'> 百度首页 </a>";
 //   System.out.println(Jsoup.isValid(HTML2, Whitelist.basic()));
    System.out.println(Jsoup.isValid(HTML2, baseurl,Whitelist.basic()));
-    Document doc=Jsoup.parse(HTML2,baseurl);
-    Element link = doc.select("a").first();
-    System.out.println(link.absUrl("href"));
+//    Document doc=Jsoup.parse(HTML2,baseurl);
+//    Element link = doc.select("a").first();
+//    System.out.println(link.absUrl("href"));
+//    doc.select()
 //    System.out.println(doc);
 
 //        System.out.println(doc.select("div:matches(" + Pattern.quote("*") + ")"));
