@@ -274,6 +274,7 @@ public final class Jsoup {
                 if(flag ==1){
                     body.append("\n");
                 }
+                flag=1;
                 link.attr("href",link.absUrl("href"));
                 body.append(link.toString());
             }
