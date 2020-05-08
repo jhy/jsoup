@@ -317,18 +317,6 @@ abstract class Token {
         }
     }
 
-//    final static class DownLevelRevealed extends Comment {
-//
-////        DownLevelRevealed() {
-////            type = TokenType.Comment;
-////        }
-//
-//        @Override
-//        public String toString() {
-//            return "<!" + getData() + ">";
-//        }
-//    }
-
     static class Character extends Token {
         private String data;
 
