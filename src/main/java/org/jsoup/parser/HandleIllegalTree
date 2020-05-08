@@ -1,0 +1,81 @@
+package org.jsoup.parser;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Node;
+
+import java.util.ArrayList;
+
+public class HandleIllegalTree {
+    /**
+     * The nested <a></a> tag is illegal. This method is used to reconstruct the dom tree to avoid nested <a></a> tag
+     * @param doc the document tree which have nested <a></a>tag and need to be reconstructed.
+     * @return whether there is wrongly nested <a></a>tag in the document
+     */
+    public boolean handlesMisNestedAtag(Document doc){
+        Node body = doc.body();
+        ArrayList<Node> list = new ArrayList<Node>();
+        // BFS the dom tree and store the nodes in list by visiting order.
+        int head=0, tail=0;
+        list.add(body);
+        tail+=1;
+        String AttributeName="containsAtag";
+        while(head<tail){
+            Node node = list.get(head);
+            head++;
+            node.attr(AttributeName,"F");
+            for(Node child :node.childNodes()) {
+                list.add(child);
+                tail++;
+            }
+        }
+        // For every nodes, mark whether it have descendant which have 'a' tag.
+        Boolean flag=false; // Judge whether it has nestedA
+        while(tail>0){
+            Node node = list.get(--tail);
+            if(node.nodeName()=="a") {
+                if (node.attr(AttributeName) == "T"){
+                    flag = true;
+                }
+                node.attr(AttributeName, "T");
+            }
+            if (node.attr(AttributeName) == "T"){
+                node.parent().attr(AttributeName, "T");
+            }
+        }
+        // reconstruct the dom tree to avoid nested 'a' tags.
+        list.clear();
+        head=tail=0;
+        list.add(doc.body());
+        tail+=1;
+        while(head<tail){
+            Node node = list.get(head);
+            head++;
+            Boolean childContainA=false;
+            for(Node child :node.childNodes()){
+                if(child.attr(AttributeName)=="T"){
+                    list.add(child);
+                    tail++;
+                    childContainA = true;
+                }
+            }
+            if(node.nodeName()=="a" &&childContainA){
+                Node t = node.shallowClone();
+                node.before(t);
+                node.unwrap();
+            }
+        }
+        //delete the 'containsAtag' attribution which is used in algorithm
+        list.clear();
+        head=tail=0; list.add(doc.root()); tail+=1;
+        while(head<tail){
+            Node node = list.get(head);
+            node.removeAttr(AttributeName);
+            head++;
+            for(Node child :node.childNodes()) {
+                list.add(child);
+                tail++;
+            }
+        }
+        return flag;
+    }
+}
