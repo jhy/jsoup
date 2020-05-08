@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import java.util.ArrayList;
+import java.util.Map;
 import org.jsoup.SerializationException;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
@@ -19,12 +20,12 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
  * HTML entities, and escape routines. Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C
  * HTML named character references</a>.
  */
-public class Entities {
+public final class Entities {
     private static final int empty = -1;
     private static final String emptyName = "";
     static final int codepointRadix = 36;
     private static final char[] codeDelims = {',', ';'};
-    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
+    private static final Map<String, String> multipoints = new HashMap<>(); // name -> multiple character references
     private static final Document.OutputSettings DefaultOutput = new Document.OutputSettings();
 
     public enum EscapeMode {
@@ -106,11 +107,13 @@ public class Entities {
      */
     public static String getByName(String name) {
         String val = multipoints.get(name);
-        if (val != null)
+        if (val != null) {
             return val;
+        }
         int codepoint = extended.codepointForName(name);
-        if (codepoint != empty)
+        if (codepoint != empty) {
             return new String(new int[]{codepoint}, 0, 1);
+        }
         return emptyName;
     }
 
@@ -138,8 +141,9 @@ public class Entities {
      * @return the escaped string
      */
     public static String escape(String string, Document.OutputSettings out) {
-        if (string == null)
+        if (string == null) {
             return "";
+        }
         StringBuilder accum = StringUtil.borrowBuilder();
         try {
             escape(accum, string, out, false, false, false);
@@ -160,8 +164,29 @@ public class Entities {
         return escape(string, DefaultOutput);
     }
 
-    // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
 
+    /**
+     * Help to judge whether &#%d; is a valid XML Character
+     * @param codePoint the integer value of the specify char
+     */
+    static boolean isXMLCharacter(int codePoint){
+        if(codePoint == 9 || codePoint == 10 || codePoint == 13) {
+            return true;
+        }else {
+            return codePoint >= 0 && codePoint <= 31;
+        }
+    }
+    /**
+     * HTML escape an input string, using different settings (UTF-8, ASCII, ...). That is, {@code <} is returned as
+     * {@code &lt;}
+     * @param accum the buffer of string stream
+     * @param out the document as output
+     * @param inAttribute whether is in attribute
+     * @param normaliseWhite whether is normaliseWhite
+     * @param stripLeadingWhite whether is stripLeadingWhite
+     * @param string the un-escaped string to escape
+     *
+     */
     static void escape(Appendable accum, String string, Document.OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
         boolean lastWasWhite = false;
@@ -169,18 +194,18 @@ public class Entities {
         final EscapeMode escapeMode = out.escapeMode();
         final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
-        final int length = string.length();
 
         int codePoint;
-        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+        for (int offset = 0; offset < string.length(); offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
-            if(codePoint >= 0 && codePoint <= 31 && codePoint != 9 && codePoint != 10 && codePoint != 13) {
+            if(isXMLCharacter(codePoint)){
                 continue;
             }
             if (normaliseWhite) {
                 if (StringUtil.isWhitespace(codePoint)) {
-                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
                         continue;
+                    }
                     accum.append(' ');
                     lastWasWhite = true;
                     continue;
@@ -198,53 +223,68 @@ public class Entities {
                         accum.append("&amp;");
                         break;
                     case 0xA0:
-                        if (escapeMode != EscapeMode.xhtml)
+                        if (escapeMode != EscapeMode.xhtml) {
                             accum.append("&nbsp;");
-                        else
+                        }
+                        else{
                             accum.append("&#xa0;");
+                        }
                         break;
                     case '<':
                         // escape when in character data or when in a xml attribue val; not needed in html attr val
-                        if (!inAttribute || escapeMode == EscapeMode.xhtml)
+                        if (!inAttribute || escapeMode == EscapeMode.xhtml) {
                             accum.append("&lt;");
-                        else
+                        }
+                        else {
                             accum.append(c);
+                        }
                         break;
                     case '>':
-                        if (!inAttribute)
+                        if (!inAttribute){
                             accum.append("&gt;");
-                        else
+                        }
+                        else{
                             accum.append(c);
+                        }
                         break;
                     case '"':
-                        if (inAttribute)
+                        if (inAttribute) {
                             accum.append("&quot;");
-                        else
+                        }
+                        else {
                             accum.append(c);
+                        }
                         break;
                     default:
-                        if (canEncode(coreCharset, c, encoder))
+                        if (canEncode(coreCharset, c, encoder)) {
                             accum.append(c);
-                        else
+                        }
+                        else {
                             appendEncoded(accum, escapeMode, codePoint);
+                        }
+                        break;
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));
 
-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                if (encoder.canEncode(c)){ // uses fallback encoder for simplicity
                     accum.append(c);
-                else
+                }
+                else {
                     appendEncoded(accum, escapeMode, codePoint);
+                }
             }
         }
     }
 
     private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
         final String name = escapeMode.nameForCodepoint(codePoint);
-        if (!emptyName.equals(name)) // ok for identity check
+        if (!emptyName.equals(name)) {// ok for identity check
             accum.append('&').append(name).append(';');
-        else
+        }
+        else {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
+        }
     }
 
     /**
@@ -297,10 +337,12 @@ public class Entities {
         ascii, utf, fallback;
 
         static CoreCharset byName(final String name) {
-            if (name.equals("US-ASCII"))
+            if (name.equals("US-ASCII")) {
                 return ascii;
-            if (name.startsWith("UTF-")) // covers UTF-8, UTF-16, et al
+            }
+            if (name.startsWith("UTF-")) { // covers UTF-8, UTF-16, et al
                 return utf;
+            }
             return fallback;
         }
     }
