@@ -169,7 +169,7 @@ public final class Entities {
      * Help to judge whether &#%d; is a valid XML Character
      * @param codePoint the integer value of the specify char
      */
-    static boolean isXMLCharacter(int codePoint){
+    static boolean isInvalidXMLCharacter(int codePoint){
         if(codePoint == 9 || codePoint == 10 || codePoint == 13) {
             return true;
         }else {
@@ -198,7 +198,7 @@ public final class Entities {
         int codePoint;
         for (int offset = 0; offset < string.length(); offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
-            if(isXMLCharacter(codePoint)){
+            if(isInvalidXMLCharacter(codePoint)){
                 continue;
             }
             if (normaliseWhite) {
