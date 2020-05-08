@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EntitiesTest {
     @Test public void escape() {
@@ -22,6 +24,14 @@ public class EntitiesTest {
         assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »", escapedUtfFull);
         assertEquals("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »", escapedUtfMin);
         // odd that it's defined as aring in base but angst in full
+    }
+    @Test public void escapeRoundTrip() {
+        String text = "Hello &<> Å å π 新 there ¾ © »";
+        String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
+        String escapedAsciiFull = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(extended));
+        String escapedAsciiXhtml = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(xhtml));
+        String escapedUtfFull = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(extended));
+        String escapedUtfMin = Entities.escape(text, new OutputSettings().charset("UTF-8").escapeMode(xhtml));
 
         // round trip
         assertEquals(text, Entities.unescape(escapedAscii));
@@ -29,6 +39,14 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedAsciiXhtml));
         assertEquals(text, Entities.unescape(escapedUtfFull));
         assertEquals(text, Entities.unescape(escapedUtfMin));
+    }
+    @Test public void isInvalidXMLCharacterFalseCase() {
+        int codePoint = 42;
+        assertFalse(Entities.isInvalidXMLCharacter(codePoint));
+    }
+    @Test public void isInvalidXMLCharacterTrueCase() {
+        int codePoint = 2;
+        assertTrue(Entities.isInvalidXMLCharacter(codePoint));
     }
 
     @Test public void escapedSupplementary() {
