@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import java.util.ArrayList;
 import org.jsoup.SerializationException;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
@@ -114,6 +115,7 @@ public class Entities {
     }
 
     public static int codepointsForName(final String name, final int[] codepoints) {
+
         String val = multipoints.get(name);
         if (val != null) {
             codepoints[0] = val.codePointAt(0);
@@ -159,9 +161,9 @@ public class Entities {
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+
     static void escape(Appendable accum, String string, Document.OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
-
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
@@ -172,7 +174,9 @@ public class Entities {
         int codePoint;
         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
-
+            if(codePoint >= 0 && codePoint <= 31 && codePoint != 9 && codePoint != 10 && codePoint != 13) {
+                continue;
+            }
             if (normaliseWhite) {
                 if (StringUtil.isWhitespace(codePoint)) {
                     if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
@@ -226,6 +230,7 @@ public class Entities {
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));
+
                 if (encoder.canEncode(c)) // uses fallback encoder for simplicity
                     accum.append(c);
                 else
