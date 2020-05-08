@@ -1,0 +1,46 @@
+package org.jsoup.parser;
+
+import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Document;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+public class HandleIllegalTreeTest {
+    @Test
+    public void TestDetectNestedAtag() {
+        String h = "<a href='#1'><div><div><a href='#2'>child</a></div></div></a>";
+        Document doc = Jsoup.parse(h);
+        HandleIllegalTree handle = new HandleIllegalTree();
+        assertTrue(handle.handlesMisNestedAtag(doc));
+    }
+    @Test
+    public void TestDetectNoNestedAtag() {
+        String h = "<a href='#1'><div><div></div></div></a>";
+        Document doc = Jsoup.parse(h);
+        HandleIllegalTree handle = new HandleIllegalTree();
+        assertFalse(handle.handlesMisNestedAtag(doc));
+    }
+    @Test
+    public void TestNestedAtagReconstruct() {
+        String h = "<a href='#1'><div><div><a href='#2'>child</a></div></div></a>";
+        String w = "<a href=\"#1\"></a> <div> <a href=\"#1\"></a> <div> <a href=\"#2\">child</a> </div> </div>";
+        Document doc = Jsoup.parse(h);
+        HandleIllegalTree handle = new HandleIllegalTree();
+        handle.handlesMisNestedAtag(doc);
+        assertEquals(
+                StringUtil.normaliseWhitespace(w),
+                StringUtil.normaliseWhitespace(doc.body().html()));
+    }
+    @Test
+    public void TestNestedAtagRemain() {
+        String h = "<a href='#1'><div><div></div</div></a>";
+        Document doc = Jsoup.parse(h);
+        Document original = doc.clone();
+        HandleIllegalTree handle = new HandleIllegalTree();
+        handle.handlesMisNestedAtag(doc);
+        assertEquals(
+                StringUtil.normaliseWhitespace(original.html()),
+                StringUtil.normaliseWhitespace(doc.html()));
+    }
+}
