@@ -1,9 +1,13 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -38,6 +42,14 @@ public class TokenQueueTest {
         tq.consumeTo("(");
         String match = tq.chompBalanced('(', ')');
         assertEquals("something(or another)", match);
+    }
+    @Test public void chompBalanceWhenBracketInQE() {
+        final Document doc = Jsoup.parse("<div>1) foo</div>");
+        assertNotEquals("",doc.select("div:matches(" + Pattern.quote("1)")+ ")").toString());
+    }
+    @Test public void chompBalanceWhenManyBracketInQE() {
+        final Document doc = Jsoup.parse("<div>1) foo</div>");
+        assertEquals("",doc.select("div:matches(" + Pattern.quote("1)))")+ ")").toString());
     }
 
     @Test public void unescape() {

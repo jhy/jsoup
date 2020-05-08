@@ -268,10 +268,14 @@ public class TokenQueue {
         do {
             if (isEmpty()) break;
             char c = consume();
-            if(last==ESC && c=='Q')
-                isQE=true;
-            else if(last==ESC && c=='E')
-                isQE=false;
+            if(last==ESC){
+                if(c=='Q'){
+                    isQE=true;
+                }
+                if(c=='E'){
+                    isQE=false;
+                }
+            }
             if ( (last == 0 || last != ESC) && (!isQE)) {
                 if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
