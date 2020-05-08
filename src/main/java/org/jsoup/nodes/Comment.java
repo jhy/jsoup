@@ -14,6 +14,7 @@ public class Comment extends LeafNode {
      Create a new comment node.
      @param data The contents of the comment
      */
+    boolean isDownLevelRevealed = false;
     public Comment(String data) {
         value = data;
     }
@@ -38,10 +39,18 @@ public class Comment extends LeafNode {
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock()) || (out.outline() )))
             indent(accum, depth, out);
-        accum
-                .append("<!--")
-                .append(getData())
-                .append("-->");
+        if(isDownLevelRevealed){
+            accum
+                    .append("<!")
+                    .append(getData())
+                    .append(">");
+        }
+        else{
+            accum
+                    .append("<!--")
+                    .append(getData())
+                    .append("-->");
+        }
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
@@ -79,5 +88,9 @@ public class Comment extends LeafNode {
             decl.attributes().addAll(el.attributes());
         }
         return decl;
+    }
+
+    public void setDownLevelRevealed(boolean flag){
+        isDownLevelRevealed = flag;
     }
 }
