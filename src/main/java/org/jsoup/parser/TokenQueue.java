@@ -264,18 +264,25 @@ public class TokenQueue {
         char last = 0;
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
-
+        boolean isQE = false;
         do {
             if (isEmpty()) break;
             char c = consume();
-            if (last == 0 || last != ESC) {
+            if(last==ESC){
+                if(c=='Q'){
+                    isQE=true;
+                }
+                if(c=='E'){
+                    isQE=false;
+                }
+            }
+            if ( (last == 0 || last != ESC) && (!isQE)) {
                 if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
                 if (inSingleQuote || inDoubleQuote)
                     continue;
-
                 if (c == open) {
                     depth++;
                     if (start == -1)
@@ -284,7 +291,6 @@ public class TokenQueue {
                 else if (c == close)
                     depth--;
             }
-
             if (depth > 0 && last != 0)
                 end = pos; // don't include the outer match pair in the return
             last = c;
