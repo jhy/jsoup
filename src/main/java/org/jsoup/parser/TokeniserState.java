@@ -924,6 +924,12 @@ enum TokeniserState {
         }
     },
     MarkupDeclarationOpen {
+        /**
+         * Deal with the situation that match a '!'
+         * This method will read a section of html String than register a comment token in t
+         * @param t the object that built tokens
+         * @param r reader of html String
+         */
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchConsume("--")) {
                 t.createCommentPending();
@@ -936,7 +942,12 @@ enum TokeniserState {
                 //} else if (!t.currentNodeInHtmlNS() && r.matchConsume("[CDATA[")) {
                 t.createTempBuffer();
                 t.transition(CdataSection);
-            } else {
+            }else if(r.matches("[if")){
+                // Added to deal with down level revealed
+                t.createCommentPending();
+                t.transition(DownLevelRevealedStart);
+            }
+            else {
                 t.error(this);
                 t.createBogusCommentPending();
                 t.advanceTransition(BogusComment); // advance so this character gets in bogus comment data's rewind
@@ -1103,6 +1114,22 @@ enum TokeniserState {
                     t.commentPending.append("--!").append(c);
                     t.transition(Comment);
             }
+        }
+    },
+    DownLevelRevealedStart {
+        /**
+         * Read string to build a down level revealed token.
+         * @param t the object that built tokens
+         * @param r reader of html String
+         */
+        @Override
+        void read(Tokeniser t, CharacterReader r) {
+            t.commentPending.append(r.consumeTo("<![endif]>"));
+            t.commentPending.append(r.consumeTo(">"));
+            t.commentPending.setDownLevelRevealed(true);
+            t.emitCommentPending();
+            r.consume();
+            t.transition(Data);
         }
     },
     Doctype {

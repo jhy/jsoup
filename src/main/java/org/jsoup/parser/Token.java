@@ -260,12 +260,14 @@ abstract class Token {
         private final StringBuilder data = new StringBuilder();
         private String dataS; // try to get in one shot
         boolean bogus = false;
+        boolean isDownLevelRevealed = false;
 
         @Override
         Token reset() {
             reset(data);
             dataS = null;
             bogus = false;
+            isDownLevelRevealed = false;
             return this;
         }
 
@@ -301,12 +303,31 @@ abstract class Token {
             }
         }
 
+        public void setDownLevelRevealed(boolean flag){
+            isDownLevelRevealed = flag;
+        }
 
+        /**
+         * According to the attribute isDownLevelRevealed, return the whole string of token.
+         * @return The whole string of this token,
+         */
         @Override
         public String toString() {
-            return "<!--" + getData() + "-->";
+            return isDownLevelRevealed ? "<!" + getData() + ">":"<!--" + getData() + "-->";
         }
     }
+
+//    final static class DownLevelRevealed extends Comment {
+//
+////        DownLevelRevealed() {
+////            type = TokenType.Comment;
+////        }
+//
+//        @Override
+//        public String toString() {
+//            return "<!" + getData() + ">";
+//        }
+//    }
 
     static class Character extends Token {
         private String data;
