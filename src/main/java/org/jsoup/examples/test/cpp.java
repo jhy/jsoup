@@ -39,7 +39,7 @@ public class cpp {public static void main(String[] args) throws IOException {
     String HTML2="<a href='http://www.baidu.com/xxx'> 百度首页 </a>";
     String HTML3="<a href='/xxx'> 百度首页 </a>";
 //   System.out.println(Jsoup.isValid(HTML2, Whitelist.basic()));
-   System.out.println(Jsoup.isValid(HTML2, baseurl,Whitelist.basic()));
+   System.out.println(Jsoup.isValid(HTML3, Whitelist.basic()));
 //    Document doc=Jsoup.parse(HTML2,baseurl);
 //    Element link = doc.select("a").first();
 //    System.out.println(link.absUrl("href"));
