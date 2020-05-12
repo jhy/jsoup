@@ -53,7 +53,7 @@
         <!-- this plugin allows us to ensure Java 8 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.16</version>
+        <version>1.18</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
