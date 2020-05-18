@@ -356,6 +356,21 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
+
+    /**
+     * Insert the specified node into the DOM before each matched element's outer HTML (as a preceding sibling).
+     * @param node node to insert before each element
+     * @return this, for chaining
+     * @see Element#before(String)
+     */
+    public Elements before(Node node) {
+
+        for (Element element : this) {
+            Node newNode = node.clone();
+            element.before(newNode);
+        }
+        return this;
+    }
     
     /**
      * Insert the supplied HTML after each matched element's outer HTML.
