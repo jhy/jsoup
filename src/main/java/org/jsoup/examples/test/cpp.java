@@ -9,7 +9,8 @@ import javax.print.Doc;
 import java.io.IOException;
 import java.net.URL;
 
-public class cpp {public static void main(String[] args) throws IOException {
+public class cpp {
+    public static void main(String[] args) throws IOException {
 //    final Document doc = Jsoup.parse("<div> )foo</div> \n<div>y foo</div>\n<div>\\)</div>\n<div>1</div>");
 
 //        System.out.println(doc.select("div:matches(" + "1" + ")"));
