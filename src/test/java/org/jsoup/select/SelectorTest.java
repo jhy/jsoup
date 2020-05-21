@@ -617,6 +617,14 @@ public class SelectorTest {
         assertEquals("2", ps2.first().id());
     }
 
+    @Test public void testPseudoContainsWithMultipleSpaces() {
+        String html = "<p> <span> <i> One  </i>  </span>  <span>  Two </span>   </p>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("p:contains(    One  Two  )");
+        assertEquals(1, els.size());
+        assertEquals("One Two", els.text());
+    }
+
     @MultiLocaleTest
     public void containsOwn(Locale locale) {
         Locale.setDefault(locale);

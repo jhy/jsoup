@@ -652,26 +652,27 @@ public abstract class Evaluator {
         }
     }
 
-    /**
-     * Evaluator for matching Element (and its descendants) text
-     */
-    public static final class ContainsText extends Evaluator {
-        private String searchText;
+	/**
+	 * Evaluator for matching Element (and its descendants) text
+	 */
+	public static final class ContainsText extends Evaluator {
+		private static final Pattern doubleSpaces = Pattern.compile("  +");
+		private String searchText;
 
-        public ContainsText(String searchText) {
-            this.searchText = lowerCase(searchText);
-        }
+		public ContainsText(String searchText) {
+			this.searchText = doubleSpaces.matcher(normalize(searchText)).replaceAll(" ");
+		}
 
-        @Override
-        public boolean matches(Element root, Element element) {
-            return lowerCase(element.text()).contains(searchText);
-        }
+		@Override
+		public boolean matches(Element root, Element element) {
+			return lowerCase(element.text()).contains(searchText);
+		}
 
-        @Override
-        public String toString() {
-            return String.format(":contains(%s)", searchText);
-        }
-    }
+		@Override
+		public String toString() {
+			return String.format(":contains(%s)", searchText);
+		}
+	}
 
     /**
      * Evaluator for matching Element (and its descendants) data

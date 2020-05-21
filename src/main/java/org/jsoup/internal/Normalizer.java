@@ -12,7 +12,7 @@ public final class Normalizer {
     }
 
     public static String normalize(final String input) {
-        return lowerCase(input).trim();
+        return lowerCase(input.trim());
     }
 
     public static String normalize(final String input, boolean isStringLiteral) {
