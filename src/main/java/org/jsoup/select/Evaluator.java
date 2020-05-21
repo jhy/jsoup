@@ -656,11 +656,11 @@ public abstract class Evaluator {
 	 * Evaluator for matching Element (and its descendants) text
 	 */
 	public static final class ContainsText extends Evaluator {
-		private static final Pattern doubleSpaces = Pattern.compile("  +");
+		private static final Pattern multipleSpaces = Pattern.compile("  +");
 		private String searchText;
 
 		public ContainsText(String searchText) {
-			this.searchText = doubleSpaces.matcher(normalize(searchText)).replaceAll(" ");
+			this.searchText = multipleSpaces.matcher(normalize(searchText)).replaceAll(" ");
 		}
 
 		@Override
