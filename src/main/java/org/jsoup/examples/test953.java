@@ -9,7 +9,7 @@ import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
 
-public class test1289 {
+public class test953 {
     public static void main(String[] args) throws IOException{
         String html =
                 "<html>\n" +
@@ -40,8 +40,8 @@ public class test1289 {
         Element es2 = document.getElementById("tt");
         Node testNode3 = testNode.clone();
         es.before(testNode);
-//        es1.before(testNode);
-//        es1.before(html3);
+        es1.before(testNode);
+        es1.before(html3);
         System.out.println(document);
 //        es2.before(testNode3);
 //        System.out.println(document);
