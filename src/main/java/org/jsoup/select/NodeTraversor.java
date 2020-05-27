@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.NullPointerException;
 import org.jsoup.select.NodeFilter.FilterResult;
 
 /**
@@ -22,6 +23,7 @@ public class NodeTraversor {
         int depth = 0;
         
         while (node != null) {
+            Node tmp=node;
             visitor.head(node, depth);
             if (node.childNodeSize() > 0) {
                 node = node.childNode(0);
@@ -29,7 +31,14 @@ public class NodeTraversor {
             } else {
                 while (node.nextSibling() == null && depth > 0) {
                     visitor.tail(node, depth);
+                    try {
                     node = node.parentNode();
+                    if(node==null){
+                        throw new NullPointerException("ParentNodeShouldNotBeNUll");
+                    }
+                    }catch (NullPointerException e){
+                        e.printStackTrace();
+                    }
                     depth--;
                 }
                 visitor.tail(node, depth);
