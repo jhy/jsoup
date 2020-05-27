@@ -364,8 +364,9 @@ public class Elements extends ArrayList<Element> {
      * @see Element#before(String)
      */
     public Elements before(Node node) {
-
+        Validate.notNull(node);
         for (Element element : this) {
+            Validate.notNull(element);
             Node newNode = node.clone();
             element.before(newNode);
         }
