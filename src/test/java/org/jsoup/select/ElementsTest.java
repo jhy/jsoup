@@ -280,6 +280,42 @@ public class ElementsTest {
         assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString());
     }
 
+
+    @Test public void traverse2() {
+        String html =
+                "<html>\n" +
+                        "<head>\n" +
+                        "    <link href=\"css/test.css\" rel=\"stylesheet\">\n" +
+                        "</head>\n" +
+                        "<body>\n" +
+                        "</body>\n" +
+                        "</html>";
+        Document document = Jsoup.parse(html);
+        final StringBuilder accum = new StringBuilder();
+        try{
+        document.traverse(new NodeVisitor() {
+            @Override
+            public void head(Node node, int depth) {
+                if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if ("link".equals(element.tagName())) {
+                        Element style = element.ownerDocument().createElement("style");
+                        element.replaceWith(style);
+                    }
+                }
+            }
+
+            @Override
+            public void tail(Node node, int depth) {
+            }
+        });
+            fail("No exception thrown.");
+        }catch (NullPointerException excepted){
+            assertEquals(NullPointerException.class,excepted.getClass());
+
+        }
+    }
+
     @Test public void forms() {
         Document doc = Jsoup.parse("<form id=1><input name=q></form><div /><form id=2><input name=f></form>");
         Elements els = doc.select("*");
