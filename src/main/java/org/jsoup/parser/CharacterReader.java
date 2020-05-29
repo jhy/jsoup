@@ -505,10 +505,20 @@ public final class CharacterReader {
         return !isEmpty() && Arrays.binarySearch(seq, charBuf[bufPos]) >= 0;
     }
 
+    private boolean isChinese(char c){
+        int x = c;
+        if(x >= 0x4e00 && x <= 0x9fbb){
+            return true;
+        }
+        return false;
+    }
     boolean matchesLetter() {
         if (isEmpty())
             return false;
         char c = charBuf[bufPos];
+        if(isChinese(c)){
+            return false;
+        }
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c);
     }
 
