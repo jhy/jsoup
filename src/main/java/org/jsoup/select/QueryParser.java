@@ -15,8 +15,8 @@ import static org.jsoup.internal.Normalizer.normalize;
  * Parses a CSS selector into an Evaluator tree.
  */
 public class QueryParser {
-    private final static String[] combinators = {",", ">", "+", "~", " "};
-    private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
+    private final static String[] combinators = { ",", ">", "+", "~", " " };
+    private static final String[] AttributeEvals = new String[] { "=", "!=", "^=", "$=", "*=", "~=" };
 
     private TokenQueue tq;
     private String query;
@@ -24,6 +24,7 @@ public class QueryParser {
 
     /**
      * Create a new QueryParser.
+     * 
      * @param query CSS query
      */
     private QueryParser(String query) {
@@ -35,6 +36,7 @@ public class QueryParser {
 
     /**
      * Parse a CSS query into an Evaluator.
+     * 
      * @param query CSS query
      * @return Evaluator
      * @see Selector selector query syntax
@@ -50,6 +52,7 @@ public class QueryParser {
 
     /**
      * Parse the query
+     * 
      * @return Evaluator
      */
     Evaluator parse() {
@@ -86,7 +89,8 @@ public class QueryParser {
         String subQuery = consumeSubQuery(); // support multi > childs
 
         Evaluator rootEval; // the new topmost evaluator
-        Evaluator currentEval; // the evaluator the new eval will be combined to. could be root, or rightmost or.
+        Evaluator currentEval; // the evaluator the new eval will be combined to. could be root, or rightmost
+                               // or.
         Evaluator newEval = parse(subQuery); // the evaluator to add into target evaluator
         boolean replaceRightMost = false;
 
@@ -97,19 +101,20 @@ public class QueryParser {
                 currentEval = ((CombiningEvaluator.Or) currentEval).rightMostEvaluator();
                 replaceRightMost = true;
             }
-        }
-        else {
+        } else {
             rootEval = currentEval = new CombiningEvaluator.And(evals);
         }
         evals.clear();
 
-        // for most combinators: change the current eval into an AND of the current eval and the new eval
+        // for most combinators: change the current eval into an AND of the current eval
+        // and the new eval
         if (combinator == '>')
             currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediateParent(currentEval));
         else if (combinator == ' ')
             currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.Parent(currentEval));
         else if (combinator == '+')
-            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediatePreviousSibling(currentEval));
+            currentEval = new CombiningEvaluator.And(newEval,
+                    new StructuralEvaluator.ImmediatePreviousSibling(currentEval));
         else if (combinator == '~')
             currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.PreviousSibling(currentEval));
         else if (combinator == ',') { // group or.
@@ -123,13 +128,13 @@ public class QueryParser {
                 or.add(newEval);
             }
             currentEval = or;
-        }
-        else
+        } else
             throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
 
         if (replaceRightMost)
             ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
-        else rootEval = currentEval;
+        else
+            rootEval = currentEval;
         evals.add(rootEval);
     }
 
@@ -179,34 +184,39 @@ public class QueryParser {
             matches(true);
         else if (tq.matches(":not("))
             not();
-		else if (tq.matchChomp(":nth-child("))
-        	cssNthChild(false, false);
+        else if (tq.matches("::before"))// when the query contains "::before", pull it off from query
+            tq.chompTo("::before");
+        else if (tq.matches("::after"))// when the query contains "::after", pull it off from query
+            tq.chompTo("::after");
+        else if (tq.matchChomp(":nth-child("))
+            cssNthChild(false, false);
         else if (tq.matchChomp(":nth-last-child("))
-        	cssNthChild(true, false);
+            cssNthChild(true, false);
         else if (tq.matchChomp(":nth-of-type("))
-        	cssNthChild(false, true);
+            cssNthChild(false, true);
         else if (tq.matchChomp(":nth-last-of-type("))
-        	cssNthChild(true, true);
+            cssNthChild(true, true);
         else if (tq.matchChomp(":first-child"))
-        	evals.add(new Evaluator.IsFirstChild());
+            evals.add(new Evaluator.IsFirstChild());
         else if (tq.matchChomp(":last-child"))
-        	evals.add(new Evaluator.IsLastChild());
+            evals.add(new Evaluator.IsLastChild());
         else if (tq.matchChomp(":first-of-type"))
-        	evals.add(new Evaluator.IsFirstOfType());
+            evals.add(new Evaluator.IsFirstOfType());
         else if (tq.matchChomp(":last-of-type"))
-        	evals.add(new Evaluator.IsLastOfType());
+            evals.add(new Evaluator.IsLastOfType());
         else if (tq.matchChomp(":only-child"))
-        	evals.add(new Evaluator.IsOnlyChild());
+            evals.add(new Evaluator.IsOnlyChild());
         else if (tq.matchChomp(":only-of-type"))
-        	evals.add(new Evaluator.IsOnlyOfType());
+            evals.add(new Evaluator.IsOnlyOfType());
         else if (tq.matchChomp(":empty"))
-        	evals.add(new Evaluator.IsEmpty());
+            evals.add(new Evaluator.IsEmpty());
         else if (tq.matchChomp(":root"))
-        	evals.add(new Evaluator.IsRoot());
+            evals.add(new Evaluator.IsRoot());
         else if (tq.matchChomp(":matchText"))
             evals.add(new Evaluator.MatchText());
-		else // unhandled
-            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+        else // unhandled
+            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query,
+                    tq.remainder());
 
     }
 
@@ -223,17 +233,21 @@ public class QueryParser {
     }
 
     private void byTag() {
-        // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
-        // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
+        // todo - these aren't dealing perfectly with case sensitivity. For case
+        // sensitive parsers, we should also make
+        // the tag in the selector case-sensitive (and also attribute names). But for
+        // now, normalize (lower-case) for
         // consistency - both the selector and the element tag
         String tagName = normalize(tq.consumeElementSelector());
         Validate.notEmpty(tagName);
 
         // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
         if (tagName.startsWith("*|")) {
-            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName), new Evaluator.TagEndsWith(tagName.replace("*|", ":"))));
+            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName),
+                    new Evaluator.TagEndsWith(tagName.replace("*|", ":"))));
         } else {
-            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            // namespaces: if element name is "abc:def", selector must be "abc|def", so
+            // flip:
             if (tagName.contains("|"))
                 tagName = tagName.replace("|", ":");
 
@@ -271,7 +285,8 @@ public class QueryParser {
             else if (cq.matchChomp("~="))
                 evals.add(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())));
             else
-                throw new Selector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+                throw new Selector.SelectorParseException(
+                        "Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
     }
 
@@ -291,43 +306,44 @@ public class QueryParser {
     private void indexEquals() {
         evals.add(new Evaluator.IndexEquals(consumeIndex()));
     }
-    
-    //pseudo selectors :first-child, :last-child, :nth-child, ...
-    private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
 
-	private void cssNthChild(boolean backwards, boolean ofType) {
-		String argS = normalize(tq.chompTo(")"));
-		Matcher mAB = NTH_AB.matcher(argS);
-		Matcher mB = NTH_B.matcher(argS);
-		final int a, b;
-		if ("odd".equals(argS)) {
-			a = 2;
-			b = 1;
-		} else if ("even".equals(argS)) {
-			a = 2;
-			b = 0;
-		} else if (mAB.matches()) {
-			a = mAB.group(3) != null ? Integer.parseInt(mAB.group(1).replaceFirst("^\\+", "")) : 1;
-			b = mAB.group(4) != null ? Integer.parseInt(mAB.group(4).replaceFirst("^\\+", "")) : 0;
-		} else if (mB.matches()) {
-			a = 0;
-			b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
-		} else {
-			throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS);
-		}
-		if (ofType)
-			if (backwards)
-				evals.add(new Evaluator.IsNthLastOfType(a, b));
-			else
-				evals.add(new Evaluator.IsNthOfType(a, b));
-		else {
-			if (backwards)
-				evals.add(new Evaluator.IsNthLastChild(a, b));
-			else
-				evals.add(new Evaluator.IsNthChild(a, b));
-		}
-	}
+    // pseudo selectors :first-child, :last-child, :nth-child, ...
+    private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern NTH_B = Pattern.compile("([+-])?(\\d+)");
+
+    private void cssNthChild(boolean backwards, boolean ofType) {
+        String argS = normalize(tq.chompTo(")"));
+        Matcher mAB = NTH_AB.matcher(argS);
+        Matcher mB = NTH_B.matcher(argS);
+        final int a, b;
+        if ("odd".equals(argS)) {
+            a = 2;
+            b = 1;
+        } else if ("even".equals(argS)) {
+            a = 2;
+            b = 0;
+        } else if (mAB.matches()) {
+            a = mAB.group(3) != null ? Integer.parseInt(mAB.group(1).replaceFirst("^\\+", "")) : 1;
+            b = mAB.group(4) != null ? Integer.parseInt(mAB.group(4).replaceFirst("^\\+", "")) : 0;
+        } else if (mB.matches()) {
+            a = 0;
+            b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
+        } else {
+            throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS);
+        }
+        if (ofType)
+            if (backwards)
+                evals.add(new Evaluator.IsNthLastOfType(a, b));
+            else
+                evals.add(new Evaluator.IsNthOfType(a, b));
+        else {
+            if (backwards)
+                evals.add(new Evaluator.IsNthLastChild(a, b));
+            else
+                evals.add(new Evaluator.IsNthChild(a, b));
+        }
+    }
 
     private int consumeIndex() {
         String indexS = tq.chompTo(")").trim();
