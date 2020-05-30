@@ -588,6 +588,11 @@ enum HtmlTreeBuilderState {
                     }
                     // todo - is this right? drops rp, rt if ruby not in scope?
                     break;
+                case "template":
+                    tb.reconstructFormattingElements();
+                    tb.insert(startTag);
+                    tb.transition(InTemplate);
+                    break;
                 default:
                     // todo - bring scan groups in if desired
                     if (inSorted(name, Constants.InBodyStartEmptyFormatters)) {
@@ -1548,6 +1553,68 @@ enum HtmlTreeBuilderState {
         boolean process(Token t, HtmlTreeBuilder tb) {
             return true;
             // todo: implement. Also; how do we get here?
+        }
+    },
+    InTemplate {
+        @Override
+        boolean process(Token t, HtmlTreeBuilder tb) {
+            switch (t.type) {
+                case Character: {
+                    Token.Character c = t.asCharacter();
+                    if (c.getData().equals(nullString)) {
+                        tb.error(this);
+                        return false;
+                    } else {
+                        tb.reconstructFormattingElements();
+                        tb.insert(c);
+                    }
+                    break;
+                }
+                case Comment: {
+                    tb.insert(t.asComment());
+                    break;
+                }
+                case Doctype: {
+                    tb.error(this);
+                    return false;
+                }
+                case StartTag:
+                    return inTemplateStartTag(t, tb);
+                case EndTag:
+                    return inTemplateEndTag(t, tb);
+                case EOF:
+                    break;
+            }
+            return true;
+        }
+        
+        private boolean inTemplateStartTag(Token t, HtmlTreeBuilder tb) {
+            final Token.StartTag startTag = t.asStartTag();
+            final String name = startTag.normalName();
+
+            if ("template".equals(name)) {
+                tb.error(this);
+            } else {
+                if (inSorted(name, InBodyStartDrop)) {
+                    tb.reconstructFormattingElements();
+                    tb.insert(startTag);
+                } else {
+                    return InBody.process(t, tb);
+                }
+            }
+            return true;
+        }
+
+        private boolean inTemplateEndTag(Token t, HtmlTreeBuilder tb) {
+            final Token.EndTag endTag = t.asEndTag();
+            final String name = endTag.normalName();
+
+            if ("template".equals(name)) {
+                tb.transition(InBody);
+            } else {
+                return InBody.process(t, tb);
+            }
+            return true;
         }
     };
 
