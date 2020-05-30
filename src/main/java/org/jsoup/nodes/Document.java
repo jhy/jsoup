@@ -5,17 +5,25 @@ import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
+import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Selector;
 
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
+
+import static org.jsoup.internal.Normalizer.normalize;
 
 /**
- A HTML Document.
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * A HTML Document.
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
     private Parser parser; // the parser used to parse this document
@@ -24,10 +32,11 @@ public class Document extends Element {
     private boolean updateMetaCharset = false;
 
     /**
-     Create a new, empty Document.
-     @param baseUri base URI of document
-     @see org.jsoup.Jsoup#parse
-     @see #createShell
+     * Create a new, empty Document.
+     *
+     * @param baseUri base URI of document
+     * @see org.jsoup.Jsoup#parse
+     * @see #createShell
      */
     public Document(String baseUri) {
         super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
@@ -35,9 +44,10 @@ public class Document extends Element {
     }
 
     /**
-     Create a valid, empty shell of a document, suitable for adding more elements to.
-     @param baseUri baseUri of document
-     @return document with html, head, and body elements.
+     * Create a valid, empty shell of a document, suitable for adding more elements to.
+     *
+     * @param baseUri baseUri of document
+     * @return document with html, head, and body elements.
      */
     public static Document createShell(String baseUri) {
         Validate.notNull(baseUri);
@@ -54,14 +64,16 @@ public class Document extends Element {
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
+     *
      * @return location
      */
     public String location() {
-     return location;
+        return location;
     }
 
     /**
      * Returns this Document's doctype.
+     *
      * @return document type, or null if not set
      */
     public DocumentType documentType() {
@@ -74,26 +86,29 @@ public class Document extends Element {
         return null;
         // todo - add a set document type?
     }
-    
+
     /**
-     Accessor to the document's {@code head} element.
-     @return {@code head}
+     * Accessor to the document's {@code head} element.
+     *
+     * @return {@code head}
      */
     public Element head() {
         return findFirstElementByTagName("head", this);
     }
 
     /**
-     Accessor to the document's {@code body} element.
-     @return {@code body}
+     * Accessor to the document's {@code body} element.
+     *
+     * @return {@code body}
      */
     public Element body() {
         return findFirstElementByTagName("body", this);
     }
 
     /**
-     Get the string contents of the document's {@code title} element.
-     @return Trimmed title, or empty string if none set.
+     * Get the string contents of the document's {@code title} element.
+     *
+     * @return Trimmed title, or empty string if none set.
      */
     public String title() {
         // title is a preserve whitespace tag (for document output), but normalised here
@@ -102,9 +117,10 @@ public class Document extends Element {
     }
 
     /**
-     Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
-     not present
-     @param title string to set as title
+     * Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
+     * not present
+     *
+     * @param title string to set as title
      */
     public void title(String title) {
         Validate.notNull(title);
@@ -117,18 +133,20 @@ public class Document extends Element {
     }
 
     /**
-     Create a new Element, with this document's base uri. Does not make the new element a child of this document.
-     @param tagName element tag name (e.g. {@code a})
-     @return new element
+     * Create a new Element, with this document's base uri. Does not make the new element a child of this document.
+     *
+     * @param tagName element tag name (e.g. {@code a})
+     * @return new element
      */
     public Element createElement(String tagName) {
         return new Element(Tag.valueOf(tagName, ParseSettings.preserveCase), this.baseUri());
     }
 
     /**
-     Normalise the document. This happens after the parse phase so generally does not need to be called.
-     Moves any text content that is not in the body element into the body.
-     @return this document after normalisation
+     * Normalise the document. This happens after the parse phase so generally does not need to be called.
+     * Moves any text content that is not in the body element into the body.
+     *
+     * @return this document after normalisation
      */
     public Document normalise() {
         Element htmlEl = findFirstElementByTagName("html", this);
@@ -147,16 +165,16 @@ public class Document extends Element {
 
         normaliseStructure("head", htmlEl);
         normaliseStructure("body", htmlEl);
-        
+
         ensureMetaCharsetElement();
-        
+
         return this;
     }
 
     // does not recurse.
     private void normaliseTextNodes(Element element) {
         List<Node> toMove = new ArrayList<>();
-        for (Node node: element.childNodes) {
+        for (Node node : element.childNodes) {
             if (node instanceof TextNode) {
                 TextNode tn = (TextNode) node;
                 if (!tn.isBlank())
@@ -164,7 +182,7 @@ public class Document extends Element {
             }
         }
 
-        for (int i = toMove.size()-1; i >= 0; i--) {
+        for (int i = toMove.size() - 1; i >= 0; i--) {
             Node node = toMove.get(i);
             element.removeChild(node);
             body().prependChild(new TextNode(" "));
@@ -214,9 +232,10 @@ public class Document extends Element {
     }
 
     /**
-     Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
-     @param text unencoded text
-     @return this document
+     * Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
+     *
+     * @param text unencoded text
+     * @return this document
      */
     @Override
     public Element text(String text) {
@@ -228,71 +247,68 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
-    
+
     /**
      * Sets the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset(java.nio.charset.Charset)
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
-     * 
+     *
      * <p>This enables
      * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
-     * 
+     *
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
      * </ul>
-     * 
+     *
      * @param charset Charset
-     * 
-     * @see #updateMetaCharsetElement(boolean) 
-     * @see OutputSettings#charset(java.nio.charset.Charset) 
+     * @see #updateMetaCharsetElement(boolean)
+     * @see OutputSettings#charset(java.nio.charset.Charset)
      */
     public void charset(Charset charset) {
         updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
-    
+
     /**
      * Returns the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset()}.
-     * 
+     *
      * @return Current Charset
-     * 
-     * @see OutputSettings#charset() 
+     * @see OutputSettings#charset()
      */
     public Charset charset() {
         return outputSettings.charset();
     }
-    
+
     /**
      * Sets whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
      * modified.</p>
-     * 
+     *
      * @param update If <tt>true</tt> the element updated on charset
-     * changes, <tt>false</tt> if not
-     * 
-     * @see #charset(java.nio.charset.Charset) 
+     *               changes, <tt>false</tt> if not
+     * @see #charset(java.nio.charset.Charset)
      */
     public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = update;
     }
-    
+
     /**
      * Returns whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * @return Returns <tt>true</tt> if the element is updated on charset
      * changes, <tt>false</tt> if not
      */
@@ -306,21 +322,21 @@ public class Document extends Element {
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
-    
+
     /**
      * Ensures a meta charset (html) or xml declaration (xml) with the current
      * encoding used. This only applies with
      * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
      * <tt>true</tt>, otherwise this method does nothing.
-     * 
+     *
      * <ul>
      * <li>An existing element gets updated with the current charset</li>
      * <li>If there's no element yet it will be inserted</li>
      * <li>Obsolete elements are removed</li>
      * </ul>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
@@ -376,7 +392,7 @@ public class Document extends Element {
             }
         }
     }
-    
+
 
     /**
      * A Document's output settings control the form of the text() and html() methods.
@@ -400,13 +416,14 @@ public class Document extends Element {
         public OutputSettings() {
             charset(Charset.forName("UTF8"));
         }
-        
+
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
          * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
          * which uses the complete set of HTML named entities.
          * <p>
          * The default escape mode is <code>base</code>.
+         *
          * @return the document's current escape mode
          */
         public Entities.EscapeMode escapeMode() {
@@ -416,6 +433,7 @@ public class Document extends Element {
         /**
          * Set the document's escape mode, which determines how characters are escaped when the output character set
          * does not support a given character:- using either a named or a numbered escape.
+         *
          * @param escapeMode the new escape mode to use
          * @return the document's output settings, for chaining
          */
@@ -430,6 +448,7 @@ public class Document extends Element {
          * <p>
          * Where possible (when parsing from a URL or File), the document's output charset is automatically set to the
          * input charset. Otherwise, it defaults to UTF-8.
+         *
          * @return the document's current charset.
          */
         public Charset charset() {
@@ -438,6 +457,7 @@ public class Document extends Element {
 
         /**
          * Update the document's output charset.
+         *
          * @param charset the new charset to use.
          * @return the document's output settings, for chaining
          */
@@ -448,6 +468,7 @@ public class Document extends Element {
 
         /**
          * Update the document's output charset.
+         *
          * @param charset the new charset (by name) to use.
          * @return the document's output settings, for chaining
          */
@@ -471,6 +492,7 @@ public class Document extends Element {
 
         /**
          * Get the document's current output syntax.
+         *
          * @return current syntax
          */
         public Syntax syntax() {
@@ -480,6 +502,7 @@ public class Document extends Element {
         /**
          * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
          * {@code xml}, with self-closing tags.
+         *
          * @param syntax serialization syntax
          * @return the document's output settings, for chaining
          */
@@ -491,6 +514,7 @@ public class Document extends Element {
         /**
          * Get if pretty printing is enabled. Default is true. If disabled, the HTML output methods will not re-format
          * the output, and the output will generally look like the input.
+         *
          * @return if pretty printing is enabled.
          */
         public boolean prettyPrint() {
@@ -499,6 +523,7 @@ public class Document extends Element {
 
         /**
          * Enable or disable pretty printing.
+         *
          * @param pretty new pretty print setting
          * @return this, for chaining
          */
@@ -506,18 +531,20 @@ public class Document extends Element {
             prettyPrint = pretty;
             return this;
         }
-        
+
         /**
          * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
          * all tags as block.
+         *
          * @return if outline mode is enabled.
          */
         public boolean outline() {
             return outline;
         }
-        
+
         /**
          * Enable or disable HTML outline mode.
+         *
          * @param outlineMode new outline setting
          * @return this, for chaining
          */
@@ -528,6 +555,7 @@ public class Document extends Element {
 
         /**
          * Get the current tag indent amount, used when pretty printing.
+         *
          * @return the current indent amount
          */
         public int indentAmount() {
@@ -536,6 +564,7 @@ public class Document extends Element {
 
         /**
          * Set the indent amount for pretty printing
+         *
          * @param indentAmount number of spaces to use for indenting each level. Must be {@literal >=} 0.
          * @return this, for chaining
          */
@@ -562,6 +591,7 @@ public class Document extends Element {
 
     /**
      * Get the document's current output settings.
+     *
      * @return the document's current output settings.
      */
     public OutputSettings outputSettings() {
@@ -570,6 +600,7 @@ public class Document extends Element {
 
     /**
      * Set the document's output settings.
+     *
      * @param outputSettings new output settings.
      * @return this document, for chaining.
      */
@@ -594,6 +625,7 @@ public class Document extends Element {
 
     /**
      * Get the parser that was used to parse this document.
+     *
      * @return the parser
      */
     public Parser parser() {
@@ -603,11 +635,184 @@ public class Document extends Element {
     /**
      * Set the parser used to create this document. This parser is then used when further parsing within this document
      * is required.
+     *
      * @param parser the configured parser to use when further parsing is required for this document.
      * @return this document, for chaining.
      */
     public Document parser(Parser parser) {
         this.parser = parser;
         return this;
+    }
+
+    //parse the attribute value
+    private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
+
+    //used to store all the url complements
+    private static final String[] URLParseAttr = new String[]{"protocol", "authority", "file", "host", "path", "port", "defaultport", "query", "ref"};
+    private static final String HASREGEX = "^(|\\s+)div(|\\s+):(|\\s+)has\\((|\\s+)>";
+
+    /**
+     * @param cssQuery the css query received
+     * @return the list of element
+     * @Override the select methods with a special judge to the abd pseudo-class selector.
+     */
+    @Override
+    public Elements select(String cssQuery) {
+
+        if (Pattern.compile(HASREGEX).matcher(cssQuery).find()) {
+            String cssTemp = cssQuery.replaceAll(">", "");
+            String temp = cssTemp.substring(cssTemp.lastIndexOf("(") + 1, cssTemp.indexOf(")"));
+            String[] itemList = temp.split(",");
+            String beforeString = cssTemp.substring(0, cssTemp.lastIndexOf("(") + 1);
+            String lastString = cssTemp.substring(cssTemp.indexOf(")"));
+            Elements res = new Elements();
+            boolean firstTime = true;
+            for (String s : itemList) {
+                String tempCssQuery = beforeString + s.trim() + lastString;
+                Elements tempEleList = super.select(tempCssQuery);
+                if (firstTime)
+                    for (Element e : tempEleList) {
+                        if (!res.contains(e))
+                            res.add(e);
+                    }
+                else {
+                    Elements resTemp = new Elements();
+                    for (Element e : tempEleList) {
+                        if (res.contains(e))
+                            resTemp.add(e);
+                    }
+                    res = resTemp;
+                }
+                firstTime = false;
+            }
+            return res;
+        }
+        String cssQueryTemp = cssQuery;
+        TokenQueue tq = new TokenQueue(cssQueryTemp);
+        tq.consumeWhitespace();
+        normalize(tq.consumeElementSelector());
+
+        cssQueryTemp = tq.remainder().trim();
+        if (cssQueryTemp.indexOf("[") == 0 && cssQueryTemp.lastIndexOf("]") == cssQueryTemp.length() - 1) {
+            cssQueryTemp = cssQueryTemp.substring(1).trim();
+            for (String s : URLParseAttr) {
+                if (cssQueryTemp.contains(s) && cssQueryTemp.indexOf(s) == 0) {
+                    return pseSelect(cssQuery);
+                }
+            }
+        }
+
+        return super.select(cssQuery);
+    }
+
+    /**
+     * triggered when the element has the attribute of abs pseudo-class, for example and limitation information in  URLParseAttr
+     *
+     * @param cssQuery the ordinary css query received
+     * @return the list of element with the given limition information, for example, all a label with the host of localhost
+     */
+    private Elements pseSelect(String cssQuery) {
+
+        TokenQueue tq = new TokenQueue(cssQuery);
+        tq.consumeWhitespace();
+        String tagName = normalize(tq.consumeElementSelector());
+
+        Elements tag = this.select(tagName);
+        Elements resTag = this.select(tagName);
+        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+        String key = cq.consumeToAny(AttributeEvals); // host:href
+        String attr = key.split(":")[1].trim();
+        String urlSelect = key.split(":")[0].trim();
+        Validate.notEmpty(attr);
+        cq.consumeWhitespace(); // "=link"
+        int attrJudgeFlagNum = -1;
+        if (cq.matchChomp("!=")) {
+            attrJudgeFlagNum = 1;
+        } else if (cq.matchChomp("^=")) {
+            attrJudgeFlagNum = 2;
+        } else if (cq.matchChomp("$=")) {
+            attrJudgeFlagNum = 3;
+        } else if (cq.matchChomp("*=")) {
+            attrJudgeFlagNum = 4;
+        } else if (cq.matchChomp("="))
+            attrJudgeFlagNum = 0;
+        else {
+            throw new Selector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", cssQuery, cq.remainder());
+        }
+        String linkStr = cq.remainder().trim();
+        String attrbutekey = "abs:" + attr;
+        for (Element t : tag) {//all the el of given tag
+            String link;
+            link = t.attr(attrbutekey);
+            String temp = getURLAttrPart(urlSelect.toLowerCase(), link);
+            switch (attrJudgeFlagNum) {
+                case 1://!=
+                    if (linkStr.equals(temp))
+                        resTag.remove(t);
+                    break;
+                case 2://^=
+                    if (temp.indexOf(linkStr) != 0)
+                        resTag.remove(t);
+                    break;
+                case 3://$=
+                    if (temp.indexOf(linkStr) != temp.length() - linkStr.length())
+                        resTag.remove(t);
+                    break;
+                case 4://*=
+                    if (!temp.contains(linkStr))
+                        resTag.remove(t);
+                    break;
+                case 0://=
+                    if (!linkStr.equals(temp))
+                        resTag.remove(t);
+                    break;
+                default:
+                    break;
+            }
+        }
+        return resTag;
+    }
+
+    /**
+     * get the url attribute complement in the given url, for example, the host of the given url link.
+     *
+     * @param targetAttr the target url complement name
+     * @param url_link   the given ordinary url link
+     * @return the url complement of the given url link
+     */
+    private static String getURLAttrPart(String targetAttr, String url_link) {
+        String targetUrlPaserRes = "";
+        try {
+            String urtMethodName;
+            URL url = new URL(url_link);
+            int index = 0;
+            for (String s : URLParseAttr) {
+                if (s.equals(targetAttr))
+                    break;
+                index++;
+            }
+            if (index > 8)
+                return "";
+            urtMethodName = "get" + URLParseAttr[index].substring(0, 1).toUpperCase() + URLParseAttr[index].substring(1);
+            if (index == 6)
+                urtMethodName = "getDefaultPort";
+            Class cla = url.getClass();
+            targetUrlPaserRes = (String) String.valueOf(cla.getDeclaredMethod(urtMethodName).invoke(url));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return targetUrlPaserRes;
+    }
+
+    /**
+     * select the firsh element according to the css query
+     *
+     * @param cssQuery the css query
+     * @return the first element found
+     */
+    @Override
+    public Element selectFirst(String cssQuery) {
+        Elements tag = select(cssQuery);
+        return tag.size() == 0 ? null : tag.get(0);
     }
 }
