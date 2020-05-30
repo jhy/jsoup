@@ -356,16 +356,28 @@ public abstract class Node implements Cloneable {
 
         Element wrap = (Element) wrapNode;
         Element deepest = getDeepChild(wrap);
-        parentNode.replaceChild(this, wrap);
-        deepest.addChildren(this);
-
-        // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
-        if (wrapChildren.size() > 0) {
-            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
-            for (int i = 0; i < wrapChildren.size(); i++) {
-                Node remainder = wrapChildren.get(i);
-                remainder.parentNode.removeChild(remainder);
-                wrap.appendChild(remainder);
+  
+        if (parentNode != null) {
+            parentNode.replaceChild(this, wrap);
+            deepest.addChildren(this);
+            // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
+            if (wrapChildren.size() > 0) {
+                //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
+                for (int i = 0; i < wrapChildren.size(); i++) {
+                    Node remainder = wrapChildren.get(i);
+                    remainder.parentNode.removeChild(remainder);
+                    wrap.appendChild(remainder);
+                }
+            }
+        } else {
+            deepest.addChildren(this);
+            List<Node> childNodes = deepest.parent().childNodes;
+            for (int i = 0; i < childNodes.size(); i++) {
+                Node el = childNodes.get(i);
+                if (el != deepest) {
+                    el.parentNode.removeChild(el);
+                    deepest.appendChild(el);
+                }
             }
         }
         return this;
@@ -398,9 +410,11 @@ public abstract class Node implements Cloneable {
 
     private Element getDeepChild(Element el) {
         List<Element> children = el.children();
-        if (children.size() > 0)
+        if (children.size() > 0) {
+            if (children.get(0).nodeName().equals("head"))
+                return getDeepChild(children.get(1));
             return getDeepChild(children.get(0));
-        else
+        } else
             return el;
     }
 
