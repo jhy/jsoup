@@ -229,7 +229,12 @@ public final class StringUtil {
         }
     }
 
-    private static final Stack<StringBuilder> builders = new Stack<>();
+    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
+        @Override
+        protected Stack<StringBuilder> initialValue() {
+            return new Stack<>();
+        }
+    };
 
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
@@ -239,11 +244,10 @@ public final class StringUtil {
      * @return an empty StringBuilder
      */
     public static StringBuilder borrowBuilder() {
-        synchronized (builders) {
-            return builders.empty() ?
-                new StringBuilder(MaxCachedBuilderSize) :
-                builders.pop();
-        }
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        return builders.empty() ?
+            new StringBuilder(MaxCachedBuilderSize) :
+            builders.pop();
     }
 
     /**
@@ -261,12 +265,11 @@ public final class StringUtil {
         else
             sb.delete(0, sb.length()); // make sure it's emptied on release
 
-        synchronized (builders) {
-            builders.push(sb);
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        builders.push(sb);
 
-            while (builders.size() > MaxIdleBuilders) {
-                builders.pop();
-            }
+        while (builders.size() > MaxIdleBuilders) {
+            builders.pop();
         }
         return string;
     }
