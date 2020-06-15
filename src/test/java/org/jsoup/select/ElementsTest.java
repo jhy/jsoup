@@ -282,8 +282,8 @@ public class ElementsTest {
 
     @Test public void forms() {
         Document doc = Jsoup.parse("<form id=1><input name=q></form><div /><form id=2><input name=f></form>");
-        Elements els = doc.select("*");
-        assertEquals(9, els.size());
+        Elements els = doc.select("form, div");
+        assertEquals(3, els.size());
 
         List<FormElement> forms = els.forms();
         assertEquals(2, forms.size());
@@ -335,11 +335,6 @@ public class ElementsTest {
     @Test public void nodesEmpty() {
         Document doc = Jsoup.parse("<p>");
         assertEquals(0, doc.select("form").textNodes().size());
-    }
-
-    @Test public void formElementsDescendButNotAccumulate() {
-        Document doc = Jsoup.parse("<div><div><form id=1>");
-        assertEquals(1, doc.select("div").forms().size());
     }
 
     @Test public void classWithHyphen() {

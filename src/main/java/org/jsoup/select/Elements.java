@@ -636,7 +636,11 @@ public class Elements extends ArrayList<Element> {
      * no forms.
      */
     public List<FormElement> forms() {
-        return nodesOfType(FormElement.class);
+        ArrayList<FormElement> forms = new ArrayList<>();
+        for (Element el: this)
+            if (el instanceof FormElement)
+                forms.add((FormElement) el);
+        return forms;
     }
 
     /**
@@ -644,7 +648,7 @@ public class Elements extends ArrayList<Element> {
      * @return Comment nodes, or an empty list if none.
      */
     public List<Comment> comments() {
-        return nodesOfType(Comment.class);
+        return childNodesOfType(Comment.class);
     }
 
     /**
@@ -652,7 +656,7 @@ public class Elements extends ArrayList<Element> {
      * @return TextNode nodes, or an empty list if none.
      */
     public List<TextNode> textNodes() {
-        return nodesOfType(TextNode.class);
+        return childNodesOfType(TextNode.class);
     }
 
     /**
@@ -661,20 +665,16 @@ public class Elements extends ArrayList<Element> {
      * @return Comment nodes, or an empty list if none.
      */
     public List<DataNode> dataNodes() {
-        return nodesOfType(DataNode.class);
+        return childNodesOfType(DataNode.class);
     }
 
-    private <T extends Node> List<T> nodesOfType(Class<T> tClass) {
+    private <T extends Node> List<T> childNodesOfType(Class<T> tClass) {
         ArrayList<T> nodes = new ArrayList<>();
         for (Element el: this) {
-            if (el.getClass().isInstance(tClass)) { // Handles FormElements
-                nodes.add(tClass.cast(el));
-            } else if (Node.class.isAssignableFrom(tClass)) { // check if child nodes match
-                for (int i = 0; i < el.childNodeSize(); i++) {
-                    Node node = el.childNode(i);
-                    if (tClass.isInstance(node))
-                        nodes.add(tClass.cast(node));
-                }
+            for (int i = 0; i < el.childNodeSize(); i++) {
+                Node node = el.childNode(i);
+                if (tClass.isInstance(node))
+                    nodes.add(tClass.cast(node));
             }
         }
         return nodes;
