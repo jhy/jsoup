@@ -33,15 +33,15 @@ import java.util.List;
  </p>
  */
 public class Cleaner {
-    private Whitelist whitelist;
+    private Allowlist allowlist;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied whitelist.
-     @param whitelist white-list to clean with
+     @param allowlist white-list to clean with
      */
-    public Cleaner(Whitelist whitelist) {
-        Validate.notNull(whitelist);
-        this.whitelist = whitelist;
+    public Cleaner(Allowlist allowlist) {
+        Validate.notNull(allowlist);
+        this.allowlist = allowlist;
     }
 
     /**
@@ -107,7 +107,7 @@ public class Cleaner {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
-                if (whitelist.isSafeTag(sourceEl.normalName())) { // safe, clone and copy safe attrs
+                if (allowlist.isSafeTag(sourceEl.normalName())) { // safe, clone and copy safe attrs
                     ElementMeta meta = createSafeElement(sourceEl);
                     Element destChild = meta.el;
                     destination.appendChild(destChild);
@@ -121,7 +121,7 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
-            } else if (source instanceof DataNode && whitelist.isSafeTag(source.parent().nodeName())) {
+            } else if (source instanceof DataNode && allowlist.isSafeTag(source.parent().nodeName())) {
               DataNode sourceData = (DataNode) source;
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
@@ -131,7 +131,7 @@ public class Cleaner {
         }
 
         public void tail(Node source, int depth) {
-            if (source instanceof Element && whitelist.isSafeTag(source.nodeName())) {
+            if (source instanceof Element && allowlist.isSafeTag(source.nodeName())) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
         }
@@ -151,12 +151,12 @@ public class Cleaner {
 
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
-            if (whitelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
+            if (allowlist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
             else
                 numDiscarded++;
         }
-        Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
+        Attributes enforcedAttrs = allowlist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
 
         return new ElementMeta(dest, numDiscarded);

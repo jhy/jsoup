@@ -56,14 +56,14 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  elements as appropriate.
  </p>
  <p>
- If you are going to extend a whitelist, please be very careful. Make sure you understand what attributes may lead to
+ If you are going to extend an allowlist, please be very careful. Make sure you understand what attributes may lead to
  XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See 
  http://ha.ckers.org/xss.html for some XSS attack examples.
  </p>
 
  @author Jonathan Hedley
  */
-public class Whitelist {
+public class Allowlist {
     private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
@@ -71,29 +71,29 @@ public class Whitelist {
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
-     This whitelist allows only text nodes: all HTML will be stripped.
+     This allowlist allows only text nodes: all HTML will be stripped.
 
-     @return whitelist
+     @return allowlist
      */
-    public static Whitelist none() {
-        return new Whitelist();
+    public static Allowlist none() {
+        return new Allowlist();
     }
 
     /**
-     This whitelist allows only simple text formatting: <code>b, em, i, strong, u</code>. All other HTML (tags and
+     This allowlist allows only simple text formatting: <code>b, em, i, strong, u</code>. All other HTML (tags and
      attributes) will be removed.
 
-     @return whitelist
+     @return allowlist
      */
-    public static Whitelist simpleText() {
-        return new Whitelist()
+    public static Allowlist simpleText() {
+        return new Allowlist()
                 .addTags("b", "em", "i", "strong", "u")
                 ;
     }
 
     /**
      <p>
-     This whitelist allows a fuller range of text nodes: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li,
+     This allowlist allows a fuller range of text nodes: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li,
      ol, p, pre, q, small, span, strike, strong, sub, sup, u, ul</code>, and appropriate attributes.
      </p>
      <p>
@@ -104,10 +104,10 @@ public class Whitelist {
      Does not allow images.
      </p>
 
-     @return whitelist
+     @return allowlist
      */
-    public static Whitelist basic() {
-        return new Whitelist()
+    public static Allowlist basic() {
+        return new Allowlist()
                 .addTags(
                         "a", "b", "blockquote", "br", "cite", "code", "dd", "dl", "dt", "em",
                         "i", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong", "sub",
@@ -127,12 +127,12 @@ public class Whitelist {
     }
 
     /**
-     This whitelist allows the same text tags as {@link #basic}, and also allows <code>img</code> tags, with appropriate
+     This allowlist allows the same text tags as {@link #basic}, and also allows <code>img</code> tags, with appropriate
      attributes, with <code>src</code> pointing to <code>http</code> or <code>https</code>.
 
-     @return whitelist
+     @return allowlist
      */
-    public static Whitelist basicWithImages() {
+    public static Allowlist basicWithImages() {
         return basic()
                 .addTags("img")
                 .addAttributes("img", "align", "alt", "height", "src", "title", "width")
@@ -141,17 +141,17 @@ public class Whitelist {
     }
 
     /**
-     This whitelist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
+     This allowlist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
      code, col, colgroup, dd, div, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, span, strike, strong, sub,
      sup, table, tbody, td, tfoot, th, thead, tr, u, ul</code>
      <p>
      Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
      </p>
 
-     @return whitelist
+     @return allowlist
      */
-    public static Whitelist relaxed() {
-        return new Whitelist()
+    public static Allowlist relaxed() {
+        return new Allowlist()
                 .addTags(
                         "a", "b", "blockquote", "br", "caption", "cite", "code", "col",
                         "colgroup", "dd", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -182,14 +182,14 @@ public class Whitelist {
     }
 
     /**
-     Create a new, empty whitelist. Generally it will be better to start with a default prepared whitelist instead.
+     Create a new, empty allowlist. Generally it will be better to start with a default prepared allowlist instead.
 
      @see #basic()
      @see #basicWithImages()
      @see #simpleText()
      @see #relaxed()
      */
-    public Whitelist() {
+    public Allowlist() {
         tagNames = new HashSet<>();
         attributes = new HashMap<>();
         enforcedAttributes = new HashMap<>();
@@ -198,12 +198,12 @@ public class Whitelist {
     }
 
     /**
-     Add a list of allowed elements to a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
+     Add a list of allowed elements to an allowlist. (If a tag is not allowed, it will be removed from the HTML.)
 
      @param tags tag names to allow
      @return this (for chaining)
      */
-    public Whitelist addTags(String... tags) {
+    public Allowlist addTags(String... tags) {
         Validate.notNull(tags);
 
         for (String tagName : tags) {
@@ -214,12 +214,12 @@ public class Whitelist {
     }
 
     /**
-     Remove a list of allowed elements from a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
+     Remove a list of allowed elements from an allowlist. (If a tag is not allowed, it will be removed from the HTML.)
 
      @param tags tag names to disallow
      @return this (for chaining)
      */
-    public Whitelist removeTags(String... tags) {
+    public Allowlist removeTags(String... tags) {
         Validate.notNull(tags);
 
         for(String tag: tags) {
@@ -250,7 +250,7 @@ public class Whitelist {
      @param attributes List of valid attributes for the tag
      @return this (for chaining)
      */
-    public Whitelist addAttributes(String tag, String... attributes) {
+    public Allowlist addAttributes(String tag, String... attributes) {
         Validate.notEmpty(tag);
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
@@ -286,7 +286,7 @@ public class Whitelist {
      @param attributes List of invalid attributes for the tag
      @return this (for chaining)
      */
-    public Whitelist removeAttributes(String tag, String... attributes) {
+    public Allowlist removeAttributes(String tag, String... attributes) {
         Validate.notEmpty(tag);
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
@@ -328,7 +328,7 @@ public class Whitelist {
      @param value The enforced attribute value
      @return this (for chaining)
      */
-    public Whitelist addEnforcedAttribute(String tag, String attribute, String value) {
+    public Allowlist addEnforcedAttribute(String tag, String attribute, String value) {
         Validate.notEmpty(tag);
         Validate.notEmpty(attribute);
         Validate.notEmpty(value);
@@ -355,7 +355,7 @@ public class Whitelist {
      @param attribute   The attribute name
      @return this (for chaining)
      */
-    public Whitelist removeEnforcedAttribute(String tag, String attribute) {
+    public Allowlist removeEnforcedAttribute(String tag, String attribute) {
         Validate.notEmpty(tag);
         Validate.notEmpty(attribute);
 
@@ -372,7 +372,7 @@ public class Whitelist {
     }
 
     /**
-     * Configure this Whitelist to preserve relative links in an element's URL attribute, or convert them to absolute
+     * Configure this allowlist to preserve relative links in an element's URL attribute, or convert them to absolute
      * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
      * e.g. {@code http://}.
      * <p>
@@ -383,10 +383,10 @@ public class Whitelist {
      * </p>
      *
      * @param preserve {@code true} to allow relative links, {@code false} (default) to deny
-     * @return this Whitelist, for chaining.
+     * @return this allowlist, for chaining.
      * @see #addProtocols
      */
-    public Whitelist preserveRelativeLinks(boolean preserve) {
+    public Allowlist preserveRelativeLinks(boolean preserve) {
         preserveRelativeLinks = preserve;
         return this;
     }
@@ -407,7 +407,7 @@ public class Whitelist {
      @param protocols List of valid protocols
      @return this, for chaining
      */
-    public Whitelist addProtocols(String tag, String attribute, String... protocols) {
+    public Allowlist addProtocols(String tag, String attribute, String... protocols) {
         Validate.notEmpty(tag);
         Validate.notEmpty(attribute);
         Validate.notNull(protocols);
@@ -449,7 +449,7 @@ public class Whitelist {
      @param removeProtocols List of invalid protocols
      @return this, for chaining
      */
-    public Whitelist removeProtocols(String tag, String attribute, String... removeProtocols) {
+    public Allowlist removeProtocols(String tag, String attribute, String... removeProtocols) {
         Validate.notEmpty(tag);
         Validate.notEmpty(attribute);
         Validate.notNull(removeProtocols);
@@ -478,7 +478,7 @@ public class Whitelist {
     }
 
     /**
-     * Test if the supplied tag is allowed by this whitelist
+     * Test if the supplied tag is allowed by this allowlist
      * @param tag test tag
      * @return true if allowed
      */
@@ -487,7 +487,7 @@ public class Whitelist {
     }
 
     /**
-     * Test if the supplied attribute is allowed by this whitelist for this tag
+     * Test if the supplied attribute is allowed by this allowlist for this tag
      * @param tagName tag to consider allowing the attribute in
      * @param el element under test, to confirm protocol
      * @param attr attribute under test

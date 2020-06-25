@@ -5,7 +5,7 @@ import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Allowlist;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -1142,8 +1142,8 @@ public class HtmlParserTest {
         parser.parseInput(html, "");
         assertEquals(0, parser.getErrors().size());
 
-        assertTrue(Jsoup.isValid(html, Whitelist.basic()));
-        String clean = Jsoup.clean(html, Whitelist.basic());
+        assertTrue(Jsoup.isValid(html, Allowlist.basic()));
+        String clean = Jsoup.clean(html, Allowlist.basic());
         assertEquals("<p>test<br>test<br></p>", clean);
     }
 
@@ -1154,8 +1154,8 @@ public class HtmlParserTest {
         assertEquals(1, parser.getErrors().size());
         assertEquals("18: Tag cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
 
-        assertFalse(Jsoup.isValid(html, Whitelist.relaxed()));
-        String clean = Jsoup.clean(html, Whitelist.relaxed());
+        assertFalse(Jsoup.isValid(html, Allowlist.relaxed()));
+        String clean = Jsoup.clean(html, Allowlist.relaxed());
         assertEquals("<p>test</p> <div></div> <div> Two </div>", StringUtil.normaliseWhitespace(clean));
     }
 
@@ -1278,7 +1278,7 @@ public class HtmlParserTest {
     public void testH20() {
         // https://github.com/jhy/jsoup/issues/731
         String html = "H<sub>2</sub>O";
-        String clean = Jsoup.clean(html, Whitelist.basic());
+        String clean = Jsoup.clean(html, Allowlist.basic());
         assertEquals("H<sub>2</sub>O", clean);
 
         Document doc = Jsoup.parse(html);
@@ -1289,7 +1289,7 @@ public class HtmlParserTest {
     public void testUNewlines() {
         // https://github.com/jhy/jsoup/issues/851
         String html = "t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e";
-        String clean = Jsoup.clean(html, Whitelist.basic());
+        String clean = Jsoup.clean(html, Allowlist.basic());
         assertEquals("t<u>es</u>t <b>on</b> <i>f</i><u>ir</u>e", clean);
 
         Document doc = Jsoup.parse(html);

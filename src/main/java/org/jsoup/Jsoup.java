@@ -3,7 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Allowlist;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
 
@@ -189,14 +189,14 @@ public class Jsoup {
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
-     @param whitelist white-list of permitted HTML elements
+     @param allowlist white-list of permitted HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+    public static String clean(String bodyHtml, String baseUri, Allowlist allowlist) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(allowlist);
         Document clean = cleaner.clean(dirty);
         return clean.body().html();
     }
@@ -206,13 +206,13 @@ public class Jsoup {
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
-     @param whitelist white-list of permitted HTML elements
+     @param allowlist white-list of permitted HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, Whitelist whitelist) {
-        return clean(bodyHtml, "", whitelist);
+    public static String clean(String bodyHtml, Allowlist allowlist) {
+        return clean(bodyHtml, "", allowlist);
     }
 
     /**
@@ -224,14 +224,14 @@ public class Jsoup {
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
-     * @param whitelist white-list of permitted HTML elements
+     * @param allowlist white-list of permitted HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+    public static String clean(String bodyHtml, String baseUri, Allowlist allowlist, Document.OutputSettings outputSettings) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(allowlist);
         Document clean = cleaner.clean(dirty);
         clean.outputSettings(outputSettings);
         return clean.body().html();
@@ -242,12 +242,12 @@ public class Jsoup {
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
-     @param whitelist whitelist to test against
+     @param allowlist whitelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist) 
+     @see #clean(String, Allowlist)
      */
-    public static boolean isValid(String bodyHtml, Whitelist whitelist) {
-        return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+    public static boolean isValid(String bodyHtml, Allowlist allowlist) {
+        return new Cleaner(allowlist).isValidBodyHtml(bodyHtml);
     }
     
 }
