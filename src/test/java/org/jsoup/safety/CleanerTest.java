@@ -81,7 +81,7 @@ public class CleanerTest {
     }
 
     @MultiLocaleTest
-    public void whitelistedProtocolShouldBeRetained(Locale locale) {
+    public void allowlistedProtocolShouldBeRetained(Locale locale) {
         Locale.setDefault(locale);
 
         Allowlist allowlist = Allowlist.none()
@@ -128,14 +128,14 @@ public class CleanerTest {
         String validAnchor = "<a href=\"#valid\">Valid anchor</a>";
         String invalidAnchor = "<a href=\"#anchor with spaces\">Invalid anchor</a>";
 
-        // A Whitelist that does not allow anchors will strip them out.
+        // An Allowlist that does not allow anchors will strip them out.
         String cleanHtml = Jsoup.clean(validAnchor, Allowlist.relaxed());
         assertEquals("<a>Valid anchor</a>", cleanHtml);
 
         cleanHtml = Jsoup.clean(invalidAnchor, Allowlist.relaxed());
         assertEquals("<a>Invalid anchor</a>", cleanHtml);
 
-        // A Whitelist that allows them will keep them.
+        // An Allowlist that allows them will keep them.
         Allowlist relaxedWithAnchor = Allowlist.relaxed().addProtocols("a", "href", "#");
 
         cleanHtml = Jsoup.clean(validAnchor, relaxedWithAnchor);
@@ -234,7 +234,7 @@ public class CleanerTest {
         String html = "<p class='foo' src='bar'>One</p>";
         Allowlist allowlist = new Allowlist()
             .addAttributes("p", "class");
-        // ^^ whitelist does not have explicit tag add for p, inferred from add attributes.
+        // ^^ allowlist does not have explicit tag add for p, inferred from add attributes.
         String clean = Jsoup.clean(html, allowlist);
         assertEquals("<p class=\"foo\">One</p>", clean);
     }
@@ -278,7 +278,7 @@ public class CleanerTest {
     }
 
     @Test
-    public void testScriptTagInWhiteList() {
+    public void testScriptTagInAllowList() {
         Allowlist allowlist = Allowlist.relaxed();
         allowlist.addTags( "script" );
         assertTrue( Jsoup.isValid("Hello<script>alert('Doh')</script>World !", allowlist) );
