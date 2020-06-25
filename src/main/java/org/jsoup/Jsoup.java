@@ -220,7 +220,7 @@ public class Jsoup {
      * permitted tags and attributes.
      * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
      * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
-     * structural tags (<code>html, head, body</code> etc) to the whitelist.
+     * structural tags (<code>html, head, body</code> etc) to the allowlist.
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
@@ -238,11 +238,11 @@ public class Jsoup {
     }
 
     /**
-     Test if the input body HTML has only tags and attributes allowed by the Whitelist. Useful for form validation.
+     Test if the input body HTML has only tags and attributes allowed by the Allowlist. Useful for form validation.
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
-     @param allowlist whitelist to test against
+     @param allowlist allowlist to test against
      @return true if no tags or attributes were removed; false otherwise
      @see #clean(String, Allowlist)
      */

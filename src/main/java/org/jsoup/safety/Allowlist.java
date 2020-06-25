@@ -2,7 +2,7 @@ package org.jsoup.safety;
 
 /*
     Thank you to Ryan Grove (wonko.com) for the Ruby HTML cleaner http://github.com/rgrove/sanitize/, which inspired
-    this whitelist configuration, and the initial defaults.
+    this allowlist configuration, and the initial defaults.
  */
 
 import org.jsoup.helper.Validate;
@@ -19,7 +19,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 
 
 /**
- Whitelists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
+ Allowlists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
  <p>
  Start with one of the defaults:
  </p>
@@ -31,7 +31,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  <li>{@link #relaxed}
  </ul>
  <p>
- If you need to allow more through (please be careful!), tweak a base whitelist with:
+ If you need to allow more through (please be careful!), tweak a base allowlist with:
  </p>
  <ul>
  <li>{@link #addTags}
@@ -40,7 +40,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  <li>{@link #addProtocols}
  </ul>
  <p>
- You can remove any setting from an existing whitelist with:
+ You can remove any setting from an existing allowlist with:
  </p>
  <ul>
  <li>{@link #removeTags}
@@ -50,9 +50,9 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </ul>
  
  <p>
- The cleaner and these whitelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
+ The cleaner and these allowlists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
- document HTML around the cleaned body HTML, or create a whitelist that allows <code>html</code> and <code>head</code>
+ document HTML around the cleaned body HTML, or create an allowlist that allows <code>html</code> and <code>head</code>
  elements as appropriate.
  </p>
  <p>

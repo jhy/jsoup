@@ -18,11 +18,11 @@ import java.util.List;
 
 
 /**
- The whitelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
+ The allowlist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
  <p>
  The HTML cleaner parses the input as HTML and then runs it through a white-list, so the output HTML can only contain
- HTML that is allowed by the whitelist.
+ HTML that is allowed by the allowlist.
  </p>
  <p>
  It is assumed that the input HTML is a body fragment; the clean methods only pull from the source's body, and the
@@ -36,7 +36,7 @@ public class Cleaner {
     private Allowlist allowlist;
 
     /**
-     Create a new cleaner, that sanitizes documents using the supplied whitelist.
+     Create a new cleaner, that sanitizes documents using the supplied allowlist.
      @param allowlist white-list to clean with
      */
     public Cleaner(Allowlist allowlist) {
@@ -45,7 +45,7 @@ public class Cleaner {
     }
 
     /**
-     Creates a new, clean document, from the original dirty document, containing only elements allowed by the whitelist.
+     Creates a new, clean document, from the original dirty document, containing only elements allowed by the allowlist.
      The original document is not modified. Only elements from the dirt document's <code>body</code> are used.
      @param dirtyDocument Untrusted base document to clean.
      @return cleaned document.
@@ -61,8 +61,8 @@ public class Cleaner {
     }
 
     /**
-     Determines if the input document <b>body</b>is valid, against the whitelist. It is considered valid if all the tags and attributes
-     in the input HTML are allowed by the whitelist, and that there is no content in the <code>head</code>.
+     Determines if the input document <b>body</b>is valid, against the allowlist. It is considered valid if all the tags and attributes
+     in the input HTML are allowed by the allowlist, and that there is no content in the <code>head</code>.
      <p>
      This method can be used as a validator for user input. An invalid document will still be cleaned successfully
      using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
