@@ -189,7 +189,7 @@ public class Jsoup {
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
-     @param allowlist white-list of permitted HTML elements
+     @param allowlist list of allowed HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
@@ -206,7 +206,7 @@ public class Jsoup {
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
-     @param allowlist white-list of permitted HTML elements
+     @param allowlist list of allowed HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
@@ -216,15 +216,15 @@ public class Jsoup {
     }
 
     /**
-     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of
-     * permitted tags and attributes.
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a list of
+     * allowed tags and attributes.
      * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
      * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
      * structural tags (<code>html, head, body</code> etc) to the allowlist.
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
-     * @param allowlist white-list of permitted HTML elements
+     @param allowlist list of allowed HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)

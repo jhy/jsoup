@@ -21,7 +21,7 @@ import java.util.List;
  The allowlist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
  <p>
- The HTML cleaner parses the input as HTML and then runs it through a white-list, so the output HTML can only contain
+ The HTML cleaner parses the input as HTML and then runs it through an allow-list, so the output HTML can only contain
  HTML that is allowed by the allowlist.
  </p>
  <p>
