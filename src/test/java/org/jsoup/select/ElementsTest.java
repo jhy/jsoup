@@ -293,6 +293,12 @@ public class ElementsTest {
         assertEquals("2", forms.get(1).id());
     }
 
+    @Test public void formsRegression() {
+        Document doc = Jsoup.parse("<form id=1></form>");
+        List<FormElement> forms = doc.select("form").forms();
+        assertEquals(1, forms.size());
+    }
+
     @Test public void comments() {
         Document doc = Jsoup.parse("<!-- comment1 --><p><!-- comment2 --><p class=two><!-- comment3 -->");
         List<Comment> comments = doc.select("p").comments();

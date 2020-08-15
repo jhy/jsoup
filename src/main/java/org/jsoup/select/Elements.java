@@ -667,7 +667,7 @@ public class Elements extends ArrayList<Element> {
     private <T extends Node> List<T> nodesOfType(Class<T> tClass) {
         ArrayList<T> nodes = new ArrayList<>();
         for (Element el: this) {
-            if (el.getClass().isInstance(tClass)) { // Handles FormElements
+            if (tClass.isInstance(el)) { // Handles FormElements
                 nodes.add(tClass.cast(el));
             } else if (Node.class.isAssignableFrom(tClass)) { // check if child nodes match
                 for (int i = 0; i < el.childNodeSize(); i++) {
