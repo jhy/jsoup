@@ -2,10 +2,11 @@ package org.jsoup;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.safety.Allowlist;
 import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
+import org.jsoup.safety.Whitelist;
 
 import java.io.File;
 import java.io.IOException;
@@ -184,70 +185,134 @@ public class Jsoup {
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
-     tags and attributes.
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a list of
+     allowed tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
-     @param whitelist white-list of permitted HTML elements
+     @param allowlist list of allowed HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+    public static String clean(String bodyHtml, String baseUri, Allowlist allowlist) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(allowlist);
         Document clean = cleaner.clean(dirty);
         return clean.body().html();
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
-     tags and attributes.
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a list of
+     allowed tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
-     @param whitelist white-list of permitted HTML elements
+     @param baseUri   URL to resolve relative URLs against
+     @param whitelist list of allowed HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, Whitelist whitelist) {
-        return clean(bodyHtml, "", whitelist);
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+        return clean(bodyHtml, baseUri, whitelist.asAllowlist());
     }
 
     /**
-     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of
-     * permitted tags and attributes.
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through an list of
+     allowed tags and attributes.
+
+     @param bodyHtml  input untrusted HTML (body fragment)
+     @param allowlist list of allowed HTML elements
+     @return safe HTML (body fragment)
+
+     @see Cleaner#clean(Document)
+     */
+    public static String clean(String bodyHtml, Allowlist allowlist) {
+        return clean(bodyHtml, "", allowlist);
+    }
+
+    /**
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through an list of
+     allowed tags and attributes.
+
+     @param bodyHtml  input untrusted HTML (body fragment)
+     @param whitelist list of allowed HTML elements
+     @return safe HTML (body fragment)
+
+     @see Cleaner#clean(Document)
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, Whitelist whitelist) {
+        return clean(bodyHtml, "", whitelist.asAllowlist());
+    }
+
+    /**
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a list of
+     * allowed tags and attributes.
      * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
      * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
-     * structural tags (<code>html, head, body</code> etc) to the whitelist.
+     * structural tags (<code>html, head, body</code> etc) to the allowlist.
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
-     * @param whitelist white-list of permitted HTML elements
+     * @param allowlist list of allowed HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+    public static String clean(String bodyHtml, String baseUri, Allowlist allowlist, Document.OutputSettings outputSettings) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(allowlist);
         Document clean = cleaner.clean(dirty);
         clean.outputSettings(outputSettings);
         return clean.body().html();
     }
 
     /**
-     Test if the input body HTML has only tags and attributes allowed by the Whitelist. Useful for form validation.
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a list of
+     * allowed tags and attributes.
+     * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
+     * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
+     * structural tags (<code>html, head, body</code> etc) to the allowlist.
+     *
+     * @param bodyHtml input untrusted HTML (body fragment)
+     * @param baseUri URL to resolve relative URLs against
+     * @param allowlist list of allowed HTML elements
+     * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
+     * @return safe HTML (body fragment)
+     * @see Cleaner#clean(Document)
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+        return clean(bodyHtml, baseUri, whitelist.asAllowlist(), outputSettings);
+    }
+
+    /**
+     Test if the input body HTML has only tags and attributes allowed by the Allowlist. Useful for form validation.
+     <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
+     <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
+     @param bodyHtml HTML to test
+     @param allowlist allowlist to test against
+     @return true if no tags or attributes were removed; false otherwise
+     @see #clean(String, Allowlist)
+     */
+    public static boolean isValid(String bodyHtml, Allowlist allowlist) {
+        return new Cleaner(allowlist).isValidBodyHtml(bodyHtml);
+    }
+    
+    /**
+     Test if the input body HTML has only tags and attributes allowed by the Allowlist. Useful for form validation.
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
      @param whitelist whitelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist) 
+     @see #clean(String, Allowlist)
      */
+    @Deprecated
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
-        return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+        return isValid(bodyHtml, whitelist.asAllowlist());
     }
-    
+
 }
