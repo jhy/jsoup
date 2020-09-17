@@ -117,7 +117,7 @@ public class Whitelist {
                 .addAttributes("blockquote", "cite")
                 .addAttributes("q", "cite")
 
-                .addProtocols("a", "href", "ftp", "http", "https", "mailto")
+                .addProtocols("a", "href", "ftp", "http", "https", "mailto", "*")
                 .addProtocols("blockquote", "cite", "http", "https")
                 .addProtocols("cite", "cite", "http", "https")
 
@@ -136,7 +136,7 @@ public class Whitelist {
         return basic()
                 .addTags("img")
                 .addAttributes("img", "align", "alt", "height", "src", "title", "width")
-                .addProtocols("img", "src", "http", "https")
+                .addProtocols("img", "src", "http", "https", "*")
                 ;
     }
 
@@ -529,6 +529,10 @@ public class Whitelist {
         if (!preserveRelativeLinks)
             attr.setValue(value);
         
+        // 如果有*则表示全部通过
+        if (protocols.stream().map(Protocol::toString).collect(Collectors.toList()).contains("*")) {
+            return true;
+        }
         for (Protocol protocol : protocols) {
             String prot = protocol.toString();
 
