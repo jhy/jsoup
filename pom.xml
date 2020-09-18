@@ -289,6 +289,31 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <!-- javax.validation for optional validator support -->
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>2.0.2</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <!-- for testing the optional validator support -->
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>6.1.5.Final</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <!-- for testing the optional validator support -->
+      <groupId>org.glassfish</groupId>
+      <artifactId>jakarta.el</artifactId>
+      <version>3.0.3</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <dependencyManagement>
