@@ -360,10 +360,10 @@ public class TokenQueue {
      */
     public String consumeElementSelector() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-")))
+        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-", "\\") || pos>0 && queue.charAt(pos-1)=='\\'))
             pos++;
         
-        return queue.substring(start, pos);
+        return queue.substring(start, pos).replace("\\", "");
     }
 
     /**
@@ -373,10 +373,10 @@ public class TokenQueue {
      */
     public String consumeCssIdentifier() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_', '\\') || pos>0 && queue.charAt(pos-1)=='\\'))
             pos++;
 
-        return queue.substring(start, pos);
+        return queue.substring(start, pos).replace("\\", "");
     }
 
     /**
