@@ -341,19 +341,6 @@ public class TokenQueue {
     }
     
     /**
-     * Consume an tag name off the queue (word or :, _, -)
-     * 
-     * @return tag name
-     */
-    public String consumeTagName() {
-        int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny(':', '_', '-')))
-            pos++;
-        
-        return queue.substring(start, pos);
-    }
-    
-    /**
      * Consume a CSS element selector (tag name, but | instead of : for namespaces (or *| for wildcard namespace), to not conflict with :pseudo selects).
      * 
      * @return tag name
