@@ -70,6 +70,9 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:only-child</code></td><td>elements that have a parent element and whose parent element have no other element children</td><td></td></tr>
  * <tr><td><code>:only-of-type</code></td><td> an element that has a parent element and whose parent element has no other element children with the same expanded element name</td><td></td></tr>
  * <tr><td><code>:empty</code></td><td>elements that have no children at all</td><td></td></tr>
+ * <tr><td><code>:local-name</code></td><td>elements with a given local-name (without namespace prefix), <b>case sensitive</b></td><td>:local-name(foo)</td></tr>
+ * <tr><td><code>:name</code></td><td>elements with a given Qname (including namespace prefix), <b>case sensitive</b></td><td>:name(bar:foo)</td></tr>
+ * <tr><td><code>:namespace-uri</code></td><td>elements with a given namespace URI, <b>case sensitive</b></td><td>:namespace-uri(http://jsoup.org/)</td></tr>
  * </table>
  *
  * @author Jonathan Hedley, jonathan@hedley.net

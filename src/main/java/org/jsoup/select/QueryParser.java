@@ -173,6 +173,12 @@ public class QueryParser {
             contains(true);
         else if (tq.matches(":containsData("))
             containsData();
+        else if (tq.matches(":local-name("))
+            byLocalName();
+        else if (tq.matches(":name("))
+            byName();
+        else if (tq.matches(":namespace-uri("))
+            byNamespaceURI();
         else if (tq.matches(":matches("))
             matches(false);
         else if (tq.matches(":matchesOwn("))
@@ -239,6 +245,30 @@ public class QueryParser {
 
             evals.add(new Evaluator.Tag(tagName));
         }
+    }
+
+    private void byLocalName() {
+    	tq.consume(":local-name");
+        String tagName = tq.chompBalanced('(', ')');
+        Validate.notEmpty(tagName);
+
+        evals.add(new Evaluator.LocalName(tagName));
+    }
+
+    private void byName() {
+    	tq.consume(":name");
+        String tagName = tq.chompBalanced('(', ')');
+        Validate.notEmpty(tagName);
+
+        evals.add(new Evaluator.Tag(tagName));
+    }
+
+    private void byNamespaceURI() {
+    	tq.consume(":namespace-URI");
+        String nsUri = tq.chompBalanced('(', ')');
+        Validate.notEmpty(nsUri);
+
+        evals.add(new Evaluator.NamespaceURI(nsUri));
     }
 
     private void byAttribute() {

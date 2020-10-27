@@ -1620,4 +1620,29 @@ public class Element extends Node {
             && previousSibling() != null
             && !out.outline();
     }
+
+	public String namespacePrefix() {
+		final String tn = this.tagName();
+		final int p = tn.indexOf(':');
+		if (p<0) return null;
+		return tn.substring(0, p);
+	}
+
+	public String namespaceURI() {
+		final String prefix = namespacePrefix();
+		if (prefix==null) return null;
+		
+		return declaredNamespaceURIbyPrefix("xmlns:"+prefix);
+	}
+
+	private String declaredNamespaceURIbyPrefix(String xmlnsAttr) {
+		final String uri = this.attr(xmlnsAttr);
+		if (!uri.isEmpty()) return uri;
+		
+		final Element parent = parent();
+		if (parent!=null) {
+			return parent.declaredNamespaceURIbyPrefix(xmlnsAttr);
+		}
+		return null;
+	}
 }

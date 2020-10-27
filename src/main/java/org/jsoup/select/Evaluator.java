@@ -79,6 +79,53 @@ public abstract class Evaluator {
     }
 
     /**
+     * Evaluator for tag name
+     */
+    public static final class LocalName extends Evaluator {
+        private String tagName;
+
+        public LocalName(String tagName) {
+            this.tagName = tagName;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+        	final String tn = element.tagName();
+        	final int p = tn.indexOf(':');
+        	if (p>-1) {
+                return (tn.substring(p+1).equals(tagName));
+        	}
+            return (tn.equals(tagName));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", tagName);
+        }
+    }
+    
+    /**
+     * Evaluator for tag name
+     */
+    public static final class NamespaceURI extends Evaluator {
+        private String nsUri;
+
+        public NamespaceURI(String nsUri) {
+            this.nsUri = nsUri;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return this.nsUri.equals(element.namespaceURI());
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", nsUri);
+        }
+    }
+    
+    /**
      * Evaluator for element id
      */
     public static final class Id extends Evaluator {
