@@ -360,10 +360,15 @@ public class TokenQueue {
      */
     public String consumeElementSelector() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-", "\\") || pos>0 && queue.charAt(pos-1)=='\\'))
+        boolean hasEscape=false;
+        
+        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-", "\\") || pos>0 && queue.charAt(pos-1)=='\\' && (hasEscape=true)))
             pos++;
         
-        return queue.substring(start, pos).replace("\\", "");
+        if (hasEscape) {
+            return TokenQueue.unescape(queue.substring(start, pos));
+        }
+        return queue.substring(start, pos);
     }
 
     /**
@@ -373,10 +378,15 @@ public class TokenQueue {
      */
     public String consumeCssIdentifier() {
         int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_', '\\') || pos>0 && queue.charAt(pos-1)=='\\'))
+        boolean hasEscape=false;
+        
+        while (!isEmpty() && (matchesWord() || matchesAny('-', '_', '\\') || pos>0 && queue.charAt(pos-1)=='\\' && (hasEscape=true)))
             pos++;
 
-        return queue.substring(start, pos).replace("\\", "");
+        if (hasEscape) {
+        	return TokenQueue.unescape(queue.substring(start, pos));
+        }
+        return queue.substring(start, pos);
     }
 
     /**
