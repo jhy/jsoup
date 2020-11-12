@@ -1616,7 +1616,7 @@ public class Element extends Node {
     private boolean isInlineable(Document.OutputSettings out) {
         return tag().isInline()
             && !tag().isEmpty()
-            && parent().isBlock()
+            && (parent()==null || parent().isBlock())
             && previousSibling() != null
             && !out.outline();
     }

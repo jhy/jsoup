@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.*;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -430,5 +431,15 @@ public class ElementsTest {
         assertEquals("http://example.com/foo", absAttrs.get(0));
         assertEquals("http://example.com/bar", absAttrs.get(1));
         assertEquals("http://example.com", absAttrs.get(2));
+    }
+    
+    @Test public void toStringInlineNPE() {
+        Document doc = Jsoup.parse(
+                "<root><jobOffer><id>4711</id></jobOffer></root>",
+                "http://example.com", Parser.xmlParser()
+        );
+
+        Element e = doc.select("jobOffer").first().clone();
+        System.out.println( e.toString() );
     }
 }
