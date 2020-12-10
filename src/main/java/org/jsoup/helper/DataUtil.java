@@ -130,7 +130,7 @@ public final class DataUtil {
             try {
                 CharBuffer defaultDecoded = Charset.forName(defaultCharset).decode(firstBytes);
                 if (defaultDecoded.hasArray())
-                    doc = parser.parseInput(new CharArrayReader(defaultDecoded.array()), baseUri);
+                    doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
                 else
                     doc = parser.parseInput(defaultDecoded.toString(), baseUri);
             } catch (UncheckedIOException e) {

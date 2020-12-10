@@ -162,6 +162,14 @@ public class DataUtilTest {
     }
 
     @Test
+    public void noExtraNULLBytes() throws IOException {
+    	final byte[] b = "<html><head><meta charset=\"UTF-8\"></head><body><div><u>ü</u>ü</div></body></html>".getBytes("UTF-8");
+    	
+    	Document doc = Jsoup.parse(new ByteArrayInputStream(b), null, "");
+    	assertFalse( doc.outerHtml().contains("\u0000") );
+    }
+
+    @Test
     public void supportsZippedUTF8BOM() throws IOException {
         File in = getFile("/bomtests/bom_utf8.html.gz");
         Document doc = Jsoup.parse(in, null, "http://example.com");
