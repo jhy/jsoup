@@ -276,7 +276,7 @@
       <!-- jetty for webserver integration tests. 9.2 is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.4.26.v20200117</version>
+      <version>9.4.35.v20201120</version>
       <scope>test</scope>
     </dependency>
 
