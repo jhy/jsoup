@@ -14,7 +14,7 @@ jsoup is designed to deal with all varieties of HTML found in the wild; from pri
 
 See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API documentation](https://jsoup.org/apidocs/).
 
-[![Build Status](https://travis-ci.org/jhy/jsoup.svg?branch=master)](https://travis-ci.org/jhy/jsoup)
+[![Build Status](https://github.com/jhy/jsoup/workflows/Build/badge.svg)](https://github.com/jhy/jsoup/workflows/Build)
 
 ## Example
 Fetch the [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/index.html?org/jsoup/select/Elements.html):
@@ -31,7 +31,7 @@ for (Element headline : newsHeadlines) {
 [Online sample](https://try.jsoup.org/~LGB7rk_atM2roavV0d-czMt3J_g), [full source](https://github.com/jhy/jsoup/blob/master/src/main/java/org/jsoup/examples/Wikipedia.java).
 
 ## Open source
-jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup/tree/master/src/main/java/org/jsoup).
+jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup).
 
 ## Getting started
 1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
