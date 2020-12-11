@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -37,7 +38,8 @@ import java.util.zip.GZIPInputStream;
  */
 public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
-    static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
+    static final Charset defaultCharset = StandardCharsets.UTF_8;
+    static final String defaultCharsetName = defaultCharset.name(); // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
     static final int bufferSize = 1024 * 32;
     private static final char[] mimeBoundaryChars =
@@ -128,7 +130,7 @@ public final class DataUtil {
 
         if (charsetName == null) { // determine from meta. safe first parse as UTF-8
             try {
-                CharBuffer defaultDecoded = Charset.forName(defaultCharset).decode(firstBytes);
+                CharBuffer defaultDecoded = defaultCharset.decode(firstBytes);
                 if (defaultDecoded.hasArray())
                     doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
                 else
@@ -166,7 +168,7 @@ public final class DataUtil {
                 }
             }
             foundCharset = validateCharset(foundCharset);
-            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
+            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case insensitive check here to match how validate works)
                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                 charsetName = foundCharset;
                 doc = null;
@@ -178,7 +180,7 @@ public final class DataUtil {
         }
         if (doc == null) {
             if (charsetName == null)
-                charsetName = defaultCharset;
+                charsetName = defaultCharsetName;
             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
             if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                 long skipped = reader.skip(1);
@@ -190,11 +192,11 @@ public final class DataUtil {
                 // io exception when parsing (not seen before because reading the stream as we go)
                 throw e.ioException();
             }
-            Charset charset = Charset.forName(charsetName);
+            Charset charset = charsetName.equals(defaultCharsetName) ? defaultCharset : Charset.forName(charsetName);
             doc.outputSettings().charset(charset);
             if (!charset.canEncode()) {
                 // some charsets can read but not encode; switch to an encodable charset and update the meta el
-                doc.charset(Charset.forName(defaultCharset));
+                doc.charset(defaultCharset);
             }
         }
         input.close();

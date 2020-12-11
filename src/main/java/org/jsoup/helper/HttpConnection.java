@@ -541,7 +541,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
-        private String postDataCharset = DataUtil.defaultCharset;
+        private String postDataCharset = DataUtil.defaultCharsetName;
         private SSLSocketFactory sslSocketFactory;
 
         Request() {
@@ -852,11 +852,8 @@ public class HttpConnection implements Connection {
         public String body() {
             prepareByteData();
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
-            String body;
-            if (charset == null)
-                body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString();
-            else
-                body = Charset.forName(charset).decode(byteData).toString();
+            String body = (charset == null ? DataUtil.defaultCharset : Charset.forName(charset))
+                .decode(byteData).toString();
             ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
         }
@@ -1111,9 +1108,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharset))
+                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
+                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
             }
             req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params
