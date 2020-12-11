@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.DataUtil;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
@@ -9,7 +10,6 @@ import org.jsoup.select.Elements;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -399,7 +399,7 @@ public class Document extends Element {
         private Syntax syntax = Syntax.html;
 
         public OutputSettings() {
-            charset(StandardCharsets.UTF_8);
+            charset(DataUtil.UTF_8);
         }
         
         /**

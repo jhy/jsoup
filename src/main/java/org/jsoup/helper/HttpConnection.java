@@ -852,7 +852,7 @@ public class HttpConnection implements Connection {
         public String body() {
             prepareByteData();
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
-            String body = (charset == null ? DataUtil.defaultCharset : Charset.forName(charset))
+            String body = (charset == null ? DataUtil.UTF_8 : Charset.forName(charset))
                 .decode(byteData).toString();
             ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
