@@ -176,7 +176,7 @@ public class Element extends Node {
     
     /**
      * Test if this element is a block-level element. (E.g. {@code <div> == true} or an inline element
-     * {@code <p> == false}).
+     * {@code <span> == false}).
      * 
      * @return true if block, false if not (and thus inline)
      */

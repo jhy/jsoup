@@ -1597,4 +1597,12 @@ public class ElementTest {
         assertEquals(2, row.childrenSize());
         assertEquals(5, row.childNodeSize());
     }
+
+    @Test public void isBlock() {
+        String html = "<div><p><span>Hello</span>";
+        Document doc = Jsoup.parse(html);
+        assertTrue(doc.selectFirst("div").isBlock());
+        assertTrue(doc.selectFirst("p").isBlock());
+        assertFalse(doc.selectFirst("span").isBlock());
+    }
 }
