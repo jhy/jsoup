@@ -10,7 +10,6 @@ jobs:
         # choosing to run a reduced set of LTS, current, and next, to balance coverage and execution time
         java: [8, 11, 15, 16-ea]
       fail-fast: false
-      max-parallel: 4
     name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -25,10 +24,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-java-${{ matrix.java }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-            
-      - name: Verify with Maven
+
+      - name: Maven Compile
+        run: mvn -X compile -B --file pom.xml
+
+      - name: Maven Verify
         run: mvn -X verify -B --file pom.xml
 ...
