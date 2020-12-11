@@ -64,6 +64,8 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
+    private static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, not in Android API 10.
+    private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
@@ -386,10 +388,10 @@ public class HttpConnection implements Connection {
         }
 
         private static String fixHeaderEncoding(String val) {
-            byte[] bytes = val.getBytes(StandardCharsets.ISO_8859_1);
+            byte[] bytes = val.getBytes(ISO_8859_1);
             if (!looksLikeUtf8(bytes))
                 return val;
-            return new String(bytes, StandardCharsets.UTF_8);
+            return new String(bytes, UTF_8);
         }
 
         private static boolean looksLikeUtf8(byte[] input) {
