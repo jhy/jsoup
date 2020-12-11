@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -32,6 +31,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -386,15 +386,10 @@ public class HttpConnection implements Connection {
         }
 
         private static String fixHeaderEncoding(String val) {
-            try {
-                byte[] bytes = val.getBytes("ISO-8859-1");
-                if (!looksLikeUtf8(bytes))
-                    return val;
-                return new String(bytes, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                // shouldn't happen as these both always exist
+            byte[] bytes = val.getBytes(StandardCharsets.ISO_8859_1);
+            if (!looksLikeUtf8(bytes))
                 return val;
-            }
+            return new String(bytes, StandardCharsets.UTF_8);
         }
 
         private static boolean looksLikeUtf8(byte[] input) {
