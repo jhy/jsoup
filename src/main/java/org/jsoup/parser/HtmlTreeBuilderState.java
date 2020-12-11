@@ -339,9 +339,11 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     // merge attributes onto real html
                     Element html = tb.getStack().get(0);
-                    for (Attribute attribute : startTag.getAttributes()) {
-                        if (!html.hasAttr(attribute.getKey()))
-                            html.attributes().put(attribute);
+                    if (startTag.hasAttributes()) {
+                        for (Attribute attribute : startTag.attributes) {
+                            if (!html.hasAttr(attribute.getKey()))
+                                html.attributes().put(attribute);
+                        }
                     }
                     break;
                 case "body":
@@ -353,9 +355,11 @@ enum HtmlTreeBuilderState {
                     } else {
                         tb.framesetOk(false);
                         Element body = stack.get(1);
-                        for (Attribute attribute : startTag.getAttributes()) {
-                            if (!body.hasAttr(attribute.getKey()))
-                                body.attributes().put(attribute);
+                        if (startTag.hasAttributes()) {
+                            for (Attribute attribute : startTag.attributes) {
+                                if (!body.hasAttr(attribute.getKey()))
+                                    body.attributes().put(attribute);
+                            }
                         }
                     }
                     break;
@@ -451,14 +455,14 @@ enum HtmlTreeBuilderState {
                         return false;
 
                     tb.processStartTag("form");
-                    if (startTag.attributes.hasKey("action")) {
+                    if (startTag.hasAttribute("action")) {
                         Element form = tb.getFormElement();
                         form.attr("action", startTag.attributes.get("action"));
                     }
                     tb.processStartTag("hr");
                     tb.processStartTag("label");
                     // hope you like english.
-                    String prompt = startTag.attributes.hasKey("prompt") ?
+                    String prompt = startTag.hasAttribute("prompt") ?
                         startTag.attributes.get("prompt") :
                         "This is a searchable index. Enter search keywords: ";
 
@@ -466,9 +470,11 @@ enum HtmlTreeBuilderState {
 
                     // input
                     Attributes inputAttribs = new Attributes();
-                    for (Attribute attr : startTag.attributes) {
-                        if (!inSorted(attr.getKey(), Constants.InBodyStartInputAttribs))
-                            inputAttribs.put(attr);
+                    if (startTag.hasAttributes()) {
+                        for (Attribute attr : startTag.attributes) {
+                            if (!inSorted(attr.getKey(), Constants.InBodyStartInputAttribs))
+                                inputAttribs.put(attr);
+                        }
                     }
                     inputAttribs.put("name", "isindex");
                     tb.processStartTag("input", inputAttribs);
@@ -931,7 +937,7 @@ enum HtmlTreeBuilderState {
                 } else if (inSorted(name, InTableToHead)) {
                     return tb.process(t, InHead);
                 } else if (name.equals("input")) {
-                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
+                    if (!(startTag.hasAttributes() && startTag.attributes.get("type").equalsIgnoreCase("hidden"))) {
                         return anythingElse(t, tb);
                     } else {
                         tb.insertEmpty(startTag);

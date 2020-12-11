@@ -85,7 +85,7 @@ final class Tokeniser {
             lastStartTag = startTag.tagName;
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
-            if (endTag.attributes != null)
+            if (endTag.hasAttributes())
                 error("Attributes incorrectly present on end tag");
         }
     }

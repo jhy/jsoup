@@ -434,6 +434,22 @@ public class HtmlParserTest {
         assertEquals("http://example.com/foo", doc.select("a").first().absUrl("href"));
     }
 
+    @Test public void parseBodyIsIndexNoAttributes() {
+        // https://github.com/jhy/jsoup/issues/1404
+        String expectedHtml = "<form>\n" +
+            " <hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label>\n" +
+            " <hr>\n" +
+            "</form>";
+        Document doc = Jsoup.parse("<isindex>");
+        assertEquals(expectedHtml, doc.body().html());
+
+        doc = Jsoup.parseBodyFragment("<isindex>");
+        assertEquals(expectedHtml, doc.body().html());
+
+        doc = Jsoup.parseBodyFragment("<table><input></table>");
+        assertEquals("<input>\n<table></table>", doc.body().html());
+    }
+
     @Test public void handlesUnknownNamespaceTags() {
         // note that the first foo:bar should not really be allowed to be self closing, if parsed in html mode.
         String h = "<foo:bar id='1' /><abc:def id=2>Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>";

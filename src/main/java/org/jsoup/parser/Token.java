@@ -123,6 +123,14 @@ abstract class Token {
             pendingAttributeValueS = null;
         }
 
+        final boolean hasAttributes() {
+            return attributes != null;
+        }
+
+        final boolean hasAttribute(String key) {
+            return attributes != null && attributes.hasKey(key);
+        }
+
         final void finaliseTag() {
             // finalises for emit
             if (pendingAttributeName != null) {
@@ -149,12 +157,6 @@ abstract class Token {
 
         final boolean isSelfClosing() {
             return selfClosing;
-        }
-
-        final Attributes getAttributes() {
-            if (attributes == null)
-                attributes = new Attributes();
-            return attributes;
         }
 
         // these appenders are rarely hit in not null state-- caused by null chars.
@@ -237,7 +239,7 @@ abstract class Token {
 
         @Override
         public String toString() {
-            if (attributes != null && attributes.size() > 0)
+            if (hasAttributes() && attributes.size() > 0)
                 return "<" + name() + " " + attributes.toString() + ">";
             else
                 return "<" + name() + ">";
