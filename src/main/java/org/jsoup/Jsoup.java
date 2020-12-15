@@ -1,11 +1,12 @@
 package org.jsoup;
 
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Safelist;
 import org.jsoup.safety.Whitelist;
-import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.HttpConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -184,70 +185,106 @@ public class Jsoup {
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through an allow-list of safe
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
-     @param whitelist white-list of permitted HTML elements
+     @param safelist  list of permitted HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         return clean.body().html();
     }
 
     /**
-     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of permitted
+     Use {@link #clean(String, String, Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist safelist) {
+        return clean(bodyHtml, baseUri, (Safelist) safelist);
+    }
+
+    /**
+     Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of permitted
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
-     @param whitelist white-list of permitted HTML elements
+     @param safelist list of permitted HTML elements
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, Whitelist whitelist) {
-        return clean(bodyHtml, "", whitelist);
+    public static String clean(String bodyHtml, Safelist safelist) {
+        return clean(bodyHtml, "", safelist);
     }
 
     /**
-     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a white-list of
+     Use {@link #clean(String, Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, Whitelist safelist) {
+        return clean(bodyHtml, (Safelist) safelist);
+    }
+
+    /**
+     * Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of
      * permitted tags and attributes.
      * <p>The HTML is treated as a body fragment; it's expected the cleaned HTML will be used within the body of an
      * existing document. If you want to clean full documents, use {@link Cleaner#clean(Document)} instead, and add
-     * structural tags (<code>html, head, body</code> etc) to the whitelist.
+     * structural tags (<code>html, head, body</code> etc) to the safelist.
      *
      * @param bodyHtml input untrusted HTML (body fragment)
      * @param baseUri URL to resolve relative URLs against
-     * @param whitelist white-list of permitted HTML elements
+     * @param safelist list of permitted HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings) {
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
-        Cleaner cleaner = new Cleaner(whitelist);
+        Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         clean.outputSettings(outputSettings);
         return clean.body().html();
     }
 
     /**
-     Test if the input body HTML has only tags and attributes allowed by the Whitelist. Useful for form validation.
+     Use {@link #clean(String, String, Safelist, Document.OutputSettings)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static String clean(String bodyHtml, String baseUri, Whitelist safelist, Document.OutputSettings outputSettings) {
+        return clean(bodyHtml, baseUri, (Safelist) safelist, outputSettings);
+    }
+
+    /**
+     Test if the input body HTML has only tags and attributes allowed by the Safelist. Useful for form validation.
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
-     @param whitelist whitelist to test against
+     @param safelist safelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist) 
+     @see #clean(String, Safelist)
      */
-    public static boolean isValid(String bodyHtml, Whitelist whitelist) {
-        return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);
+    public static boolean isValid(String bodyHtml, Safelist safelist) {
+        return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
+    }
+
+    /**
+     Use {@link #isValid(String, Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public static boolean isValid(String bodyHtml, Whitelist safelist) {
+        return isValid(bodyHtml, (Safelist) safelist);
     }
     
 }
