@@ -33,4 +33,13 @@ jobs:
 
       - name: Maven Verify
         run: mvn -X verify -B --file pom.xml
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: jsoup-artifacts
+          path: |
+              target/
+              !target/classes
+              !target/test-classes
 ...

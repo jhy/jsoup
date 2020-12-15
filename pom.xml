@@ -50,7 +50,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <!-- this plugin allows us to ensure Java 8 API compatibility -->
+        <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
         <version>1.16</version>
@@ -177,6 +177,25 @@
           <parallel>methods</parallel>
           <threadCount>8</threadCount>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- API version compat check - https://siom79.github.io/japicmp/ -->
+        <groupId>com.github.siom79.japicmp</groupId>
+        <artifactId>japicmp-maven-plugin</artifactId>
+        <version>0.14.4</version>
+        <configuration>
+          <parameter>
+            <!-- Just running the reports for now. jsoup policy is ok to remove deprecated methods on minor but not builds. -->
+          </parameter>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>cmp</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <resources>
