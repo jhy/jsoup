@@ -8,6 +8,7 @@ jsoup changelog
   * Improvement: renamed the Whitelist class to Safelist, with the goal of more inclusive language. A shim is provided
     for backwards compatibility (source and binary). This shim is marked as deprecated and will be removed in the
     jsoup 1.15.1 release.
+    <https://github.com/jhy/jsoup/pull/1464>
 
   * Improvement: added support for loading and parsing gzipped HTML files in Jsoup.parse(File in, charset, baseUri).
 
