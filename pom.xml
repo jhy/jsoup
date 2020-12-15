@@ -185,7 +185,9 @@
         <version>0.14.4</version>
         <configuration>
           <parameter>
-            <!-- Just running the reports for now. jsoup policy is ok to remove deprecated methods on minor but not builds. -->
+            <!-- jsoup policy is ok to remove deprecated methods on minor but not builds. will need to temp remove on bump to 1.15.1 and manually validate -->
+            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+            <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
           </parameter>
         </configuration>
         <executions>

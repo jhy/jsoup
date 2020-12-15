@@ -18,34 +18,44 @@ import java.util.List;
 
 
 /**
- The whitelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
+ The safelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
  <p>
- The HTML cleaner parses the input as HTML and then runs it through a white-list, so the output HTML can only contain
- HTML that is allowed by the whitelist.
+ The HTML cleaner parses the input as HTML and then runs it through a safe-list, so the output HTML can only contain
+ HTML that is allowed by the safelist.
  </p>
  <p>
  It is assumed that the input HTML is a body fragment; the clean methods only pull from the source's body, and the
- canned white-lists only allow body contained tags.
+ canned safe-lists only allow body contained tags.
  </p>
  <p>
  Rather than interacting directly with a Cleaner object, generally see the {@code clean} methods in {@link org.jsoup.Jsoup}.
  </p>
  */
 public class Cleaner {
-    private Whitelist whitelist;
+    private Safelist safelist;
 
     /**
-     Create a new cleaner, that sanitizes documents using the supplied whitelist.
-     @param whitelist white-list to clean with
+     Create a new cleaner, that sanitizes documents using the supplied safelist.
+     @param safelist safe-list to clean with
      */
-    public Cleaner(Whitelist whitelist) {
-        Validate.notNull(whitelist);
-        this.whitelist = whitelist;
+    public Cleaner(Safelist safelist) {
+        Validate.notNull(safelist);
+        this.safelist = safelist;
     }
 
     /**
-     Creates a new, clean document, from the original dirty document, containing only elements allowed by the whitelist.
+     Use {@link #Cleaner(Safelist)} instead.
+     @deprecated as of 1.14.1.
+     */
+    @Deprecated
+    public Cleaner(Whitelist whitelist) {
+        Validate.notNull(whitelist);
+        new Cleaner((Safelist) whitelist);
+    }
+
+    /**
+     Creates a new, clean document, from the original dirty document, containing only elements allowed by the safelist.
      The original document is not modified. Only elements from the dirt document's <code>body</code> are used.
      @param dirtyDocument Untrusted base document to clean.
      @return cleaned document.
@@ -61,8 +71,8 @@ public class Cleaner {
     }
 
     /**
-     Determines if the input document <b>body</b>is valid, against the whitelist. It is considered valid if all the tags and attributes
-     in the input HTML are allowed by the whitelist, and that there is no content in the <code>head</code>.
+     Determines if the input document <b>body</b>is valid, against the safelist. It is considered valid if all the tags and attributes
+     in the input HTML are allowed by the safelist, and that there is no content in the <code>head</code>.
      <p>
      This method can be used as a validator for user input. An invalid document will still be cleaned successfully
      using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
@@ -107,7 +117,7 @@ public class Cleaner {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
-                if (whitelist.isSafeTag(sourceEl.normalName())) { // safe, clone and copy safe attrs
+                if (safelist.isSafeTag(sourceEl.normalName())) { // safe, clone and copy safe attrs
                     ElementMeta meta = createSafeElement(sourceEl);
                     Element destChild = meta.el;
                     destination.appendChild(destChild);
@@ -121,7 +131,7 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
-            } else if (source instanceof DataNode && whitelist.isSafeTag(source.parent().nodeName())) {
+            } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().nodeName())) {
               DataNode sourceData = (DataNode) source;
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
@@ -131,7 +141,7 @@ public class Cleaner {
         }
 
         public void tail(Node source, int depth) {
-            if (source instanceof Element && whitelist.isSafeTag(source.nodeName())) {
+            if (source instanceof Element && safelist.isSafeTag(source.nodeName())) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
         }
@@ -151,12 +161,12 @@ public class Cleaner {
 
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
-            if (whitelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
+            if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
             else
                 numDiscarded++;
         }
-        Attributes enforcedAttrs = whitelist.getEnforcedAttributes(sourceTag);
+        Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
 
         return new ElementMeta(dest, numDiscarded);
