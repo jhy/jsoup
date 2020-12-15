@@ -25,6 +25,10 @@ jsoup changelog
   * Bugfix: when parsing HTML, could throw NPEs on some tags (isindex or table>input).
     <https://github.com/jhy/jsoup/issues/1404>
 
+  * Bugfix: in HttpConnection.Request, headers beginning with "sec-" (e.g. Sec-Fetch-Mode) were silently discarded by
+    the underlying Java HttpURLConnection. These are now settable correctly.
+    <https://github.com/jhy/jsoup/issues/1461>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.

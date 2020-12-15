@@ -140,6 +140,35 @@ public class ConnectTest {
     }
 
     @Test
+    public void canSendSecFetchHeaders() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1461
+        Document doc = Jsoup.connect(echoUrl)
+            .header("Random-Header-name", "hello")
+            .header("Sec-Fetch-Site", "cross-site")
+            .header("Sec-Fetch-Mode", "cors")
+            .get();
+
+        assertEquals("hello", ihVal("Random-Header-name", doc));
+        assertEquals("cross-site", ihVal("Sec-Fetch-Site", doc));
+        assertEquals("cors", ihVal("Sec-Fetch-Mode", doc));
+    }
+
+    @Test
+    public void secFetchHeadersSurviveRedirect() throws IOException {
+        Document doc = Jsoup
+            .connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, echoUrl)
+            .header("Random-Header-name", "hello")
+            .header("Sec-Fetch-Site", "cross-site")
+            .header("Sec-Fetch-Mode", "cors")
+            .get();
+
+        assertEquals("hello", ihVal("Random-Header-name", doc));
+        assertEquals("cross-site", ihVal("Sec-Fetch-Site", doc));
+        assertEquals("cors", ihVal("Sec-Fetch-Mode", doc));
+    }
+
+    @Test
     public void sendsRequestBodyJsonWithData() throws IOException {
         final String body = "{key:value}";
         Document doc = Jsoup.connect(echoUrl)

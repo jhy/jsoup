@@ -533,6 +533,10 @@ public class HttpConnection implements Connection {
     }
 
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+        static {
+            System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+            // make sure that we can send Sec-Fetch-Site headers etc.
+        }
         private Proxy proxy; // nullable
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
