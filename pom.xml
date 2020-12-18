@@ -31,8 +31,42 @@
     <url>https://jhy.io/</url>
   </organization>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Kotlin is a test dependency -->
+    <kotlin.version>1.4.21</kotlin.version>
+    <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+  </properties>
+
   <build>
     <plugins>
+      <plugin>
+        <!-- Kotlin compiler, test scope only. Ref: https://kotlinlang.org/docs/reference/using-maven.html -->
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-maven-plugin</artifactId>
+        <version>${kotlin.version}</version>
+        <executions>
+          <execution>
+            <id>test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>test-compile</goal>
+            </goals>
+            <configuration>
+              <sourceDirs>
+                <source>src/test/java</source>
+                <source>src/test/kotlin</source>
+              </sourceDirs>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <jvmTarget>1.8</jvmTarget>
+          <args>
+            <arg>-Xjsr305=strict</arg>
+          </args>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -48,6 +82,35 @@
           <!-- this means incremental = true... -->
           <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
+        <executions>
+          <!-- Replacing default-compile as it is treated specially by maven -->
+          <execution>
+            <id>default-compile</id>
+            <phase>none</phase>
+          </execution>
+          <!-- Replacing default-testCompile as it is treated specially by maven -->
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>java-compile</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>java-test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <skip>${maven.test.skip}</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <!-- Ensure Java 8 and Android 10 API compatibility -->
@@ -311,12 +374,25 @@
       <scope>test</scope>
     </dependency>
 
-
     <dependency>
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
       <version>9.4.35.v20201120</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <!-- Kotlin stdlib, only used during test -->
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib-jdk8</artifactId>
+      <version>${kotlin.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-test</artifactId>
+      <version>${kotlin.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -326,10 +402,6 @@
     <dependencies>
     </dependencies>
   </dependencyManagement>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
 
   <developers>
     <developer>
