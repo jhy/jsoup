@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +28,11 @@ abstract class TreeBuilder {
     private Token.EndTag end  = new Token.EndTag();
     abstract ParseSettings defaultSettings();
 
+    @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNull(input, "String input must not be null");
         Validate.notNull(baseUri, "BaseURI must not be null");
+        Validate.notNull(parser);
 
         doc = new Document(baseUri);
         doc.parser(parser);
@@ -42,6 +45,7 @@ abstract class TreeBuilder {
         this.baseUri = baseUri;
     }
 
+    @ParametersAreNonnullByDefault
     Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
