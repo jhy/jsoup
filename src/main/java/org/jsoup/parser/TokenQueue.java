@@ -268,7 +268,7 @@ public class TokenQueue {
         do {
             if (isEmpty()) break;
             char c = consume();
-            if (last == 0 || last != ESC) {
+            if (last != ESC) {
                 if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
@@ -306,7 +306,7 @@ public class TokenQueue {
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
-                if (last != 0 && last == ESC)
+                if (last == ESC)
                     out.append(c);
             }
             else 
@@ -396,7 +396,7 @@ public class TokenQueue {
      @return remained of queue.
      */
     public String remainder() {
-        final String remainder = queue.substring(pos, queue.length());
+        final String remainder = queue.substring(pos);
         pos = queue.length();
         return remainder;
     }

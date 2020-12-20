@@ -33,7 +33,7 @@ public final class CharacterReader {
         Validate.notNull(input);
         Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = new char[sz > maxBufferLen ? maxBufferLen : sz];
+        charBuf = new char[Math.min(sz, maxBufferLen)];
         bufferUp();
     }
 
@@ -93,7 +93,7 @@ public final class CharacterReader {
                 bufPos = offset;
                 if (bufMark != -1)
                     bufMark = 0;
-                bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
+                bufSplitPoint = Math.min(bufLength, readAheadLimit);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -327,7 +327,7 @@ public final class CharacterReader {
                 case '\'':
                     if (single) break OUTER;
                 case '"':
-                    if (!single) break OUTER;;
+                    if (!single) break OUTER;
                 default:
                     pos++;
             }

@@ -183,7 +183,6 @@ final class Tokeniser {
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character outside of valid range");
                 codeRef[0] = replacementChar;
-                return codeRef;
             } else {
                 // fix illegal unicode characters to match browser behavior
                 if (charval >= win1252ExtensionsStart && charval < win1252ExtensionsStart + win1252Extensions.length) {
@@ -194,8 +193,8 @@ final class Tokeniser {
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
                 codeRef[0] = charval;
-                return codeRef;
             }
+            return codeRef;
         } else { // named
             // get as many letters as possible, and look for matching entities.
             String nameRef = reader.consumeLetterThenDigitSequence();
