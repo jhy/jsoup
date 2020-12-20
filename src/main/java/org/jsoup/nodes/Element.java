@@ -194,6 +194,17 @@ public class Element extends Node {
     }
 
     /**
+     Set the {@code id} attribute of this element.
+     @param id the ID value to use
+     @return this Element, for chaining
+     */
+    public Element id(String id) {
+        Validate.notNull(id);
+        attr("id", id);
+        return this;
+    }
+
+    /**
      * Set an attribute value on this element. If this element already has an attribute with the
      * key, its value is updated; otherwise, a new attribute is added.
      * 

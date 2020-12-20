@@ -18,6 +18,8 @@ jsoup changelog
   * Improvement: better parsing performance when under high thread concurrency
     <https://github.com/jhy/jsoup/pull/1402>
 
+  * Improvement: added Element#id(String) ID attribute setter.
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.

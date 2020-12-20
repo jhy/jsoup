@@ -19,6 +19,19 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ElementTest {
     private String reference = "<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>";
 
+    @Test public void testId() {
+        Document doc = Jsoup.parse("<div id=Foo>");
+        Element el = doc.selectFirst("div");
+        assertEquals("Foo", el.id());
+    }
+
+    @Test public void testSetId() {
+        Document doc = Jsoup.parse("<div id=Boo>");
+        Element el = doc.selectFirst("div");
+        el.id("Foo");
+        assertEquals("Foo", el.id());
+    }
+
     @Test public void getElementsByTagName() {
         Document doc = Jsoup.parse(reference);
         List<Element> divs = doc.getElementsByTag("div");
@@ -1611,6 +1624,7 @@ public class ElementTest {
         div.addChildren(wrap);
         // now should be that One moved into wrap, leaving Two in div.
 
+        assertEquals("<div><p>Two</p><nav><p>One</p><p>Three</p></nav></div>", TextUtil.stripNewlines(div.outerHtml()));
         assertEquals("<div><p>Two</p><nav><p>One</p><p>Three</p></nav></div>", TextUtil.stripNewlines(div.outerHtml()));
     }
 
