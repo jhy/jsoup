@@ -24,7 +24,7 @@ import static org.jsoup.internal.StringUtil.inSorted;
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 public class HtmlTreeBuilder extends TreeBuilder {
-    // tag searches. must be sorted, used in inSorted. MUST update HtmlTreeBuilderTest if more arrays are added.
+    // tag searches. must be sorted, used in inSorted. HtmlTreeBuilderTest validates they're sorted.
     static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "marquee", "object", "table", "td", "th"};
     static final String[] TagSearchList = new String[]{"ol", "ul"};
     static final String[] TagSearchButton = new String[]{"button"};
