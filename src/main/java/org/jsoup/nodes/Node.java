@@ -477,14 +477,16 @@ public abstract class Node implements Cloneable {
                     break;
                 }
             }
-            firstParent.empty();
-            nodes.addAll(index, Arrays.asList(children));
-            i = children.length;
-            while (i-- > 0) {
-                children[i].parentNode = this;
+            if (sameList) { // moving, so OK to empty firstParent and short-circuit
+                firstParent.empty();
+                nodes.addAll(index, Arrays.asList(children));
+                i = children.length;
+                while (i-- > 0) {
+                    children[i].parentNode = this;
+                }
+                reindexChildren(index);
+                return;
             }
-            reindexChildren(index);
-            return;
         }
 
         Validate.noNullElements(children);

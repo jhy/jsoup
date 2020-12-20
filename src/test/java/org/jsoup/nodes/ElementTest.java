@@ -1591,6 +1591,30 @@ public class ElementTest {
     }
 
     @Test
+    public void testNotActuallyAReparent() {
+        // prep
+        String html = "<div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.selectFirst("div");
+        Element new1 = new Element("p").text("One");
+        Element new2 = new Element("p").text("Two");
+        div.addChildren(new1, new2);
+
+        assertEquals("<div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(div.outerHtml()));
+
+        // and the issue setup:
+        Element new3 = new Element("p").text("Three");
+        Element wrap = new Element("nav");
+        wrap.addChildren(0, new1, new3);
+
+        assertEquals("<nav><p>One</p><p>Three</p></nav>", TextUtil.stripNewlines(wrap.outerHtml()));
+        div.addChildren(wrap);
+        // now should be that One moved into wrap, leaving Two in div.
+
+        assertEquals("<div><p>Two</p><nav><p>One</p><p>Three</p></nav></div>", TextUtil.stripNewlines(div.outerHtml()));
+    }
+
+    @Test
     public void testChildSizeWithMixedContent() {
         Document doc = Jsoup.parse("<table><tbody>\n<tr>\n<td>15:00</td>\n<td>sport</td>\n</tr>\n</tbody></table>");
         Element row = doc.selectFirst("table tbody tr");

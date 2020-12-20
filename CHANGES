@@ -32,6 +32,9 @@ jsoup changelog
     the underlying Java HttpURLConnection. These are now settable correctly.
     <https://github.com/jhy/jsoup/issues/1461>
 
+  * Bugfix: when adding child Nodes to a Node, could incorrectly reparent all nodes if the first parent had the same
+    length of children as the incoming node list.
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.
