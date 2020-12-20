@@ -1,13 +1,14 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.DataUtil;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
+import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class Document extends Element {
     public Document(String baseUri) {
         super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
         this.location = baseUri;
+        this.parser = Parser.htmlParser(); // default, but overridable
     }
 
     /**
@@ -65,7 +67,7 @@ public class Document extends Element {
      * Returns this Document's doctype.
      * @return document type, or null if not set
      */
-    public DocumentType documentType() {
+    public @Nullable DocumentType documentType() {
         for (Node node : childNodes) {
             if (node instanceof DocumentType)
                 return (DocumentType) node;
@@ -80,16 +82,18 @@ public class Document extends Element {
      Accessor to the document's {@code head} element.
      @return {@code head}
      */
-    public Element head() {
-        return findFirstElementByTagName("head", this);
+    public @Nullable Element head() {
+        // todo - we practically enforce this - move to nonnull
+        return findFirstElementByTagName("head");
     }
 
     /**
      Accessor to the document's {@code body} element.
      @return {@code body}
      */
-    public Element body() {
-        return findFirstElementByTagName("body", this);
+    public @Nullable Element body() {
+        // todo - we practically enforce this - move to nonnull
+        return findFirstElementByTagName("body");
     }
 
     /**
@@ -132,7 +136,7 @@ public class Document extends Element {
      @return this document after normalisation
      */
     public Document normalise() {
-        Element htmlEl = findFirstElementByTagName("html", this);
+        Element htmlEl = findFirstElementByTagName("html");
         if (htmlEl == null)
             htmlEl = appendElement("html");
         if (head() == null)
@@ -189,24 +193,24 @@ public class Document extends Element {
                 master.appendChild(dupe);
         }
         // ensure parented by <html>
-        if (!master.parent().equals(htmlEl)) {
+        if (master.parent() != null && !master.parent().equals(htmlEl)) {
             htmlEl.appendChild(master); // includes remove()            
         }
     }
 
-    // fast method to get first by tag name, used for html, head, body finders
-    private Element findFirstElementByTagName(String tag, Node node) {
-        if (node.nodeName().equals(tag))
-            return (Element) node;
+    // fast method to get first by tag name, used for html, head, body finders - no recursive descent
+    private @Nullable Element findFirstElementByTagName(String tag) {
+        Element root = child(0); // the HTML element - Document sits above
+        if (root.nodeName().equals(tag))
+            return this;
         else {
-            int size = node.childNodeSize();
+            int size = root.childNodeSize();
             for (int i = 0; i < size; i++) {
-                Element found = findFirstElementByTagName(tag, node.childNode(i));
-                if (found != null)
-                    return found;
+                if (root.childNode(i).nodeName().equals(tag))
+                    return (Element) root.childNode(i);
             }
         }
-        return null;
+        return null; // todo - make this blow up in most cases - how to handle frameset (no body)?)
     }
 
     @Override
@@ -348,30 +352,22 @@ public class Document extends Element {
                 select("meta[name=charset]").remove();
             } else if (syntax == OutputSettings.Syntax.xml) {
                 Node node = childNodes().get(0);
-
                 if (node instanceof XmlDeclaration) {
                     XmlDeclaration decl = (XmlDeclaration) node;
-
                     if (decl.name().equals("xml")) {
                         decl.attr("encoding", charset().displayName());
-
-                        final String version = decl.attr("version");
-
-                        if (version != null) {
+                        if (decl.hasAttr("version"))
                             decl.attr("version", "1.0");
-                        }
                     } else {
                         decl = new XmlDeclaration("xml", false);
                         decl.attr("version", "1.0");
                         decl.attr("encoding", charset().displayName());
-
                         prependChild(decl);
                     }
                 } else {
                     XmlDeclaration decl = new XmlDeclaration("xml", false);
                     decl.attr("version", "1.0");
                     decl.attr("encoding", charset().displayName());
-
                     prependChild(decl);
                 }
             }
@@ -389,18 +385,16 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset;
-        private ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
-        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
+        private Charset charset = DataUtil.UTF_8;
+        private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
+        @Nullable Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {
-            charset(DataUtil.UTF_8);
-        }
+        public OutputSettings() {}
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML

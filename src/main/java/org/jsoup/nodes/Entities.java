@@ -45,7 +45,7 @@ public class Entities {
         private int[] codeVals; // limitation is the few references with multiple characters; those go into multipoints.
 
         // table of codepoints to named entities.
-        private int[] codeKeys; // we don' support multicodepoints to single named value currently
+        private int[] codeKeys; // we don't support multicodepoints to single named value currently
         private String[] nameVals;
 
         EscapeMode(String file, int size) {

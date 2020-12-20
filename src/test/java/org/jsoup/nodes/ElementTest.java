@@ -156,6 +156,25 @@ public class ElementTest {
         assertEquals("element", p.lastElementSibling().text());
     }
 
+    @Test public void testFirstElementSiblingOnOrphan() {
+        Element p = new Element("p");
+        assertSame(p, p.firstElementSibling());
+        assertSame(p, p.lastElementSibling());
+    }
+
+    @Test public void testFirstAndLastSiblings() {
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        Element one = div.child(0);
+        Element two = div.child(1);
+        Element three = div.child(2);
+
+        assertSame(one, one.firstElementSibling());
+        assertSame(one, two.firstElementSibling());
+        assertSame(three, three.lastElementSibling());
+        assertSame(three, two.lastElementSibling());
+    }
+
     @Test public void testGetParents() {
         Document doc = Jsoup.parse("<div><p>Hello <span>there</span></div>");
         Element span = doc.select("span").first();
@@ -574,6 +593,26 @@ public class ElementTest {
         assertEquals(ret, p);
     }
 
+    @Test public void testWrapNoop() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div>");
+        Node p = doc.select("p").first();
+        Node wrapped = p.wrap("Some junk");
+        assertSame(p, wrapped);
+        assertEquals("<div><p>Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
+        // should be a NOOP
+    }
+
+    @Test public void testWrapOnOrphan() {
+        Element orphan = new Element("span").text("Hello!");
+        assertFalse(orphan.hasParent());
+        Element wrapped = orphan.wrap("<div></div> There!");
+        assertSame(orphan, wrapped);
+        assertTrue(orphan.hasParent()); // should now be in the DIV
+        assertNotNull(orphan.parent());
+        assertEquals("div", orphan.parent().tagName());
+        assertEquals("<div>\n <span>Hello!</span>\n</div>", orphan.parent().outerHtml());
+    }
+
     @Test public void before() {
         Document doc = Jsoup.parse("<div><p>Hello</p><p>There</p></div>");
         Element p1 = doc.select("p").first();
@@ -598,7 +637,24 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div><p>Hello</p></div>");
         Element p = doc.select("p").first();
         p.wrap("<div class='head'></div><p>There!</p>");
-        assertEquals("<div><div class=\"head\"><p>Hello</p><p>There!</p></div></div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div><div class=\"head\"><p>Hello</p></div><p>There!</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void testWrapWithSimpleRemainder() {
+        Document doc = Jsoup.parse("<p>Hello");
+        Element p = doc.selectFirst("p");
+        Element body = p.parent();
+        assertNotNull(body);
+        assertEquals("body", body.tagName());
+
+        p.wrap("<div></div> There");
+        Element div = p.parent();
+        assertNotNull(div);
+        assertEquals("div", div.tagName());
+        assertSame(div, p.parent());
+        assertSame(body, div.parent());
+
+        assertEquals("<div><p>Hello</p></div> There", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testHasText() {
@@ -652,6 +708,11 @@ public class ElementTest {
 
         img.remove(); // lost its parent
         assertEquals("<img src=\"foo\">", img.toString());
+    }
+
+    @Test public void orphanDivToString() {
+        Element orphan = new Element("div").id("foo").text("Hello");
+        assertEquals("<div id=\"foo\">\n Hello\n</div>", orphan.toString());
     }
 
     @Test public void testClone() {

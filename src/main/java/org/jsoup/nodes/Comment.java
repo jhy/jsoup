@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
@@ -69,7 +70,7 @@ public class Comment extends LeafNode {
      * Attempt to cast this comment to an XML Declaration note.
      * @return an XML declaration if it could be parsed as one, null otherwise.
      */
-    public XmlDeclaration asXmlDeclaration() {
+    public @Nullable XmlDeclaration asXmlDeclaration() {
         String data = getData();
         Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri(), Parser.xmlParser());
         XmlDeclaration decl = null;

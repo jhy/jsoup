@@ -37,6 +37,11 @@ jsoup changelog
   * Bugfix: when adding child Nodes to a Node, could incorrectly reparent all nodes if the first parent had the same
     length of children as the incoming node list.
 
+  * Bugfix: when wrapping an orphaned element, would throw an NPE.
+
+  * Bugfix: when wrapping an element with HTML that included multiple sibling elements, those siblings were incorrectly
+    added as children of the wrapper instead of siblings.
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.

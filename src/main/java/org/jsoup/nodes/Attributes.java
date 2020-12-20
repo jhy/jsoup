@@ -5,6 +5,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -82,7 +83,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
-    static String checkNotNull(String val) {
+    static String checkNotNull(@Nullable String val) {
         return val == null ? EmptyString : val;
     }
 
@@ -111,7 +112,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * Adds a new attribute. Will produce duplicates if the key already exists.
      * @see Attributes#put(String, String)
      */
-    public Attributes add(String key, String value) {
+    public Attributes add(String key, @Nullable String value) {
         checkCapacity(size + 1);
         keys[size] = key;
         vals[size] = value;
@@ -135,7 +136,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return this;
     }
 
-    void putIgnoreCase(String key, String value) {
+    void putIgnoreCase(String key, @Nullable String value) {
         int i = indexOfKeyIgnoreCase(key);
         if (i != NotFound) {
             vals[i] = value;
@@ -173,6 +174,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     // removes and shifts up
+    @SuppressWarnings("AssignmentToNull")
     private void remove(int index) {
         Validate.isFalse(index >= size);
         int shifted = size - index - 1;

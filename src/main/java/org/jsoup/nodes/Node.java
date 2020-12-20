@@ -7,6 +7,7 @@ import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +22,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
     static final String EmptyString = "";
-    Node parentNode;
+    @Nullable Node parentNode; // Nodes don't always have parents
     int siblingIndex;
 
     /**
@@ -41,6 +42,11 @@ public abstract class Node implements Cloneable {
      */
     protected abstract boolean hasAttributes();
 
+    /**
+     Checks if this node has a parent. Nodes won't have parents if e.g. they are newly created and not added as a child
+     to an exsiting node, or if they are a {@link #shallowClone()}. In such cases, {@link #parent()} will return {@code null}.
+     @return if this node has a parent.
+     */
     public boolean hasParent() {
         return parentNode != null;
     }
@@ -240,8 +246,9 @@ public abstract class Node implements Cloneable {
     /**
      Gets this node's parent node.
      @return parent node; or null if no parent.
+     @see #hasParent()
      */
-    public Node parent() {
+    public @Nullable Node parent() {
         return parentNode;
     }
 
@@ -249,7 +256,7 @@ public abstract class Node implements Cloneable {
      Gets this node's parent node. Not overridable by extending classes, so useful if you really just need the Node type.
      @return parent node; or null if no parent.
      */
-    public final Node parentNode() {
+    public @Nullable final Node parentNode() {
         return parentNode;
     }
 
@@ -268,7 +275,7 @@ public abstract class Node implements Cloneable {
      * Gets the Document associated with this Node.
      * @return the Document associated with this Node, or null if there is no such Document.
      */
-    public Document ownerDocument() {
+    public @Nullable Document ownerDocument() {
         Node root = root();
         return (root instanceof Document) ? (Document) root : null;
     }
@@ -342,30 +349,42 @@ public abstract class Node implements Cloneable {
 
     /**
      Wrap the supplied HTML around this node.
-     @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+
+     @param html HTML to wrap around this node, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep. If
+     the input HTML does not parse to a result starting with an Element, this will be a no-op.
      @return this node, for chaining.
      */
     public Node wrap(String html) {
         Validate.notEmpty(html);
 
-        Element context = parent() instanceof Element ? (Element) parent() : null;
+        // Parse context - this if element or parent if element else null
+        Element context =
+            this instanceof Element ? (Element) this :
+                parentNode != null && parentNode instanceof Element ? (Element) parentNode :
+                    null;
         List<Node> wrapChildren = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
         Node wrapNode = wrapChildren.get(0);
         if (!(wrapNode instanceof Element)) // nothing to wrap with; noop
-            return null;
+            return this;
 
         Element wrap = (Element) wrapNode;
         Element deepest = getDeepChild(wrap);
-        parentNode.replaceChild(this, wrap);
-        deepest.addChildren(this);
+        if (parentNode != null)
+            parentNode.replaceChild(this, wrap);
+        deepest.addChildren(this); // side effect of tricking wrapChildren to lose first
 
         // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
         if (wrapChildren.size() > 0) {
             //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
             for (int i = 0; i < wrapChildren.size(); i++) {
                 Node remainder = wrapChildren.get(i);
-                remainder.parentNode.removeChild(remainder);
-                wrap.appendChild(remainder);
+                // if no parent, this could be the wrap node, so skip
+                if (wrap == remainder)
+                    continue;
+
+                if (remainder.parentNode != null)
+                    remainder.parentNode.removeChild(remainder);
+                wrap.after(remainder);
             }
         }
         return this;
@@ -382,11 +401,11 @@ public abstract class Node implements Cloneable {
      * <p>{@code <div>One Two <b>Three</b></div>}</p>
      * and the {@code "Two "} {@link TextNode} being returned.
      *
-     * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
+     * @return the first child of this node, after the node has been unwrapped. @{code Null} if the node had no children.
      * @see #remove()
      * @see #wrap(String)
      */
-    public Node unwrap() {
+    public @Nullable Node unwrap() {
         Validate.notNull(parentNode);
         final List<Node> childNodes = ensureChildNodes();
         Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
@@ -528,9 +547,9 @@ public abstract class Node implements Cloneable {
 
     /**
      Get this node's next sibling.
-     @return next sibling, or null if this is the last sibling
+     @return next sibling, or @{code null} if this is the last sibling
      */
-    public Node nextSibling() {
+    public @Nullable Node nextSibling() {
         if (parentNode == null)
             return null; // root
 
@@ -544,9 +563,9 @@ public abstract class Node implements Cloneable {
 
     /**
      Get this node's previous sibling.
-     @return the previous sibling, or null if this is the first sibling
+     @return the previous sibling, or @{code null} if this is the first sibling
      */
-    public Node previousSibling() {
+    public @Nullable Node previousSibling() {
         if (parentNode == null)
             return null; // root
 
@@ -659,7 +678,7 @@ public abstract class Node implements Cloneable {
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other
      */
-    public boolean hasSameValue(Object o) {
+    public boolean hasSameValue(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -712,7 +731,7 @@ public abstract class Node implements Cloneable {
      * Return a clone of the node using the given parent (which can be null).
      * Not a deep copy of children.
      */
-    protected Node doClone(Node parent) {
+    protected Node doClone(@Nullable Node parent) {
         Node clone;
 
         try {
@@ -728,8 +747,8 @@ public abstract class Node implements Cloneable {
     }
 
     private static class OuterHtmlVisitor implements NodeVisitor {
-        private Appendable accum;
-        private Document.OutputSettings out;
+        private final Appendable accum;
+        private final Document.OutputSettings out;
 
         OuterHtmlVisitor(Appendable accum, Document.OutputSettings out) {
             this.accum = accum;

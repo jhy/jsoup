@@ -2,6 +2,9 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.FieldsAreNonnullByDefault;
+import org.jsoup.internal.NonnullByDefault;
+import org.jsoup.internal.ReturnsAreNonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
@@ -14,6 +17,8 @@ import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -37,14 +42,15 @@ import static org.jsoup.internal.Normalizer.normalize;
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
+@NonnullByDefault
 public class Element extends Node {
     private static final List<Node> EMPTY_NODES = Collections.emptyList();
     private static final Pattern classSplit = Pattern.compile("\\s+");
     private static final String baseUriKey = Attributes.internalKey("baseUri");
     private Tag tag;
-    private WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
+    private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
-    private Attributes attributes;
+    private @Nullable Attributes attributes; // field is nullable but all methods for attributes are non null
 
     /**
      * Create a new, standalone element.
@@ -63,7 +69,7 @@ public class Element extends Node {
      * @see #appendChild(Node)
      * @see #appendElement(String)
      */
-    public Element(Tag tag, String baseUri, Attributes attributes) {
+    public Element(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         Validate.notNull(tag);
         childNodes = EMPTY_NODES;
         this.attributes = attributes;
@@ -97,7 +103,7 @@ public class Element extends Node {
 
     @Override
     public Attributes attributes() {
-        if (!hasAttributes())
+        if (attributes == null) // not using hasAttributes, as doesn't clear warning
             attributes = new Attributes();
         return attributes;
     }
@@ -110,7 +116,7 @@ public class Element extends Node {
     private static String searchUpForAttribute(final Element start, final String key) {
         Element el = start;
         while (el != null) {
-            if (el.hasAttributes() && el.attributes.hasKey(key))
+            if (el.attributes != null && el.attributes.hasKey(key))
                 return el.attributes.get(key);
             el = el.parent();
         }
@@ -190,7 +196,7 @@ public class Element extends Node {
      * @return The id attribute, if present, or an empty string if not.
      */
     public String id() {
-        return hasAttributes() ? attributes.getIgnoreCase("id") :"";
+        return attributes != null ? attributes.getIgnoreCase("id") :"";
     }
 
     /**
@@ -470,7 +476,7 @@ public class Element extends Node {
      * @return the closest ancestor element (possibly itself) that matches the provided evaluator. {@code null} if not
      * found.
      */
-    public Element closest(String cssQuery) {
+    public @Nullable Element closest(String cssQuery) {
         return closest(QueryParser.parse(cssQuery));
     }
 
@@ -481,7 +487,7 @@ public class Element extends Node {
      * @return the closest ancestor element (possibly itself) that matches the provided evaluator. {@code null} if not
      * found.
      */
-    public Element closest(Evaluator evaluator) {
+    public @Nullable Element closest(Evaluator evaluator) {
         Validate.notNull(evaluator);
         Element el = this;
         final Element root = root();
@@ -779,7 +785,7 @@ public class Element extends Node {
      * @return the next element, or null if there is no next element
      * @see #previousElementSibling()
      */
-    public Element nextElementSibling() {
+    public @Nullable Element nextElementSibling() {
         if (parentNode == null) return null;
         List<Element> siblings = parent().childElementsList();
         int index = indexInList(this, siblings);
@@ -803,7 +809,7 @@ public class Element extends Node {
      * @return the previous element, or null if there is no previous element
      * @see #nextElementSibling()
      */
-    public Element previousElementSibling() {
+    public @Nullable Element previousElementSibling() {
         if (parentNode == null) return null;
         List<Element> siblings = parent().childElementsList();
         int index = indexInList(this, siblings);
@@ -831,13 +837,15 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the first element sibling of this element.
+     * Gets the first Element sibling of this element. That may be this element.
      * @return the first sibling that is an element (aka the parent's first element child) 
      */
     public Element firstElementSibling() {
-        // todo: should firstSibling() exclude this?
-        List<Element> siblings = parent().childElementsList();
-        return siblings.size() > 1 ? siblings.get(0) : null;
+        if (parent() != null) {
+            List<Element> siblings = parent().childElementsList();
+            return siblings.size() > 1 ? siblings.get(0) : this;
+        } else
+            return this; // orphan is its own first sibling
     }
     
     /**
@@ -851,12 +859,15 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the last element sibling of this element
+     * Gets the last element sibling of this element. That may be this element.
      * @return the last sibling that is an element (aka the parent's last element child) 
      */
     public Element lastElementSibling() {
-        List<Element> siblings = parent().childElementsList();
-        return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
+        if (parent() != null) {
+            List<Element> siblings = parent().childElementsList();
+            return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : this;
+        } else
+            return this;
     }
 
     private static <E extends Element> int indexInList(Element search, List<E> elements) {
@@ -891,7 +902,7 @@ public class Element extends Node {
      * @param id The ID to search for.
      * @return The first matching element by ID, starting with this element, or null if none found.
      */
-    public Element getElementById(String id) {
+    public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
         
         Elements elements = Collector.collect(new Evaluator.Id(id), this);
@@ -1247,7 +1258,7 @@ public class Element extends Node {
             accum.append(" ");
     }
 
-    static boolean preserveWhitespace(Node node) {
+    static boolean preserveWhitespace(@Nullable Node node) {
         // looks only at this element and five levels up, to prevent recursion & needless stack searches
         if (node instanceof Element) {
             Element el = (Element) node;
@@ -1374,7 +1385,7 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        if (!hasAttributes())
+        if (attributes == null)
             return false;
 
         final String classAttr = attributes.getIgnoreCase("class");
@@ -1571,7 +1582,7 @@ public class Element extends Node {
     }
 
     @Override
-    protected Element doClone(Node parent) {
+    protected Element doClone(@Nullable Node parent) {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.childNodes = new NodeList(clone, childNodes.size());
@@ -1632,7 +1643,7 @@ public class Element extends Node {
     private boolean isInlineable(Document.OutputSettings out) {
         return tag().isInline()
             && !tag().isEmpty()
-            && parent().isBlock()
+            && (parent() == null || parent().isBlock())
             && previousSibling() != null
             && !out.outline();
     }
