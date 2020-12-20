@@ -2,12 +2,15 @@ package org.jsoup;
 
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
+import org.jsoup.internal.ReturnsAreNonnullByDefault;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 import org.jsoup.safety.Whitelist;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +20,8 @@ import java.net.URL;
  The core public access point to the jsoup functionality.
 
  @author Jonathan Hedley */
+
+@ParametersAreNonnullByDefault @ReturnsAreNonnullByDefault
 public class Jsoup {
     private Jsoup() {}
 
@@ -85,7 +90,7 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(File in, String charsetName, String baseUri) throws IOException {
+    public static Document parse(File in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
     }
 
@@ -100,7 +105,7 @@ public class Jsoup {
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      @see #parse(File, String, String)
      */
-    public static Document parse(File in, String charsetName) throws IOException {
+    public static Document parse(File in, @Nullable String charsetName) throws IOException {
         return DataUtil.load(in, charsetName, in.getAbsolutePath());
     }
 
@@ -115,7 +120,7 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(InputStream in, String charsetName, String baseUri) throws IOException {
+    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
     }
 
@@ -132,7 +137,7 @@ public class Jsoup {
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return DataUtil.load(in, charsetName, baseUri, parser);
     }
 

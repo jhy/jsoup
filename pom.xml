@@ -31,6 +31,10 @@
     <url>https://jhy.io/</url>
   </organization>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -311,7 +315,6 @@
       <scope>test</scope>
     </dependency>
 
-
     <dependency>
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
@@ -320,16 +323,20 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <!-- javax.annotations.nonnull, with Apache 2 (not GPL) license. Not distributed. -->
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+
   </dependencies>
 
   <dependencyManagement>
     <dependencies>
     </dependencies>
   </dependencyManagement>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
 
   <developers>
     <developer>

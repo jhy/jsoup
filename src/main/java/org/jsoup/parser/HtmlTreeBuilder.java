@@ -12,6 +12,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return ParseSettings.htmlDefault;
     }
 
-    @Override
+    @Override @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
 
