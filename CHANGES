@@ -22,6 +22,9 @@ jsoup changelog
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.
 
+  * Build Improvement: added nullability annotations and initial settings.
+    <https://github.com/jhy/jsoup/pull/1467>
+
   * Bugfix: when parsing HTML, could throw NPEs on some tags (isindex or table>input).
     <https://github.com/jhy/jsoup/issues/1404>
 
