@@ -1126,14 +1126,19 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
-     * <p>
-     * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
-     *
-     * @return unencoded, normalized text, or empty string if none.
-     * @see #wholeText() if you don't want the text to be normalized.
-     * @see #ownText()
-     * @see #textNodes()
+     Gets the <b>normalized, combined text</b> of this element and all its children. Whitespace is normalized and
+     trimmed.
+     <p>
+     For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
+    now!"}
+     <p>
+     If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
+     children), use {@link #ownText()}
+
+     @return unencoded, normalized text, or empty string if none.
+     @see #wholeText()
+     @see #ownText()
+     @see #textNodes()
      */
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
@@ -1190,7 +1195,7 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the text owned by this element only; does not get the combined text of all children.
+     * Gets the (normalized) text owned by this element only; does not get the combined text of all children.
      * <p>
      * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
      * whereas {@code p.text()} returns {@code "Hello there now!"}.
@@ -1282,7 +1287,7 @@ public class Element extends Node {
 
     /**
      * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag. Note that data is NOT the
-     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@link #data()}
+     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
      * for the contents of scripts, comments, CSS styles, etc.
      *
      * @return the data, or empty string if none
