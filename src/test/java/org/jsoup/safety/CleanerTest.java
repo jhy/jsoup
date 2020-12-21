@@ -328,4 +328,15 @@ public class CleanerTest {
         assertEquals(orig, TextUtil.stripNewlines(clean)); // only difference is pretty print wrap & indent
         assertTrue(isValid);
     }
+
+    @Test public void copiesOutputSettings() {
+        Document orig = Jsoup.parse("<p>test<br></p>");
+        orig.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        orig.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
+        Safelist whitelist = Safelist.none().addTags("p", "br");
+
+        Document result = new Cleaner(whitelist).clean(orig);
+        assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
+        assertEquals("<p>test<br /></p>", result.body().html());
+    }
 }

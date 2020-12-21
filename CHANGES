@@ -23,6 +23,10 @@ jsoup changelog
   * Improvement: in Document, #body() and #head() accessors will now automatically create those elements, if they were
     missing (e.g. if the Document was not parsed from HTML).
 
+  * Improvement: when cleaning a document, the output settings of the original document are cloned into the cleaned
+    document.
+    <https://github.com/jhy/jsoup/issues/1417>
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.
