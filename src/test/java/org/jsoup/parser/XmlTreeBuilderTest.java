@@ -103,8 +103,7 @@ public class XmlTreeBuilderTest {
     @Test public void handlesXmlDeclarationAsDeclaration() {
         String html = "<?xml encoding='UTF-8' ?><body>One</body><!-- comment -->";
         Document doc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<?xml encoding=\"UTF-8\"?> <body> One </body><!-- comment -->",
-                StringUtil.normaliseWhitespace(doc.outerHtml()));
+        assertEquals("<?xml encoding=\"UTF-8\"?><body>One</body><!-- comment -->",doc.outerHtml());
         assertEquals("#declaration", doc.childNode(0).nodeName());
         assertEquals("#comment", doc.childNode(2).nodeName());
     }
@@ -189,6 +188,13 @@ public class XmlTreeBuilderTest {
     }
 
     @Test
+    public void disablesPrettyPrintingByDefault() {
+        String xml = "\n\n<div><one>One</one><one>\n Two</one>\n</div>\n ";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        assertEquals(xml, doc.html());
+    }
+
+    @Test
     public void canNormalizeCase() {
         String xml = "<TEST ID=1>Check</TEST>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser().settings(ParseSettings.htmlDefault));
@@ -198,7 +204,7 @@ public class XmlTreeBuilderTest {
     @Test public void normalizesDiscordantTags() {
         Parser parser = Parser.xmlParser().settings(ParseSettings.htmlDefault);
         Document document = Jsoup.parse("<div>test</DIV><p></p>", "", parser);
-        assertEquals("<div>\n test\n</div>\n<p></p>", document.html());
+        assertEquals("<div>test</div><p></p>", document.html());
         // was failing -> toString() = "<div>\n test\n <p></p>\n</div>"
     }
 
@@ -211,7 +217,7 @@ public class XmlTreeBuilderTest {
         assertEquals(0, div.children().size());
         assertEquals(1, div.childNodeSize()); // no elements, one text node
 
-        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]>\n</div>", div.outerHtml());
+        assertEquals("<div id=\"1\"><![CDATA[\n<html>\n <foo><&amp;]]></div>", div.outerHtml());
 
         CDataNode cdata = (CDataNode) div.textNodes().get(0);
         assertEquals("\n<html>\n <foo><&amp;", cdata.text());

@@ -27,6 +27,8 @@ jsoup changelog
     document.
     <https://github.com/jhy/jsoup/issues/1417>
 
+  * Improvement: when parsing XML, disable pretty-printing by default.
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.

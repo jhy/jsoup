@@ -31,7 +31,9 @@ public class XmlTreeBuilder extends TreeBuilder {
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
-        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        doc.outputSettings()
+            .syntax(Document.OutputSettings.Syntax.xml)
+            .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
     }
 
     Document parse(Reader input, String baseUri) {
