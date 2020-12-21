@@ -5,6 +5,8 @@ import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
+import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -73,6 +75,34 @@ public class DocumentTest {
     @Test public void testNormalisesStructure() {
         Document doc = Jsoup.parse("<html><head><script>one</script><noscript><p>two</p></noscript></head><body><p>three</p></body><p>four</p></html>");
         assertEquals("<html><head><script>one</script><noscript>&lt;p&gt;two</noscript></head><body><p>three</p><p>four</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void accessorsWillNormalizeStructure() {
+        Document doc = new Document("");
+        assertEquals("", doc.html());
+
+        Element body = doc.body();
+        assertEquals("body", body.tagName());
+        Element head = doc.head();
+        assertEquals("head", head.tagName());
+        assertEquals("<html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test public void accessorsAreCaseInsensitive() {
+        Parser parser = Parser.htmlParser().settings(ParseSettings.preserveCase);
+        Document doc = parser.parseInput("<!DOCTYPE html><HTML><HEAD><TITLE>SHOUTY</TITLE></HEAD><BODY>HELLO</BODY></HTML>", "");
+
+        Element body = doc.body();
+        assertEquals("BODY", body.tagName());
+        assertEquals("body", body.normalName());
+        Element head = doc.head();
+        assertEquals("HEAD", head.tagName());
+        assertEquals("body", body.normalName());
+
+        Element root = doc.selectFirst("html");
+        assertEquals("HTML", root.tagName());
+        assertEquals("html", root.normalName());
+        assertEquals("SHOUTY", doc.title());
     }
 
     @Test public void testClone() {

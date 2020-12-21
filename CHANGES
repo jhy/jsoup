@@ -20,6 +20,9 @@ jsoup changelog
 
   * Improvement: added Element#id(String) ID attribute setter.
 
+  * Improvement: in Document, #body() and #head() accessors will now automatically create those elements, if they were
+    missing (e.g. if the Document was not parsed from HTML).
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.

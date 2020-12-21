@@ -470,9 +470,10 @@ public class ConnectTest {
         con.data(FileServlet.ContentTypeParam, "application/rss+xml");
         Document doc = con.get();
         Element title = doc.selectFirst("title");
+        assertNotNull(title);
         assertEquals("jsoup RSS news", title.text());
         assertEquals("channel", title.parent().nodeName());
-        assertEquals("jsoup RSS news", doc.title());
+        assertEquals("", doc.title()); // the document title is unset, this tag is channel>title, not html>head>title
         assertEquals(3, doc.select("link").size());
         assertEquals("application/rss+xml", con.response().contentType());
         assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());

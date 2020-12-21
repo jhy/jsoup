@@ -3,6 +3,8 @@ package org.jsoup.select;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import javax.annotation.Nullable;
+
 import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
 import static org.jsoup.select.NodeFilter.FilterResult.STOP;
 
@@ -52,7 +54,14 @@ public class Collector {
         }
     }
 
-    public static Element findFirst(Evaluator eval, Element root) {
+    /**
+     Finds the first Element that matches the Evaluator that descends from the root, and stops the query once that first
+     match is found.
+     @param eval Evaluator to test elements against
+     @param root root of tree to descend
+     @return the first match; {@code null} if none
+     */
+    public static @Nullable Element findFirst(Evaluator eval, Element root) {
         FirstFinder finder = new FirstFinder(root, eval);
         NodeTraversor.filter(finder, root);
         return finder.match;

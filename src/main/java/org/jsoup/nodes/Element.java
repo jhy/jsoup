@@ -323,7 +323,7 @@ public class Element extends Node {
      * TODO - think about pulling this out as a helper as there are other shadow lists (like in Attributes) kept around.
      * @return a list of child elements
      */
-    private List<Element> childElementsList() {
+    List<Element> childElementsList() {
         List<Element> children;
         if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
             final int size = childNodes.size();
@@ -433,7 +433,7 @@ public class Element extends Node {
      * @param cssQuery cssQuery a {@link Selector} CSS-like query
      * @return the first matching element, or <b>{@code null}</b> if there is no match.
      */
-    public Element selectFirst(String cssQuery) {
+    public @Nullable Element selectFirst(String cssQuery) {
         return Selector.selectFirst(cssQuery, this);
     }
 
@@ -445,7 +445,7 @@ public class Element extends Node {
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
      *     matchn.
      */
-    public Element selectFirst(Evaluator evaluator) {
+    public @Nullable Element selectFirst(Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
     }
 

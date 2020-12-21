@@ -7,6 +7,7 @@ import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
@@ -77,23 +78,51 @@ public class Document extends Element {
         return null;
         // todo - add a set document type?
     }
-    
+
     /**
-     Accessor to the document's {@code head} element.
-     @return {@code head}
+     Find the root HTML element, or create it if it doesn't exist.
+     @return the root HTML element.
      */
-    public @Nullable Element head() {
-        // todo - we practically enforce this - move to nonnull
-        return findFirstElementByTagName("head");
+    private Element htmlEl() {
+        for (Element el: childElementsList()) {
+            if (el.normalName().equals("html"))
+                return el;
+        }
+        return appendElement("html");
     }
 
     /**
-     Accessor to the document's {@code body} element.
-     @return {@code body}
+     Get this document's {@code head} element.
+     <p>
+     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
+     that, use {@code #selectFirst("head")} instead.
+
+     @return {@code head} element.
      */
-    public @Nullable Element body() {
-        // todo - we practically enforce this - move to nonnull
-        return findFirstElementByTagName("body");
+    public Element head() {
+        Element html = htmlEl();
+        for (Element el: html.childElementsList()) {
+            if (el.normalName().equals("head"))
+                return el;
+        }
+        return html.prependElement("head");
+    }
+
+    /**
+     Get this document's {@code body} element.
+     <p>
+     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
+     that, use {@code #selectFirst("body")} instead.
+
+     @return {@code body} element.
+     */
+    public Element body() {
+        Element html = htmlEl();
+        for (Element el: html.childElementsList()) {
+            if (el.normalName().equals("body"))
+                return el;
+        }
+        return html.appendElement("body");
     }
 
     /**
@@ -102,9 +131,10 @@ public class Document extends Element {
      */
     public String title() {
         // title is a preserve whitespace tag (for document output), but normalised here
-        Element titleEl = getElementsByTag("title").first();
+        Element titleEl = head().selectFirst(titleEval);
         return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
     }
+    private static final Evaluator titleEval = new Evaluator.Tag("title");
 
     /**
      Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
@@ -113,12 +143,10 @@ public class Document extends Element {
      */
     public void title(String title) {
         Validate.notNull(title);
-        Element titleEl = getElementsByTag("title").first();
-        if (titleEl == null) { // add to head
-            head().appendElement("title").text(title);
-        } else {
-            titleEl.text(title);
-        }
+        Element titleEl = head().selectFirst(titleEval);
+        if (titleEl == null) // add to head
+            titleEl = head().appendElement("title");
+        titleEl.text(title);
     }
 
     /**
@@ -136,17 +164,13 @@ public class Document extends Element {
      @return this document after normalisation
      */
     public Document normalise() {
-        Element htmlEl = findFirstElementByTagName("html");
-        if (htmlEl == null)
-            htmlEl = appendElement("html");
-        if (head() == null)
-            htmlEl.prependElement("head");
-        if (body() == null)
-            htmlEl.appendElement("body");
+        Element htmlEl = htmlEl(); // these all create if not found
+        Element head = head();
+        body();
 
         // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
         // of. do in inverse order to maintain text order.
-        normaliseTextNodes(head());
+        normaliseTextNodes(head);
         normaliseTextNodes(htmlEl);
         normaliseTextNodes(this);
 

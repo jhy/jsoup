@@ -59,6 +59,13 @@ public class CompatibilityTests {
         assertEquals(0, cleanDoc.body().childNodeSize());
     }
 
+    @Test public void handlesCleanerFromWhitelist() {
+        Cleaner cleaner = new Cleaner(Whitelist.basic());
+        Document doc = Jsoup.parse("<script>Script</script><p>Text</p>");
+        Document clean = cleaner.clean(doc);
+        assertEquals("<p>Text</p>", clean.body().html());
+    }
+
     @Test
     public void supplyOutputSettings() {
         // test that one can override the default document output settings

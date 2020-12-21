@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
@@ -155,7 +156,7 @@ public class Selector {
      * @param root root element to descend into
      * @return the matching element, or <b>null</b> if none.
      */
-    public static Element selectFirst(String cssQuery, Element root) {
+    public static @Nullable Element selectFirst(String cssQuery, Element root) {
         Validate.notEmpty(cssQuery);
         return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }

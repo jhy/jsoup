@@ -33,7 +33,7 @@ import java.util.List;
  </p>
  */
 public class Cleaner {
-    private Safelist safelist;
+    private final Safelist safelist;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
@@ -51,7 +51,7 @@ public class Cleaner {
     @Deprecated
     public Cleaner(Whitelist whitelist) {
         Validate.notNull(whitelist);
-        new Cleaner((Safelist) whitelist);
+        this.safelist = whitelist;
     }
 
     /**
