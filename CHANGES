@@ -28,6 +28,7 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/1417>
 
   * Improvement: when parsing XML, disable pretty-printing by default.
+    <https://github.com/jhy/jsoup/issues/1168>
 
   * Build Improvement: moved to GitHub Workflows for build verification.
 
