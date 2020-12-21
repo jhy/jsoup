@@ -9,6 +9,7 @@ import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -183,7 +184,8 @@ public class Elements extends ArrayList<Element> {
      */
     public String val() {
         if (size() > 0)
-            return first().val();
+            //noinspection ConstantConditions
+            return first().val(); // first() != null as size() > 0
         else
             return "";
     }
@@ -564,7 +566,7 @@ public class Elements extends ArrayList<Element> {
         return siblings(query, false, true);
     }
 
-    private Elements siblings(String query, boolean next, boolean all) {
+    private Elements siblings(@Nullable String query, boolean next, boolean all) {
         Elements els = new Elements();
         Evaluator eval = query != null? QueryParser.parse(query) : null;
         for (Element e : this) {
@@ -598,7 +600,7 @@ public class Elements extends ArrayList<Element> {
      Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty.
      */
-    public Element first() {
+    public @Nullable Element first() {
         return isEmpty() ? null : get(0);
     }
 
@@ -606,7 +608,7 @@ public class Elements extends ArrayList<Element> {
      Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
      */
-    public Element last() {
+    public @Nullable Element last() {
         return isEmpty() ? null : get(size() - 1);
     }
 

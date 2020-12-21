@@ -12,6 +12,7 @@ import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.File;
@@ -109,12 +110,12 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(InputStream input, String charsetName, String baseUri, Parser parser) throws IOException  {
+    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
 
-        Document doc = null;
+        @Nullable Document doc = null;
 
         // read the start of the stream and look for a BOM or meta charset
         input.mark(bufferSize);
@@ -226,7 +227,7 @@ public final class DataUtil {
      * @param contentType e.g. "text/html; charset=EUC-JP"
      * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
      */
-    static String getCharsetFromContentType(String contentType) {
+    static @Nullable String getCharsetFromContentType(@Nullable String contentType) {
         if (contentType == null) return null;
         Matcher m = charsetPattern.matcher(contentType);
         if (m.find()) {
@@ -237,7 +238,7 @@ public final class DataUtil {
         return null;
     }
 
-    private static String validateCharset(String cs) {
+    private @Nullable static String validateCharset(@Nullable String cs) {
         if (cs == null || cs.length() == 0) return null;
         cs = cs.trim().replaceAll("[\"']", "");
         try {
@@ -262,7 +263,7 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
-    private static BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
+    private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
         final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
         buffer.mark();
         byte[] bom = new byte[4];

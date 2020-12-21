@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -217,7 +218,7 @@ public interface Connection {
      * @param key the data key
      * @return null if not set
      */
-    KeyVal data(String key);
+    @Nullable KeyVal data(String key);
 
     /**
      * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
@@ -345,9 +346,9 @@ public interface Connection {
 
         /**
          * Get the URL
-         * @return URL
+         * @return URL, or {@code null} if it has not yet been set.
          */
-        URL url();
+        @Nullable URL url();
 
         /**
          * Set the URL
@@ -358,9 +359,9 @@ public interface Connection {
 
         /**
          * Get the request method
-         * @return method
+         * @return method, or {@code null} if it has not yet been set.
          */
-        Method method();
+        @Nullable Method method();
 
         /**
          * Set the request method
@@ -380,7 +381,7 @@ public interface Connection {
          * @see #hasHeader(String)
          * @see #cookie(String)
          */
-        String header(String name);
+        @Nullable String header(String name);
 
         /**
          * Get the values of a header.
@@ -494,7 +495,7 @@ public interface Connection {
          * Get the proxy used for this request.
          * @return the proxy; <code>null</code> if not enabled.
          */
-        Proxy proxy();
+        @Nullable Proxy proxy();
 
         /**
          * Update the proxy for this request.
@@ -786,6 +787,6 @@ public interface Connection {
          * Get the current Content Type, or {@code null} if not set.
          * @return the current Content Type.
          */
-        String contentType();
+        @Nullable String contentType();
     }
 }

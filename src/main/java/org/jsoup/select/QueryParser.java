@@ -18,9 +18,9 @@ public class QueryParser {
     private final static String[] combinators = {",", ">", "+", "~", " "};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
-    private TokenQueue tq;
-    private String query;
-    private List<Evaluator> evals = new ArrayList<>();
+    private final TokenQueue tq;
+    private final String query;
+    private final List<Evaluator> evals = new ArrayList<>();
 
     /**
      * Create a new QueryParser.
@@ -95,6 +95,7 @@ public class QueryParser {
             // make sure OR (,) has precedence:
             if (rootEval instanceof CombiningEvaluator.Or && combinator != ',') {
                 currentEval = ((CombiningEvaluator.Or) currentEval).rightMostEvaluator();
+                assert currentEval != null; // rightMost signature can return null (if none set), but always will have one by this point
                 replaceRightMost = true;
             }
         }
@@ -116,12 +117,11 @@ public class QueryParser {
             CombiningEvaluator.Or or;
             if (currentEval instanceof CombiningEvaluator.Or) {
                 or = (CombiningEvaluator.Or) currentEval;
-                or.add(newEval);
             } else {
                 or = new CombiningEvaluator.Or();
                 or.add(currentEval);
-                or.add(newEval);
             }
+            or.add(newEval);
             currentEval = or;
         }
         else

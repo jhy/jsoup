@@ -27,7 +27,9 @@ public class NodeTraversor {
                 node = node.childNode(0);
                 depth++;
             } else {
-                while (node.nextSibling() == null && depth > 0) {
+                while (true) {
+                    assert node != null; // as depth > 0, will have parent
+                    if (!(node.nextSibling() == null && depth > 0)) break;
                     visitor.tail(node, depth);
                     node = node.parentNode();
                     depth--;
@@ -73,7 +75,9 @@ public class NodeTraversor {
                 continue;
             }
             // No siblings, move upwards:
-            while (node.nextSibling() == null && depth > 0) {
+            while (true) {
+                assert node != null; // depth > 0, so has parent
+                if (!(node.nextSibling() == null && depth > 0)) break;
                 // 'tail' current node:
                 if (result == FilterResult.CONTINUE || result == FilterResult.SKIP_CHILDREN) {
                     result = filter.tail(node, depth);

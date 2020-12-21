@@ -843,6 +843,12 @@ public class SelectorTest {
         assertEquals("Two", doc.select("p:matchText + br + *").text());
     }
 
+    @Test public void nthLastChildWithNoParent() {
+        Element el = new Element("p").text("Orphan");
+        Elements els = el.select("p:nth-last-child(1)");
+        assertEquals(0, els.size());
+    }
+
     @Test public void splitOnBr() {
         String html = "<div><p>One<br>Two<br>Three</p></div>";
         Document doc = Jsoup.parse(html);

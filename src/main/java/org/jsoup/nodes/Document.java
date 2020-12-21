@@ -360,20 +360,13 @@ public class Document extends Element {
             OutputSettings.Syntax syntax = outputSettings().syntax();
 
             if (syntax == OutputSettings.Syntax.html) {
-                Element metaCharset = select("meta[charset]").first();
-
+                Element metaCharset = selectFirst("meta[charset]");
                 if (metaCharset != null) {
                     metaCharset.attr("charset", charset().displayName());
                 } else {
-                    Element head = head();
-
-                    if (head != null) {
-                        head.appendElement("meta").attr("charset", charset().displayName());
-                    }
+                    head().appendElement("meta").attr("charset", charset().displayName());
                 }
-
-                // Remove obsolete elements
-                select("meta[name=charset]").remove();
+                select("meta[name=charset]").remove(); // Remove obsolete elements
             } else if (syntax == OutputSettings.Syntax.xml) {
                 Node node = childNodes().get(0);
                 if (node instanceof XmlDeclaration) {

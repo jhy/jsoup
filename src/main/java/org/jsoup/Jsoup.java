@@ -2,7 +2,6 @@ package org.jsoup;
 
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
-import org.jsoup.internal.ReturnsAreNonnullByDefault;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
@@ -10,7 +9,6 @@ import org.jsoup.safety.Safelist;
 import org.jsoup.safety.Whitelist;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +19,6 @@ import java.net.URL;
 
  @author Jonathan Hedley */
 
-@ParametersAreNonnullByDefault @ReturnsAreNonnullByDefault
 public class Jsoup {
     private Jsoup() {}
 

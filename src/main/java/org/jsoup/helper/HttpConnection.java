@@ -10,6 +10,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
@@ -111,8 +112,6 @@ public class HttpConnection implements Connection {
     }
 
     private static String encodeMimeName(String val) {
-        if (val == null)
-            return null;
         return val.replace("\"", "%22");
     }
 
@@ -324,8 +323,8 @@ public class HttpConnection implements Connection {
 
     @SuppressWarnings({"unchecked"})
     private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
-        URL url;
-        Method method;
+        @Nullable URL url;
+        @Nullable Method method;
         Map<String, List<String>> headers;
         Map<String, String> cookies;
 
@@ -368,6 +367,7 @@ public class HttpConnection implements Connection {
         @Override
         public T addHeader(String name, String value) {
             Validate.notEmpty(name);
+            //noinspection ConstantConditions
             value = value == null ? "" : value;
 
             List<String> values = headers(name);
@@ -494,7 +494,7 @@ public class HttpConnection implements Connection {
             return Collections.emptyList();
         }
 
-        private Map.Entry<String, List<String>> scanHeaders(String name) {
+        private @Nullable Map.Entry<String, List<String>> scanHeaders(String name) {
             String lc = lowerCase(name);
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (lowerCase(entry.getKey()).equals(lc))
@@ -536,18 +536,18 @@ public class HttpConnection implements Connection {
             System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
             // make sure that we can send Sec-Fetch-Site headers etc.
         }
-        private Proxy proxy; // nullable
+        private @Nullable Proxy proxy;
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
-        private Collection<Connection.KeyVal> data;
-        private String body = null;
+        private final Collection<Connection.KeyVal> data;
+        private @Nullable String body = null;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private String postDataCharset = DataUtil.defaultCharsetName;
-        private SSLSocketFactory sslSocketFactory;
+        private @Nullable SSLSocketFactory sslSocketFactory;
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
@@ -1001,7 +1001,7 @@ public class HttpConnection implements Connection {
             }
         }
 
-        private static String setOutputContentType(final Connection.Request req) {
+        private @Nullable static String setOutputContentType(final Connection.Request req) {
             String bound = null;
             if (req.hasHeader(CONTENT_TYPE)) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
@@ -1024,7 +1024,7 @@ public class HttpConnection implements Connection {
             return bound;
         }
 
-        private static void writePost(final Connection.Request req, final OutputStream outputStream, final String bound) throws IOException {
+        private static void writePost(final Connection.Request req, final OutputStream outputStream, @Nullable final String bound) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
             final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
 
@@ -1041,7 +1041,8 @@ public class HttpConnection implements Connection {
                         w.write("; filename=\"");
                         w.write(encodeMimeName(keyVal.value()));
                         w.write("\"\r\nContent-Type: ");
-                        w.write(keyVal.contentType() != null ? keyVal.contentType() : DefaultUploadType);
+                        String contentType = keyVal.contentType();
+                        w.write(contentType != null ? contentType : DefaultUploadType);
                         w.write("\r\n\r\n");
                         w.flush(); // flush
                         DataUtil.crossStreams(keyVal.inputStream(), outputStream);

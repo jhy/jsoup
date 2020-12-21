@@ -6,8 +6,8 @@ import java.io.IOException;
  * Signals that a HTTP request resulted in a not OK HTTP response.
  */
 public class HttpStatusException extends IOException {
-    private int statusCode;
-    private String url;
+    private final int statusCode;
+    private final String url;
 
     public HttpStatusException(String message, int statusCode, String url) {
         super(message);

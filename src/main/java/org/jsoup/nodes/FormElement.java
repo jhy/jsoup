@@ -96,7 +96,7 @@ public class FormElement extends Element {
                     set = true;
                 }
                 if (!set) {
-                    Element option = el.select("option").first();
+                    Element option = el.selectFirst("option");
                     if (option != null)
                         data.add(HttpConnection.KeyVal.create(name, option.val()));
                 }
