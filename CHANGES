@@ -12,7 +12,7 @@ jsoup changelog
 
   * Improvement: added support for loading and parsing gzipped HTML files in Jsoup.parse(File in, charset, baseUri).
 
-  * Improvement: reduced thread content in HttpConnection and Document.
+  * Improvement: reduced thread contention in HttpConnection and Document.
     <https://github.com/jhy/jsoup/pull/1455>
 
   * Improvement: better parsing performance when under high thread concurrency
@@ -233,7 +233,7 @@ jsoup changelog
     Attribute#getValue() method.
     <https://github.com/jhy/jsoup/issues/1065>
 
-  * Bugix: orphan Attribute objects (i.e. created outside of a parse or an Element) would throw an NPE on
+  * Bugfix: orphan Attribute objects (i.e. created outside of a parse or an Element) would throw an NPE on
     Attribute#setValue(val)
     <https://github.com/jhy/jsoup/issues/1107>
 
@@ -381,7 +381,7 @@ jsoup changelog
 
   * Updated Jsoup.connect().timeout() to implement a total connect + combined read timeout. Previously it specified
     connect and buffer read times only, so to implement a combined total timeout, you had to have another thread send
-    an interupt.
+    an interrupt.
 
   * Improved performance of Node.addChildren (was quadratic)
     <https://github.com/jhy/jsoup/pull/930>
@@ -395,7 +395,7 @@ jsoup changelog
   * Improved Node traversal, including less object creation, and partial and filtering traversor support.
     <https://github.com/jhy/jsoup/pull/849>
 
-  * Bugfix: if a document was was redecoded after character set detection, the HTML parser was not reset correctly,
+  * Bugfix: if a document was was re-decoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
 
@@ -536,7 +536,7 @@ jsoup changelog
    is not defined by the server, or is defined incorrectly.
    <https://github.com/jhy/jsoup/issues/743>
 
- * Improved performance of class selectors by reducing memory allocation and garbase collection.
+ * Improved performance of class selectors by reducing memory allocation and garbage collection.
    <https://github.com/jhy/jsoup/pull/753>
 
  * Improved performance of HTML output by reducing the creation of temporary attribute list iterators.
@@ -727,7 +727,7 @@ jsoup changelog
  * Fixed performance issue when parsing HTML with elements with many children that need re-parenting.
    <https://github.com/jhy/jsoup/pull/506>
 
- * Fixed an issue where a server returning an unsupport character set response would cause a runtime
+ * Fixed an issue where a server returning an unsupported character set response would cause a runtime
    UnsupportedCharsetException, instead of falling back to the default UTF-8 charset.
    <https://github.com/jhy/jsoup/pull/509>
 
@@ -868,7 +868,7 @@ jsoup changelog
  * When parsing, allow all tags to self-close. Tags that aren't expected to self-close will get an end tag.
    <https://github.com/jhy/jsoup/issues/258>
 
- * Fixed an issue when parsing <textarea>/RCData tags containing unescaped closing tags that would drop the traling >.
+ * Fixed an issue when parsing <textarea>/RCData tags containing unescaped closing tags that would drop the trailing >.
 
  * Corrected the javadoc for Element#child() to note that it throws IndexOutOfBounds.
    <https://github.com/jhy/jsoup/issues/277>
@@ -1296,7 +1296,7 @@ jsoup changelog
     also collection class methods on Elements.
  * New feature: supports Element#wrap(html) and Elements#wrap(html).
  * New selector syntax: supports E + F adjacent sibling selector
- * New selector systax: supports E ~ F preceding sibling selector
+ * New selector syntax: supports E ~ F preceding sibling selector
  * New: supports Element#elementSiblingIndex()
 
  * Improved document normalisation.
