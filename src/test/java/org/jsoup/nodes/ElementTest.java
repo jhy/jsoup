@@ -1764,4 +1764,19 @@ public class ElementTest {
         assertEquals("var foo = 5 &lt; 2;\nvar bar = 1 &amp;&amp; 2;", el.html());
         assertEquals("", el.data());
     }
+
+    @Test public void testShallowCloneToString() {
+        // https://github.com/jhy/jsoup/issues/1410
+        Document doc = Jsoup.parse("<p><i>Hello</i></p>");
+        Element p = doc.selectFirst("p");
+        Element i = doc.selectFirst("i");
+        String pH = p.shallowClone().toString();
+        String iH = i.shallowClone().toString();
+
+        assertEquals("<p></p>", pH); // shallow, so no I
+        assertEquals("<i></i>", iH);
+
+        assertEquals(p.outerHtml(), p.toString());
+        assertEquals(i.outerHtml(), i.toString());
+    }
 }
