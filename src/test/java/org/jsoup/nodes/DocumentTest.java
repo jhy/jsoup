@@ -489,4 +489,34 @@ public class DocumentTest {
         assertNotNull(documentType);
         assertEquals("html", documentType.name());
     }
+
+    @Test public void framesetSupportsBodyMethod() {
+        String html = "<html><head><title>Frame Test</title></head><frameset id=id><frame src=foo.html></frameset>";
+        Document doc = Jsoup.parse(html);
+        Element head = doc.head();
+        assertNotNull(head);
+        assertEquals("Frame Test", doc.title());
+
+        // Frameset docs per html5 spec have no body.
+        assertNull(doc.selectFirst("body"));
+
+        // but we want the .body() tag to not null; so we auto-normalize it
+        // doing it in body() vs parse keeps the html close to original for round-trip option
+        Element body = doc.body();
+        assertNotNull(body);
+        assertEquals("", body.html());
+
+        assertNotNull(doc.selectFirst("body"));
+
+        String expected = "<html>\n" +
+            " <head>\n" +
+            "  <title>Frame Test</title>\n" +
+            " </head>\n" +
+            " <frameset id=\"id\">\n" +
+            "  <frame src=\"foo.html\">\n" +
+            " </frameset>\n" +
+            " <body></body>\n" +
+            "</html>";
+        assertEquals(expected, doc.html());
+    }
 }
