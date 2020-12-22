@@ -1587,7 +1587,6 @@ public class Element extends Node {
         clone.attributes = attributes != null ? attributes.clone() : null;
         clone.childNodes = new NodeList(clone, childNodes.size());
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
-        clone.setBaseUri(baseUri());
 
         return clone;
     }

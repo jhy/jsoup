@@ -178,17 +178,21 @@ public class DocumentTest {
     	assertEquals(htmlContent, document.html(new StringWriter()).toString());
     }
 
-    // Ignored since this test can take awhile to run.
-    @Disabled
     @Test public void testOverflowClone() {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<head><base href='https://jsoup.org/'>");
         for (int i = 0; i < 100000; i++) {
-            builder.insert(0, "<i>");
-            builder.append("</i>");
+            sb.append("<div>");
         }
+        sb.append("<p>Hello <a href='/example.html'>there</a>");
 
-        Document doc = Jsoup.parse(builder.toString());
-        doc.clone();
+        Document doc = Jsoup.parse(sb.toString());
+
+        String expectedLink = "https://jsoup.org/example.html";
+        assertEquals(expectedLink, doc.selectFirst("a").attr("abs:href"));
+        Document clone = doc.clone();
+        doc.hasSameValue(clone);
+        assertEquals(expectedLink, clone.selectFirst("a").attr("abs:href"));
     }
 
     @Test public void DocumentsWithSameContentAreEqual() {

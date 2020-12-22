@@ -17,6 +17,7 @@ public final class StringUtil {
     static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
         "         ", "          ", "           ", "            ", "             ", "              ", "               ",
         "                ", "                 ", "                  ", "                   ", "                    "};
+    private static final int maxPaddingWidth = 30; // so very deeply nested nodes don't get insane padding amounts
 
     /**
      * Join a collection of strings by a separator
@@ -61,7 +62,7 @@ public final class StringUtil {
     }
 
     /**
-     * Returns space padding
+     * Returns space padding (up to a max of 30).
      * @param width amount of padding desired
      * @return string of spaces * width
      */
@@ -71,6 +72,7 @@ public final class StringUtil {
 
         if (width < padding.length)
             return padding[width];
+        width = Math.min(width, maxPaddingWidth);
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';

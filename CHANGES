@@ -30,6 +30,9 @@ jsoup changelog
   * Improvement: when parsing XML, disable pretty-printing by default.
     <https://github.com/jhy/jsoup/issues/1168>
 
+  * Improvement: much better performance in Node#clone() for large and deeply nested documents. Complexity was O(n^2) or
+    worse, now O(n).
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.

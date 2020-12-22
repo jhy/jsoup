@@ -662,9 +662,10 @@ public abstract class Node implements Cloneable {
 
     /**
      * Check if this node is the same instance of another (object identity test).
+     * <p>For an node value equality check, see {@link #hasSameValue(Object)}</p>
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other
-     * @see Node#hasSameValue(Object) to compare nodes by their value
+     * @see Node#hasSameValue(Object)
      */
     @Override
     public boolean equals(Object o) {

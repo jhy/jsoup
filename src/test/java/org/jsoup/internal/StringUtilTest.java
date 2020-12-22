@@ -24,7 +24,7 @@ public class StringUtilTest {
         assertEquals(" ", StringUtil.padding(1));
         assertEquals("  ", StringUtil.padding(2));
         assertEquals("               ", StringUtil.padding(15));
-        assertEquals("                                             ", StringUtil.padding(45));
+        assertEquals("                              ", StringUtil.padding(45)); // we tap out at 30
     }
 
     @Test public void paddingInACan() {
