@@ -108,7 +108,6 @@ abstract class TreeBuilder {
         return size > 0 ? stack.get(size-1) : null;
     }
 
-
     /**
      * If the parser is tracking errors, and an error at the current position.
      * @param msg error message
@@ -117,5 +116,13 @@ abstract class TreeBuilder {
         ParseErrorList errors = parser.getErrors();
         if (errors.canAddError())
             errors.add(new ParseError(reader.pos(), msg));
+    }
+
+    /**
+     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
+     Data Nodes).
+     */
+    protected boolean isContentForTagData(String normalName) {
+        return false;
     }
 }

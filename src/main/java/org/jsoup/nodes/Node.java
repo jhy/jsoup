@@ -357,10 +357,10 @@ public abstract class Node implements Cloneable {
     public Node wrap(String html) {
         Validate.notEmpty(html);
 
-        // Parse context - this if element or parent if element else null
+        // Parse context - parent (because wrapping), this, or null
         Element context =
-            this instanceof Element ? (Element) this :
-                parentNode != null && parentNode instanceof Element ? (Element) parentNode :
+            parentNode != null && parentNode instanceof Element ? (Element) parentNode :
+                this instanceof Element ? (Element) this :
                     null;
         List<Node> wrapChildren = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
         Node wrapNode = wrapChildren.get(0);

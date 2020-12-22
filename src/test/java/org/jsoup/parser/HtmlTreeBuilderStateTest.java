@@ -18,7 +18,8 @@ public class HtmlTreeBuilderStateTest {
         Field[] fields = aClass.getDeclaredFields();
 
         for (Field field : fields) {
-            if (Modifier.isStatic(field.getModifiers()) && field.getType().isArray()) {
+            int modifiers = field.getModifiers();
+            if (Modifier.isStatic(modifiers) && !Modifier.isPrivate(modifiers) && field.getType().isArray()) {
                 try {
                     array.add((Object[]) field.get(null));
                 } catch (IllegalAccessException e) {

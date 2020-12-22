@@ -2,9 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.FieldsAreNonnullByDefault;
 import org.jsoup.internal.NonnullByDefault;
-import org.jsoup.internal.ReturnsAreNonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
@@ -18,7 +16,6 @@ import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -1150,12 +1147,13 @@ public class Element extends Node {
     /**
      Gets the <b>normalized, combined text</b> of this element and all its children. Whitespace is normalized and
      trimmed.
-     <p>
-     For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
+     <p>For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
     now!"}
-     <p>
-     If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
+     <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
      children), use {@link #ownText()}
+     <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
+     nodes (such as {@code <script>} tags are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     that content.
 
      @return unencoded, normalized text, or empty string if none.
      @see #wholeText()
@@ -1274,16 +1272,22 @@ public class Element extends Node {
     }
 
     /**
-     * Set the text of this element. Any existing contents (text or elements) will be cleared
+     * Set the text of this element. Any existing contents (text or elements) will be cleared.
+     * <p>As a special case, for {@code <script>} and {@code <style> tags, the input text will be treated as data,
+     * not visible text.</p>
      * @param text unencoded text
      * @return this element
      */
     public Element text(String text) {
         Validate.notNull(text);
-
         empty();
-        TextNode textNode = new TextNode(text);
-        appendChild(textNode);
+        // special case for script/style in HTML: should be data node
+        Document owner = ownerDocument();
+        // an alternate impl would be to run through the parser
+        if (owner != null && owner.parser().isContentForTagData(normalName()))
+            appendChild(new DataNode(text));
+        else
+            appendChild(new TextNode(text));
 
         return this;
     }
@@ -1308,7 +1312,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag. Note that data is NOT the
+     * Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
      * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
      * for the contents of scripts, comments, CSS styles, etc.
      *

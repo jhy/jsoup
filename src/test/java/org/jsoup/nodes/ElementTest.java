@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.*;
 import org.junit.jupiter.api.Test;
@@ -611,6 +612,15 @@ public class ElementTest {
         assertNotNull(orphan.parent());
         assertEquals("div", orphan.parent().tagName());
         assertEquals("<div>\n <span>Hello!</span>\n</div>", orphan.parent().outerHtml());
+    }
+
+    @Test public void testWrapArtificialStructure() {
+        // div normally couldn't get into a p, but explicitly want to wrap
+        Document doc = Jsoup.parse("<p>Hello <i>there</i> now.");
+        Element i = doc.selectFirst("i");
+        i.wrap("<div id=id1></div> quite");
+        assertEquals("div", i.parent().tagName());
+        assertEquals("<p>Hello <div id=\"id1\"><i>there</i></div> quite now.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void before() {
@@ -1703,5 +1713,55 @@ public class ElementTest {
         assertTrue(doc.selectFirst("div").isBlock());
         assertTrue(doc.selectFirst("p").isBlock());
         assertFalse(doc.selectFirst("span").isBlock());
+    }
+
+    @Test public void testScriptTextHtmlSetAsData() {
+        String src = "var foo = 5 < 2;\nvar bar = 1 && 2;";
+        String html = "<script>" + src + "</script>";
+        Document doc = Jsoup.parse(html);
+        Element el = doc.selectFirst("script");
+        assertNotNull(el);
+
+        validateScriptContents(src, el);
+
+        src = "var foo = 4 < 2;\nvar bar > 1 && 2;";
+        el.html(src);
+        validateScriptContents(src, el);
+
+        // special case for .text (in HTML; in XML will just be regular text)
+        el.text(src);
+        validateScriptContents(src, el);
+
+        // XML, no special treatment, get escaped correctly
+        Document xml = Parser.xmlParser().parseInput(html, "");
+        Element xEl = xml.selectFirst("script");
+        assertNotNull(xEl);
+        src = "var foo = 5 < 2;\nvar bar = 1 && 2;";
+        String escaped = "var foo = 5 &lt; 2;\nvar bar = 1 &amp;&amp; 2;";
+        validateXmlScriptContents(xEl);
+        xEl.text(src);
+        validateXmlScriptContents(xEl);
+        xEl.html(src);
+        validateXmlScriptContents(xEl);
+
+        assertEquals("<script>var foo = 4 < 2;\nvar bar > 1 && 2;</script>", el.outerHtml());
+        assertEquals("<script>" + escaped + "</script>", xEl.outerHtml()); // escaped in xml as no special treatment
+
+    }
+
+    private static void validateScriptContents(String src, Element el) {
+        assertEquals("", el.text()); // it's not text
+        assertEquals("", el.ownText());
+        assertEquals("", el.wholeText());
+        assertEquals(src, el.html());
+        assertEquals(src, el.data());
+    }
+
+    private static void validateXmlScriptContents(Element el) {
+        assertEquals("var foo = 5 < 2; var bar = 1 && 2;", el.text());
+        assertEquals("var foo = 5 < 2; var bar = 1 && 2;", el.ownText());
+        assertEquals("var foo = 5 < 2;\nvar bar = 1 && 2;", el.wholeText());
+        assertEquals("var foo = 5 &lt; 2;\nvar bar = 1 &amp;&amp; 2;", el.html());
+        assertEquals("", el.data());
     }
 }

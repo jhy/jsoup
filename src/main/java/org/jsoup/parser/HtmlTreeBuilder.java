@@ -108,7 +108,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             else
                 tokeniser.transition(TokeniserState.Data); // default
 
-            root = new Element(Tag.valueOf("html", settings), baseUri);
+            root = new Element(Tag.valueOf(contextTag, settings), baseUri);
             doc.appendChild(root);
             stack.add(root);
             resetInsertionMode();
@@ -126,8 +126,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         runParser();
-        if (context != null)
+        if (context != null) {
+            // depending on context and the input html, content may have been added outside of the root el
+            // e.g. context=p, input=div, the div will have been pushed out.
+            List<Node> nodes = root.siblingNodes();
+            if (!nodes.isEmpty())
+                root.insertChildren(-1, nodes);
             return root.childNodes();
+        }
         else
             return doc.childNodes();
     }
@@ -271,7 +277,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         if (characterToken.isCData())
             node = new CDataNode(data);
-        else if (tagName.equals("script") || tagName.equals("style"))
+        else if (isContentForTagData(tagName))
             node = new DataNode(data);
         else
             node = new TextNode(data);
@@ -742,5 +748,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 ", state=" + state +
                 ", currentElement=" + currentElement() +
                 '}';
+    }
+
+    private static final String[] dataTags = {"script", "style"};
+    protected boolean isContentForTagData(String normalName) {
+        for (String tag : dataTags) {
+            if (tag.equals(normalName))
+                return true;
+        }
+        return false;
     }
 }

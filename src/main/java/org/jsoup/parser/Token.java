@@ -149,6 +149,10 @@ abstract class Token {
             return normalName;
         }
 
+        final String toStringName() {
+            return tagName != null ? tagName : "[unset]";
+        }
+
         final Tag name(String name) {
             tagName = name;
             normalName = lowerCase(name);
@@ -240,9 +244,9 @@ abstract class Token {
         @Override
         public String toString() {
             if (hasAttributes() && attributes.size() > 0)
-                return "<" + name() + " " + attributes.toString() + ">";
+                return "<" + toStringName() + " " + attributes.toString() + ">";
             else
-                return "<" + name() + ">";
+                return "<" + toStringName() + ">";
         }
     }
 
@@ -254,7 +258,7 @@ abstract class Token {
 
         @Override
         public String toString() {
-            return "</" + (tagName != null ? tagName : "(unset)") + ">";
+            return "</" + toStringName() + ">";
         }
     }
 

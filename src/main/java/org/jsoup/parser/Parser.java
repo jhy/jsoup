@@ -93,6 +93,14 @@ public class Parser {
         return settings;
     }
 
+    /**
+     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
+     Data Nodes).
+     */
+    public boolean isContentForTagData(String normalName) {
+        return getTreeBuilder().isContentForTagData(normalName);
+    }
+
     // static parse functions below
     /**
      * Parse HTML into a Document.
