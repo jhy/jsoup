@@ -1,0 +1,16 @@
+<html>
+<head>
+  <title>Upload Form Test</title>
+</head>
+<body>
+<h1>Upload Form Test</h1>
+
+<form action="/EchoServlet" method="POST" enctype="multipart/form-data" name="tidy" onsubmit="return verifySubmit()">
+  <input type="hidden" name="_function" value="tidy">
+  <label for="_file">Upload:</label>
+  <input name="_file" id="_file" type="file" size="40">
+  <input type="submit">
+</form>
+
+</body>
+</html>

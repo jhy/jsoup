@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.FormElement;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
@@ -505,5 +507,38 @@ public class ConnectTest {
         assertEquals(14766, text.length());
         assertEquals(text, docFromLocalServer.body().text());
         assertEquals(text, docFromFileRead.body().text());
+    }
+
+    /**
+     * Test fetching a form, and submitting it with a file attached.
+     */
+    @Test
+    public void postHtmlFile() throws IOException {
+        Document index = Jsoup.connect(FileServlet.urlTo("/htmltests/upload-form.html")).get();
+        List<FormElement> forms = index.select("[name=tidy]").forms();
+        assertEquals(1, forms.size());
+        FormElement form = forms.get(0);
+        Connection post = form.submit();
+
+        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        FileInputStream stream = new FileInputStream(uploadFile);
+
+        Connection.KeyVal fileData = post.data("_file");
+        assertNotNull(fileData);
+        fileData.value("check.html");
+        fileData.inputStream(stream);
+
+        Connection.Response res;
+        try {
+            res = post.execute();
+        } finally {
+            stream.close();
+        }
+
+        Document doc = res.parse();
+        assertEquals(ihVal("Method", doc), "POST"); // from form action
+        assertEquals(ihVal("Part _file Filename", doc), "check.html");
+        assertEquals(ihVal("Part _file Name", doc), "_file");
+        assertEquals(ihVal("_function", doc), "tidy");
     }
 }

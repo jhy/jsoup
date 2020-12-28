@@ -324,33 +324,6 @@ public class UrlConnectTest {
         assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
     }
 
-    /**
-     * Test fetching a form, and submitting it with a file attached.
-     */
-    @Test
-    public void postHtmlFile() throws IOException {
-        Document index = Jsoup.connect("http://direct.infohound.net/tidy/").get();
-        FormElement form = index.select("[name=tidy]").forms().get(0);
-        Connection post = form.submit();
-
-        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html");
-        FileInputStream stream = new FileInputStream(uploadFile);
-
-        Connection.KeyVal fileData = post.data("_file");
-        fileData.value("check.html");
-        fileData.inputStream(stream);
-
-        Connection.Response res;
-        try {
-            res = post.execute();
-        } finally {
-            stream.close();
-        }
-
-        Document out = res.parse();
-        assertTrue(out.text().contains("HTML Tidy Complete"));
-    }
-
     @Test
     public void handles201Created() throws IOException {
         Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup

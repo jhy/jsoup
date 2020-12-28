@@ -64,6 +64,9 @@ jsoup changelog
   * Bugfix: when wrapping HTML around an existing element with Element#wrap(String), will no take the content as
     provided and ignore normal HTML tree-building rules. This allows for e.g. a div tag to be placed inside of p tags.
 
+  * Bugfix: the Elements#forms() method should return the selected immediate elements that are Forms, not children.
+    <https://github.com/jhy/jsoup/pull/1403>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.
