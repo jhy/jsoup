@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-
 public class FileServlet extends BaseServlet {
     public static final String Url = TestServer.map(FileServlet.class);
     public static final String ContentTypeParam = "contentType";

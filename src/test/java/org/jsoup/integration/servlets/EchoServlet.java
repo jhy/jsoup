@@ -49,6 +49,10 @@ public class EchoServlet extends BaseServlet {
 
         res.setContentType(TextHtml);
         res.setStatus(intCode);
+        // no-cache headers for test
+        res.addHeader("Cache-Control", "no-cache");
+        res.addHeader("Cache-Control", "no-store");
+
         PrintWriter w = res.getWriter();
 
         w.write("<title>Webserver Environment Variables</title>\n" +

@@ -231,24 +231,6 @@ public class UrlConnectTest {
         assertEquals("UTF-8", res.charset()); // set from default on parse
     }
 
-    @Test
-    public void maxBodySize() throws IOException {
-        String url = "http://direct.infohound.net/tools/large.html"; // 280 K
-
-        Connection.Response defaultRes = Jsoup.connect(url).execute();
-        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
-        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
-        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
-        Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
-
-        int actualDocText = 269541;
-        assertEquals(actualDocText, defaultRes.parse().text().length());
-        assertEquals(49165, smallRes.parse().text().length());
-        assertEquals(196577, mediumRes.parse().text().length());
-        assertEquals(actualDocText, largeRes.parse().text().length());
-        assertEquals(actualDocText, unlimitedRes.parse().text().length());
-    }
-
     /**
      * Verify that security disabling feature works properly.
      * <p/>
@@ -317,81 +299,10 @@ public class UrlConnectTest {
     }
 
     @Test
-    public void baseHrefCorrectAfterHttpEquiv() throws IOException {
-        // https://github.com/jhy/jsoup/issues/440
-        Connection.Response res = Jsoup.connect("http://direct.infohound.net/tools/charset-base.html").execute();
-        Document doc = res.parse();
-        assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
-    }
-
-    @Test
     public void handles201Created() throws IOException {
         Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
         assertEquals("https://jsoup.org/", doc.location());
     }
-
-    @Test
-    public void fetchToW3c() throws IOException {
-        String url = "https://jsoup.org";
-        Document doc = Jsoup.connect(url).get();
-
-        W3CDom dom = new W3CDom();
-        org.w3c.dom.Document wDoc = dom.fromJsoup(doc);
-        assertEquals(url, wDoc.getDocumentURI());
-        String html = dom.asString(wDoc);
-        assertTrue(html.contains("jsoup"));
-    }
-
-    @Test
-    public void fetchHandlesXml() throws IOException {
-        // should auto-detect xml and use XML parser, unless explicitly requested the html parser
-        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
-        Connection con = Jsoup.connect(xmlUrl);
-        Document doc = con.get();
-        Connection.Request req = con.request();
-        assertTrue(req.parser().getTreeBuilder() instanceof XmlTreeBuilder);
-        assertEquals("<xml> <link> one </link> <table> Two </table> </xml>", StringUtil.normaliseWhitespace(doc.outerHtml()));
-    }
-
-    @Test
-    public void fetchHandlesXmlAsHtmlWhenParserSet() throws IOException {
-        // should auto-detect xml and use XML parser, unless explicitly requested the html parser
-        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
-        Connection con = Jsoup.connect(xmlUrl).parser(Parser.htmlParser());
-        Document doc = con.get();
-        Connection.Request req = con.request();
-        assertTrue(req.parser().getTreeBuilder() instanceof HtmlTreeBuilder);
-        assertEquals("<html> <head></head> <body> <xml> <link>one <table> Two </table> </xml> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
-    }
-
-    @Test
-    public void combinesSameHeadersWithComma() throws IOException {
-        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-        String url = "http://direct.infohound.net/tools/q.pl";
-        Connection con = Jsoup.connect(url);
-        con.get();
-
-        Connection.Response res = con.response();
-        assertEquals("text/html", res.header("Content-Type"));
-        assertEquals("no-cache, no-store", res.header("Cache-Control"));
-
-        List<String> header = res.headers("Cache-Control");
-        assertEquals(2, header.size());
-        assertEquals("no-cache", header.get(0));
-        assertEquals("no-store", header.get(1));
-    }
-
-    @Test
-    public void sendHeadRequest() throws IOException {
-        String url = "http://direct.infohound.net/tools/parse-xml.xml";
-        Connection con = Jsoup.connect(url).method(Connection.Method.HEAD);
-        final Connection.Response response = con.execute();
-        assertEquals("text/xml", response.header("Content-Type"));
-        assertEquals("", response.body()); // head ought to have no body
-        Document doc = response.parse();
-        assertEquals("", doc.text());
-    }
-
 
     /*
      Proxy tests. Assumes local proxy running on 8888, without system propery set (so that specifying it is required).
