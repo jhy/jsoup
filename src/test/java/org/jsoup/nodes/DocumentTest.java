@@ -497,16 +497,19 @@ public class DocumentTest {
         assertNotNull(head);
         assertEquals("Frame Test", doc.title());
 
-        // Frameset docs per html5 spec have no body.
+        // Frameset docs per html5 spec have no body element - but instead a frameset elelemt
         assertNull(doc.selectFirst("body"));
+        Element frameset = doc.selectFirst("frameset");
+        assertNotNull(frameset);
 
-        // but we want the .body() tag to not null; so we auto-normalize it
+        // the body() method returns body or frameset and does not otherwise modify the document
         // doing it in body() vs parse keeps the html close to original for round-trip option
         Element body = doc.body();
         assertNotNull(body);
-        assertEquals("", body.html());
+        assertSame(frameset, body);
+        assertEquals("frame", body.child(0).tagName());
 
-        assertNotNull(doc.selectFirst("body"));
+        assertNull(doc.selectFirst("body")); // did not vivify a body element
 
         String expected = "<html>\n" +
             " <head>\n" +
@@ -515,7 +518,6 @@ public class DocumentTest {
             " <frameset id=\"id\">\n" +
             "  <frame src=\"foo.html\">\n" +
             " </frameset>\n" +
-            " <body></body>\n" +
             "</html>";
         assertEquals(expected, doc.html());
     }

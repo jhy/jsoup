@@ -109,17 +109,18 @@ public class Document extends Element {
     }
 
     /**
-     Get this document's {@code body} element.
+     Get this document's {@code <body>} or {@code <frameset>} element.
      <p>
-     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
-     that, use {@code #selectFirst("body")} instead.
+     As a <b>side-effect</b>, if this Document does not already have a HTML structure, it will be created with a {@code
+    <body>} element. If you do not want that, use {@code #selectFirst("body")} instead.
 
-     @return {@code body} element.
+     @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} element if the document
+     had no contents, or the outermost {@code <frameset> element} for frameset documents.
      */
     public Element body() {
         Element html = htmlEl();
         for (Element el: html.childElementsList()) {
-            if (el.normalName().equals("body"))
+            if ("body".equals(el.normalName()) || "frameset".equals(el.normalName()))
                 return el;
         }
         return html.appendElement("body");

@@ -21,7 +21,8 @@ jsoup changelog
   * Improvement: added Element#id(String) ID attribute setter.
 
   * Improvement: in Document, #body() and #head() accessors will now automatically create those elements, if they were
-    missing (e.g. if the Document was not parsed from HTML).
+    missing (e.g. if the Document was not parsed from HTML). Additionally, the #body() method returns the frameset
+    element (instead of null) for frameset documents.
 
   * Improvement: when cleaning a document, the output settings of the original document are cloned into the cleaned
     document.
