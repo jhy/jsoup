@@ -750,12 +750,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 '}';
     }
 
-    private static final String[] dataTags = {"script", "style"};
-    protected boolean isContentForTagData(String normalName) {
-        for (String tag : dataTags) {
-            if (tag.equals(normalName))
-                return true;
-        }
-        return false;
+    protected boolean isContentForTagData(final String normalName) {
+        return (normalName.equals("script") || normalName.equals("style"));
     }
 }
