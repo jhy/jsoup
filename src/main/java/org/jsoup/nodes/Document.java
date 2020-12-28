@@ -223,21 +223,6 @@ public class Document extends Element {
         }
     }
 
-    // fast method to get first by tag name, used for html, head, body finders - no recursive descent
-    private @Nullable Element findFirstElementByTagName(String tag) {
-        Element root = child(0); // the HTML element - Document sits above
-        if (root.nodeName().equals(tag))
-            return this;
-        else {
-            int size = root.childNodeSize();
-            for (int i = 0; i < size; i++) {
-                if (root.childNode(i).nodeName().equals(tag))
-                    return (Element) root.childNode(i);
-            }
-        }
-        return null; // todo - make this blow up in most cases - how to handle frameset (no body)?)
-    }
-
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
