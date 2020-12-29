@@ -109,7 +109,7 @@ abstract class TreeBuilder {
     }
 
     /**
-     * If the parser is tracking errors, and an error at the current position.
+     * If the parser is tracking errors, add an error at the current position.
      * @param msg error message
      */
     protected void error(String msg) {
