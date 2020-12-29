@@ -294,8 +294,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
+     * Update (rename) the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
      * {@code doc.select("i").tagName("em");}
+     *
      * @param tagName the new tag name
      * @return this, for chaining
      * @see Element#tagName(String)

@@ -156,11 +156,12 @@ public class Element extends Node {
     }
 
     /**
-     * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
      * {@code el.tagName("div");}.
      *
      * @param tagName new tag name for this element
      * @return this element, for chaining
+     * @see Elements#tagName(String) 
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
