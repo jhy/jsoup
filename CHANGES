@@ -62,7 +62,7 @@ jsoup changelog
     treated as a DataNode, despite calling the text() method.
     <https://github.com/jhy/jsoup/issues/1419>
 
-  * Bugfix: when wrapping HTML around an existing element with Element#wrap(String), will no take the content as
+  * Bugfix: when wrapping HTML around an existing element with Element#wrap(String), will now take the content as
     provided and ignore normal HTML tree-building rules. This allows for e.g. a div tag to be placed inside of p tags.
 
   * Bugfix: the Elements#forms() method should return the selected immediate elements that are Forms, not children.
