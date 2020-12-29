@@ -56,7 +56,7 @@ jsoup changelog
   * Bugfix: when wrapping an element with HTML that included multiple sibling elements, those siblings were incorrectly
     added as children of the wrapper instead of siblings.
 
-  * Bugfix: when setting the content of a script or style tag via the Element#html(String) method, the content is
+  * Bugfix: when setting the content of a script or style tag via the Element#html(String) method, the content is now
     treated as a DataNode, not a TextNode. This means that characters like '<' will no longer be incorrectly escaped.
     As a related ergonomic improvement, the same behavior applies for Element#text(String) (i.e. the content will be
     treated as a DataNode, despite calling the text() method.

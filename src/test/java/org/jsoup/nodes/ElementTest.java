@@ -1779,4 +1779,21 @@ public class ElementTest {
         assertEquals(p.outerHtml(), p.toString());
         assertEquals(i.outerHtml(), i.toString());
     }
+
+    @Test public void styleHtmlRoundTrips() {
+        String styleContents = "foo < bar > qux {color:white;}";
+        String html = "<head><style>" + styleContents + "</style></head>";
+        Document doc = Jsoup.parse(html);
+
+        Element head = doc.head();
+        Element style = head.selectFirst("style");
+        assertNotNull(style);
+        assertEquals(styleContents, style.html());
+        style.html(styleContents);
+        assertEquals(styleContents, style.html());
+        assertEquals("", style.text());
+        style.text(styleContents); // pushes the HTML, not the Text
+        assertEquals("", style.text());
+        assertEquals(styleContents, style.html());
+    }
 }
