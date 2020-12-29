@@ -19,18 +19,23 @@ public class NodeTraversor {
      */
     public static void traverse(NodeVisitor visitor, Node root) {
         Node node = root;
+        Node parent; // remember parent to find nodes that get replaced in .head
         int depth = 0;
         
         while (node != null) {
-            visitor.head(node, depth);
-            if (node.childNodeSize() > 0) {
+            parent = node.parentNode();
+            visitor.head(node, depth); // visit current node
+            if (parent != null && !node.hasParent()) // must have been replaced; find replacement
+                node = parent.childNode(node.siblingIndex()); // replace ditches parent but keeps sibling index
+
+            if (node.childNodeSize() > 0) { // descend
                 node = node.childNode(0);
                 depth++;
             } else {
                 while (true) {
                     assert node != null; // as depth > 0, will have parent
                     if (!(node.nextSibling() == null && depth > 0)) break;
-                    visitor.tail(node, depth);
+                    visitor.tail(node, depth); // when no more siblings, ascend
                     node = node.parentNode();
                     depth--;
                 }

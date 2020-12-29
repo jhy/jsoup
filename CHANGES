@@ -34,6 +34,9 @@ jsoup changelog
   * Improvement: much better performance in Node#clone() for large and deeply nested documents. Complexity was O(n^2) or
     worse, now O(n).
 
+  * Improvement: during traversal using the NodeTraversor, nodes may now be replaced with Node#replaceWith(Node).
+    <https://github.com/jhy/jsoup/issues/1289>
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.
