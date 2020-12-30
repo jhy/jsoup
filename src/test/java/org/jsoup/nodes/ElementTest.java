@@ -1958,4 +1958,51 @@ public class ElementTest {
         assertEquals("<div></div>\n<div>\n <p>Four</p>\n</div>\n<p>One</p>\n<p>Two</p>\n<p>Three</p>",
             doc.body().html());
     }
+
+    @Test
+    public void accessorsDoNotVivifyAttributes() throws NoSuchFieldException, IllegalAccessException {
+        // internally, we don't want to create empty Attribute objects unless actually used for something
+        Document doc = Jsoup.parse("<div><p><a href=foo>One</a>");
+        Element div = doc.selectFirst("div");
+        Element p = doc.selectFirst("p");
+        Element a = doc.selectFirst("a");
+
+        // should not create attributes
+        assertEquals("", div.attr("href"));
+        p.removeAttr("href");
+
+        Elements hrefs = doc.select("[href]");
+        assertEquals(1, hrefs.size());
+
+        assertFalse(div.hasAttributes());
+        assertFalse(p.hasAttributes());
+        assertTrue(a.hasAttributes());
+    }
+
+    @Test
+    public void childNodesAccessorDoesNotVivify() {
+        Document doc = Jsoup.parse("<p></p>");
+        Element p = doc.selectFirst("p");
+        assertFalse(p.hasChildNodes());
+
+        assertEquals(0, p.childNodeSize());
+        assertEquals(0, p.childrenSize());
+
+        List<Node> childNodes = p.childNodes();
+        assertEquals(0, childNodes.size());
+
+        Elements children = p.children();
+        assertEquals(0, children.size());
+
+        assertFalse(p.hasChildNodes());
+    }
+
+    @Test void emptyChildrenElementsIsModifiable() {
+        // using unmodifiable empty in childElementList as short circuit, but people may be modifying Elements.
+        Element p = new Element("p");
+        Elements els = p.children();
+        assertEquals(0, els.size());
+        els.add(new Element("a"));
+        assertEquals(1, els.size());
+    }
 }

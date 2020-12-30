@@ -21,6 +21,7 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
+    static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
     @Nullable Node parentNode; // Nodes don't always have parents
     int siblingIndex;
@@ -105,6 +106,8 @@ public abstract class Node implements Cloneable {
      */
     public boolean hasAttr(String attributeKey) {
         Validate.notNull(attributeKey);
+        if (!hasAttributes())
+            return false;
 
         if (attributeKey.startsWith("abs:")) {
             String key = attributeKey.substring("abs:".length());
@@ -121,7 +124,8 @@ public abstract class Node implements Cloneable {
      */
     public Node removeAttr(String attributeKey) {
         Validate.notNull(attributeKey);
-        attributes().removeIgnoreCase(attributeKey);
+        if (hasAttributes())
+            attributes().removeIgnoreCase(attributeKey);
         return this;
     }
 
@@ -130,10 +134,12 @@ public abstract class Node implements Cloneable {
      * @return this, for chaining
      */
     public Node clearAttributes() {
-        Iterator<Attribute> it = attributes().iterator();
-        while (it.hasNext()) {
-            it.next();
-            it.remove();
+        if (hasAttributes()) {
+            Iterator<Attribute> it = attributes().iterator();
+            while (it.hasNext()) {
+                it.next();
+                it.remove();
+            }
         }
         return this;
     }
@@ -209,6 +215,9 @@ public abstract class Node implements Cloneable {
      @return list of children. If no children, returns an empty list.
      */
     public List<Node> childNodes() {
+        if (childNodeSize() == 0)
+            return EmptyNodes;
+
         List<Node> children = ensureChildNodes();
         List<Node> rewrap = new ArrayList<>(children.size()); // wrapped so that looping and moving will not throw a CME as the source changes
         rewrap.addAll(children);

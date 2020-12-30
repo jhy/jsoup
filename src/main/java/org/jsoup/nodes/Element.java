@@ -41,9 +41,9 @@ import static org.jsoup.internal.Normalizer.normalize;
  */
 @NonnullByDefault
 public class Element extends Node {
-    private static final List<Node> EMPTY_NODES = Collections.emptyList();
-    private static final Pattern classSplit = Pattern.compile("\\s+");
-    private static final String baseUriKey = Attributes.internalKey("baseUri");
+    private static final List<Element> EmptyChildren = Collections.emptyList();
+    private static final Pattern ClassSplit = Pattern.compile("\\s+");
+    private static final String BaseUriKey = Attributes.internalKey("baseUri");
     private Tag tag;
     private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
@@ -68,7 +68,7 @@ public class Element extends Node {
      */
     public Element(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         Validate.notNull(tag);
-        childNodes = EMPTY_NODES;
+        childNodes = EmptyNodes;
         this.attributes = attributes;
         this.tag = tag;
         if (baseUri != null)
@@ -86,8 +86,15 @@ public class Element extends Node {
         this(tag, baseUri, null);
     }
 
+    /**
+     Internal test to check if a nodelist object has been created.
+     */
+    protected boolean hasChildNodes() {
+        return childNodes != EmptyNodes;
+    }
+
     protected List<Node> ensureChildNodes() {
-        if (childNodes == EMPTY_NODES) {
+        if (childNodes == EmptyNodes) {
             childNodes = new NodeList(this, 4);
         }
         return childNodes;
@@ -107,7 +114,7 @@ public class Element extends Node {
 
     @Override
     public String baseUri() {
-        return searchUpForAttribute(this, baseUriKey);
+        return searchUpForAttribute(this, BaseUriKey);
     }
 
     private static String searchUpForAttribute(final Element start, final String key) {
@@ -122,7 +129,7 @@ public class Element extends Node {
 
     @Override
     protected void doSetBaseUri(String baseUri) {
-        attributes().put(baseUriKey, baseUri);
+        attributes().put(BaseUriKey, baseUri);
     }
 
     @Override
@@ -322,6 +329,9 @@ public class Element extends Node {
      * @return a list of child elements
      */
     List<Element> childElementsList() {
+        if (childNodeSize() == 0)
+            return EmptyChildren; // short circuit creating empty
+
         List<Element> children;
         if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
             final int size = childNodes.size();
@@ -1387,7 +1397,7 @@ public class Element extends Node {
      * @return set of classnames, empty if no class attribute
      */
     public Set<String> classNames() {
-    	String[] names = classSplit.split(className());
+    	String[] names = ClassSplit.split(className());
     	Set<String> classNames = new LinkedHashSet<>(Arrays.asList(names));
     	classNames.remove(""); // if classNames() was empty, would include an empty class
 
