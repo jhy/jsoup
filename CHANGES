@@ -37,6 +37,15 @@ jsoup changelog
   * Improvement: during traversal using the NodeTraversor, nodes may now be replaced with Node#replaceWith(Node).
     <https://github.com/jhy/jsoup/issues/1289>
 
+  * Improvement: added Element#insertChildren and Elment#prependChildren, as convenience methods in addition to
+    Element#insertChildren(index, children), for bulk moving nodes.
+
+  * Improvement: although Node#childNodes() returns an UnmodifiableList as a view into its children, it was still
+    directly backed by the internal child list. That made some uses, such as looping and moving those children to
+    another element, throw a ConcurrentModificationException. Now this method returns its own list so that they are
+    separated and changes to the parent's contents will not impact the children view.
+    <https://github.com/jhy/jsoup/issues/1431>
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.

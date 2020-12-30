@@ -209,7 +209,10 @@ public abstract class Node implements Cloneable {
      @return list of children. If no children, returns an empty list.
      */
     public List<Node> childNodes() {
-        return Collections.unmodifiableList(ensureChildNodes());
+        List<Node> children = ensureChildNodes();
+        List<Node> rewrap = new ArrayList<>(children.size()); // wrapped so that looping and moving will not throw a CME as the source changes
+        rewrap.addAll(children);
+        return Collections.unmodifiableList(rewrap);
     }
 
     /**
@@ -487,7 +490,7 @@ public abstract class Node implements Cloneable {
         final Node firstParent = children[0].parent();
         if (firstParent != null && firstParent.childNodeSize() == children.length) {
             boolean sameList = true;
-            final List<Node> firstParentNodes = firstParent.childNodes();
+            final List<Node> firstParentNodes = firstParent.ensureChildNodes();
             // identity check contents to see if same
             int i = children.length;
             while (i-- > 0) {

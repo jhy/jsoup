@@ -354,7 +354,7 @@ public class Document extends Element {
                 }
                 select("meta[name=charset]").remove(); // Remove obsolete elements
             } else if (syntax == OutputSettings.Syntax.xml) {
-                Node node = childNodes().get(0);
+                Node node = ensureChildNodes().get(0);
                 if (node instanceof XmlDeclaration) {
                     XmlDeclaration decl = (XmlDeclaration) node;
                     if (decl.name().equals("xml")) {

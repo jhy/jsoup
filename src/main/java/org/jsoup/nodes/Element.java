@@ -498,10 +498,12 @@ public class Element extends Node {
     }
     
     /**
-     * Add a node child node to this element.
+     * Insert a node to the end of this Element's children. The incoming node will be re-parented.
      * 
      * @param child node to add.
-     * @return this element, so that you can add more child nodes or elements.
+     * @return this Element, for chaining
+     * @see #prependChild(Node)
+     * @see #insertChildren(int, Collection)
      */
     public Element appendChild(Node child) {
         Validate.notNull(child);
@@ -511,6 +513,18 @@ public class Element extends Node {
         ensureChildNodes();
         childNodes.add(child);
         child.setSiblingIndex(childNodes.size() - 1);
+        return this;
+    }
+
+    /**
+     Insert the given nodes to the end of this Element's children.
+
+     @param children nodes to add
+     @return this Element, for chaining
+     @see #insertChildren(int, Collection)
+     */
+    public Element appendChildren(Collection<? extends Node> children) {
+        insertChildren(-1, children);
         return this;
     }
 
@@ -536,6 +550,18 @@ public class Element extends Node {
         Validate.notNull(child);
         
         addChildren(0, child);
+        return this;
+    }
+
+    /**
+     Insert the given nodes to the start of this Element's children.
+
+     @param children nodes to add
+     @return this Element, for chaining
+     @see #insertChildren(int, Collection)
+     */
+    public Element prependChildren(Collection<? extends Node> children) {
+        insertChildren(0, children);
         return this;
     }
 
