@@ -44,8 +44,8 @@ public abstract class Node implements Cloneable {
     protected abstract boolean hasAttributes();
 
     /**
-     Checks if this node has a parent. Nodes won't have parents if e.g. they are newly created and not added as a child
-     to an exsiting node, or if they are a {@link #shallowClone()}. In such cases, {@link #parent()} will return {@code null}.
+     Checks if this node has a parent. Nodes won't have parents if (e.g.) they are newly created and not added as a child
+     to an existing node, or if they are a {@link #shallowClone()}. In such cases, {@link #parent()} will return {@code null}.
      @return if this node has a parent.
      */
     public boolean hasParent() {
@@ -145,8 +145,11 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the base URI that applies to this node. Empty string if not defined. Used to make relative links absolute to.
+     Get the base URI that applies to this node. Will return an empty string if not defined. Used to make relative links
+     absolute.
+
      @return base URI
+     @see #absUrl
      */
     public abstract String baseUri();
 
@@ -166,7 +169,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get an absolute URL from a URL attribute that may be relative (i.e. an <code>&lt;a href&gt;</code> or
+     * Get an absolute URL from a URL attribute that may be relative (such as an <code>&lt;a href&gt;</code> or
      * <code>&lt;img src&gt;</code>).
      * <p>
      * E.g.: <code>String absUrl = linkEl.absUrl("href");</code>
@@ -301,7 +304,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified HTML into the DOM before this node (i.e. as a preceding sibling).
+     * Insert the specified HTML into the DOM before this node (as a preceding sibling).
      * @param html HTML to add before this node
      * @return this node, for chaining
      * @see #after(String)
@@ -312,7 +315,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
+     * Insert the specified node into the DOM before this node (as a preceding sibling).
      * @param node to add before this node
      * @return this node, for chaining
      * @see #after(Node)
@@ -326,7 +329,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified HTML into the DOM after this node (i.e. as a following sibling).
+     * Insert the specified HTML into the DOM after this node (as a following sibling).
      * @param html HTML to add after this node
      * @return this node, for chaining
      * @see #before(String)
@@ -337,7 +340,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+     * Insert the specified node into the DOM after this node (as a following sibling).
      * @param node to add after this node
      * @return this node, for chaining
      * @see #before(Node)
@@ -588,7 +591,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get the list index of this node in its node sibling list. I.e. if this is the first node
+     * Get the list index of this node in its node sibling list. E.g. if this is the first node
      * sibling, returns 0.
      * @return position in node sibling list
      * @see org.jsoup.nodes.Element#elementSiblingIndex()
