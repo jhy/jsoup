@@ -40,7 +40,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.8.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -52,20 +52,43 @@
           <!-- this means incremental = true... -->
           <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
+        <executions>
+          <execution>
+            <id>compile-java-8</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>compile-java-9</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>9</release>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+              </compileSourceRoots>
+              <multiReleaseOutput>true</multiReleaseOutput>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.16</version>
+        <version>1.19</version>
         <executions>
           <execution>
-            <id>animal-sniffer</id>
+            <id>compile-java-8</id>
             <phase>compile</phase>
             <goals>
               <goal>check</goal>
             </goals>
             <configuration>
+              <checkTestClasses>false</checkTestClasses><!-- build using JDK9, but run on 8; ok for tests to use later features -->
               <signature>
                 <groupId>org.codehaus.mojo.signature</groupId>
                 <artifactId>java18</artifactId>
@@ -83,7 +106,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.0</version>
         <configuration>
             <doclint>none</doclint>
             <source>7</source>
@@ -101,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.2.1</version>
         <configuration>
           <excludes>
             <exclude>org/jsoup/examples/**</exclude>
@@ -120,11 +143,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
+        <version>3.2.0</version>
         <configuration>
           <archive>
             <manifestEntries>
-              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
+              <Multi-Release>true</Multi-Release>
             </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
@@ -136,7 +159,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.4</version>
+        <version>5.1.1</version>
         <executions>
           <execution>
             <id>bundle-manifest</id>
@@ -156,7 +179,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.2.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
@@ -329,6 +352,13 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
       <version>3.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-dependency-plugin</artifactId>
+      <version>3.1.2</version>
       <scope>compile</scope>
     </dependency>
 
