@@ -15,14 +15,14 @@ import java.util.Stack;
 public final class StringUtil {
     // memoised padding up to 21
     static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
-        "         ", "          ", "           ", "            ", "             ", "              ", "               ",
-        "                ", "                 ", "                  ", "                   ", "                    "};
+            "         ", "          ", "           ", "            ", "             ", "              ", "               ",
+            "                ", "                 ", "                  ", "                   ", "                    "};
     private static final int maxPaddingWidth = 30; // so very deeply nested nodes don't get insane padding amounts
 
     /**
      * Join a collection of strings by a separator
      * @param strings collection of string objects
-     * @param sep string to place between strings
+     * @param sep     string to place between strings
      * @return joined string
      */
     public static String join(Collection strings, String sep) {
@@ -32,7 +32,7 @@ public final class StringUtil {
     /**
      * Join a collection of strings by a separator
      * @param strings iterator of string objects
-     * @param sep string to place between strings
+     * @param sep     string to place between strings
      * @return joined string
      */
     public static String join(Iterator strings, String sep) {
@@ -54,7 +54,7 @@ public final class StringUtil {
     /**
      * Join an array of strings by a separator
      * @param strings collection of string objects
-     * @param sep string to place between strings
+     * @param sep     string to place between strings
      * @return joined string
      */
     public static String join(String[] strings, String sep) {
@@ -119,7 +119,7 @@ public final class StringUtil {
      * @return true if code point is whitespace, false otherwise
      * @see #isActuallyWhitespace(int)
      */
-    public static boolean isWhitespace(int c){
+    public static boolean isWhitespace(int c) {
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
 
@@ -128,7 +128,7 @@ public final class StringUtil {
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
-    public static boolean isActuallyWhitespace(int c){
+    public static boolean isActuallyWhitespace(int c) {
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == 160;
         // 160 is &nbsp; (non-breaking space). Not in the spec but expected.
     }
@@ -152,8 +152,8 @@ public final class StringUtil {
 
     /**
      * After normalizing the whitespace within a string, appends it to a string builder.
-     * @param accum builder to append to
-     * @param string string to normalize whitespace within
+     * @param accum        builder to append to
+     * @param string       string to normalize whitespace within
      * @param stripLeading set to true if you wish to remove any leading whitespace
      */
     public static void appendNormalisedWhitespace(StringBuilder accum, String string, boolean stripLeading) {
@@ -162,15 +162,14 @@ public final class StringUtil {
 
         int len = string.length();
         int c;
-        for (int i = 0; i < len; i+= Character.charCount(c)) {
+        for (int i = 0; i < len; i += Character.charCount(c)) {
             c = string.codePointAt(i);
             if (isActuallyWhitespace(c)) {
                 if ((stripLeading && !reachedNonWhite) || lastWasWhite)
                     continue;
                 accum.append(' ');
                 lastWasWhite = true;
-            }
-            else if (!isInvisibleChar(c)) {
+            } else if (!isInvisibleChar(c)) {
                 accum.appendCodePoint(c);
                 lastWasWhite = false;
                 reachedNonWhite = true;
@@ -178,11 +177,17 @@ public final class StringUtil {
         }
     }
 
+    public static void separateBeforeAppending(StringBuilder accum) {
+        if (accum.length() > 0 && accum.charAt(accum.length() - 1) != ' ') {
+            accum.append(' ');
+        }
+    }
+
     public static boolean in(final String needle, final String... haystack) {
         final int len = haystack.length;
         for (int i = 0; i < len; i++) {
             if (haystack[i].equals(needle))
-            return true;
+                return true;
         }
         return false;
     }
@@ -193,7 +198,7 @@ public final class StringUtil {
 
     /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
-     * @param base the existing absolute base URL
+     * @param base   the existing absolute base URL
      * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
      * @return the resolved absolute URL
      * @throws MalformedURLException if an error occurred generating the URL
@@ -212,7 +217,7 @@ public final class StringUtil {
     /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
      * @param baseUrl the existing absolute base URL
-     * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
+     * @param relUrl  the relative URL to resolve. (If it's already absolute, it will be returned)
      * @return an absolute URL if one was able to be generated, or the empty string if not
      */
     public static String resolve(final String baseUrl, final String relUrl) {
@@ -237,7 +242,6 @@ public final class StringUtil {
             return new Stack<>();
         }
     };
-
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
@@ -248,8 +252,8 @@ public final class StringUtil {
     public static StringBuilder borrowBuilder() {
         Stack<StringBuilder> builders = threadLocalBuilders.get();
         return builders.empty() ?
-            new StringBuilder(MaxCachedBuilderSize) :
-            builders.pop();
+                new StringBuilder(MaxCachedBuilderSize) :
+                builders.pop();
     }
 
     /**
@@ -275,7 +279,6 @@ public final class StringUtil {
         }
         return string;
     }
-
     private static final int MaxCachedBuilderSize = 8 * 1024;
     private static final int MaxIdleBuilders = 8;
 }

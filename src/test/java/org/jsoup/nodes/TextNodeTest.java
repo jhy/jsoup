@@ -4,17 +4,31 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.internal.StringUtil;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**
- Test TextNodes
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * Test TextNodes
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class TextNodeTest {
-    @Test public void testBlank() {
+    private static Stream<Arguments> tagsWithoutSpace() {
+        return Stream.of(
+                arguments("<div>One<p>Two<p>Three", "One Two Three"),
+                arguments("<div>The<span>rock</span></div>", "The rock")
+        );
+    }
+
+    @Test
+    public void testBlank() {
         TextNode one = new TextNode("");
         TextNode two = new TextNode("     ");
         TextNode three = new TextNode("  \n\n   ");
@@ -28,7 +42,8 @@ public class TextNodeTest {
         assertFalse(five.isBlank());
     }
 
-    @Test public void testTextBean() {
+    @Test
+    public void testTextBean() {
         Document doc = Jsoup.parse("<p>One <span>two &amp;</span> three &amp;</p>");
         Element p = doc.select("p").first();
 
@@ -48,7 +63,8 @@ public class TextNodeTest {
         assertEquals("One <span>two &amp;</span>kablam &amp;", TextUtil.stripNewlines(p.html()));
     }
 
-    @Test public void testSplitText() {
+    @Test
+    public void testSplitText() {
         Document doc = Jsoup.parse("<div>Hello there</div>");
         Element div = doc.select("div").first();
         TextNode tn = (TextNode) div.childNode(0);
@@ -60,7 +76,8 @@ public class TextNodeTest {
         assertSame(tn.parent(), tail.parent());
     }
 
-    @Test public void testSplitAnEmbolden() {
+    @Test
+    public void testSplitAnEmbolden() {
         Document doc = Jsoup.parse("<div>Hello there</div>");
         Element div = doc.select("div").first();
         TextNode tn = (TextNode) div.childNode(0);
@@ -70,13 +87,15 @@ public class TextNodeTest {
         assertEquals("Hello <b>there</b>", TextUtil.stripNewlines(div.html())); // not great that we get \n<b>there there... must correct
     }
 
-    @Test public void testWithSupplementaryCharacter(){
+    @Test
+    public void testWithSupplementaryCharacter() {
         Document doc = Jsoup.parse(new String(Character.toChars(135361)));
         TextNode t = doc.body().textNodes().get(0);
         assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
     }
 
-    @Test public void testLeadNodesHaveNoChildren() {
+    @Test
+    public void testLeadNodesHaveNoChildren() {
         Document doc = Jsoup.parse("<div>Hello there</div>");
         Element div = doc.select("div").first();
         TextNode tn = (TextNode) div.childNode(0);
@@ -84,7 +103,8 @@ public class TextNodeTest {
         assertEquals(0, nodes.size());
     }
 
-    @Test public void testSpaceNormalise() {
+    @Test
+    public void testSpaceNormalise() {
         // https://github.com/jhy/jsoup/issues/1309
         String whole = "Two  spaces";
         String norm = "Two spaces";
@@ -156,5 +176,20 @@ public class TextNodeTest {
             }
         }
         assertTrue(foundFirst);
+    }
+
+    @ParameterizedTest
+    @MethodSource("tagsWithoutSpace")
+    public void shouldAddSpaceBetweenNewWords(String in, String out) {
+        // https://github.com/jhy/jsoup/issues/1448"
+
+        //Given
+        Document doc = Jsoup.parse(in);
+
+        //When
+        String res = doc.text();
+
+        //Then
+        assertEquals(res, out);
     }
 }

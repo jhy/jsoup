@@ -1167,6 +1167,7 @@ public class Element extends Node {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
                     appendNormalisedText(accum, textNode);
+
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
                     if (accum.length() > 0 &&
@@ -1244,7 +1245,7 @@ public class Element extends Node {
 
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
-
+        StringUtil.separateBeforeAppending(accum);
         if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
