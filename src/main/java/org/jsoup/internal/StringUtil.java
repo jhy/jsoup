@@ -192,6 +192,22 @@ public final class StringUtil {
     }
 
     /**
+     Tests that a String contains only ASCII characters.
+     @param string scanned string
+     @return true if all characters are in range 0 - 127
+     */
+    public static boolean isAscii(String string) {
+        Validate.notNull(string);
+        for (int i = 0; i < string.length(); i++) {
+            int c = string.charAt(i);
+            if (c > 127) { // ascii range
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
      * @param base the existing absolute base URL
      * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)

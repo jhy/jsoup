@@ -494,4 +494,12 @@ public class UrlConnectTest {
         assertEquals("石嘴山市环境保护局", doc.title());
     }
 
+    @Test public void canRequestIdn() throws IOException {
+        String url = "https://xn--rksmrgs-5wao1o.josefsson.org/";
+        Document doc = Jsoup.connect(url).get();
+
+        assertEquals("https://xn--rksmrgs-5wao1o.josefsson.org/", doc.location());
+        assertTrue(doc.title().contains("Räksmörgås.josefßon.org"));
+    }
+
 }

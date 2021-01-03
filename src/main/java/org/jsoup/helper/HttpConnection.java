@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.IDN;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -99,6 +100,7 @@ public class HttpConnection implements Connection {
 	}
 
     static URL encodeUrl(URL u) {
+	    u = punyUrl(u);
         try {
             //  odd way to encode urls, but it works!
             String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
@@ -109,6 +111,24 @@ public class HttpConnection implements Connection {
             // give up and return the original input
             return u;
         }
+    }
+
+    /**
+     Convert an International URL to a Punycode URL.
+     @param url input URL that may include an international hostname
+     @return a punycode URL if required, or the original URL
+     */
+    private static URL punyUrl(URL url) {
+        if (!StringUtil.isAscii(url.getHost())) {
+            try {
+                String puny = IDN.toASCII(url.getHost());
+                url = new URL(url.getProtocol(), puny, url.getPort(), url.getFile()); // file will include ref, query if any
+            } catch (MalformedURLException e) {
+                // if passed a valid URL initially, cannot happen
+                throw new IllegalArgumentException(e);
+            }
+        }
+        return url;
     }
 
     private static String encodeMimeName(String val) {
@@ -339,7 +359,7 @@ public class HttpConnection implements Connection {
 
         public T url(URL url) {
             Validate.notNull(url, "URL must not be null");
-            this.url = url;
+            this.url = punyUrl(url); // if calling url(url) directly, does not go through encodeUrl, so we punycode it explicitly. todo - should we encode here as well?
             return (T) this;
         }
 

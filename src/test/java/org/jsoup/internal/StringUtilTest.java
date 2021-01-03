@@ -100,4 +100,14 @@ public class StringUtilTest {
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "./two.c"));
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "two.c"));
     }
+
+    @Test
+    void isAscii() {
+        assertTrue(StringUtil.isAscii(""));
+        assertTrue(StringUtil.isAscii("example.com"));
+        assertTrue(StringUtil.isAscii("One Two"));
+        assertFalse(StringUtil.isAscii("🧔"));
+        assertFalse(StringUtil.isAscii("测试"));
+        assertFalse(StringUtil.isAscii("测试.com"));
+    }
 }

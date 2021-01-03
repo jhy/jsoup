@@ -1,8 +1,11 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -253,5 +256,17 @@ public class HttpConnectionTest {
     @Test public void handlesHeaderEncodingOnRequest() {
         Connection.Request req = new HttpConnection.Request();
         req.addHeader("xxx", "é");
+    }
+
+    @Test public void supportsInternationalDomainNames() throws MalformedURLException {
+        String idn = "https://www.测试.测试/foo.html?bar";
+        String puny = "https://www.xn--0zwm56d.xn--0zwm56d/foo.html?bar";
+
+        Connection con = Jsoup.connect(idn);
+        assertEquals(puny, con.request().url().toExternalForm());
+
+        HttpConnection.Request req = new HttpConnection.Request();
+        req.url(new URL(idn));
+        assertEquals(puny, req.url().toExternalForm());
     }
 }

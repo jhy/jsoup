@@ -18,6 +18,9 @@ jsoup changelog
     jsoup 1.15.1 release.
     <https://github.com/jhy/jsoup/pull/1464>
 
+  * Improvement: added support for Internationalized Domain Names (IDNs) in Jsoup.Connect.
+    <https://github.com/jhy/jsoup/issues/1300>
+
   * Improvement: added support for loading and parsing gzipped HTML files in Jsoup.parse(File in, charset, baseUri).
 
   * Improvement: reduced thread contention in HttpConnection and Document.

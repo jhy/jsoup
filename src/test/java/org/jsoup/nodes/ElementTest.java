@@ -1179,7 +1179,7 @@ public class ElementTest {
 
     @Test
     public void testRelativeUrls() {
-        String html = "<body><a href='./one.html'>One</a> <a href='two.html'>two</a> <a href='../three.html'>Three</a> <a href='//example2.com/four/'>Four</a> <a href='https://example2.com/five/'>Five</a>";
+        String html = "<body><a href='./one.html'>One</a> <a href='two.html'>two</a> <a href='../three.html'>Three</a> <a href='//example2.com/four/'>Four</a> <a href='https://example2.com/five/'>Five</a> <a>Six</a> <a href=''>Seven</a>";
         Document doc = Jsoup.parse(html, "http://example.com/bar/");
         Elements els = doc.select("a");
 
@@ -1188,6 +1188,23 @@ public class ElementTest {
         assertEquals("http://example.com/three.html", els.get(2).absUrl("href"));
         assertEquals("http://example2.com/four/", els.get(3).absUrl("href"));
         assertEquals("https://example2.com/five/", els.get(4).absUrl("href"));
+        assertEquals("", els.get(5).absUrl("href"));
+        assertEquals("http://example.com/bar/", els.get(6).absUrl("href"));
+    }
+
+    @Test
+    public void testRelativeIdnUrls() {
+        String idn = "https://www.测试.测试/";
+        String idnFoo = idn + "foo.html?bar";
+
+        Document doc = Jsoup.parse("<a href=''>One</a><a href='/bar.html?qux'>Two</a>", idnFoo);
+        Elements els = doc.select("a");
+        Element one = els.get(0);
+        Element two = els.get(1);
+        String hrefOne = one.absUrl("href");
+        String hrefTwo = two.absUrl("href");
+        assertEquals(idnFoo, hrefOne);
+        assertEquals("https://www.测试.测试/bar.html?qux", hrefTwo);
     }
 
     @Test
