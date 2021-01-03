@@ -495,7 +495,7 @@ public class UrlConnectTest {
     }
 
     @Test public void canRequestIdn() throws IOException {
-        String url = "https://xn--rksmrgs-5wao1o.josefsson.org/";
+        String url = "https://räksmörgås.josefsson.org/";
         Document doc = Jsoup.connect(url).get();
 
         assertEquals("https://xn--rksmrgs-5wao1o.josefsson.org/", doc.location());
