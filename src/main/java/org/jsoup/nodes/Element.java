@@ -772,8 +772,18 @@ public class Element extends Node {
      * @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        if (id().length() > 0)
-            return "#" + id();
+        if (id().length() > 0) {
+            // prefer to return the ID - but check that it's actually unique first!
+            String idSel = "#" + id();
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Elements els = doc.select(idSel);
+                if (els.size() == 1 && els.get(0) == this) // otherwise, continue to the nth-child impl
+                    return idSel;
+            } else {
+                return idSel; // no ownerdoc, return the ID selector
+            }
+        }
 
         // Translate HTML namespace ns:tag to CSS namespace syntax ns|tag
         String tagName = tagName().replace(':', '|');

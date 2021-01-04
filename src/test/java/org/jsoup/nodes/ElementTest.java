@@ -1092,6 +1092,23 @@ public class ElementTest {
     }
 
     @Test
+    public void testCssPathDuplicateIds() {
+        // https://github.com/jhy/jsoup/issues/1147 - multiple elements with same ID, use the non-ID form
+        Document doc = Jsoup.parse("<article><div id=dupe>A</div><div id=dupe>B</div><div id=dupe class=c1>");
+        Element divA = doc.select("div").get(0);
+        Element divB = doc.select("div").get(1);
+        Element divC = doc.select("div").get(2);
+
+        assertEquals(divA.cssSelector(), "html > body > article > div:nth-child(1)");
+        assertEquals(divB.cssSelector(), "html > body > article > div:nth-child(2)");
+        assertEquals(divC.cssSelector(), "html > body > article > div.c1");
+
+        assertSame(divA, doc.select(divA.cssSelector()).first());
+        assertSame(divB, doc.select(divB.cssSelector()).first());
+        assertSame(divC, doc.select(divC.cssSelector()).first());
+    }
+
+    @Test
     public void testClassNames() {
         Document doc = Jsoup.parse("<div class=\"c1 c2\">C</div>");
         Element div = doc.select("div").get(0);

@@ -85,6 +85,10 @@ jsoup changelog
   * Bugfix: the Elements#forms() method should return the selected immediate elements that are Forms, not children.
     <https://github.com/jhy/jsoup/pull/1403>
 
+  * Bugfix: when creating a selector for an element with Element#cssSelector, if the element used a non-unique ID
+    attribute, the returned selector may not match the desired element.
+    <https://github.com/jhy/jsoup/issues/1085>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.
