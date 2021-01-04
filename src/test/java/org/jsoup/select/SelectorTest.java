@@ -979,4 +979,20 @@ public class SelectorTest {
         assertEquals(outer, span);
         assertNotEquals(outer, inner);
     }
+
+    @Test
+    public void selectFirstLevelChildrenOnly() {
+        // testcase for https://github.com/jhy/jsoup/issues/984
+        String html = "<div><span>One <span>Two</span></span> <span>Three <span>Four</span></span>";
+        Document doc = Jsoup.parse(html);
+
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+
+        // want to select One and Three only - the first level children
+        Elements spans = div.select(":root > span");
+        assertEquals(2, spans.size());
+        assertEquals("One Two", spans.get(0).text());
+        assertEquals("Three Four", spans.get(1).text());
+    }
 }
