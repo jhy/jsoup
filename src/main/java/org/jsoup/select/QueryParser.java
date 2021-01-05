@@ -105,27 +105,33 @@ public class QueryParser {
         evals.clear();
 
         // for most combinators: change the current eval into an AND of the current eval and the new eval
-        if (combinator == '>')
-            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediateParent(currentEval), newEval);
-        else if (combinator == ' ')
-            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
-        else if (combinator == '+')
-            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
-        else if (combinator == '~')
-            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
-        else if (combinator == ',') { // group or.
-            CombiningEvaluator.Or or;
-            if (currentEval instanceof CombiningEvaluator.Or) {
-                or = (CombiningEvaluator.Or) currentEval;
-            } else {
-                or = new CombiningEvaluator.Or();
-                or.add(currentEval);
-            }
-            or.add(newEval);
-            currentEval = or;
+        switch (combinator) {
+            case '>':
+                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediateParent(currentEval), newEval);
+                break;
+            case ' ':
+                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
+                break;
+            case '+':
+                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
+                break;
+            case '~':
+                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
+                break;
+            case ',':
+                CombiningEvaluator.Or or;
+                if (currentEval instanceof CombiningEvaluator.Or) {
+                    or = (CombiningEvaluator.Or) currentEval;
+                } else {
+                    or = new CombiningEvaluator.Or();
+                    or.add(currentEval);
+                }
+                or.add(newEval);
+                currentEval = or;
+                break;
+            default:
+                throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
         }
-        else
-            throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
 
         if (replaceRightMost)
             ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
