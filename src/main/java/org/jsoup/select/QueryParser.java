@@ -106,13 +106,13 @@ public class QueryParser {
 
         // for most combinators: change the current eval into an AND of the current eval and the new eval
         if (combinator == '>')
-            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediateParent(currentEval));
+            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediateParent(currentEval), newEval);
         else if (combinator == ' ')
-            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.Parent(currentEval));
+            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
         else if (combinator == '+')
-            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.ImmediatePreviousSibling(currentEval));
+            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
         else if (combinator == '~')
-            currentEval = new CombiningEvaluator.And(newEval, new StructuralEvaluator.PreviousSibling(currentEval));
+            currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
         else if (combinator == ',') { // group or.
             CombiningEvaluator.Or or;
             if (currentEval instanceof CombiningEvaluator.Or) {
@@ -382,4 +382,11 @@ public class QueryParser {
 
         evals.add(new StructuralEvaluator.Not(parse(subQuery)));
     }
+
+    @Override
+    public String toString() {
+        return query;
+    }
+
+
 }

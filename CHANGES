@@ -134,6 +134,8 @@ jsoup changelog
   * Bugfix: ensure that script and style contents are parsed into DataNodes, not TextNodes, when in case-sensitive
     parse mode.
 
+  * Bugfix: corrected the toString() methods of the Evaluator classes.
+
 
 **** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query

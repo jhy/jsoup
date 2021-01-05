@@ -871,6 +871,7 @@ public class SelectorTest {
     @Test public void findBetweenSpan() {
         Document doc = Jsoup.parse("<p><span>One</span> Two <span>Three</span>");
         Elements els = doc.select("span ~ p:matchText"); // the Two becomes its own p, sibling of the span
+        // todo - think this should really be 'p:matchText span ~ p'. The :matchText should behave as a modifier to expand the nodes.
 
         assertEquals(1, els.size());
         assertEquals("Two", els.text());

@@ -21,13 +21,14 @@ public class QueryParserTest {
             assertTrue(innerEval instanceof CombiningEvaluator.And);
             CombiningEvaluator.And and = (CombiningEvaluator.And) innerEval;
             assertEquals(2, and.evaluators.size());
-            assertTrue(and.evaluators.get(0) instanceof Evaluator.Tag);
-            assertTrue(and.evaluators.get(1) instanceof StructuralEvaluator.Parent);
+            assertTrue(and.evaluators.get(0) instanceof StructuralEvaluator.Parent);
+            assertTrue(and.evaluators.get(1) instanceof Evaluator.Tag);
         }
     }
 
     @Test public void testParsesMultiCorrectly() {
-        Evaluator eval = QueryParser.parse(".foo > ol, ol > li + li");
+        String query = ".foo > ol, ol > li + li";
+        Evaluator eval = QueryParser.parse(query);
         assertTrue(eval instanceof CombiningEvaluator.Or);
         CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
         assertEquals(2, or.evaluators.size());
@@ -35,10 +36,11 @@ public class QueryParserTest {
         CombiningEvaluator.And andLeft = (CombiningEvaluator.And) or.evaluators.get(0);
         CombiningEvaluator.And andRight = (CombiningEvaluator.And) or.evaluators.get(1);
 
-        assertEquals("ol :ImmediateParent.foo", andLeft.toString());
+        assertEquals(".foo > ol", andLeft.toString());
         assertEquals(2, andLeft.evaluators.size());
-        assertEquals("li :prevli :ImmediateParentol", andRight.toString());
-        assertEquals(2, andLeft.evaluators.size());
+        assertEquals("ol > li + li", andRight.toString());
+        assertEquals(2, andRight.evaluators.size());
+        assertEquals(query, eval.toString());
     }
 
     @Test public void exceptionOnUncloseAttribute() {
@@ -60,6 +62,12 @@ public class QueryParserTest {
 
     @Test public void okOnSpacesForeAndAft() {
         Evaluator parse = QueryParser.parse(" span div  ");
-        assertEquals("div :parentspan", parse.toString()); // TODO - don't really love that toString() result...
+        assertEquals("span div", parse.toString());
+    }
+
+    @Test public void structuralEvaluatorsToString() {
+        String q = "a:not(:has(span.foo)) b d > e + f ~ g";
+        Evaluator parse = QueryParser.parse(q);
+        assertEquals(q, parse.toString());
     }
 }

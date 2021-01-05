@@ -44,7 +44,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":not%s", evaluator);
+            return String.format(":not(%s)", evaluator);
         }
     }
 
@@ -70,7 +70,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":parent%s", evaluator);
+            return String.format("%s ", evaluator);
         }
     }
 
@@ -89,7 +89,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":ImmediateParent%s", evaluator);
+            return String.format("%s > ", evaluator);
         }
     }
 
@@ -115,7 +115,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":prev*%s", evaluator);
+            return String.format("%s ~ ", evaluator);
         }
     }
 
@@ -134,7 +134,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public String toString() {
-            return String.format(":prev%s", evaluator);
+            return String.format("%s + ", evaluator);
         }
     }
 }
