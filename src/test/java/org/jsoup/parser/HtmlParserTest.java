@@ -1378,4 +1378,23 @@ public class HtmlParserTest {
         doc.outputSettings().prettyPrint(false);
         assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
     }
+
+    @Test public void preservesTabs() {
+        // testcase to demonstrate tab retention - https://github.com/jhy/jsoup/issues/1240
+        String html = "<pre>One\tTwo</pre><span>\tThree\tFour</span>";
+        Document doc = Jsoup.parse(html);
+
+        Element pre = doc.selectFirst("pre");
+        Element span = doc.selectFirst("span");
+
+        assertEquals("One\tTwo", pre.text());
+        assertEquals("Three Four", span.text()); // normalized, including overall trim
+        assertEquals("\tThree\tFour", span.wholeText()); // text normalizes, wholeText retains original spaces incl tabs
+        assertEquals("One\tTwo Three Four", doc.body().text());
+
+        assertEquals("<pre>One\tTwo</pre><span> Three Four</span>", doc.body().html()); // html output provides normalized space, incl tab in pre but not in span
+
+        doc.outputSettings().prettyPrint(false);
+        assertEquals(html, doc.body().html()); // disabling pretty-printing - round-trips the tab throughout, as no normalization occurs
+    }
 }
