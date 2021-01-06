@@ -6,12 +6,15 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.w3c.dom.Comment;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -26,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 import static javax.xml.transform.OutputKeys.METHOD;
 
@@ -72,7 +76,7 @@ public class W3CDom {
      * @see OutputKeys#INDENT
      * @see OutputKeys#MEDIA_TYPE
      */
-    public static String asString(Document doc, Map<String, String> properties) {
+    public static String asString(Document doc, @Nullable Map<String, String> properties) {
         try {
             DOMSource domSource = new DOMSource(doc);
             StringWriter writer = new StringWriter();
@@ -190,11 +194,12 @@ public class W3CDom {
 
         private final Document doc;
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
-        private Element dest;
+        private Node dest;
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
-            this.namespacesStack.push(new HashMap<String, String>());
+            this.namespacesStack.push(new HashMap<>());
+            this.dest = doc;
         }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
@@ -206,16 +211,20 @@ public class W3CDom {
                 String namespace = namespacesStack.peek().get(prefix);
                 String tagName = sourceEl.tagName();
 
-                Element el = namespace == null && tagName.contains(":") ?
-                    doc.createElementNS("", tagName) : // doesn't have a real namespace defined
-                    doc.createElementNS(namespace, tagName);
-                copyAttributes(sourceEl, el);
-                if (dest == null) { // sets up the root
-                    doc.appendChild(el);
-                } else {
+                /* Tag names in XML are quite, but less, permissive than HTML. Rather than reimplement the validation,
+                we just try to use it as-is. If it fails, insert as a text node instead. We don't try to normalize the
+                tagname to something safe, because that isn't going to be meaningful downstream. This seems(?) to be
+                how browsers handle the situation, also. https://github.com/jhy/jsoup/issues/1093 */
+                try {
+                    Element el = namespace == null && tagName.contains(":") ?
+                        doc.createElementNS("", tagName) : // doesn't have a real namespace defined
+                        doc.createElementNS(namespace, tagName);
+                    copyAttributes(sourceEl, el);
                     dest.appendChild(el);
+                    dest = el; // descend
+                } catch (DOMException e) {
+                    dest.appendChild(doc.createTextNode("<" + tagName + ">"));
                 }
-                dest = el; // descend
             } else if (source instanceof org.jsoup.nodes.TextNode) {
                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
                 Text text = doc.createTextNode(sourceText.getWholeText());
@@ -236,16 +245,19 @@ public class W3CDom {
 
         public void tail(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
-                dest = (Element) dest.getParentNode(); // undescend. cromulent.
+                dest = dest.getParentNode(); // undescend. cromulent.
             }
             namespacesStack.pop();
         }
 
+        private static final Pattern attrKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]");
+        private static final Pattern attrKeyValid = Pattern.compile("[a-zA-Z_:][-a-zA-Z0-9_:.]*");
+
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
                 // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
-                String key = attribute.getKey().replaceAll("[^-a-zA-Z0-9_:.]", "");
-                if (key.matches("[a-zA-Z_:][-a-zA-Z0-9_:.]*"))
+                String key = attrKeyReplace.matcher(attribute.getKey()).replaceAll("");
+                if (attrKeyValid.matcher(key).matches())
                     el.setAttribute(key, attribute.getValue());
             }
         }

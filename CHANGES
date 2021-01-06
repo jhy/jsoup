@@ -136,6 +136,10 @@ jsoup changelog
 
   * Bugfix: corrected the toString() methods of the Evaluator classes.
 
+  * Bugfix: when converting a jsoup document to a W3C document (in W3CDom#convert), if a tag had XML illegal characters,
+    a DOMException would be thown. Now instead, that tag is represented as a text node.
+    <https://github.com/jhy/jsoup/issues/1093>
+
 
 **** Release 1.12.2 [2020-Feb-08]
   * Improvement: the :has() selector now supports relative selectors. For example, the query

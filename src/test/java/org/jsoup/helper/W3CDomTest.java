@@ -183,7 +183,18 @@ public class W3CDomTest {
         assertTrue(body.hasAttr("\"")); // actually an attribute with key '"'. Correct per HTML5 spec, but w3c xml dom doesn't dig it
         assertTrue(body.hasAttr("name\""));
 
-        Document w3Doc = new W3CDom().fromJsoup(jsoupDoc);
+        Document w3Doc = W3CDom.convert(jsoupDoc);
+        String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body name=\"\" style=\"color: red\"/></html>", xml);
+    }
+
+    @Test
+    public void handlesInvalidTagAsText() {
+        org.jsoup.nodes.Document jsoup = Jsoup.parse("<インセンティブで高収入！>Text <p>More</p>");
+
+        Document w3Doc = W3CDom.convert(jsoup);
+        String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body>&lt;インセンティブで高収入！&gt;Text <p>More</p></body></html>", xml);
     }
 
     @Test
@@ -280,4 +291,3 @@ public class W3CDomTest {
     }
 
 }
-
