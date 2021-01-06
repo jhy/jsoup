@@ -195,6 +195,9 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
+            // note that this deviates from spec, which is to pop out of noscript and reprocess in head:
+            // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inheadnoscript
+            // allows content to be inserted as data
             tb.error(this);
             tb.insert(new Token.Character().data(t.toString()));
             return true;

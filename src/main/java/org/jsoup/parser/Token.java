@@ -219,6 +219,9 @@ abstract class Token {
                 pendingAttributeValueS = null;
             }
         }
+
+        @Override
+        abstract public String toString();
     }
 
     final static class StartTag extends Tag {
@@ -307,7 +310,6 @@ abstract class Token {
             }
         }
 
-
         @Override
         public String toString() {
             return "<!--" + getData() + "-->";
@@ -364,6 +366,11 @@ abstract class Token {
         @Override
         Token reset() {
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return "";
         }
     }
 
