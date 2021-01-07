@@ -131,10 +131,13 @@ public final class DataUtil {
         if (charsetName == null) { // determine from meta. safe first parse as UTF-8
             try {
                 CharBuffer defaultDecoded = UTF_8.decode(firstBytes);
-                if (defaultDecoded.hasArray())
-                    doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
-                else
+                if (defaultDecoded.hasArray() && defaultDecoded.hasRemaining()) {
+                    char[] chars = new char[defaultDecoded.remaining()];
+                    System.arraycopy(defaultDecoded.array(), defaultDecoded.position(), chars, 0, defaultDecoded.remaining());
+                    doc = parser.parseInput(new CharArrayReader(chars), baseUri);
+                } else {
                     doc = parser.parseInput(defaultDecoded.toString(), baseUri);
+                }
             } catch (UncheckedIOException e) {
                 throw e.ioException();
             }
