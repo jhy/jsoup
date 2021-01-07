@@ -615,6 +615,15 @@ public class HtmlParserTest {
         assertEquals("<html><head><noscript>&lt;img src=\"foo\"&gt;</noscript></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
+    @Test public void testUnclosedNoscriptInHead() {
+        // Was getting "EOF" in html output, because the #anythingElse handler was calling an undefined toString, so used object.toString.
+        String[] strings = {"<noscript>", "<noscript>One"};
+        for (String html : strings) {
+            Document doc = Jsoup.parse(html);
+            assertEquals(html + "</noscript>", TextUtil.stripNewlines(doc.head().html()));
+        }
+    }
+
     @Test public void testAFlowContents() {
         // html5 has <a> as either phrasing or block
         Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
