@@ -1320,7 +1320,7 @@ public class Element extends Node {
 
     /**
      * Set the text of this element. Any existing contents (text or elements) will be cleared.
-     * <p>As a special case, for {@code <script>} and {@code <style> tags, the input text will be treated as data,
+     * <p>As a special case, for {@code <script>} and {@code <style>} tags, the input text will be treated as data,
      * not visible text.</p>
      * @param text unencoded text
      * @return this element
