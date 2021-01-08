@@ -1406,4 +1406,22 @@ public class HtmlParserTest {
         doc.outputSettings().prettyPrint(false);
         assertEquals(html, doc.body().html()); // disabling pretty-printing - round-trips the tab throughout, as no normalization occurs
     }
+
+    @Test public void canDetectAutomaticallyAddedElements() {
+        String bare = "<script>One</script>";
+        String full = "<html><head><title>Check</title></head><body><p>One</p></body></html>";
+
+        assertTrue(didAddElements(bare));
+        assertFalse(didAddElements(full));
+    }
+
+    private boolean didAddElements(String input) {
+        // two passes, one as XML and one as HTML. XML does not vivify missing/optional tags
+        Document html = Jsoup.parse(input);
+        Document xml = Jsoup.parse(input, "", Parser.xmlParser());
+
+        int htmlElementCount = html.getAllElements().size();
+        int xmlElementCount = xml.getAllElements().size();
+        return htmlElementCount > xmlElementCount;
+    }
 }
