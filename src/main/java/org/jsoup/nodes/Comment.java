@@ -67,7 +67,7 @@ public class Comment extends LeafNode {
     }
 
     /**
-     * Attempt to cast this comment to an XML Declaration note.
+     * Attempt to cast this comment to an XML Declaration node.
      * @return an XML declaration if it could be parsed as one, null otherwise.
      */
     public @Nullable XmlDeclaration asXmlDeclaration() {
