@@ -8,11 +8,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         # choosing to run a reduced set of LTS, current, and next, to balance coverage and execution time
-        java: [8, 11, 15]
-        # Temporarily removed 16-ea, as it started failing in the japicmp plugin phase.
-        # Working (with japacmp): https://github.com/jhy/jsoup/runs/1556442000?check_suite_focus=true
-        # Failing: https://github.com/jhy/jsoup/runs/1556669892?check_suite_focus=true
-        # Issue raised: https://github.com/siom79/japicmp/issues/275
+        java: [8, 11, 15, 16-ea]
       fail-fast: false
     name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
     steps:
