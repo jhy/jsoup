@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @Nonnull
 @TypeQualifierDefault(ElementType.FIELD)
-@Retention(value = RetentionPolicy.RUNTIME)
+@Retention(value = RetentionPolicy.CLASS)
 
 /**
  Indicates that fields types are not nullable, unless otherwise specified by @Nullable.

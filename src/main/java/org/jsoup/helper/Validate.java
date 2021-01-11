@@ -1,5 +1,7 @@
 package org.jsoup.helper;
 
+import javax.annotation.Nullable;
+
 /**
  * Simple validation methods. Designed for jsoup internal use
  */
@@ -11,7 +13,7 @@ public final class Validate {
      * Validates that the object is not null
      * @param obj object to test
      */
-    public static void notNull(Object obj) {
+    public static void notNull(@Nullable Object obj) {
         if (obj == null)
             throw new IllegalArgumentException("Object must not be null");
     }
@@ -21,7 +23,7 @@ public final class Validate {
      * @param obj object to test
      * @param msg message to output if validation fails
      */
-    public static void notNull(Object obj, String msg) {
+    public static void notNull(@Nullable Object obj, String msg) {
         if (obj == null)
             throw new IllegalArgumentException(msg);
     }
@@ -84,20 +86,20 @@ public final class Validate {
     }
 
     /**
-     * Validates that the string is not empty
+     * Validates that the string is not null and is not empty
      * @param string the string to test
      */
-    public static void notEmpty(String string) {
+    public static void notEmpty(@Nullable String string) {
         if (string == null || string.length() == 0)
             throw new IllegalArgumentException("String must not be empty");
     }
 
     /**
-     * Validates that the string is not empty
+     * Validates that the string is not null and is not empty
      * @param string the string to test
      * @param msg message to output if validation fails
      */
-    public static void notEmpty(String string, String msg) {
+    public static void notEmpty(@Nullable String string, String msg) {
         if (string == null || string.length() == 0)
             throw new IllegalArgumentException(msg);
     }

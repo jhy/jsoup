@@ -4,8 +4,6 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,6 +15,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
+
+    @Test public void canCreateEmptyConnection() {
+        HttpConnection con = new HttpConnection();
+        assertEquals(Connection.Method.GET, con.request().method());
+        assertThrows(IllegalArgumentException.class, () -> {
+            URL url = con.request().url();
+        });
+    }
+
+    @Test public void throwsExceptionOnResponseWithoutExecute() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com");
+            con.response();
+        });
+    }
 
     @Test public void throwsExceptionOnParseWithoutExecute() {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -248,7 +261,7 @@ public class HttpConnectionTest {
             con.execute();
         } catch (IllegalArgumentException e) {
             threw = true;
-            assertEquals("URL must be specified to connect", e.getMessage());
+            assertEquals("URL not yet set", e.getMessage());
         }
         assertTrue(threw);
     }
@@ -268,5 +281,16 @@ public class HttpConnectionTest {
         HttpConnection.Request req = new HttpConnection.Request();
         req.url(new URL(idn));
         assertEquals(puny, req.url().toExternalForm());
+    }
+
+    @Test public void validationErrorsOnExecute() throws IOException {
+        Connection con = new HttpConnection();
+        boolean urlThrew = false;
+        try {
+            con.execute();
+        } catch (IllegalArgumentException e) {
+            urlThrew = e.getMessage().contains("URL");
+        }
+        assertTrue(urlThrew);
     }
 }

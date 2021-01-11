@@ -325,11 +325,11 @@
     </dependency>
 
     <dependency>
-      <!-- javax.annotations.nonnull, with Apache 2 (not GPL) license. Not distributed. -->
+      <!-- javax.annotations.nonnull, with Apache 2 (not GPL) license. Build time only. -->
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
       <version>3.0.2</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

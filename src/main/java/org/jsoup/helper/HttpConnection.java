@@ -51,6 +51,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
  */
+@SuppressWarnings("CharsetObjectCanBeUsed")
 public class HttpConnection implements Connection {
     public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
@@ -80,9 +81,11 @@ public class HttpConnection implements Connection {
         return con;
     }
 
+    /**
+     Creates a new, empty HttpConnection.
+     */
     public HttpConnection() {
         req = new Request();
-        res = new Response();
     }
 
     /**
@@ -136,7 +139,7 @@ public class HttpConnection implements Connection {
     }
 
     private Connection.Request req;
-    private Connection.Response res;
+    private @Nullable Connection.Response res;
 
     public Connection url(URL url) {
         req.url(url);
@@ -153,7 +156,7 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Connection proxy(Proxy proxy) {
+    public Connection proxy(@Nullable Proxy proxy) {
         req.proxy(proxy);
         return this;
     }
@@ -304,12 +307,14 @@ public class HttpConnection implements Connection {
     public Document get() throws IOException {
         req.method(Method.GET);
         execute();
+        Validate.notNull(res);
         return res.parse();
     }
 
     public Document post() throws IOException {
         req.method(Method.POST);
         execute();
+        Validate.notNull(res);
         return res.parse();
     }
 
@@ -328,6 +333,9 @@ public class HttpConnection implements Connection {
     }
 
     public Connection.Response response() {
+        if (res == null) {
+            throw new IllegalArgumentException("You must execute the request before getting a response.");
+        }
         return res;
     }
 
@@ -341,10 +349,20 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    @SuppressWarnings({"unchecked"})
-    private static abstract class Base<T extends Connection.Base> implements Connection.Base<T> {
-        @Nullable URL url;
-        @Nullable Method method;
+
+    @SuppressWarnings("unchecked")
+    private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
+        private static final URL UnsetUrl; // only used if you created a new Request()
+        static {
+            try {
+                UnsetUrl = new URL("http://undefined/");
+            } catch (MalformedURLException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        URL url = UnsetUrl;
+        Method method = Method.GET;
         Map<String, List<String>> headers;
         Map<String, String> cookies;
 
@@ -354,6 +372,8 @@ public class HttpConnection implements Connection {
         }
 
         public URL url() {
+            if (url == UnsetUrl)
+                throw new IllegalArgumentException("URL not yet set");
             return url;
         }
 
@@ -584,7 +604,7 @@ public class HttpConnection implements Connection {
             return proxy;
         }
 
-        public Request proxy(Proxy proxy) {
+        public Request proxy(@Nullable Proxy proxy) {
             this.proxy = proxy;
             return this;
         }
@@ -659,7 +679,7 @@ public class HttpConnection implements Connection {
             return data;
         }
 
-        public Connection.Request requestBody(String body) {
+        public Connection.Request requestBody(@Nullable String body) {
             this.body = body;
             return this;
         }
@@ -693,44 +713,44 @@ public class HttpConnection implements Connection {
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
         private static final String LOCATION = "Location";
-        private int statusCode;
-        private String statusMessage;
-        private ByteBuffer byteData;
-        private InputStream bodyStream;
-        private HttpURLConnection conn;
-        private String charset;
-        private String contentType;
+        private final int statusCode;
+        private final String statusMessage;
+        private @Nullable ByteBuffer byteData;
+        private @Nullable InputStream bodyStream;
+        private @Nullable HttpURLConnection conn;
+        private @Nullable String charset;
+        private @Nullable final String contentType;
         private boolean executed = false;
         private boolean inputStreamRead = false;
         private int numRedirects = 0;
-        private Connection.Request req;
+        private final Connection.Request req;
 
         /*
          * Matches XML content types (like text/xml, application/xhtml+xml;charset=UTF8, etc)
          */
         private static final Pattern xmlContentTypeRxp = Pattern.compile("(application|text)/\\w*\\+?xml.*");
 
+        /**
+         <b>Internal only! </b>Creates a dummy HttpConnection.Response, useful for testing. All actual responses
+         are created from the HttpURLConnection and fields defined.
+         */
         Response() {
             super();
-        }
-
-        private Response(Response previousResponse) throws IOException {
-            super();
-            if (previousResponse != null) {
-                numRedirects = previousResponse.numRedirects + 1;
-                if (numRedirects >= MAX_REDIRECTS)
-                    throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
-            }
+            statusCode = 400;
+            statusMessage = "Request not made";
+            req = new Request();
+            contentType = null;
         }
 
         static Response execute(Connection.Request req) throws IOException {
             return execute(req, null);
         }
 
-        static Response execute(Connection.Request req, Response previousResponse) throws IOException {
+        static Response execute(Connection.Request req, @Nullable Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
-            Validate.notNull(req.url(), "URL must be specified to connect");
-            String protocol = req.url().getProtocol();
+            URL url = req.url();
+            Validate.notNull(url, "URL must be specified to connect");
+            String protocol = url.getProtocol();
             if (!protocol.equals("http") && !protocol.equals("https"))
                 throw new MalformedURLException("Only http & https protocols supported");
             final boolean methodHasBody = req.method().hasBody();
@@ -754,9 +774,7 @@ public class HttpConnection implements Connection {
                     writePost(req, conn.getOutputStream(), mimeBoundary);
 
                 int status = conn.getResponseCode();
-                res = new Response(previousResponse);
-                res.setupFromConnection(conn, previousResponse);
-                res.req = req;
+                res = new Response(conn, req, previousResponse);
 
                 // redirect if there's a location header (from 3xx, or 201 etc)
                 if (res.hasHeader(LOCATION) && req.followRedirects()) {
@@ -768,6 +786,7 @@ public class HttpConnection implements Connection {
                     }
 
                     String location = res.header(LOCATION);
+                    Validate.notNull(location);
                     if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
@@ -801,8 +820,8 @@ public class HttpConnection implements Connection {
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
-                    res.bodyStream = null;
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    Validate.notNull(res.bodyStream);
                     if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
                     } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
@@ -861,7 +880,7 @@ public class HttpConnection implements Connection {
 
         private void prepareByteData() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
-            if (byteData == null) {
+            if (bodyStream != null && byteData == null) {
                 Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
                 try {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
@@ -876,6 +895,7 @@ public class HttpConnection implements Connection {
 
         public String body() {
             prepareByteData();
+            Validate.notNull(byteData);
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body = (charset == null ? DataUtil.UTF_8 : Charset.forName(charset))
                 .decode(byteData).toString();
@@ -885,6 +905,7 @@ public class HttpConnection implements Connection {
 
         public byte[] bodyAsBytes() {
             prepareByteData();
+            Validate.notNull(byteData);
             return byteData.array();
         }
 
@@ -904,10 +925,11 @@ public class HttpConnection implements Connection {
 
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
+            Proxy proxy = req.proxy();
             final HttpURLConnection conn = (HttpURLConnection) (
-                req.proxy() == null ?
+                proxy == null ?
                 req.url().openConnection() :
-                req.url().openConnection(req.proxy())
+                req.url().openConnection(proxy)
             );
 
             conn.setRequestMethod(req.method().name());
@@ -950,8 +972,9 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn, HttpConnection.Response previousResponse) throws IOException {
+        private Response(HttpURLConnection conn, Connection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
             this.conn = conn;
+            this.req = request;
             method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
@@ -968,6 +991,11 @@ public class HttpConnection implements Connection {
                         cookie(prevCookie.getKey(), prevCookie.getValue());
                 }
                 previousResponse.safeClose();
+
+                // enforce too many redirects:
+                numRedirects = previousResponse.numRedirects + 1;
+                if (numRedirects >= MAX_REDIRECTS)
+                    throw new IOException(String.format("Too many redirects occurred trying to load URL %s", previousResponse.url()));
             }
         }
 
@@ -1022,14 +1050,14 @@ public class HttpConnection implements Connection {
         }
 
         private @Nullable static String setOutputContentType(final Connection.Request req) {
+            final String contentType = req.header(CONTENT_TYPE);
             String bound = null;
-            if (req.hasHeader(CONTENT_TYPE)) {
+            if (contentType != null) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
                 // todo - if content type already set, we could add charset
 
                 // if user has set content type to multipart/form-data, auto add boundary.
-                if(req.header(CONTENT_TYPE).contains(MULTIPART_FORM_DATA) &&
-                        !req.header(CONTENT_TYPE).contains("boundary")) {
+                if(contentType.contains(MULTIPART_FORM_DATA) && !contentType.contains("boundary")) {
                     bound = DataUtil.mimeBoundary();
                     req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
                 }
@@ -1044,20 +1072,21 @@ public class HttpConnection implements Connection {
             return bound;
         }
 
-        private static void writePost(final Connection.Request req, final OutputStream outputStream, @Nullable final String bound) throws IOException {
+        private static void writePost(final Connection.Request req, final OutputStream outputStream, @Nullable final String boundary) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
             final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
 
-            if (bound != null) {
+            if (boundary != null) {
                 // boundary will be set if we're in multipart mode
                 for (Connection.KeyVal keyVal : data) {
                     w.write("--");
-                    w.write(bound);
+                    w.write(boundary);
                     w.write("\r\n");
                     w.write("Content-Disposition: form-data; name=\"");
                     w.write(encodeMimeName(keyVal.key())); // encodes " to %22
                     w.write("\"");
-                    if (keyVal.hasInputStream()) {
+                    final InputStream input = keyVal.inputStream();
+                    if (input != null) {
                         w.write("; filename=\"");
                         w.write(encodeMimeName(keyVal.value()));
                         w.write("\"\r\nContent-Type: ");
@@ -1065,7 +1094,7 @@ public class HttpConnection implements Connection {
                         w.write(contentType != null ? contentType : DefaultUploadType);
                         w.write("\r\n\r\n");
                         w.flush(); // flush
-                        DataUtil.crossStreams(keyVal.inputStream(), outputStream);
+                        DataUtil.crossStreams(input, outputStream);
                         outputStream.flush();
                     } else {
                         w.write("\r\n\r\n");
@@ -1074,24 +1103,27 @@ public class HttpConnection implements Connection {
                     w.write("\r\n");
                 }
                 w.write("--");
-                w.write(bound);
+                w.write(boundary);
                 w.write("--");
-            } else if (req.requestBody() != null) {
-                // data will be in query string, we're sending a plaintext body
-                w.write(req.requestBody());
-            }
-            else {
-                // regular form data (application/x-www-form-urlencoded)
-                boolean first = true;
-                for (Connection.KeyVal keyVal : data) {
-                    if (!first)
-                        w.append('&');
-                    else
-                        first = false;
+            } else {
+                String body = req.requestBody();
+                if (body != null) {
+                    // data will be in query string, we're sending a plaintext body
+                    w.write(body);
+                }
+                else {
+                    // regular form data (application/x-www-form-urlencoded)
+                    boolean first = true;
+                    for (Connection.KeyVal keyVal : data) {
+                        if (!first)
+                            w.append('&');
+                        else
+                            first = false;
 
-                    w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
-                    w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
+                        w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
+                        w.write('=');
+                        w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
+                    }
                 }
             }
             w.close();
@@ -1155,18 +1187,24 @@ public class HttpConnection implements Connection {
     public static class KeyVal implements Connection.KeyVal {
         private String key;
         private String value;
-        private InputStream stream;
-        private String contentType;
+        private @Nullable InputStream stream;
+        private @Nullable String contentType;
 
         public static KeyVal create(String key, String value) {
-            return new KeyVal().key(key).value(value);
+            return new KeyVal(key, value);
         }
 
         public static KeyVal create(String key, String filename, InputStream stream) {
-            return new KeyVal().key(key).value(filename).inputStream(stream);
+            return new KeyVal(key, filename)
+                .inputStream(stream);
         }
 
-        private KeyVal() {}
+        private KeyVal(String key, String value) {
+            Validate.notEmpty(key, "Data key must not be empty");
+            Validate.notNull(value, "Data value must not be null");
+            this.key = key;
+            this.value = value;
+        }
 
         public KeyVal key(String key) {
             Validate.notEmpty(key, "Data key must not be empty");

@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @Nonnull
 @TypeQualifierDefault({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
-@Retention(value = RetentionPolicy.RUNTIME)
+@Retention(value = RetentionPolicy.CLASS)
 
 /**
  Indicates that all components (methods, returns, fields) are not nullable, unless otherwise specified by @Nullable.
