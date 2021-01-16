@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
@@ -20,10 +22,11 @@ import java.util.List;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
+    private @Nullable Connection connection; // the connection this doc was fetched from, if any
     private OutputSettings outputSettings = new OutputSettings();
     private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
-    private String location;
+    private final String location;
     private boolean updateMetaCharset = false;
 
     /**
@@ -58,10 +61,24 @@ public class Document extends Element {
     /**
      * Get the URL this Document was parsed from. If the starting URL is a redirect,
      * this will return the final URL from which the document was served from.
+     * <p>Will return an empty string if the location is unknown (e.g. if parsed from a String).
      * @return location
      */
     public String location() {
-     return location;
+        return location;
+    }
+
+    /**
+     Returns the Connection (Request/Response) object that was used to fetch this document, if any; otherwise, a new
+     default Connection object. This can be used to continue a session, preserving settings and cookies, etc.
+     @return the Connection (session) associated with this Document, or an empty one otherwise.
+     @see Connection#newRequest()
+     */
+    public Connection connection() {
+        if (connection == null)
+            return Jsoup.newSession();
+        else
+            return connection;
     }
 
     /**
@@ -606,6 +623,21 @@ public class Document extends Element {
      */
     public Document parser(Parser parser) {
         this.parser = parser;
+        return this;
+    }
+
+    /**
+     Set the Connection used to fetch this document. This Connection is used as a session object when further requests are
+     made (e.g. when a form is submitted).
+
+     @param connection to set
+     @return this document, for chaining
+     @see Connection#newRequest()
+     @since 1.14.1
+     */
+    public Document connection(Connection connection) {
+        Validate.notNull(connection);
+        this.connection = connection;
         return this;
     }
 }

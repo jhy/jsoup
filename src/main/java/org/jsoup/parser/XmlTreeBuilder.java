@@ -45,6 +45,11 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
+    XmlTreeBuilder newInstance() {
+        return new XmlTreeBuilder();
+    }
+
+    @Override
     protected boolean process(Token token) {
         // start tag, end tag, doctype, comment, character, eof
         switch (token.type) {

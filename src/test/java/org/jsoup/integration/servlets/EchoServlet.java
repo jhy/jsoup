@@ -7,6 +7,7 @@ import org.jsoup.integration.TestServer;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
@@ -78,6 +79,14 @@ public class EchoServlet extends BaseServlet {
             }
         }
 
+        // cookies
+        final Cookie[] cookies = req.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                EchoServlet.write(w, "Cookie: " + cookie.getName(), cookie.getValue());
+            }
+        }
+
         // the request params
         Enumeration<String> parameterNames = req.getParameterNames();
         while (parameterNames.hasMoreElements()) {
@@ -111,7 +120,7 @@ public class EchoServlet extends BaseServlet {
         w.println("</table>");
     }
 
-    private static void write(PrintWriter w, String key, String val) {
+    static void write(PrintWriter w, String key, String val) {
         w.println("<tr><th>" + escape(key) + "</th><td>" + escape(val) + "</td></tr>");
     }
 

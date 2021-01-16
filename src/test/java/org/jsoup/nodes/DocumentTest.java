@@ -140,6 +140,11 @@ public class DocumentTest {
         assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",baseUri);
     }
 
+    @Test public void testLocationFromString() {
+        Document doc = Jsoup.parse("<p>Hello");
+        assertEquals("", doc.location());
+    }
+
     @Test public void testHtmlAndXmlSyntax() {
         String h = "<!DOCTYPE html><body><img async checked='checked' src='&<>\"'>&lt;&gt;&amp;&quot;<foo />bar";
         Document doc = Jsoup.parse(h);

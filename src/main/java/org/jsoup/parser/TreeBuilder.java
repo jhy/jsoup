@@ -59,6 +59,12 @@ abstract class TreeBuilder {
         return doc;
     }
 
+    /**
+     Create a new copy of this TreeBuilder
+     @return copy, ready for a new parse
+     */
+    abstract TreeBuilder newInstance();
+
     abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
 
     protected void runParser() {

@@ -2,6 +2,7 @@ package org.jsoup.internal;
 
 import org.jsoup.helper.Validate;
 
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -10,7 +11,8 @@ import java.util.Iterator;
 import java.util.Stack;
 
 /**
- * A minimal String utility class. Designed for internal jsoup use only.
+ A minimal String utility class. Designed for <b>internal</b> jsoup use only - the API and outcome may change without
+ notice.
  */
 public final class StringUtil {
     // memoised padding up to 21
@@ -25,7 +27,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Collection strings, String sep) {
+    public static String join(Collection<?> strings, String sep) {
         return join(strings.iterator(), sep);
     }
 
@@ -35,7 +37,7 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
-    public static String join(Iterator strings, String sep) {
+    public static String join(Iterator<?> strings, String sep) {
         if (!strings.hasNext())
             return "";
 
@@ -43,12 +45,12 @@ public final class StringUtil {
         if (!strings.hasNext()) // only one, avoid builder
             return start;
 
-        StringBuilder sb = StringUtil.borrowBuilder().append(start);
+        StringJoiner j = new StringJoiner(sep);
+        j.add(start);
         while (strings.hasNext()) {
-            sb.append(sep);
-            sb.append(strings.next());
+            j.add(strings.next());
         }
-        return StringUtil.releaseBuilder(sb);
+        return j.complete();
     }
 
     /**
@@ -59,6 +61,56 @@ public final class StringUtil {
      */
     public static String join(String[] strings, String sep) {
         return join(Arrays.asList(strings), sep);
+    }
+
+    /**
+     A StringJoiner allows incremental / filtered joining of a set of stringable objects.
+     @since 1.14.1
+     */
+    public static class StringJoiner {
+        @Nullable StringBuilder sb = borrowBuilder(); // sets null on builder release so can't accidentally be reused
+        final String separator;
+        boolean first = true;
+
+        /**
+         Create a new joiner, that uses the specified separator. MUST call {@link #complete()} or will leak a thread
+         local string builder.
+
+         @param separator the token to insert between strings
+         */
+        public StringJoiner(String separator) {
+            this.separator = separator;
+        }
+
+        /**
+         Add another item to the joiner, will be separated
+         */
+        public StringJoiner add(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            if (!first)
+                sb.append(separator);
+            sb.append(stringy);
+            first = false;
+            return this;
+        }
+
+        /**
+         Append content to the current item; not separated
+         */
+        public StringJoiner append(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            sb.append(stringy);
+            return this;
+        }
+
+        /**
+         Return the joined string, and release the builder back to the pool. This joiner cannot be reused.
+         */
+        public String complete() {
+            String string = releaseBuilder(sb);
+            sb = null;
+            return string;
+        }
     }
 
     /**

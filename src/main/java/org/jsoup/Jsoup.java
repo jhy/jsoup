@@ -62,7 +62,7 @@ public class Jsoup {
     }
 
     /**
-     * Creates a new {@link Connection} to a URL. Use to fetch and parse a HTML page.
+     * Creates a new {@link Connection} (session), with the defined request URL. Use to fetch and parse a HTML page.
      * <p>
      * Use examples:
      * <ul>
@@ -71,9 +71,38 @@ public class Jsoup {
      * </ul>
      * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
      * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     * @see #newSession()
+     * @see Connection#newRequest()
      */
     public static Connection connect(String url) {
         return HttpConnection.connect(url);
+    }
+
+    /**
+     Creates a new {@link Connection} to use as a session. Connection settings (user-agent, timeouts, URL, etc), and
+     cookies will be maintained for the session. Use examples:
+<pre><code>
+Connection session = Jsoup.newSession()
+     .timeout(20 * 1000)
+     .userAgent("FooBar 2000");
+
+Document doc1 = session.newRequest()
+     .url("https://jsoup.org/").data("ref", "example")
+     .get();
+Document doc2 = session.newRequest()
+     .url("https://en.wikipedia.org/wiki/Main_Page")
+     .get();
+Connection con3 = session.newRequest();
+</code></pre>
+
+     <p>For multi-threaded requests, it is safe to use this session between threads, but take care to call {@link
+    Connection#newRequest()} per request and not share that instance between threads when executing or parsing.</p>
+
+     @return a connection
+     @since 1.14.1
+     */
+    public static Connection newSession() {
+        return new HttpConnection();
     }
 
     /**

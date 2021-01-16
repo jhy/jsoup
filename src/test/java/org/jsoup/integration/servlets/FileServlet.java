@@ -25,6 +25,8 @@ public class FileServlet extends BaseServlet {
         File file = ParseTest.getFile(location);
         if (file.exists()) {
             res.setContentType(contentType);
+            if (file.getName().endsWith("gz"))
+                res.addHeader("Content-Encoding", "gzip");
             res.setStatus(HttpServletResponse.SC_OK);
 
             ServletOutputStream out = res.getOutputStream();

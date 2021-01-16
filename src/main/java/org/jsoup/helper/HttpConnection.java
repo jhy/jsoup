@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.CookieManager;
+import java.net.CookieStore;
 import java.net.HttpURLConnection;
 import java.net.IDN;
 import java.net.InetSocketAddress;
@@ -69,12 +71,22 @@ public class HttpConnection implements Connection {
     private static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, not in Android API 10.
     private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
+    /**
+     Create a new Connection, with the request URL specified.
+     @param url the URL to fetch from
+     @return a new Connection object
+     */
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
         con.url(url);
         return con;
     }
 
+    /**
+     Create a new Connection, with the request URL specified.
+     @param url the URL to fetch from
+     @return a new Connection object
+     */
     public static Connection connect(URL url) {
         Connection con = new HttpConnection();
         con.url(url);
@@ -86,6 +98,14 @@ public class HttpConnection implements Connection {
      */
     public HttpConnection() {
         req = new Request();
+    }
+
+    /**
+     Create a new Request by deep-copying an existing Request
+     @param copy the request to copy
+     */
+    HttpConnection(Request copy) {
+        req = new Request(copy);
     }
 
     /**
@@ -138,8 +158,20 @@ public class HttpConnection implements Connection {
         return val.replace("\"", "%22");
     }
 
-    private Connection.Request req;
+    private HttpConnection.Request req;
     private @Nullable Connection.Response res;
+
+    @Override
+    public Connection newRequest() {
+        // copy the prototype request for the different settings, cookie manager, etc
+        return new HttpConnection(req);
+    }
+
+    /** Create a new Connection that just wraps the provided Request and Response */
+    private HttpConnection(Request req, Response res) {
+        this.req = req;
+        this.res = res;
+    }
 
     public Connection url(URL url) {
         req.url(url);
@@ -299,6 +331,18 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override
+    public Connection cookieStore(CookieStore cookieStore) {
+        // create a new cookie manager using the new store
+        req.cookieManager = new CookieManager(cookieStore, null);
+        return this;
+    }
+
+    @Override
+    public CookieStore cookieStore() {
+        return req.cookieManager.getCookieStore();
+    }
+
     public Connection parser(Parser parser) {
         req.parser(parser);
         return this;
@@ -328,7 +372,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection request(Connection.Request request) {
-        req = request;
+        req = (HttpConnection.Request) request; // will throw a class-cast exception if the user has extended some but not all of Connection; that's desired
         return this;
     }
 
@@ -371,9 +415,19 @@ public class HttpConnection implements Connection {
             cookies = new LinkedHashMap<>();
         }
 
+        private Base(Base<T> copy) {
+            url = copy.url; // unmodifiable object
+            method = copy.method;
+            headers = new LinkedHashMap<>();
+            for (Map.Entry<String, List<String>> entry : copy.headers.entrySet()) {
+                headers.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+            cookies = new LinkedHashMap<>(); cookies.putAll(copy.cookies); // just holds strings
+        }
+
         public URL url() {
             if (url == UnsetUrl)
-                throw new IllegalArgumentException("URL not yet set");
+                throw new IllegalArgumentException("URL not set. Make sure to call #url(...) before executing the request.");
             return url;
         }
 
@@ -576,6 +630,7 @@ public class HttpConnection implements Connection {
             System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
             // make sure that we can send Sec-Fetch-Site headers etc.
         }
+
         private @Nullable Proxy proxy;
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
@@ -588,8 +643,11 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private String postDataCharset = DataUtil.defaultCharsetName;
         private @Nullable SSLSocketFactory sslSocketFactory;
+        private CookieManager cookieManager;
+        private volatile boolean executing = false;
 
         Request() {
+            super();
             timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024 * 2; // 2MB
             followRedirects = true;
@@ -598,6 +656,25 @@ public class HttpConnection implements Connection {
             addHeader("Accept-Encoding", "gzip");
             addHeader(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
+            cookieManager = new CookieManager(); // creates a default InMemoryCookieStore
+        }
+
+        Request(Request copy) {
+            super(copy);
+            proxy = copy.proxy;
+            postDataCharset = copy.postDataCharset;
+            timeoutMilliseconds = copy.timeoutMilliseconds;
+            maxBodySizeBytes = copy.maxBodySizeBytes;
+            followRedirects = copy.followRedirects;
+            data = new ArrayList<>(); data.addAll(copy.data()); // this is shallow, but holds immutable string keyval, and possibly an InputStream which can only be read once anyway, so using as a prototype would be unsupported
+            body = copy.body;
+            ignoreHttpErrors = copy.ignoreHttpErrors;
+            ignoreContentType = copy.ignoreContentType;
+            parser = copy.parser.newInstance(); // parsers and their tree-builders maintain state, so need a fresh copy
+            parserDefined = copy.parserDefined;
+            sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
+            cookieManager = copy.cookieManager;
+            executing = false;
         }
 
         public Proxy proxy() {
@@ -708,6 +785,10 @@ public class HttpConnection implements Connection {
         public String postDataCharset() {
             return postDataCharset;
         }
+
+        CookieManager cookieManager() {
+            return cookieManager;
+        }
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
@@ -723,7 +804,7 @@ public class HttpConnection implements Connection {
         private boolean executed = false;
         private boolean inputStreamRead = false;
         private int numRedirects = 0;
-        private final Connection.Request req;
+        private final HttpConnection.Request req;
 
         /*
          * Matches XML content types (like text/xml, application/xhtml+xml;charset=UTF8, etc)
@@ -742,11 +823,15 @@ public class HttpConnection implements Connection {
             contentType = null;
         }
 
-        static Response execute(Connection.Request req) throws IOException {
+        static Response execute(HttpConnection.Request req) throws IOException {
             return execute(req, null);
         }
 
-        static Response execute(Connection.Request req, @Nullable Response previousResponse) throws IOException {
+        static Response execute(HttpConnection.Request req, @Nullable Response previousResponse) throws IOException {
+            synchronized (req) {
+                Validate.isFalse(req.executing, "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
+                req.executing = true;
+            }
             Validate.notNull(req, "Request must not be null");
             URL url = req.url();
             Validate.notNull(url, "URL must be specified to connect");
@@ -792,9 +877,7 @@ public class HttpConnection implements Connection {
                     URL redir = StringUtil.resolve(req.url(), location);
                     req.url(encodeUrl(redir));
 
-                    for (Map.Entry<String, String> cookie : res.cookies.entrySet()) { // add response cookies to request (for e.g. login posts)
-                        req.cookie(cookie.getKey(), cookie.getValue());
-                    }
+                    req.executing = false;
                     return execute(req, res);
                 }
                 if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
@@ -812,10 +895,7 @@ public class HttpConnection implements Connection {
 
                 // switch to the XML parser if content type is xml and not parser not explicitly set
                 if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
-                    // only flip it if a HttpConnection.Request (i.e. don't presume other impls want it):
-                    if (req instanceof HttpConnection.Request && !((Request) req).parserDefined) {
-                        req.parser(Parser.xmlParser());
-                    }
+                    if (!req.parserDefined) req.parser(Parser.xmlParser());
                 }
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
@@ -837,6 +917,8 @@ public class HttpConnection implements Connection {
             } catch (IOException e) {
                 if (res != null) res.safeClose(); // will be non-null if got to conn
                 throw e;
+            } finally {
+                req.executing = false;
             }
 
             res.executed = true;
@@ -872,6 +954,7 @@ public class HttpConnection implements Connection {
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
             Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
+            doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             inputStreamRead = true;
             safeClose();
@@ -924,7 +1007,7 @@ public class HttpConnection implements Connection {
         }
 
         // set up connection defaults, and details from request
-        private static HttpURLConnection createConnection(Connection.Request req) throws IOException {
+        private static HttpURLConnection createConnection(HttpConnection.Request req) throws IOException {
             Proxy proxy = req.proxy();
             final HttpURLConnection conn = (HttpURLConnection) (
                 proxy == null ?
@@ -941,8 +1024,7 @@ public class HttpConnection implements Connection {
                 ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
             if (req.method().hasBody())
                 conn.setDoOutput(true);
-            if (req.cookies().size() > 0)
-                conn.addRequestProperty("Cookie", getRequestCookieString(req));
+            CookieUtil.applyCookiesToRequest(req, conn); // from the Request key/val cookies and the Cookie Store
             for (Map.Entry<String, List<String>> header : req.multiHeaders().entrySet()) {
                 for (String value : header.getValue()) {
                     conn.addRequestProperty(header.getKey(), value);
@@ -972,7 +1054,7 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private Response(HttpURLConnection conn, Connection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
+        private Response(HttpURLConnection conn, HttpConnection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
             this.conn = conn;
             this.req = request;
             method = Method.valueOf(conn.getRequestMethod());
@@ -982,10 +1064,11 @@ public class HttpConnection implements Connection {
             contentType = conn.getContentType();
 
             Map<String, List<String>> resHeaders = createHeaderMap(conn);
-            processResponseHeaders(resHeaders);
+            processResponseHeaders(resHeaders); // includes cookie key/val read during header scan
+            CookieUtil.storeCookies(req, url, resHeaders); // add set cookies to cookie store
 
-            // if from a redirect, map previous response cookies into this response
-            if (previousResponse != null) {
+            if (previousResponse != null) { // was redirected
+                // map previous response cookies into this response cookies() object
                 for (Map.Entry<String, String> prevCookie : previousResponse.cookies().entrySet()) {
                     if (!hasCookie(prevCookie.getKey()))
                         cookie(prevCookie.getKey(), prevCookie.getValue());
@@ -1037,9 +1120,9 @@ public class HttpConnection implements Connection {
                         TokenQueue cd = new TokenQueue(value);
                         String cookieName = cd.chompTo("=").trim();
                         String cookieVal = cd.consumeTo(";").trim();
-                        // ignores path, date, domain, validateTLSCertificates et al. req'd?
+                        // ignores path, date, domain, validateTLSCertificates et al. full details will be available in cookiestore if required
                         // name not blank, value not null
-                        if (cookieName.length() > 0)
+                        if (cookieName.length() > 0 && !cookies.containsKey(cookieName)) // if duplicates, only keep the first
                             cookie(cookieName, cookieVal);
                     }
                 }
@@ -1127,20 +1210,6 @@ public class HttpConnection implements Connection {
                 }
             }
             w.close();
-        }
-
-        private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = StringUtil.borrowBuilder();
-            boolean first = true;
-            for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
-                if (!first)
-                    sb.append("; ");
-                else
-                    first = false;
-                sb.append(cookie.getKey()).append('=').append(cookie.getValue());
-                // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
-            }
-            return StringUtil.releaseBuilder(sb);
         }
 
         // for get url reqs, serialise the data map into the url

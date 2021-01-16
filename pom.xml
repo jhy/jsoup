@@ -203,6 +203,12 @@
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+            <excludes>
+              <!-- 1.14.1 interface adds. rarely implemented outside of jsoup, and can't provide default impl in 7, so flag in changelog -->
+              <exclude>org.jsoup.Connection.cookieStore()</exclude>
+              <exclude>org.jsoup.Connection.cookieStore(java.net.CookieStore)</exclude>
+              <exclude>jsoup.Connection.newRequest()</exclude>
+            </excludes>
           </parameter>
         </configuration>
         <executions>
