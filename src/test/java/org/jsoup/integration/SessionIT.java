@@ -3,8 +3,11 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
+import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.nodes.Document;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,6 +17,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Integration tests to test longer running Connection */
 public class SessionIT {
+    @BeforeAll
+    public static void setUp() {
+        TestServer.start();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        TestServer.stop();
+    }
+
     @Test
     public void multiThread() throws InterruptedException {
         int numThreads = 20;

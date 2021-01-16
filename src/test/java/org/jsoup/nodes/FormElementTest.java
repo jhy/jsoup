@@ -2,10 +2,13 @@ package org.jsoup.nodes;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.integration.TestServer;
 import org.jsoup.integration.servlets.CookieServlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.select.Elements;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley
  */
 public class FormElementTest {
+    @BeforeAll
+    public static void setUp() {
+        TestServer.start();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        TestServer.stop();
+    }
+
     @Test public void hasAssociatedControls() {
         //"button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
         String html = "<form id=1><button id=1><fieldset id=2 /><input id=3><keygen id=4><object id=5><output id=6>" +

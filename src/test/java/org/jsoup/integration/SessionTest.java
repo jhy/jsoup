@@ -8,6 +8,8 @@ import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,6 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionTest {
+    @BeforeAll
+    public static void setUp() {
+        TestServer.start();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        TestServer.stop();
+    }
 
     private static Elements keyEls(String key, Document doc) {
         return doc.select("th:contains(" + key + ") + td");
