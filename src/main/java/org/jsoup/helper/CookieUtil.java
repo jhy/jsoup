@@ -76,8 +76,10 @@ class CookieUtil {
     static URI asUri(URL url) throws IOException {
         try {
             return url.toURI();
-        } catch (URISyntaxException e) {
-            throw new MalformedURLException(e.getMessage()); // this would be a WTF because we construct the URL
+        } catch (URISyntaxException e) {  // this would be a WTF because we construct the URL
+            MalformedURLException ue = new MalformedURLException(e.getMessage());
+            ue.initCause(e);
+            throw ue;
         }
     }
 
