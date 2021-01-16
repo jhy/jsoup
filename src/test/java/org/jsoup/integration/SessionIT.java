@@ -5,6 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -79,8 +80,8 @@ public class SessionIT {
     @Test
     public void multiThreadWithoutNewRequestBlowsUp() throws InterruptedException {
         int numThreads = 20;
-        String url = FileServlet.urlTo("/htmltests/large.html");
-        String title = "Large HTML";
+        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=10000"; // this makes sure that the first req is still executing whilst the others run
+        String title = "Slow Rider";
 
         ThreadCatcher catcher = new ThreadCatcher();
         Connection session = Jsoup.newSession();
