@@ -29,6 +29,7 @@ public class SlowRider extends BaseServlet {
         }
 
         long startTime = System.currentTimeMillis();
+        w.println("<title>Slow Rider</title>");
         while (true) {
             w.println("<p>Are you still there?");
             boolean err = w.checkError(); // flush, and check still ok

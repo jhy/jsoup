@@ -49,6 +49,10 @@ public class ParseSettings {
         preserveAttributeCase = attribute;
     }
 
+    ParseSettings(ParseSettings copy) {
+        this(copy.preserveTagCase, copy.preserveAttributeCase);
+    }
+
     /**
      * Normalizes a tag name according to the case preservation setting.
      */

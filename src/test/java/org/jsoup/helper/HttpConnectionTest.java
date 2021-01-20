@@ -261,7 +261,7 @@ public class HttpConnectionTest {
             con.execute();
         } catch (IllegalArgumentException e) {
             threw = true;
-            assertEquals("URL not yet set", e.getMessage());
+            assertEquals("URL not set. Make sure to call #url(...) before executing the request.", e.getMessage());
         }
         assertTrue(threw);
     }

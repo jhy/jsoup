@@ -2,8 +2,16 @@ package org.jsoup.nodes;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.integration.TestServer;
+import org.jsoup.integration.servlets.CookieServlet;
+import org.jsoup.integration.servlets.EchoServlet;
+import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.select.Elements;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley
  */
 public class FormElementTest {
+    @BeforeAll
+    public static void setUp() {
+        TestServer.start();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        TestServer.stop();
+    }
+
     @Test public void hasAssociatedControls() {
         //"button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
         String html = "<form id=1><button id=1><fieldset id=2 /><input id=3><keygen id=4><object id=5><output id=6>" +
@@ -174,5 +192,28 @@ public class FormElementTest {
         assertEquals("user", data.get(0).key());
         assertEquals("login", data.get(1).key());
         assertNull(doc.selectFirst("input[name=pass]"));
+    }
+
+    @Test public void formSubmissionCarriesCookiesFromSession() throws IOException {
+        String echoUrl = EchoServlet.Url; // this is a dirty hack to initialize the EchoServlet(!)
+        Document cookieDoc = Jsoup.connect(CookieServlet.Url)
+            .data(CookieServlet.SetCookiesParam, "1")
+            .get();
+        Document formDoc = cookieDoc.connection().newRequest() // carries cookies from above set
+            .url(FileServlet.urlTo("/htmltests/upload-form.html"))
+            .get();
+        FormElement form = formDoc.select("form").forms().get(0);
+        Document echo = form.submit().post();
+
+        assertEquals(echoUrl, echo.location());
+        Elements els = echo.select("th:contains(Cookie: One)");
+        // ensure that the cookies are there and in path-specific order (two with same name)
+        assertEquals("EchoServlet", els.get(0).nextElementSibling().text());
+        assertEquals("Root", els.get(1).nextElementSibling().text());
+
+        // make sure that the session following kept unique requests
+        assertTrue(cookieDoc.connection().response().url().toExternalForm().contains("CookieServlet"));
+        assertTrue(formDoc.connection().response().url().toExternalForm().contains("upload-form"));
+        assertTrue(echo.connection().response().url().toExternalForm().contains("EchoServlet"));
     }
 }

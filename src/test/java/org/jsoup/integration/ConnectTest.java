@@ -96,7 +96,7 @@ public class ConnectTest {
             Document doc = con.get();
         } catch (HttpStatusException e) {
             threw = true;
-            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=" + e.getUrl(), e.toString());
+            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=[" + e.getUrl() + "]", e.toString());
             assertTrue(e.getUrl().startsWith(url));
             assertEquals(404, e.getStatusCode());
         } catch (IOException e) {
@@ -361,6 +361,22 @@ public class ConnectTest {
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();
         assertEquals("token=asdfg123; uid=jhy", ihVal("Cookie", doc));
+    }
+
+    @Test public void requestCookiesSurviveRedirect() throws IOException {
+        // this test makes sure that Request keyval cookies (not in the cookie store) are sent on subsequent redirections,
+        // when not using the session method
+        Connection con = Jsoup.connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, echoUrl)
+            .cookie("LetMeIn", "True")
+            .cookie("DoesItWork", "Yes");
+
+        Connection.Response res = con.execute();
+        assertEquals(0, res.cookies().size()); // were not set by Redir or Echo servlet
+        Document doc = res.parse();
+        assertEquals(echoUrl, doc.location());
+        assertEquals("True", ihVal("Cookie: LetMeIn", doc));
+        assertEquals("Yes", ihVal("Cookie: DoesItWork", doc));
     }
 
     @Test
@@ -645,5 +661,14 @@ public class ConnectTest {
         assertEquals(196577, mediumRes.parse().text().length());
         assertEquals(actualDocText, largeRes.parse().text().length());
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
+    }
+
+    @Test public void repeatable() throws IOException {
+        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        Connection con = Jsoup.connect(url).parser(Parser.xmlParser());
+        Document doc1 = con.get();
+        Document doc2 = con.get();
+        assertEquals("Large HTML", doc1.title());
+        assertEquals("Large HTML", doc2.title());
     }
 }

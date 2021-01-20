@@ -36,6 +36,7 @@ import java.util.zip.GZIPInputStream;
  * Internal static utilities for handling data.
  *
  */
+@SuppressWarnings("CharsetObjectCanBeUsed")
 public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
     public static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, as those only appear in Android API 19, and we target 10.
@@ -59,7 +60,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(File in, String charsetName, String baseUri) throws IOException {
+    public static Document load(File in, @Nullable String charsetName, String baseUri) throws IOException {
         InputStream stream = new FileInputStream(in);
         String name = Normalizer.lowerCase(in.getName());
         if (name.endsWith(".gz") || name.endsWith(".z")) {
@@ -264,7 +265,7 @@ public final class DataUtil {
     }
 
     private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
-        final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
+        @SuppressWarnings("UnnecessaryLocalVariable") final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
         buffer.mark();
         byte[] bom = new byte[4];
         if (byteData.remaining() >= bom.length) {

@@ -62,6 +62,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return ParseSettings.htmlDefault;
     }
 
+    @Override
+    HtmlTreeBuilder newInstance() {
+        return new HtmlTreeBuilder();
+    }
+
     @Override @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);

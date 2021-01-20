@@ -203,11 +203,19 @@
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+            <overrideCompatibilityChangeParameters>
+              <!-- 1.14.1 interface adds for cookies. rarely implemented outside of jsoup, and can't provide default impl in 7, so flag in changelog -->
+              <overrideCompatibilityChangeParameter>
+                <compatibilityChange>METHOD_ADDED_TO_INTERFACE</compatibilityChange>
+                <binaryCompatible>true</binaryCompatible>
+                <sourceCompatible>true</sourceCompatible>
+              </overrideCompatibilityChangeParameter>
+            </overrideCompatibilityChangeParameters>
           </parameter>
         </configuration>
         <executions>
           <execution>
-            <phase>verify</phase>
+            <phase>package</phase>
             <goals>
               <goal>cmp</goal>
             </goals>

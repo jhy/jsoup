@@ -26,6 +26,20 @@ public class Parser {
         settings = treeBuilder.defaultSettings();
         errors = ParseErrorList.noTracking();
     }
+
+    /**
+     Creates a new Parser as a deep copy of this; including initializing a new TreeBuilder. Allows independent (multi-threaded) use.
+     @return a copied parser
+     */
+    public Parser newInstance() {
+        return new Parser(this);
+    }
+
+    private Parser(Parser copy) {
+        treeBuilder = copy.treeBuilder.newInstance(); // because extended
+        errors = new ParseErrorList(copy.errors); // only copies size, not contents
+        settings = new ParseSettings(copy.settings);
+    }
     
     public Document parseInput(String html, String baseUri) {
         return treeBuilder.parse(new StringReader(html), baseUri, this);

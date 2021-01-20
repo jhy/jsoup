@@ -10,7 +10,7 @@ public class HttpStatusException extends IOException {
     private final String url;
 
     public HttpStatusException(String message, int statusCode, String url) {
-        super(message);
+        super(message + ". Status=" + statusCode + ", URL=[" + url + "]");
         this.statusCode = statusCode;
         this.url = url;
     }
@@ -21,10 +21,5 @@ public class HttpStatusException extends IOException {
 
     public String getUrl() {
         return url;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + ". Status=" + statusCode + ", URL=" + url;
     }
 }

@@ -34,7 +34,7 @@ public class TestServer {
 
     public static void stop() {
         synchronized (jetty) {
-            int count = latch.decrementAndGet();
+            int count = latch.getAndDecrement();
             if (count == 0) {
                 try {
                     jetty.stop();
