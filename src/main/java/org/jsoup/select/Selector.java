@@ -117,20 +117,19 @@ public class Selector {
         Validate.notEmpty(query);
         Validate.notNull(roots);
         Evaluator evaluator = QueryParser.parse(query);
-        ArrayList<Element> elements = new ArrayList<>();
+        Elements elements = new Elements();
         IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<>();
         // dedupe elements by identity, not equality
 
         for (Element root : roots) {
             final Elements found = select(evaluator, root);
             for (Element el : found) {
-                if (!seenElements.containsKey(el)) {
+                if (seenElements.put(el, Boolean.TRUE) == null) {
                     elements.add(el);
-                    seenElements.put(el, Boolean.TRUE);
                 }
             }
         }
-        return new Elements(elements);
+        return elements;
     }
 
     // exclude set. package open so that Elements can implement .not() selector.
