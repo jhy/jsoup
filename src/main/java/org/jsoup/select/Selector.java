@@ -115,8 +115,19 @@ public class Selector {
      */
     public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
+        return select(QueryParser.parse(query), roots);
+    }
+
+    /**
+     * Find elements matching selector.
+     *
+     * @param evaluator CSS selector
+     * @param roots root elements to descend into
+     * @return matching elements, empty if none
+     */
+    public static Elements select(Evaluator evaluator, Iterable<Element> roots) {
+        Validate.notNull(evaluator);
         Validate.notNull(roots);
-        Evaluator evaluator = QueryParser.parse(query);
         ArrayList<Element> elements = new ArrayList<>();
         IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<>();
         // dedupe elements by identity, not equality
