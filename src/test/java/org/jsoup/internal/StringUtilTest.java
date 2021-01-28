@@ -99,6 +99,25 @@ public class StringUtilTest {
         assertEquals("ftp://example.com/one", resolve("ftp://example.com/two/", "../one"));
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "./two.c"));
         assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "two.c"));
+        // examples taken from rfc3986 section 5.4.2
+        assertEquals("http://example.com/g", resolve("http://example.com/b/c/d;p?q", "../../../g"));
+        assertEquals("http://example.com/g", resolve("http://example.com/b/c/d;p?q", "../../../../g"));
+        assertEquals("http://example.com/g", resolve("http://example.com/b/c/d;p?q", "/./g"));
+        assertEquals("http://example.com/g", resolve("http://example.com/b/c/d;p?q", "/../g"));
+        assertEquals("http://example.com/b/c/g.", resolve("http://example.com/b/c/d;p?q", "g."));
+        assertEquals("http://example.com/b/c/.g", resolve("http://example.com/b/c/d;p?q", ".g"));
+        assertEquals("http://example.com/b/c/g..", resolve("http://example.com/b/c/d;p?q", "g.."));
+        assertEquals("http://example.com/b/c/..g", resolve("http://example.com/b/c/d;p?q", "..g"));
+        assertEquals("http://example.com/b/g", resolve("http://example.com/b/c/d;p?q", "./../g"));
+        assertEquals("http://example.com/b/c/g/", resolve("http://example.com/b/c/d;p?q", "./g/."));
+        assertEquals("http://example.com/b/c/g/h", resolve("http://example.com/b/c/d;p?q", "g/./h"));
+        assertEquals("http://example.com/b/c/h", resolve("http://example.com/b/c/d;p?q", "g/../h"));
+        assertEquals("http://example.com/b/c/g;x=1/y", resolve("http://example.com/b/c/d;p?q", "g;x=1/./y"));
+        assertEquals("http://example.com/b/c/y", resolve("http://example.com/b/c/d;p?q", "g;x=1/../y"));
+        assertEquals("http://example.com/b/c/g?y/./x", resolve("http://example.com/b/c/d;p?q", "g?y/./x"));
+        assertEquals("http://example.com/b/c/g?y/../x", resolve("http://example.com/b/c/d;p?q", "g?y/../x"));
+        assertEquals("http://example.com/b/c/g#s/./x", resolve("http://example.com/b/c/d;p?q", "g#s/./x"));
+        assertEquals("http://example.com/b/c/g#s/../x", resolve("http://example.com/b/c/d;p?q", "g#s/../x"));
     }
 
     @Test
