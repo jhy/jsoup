@@ -34,23 +34,23 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  If you need to allow more through (please be careful!), tweak a base safelist with:
  </p>
  <ul>
- <li>{@link #addTags}
- <li>{@link #addAttributes}
- <li>{@link #addEnforcedAttribute}
- <li>{@link #addProtocols}
+ <li>{@link #addTags(String... tagNames)}
+ <li>{@link #addAttributes(String tagName, String... attributes)}
+ <li>{@link #addEnforcedAttribute(String tagName, String attribute, String value)}
+ <li>{@link #addProtocols(String tagName, String attribute, String... protocols)}
  </ul>
  <p>
  You can remove any setting from an existing safelist with:
  </p>
  <ul>
- <li>{@link #removeTags}
- <li>{@link #removeAttributes}
- <li>{@link #removeEnforcedAttribute}
- <li>{@link #removeProtocols}
+ <li>{@link #removeTags(String... tagNames)}
+ <li>{@link #removeAttributes(String tagName, String... attributes)}
+ <li>{@link #removeEnforcedAttribute(String tagName, String attribute)}
+ <li>{@link #removeProtocols(String tagName, String attribute, String... removeProtocols)}
  </ul>
- 
+
  <p>
- The cleaner and these safelist assume that you want to clean a <code>body</code> fragment of HTML (to add user
+ The cleaner and these safelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
  document HTML around the cleaned body HTML, or create a safelist that allows <code>html</code> and <code>head</code>
  elements as appropriate.
@@ -58,10 +58,9 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  <p>
  If you are going to extend a safelist, please be very careful. Make sure you understand what attributes may lead to
  XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See 
- http://ha.ckers.org/xss.html for some XSS attack examples.
+ the <a href="https://owasp.org/www-community/xss-filter-evasion-cheatsheet">XSS Filter Evasion Cheat Sheet</a> for some
+ XSS attack examples (that jsoup will safegaurd against the default Cleaner and Safelist configuration).
  </p>
-
- @author Jonathan Hedley
  */
 public class Safelist {
     private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]

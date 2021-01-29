@@ -246,10 +246,14 @@ Connection con3 = session.newRequest();
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of permitted
      tags and attributes.
 
-     @param bodyHtml  input untrusted HTML (body fragment)
+     <p>Note that as this method does not take a base href URL to resolve attributes with relative URLs against, those
+     URLs will be removed, unless the input HTML contains a {@code <base href> tag}. If you wish to preserve those, use
+     the {@link Jsoup#clean(String html, String baseHref, Safelist)} method instead, and enable
+     {@link Safelist#preserveRelativeLinks(boolean true)}.</p>
+
+     @param bodyHtml input untrusted HTML (body fragment)
      @param safelist list of permitted HTML elements
      @return safe HTML (body fragment)
-
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, Safelist safelist) {
