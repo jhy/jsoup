@@ -15,6 +15,7 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -34,6 +35,7 @@ import java.util.List;
  */
 public class Cleaner {
     private final Safelist safelist;
+    private DiscardList discList;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
@@ -42,6 +44,7 @@ public class Cleaner {
     public Cleaner(Safelist safelist) {
         Validate.notNull(safelist);
         this.safelist = safelist;
+        discList = new DiscardList();
     }
 
     /**
@@ -52,6 +55,7 @@ public class Cleaner {
     public Cleaner(Whitelist whitelist) {
         Validate.notNull(whitelist);
         this.safelist = whitelist;
+        discList = new DiscardList();
     }
 
     /**
@@ -101,6 +105,25 @@ public class Cleaner {
         return numDiscarded == 0 && errorList.isEmpty();
     }
 
+    public ArrayList<Node> getDiscElems(){
+        return discList.getDiscTags();
+    }
+    public ArrayList<Node> getDiscAttribs(){
+        return discList.getDiscAttribs();
+    }
+    public void trackDiscElems(){
+        discList.trackDiscTags();
+    }
+    public void trackDiscAttribs(){
+        discList.trackDiscAttr();
+    }
+    public void stopTrackingDiscElems(){
+        discList.stopTagsTracking();
+    }
+    public void stopTrackingDiscAttribs(){
+        discList.stopAttribTracking();
+    }
+
     /**
      Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
      */
@@ -126,6 +149,7 @@ public class Cleaner {
                     numDiscarded += meta.numAttribsDiscarded;
                     destination = destChild;
                 } else if (source != root) { // not a safe tag, so don't add. don't count root against discarded.
+                    discList.addTag(source);
                     numDiscarded++;
                 }
             } else if (source instanceof TextNode) {
@@ -137,6 +161,7 @@ public class Cleaner {
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
+                discList.addTag(source);
                 numDiscarded++;
             }
         }
@@ -164,8 +189,10 @@ public class Cleaner {
         for (Attribute sourceAttr : sourceAttrs) {
             if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
-            else
+            else {
+                discList.addAttribute(sourceEl, sourceAttr);
                 numDiscarded++;
+            }
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
