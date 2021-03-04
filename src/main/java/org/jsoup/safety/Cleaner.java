@@ -180,7 +180,6 @@ public class Cleaner {
     private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
-        Attributes discAttrs = new Attributes();
         Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
         int numDiscarded = 0;
 
@@ -188,14 +187,12 @@ public class Cleaner {
         for (Attribute sourceAttr : sourceAttrs) {
             if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
-            else
-                discAttrs.put(sourceAttr);
+            else {
+                discList.addAttribute(sourceEl, sourceAttr);
                 numDiscarded++;
+            }
         }
-        if(numDiscarded > 0){
-            Element discard = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), discAttrs);
-            discList.addElem(discard);
-        }
+
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
         return new ElementMeta(dest, numDiscarded);

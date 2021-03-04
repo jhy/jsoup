@@ -1,6 +1,9 @@
 package org.jsoup.safety;
 
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.parser.Tag;
 
 import java.util.ArrayList;
 
@@ -47,9 +50,11 @@ public class DiscardList {
             discElems.add(elem);
         }
     }
-    public void addAttribute(Node elemWithAtttribute){
+    public void addAttribute(Element elem, Attribute attr){
         if(trackDiscAttr && (attribsMaxSize == -1 || attribsMaxSize > discAttribs.size())){
-            discAttribs.add(elemWithAtttribute);
+            Element copy = new Element(Tag.valueOf(elem.tagName()), elem.baseUri(), null);
+            copy.attributes().add(attr.getKey(), attr.getValue());
+            discAttribs.add(copy);
         }
     }
     public ArrayList<Node> getDiscElems(){
