@@ -47,7 +47,7 @@ public class DiscardList {
     }
     public void addElem(Node elem){
         if(trackDiscElems && (elemsMaxSize == -1 || elemsMaxSize > discElems.size())){
-            discElems.add(elem);
+            discElems.add(elem.clone());
         }
     }
     public void addAttribute(Element elem, Attribute attr){
