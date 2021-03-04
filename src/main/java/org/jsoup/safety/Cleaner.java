@@ -14,6 +14,7 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -104,6 +105,23 @@ public class Cleaner {
         return numDiscarded == 0 && errorList.isEmpty();
     }
 
+    public ArrayList<Node> getDiscElems(){
+        return discList.getDiscElems();
+    }
+    public ArrayList<Node> getDiscAttribs(){
+        return discList.getDiscAttribs();
+    }
+    public void trackDiscElems(){
+        discList.trackDiscElems();
+    }
+    public void trackDiscAttribs(){
+        discList.trackDiscAttr();
+    }
+    public void stopTrackingAllDisc(){
+        discList.stopElemTracking();
+        discList.stopAttribTracking();
+    }
+
     /**
      Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
      */
@@ -129,7 +147,7 @@ public class Cleaner {
                     numDiscarded += meta.numAttribsDiscarded;
                     destination = destChild;
                 } else if (source != root) { // not a safe tag, so don't add. don't count root against discarded.
-                    
+                    discList.addElem(source);
                     numDiscarded++;
                 }
             } else if (source instanceof TextNode) {
@@ -141,6 +159,7 @@ public class Cleaner {
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
+                discList.addElem(source);
                 numDiscarded++;
             }
         }
@@ -161,6 +180,7 @@ public class Cleaner {
     private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
+        Attributes discAttrs = new Attributes();
         Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
         int numDiscarded = 0;
 
@@ -169,11 +189,15 @@ public class Cleaner {
             if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
                 destAttrs.put(sourceAttr);
             else
+                discAttrs.put(sourceAttr);
                 numDiscarded++;
+        }
+        if(numDiscarded > 0){
+            Element discard = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), discAttrs);
+            discList.addElem(discard);
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
-
         return new ElementMeta(dest, numDiscarded);
     }
 
@@ -186,5 +210,6 @@ public class Cleaner {
             this.numAttribsDiscarded = numAttribsDiscarded;
         }
     }
+
 
 }
