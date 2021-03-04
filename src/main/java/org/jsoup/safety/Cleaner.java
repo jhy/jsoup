@@ -117,8 +117,10 @@ public class Cleaner {
     public void trackDiscAttribs(){
         discList.trackDiscAttr();
     }
-    public void stopTrackingAllDisc(){
+    public void stopTrackingDiscElems(){
         discList.stopElemTracking();
+    }
+    public void stopTrackingDiscAttribs(){
         discList.stopAttribTracking();
     }
 
