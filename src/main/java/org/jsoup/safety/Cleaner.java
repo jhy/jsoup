@@ -34,6 +34,7 @@ import java.util.List;
  */
 public class Cleaner {
     private final Safelist safelist;
+    private DiscardList discList;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
@@ -42,6 +43,7 @@ public class Cleaner {
     public Cleaner(Safelist safelist) {
         Validate.notNull(safelist);
         this.safelist = safelist;
+        discList = new DiscardList();
     }
 
     /**
@@ -52,6 +54,7 @@ public class Cleaner {
     public Cleaner(Whitelist whitelist) {
         Validate.notNull(whitelist);
         this.safelist = whitelist;
+        discList = new DiscardList();
     }
 
     /**
@@ -126,6 +129,7 @@ public class Cleaner {
                     numDiscarded += meta.numAttribsDiscarded;
                     destination = destChild;
                 } else if (source != root) { // not a safe tag, so don't add. don't count root against discarded.
+                    
                     numDiscarded++;
                 }
             } else if (source instanceof TextNode) {
