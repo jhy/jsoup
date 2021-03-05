@@ -193,7 +193,6 @@ public class Cleaner {
                 numDiscarded++;
             }
         }
-
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
         return new ElementMeta(dest, numDiscarded);
@@ -208,6 +207,5 @@ public class Cleaner {
             this.numAttribsDiscarded = numAttribsDiscarded;
         }
     }
-
 
 }
