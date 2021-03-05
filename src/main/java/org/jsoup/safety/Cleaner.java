@@ -195,6 +195,7 @@ public class Cleaner {
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
+     
         return new ElementMeta(dest, numDiscarded);
     }
 
