@@ -15,6 +15,7 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -195,7 +196,7 @@ public class Cleaner {
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
-     
+
         return new ElementMeta(dest, numDiscarded);
     }
 

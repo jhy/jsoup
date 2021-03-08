@@ -8,7 +8,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
