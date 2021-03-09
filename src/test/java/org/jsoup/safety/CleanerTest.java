@@ -355,7 +355,7 @@ public class CleanerTest {
     }
 
     /**
-     * The tags that are discarded should be added to the discarded elements list. No other tags should be added.
+     * The tags that are discarded should be added to the discarded tags list. No other tags should be added.
      *  @author Henrik Kultala kultala@kth.se
      */
     @Test public void testDiscardListContainsRemovedElements() {
@@ -409,7 +409,7 @@ public class CleanerTest {
     }
 
     /**
-     * No tags should be added to the removed elements if only their attributes are removed.
+     * No tags should be added to the removed tags if only their attributes are removed.
      * @author Henrik Kultala kultala@kth.se
      */
     @Test public void testDiscardListAttributesDontRemoveElements() {
@@ -424,7 +424,7 @@ public class CleanerTest {
     }
 
     /**
-     *  If only the tracking of the tags/elements list is turned on, then no attributes should be added to the attributes list.
+     *  If only the tracking of the tags/tags list is turned on, then no attributes should be added to the attributes list.
      *  @author Henrik Kultala kultala@kth.se
      */
     @Test public void testDiscardListUntrackedAttributes() {
@@ -438,7 +438,7 @@ public class CleanerTest {
     }
 
     /**
-     * If only the tracking of the attributes list is turned on, then no tags should be added to the elements list.
+     * If only the tracking of the attributes list is turned on, then no tags should be added to the tags list.
      * @author Henrik Kultala kultala@kth.se
      */
     @Test public void testDiscardListUntrackedElements() {
@@ -479,8 +479,8 @@ public class CleanerTest {
     }
 
     /**
-     * One should not be able to modify the objects of the elements discard list nor the objects of the original document
-     * through the objects returned from the getter of the elements discard list.
+     * One should not be able to modify the objects of the tags discard list nor the objects of the original document
+     * through the objects returned from the getter of the tags discard list.
      * @author Henrik Kultala kultala@kth.se
      */
     @Test public void testDiscardListElementsAreClones() {

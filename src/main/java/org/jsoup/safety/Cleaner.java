@@ -106,19 +106,19 @@ public class Cleaner {
     }
 
     public ArrayList<Node> getDiscElems(){
-        return discList.getDiscElems();
+        return discList.getDiscTags();
     }
     public ArrayList<Node> getDiscAttribs(){
         return discList.getDiscAttribs();
     }
     public void trackDiscElems(){
-        discList.trackDiscElems();
+        discList.trackDiscTags();
     }
     public void trackDiscAttribs(){
         discList.trackDiscAttr();
     }
     public void stopTrackingDiscElems(){
-        discList.stopElemTracking();
+        discList.stopTagsTracking();
     }
     public void stopTrackingDiscAttribs(){
         discList.stopAttribTracking();
@@ -149,7 +149,7 @@ public class Cleaner {
                     numDiscarded += meta.numAttribsDiscarded;
                     destination = destChild;
                 } else if (source != root) { // not a safe tag, so don't add. don't count root against discarded.
-                    discList.addElem(source);
+                    discList.addTag(source);
                     numDiscarded++;
                 }
             } else if (source instanceof TextNode) {
@@ -161,7 +161,7 @@ public class Cleaner {
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
-                discList.addElem(source);
+                discList.addTag(source);
                 numDiscarded++;
             }
         }
