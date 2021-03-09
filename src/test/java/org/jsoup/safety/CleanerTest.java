@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.junit.jupiter.api.Test;
 
@@ -338,5 +339,190 @@ public class CleanerTest {
         Document result = new Cleaner(whitelist).clean(orig);
         assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
         assertEquals("<p>test<br /></p>", result.body().html());
+    }
+
+    /**
+     * If the discard lists are not enabled they should not have anything added to them.
+     *  @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListDisabledByDefault() {
+        String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.clean(Jsoup.parse(h));
+
+        assertTrue(cleaner.getDiscElems().isEmpty());
+        assertTrue(cleaner.getDiscAttribs().isEmpty());
+    }
+
+    /**
+     * The tags that are discarded should be added to the discarded tags list. No other tags should be added.
+     *  @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListContainsRemovedElements() {
+        String h = "<div><p><a>Hello <b>there</b>!</a></div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.clean(doc);
+
+        assertTrue(doc.body().child(0).hasSameValue(cleaner.getDiscElems().get(0)));
+        assertTrue(doc.body().child(0).child(0).hasSameValue(cleaner.getDiscElems().get(1)));
+        assertTrue(doc.body().child(0).child(0).child(0).hasSameValue(cleaner.getDiscElems().get(2)));
+        assertEquals(3, cleaner.getDiscElems().size());
+    }
+
+    /**
+     *  Tags that are removed should not have their attributes added to the attributes discard list.
+     *  @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListAttributesOfRemovedElements() {
+        String h = "<div id=bar><p id=foo><a class=cl>Hello <b>there</b>!</a></div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        assertEquals(0, cleaner.getDiscAttribs().size());
+    }
+
+    /**
+     * The attributes with their associated tags that are discarded should be added to the discarded attributes list.
+     * No other attributes should be added.
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListContainsRemovedAttributes() {
+        String h = "Hello <b id=bar><i class=cl>there</i></b>!";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        // The attribute should also have the appropriate tag in the attributes discard list, hence two assertions.
+        assertEquals(doc.body().child(0).normalName(), ((Element)cleaner.getDiscAttribs().get(0)).normalName());
+        assertEquals(doc.body().child(0).attributes().html(), cleaner.getDiscAttribs().get(0).attributes().html());
+
+        assertEquals(doc.body().child(0).child(0).normalName(), ((Element)cleaner.getDiscAttribs().get(1)).normalName());
+        assertEquals(doc.body().child(0).child(0).attributes().html(), cleaner.getDiscAttribs().get(1).attributes().html());
+
+        assertEquals(2, cleaner.getDiscAttribs().size());
+    }
+
+    /**
+     * No tags should be added to the removed tags if only their attributes are removed.
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListAttributesDontRemoveElements() {
+        String h = "Hello <b id=bar><i class=cl>there</i></b>!";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        assertEquals(0, cleaner.getDiscElems().size());
+    }
+
+    /**
+     *  If only the tracking of the tags/tags list is turned on, then no attributes should be added to the attributes list.
+     *  @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListUntrackedAttributes() {
+        String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.clean(doc);
+
+        assertEquals(0, cleaner.getDiscAttribs().size());
+    }
+
+    /**
+     * If only the tracking of the attributes list is turned on, then no tags should be added to the tags list.
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListUntrackedElements() {
+        String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        assertEquals(0, cleaner.getDiscElems().size());
+    }
+
+    /**
+     * Tests that when both tags and attributes are to be removed independently, they still appear correctly
+     * in the two discard lists (and that nothing else is added to the lists).
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListBothElementsAndAttributes() {
+        String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        // Elements/tags are properly added to the discard list.
+        assertTrue(doc.body().child(0).hasSameValue(cleaner.getDiscElems().get(0)));
+        assertTrue(doc.body().child(0).child(0).hasSameValue(cleaner.getDiscElems().get(1)));
+        assertTrue(doc.body().child(0).child(0).child(0).hasSameValue(cleaner.getDiscElems().get(2)));
+
+        // Attributes and their tags are properly added to the discard list.
+        assertEquals(doc.body().child(0).child(0).child(0).child(0).normalName(), ((Element)cleaner.getDiscAttribs().get(0)).normalName());
+        assertEquals(doc.body().child(0).child(0).child(0).child(0).attributes().html(), cleaner.getDiscAttribs().get(0).attributes().html());
+
+        // The two discard lists have no additional objects added than the expected ones.
+        assertEquals(3, cleaner.getDiscElems().size());
+        assertEquals(1, cleaner.getDiscAttribs().size());
+    }
+
+    /**
+     * One should not be able to modify the objects of the tags discard list nor the objects of the original document
+     * through the objects returned from the getter of the tags discard list.
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListElementsAreClones() {
+        String h = "<div class=c>Hello <b id=bar>there</b>!</div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        String originalDiscListElemAttributes = cleaner.getDiscElems().get(0).attributes().html();
+        String originalDocElemAttributes = doc.body().child(0).attributes().html();
+
+        Element changedEl = ((Element)cleaner.getDiscElems().get(0)).attr("id", "unique");
+
+        assertNotEquals(originalDiscListElemAttributes, changedEl.attributes().html());
+        assertNotEquals(originalDocElemAttributes, changedEl.attributes().html());
+        assertEquals(originalDiscListElemAttributes, cleaner.getDiscElems().get(0).attributes().html());
+        assertEquals(originalDocElemAttributes, doc.body().child(0).attributes().html());
+    }
+
+    /**
+     * One should not be able to modify the objects of the attributes discard list nor the objects of the original document
+     * through the objects returned from the getter of the attributes discard list.
+     * @author Henrik Kultala kultala@kth.se
+     */
+    @Test public void testDiscardListAttributesAreClones() {
+        String h = "<div>Hello <b id=bar>there</b>!</div>";
+        Document doc = Jsoup.parse(h);
+        Cleaner cleaner = new Cleaner(Safelist.simpleText());
+        cleaner.trackDiscElems();
+        cleaner.trackDiscAttribs();
+        cleaner.clean(doc);
+
+        String originalDiscListAttributes = cleaner.getDiscAttribs().get(0).attributes().html();
+        String originalDocAttributes = doc.body().child(0).child(0).attributes().html();
+
+        Element changedEl = ((Element)cleaner.getDiscAttribs().get(0)).attr("class", "unique");
+
+        assertNotEquals(originalDiscListAttributes, changedEl.attributes().html());
+        assertNotEquals(originalDocAttributes, changedEl.attributes().html());
+        assertEquals(originalDiscListAttributes, cleaner.getDiscAttribs().get(0).attributes().html());
+        assertEquals(originalDocAttributes, doc.body().child(0).child(0).attributes().html());
     }
 }
