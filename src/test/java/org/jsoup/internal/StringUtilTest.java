@@ -2,29 +2,45 @@ package org.jsoup.internal;
 
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import static org.jsoup.internal.StringUtil.normaliseWhitespace;
 import static org.jsoup.internal.StringUtil.resolve;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class StringUtilTest {
 
-    @Test
-    public void join() {
-        assertEquals("", StringUtil.join(Collections.singletonList(""), " "));
-        assertEquals("one", StringUtil.join(Collections.singletonList("one"), " "));
-        assertEquals("one two three", StringUtil.join(Arrays.asList("one", "two", "three"), " "));
+    @ParameterizedTest
+    @MethodSource("joinTestArgumentsProvider")
+    public void join(String expected, Collection list) {
+        assertEquals(expected, StringUtil.join(list, " "));
     }
 
-    @Test public void padding() {
-        assertEquals("", StringUtil.padding(0));
-        assertEquals(" ", StringUtil.padding(1));
-        assertEquals("  ", StringUtil.padding(2));
-        assertEquals("               ", StringUtil.padding(15));
-        assertEquals("                              ", StringUtil.padding(45)); // we tap out at 30
+    static Stream<Arguments> joinTestArgumentsProvider() {
+        return Stream.of(
+                arguments("", Collections.singletonList("")),
+                arguments("one", Collections.singletonList("one")),
+                arguments("one two three", Arrays.asList("one", "two", "three"))
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "''                              , 0",
+            "' '                             , 1",
+            "'  '                            , 2",
+            "'               '               , 15",
+            "'                              ', 45" // we tap out at 30
+    })
+    public void padding(String expected, int width) {
+        assertEquals(expected, StringUtil.padding(width));
     }
 
     @Test public void paddingInACan() {
@@ -35,44 +51,53 @@ public class StringUtilTest {
         }
     }
 
-    @Test public void isBlank() {
-        assertTrue(StringUtil.isBlank(null));
-        assertTrue(StringUtil.isBlank(""));
-        assertTrue(StringUtil.isBlank("      "));
-        assertTrue(StringUtil.isBlank("   \r\n  "));
-
-        assertFalse(StringUtil.isBlank("hello"));
-        assertFalse(StringUtil.isBlank("   hello   "));
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"      ", "   \r\n  "})
+    public void isBlank_validValues(String value) {
+        assertTrue(StringUtil.isBlank(value));
     }
 
-    @Test public void isNumeric() {
-        assertFalse(StringUtil.isNumeric(null));
-        assertFalse(StringUtil.isNumeric(" "));
-        assertFalse(StringUtil.isNumeric("123 546"));
-        assertFalse(StringUtil.isNumeric("hello"));
-        assertFalse(StringUtil.isNumeric("123.334"));
-
-        assertTrue(StringUtil.isNumeric("1"));
-        assertTrue(StringUtil.isNumeric("1234"));
+    @ParameterizedTest
+    @ValueSource(strings = { "hello", "   hello   "})
+    public void isBlank_invalidValues(String value) {
+        assertFalse(StringUtil.isBlank(value));
     }
 
-    @Test public void isWhitespace() {
-        assertTrue(StringUtil.isWhitespace('\t'));
-        assertTrue(StringUtil.isWhitespace('\n'));
-        assertTrue(StringUtil.isWhitespace('\r'));
-        assertTrue(StringUtil.isWhitespace('\f'));
-        assertTrue(StringUtil.isWhitespace(' '));
-
-        assertFalse(StringUtil.isWhitespace('\u00a0'));
-        assertFalse(StringUtil.isWhitespace('\u2000'));
-        assertFalse(StringUtil.isWhitespace('\u3000'));
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {" ", "123 546", "hello", "123.334"})
+    public void isNumeric_invalidValues(String value) {
+        assertFalse(StringUtil.isNumeric(value));
     }
 
-    @Test public void normaliseWhiteSpace() {
-        assertEquals(" ", normaliseWhitespace("    \r \n \r\n"));
-        assertEquals(" hello there ", normaliseWhitespace("   hello   \r \n  there    \n"));
-        assertEquals("hello", normaliseWhitespace("hello"));
-        assertEquals("hello there", normaliseWhitespace("hello\nthere"));
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "1234"})
+    public void isNumeric_validValues(String value) {
+        assertTrue(StringUtil.isNumeric(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {'\t', '\n', '\r', '\f', ' '})
+    public void isWhitespace_validValues(int value) {
+        assertTrue(StringUtil.isWhitespace(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {'\u00a0', '\u2000', '\u3000'})
+    public void isWhitespace_invalidValues(int value) {
+        assertFalse(StringUtil.isWhitespace(value));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "' '            , '    \r \n \r\n'",
+            "' hello there ', '   hello   \r \n  there    \n'",
+            "'hello'        , 'hello'",
+            "'hello there'  , 'hello\nthere'"
+    })
+    public void normaliseWhiteSpace(String expected, String value) {
+        assertEquals(expected, normaliseWhitespace(value));
     }
 
     @Test public void normaliseWhiteSpaceHandlesHighSurrogates() {
@@ -84,30 +109,37 @@ public class StringUtilTest {
         assertEquals(test71540charsExpectedSingleWhitespace, extractedText);
     }
 
-    @Test public void resolvesRelativeUrls() {
-        assertEquals("http://example.com/one/two?three", resolve("http://example.com", "./one/two?three"));
-        assertEquals("http://example.com/one/two?three", resolve("http://example.com?one", "./one/two?three"));
-        assertEquals("http://example.com/one/two?three#four", resolve("http://example.com", "./one/two?three#four"));
-        assertEquals("https://example.com/one", resolve("http://example.com/", "https://example.com/one"));
-        assertEquals("http://example.com/one/two.html", resolve("http://example.com/two/", "../one/two.html"));
-        assertEquals("https://example2.com/one", resolve("https://example.com/", "//example2.com/one"));
-        assertEquals("https://example.com:8080/one", resolve("https://example.com:8080", "./one"));
-        assertEquals("https://example2.com/one", resolve("http://example.com/", "https://example2.com/one"));
-        assertEquals("https://example.com/one", resolve("wrong", "https://example.com/one"));
-        assertEquals("https://example.com/one", resolve("https://example.com/one", ""));
-        assertEquals("", resolve("wrong", "also wrong"));
-        assertEquals("ftp://example.com/one", resolve("ftp://example.com/two/", "../one"));
-        assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "./two.c"));
-        assertEquals("ftp://example.com/one/two.c", resolve("ftp://example.com/one/", "two.c"));
+    @ParameterizedTest
+    @CsvSource({
+            "'http://example.com/one/two?three'     , 'http://example.com'      , './one/two?three'",
+            "'http://example.com/one/two?three'     , 'http://example.com?one'  , './one/two?three'",
+            "'http://example.com/one/two?three#four', 'http://example.com'      , './one/two?three#four'",
+            "'https://example.com/one'              , 'http://example.com/'     , 'https://example.com/one'",
+            "'http://example.com/one/two.html'      , 'http://example.com/two/' , '../one/two.html'",
+            "'https://example2.com/one'             , 'https://example.com/'    , '//example2.com/one'",
+            "'https://example.com:8080/one'         , 'https://example.com:8080', './one'",
+            "'https://example2.com/one'             , 'http://example.com/'     , 'https://example2.com/one'",
+            "'https://example.com/one'              , 'wrong'                   , 'https://example.com/one'",
+            "'https://example.com/one'              , 'https://example.com/one' , ''",
+            "''                                     , 'wrong'                   , 'also wrong'",
+            "'ftp://example.com/one'                , 'ftp://example.com/two/'  , '../one'",
+            "'ftp://example.com/one/two.c'          , 'ftp://example.com/one/'  , './two.c'",
+            "'ftp://example.com/one/two.c'          , 'ftp://example.com/one/'  , 'two.c'"
+    })
+    public void resolvesRelativeUrls(String expected, String baseUrl, String relUrl) {
+        assertEquals(expected, resolve(baseUrl, relUrl));
     }
 
-    @Test
-    void isAscii() {
-        assertTrue(StringUtil.isAscii(""));
-        assertTrue(StringUtil.isAscii("example.com"));
-        assertTrue(StringUtil.isAscii("One Two"));
-        assertFalse(StringUtil.isAscii("🧔"));
-        assertFalse(StringUtil.isAscii("测试"));
-        assertFalse(StringUtil.isAscii("测试.com"));
+    @ParameterizedTest
+    @EmptySource
+    @ValueSource(strings = {"example.com", "One Two"})
+    void isAscii_validValues(String value) {
+        assertTrue(StringUtil.isAscii(value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"🧔", "测试", "测试.com"})
+    void isAscii_invalidValues(String value) {
+        assertFalse(StringUtil.isAscii(value));
     }
 }
