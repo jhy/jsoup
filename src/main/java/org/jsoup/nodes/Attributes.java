@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.ArrayUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
@@ -387,8 +388,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         Attributes that = (Attributes) o;
 
         if (size != that.size) return false;
-        if (!Arrays.equals(keys, that.keys)) return false;
-        return Arrays.equals(vals, that.vals);
+
+        // support order-insensitive compare with two attributes
+        if(!ArrayUtil.equalOrderInsensitiveArray(keys,that.keys)) return false;
+        return ArrayUtil.equalOrderInsensitiveArray(vals,that.vals);
+        // if (!Arrays.equals(keys, that.keys)) return false;
+        // return Arrays.equals(vals, that.vals);
     }
 
     /**

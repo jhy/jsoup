@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -226,5 +227,13 @@ public class AttributesTest {
         a.put(Attributes.internalKey("baseUri"), "example.com");
         a.put(Attributes.internalKey("another"), "example.com");
         assertEquals(2, a.size());
+    }
+
+    // Failed test for issue #1492
+    @Test
+    public void equalWhenChangeOrder(){
+        final Attributes attributesBarFoo = Jsoup.parseBodyFragment("<a style=\"bar\" class=\"foo\">").select("a").first().attributes();
+        final Attributes attributesFooBar = Jsoup.parseBodyFragment("<a class=\"foo\" style=\"bar\">").select("a").first().attributes();
+        assertEquals(attributesBarFoo, attributesFooBar);
     }
 }
