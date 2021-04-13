@@ -17,7 +17,7 @@ public class ArrayUtil {
             for (int j = 0; j < size; ++j) {
                 T elementB = b[j];
                 // compare null value
-                if (elementA == null && elementB == null) {
+                if (elementA == null && elementB == null && !isMatched[j]) {
                     isMatched[j] = true;
                     break;
                 }

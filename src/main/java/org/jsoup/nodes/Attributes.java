@@ -392,8 +392,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         // support order-insensitive compare with two attributes
         if(!ArrayUtil.equalOrderInsensitiveArray(keys,that.keys)) return false;
         return ArrayUtil.equalOrderInsensitiveArray(vals,that.vals);
-        // if (!Arrays.equals(keys, that.keys)) return false;
-        // return Arrays.equals(vals, that.vals);
+         // if (!Arrays.equals(keys, that.keys)) return false;
+         // return Arrays.equals(vals, that.vals);
     }
 
     /**
