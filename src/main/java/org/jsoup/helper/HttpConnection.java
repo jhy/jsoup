@@ -11,6 +11,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
 import javax.annotation.Nullable;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
@@ -249,6 +250,11 @@ public class HttpConnection implements Connection {
     public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
 	    req.sslSocketFactory(sslSocketFactory);
 	    return this;
+    }
+
+    public Connection hostnameVerifier(HostnameVerifier hostnameVerifier) {
+        req.hostnameVerifier(hostnameVerifier);
+        return this;
     }
 
     public Connection data(String key, String filename, InputStream inputStream) {
@@ -647,6 +653,7 @@ public class HttpConnection implements Connection {
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
         private volatile boolean executing = false;
+        private @Nullable HostnameVerifier hostnameVerifier;
 
         Request() {
             super();
@@ -732,6 +739,14 @@ public class HttpConnection implements Connection {
 
         public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
             this.sslSocketFactory = sslSocketFactory;
+        }
+
+        public HostnameVerifier hostnameVerifier() {
+            return hostnameVerifier;
+        }
+
+        public void hostnameVerifier(HostnameVerifier hostnameVerifier) {
+            this.hostnameVerifier = hostnameVerifier;
         }
 
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
@@ -1026,8 +1041,15 @@ public class HttpConnection implements Connection {
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
-            if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
-                ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
+            if (conn instanceof HttpsURLConnection) {
+                HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
+
+                if (req.sslSocketFactory() != null)
+                    httpsConn.setSSLSocketFactory(req.sslSocketFactory());
+                if (req.hostnameVerifier() != null)
+                    httpsConn.setHostnameVerifier(req.hostnameVerifier());
+            }
+
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             CookieUtil.applyCookiesToRequest(req, conn); // from the Request key/val cookies and the Cookie Store

@@ -11,6 +11,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpConnectionTest {
@@ -246,6 +249,20 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+
+    @Test public void hostnameVerifier() {
+        Connection con = HttpConnection.connect("http://example.com/");
+        HostnameVerifier hostnameVerifier = new HostnameVerifier()
+        {
+            @Override
+            public boolean verify(String hostname, SSLSession session)
+            {
+                return false;
+            }
+        };
+        con.hostnameVerifier(hostnameVerifier);
+        assertEquals(hostnameVerifier, con.request().hostnameVerifier());
     }
 
     @Test public void encodeUrl() throws MalformedURLException {
