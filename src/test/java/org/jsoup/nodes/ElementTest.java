@@ -2039,4 +2039,10 @@ public class ElementTest {
         els.add(new Element("a"));
         assertEquals(1, els.size());
     }
+
+    @Test
+    public void parseBr(){
+        String s = Jsoup.parse("Hello<br>World").wholeText();
+        assertEquals("Hello\nWorld",s);
+    }
 }

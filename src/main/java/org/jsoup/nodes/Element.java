@@ -1251,6 +1251,8 @@ public class Element extends Node {
                 if (node instanceof TextNode) {
                     TextNode textNode = (TextNode) node;
                     accum.append(textNode.getWholeText());
+                }else if (node.nodeName().equals("br")){
+                    accum.append("\n");
                 }
             }
 
