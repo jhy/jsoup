@@ -1425,6 +1425,7 @@ public class HtmlParserTest {
         return htmlElementCount > xmlElementCount;
     }
 
+    // New Feature for issue #1490
     @Test public void parseURLinString(){
         String url = "https://www.baidu.com";
         Document parseDoc = Jsoup.parse(url);
