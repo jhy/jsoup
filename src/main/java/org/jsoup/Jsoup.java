@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -49,16 +50,28 @@ public class Jsoup {
     }
 
     /**
-     Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
-     {@code <base href>} tag.
+     * Add new feature here: support parsing both html and url of string type into a Document.
+     * First check whether the string is a html or url
+     * If it is html, just use the original parse() method. Otherwise use the connect().get() to return Document.
 
-     @param html HTML to parse
-     @return sane HTML
+     @param htmlorUrl HTML or URL in string type to parse
+     @return same HTML
 
      @see #parse(String, String)
      */
-    public static Document parse(String html) {
-        return Parser.parse(html, "");
+    public static Document parse(String htmlorUrl) {
+        /* check whether the string is a url */
+        try {
+            // is URL
+            URL urlInstance = new URL(htmlorUrl);
+            return Jsoup.connect(htmlorUrl).get();
+        } catch (MalformedURLException e) {
+            // is HTML
+            return Parser.parse(htmlorUrl, "");
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        return Parser.parse(htmlorUrl, "");
     }
 
     /**
@@ -321,5 +334,5 @@ Connection con3 = session.newRequest();
     public static boolean isValid(String bodyHtml, Whitelist safelist) {
         return isValid(bodyHtml, (Safelist) safelist);
     }
-    
+
 }

@@ -1424,4 +1424,17 @@ public class HtmlParserTest {
         int xmlElementCount = xml.getAllElements().size();
         return htmlElementCount > xmlElementCount;
     }
+
+    @Test public void parseURLinString(){
+        String url = "https://www.baidu.com";
+        Document parseDoc = Jsoup.parse(url);
+        Document connectDoc = null;
+        try {
+            connectDoc = Jsoup.connect(url).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert connectDoc != null;
+        assertEquals(connectDoc.title(),parseDoc.title());
+    }
 }
