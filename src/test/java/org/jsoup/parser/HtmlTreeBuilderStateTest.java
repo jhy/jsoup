@@ -49,7 +49,7 @@ public class HtmlTreeBuilderStateTest {
 
 
     @Test
-    public void nestedAnchorElements00() {
+    public void nestedAnchorElements() {
         String html = "<html>\n" +
                 "  <body>\n" +
                 "    <a href='#1'>\n" +
@@ -71,7 +71,7 @@ public class HtmlTreeBuilderStateTest {
     }
 
     @Test
-    public void nestedAnchorElements01() {
+    public void nestedAnchorElementsPlus() {
         String html = "<html>\n" +
                 "  <body>\n" +
                 "    <a href='#1'>\n" +
