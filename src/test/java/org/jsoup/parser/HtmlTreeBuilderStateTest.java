@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +45,56 @@ public class HtmlTreeBuilderStateTest {
         List<Object[]> constants = findConstantArrays(Constants.class);
         ensureSorted(constants);
         assertEquals(38, constants.size());
+    }
+
+
+    @Test
+    public void nestedAnchorElements00() {
+        String html = "<html>\n" +
+                "  <body>\n" +
+                "    <a href='#1'>\n" +
+                "        <div>\n" +
+                "          <a href='#2'>child</a>\n" +
+                "        </div>\n" +
+                "    </a>\n" +
+                "  </body>\n" +
+                "</html>";
+        String s = Jsoup.parse(html).toString();
+        assertEquals("<html> \n" +
+                " <head></head>\n" +
+                " <body> <a href=\"#1\"> </a>\n" +
+                "  <div>\n" +
+                "   <a href=\"#1\"> </a><a href=\"#2\">child</a> \n" +
+                "  </div>   \n" +
+                " </body>\n" +
+                "</html>", s);
+    }
+
+    @Test
+    public void nestedAnchorElements01() {
+        String html = "<html>\n" +
+                "  <body>\n" +
+                "    <a href='#1'>\n" +
+                "      <div>\n" +
+                "        <div>\n" +
+                "          <a href='#2'>child</a>\n" +
+                "        </div>\n" +
+                "      </div>\n" +
+                "    </a>\n" +
+                "  </body>\n" +
+                "</html>";
+        String s = Jsoup.parse(html).toString();
+        assertEquals("<html> \n" +
+                " <head></head>\n" +
+                " <body> <a href=\"#1\"> </a>\n" +
+                "  <div>\n" +
+                "   <a href=\"#1\"> </a>\n" +
+                "   <div>\n" +
+                "    <a href=\"#1\"> </a><a href=\"#2\">child</a> \n" +
+                "   </div> \n" +
+                "  </div>   \n" +
+                " </body>\n" +
+                "</html>", s);
     }
 
 }

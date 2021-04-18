@@ -872,6 +872,8 @@ enum HtmlTreeBuilderState {
                 furthestBlock.appendChild(adopter);
                 tb.removeFromActiveFormattingElements(formatEl);
                 // todo: insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
+                if (adopter.childNodeSize() > 1)
+                    tb.pushActiveFormattingElements(adopter);
                 tb.removeFromStack(formatEl);
                 tb.insertOnStackAfter(furthestBlock, adopter);
             }
