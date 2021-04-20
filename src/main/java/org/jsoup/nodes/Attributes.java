@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.ArrayUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
@@ -88,10 +89,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get an attribute value by key.
-     @param key the (case-sensitive) attribute key
-     @return the attribute value if set; or empty string if not set (or a boolean attribute).
-     @see #hasKey(String)
+     * Get an attribute value by key.
+     *
+     * @param key the (case-sensitive) attribute key
+     * @return the attribute value if set; or empty string if not set (or a boolean attribute).
+     * @see #hasKey(String)
      */
     public String get(String key) {
         int i = indexOfKey(key);
@@ -100,6 +102,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Get an attribute's value by case-insensitive key
+     *
      * @param key the attribute name
      * @return the first matching attribute value if set; or empty string if not set (ora boolean attribute).
      */
@@ -110,6 +113,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
+     *
      * @see Attributes#put(String, String)
      */
     public Attributes add(String key, @Nullable String value) {
@@ -122,7 +126,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Set a new attribute, or replace an existing one by key.
-     * @param key case sensitive attribute key (not null)
+     *
+     * @param key   case sensitive attribute key (not null)
      * @param value attribute value (may be null, to set a boolean attribute)
      * @return these attributes, for chaining
      */
@@ -142,14 +147,14 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             vals[i] = value;
             if (!keys[i].equals(key)) // case changed, update
                 keys[i] = key;
-        }
-        else
+        } else
             add(key, value);
     }
 
     /**
      * Set a new boolean attribute, remove attribute if value is false.
-     * @param key case <b>insensitive</b> attribute key
+     *
+     * @param key   case <b>insensitive</b> attribute key
      * @param value attribute value
      * @return these attributes, for chaining
      */
@@ -162,9 +167,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Set a new attribute, or replace an existing one by key.
-     @param attribute attribute with case sensitive key
-     @return these attributes, for chaining
+     * Set a new attribute, or replace an existing one by key.
+     *
+     * @param attribute attribute with case sensitive key
+     * @return these attributes, for chaining
      */
     public Attributes put(Attribute attribute) {
         Validate.notNull(attribute);
@@ -188,8 +194,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Remove an attribute by key. <b>Case sensitive.</b>
-     @param key attribute key to remove
+     * Remove an attribute by key. <b>Case sensitive.</b>
+     *
+     * @param key attribute key to remove
      */
     public void remove(String key) {
         int i = indexOfKey(key);
@@ -198,8 +205,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Remove an attribute by key. <b>Case insensitive.</b>
-     @param key attribute key to remove
+     * Remove an attribute by key. <b>Case insensitive.</b>
+     *
+     * @param key attribute key to remove
      */
     public void removeIgnoreCase(String key) {
         int i = indexOfKeyIgnoreCase(key);
@@ -208,18 +216,20 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Tests if these attributes contain an attribute with this key.
-     @param key case-sensitive key to check for
-     @return true if key exists, false otherwise
+     * Tests if these attributes contain an attribute with this key.
+     *
+     * @param key case-sensitive key to check for
+     * @return true if key exists, false otherwise
      */
     public boolean hasKey(String key) {
         return indexOfKey(key) != NotFound;
     }
 
     /**
-     Tests if these attributes contain an attribute with this key.
-     @param key key to check for
-     @return true if key exists, false otherwise
+     * Tests if these attributes contain an attribute with this key.
+     *
+     * @param key key to check for
+     * @return true if key exists, false otherwise
      */
     public boolean hasKeyIgnoreCase(String key) {
         return indexOfKeyIgnoreCase(key) != NotFound;
@@ -227,6 +237,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Check if these attributes contain an attribute with a value for this key.
+     *
      * @param key key to check for
      * @return true if key exists, and it has a value
      */
@@ -237,6 +248,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Check if these attributes contain an attribute with a value for this key.
+     *
      * @param key case-insensitive key to check for
      * @return true if key exists, and it has a value
      */
@@ -246,8 +258,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get the number of attributes in this set.
-     @return size
+     * Get the number of attributes in this set.
+     *
+     * @return size
      */
     public int size() {
         int s = 0;
@@ -266,8 +279,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Add all the attributes from the incoming set to this set.
-     @param incoming attributes to add to these attributes.
+     * Add all the attributes from the incoming set to this set.
+     *
+     * @param incoming attributes to add to these attributes.
      */
     public void addAll(Attributes incoming) {
         if (incoming.size() == 0)
@@ -312,8 +326,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get the attributes as a List, for iteration.
-     @return an view of the attributes as an unmodifiable List.
+     * Get the attributes as a List, for iteration.
+     *
+     * @return an view of the attributes as an unmodifiable List.
      */
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
@@ -329,6 +344,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      * Retrieves a filtered view of attributes that are HTML5 custom data attributes; that is, attributes with keys
      * starting with {@code data-}.
+     *
      * @return map of custom data attributes.
      */
     public Map<String, String> dataset() {
@@ -336,8 +352,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get the HTML representation of these attributes.
-     @return HTML
+     * Get the HTML representation of these attributes.
+     *
+     * @return HTML
      */
     public String html() {
         StringBuilder sb = StringUtil.borrowBuilder();
@@ -376,6 +393,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Checks if these attributes are equal to another set of attributes, by comparing the two sets
+     *
      * @param o attributes to compare with
      * @return if both sets of attributes have the same content
      */
@@ -387,12 +405,15 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         Attributes that = (Attributes) o;
 
         if (size != that.size) return false;
-        if (!Arrays.equals(keys, that.keys)) return false;
-        return Arrays.equals(vals, that.vals);
+
+        // CS304 Issue link: https://github.com/jhy/jsoup/issues/1492
+        if (!ArrayUtil.equalOrderInsensitiveArray(keys, that.keys)) return false;
+        return ArrayUtil.equalOrderInsensitiveArray(vals, that.vals);
     }
 
     /**
      * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
+     *
      * @return calculated hashcode
      */
     @Override
@@ -428,6 +449,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      * Internal method. Removes duplicate attribute by name. Settings for case sensitivity of key names.
+     *
      * @param settings case sensitivity
      * @return number of removed dupes
      */
@@ -436,7 +458,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
-        OUTER: for (int i = 0; i < keys.length; i++) {
+        OUTER:
+        for (int i = 0; i < keys.length; i++) {
             for (int j = i + 1; j < keys.length; j++) {
                 if (keys[j] == null)
                     continue OUTER; // keys.length doesn't shrink when removing, so re-test
@@ -490,6 +513,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
             private Iterator<Attribute> attrIter = attributes.iterator();
             private Attribute attr;
+
             public boolean hasNext() {
                 while (attrIter.hasNext()) {
                     attr = attrIter.next();

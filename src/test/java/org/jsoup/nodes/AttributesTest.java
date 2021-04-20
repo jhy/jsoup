@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -226,5 +227,21 @@ public class AttributesTest {
         a.put(Attributes.internalKey("baseUri"), "example.com");
         a.put(Attributes.internalKey("another"), "example.com");
         assertEquals(2, a.size());
+    }
+
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1492
+    @Test
+    public void equalNonEmptyAttributesWhenChangeOrder(){
+        final Attributes attributesBarFoo = Jsoup.parseBodyFragment("<a style=\"bar\" class=\"foo\">").select("a").first().attributes();
+        final Attributes attributesFooBar = Jsoup.parseBodyFragment("<a class=\"foo\" style=\"bar\">").select("a").first().attributes();
+        assertEquals(attributesBarFoo, attributesFooBar);
+    }
+
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1492
+    @Test
+    public void equalEmptyAttributesWhenChangeOrder(){
+        final Attributes attributesFooNull = Jsoup.parseBodyFragment("<a style=\"foo\" class=\"\">").select("a").first().attributes();
+        final Attributes attributesNullFoo = Jsoup.parseBodyFragment("<a class=\"\" style=\"foo\">").select("a").first().attributes();
+        assertEquals(attributesNullFoo,attributesFooNull);
     }
 }
