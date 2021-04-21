@@ -1426,8 +1426,22 @@ public class HtmlParserTest {
     }
 
     //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1490
-    @Test public void parseURLinString(){
+    @Test public void parseURLinString1(){
         String url = "https://www.baidu.com";
+        Document parseDoc = Jsoup.parse(url);
+        Document connectDoc = null;
+        try {
+            connectDoc = Jsoup.connect(url).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert connectDoc != null;
+        assertEquals(connectDoc.title(),parseDoc.title());
+    }
+    
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1490
+    @Test public void parseURLinString2(){
+        String url = "https://www.github.com";
         Document parseDoc = Jsoup.parse(url);
         Document connectDoc = null;
         try {
