@@ -1253,6 +1253,8 @@ public class Element extends Node {
                     accum.append(textNode.getWholeText());
                 }else if (node.nodeName().equals("br")){
                     accum.append("\n");
+                }else if (node.nodeName().equals("hr")){
+                    accum.append("\n-\n");
                 }
             }
 
