@@ -1621,6 +1621,22 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     * Create an element with HTML.
+     * @param html HTML to parse, there should be only one outer tag which become the return element.
+     * @return the element create by the outer tag
+     * @see #html(String)
+     */
+    static Element of(final String html){
+        Element e = new Element("div").html(html);
+        if (e.childNodeSize() > 1){
+            throw new IllegalArgumentException("Element syntax error: Number of outer element must be one.");
+        }else if (e.childNodeSize() == 0){
+            throw new IllegalArgumentException("Element syntax error: No legal element detected.");
+        }
+        return e.child(0);
+    }
+
     @Override
     public Element clone() {
         return (Element) super.clone();

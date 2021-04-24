@@ -2039,4 +2039,25 @@ public class ElementTest {
         els.add(new Element("a"));
         assertEquals(1, els.size());
     }
+
+    @Test
+    public void elementOf01() {
+        assertThrows(IllegalArgumentException.class,()->{
+            Element e = Element.of("<span>Some stuff</span><span>Second part</span>");
+        });
+    }
+
+    @Test
+    public void elementOf02() {
+        Element e = Element.of("<div id=\"test\"><span>Some stuff</span><span>Second part</span></div>");
+        assertEquals("div",e.tag().getName());
+        assertEquals("test",e.attributes().get("id"));
+    }
+
+    @Test
+    public void elementOf03() {
+        assertThrows(IllegalArgumentException.class,()->{
+            Element e = Element.of("");
+        });
+    }
 }
