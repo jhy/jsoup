@@ -426,4 +426,37 @@ public class ElementsTest {
         assertEquals("http://example.com/bar", absAttrs.get(1));
         assertEquals("http://example.com", absAttrs.get(2));
     }
+
+    @Test public void replaceAll()
+    {
+        String html = "<html>" +
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("meta").replaceAll(element ->
+        {
+            return new Element("foo");
+        });
+        String expected = "<html>\n" +
+                " <head>\n" +
+                "  <foo></foo><foo></foo>\n" +
+                " </head>\n" +
+                " <body></body>\n" +
+                "</html>";
+        assertEquals(expected,document.toString());
+
+        document = Jsoup.parse(html);
+        document.select("head").replaceAll(element ->
+        {
+            return new Element("foo");
+        });
+        expected = "<html>\n" +
+                " <foo></foo>\n" +
+                " <body></body>\n" +
+                "</html>";
+        assertEquals(expected, document.toString());
+    }
 }
