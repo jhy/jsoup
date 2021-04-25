@@ -18,15 +18,15 @@ public class ElementsTest {
     @Test public void replaceAlltest01() {
         String html =
                 "<html>" +
-                        "<head>" +
-                        "<meta content=\"text/html\">" +
-                        "<meta name=\"theme-color\">" +
-                        "</head>" +
-                        "<body>" +
-                        "<h1>a head</h1>" +
-                        "<p>a paragraph。</p>" +
-                        "</body>" +
-                        "</html>";
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "<h1>a head</h1>" +
+                "<p>a paragraph。</p>" +
+                "</body>" +
+                "</html>";
         Document document = Jsoup.parse(html);
         document.select("meta").replaceAll(element ->
         {
@@ -34,14 +34,14 @@ public class ElementsTest {
         });
         String expected =
                 "<html>\n" +
-                        " <head>\n" +
-                        "  <miao></miao><miao></miao>\n" +
-                        " </head>\n" +
-                        " <body>\n" +
-                        "  <h1>a head</h1>\n" +
-                        "  <p>a paragraph。</p>\n" +
-                        " </body>\n" +
-                        "</html>";
+                " <head>\n" +
+                "  <miao></miao><miao></miao>\n" +
+                " </head>\n" +
+                " <body>\n" +
+                "  <h1>a head</h1>\n" +
+                "  <p>a paragraph。</p>\n" +
+                " </body>\n" +
+                "</html>";
         String given = document.toString();
         assertEquals(expected, given);
 
@@ -50,15 +50,15 @@ public class ElementsTest {
     @Test public void replaceAlltest02() {
         String html =
                 "<html>" +
-                        "<head>" +
-                        "<meta content=\"text/html\">" +
-                        "<meta name=\"theme-color\">" +
-                        "</head>" +
-                        "<body>" +
-                        "<h1>a head</h1>" +
-                        "<p>a paragraph。</p>" +
-                        "</body>" +
-                        "</html>";
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "<h1>a head</h1>" +
+                "<p>a paragraph。</p>" +
+                "</body>" +
+                "</html>";
         Document document = Jsoup.parse(html);
         document.select("head").replaceAll(element ->
         {
@@ -66,12 +66,12 @@ public class ElementsTest {
         });
         String expected =
                 "<html>\n" +
-                        " <miao></miao>\n" +
-                        " <body>\n" +
-                        "  <h1>a head</h1>\n" +
-                        "  <p>a paragraph。</p>\n" +
-                        " </body>\n" +
-                        "</html>";
+                " <miao></miao>\n" +
+                " <body>\n" +
+                "  <h1>a head</h1>\n" +
+                "  <p>a paragraph。</p>\n" +
+                " </body>\n" +
+                "</html>";
         String given = document.toString();
         assertEquals(expected, given);
     }
@@ -79,15 +79,15 @@ public class ElementsTest {
     @Test public void replaceAlltest03() {
         String html =
                 "<html>" +
-                        "<head>" +
-                        "<meta content=\"text/html\">" +
-                        "<meta name=\"theme-color\">" +
-                        "</head>" +
-                        "<body>" +
-                        "<h1>a head</h1>" +
-                        "<p>a paragraph。</p>" +
-                        "</body>" +
-                        "</html>";
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "<h1>a head</h1>" +
+                "<p>a paragraph。</p>" +
+                "</body>" +
+                "</html>";
         Document document = Jsoup.parse(html);
         document.select("body").replaceAll(element ->
         {
@@ -95,11 +95,11 @@ public class ElementsTest {
         });
         String expected =
                 "<html>\n" +
-                        " <head>\n" +
-                        "  <meta content=\"text/html\">\n" +
-                        "  <meta name=\"theme-color\">\n" +
-                        " </head><miao></miao>\n" +
-                        "</html>";
+                " <head>\n" +
+                "  <meta content=\"text/html\">\n" +
+                "  <meta name=\"theme-color\">\n" +
+                " </head><miao></miao>\n" +
+                "</html>";
         String given = document.toString();
         assertEquals(expected, given);
     }
@@ -107,15 +107,15 @@ public class ElementsTest {
     @Test public void replaceAlltest04() {
         String html =
                 "<html>" +
-                        "<head>" +
-                        "<meta content=\"text/html\">" +
-                        "<meta name=\"theme-color\">" +
-                        "</head>" +
-                        "<body>" +
-                        "<h1>a head</h1>" +
-                        "<p>a paragraph。</p>" +
-                        "</body>" +
-                        "</html>";
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "<h1>a head</h1>" +
+                "<p>a paragraph。</p>" +
+                "</body>" +
+                "</html>";
         Document document = Jsoup.parse(html);
         document.select("html").replaceAll(element ->
         {
