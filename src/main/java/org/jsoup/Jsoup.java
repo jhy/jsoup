@@ -66,7 +66,7 @@ public class Jsoup {
             URL url = new URL(html);
             url.toURI();
             return parse(url, 3000);
-        }catch (URISyntaxException | MalformedURLException e) {
+        } catch (URISyntaxException | MalformedURLException e) {
             return Parser.parse(html, "");
         } catch (IOException e) {
             e.printStackTrace();
