@@ -14,6 +14,116 @@ import static org.junit.jupiter.api.Assertions.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class ElementsTest {
+
+    @Test public void replaceAlltest01() {
+        String html =
+                "<html>" +
+                        "<head>" +
+                        "<meta content=\"text/html\">" +
+                        "<meta name=\"theme-color\">" +
+                        "</head>" +
+                        "<body>" +
+                        "<h1>a head</h1>" +
+                        "<p>a paragraph。</p>" +
+                        "</body>" +
+                        "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("meta").replaceAll(element ->
+        {
+            return new Element("miao");
+        });
+        String expected =
+                "<html>\n" +
+                        " <head>\n" +
+                        "  <miao></miao><miao></miao>\n" +
+                        " </head>\n" +
+                        " <body>\n" +
+                        "  <h1>a head</h1>\n" +
+                        "  <p>a paragraph。</p>\n" +
+                        " </body>\n" +
+                        "</html>";
+        String given = document.toString();
+        assertEquals(expected, given);
+
+    }
+
+    @Test public void replaceAlltest02() {
+        String html =
+                "<html>" +
+                        "<head>" +
+                        "<meta content=\"text/html\">" +
+                        "<meta name=\"theme-color\">" +
+                        "</head>" +
+                        "<body>" +
+                        "<h1>a head</h1>" +
+                        "<p>a paragraph。</p>" +
+                        "</body>" +
+                        "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("head").replaceAll(element ->
+        {
+            return new Element("miao");
+        });
+        String expected =
+                "<html>\n" +
+                        " <miao></miao>\n" +
+                        " <body>\n" +
+                        "  <h1>a head</h1>\n" +
+                        "  <p>a paragraph。</p>\n" +
+                        " </body>\n" +
+                        "</html>";
+        String given = document.toString();
+        assertEquals(expected, given);
+    }
+
+    @Test public void replaceAlltest03() {
+        String html =
+                "<html>" +
+                        "<head>" +
+                        "<meta content=\"text/html\">" +
+                        "<meta name=\"theme-color\">" +
+                        "</head>" +
+                        "<body>" +
+                        "<h1>a head</h1>" +
+                        "<p>a paragraph。</p>" +
+                        "</body>" +
+                        "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("body").replaceAll(element ->
+        {
+            return new Element("miao");
+        });
+        String expected =
+                "<html>\n" +
+                        " <head>\n" +
+                        "  <meta content=\"text/html\">\n" +
+                        "  <meta name=\"theme-color\">\n" +
+                        " </head><miao></miao>\n" +
+                        "</html>";
+        String given = document.toString();
+        assertEquals(expected, given);
+    }
+
+    @Test public void replaceAlltest04() {
+        String html =
+                "<html>" +
+                        "<head>" +
+                        "<meta content=\"text/html\">" +
+                        "<meta name=\"theme-color\">" +
+                        "</head>" +
+                        "<body>" +
+                        "<h1>a head</h1>" +
+                        "<p>a paragraph。</p>" +
+                        "</body>" +
+                        "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("html").replaceAll(element ->
+        {
+            return new Element("miao");
+        });
+        String expected = "<miao></miao>";
+        assertEquals(expected, document.toString());
+    }
     @Test public void filter() {
         String h = "<p>Excl</p><div class=headline><p>Hello</p><p>There</p></div><div class=headline><h1>Headline</h1></div>";
         Document doc = Jsoup.parse(h);

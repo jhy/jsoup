@@ -16,6 +16,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.ConcurrentModificationException;
+import java.util.function.UnaryOperator;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -681,6 +684,28 @@ public class Elements extends ArrayList<Element> {
             }
         }
         return nodes;
+    }
+    
+    /**
+     * Implement a method to replace tag. The idea comes from Arraylist.replaceAll()
+     * @param operator a lambda to do the replacement
+     * @see ArrayList#replaceAll(UnaryOperator) 
+     */
+    public void replaceAll(UnaryOperator<Element> operator) {
+        Objects.requireNonNull(operator);
+        final int expectedModCount = modCount;
+        final int size = this.size();
+
+        for(int i = 0; this.modCount == expectedModCount && i < size; i++)
+        {
+            Element element = this.get(i);
+            Element replacer = operator.apply(element);
+            element.replaceWith(replacer);
+        }
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
     }
 
 }
