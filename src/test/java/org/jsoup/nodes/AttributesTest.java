@@ -1,7 +1,9 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -226,5 +228,21 @@ public class AttributesTest {
         a.put(Attributes.internalKey("baseUri"), "example.com");
         a.put(Attributes.internalKey("another"), "example.com");
         assertEquals(2, a.size());
+    }
+
+    @Test
+    public void testOrder1() throws IOException {
+
+        final Attributes attributesBarFoo = Jsoup.parseBodyFragment("<a style=\"bar\" class=\"foo\">").select("a").first().attributes();
+        final Attributes attributesFooBar = Jsoup.parseBodyFragment("<a class=\"foo\" style=\"bar\">").select("a").first().attributes();
+        assertEquals(attributesBarFoo, attributesFooBar);
+    }
+
+    @Test
+    public void testOrder2() throws IOException {
+
+        final Attributes attributesBarFoo = Jsoup.parseBodyFragment("<base href=\"http://www.runoob.com/images/\" target=\"_blank\">").select("base").first().attributes();
+        final Attributes attributesFooBar = Jsoup.parseBodyFragment("<base target=\"_blank\" href=\"http://www.runoob.com/images/\">").select("base").first().attributes();
+        assertEquals(attributesBarFoo, attributesFooBar);
     }
 }
