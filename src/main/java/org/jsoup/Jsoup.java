@@ -22,6 +22,7 @@ import java.net.URL;
  @author Jonathan Hedley */
 
 public class Jsoup {
+    static final int TIMEOUT = 3000;
     private Jsoup() {}
 
     /**
@@ -61,15 +62,14 @@ public class Jsoup {
 
      @see #parse(String, String)
      */
-    public static Document parse(String html) {
+    public static Document parse(final String html) {
         try {
             URL url = new URL(html);
             url.toURI();
-            return parse(url, 3000);
+            return parse(url, TIMEOUT);
         } catch (URISyntaxException | MalformedURLException e) {
             return Parser.parse(html, "");
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
     }
