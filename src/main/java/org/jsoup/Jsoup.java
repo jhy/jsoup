@@ -12,6 +12,8 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -51,6 +53,8 @@ public class Jsoup {
     /**
      Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
      {@code <base href>} tag.
+     MonteCrystal#1490: Check if passed string is a url while it should be an html. If is url, then invoke the parse
+     call for url.
 
      @param html HTML to parse
      @return sane HTML
@@ -58,7 +62,16 @@ public class Jsoup {
      @see #parse(String, String)
      */
     public static Document parse(String html) {
-        return Parser.parse(html, "");
+        try {
+            URL url = new URL(html);
+            url.toURI();
+            return parse(url, 3000);
+        }catch (URISyntaxException | MalformedURLException e) {
+            return Parser.parse(html, "");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**

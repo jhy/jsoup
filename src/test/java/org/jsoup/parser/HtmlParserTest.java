@@ -1424,4 +1424,22 @@ public class HtmlParserTest {
         int xmlElementCount = xml.getAllElements().size();
         return htmlElementCount > xmlElementCount;
     }
+
+    @Test
+    void testParseUrl() throws IOException {
+        String url = "https://www2.deloitte.com/us/en/insights/industry/power-and-utilities/future-of-energy-us-energy-transition.html";
+        Document doc1 = Jsoup.parse(url);
+        assertNotEquals("<head><\\head>",doc1.head());
+    }
+
+
+    @Test
+    void testParseHead(){
+        String html = "<!DOCTYPE html>\n" +
+                "<html><head><style type=\"text/css\"></style></head><body>\n" +
+                "<div class=\"c1\"><token type=\"underline\" color=\"any\">\n" +
+                "</body></html>";
+        assertEquals("<head>\n <style type=\"text/css\"></style>\n</head>", Jsoup.parse(html).head().toString());
+    }
+
 }
