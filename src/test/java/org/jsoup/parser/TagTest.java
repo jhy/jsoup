@@ -1,6 +1,9 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -80,5 +83,38 @@ public class TagTest {
     @Test public void knownTags() {
         assertTrue(Tag.isKnownTag("div"));
         assertFalse(Tag.isKnownTag("explain"));
+    }
+
+    @Test public void registerNewTag1() {
+        String html = "<assessment-group id=\"2C93808974B5C5DA0174B73EB5712FBA\"> \n" +
+                "            <label> 2. </label> \n" +
+                "            <highlight show-answer=\"true\" id=\"2C93808974B5C5DA0174B73EB5712FBB\"> \n" +
+                "                <question> \n" +
+                "                    <p id=\"2C93808974B5C5DA0174B73EB5712FBC\">Underline the best word to complete each sentence below.</p> \n" +
+                "                </question> \n" +
+                "                <items> \n" +
+                "                    <item id=\"2C93808974B5C5DA0174B73EB5712FBD\">He has <token type=\"underline\" color=\"any\">received</token> many gifts, <strong>but</strong> his wife <strong>has</strong> received <strong>no /</strong> <token type=\"underline\" color=\"any\">none</token></item> \n" +
+                "                    <item id=\"2C93808974B5C5DA0174B73EB5712FBE\">The <strong>bird</strong> hasn't drunk <token type=\"circle\" color=\"any\"><strong>any</strong></token> <strong> / some</strong> water today.</item> \n" +
+                "                </items> \n" +
+                "            </highlight> \n" +
+                "</assessment-group>";
+        Document doc = Jsoup.parse(html);
+        assertFalse(Tag.isKnownTag("item"));
+    }
+
+    @Test public void registerNewTag2(){
+        String html =  "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<body>\n" +
+                "\n" +
+                "<p>plain-<blind>foo</blind>。</p>\n" +
+                "\n" +
+                "</body>\n" +
+                "</html>";
+        Tag.formatAndRegister("blind");
+        assertTrue(Tag.isKnownTag("blind"));
+        Document doc = Jsoup.parse(html);
+        Elements elements = doc.getElementsByTag("blind");
+        assertEquals("foo", elements.get(0).text());
     }
 }

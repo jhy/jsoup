@@ -316,4 +316,20 @@ public class Tag implements Cloneable {
     private static void register(Tag tag) {
         tags.put(tag.tagName, tag);
     }
+
+    /**
+     Register an unknown tag and set formatAsBlock true.
+
+     @param tagName which needs to be registered and format as block
+     @see #register(Tag)
+     @see #valueOf(String)
+     */
+    public static void formatAndRegister(final String tagName) {
+        if (Tag.isKnownTag(tagName)) {
+            return;
+        }
+        Tag tag = Tag.valueOf(tagName);
+        tag.formatAsBlock = false;
+        register(tag);
+    }
 }
