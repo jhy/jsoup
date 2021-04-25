@@ -59,7 +59,8 @@ public class Jsoup {
 
      @param html HTML to parse
      @return sane HTML
-     @return sane HTML if input correct, sane HTML if input is url, empty HTML if encountered IOException.
+     @return sane HTML if input correct, sane HTML if input is url,
+     empty HTML if encountered IOException.
 
      @see #parse(String, String)
      */
