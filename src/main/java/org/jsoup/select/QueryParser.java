@@ -18,6 +18,7 @@ public class QueryParser {
     private final static String[] combinators = {",", ">", "+", "~", " "};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
+    private boolean caseSensitiveFlag;
     private final TokenQueue tq;
     private final String query;
     private final List<Evaluator> evals = new ArrayList<>();
@@ -34,14 +35,35 @@ public class QueryParser {
     }
 
     /**
+     * Create a new QueryParser.
+     * @param query CSS query
+     * @param caseSensitiveFlag select case-sensitively if true
+     */
+    private QueryParser(String query, boolean caseSensitiveFlag) {
+        this(query);
+        this.caseSensitiveFlag = caseSensitiveFlag;
+    }
+
+    /**
      * Parse a CSS query into an Evaluator.
      * @param query CSS query
      * @return Evaluator
      * @see Selector selector query syntax
      */
     public static Evaluator parse(String query) {
+        return parse(query, false);
+    }
+
+    /**
+     * Parse a CSS query into an Evaluator.
+     * @param query CSS query
+     * @param caseSensitiveFlag select case-sensitively if true
+     * @return Evaluator
+     * @see Selector selector query syntax
+     */
+    public static Evaluator parse(String query, boolean caseSensitiveFlag) {
         try {
-            QueryParser p = new QueryParser(query);
+            QueryParser p = new QueryParser(query, caseSensitiveFlag);
             return p.parse();
         } catch (IllegalArgumentException e) {
             throw new Selector.SelectorParseException(e.getMessage());
@@ -225,7 +247,7 @@ public class QueryParser {
     private void byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        evals.add(new Evaluator.Class(className.trim()));
+        evals.add(new Evaluator.Class(className.trim(), this.caseSensitiveFlag));
     }
 
     private void byTag() {

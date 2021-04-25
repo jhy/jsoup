@@ -19,6 +19,13 @@ public class CssTest {
 	public static void initClass() {
 		StringBuilder sb = new StringBuilder("<html><head></head><body>");
 
+		sb.append("<div class=\"c1\">" +
+				"Some text\n" +
+				"</div>\n" +
+				"<div class=\"C1\">\n" +
+				"Some other text\n" +
+				"</div>");
+
 		sb.append("<div id='pseudo'>");
 		for (int i = 1; i <= 10; i++) {
 			sb.append(String.format("<p>%d</p>",i));
@@ -48,6 +55,16 @@ public class CssTest {
 	@BeforeEach
 	public void init() {
 		html  = Jsoup.parse(htmlString);
+	}
+
+	@Test
+	public void caseSensitive() {
+		assertEquals("Some text" , Jsoup.parse(htmlString).select(".c1", true).text());
+	}
+
+	@Test
+	public void caseInsensitive(){
+		assertEquals("Some text Some other text", Jsoup.parse(htmlString).select(".c1").text());
 	}
 
 	@Test

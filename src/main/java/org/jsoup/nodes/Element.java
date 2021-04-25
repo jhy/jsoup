@@ -410,7 +410,7 @@ public class Element extends Node {
      * </ul>
      * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
      * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
-     * 
+     *
      * @param cssQuery a {@link Selector} CSS-like query
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
      * @see Selector selector query syntax
@@ -418,7 +418,30 @@ public class Element extends Node {
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public Elements select(String cssQuery) {
-        return Selector.select(cssQuery, this);
+        return select(cssQuery, false);
+    }
+
+    /**
+     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
+     * may include this element, or any of its children.
+     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined, e.g.:</p>
+     * <ul>
+     * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
+     * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
+     * </ul>
+     * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
+     * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
+     *
+     * @param cssQuery a {@link Selector} CSS-like query
+     * @param caseSensitiveFlag select case-sensitively if true
+     * @return an {@link Elements} list containing elements that match the query (empty if none match)
+     * @see Selector selector query syntax
+     * @see QueryParser#parse(String)
+     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     */
+    public Elements select(String cssQuery, boolean caseSensitiveFlag) {
+        return Selector.select(cssQuery, this, caseSensitiveFlag);
     }
 
     /**
@@ -1436,6 +1459,17 @@ public class Element extends Node {
      */
     // performance sensitive
     public boolean hasClass(String className) {
+        return hasClass(className, false);
+    }
+
+    /**
+     * Tests if this element has a class. Case insensitive.
+     * @param className name of class to check for
+     * @param caseSensitiveFlag select case-sensitively if true
+     * @return true if it does, false if not
+     */
+    // performance sensitive
+    public boolean hasClass(String className, boolean caseSensitiveFlag) {
         if (attributes == null)
             return false;
 
@@ -1449,6 +1483,9 @@ public class Element extends Node {
 
         // if both lengths are equal, only need compare the className with the attribute
         if (len == wantLen) {
+            if (caseSensitiveFlag) {
+                return className.equals(classAttr);
+            }
             return className.equalsIgnoreCase(classAttr);
         }
 

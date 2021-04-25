@@ -105,14 +105,20 @@ public abstract class Evaluator {
      */
     public static final class Class extends Evaluator {
         private final String className;
+        private boolean caseSensitiveFlag;
 
         public Class(String className) {
             this.className = className;
         }
 
+        public Class(String className, boolean caseSensitive) {
+            this(className);
+            this.caseSensitiveFlag = caseSensitive;
+        }
+
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.hasClass(className));
+            return (element.hasClass(className, caseSensitiveFlag));
         }
 
         @Override
