@@ -427,15 +427,20 @@ public class ElementsTest {
         assertEquals("http://example.com", absAttrs.get(2));
     }
 
-    @Test public void replaceAll()
+    // CS304(manually written) issue link: https://github.com/jhy/jsoup/issues/1514
+    @Test public void replaceAllReplaceTagsWithAttributes()
     {
+        // GIVEN
         String html = "<html>" +
                 "<head>" +
                 "<meta content=\"text/html\">" +
                 "<meta name=\"theme-color\">" +
                 "</head>" +
+                "<body>" +
+                "</body>" +
                 "</html>";
         Document document = Jsoup.parse(html);
+        // THEN
         document.select("meta").replaceAll(element ->
         {
             return new Element("foo");
@@ -446,17 +451,63 @@ public class ElementsTest {
                 " </head>\n" +
                 " <body></body>\n" +
                 "</html>";
+        //WHEN
         assertEquals(expected,document.toString());
+    }
 
-        document = Jsoup.parse(html);
+    // CS304(manually written) issue link: https://github.com/jhy/jsoup/issues/1514
+    @Test public void replaceAllReplaceTagsWithoutAttribute()
+    {
+        // GIVEN
+        String html = "<html>" +
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "</body>" +
+                "</html>";
+        Document document = Jsoup.parse(html);
+
+        // WHEN
         document.select("head").replaceAll(element ->
         {
             return new Element("foo");
         });
-        expected = "<html>\n" +
+        String expected = "<html>\n" +
                 " <foo></foo>\n" +
                 " <body></body>\n" +
                 "</html>";
+        // THEN
+        assertEquals(expected, document.toString());
+    }
+
+    // CS304(manually written) issue link: https://github.com/jhy/jsoup/issues/1514
+    @Test public void replaceAllIgnoreTagsNotInhtml()
+    {
+        // GIVEN
+        String html = "<html>" +
+                "<head>" +
+                "<meta content=\"text/html\">" +
+                "<meta name=\"theme-color\">" +
+                "</head>" +
+                "<body>" +
+                "</body>" +
+                "</html>";
+        Document document = Jsoup.parse(html);
+        // WHEN
+        document.select("a").replaceAll(element ->
+        {
+            return new Element("foo");
+        });
+        String expected = "<html>\n" +
+                " <head>\n" +
+                "  <meta content=\"text/html\">\n" +
+                "  <meta name=\"theme-color\">\n" +
+                " </head>\n" +
+                " <body></body>\n" +
+                "</html>";
+        // THEN
         assertEquals(expected, document.toString());
     }
 }
