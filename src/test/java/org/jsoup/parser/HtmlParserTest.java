@@ -1429,7 +1429,7 @@ public class HtmlParserTest {
     void testParseUrl() throws IOException {
         String url = "https://www2.deloitte.com/us/en/insights/industry/power-and-utilities/future-of-energy-us-energy-transition.html";
         Document doc1 = Jsoup.parse(url);
-        assertNotEquals("<head><\\head>",doc1.head());
+        assertNotEquals("<head></head>",doc1.head().toString());
     }
 
 
