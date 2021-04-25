@@ -58,7 +58,6 @@ public class Jsoup {
      call for url.
 
      @param html HTML to parse
-     @return sane HTML
      @return sane HTML if input correct, sane HTML if input is url,
      empty HTML if encountered IOException.
 
