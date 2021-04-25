@@ -386,9 +386,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
         Attributes that = (Attributes) o;
 
-        if (size != that.size) return false;
-        if (!Arrays.equals(keys, that.keys)) return false;
-        return Arrays.equals(vals, that.vals);
+        return dataset().equals(that.dataset());
     }
 
     /**
