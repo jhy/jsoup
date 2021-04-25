@@ -70,7 +70,7 @@ public class Jsoup {
         } catch (URISyntaxException | MalformedURLException e) {
             return Parser.parse(html, "");
         } catch (IOException e) {
-            return null;
+            return Parser.parse("", "");
         }
     }
 
