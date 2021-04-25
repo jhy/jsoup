@@ -1415,6 +1415,18 @@ public class HtmlParserTest {
         assertFalse(didAddElements(full));
     }
 
+    @Test public void attributesWithNoKeyAndNoVal(){
+        String html = "<div =\"\"></div>";
+        org.jsoup.nodes.Document doc = Jsoup.parse(html);
+        String html_parse = doc.toString();
+        assertEquals("<html>\n" +
+                " <head></head>\n" +
+                " <body>\n" +
+                "  <div =\"\"></div>\n" +
+                " </body>\n" +
+                "</html>",html_parse);
+    }
+
     private boolean didAddElements(String input) {
         // two passes, one as XML and one as HTML. XML does not vivify missing/optional tags
         Document html = Jsoup.parse(input);

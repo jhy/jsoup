@@ -255,6 +255,13 @@ public class XmlTreeBuilderTest {
         assertEquals("<p One=\"One\" ONE=\"Two\" one=\"Three\" two=\"Six\" Two=\"Eight\">Text</p>", doc.selectFirst("p").outerHtml());
     }
 
+    @Test public void attributesWithNoKeyAndNoVal(){
+        String html = "<div =\"\"></div>";
+        org.jsoup.nodes.Document xml = Jsoup.parse(html, "", Parser.xmlParser());
+        String xmlResult = xml.toString();
+        assertEquals("<div></div>", xmlResult);
+    }
+
     @Test public void readerClosedAfterParse() {
         Document doc = Jsoup.parse("Hello", "", Parser.xmlParser());
         TreeBuilder treeBuilder = doc.parser().getTreeBuilder();

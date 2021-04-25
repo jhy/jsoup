@@ -596,8 +596,8 @@ enum TokeniserState {
                 case '=':
                     t.error(this);
                     t.tagPending.newAttribute();
-                    t.tagPending.appendAttributeName(c);
-                    t.transition(AttributeName);
+                    t.tagPending.appendAttributeName("");
+                    t.transition(BeforeAttributeValue);
                     break;
                 default: // A-Z, anything else
                     t.tagPending.newAttribute();
