@@ -1432,7 +1432,6 @@ public class HtmlParserTest {
         assertNotEquals("<head></head>",doc1.head().toString());
     }
 
-
     @Test
     void testParseHead(){
         String html = "<!DOCTYPE html>\n" +
