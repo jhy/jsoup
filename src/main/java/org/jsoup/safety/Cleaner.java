@@ -1,5 +1,7 @@
 package org.jsoup.safety;
 
+import java.util.List;
+
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -13,8 +15,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
-
-import java.util.List;
 
 
 /**
@@ -55,17 +55,31 @@ public class Cleaner {
     }
 
     /**
+     * {@code empty} defaults to false
+     * @see Cleaner#clean(Document, boolean)
+     */
+    public Document clean(Document dirtyDocument) {
+        return clean(dirtyDocument, false);
+    }
+
+    /**
      Creates a new, clean document, from the original dirty document, containing only elements allowed by the safelist.
      The original document is not modified. Only elements from the dirty document's <code>body</code> are used. The
      OutputSettings of the original document are cloned into the clean document.
      @param dirtyDocument Untrusted base document to clean.
+     @param fullHtml If full html is used.
      @return cleaned document.
      */
-    public Document clean(Document dirtyDocument) {
+    public Document clean(Document dirtyDocument, boolean fullHtml) {
         Validate.notNull(dirtyDocument);
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
-        copySafeNodes(dirtyDocument.body(), clean.body());
+        if (fullHtml) {
+            clean.empty();
+            copySafeNodes(dirtyDocument, clean);
+        } else {
+            copySafeNodes(dirtyDocument.body(), clean.body());
+        }
         clean.outputSettings(dirtyDocument.outputSettings().clone());
 
         return clean;

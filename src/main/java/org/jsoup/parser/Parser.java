@@ -1,12 +1,12 @@
 package org.jsoup.parser;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 /**
  * Parses HTML into a {@link org.jsoup.nodes.Document}. Generally best to use one of the  more convenient parse methods
@@ -175,23 +175,36 @@ public class Parser {
     }
 
     /**
+     * {@code fullHtml} defaults to false
+     * @see Parser#parseBodyFragment(String, String, boolean)
+     */
+    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+        return parseBodyFragment(bodyHtml, baseUri, false);
+    }
+
+    /**
      * Parse a fragment of HTML into the {@code body} of a Document.
      *
      * @param bodyHtml fragment of HTML
      * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @param fullHtml is the full html used
      *
      * @return Document, with empty head, and HTML parsed into body
      */
-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+    public static Document parseBodyFragment(String bodyHtml, String baseUri, boolean fullHtml) {
         Document doc = Document.createShell(baseUri);
-        Element body = doc.body();
-        List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
+        Element root = fullHtml ? doc.body().parent() : doc.body();
+        if (fullHtml) {
+            assert root != null;
+            root.empty();
+        }
+        List<Node> nodeList = parseFragment(bodyHtml, root, baseUri);
         Node[] nodes = nodeList.toArray(new Node[0]); // the node list gets modified when re-parented
         for (int i = nodes.length - 1; i > 0; i--) {
             nodes[i].remove();
         }
         for (Node node : nodes) {
-            body.appendChild(node);
+            root.appendChild(node);
         }
         return doc;
     }

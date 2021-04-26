@@ -1,15 +1,20 @@
 package org.jsoup.safety;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Locale;
+
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.junit.jupiter.api.Test;
-
-import java.util.Locale;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  Tests for the cleaner.
@@ -48,6 +53,12 @@ public class CleanerTest {
         String h = "<h1>Head</h1><table><tr><td>One<td>Two</td></tr></table>";
         String cleanHtml = Jsoup.clean(h, Safelist.relaxed());
         assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void testFull() {
+        String h = "<html><head><title>title</title><meta charset=\"UTF-8\"><script></script><style>.clss{color:red;}</style></head><body>1<script></script></body></html>";
+        String cleanHtml = Jsoup.clean(h, "", Safelist.full(), true);
+        assertEquals("<html><head><title>title</title><meta charset=\"UTF-8\"><style>.clss{color:red;}</style></head><body>1</body></html>", TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void testRemoveTags() {

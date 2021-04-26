@@ -5,17 +5,17 @@ package org.jsoup.safety;
     this safe-list configuration, and the initial defaults.
  */
 
-import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.Element;
+import static org.jsoup.internal.Normalizer.lowerCase;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
+import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Element;
 
 
 /**
@@ -178,6 +178,12 @@ public class Safelist {
                 .addProtocols("img", "src", "http", "https")
                 .addProtocols("q", "cite", "http", "https")
                 ;
+    }
+
+    public static Safelist full() {
+        return Safelist.relaxed()
+                .addTags("html", "body", "head", "meta", "style", "title")
+                .addAttributes("meta", "charset");
     }
 
     /**

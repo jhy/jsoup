@@ -1,5 +1,12 @@
 package org.jsoup;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
+import javax.annotation.Nullable;
+
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
@@ -7,12 +14,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 import org.jsoup.safety.Whitelist;
-
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 
 /**
  The core public access point to the jsoup functionality.
@@ -216,21 +217,30 @@ Connection con3 = session.newRequest();
     }
 
     /**
+     * {@code fullHtml} defaults to false
+     * @see Jsoup#clean(String, String, Safelist, boolean) 
+     */
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
+        return clean(bodyHtml, baseUri, safelist, false);
+    }
+
+    /**
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through an allow-list of safe
      tags and attributes.
 
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
      @param safelist  list of permitted HTML elements
-     @return safe HTML (body fragment)
+     @param fullHtml is full html is used
+     @return safe HTML
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
-        Document dirty = parseBodyFragment(bodyHtml, baseUri);
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist, boolean fullHtml) {
+        Document dirty = Parser.parseBodyFragment(bodyHtml, baseUri, fullHtml);
         Cleaner cleaner = new Cleaner(safelist);
-        Document clean = cleaner.clean(dirty);
-        return clean.body().html();
+        Document clean = cleaner.clean(dirty, fullHtml);
+        return fullHtml ? clean.html() : clean.body().html();
     }
 
     /**
