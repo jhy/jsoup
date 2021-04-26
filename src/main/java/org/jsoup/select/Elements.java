@@ -70,7 +70,9 @@ public class Elements extends ArrayList<Element> {
     @Override
     public void replaceAll(UnaryOperator<Element> operator)
     {
-        Objects.requireNonNull(operator);
+        // make sure operator is not null
+        if (operator == null)
+            throw new NullPointerException();
         int expectedModCount = this.modCount;
         int size = this.size();
 
