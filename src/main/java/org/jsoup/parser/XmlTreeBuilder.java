@@ -85,7 +85,9 @@ public class XmlTreeBuilder extends TreeBuilder {
         // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         if (startTag.hasAttributes())
             startTag.attributes.deduplicate(settings);
-
+        if (!startTag.checkValid()) {
+            startTag.attributes.remove(startTag.getIllegalPendingAttributeName());
+        }
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el);
         if (startTag.isSelfClosing()) {
@@ -128,6 +130,12 @@ public class XmlTreeBuilder extends TreeBuilder {
      * @param endTag tag to close
      */
     private void popStackToClose(Token.EndTag endTag) {
+
+        //Judge whether the attribute people are legal
+        if (!endTag.checkValid()) {
+            endTag.attributes.remove(endTag.getIllegalPendingAttributeName());
+        }
+
         String elName = settings.normalizeTag(endTag.tagName);
         Element firstFound = null;
 

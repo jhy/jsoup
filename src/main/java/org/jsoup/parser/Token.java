@@ -71,26 +71,35 @@ abstract class Token {
             return forceQuirks;
         }
     }
-
     static abstract class Tag extends Token {
         protected String tagName;
         protected String normalName; // lc version of tag name, for case insensitive tree build
         private String pendingAttributeName; // attribute names are generally caught in one hop, not accumulated
+        /** Stores an invalid string. */
+        private String illegalPendingAttributeName;
         private StringBuilder pendingAttributeValue = new StringBuilder(); // but values are accumulated, from e.g. & in hrefs
         private String pendingAttributeValueS; // try to get attr vals in one shot, vs Builder
         private boolean hasEmptyAttributeValue = false; // distinguish boolean attribute from empty string value
         private boolean hasPendingAttributeValue = false;
+        /** Determine whether attribute name is valid. */
+        private boolean hasIllegalAttributeName = false;
         boolean selfClosing = false;
         Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
+        /**
+         * variable reinitialize
+         * @return The object of this tag
+         */
         @Override
         Tag reset() {
             tagName = null;
             normalName = null;
             pendingAttributeName = null;
+            illegalPendingAttributeName = null;
             reset(pendingAttributeValue);
             pendingAttributeValueS = null;
             hasEmptyAttributeValue = false;
+            hasIllegalAttributeName = false;
             hasPendingAttributeValue = false;
             selfClosing = false;
             attributes = null;
@@ -176,9 +185,29 @@ abstract class Token {
         final void appendAttributeName(String append) {
             pendingAttributeName = pendingAttributeName == null ? append : pendingAttributeName.concat(append);
         }
-
+        /**
+         * Invalid attribute name for connection.
+         * @param append An invalid attribute name
+         */
+        final void appendIllegalAttributeName(final String append) {
+            illegalPendingAttributeName = illegalPendingAttributeName == null ? append : illegalPendingAttributeName.concat(append);
+        }
+        /**
+         * append Attribute Name and decide if it's legal.
+         * @param append part of Attribute Name
+         */
         final void appendAttributeName(char append) {
             appendAttributeName(String.valueOf(append));
+            if (!checkValid()) {
+                appendIllegalAttributeName(String.valueOf(append));
+            }
+        }
+        /**
+         * get method of IllegalPendingAttributeName.
+         * @return Illegal pending Attribute Name
+         */
+        final String getIllegalPendingAttributeName() {
+            return illegalPendingAttributeName;
         }
 
         final void appendAttributeValue(String append) {
@@ -209,6 +238,19 @@ abstract class Token {
         
         final void setEmptyAttributeValue() {
             hasEmptyAttributeValue = true;
+        }
+        /**
+         * set the flag of legal.
+         */
+        final void setIllegalAttributeName() {
+            hasIllegalAttributeName = true;
+        }
+        /**
+         * valid check of attribute name.
+         * @return the flag of legal or not
+         */
+        final boolean checkValid() {
+            return !hasIllegalAttributeName;
         }
 
         private void ensureAttributeValue() {

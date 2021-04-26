@@ -596,6 +596,7 @@ enum TokeniserState {
                 case '=':
                     t.error(this);
                     t.tagPending.newAttribute();
+                    t.tagPending.setIllegalAttributeName();
                     t.tagPending.appendAttributeName(c);
                     t.transition(AttributeName);
                     break;

@@ -261,5 +261,18 @@ public class XmlTreeBuilderTest {
         assertNull(treeBuilder.reader);
         assertNull(treeBuilder.tokeniser);
     }
-
+    @Test
+    public void beforeAttributeNameIllegalValue(){
+        String html = "<div =\"\">";
+        Document doc = Jsoup.parse(html,"",Parser.xmlParser());
+        String xml = doc.toString();
+        assertEquals("<div></div>", xml);
+    }
+    @Test
+    public void secondAttributeNameIllegalValue(){
+        String ht = "<div someattribute=\"somevalue\"=\"\"></div>";
+        Document doc = Jsoup.parse(ht,"",Parser.xmlParser());
+        String xml = doc.toString();
+        assertEquals("<div someattribute=\"somevalue\"></div>", xml);
+    }
 }
