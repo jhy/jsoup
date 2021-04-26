@@ -59,12 +59,12 @@ public class CssTest {
 
 	@Test
 	public void caseSensitive() {
-		assertEquals("Some text" , Jsoup.parse(htmlString).select(".c1", true).text());
+		assertEquals("Some text" , html.select(".c1", true).text());
 	}
 
 	@Test
 	public void caseInsensitive(){
-		assertEquals("Some text Some other text", Jsoup.parse(htmlString).select(".c1").text());
+		assertEquals("Some text Some other text", html.select(".c1").text());
 	}
 
 	@Test
