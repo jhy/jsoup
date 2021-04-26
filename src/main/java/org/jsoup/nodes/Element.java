@@ -410,7 +410,7 @@ public class Element extends Node {
      * </ul>
      * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
      * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
-     *
+     * 
      * @param cssQuery a {@link Selector} CSS-like query
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
      * @see Selector selector query syntax
