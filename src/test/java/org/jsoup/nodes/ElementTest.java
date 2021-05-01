@@ -2045,10 +2045,4 @@ public class ElementTest {
         String s = Jsoup.parse("Hello<br>World").wholeText();
         assertEquals("Hello\nWorld",s);
     }
-
-    @Test
-    public void parseHr(){
-        String s = Jsoup.parse("Hello<Hr>World").wholeText();
-        assertEquals("Hello\n-\nWorld",s);
-    }
 }
