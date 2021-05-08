@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.ArrayUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
@@ -406,9 +405,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
         if (size != that.size) return false;
 
-        // CS304 Issue link: https://github.com/jhy/jsoup/issues/1492
-        if (!ArrayUtil.equalOrderInsensitiveArray(keys, that.keys)) return false;
-        return ArrayUtil.equalOrderInsensitiveArray(vals, that.vals);
+        if(!Arrays.equals(keys,that.keys)) return false;
+        return Arrays.equals(vals,that.vals);
     }
 
     /**
