@@ -1425,31 +1425,21 @@ public class HtmlParserTest {
         return htmlElementCount > xmlElementCount;
     }
 
-    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1490
-    @Test public void parseURLinString1(){
-        String url = "https://www.baidu.com";
-        Document parseDoc = Jsoup.parse(url);
-        Document connectDoc = null;
-        try {
-            connectDoc = Jsoup.connect(url).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assert connectDoc != null;
-        assertEquals(connectDoc.title(),parseDoc.title());
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1385
+    @Test
+    public void parse_redundant_quotes_test1() {
+        String path = "<a href=\"/code.php?set=HCPCS&c=A6454\" title=\"Self-adher band w>=3\" <5\">A6454</a>";
+        String truth = "Self-adher band w>=3\" <5";
+        Document doc = Jsoup.parse(path);
+        assertEquals(doc.select("a").attr("title"), truth);
     }
-    
-    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1490
-    @Test public void parseURLinString2(){
-        String url = "https://www.github.com";
-        Document parseDoc = Jsoup.parse(url);
-        Document connectDoc = null;
-        try {
-            connectDoc = Jsoup.connect(url).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assert connectDoc != null;
-        assertEquals(connectDoc.title(),parseDoc.title());
+
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1385
+    @Test
+    public void parse_redundant_quotes_test2() {
+        String path = "<a test=\"Self-adher band w>=3\" <\"98786875>A6454</a>";
+        String truth = "Self-adher band w>=3\" <";
+        Document doc = Jsoup.parse(path);
+        assertEquals(doc.select("a").attr("test"), truth);
     }
 }
