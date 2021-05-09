@@ -348,7 +348,8 @@ public final class CharacterReader {
                 case '\'':
                     if (single) break OUTER;
                 case '"':
-                    if (!single) break OUTER;
+                    if (!redundant_quote_check(pos, val))
+                        if (!single) break OUTER;
                 default:
                     pos++;
             }
