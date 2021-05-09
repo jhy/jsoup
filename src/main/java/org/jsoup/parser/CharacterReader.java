@@ -310,6 +310,27 @@ public final class CharacterReader {
         bufPos = pos;
         return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
     }
+ 
+    /**
+     * Add new feature here: a demo try to solve the similar html format problem
+     * It is very simple, hope for a more suitable plan
+     @param pos and val
+     @return true or false to tell if there are redundant quotes
+      * This added method aims to solve this issue:
+      * CS304 Issue link: https://github.com/jhy/jsoup/issues/1385
+     */
+    boolean redundant_quote_check(int pos, char[] val) {
+        char a = val[pos + 1];
+        char b = val[pos + 2];
+        if (a == '\u0000')
+            return false;
+        if (a == ' ') {
+            //if (b >= 65 && b <= 90 || b >= 97 && b <= 122)
+            if (b == '<')
+                return true;
+        }
+        return false;
+    }
 
     String consumeAttributeQuoted(final boolean single) {
         // null, " or ', &
