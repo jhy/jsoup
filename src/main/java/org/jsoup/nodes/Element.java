@@ -1588,6 +1588,8 @@ public class Element extends Node {
 
     /**
      * Retrieves the element's inner HTML.
+     *
+     * CS304 Issue link: https://github.com/jhy/jsoup/issues/887
      * If the output syntax of HTML is XML, illegal XML characters should be removed.
      * E.g. on a {@code <div>} with one empty {@code <p>}, would return
      * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
@@ -1599,7 +1601,8 @@ public class Element extends Node {
         StringBuilder accum = StringUtil.borrowBuilder();
         html(accum);
         String html = StringUtil.releaseBuilder(accum);
-        //Remove illegal XML characters if the output syntax of HTML is XML
+        // Remove illegal XML characters if the output syntax of HTML is XML
+        // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
         if (NodeUtils.outputSettings(this).syntax().equals(Document.OutputSettings.Syntax.xml)) {
             String regex = "[<>&'\"\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f]";
             html = html.replaceAll(regex, "");
