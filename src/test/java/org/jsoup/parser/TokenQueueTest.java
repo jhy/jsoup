@@ -1,7 +1,10 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
+
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -94,5 +97,13 @@ public class TokenQueueTest {
         } catch (IllegalArgumentException expected) {
             assertEquals("Did not find balanced marker at 'something(or another)) else'", expected.getMessage());
         }
+    }
+
+    @Test
+    public void testQuotedPattern() {
+        final Document doc = Jsoup.parse("<div>\\) foo1</div><div>( foo2</div><div>1) foo3</div>");
+        assertEquals("\n\\) foo1",doc.select("div:matches(" + Pattern.quote("\\)") + ")").get(0).childNode(0).toString());
+        assertEquals("\n( foo2",doc.select("div:matches(" + Pattern.quote("(") + ")").get(0).childNode(0).toString());
+        assertEquals("\n1) foo3",doc.select("div:matches(" + Pattern.quote("1)") + ")").get(0).childNode(0).toString());
     }
 }
