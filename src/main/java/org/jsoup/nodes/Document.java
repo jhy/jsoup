@@ -393,6 +393,17 @@ public class Document extends Element {
             }
         }
     }
+
+    /**
+     * Set the document's output settings.
+     * This is used to override the function in Element, to avoid misuse.
+     * @param out new output settings.
+     */
+    @Override
+    public void setOutputSettings(Document.OutputSettings out)
+    {
+        this.outputSettings(out);
+    }
     
 
     /**

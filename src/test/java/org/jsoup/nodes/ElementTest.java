@@ -2039,4 +2039,31 @@ public class ElementTest {
         els.add(new Element("a"));
         assertEquals(1, els.size());
     }
+
+    @Test void singleElementShouldHaveStandardOutputSetting()
+    {
+        Element li = new Element("li");
+        li.setOutputSettings(new Document.OutputSettings().prettyPrint(true));
+        assertEquals("<li></li>", li.outerHtml());
+    }
+
+    @Test void elementFromDocumentShouldHaveSameOutputSetting()
+    {
+        Document document = Jsoup.parse("<div> </div>");
+        document.outputSettings(new Document.OutputSettings().prettyPrint(false));
+        Element element = document.body();
+        Element clone = element.clone();
+        assertEquals(element.outerHtml(), clone.outerHtml());
+    }
+
+    @Test void elementWithParentsFromDocumentShouldHaveSameOutputSetting()
+    {
+        Document document = Jsoup.parse("<div> <div> </div> </div>" +
+                "<br> </br>");
+        document.outputSettings(new Document.OutputSettings().prettyPrint(false));
+        Element element = document.body();
+        Element clone = element.clone();
+        assertEquals(element.outerHtml(), clone.outerHtml());
+    }
+
 }

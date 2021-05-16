@@ -48,6 +48,27 @@ public class Element extends Node {
     private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
     private @Nullable Attributes attributes; // field is nullable but all methods for attributes are non null
+    private @Nullable Document.OutputSettings outputSettings = null;
+
+    /**
+     * Setup the output setting for this element.
+     * By default, it uses the default output setting.
+     * @param out the output setting this element will use
+     */
+    public void setOutputSettings(Document.OutputSettings out)
+    {
+        Validate.notNull(out);
+        this.outputSettings = out;
+    }
+
+    /**
+     * Return the current output setting of this element.
+     * @return the output setting of this element
+     */
+    Document.OutputSettings getOutputSettings()
+    {
+        return this.outputSettings;
+    }
 
     /**
      * Create a new, standalone element.
@@ -1623,7 +1644,13 @@ public class Element extends Node {
 
     @Override
     public Element clone() {
-        return (Element) super.clone();
+        Element clone = (Element)super.clone();
+        Document owner = this.ownerDocument();
+        if (owner != null)
+        {
+            clone.setOutputSettings(owner.outputSettings());
+        }
+        return clone;
     }
 
     @Override
