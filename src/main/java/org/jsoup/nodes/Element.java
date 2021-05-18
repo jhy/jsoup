@@ -55,6 +55,7 @@ public class Element extends Node {
      * By default, it uses the default output setting.
      * @param out the output setting this element will use
      */
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     public void setOutputSettings(Document.OutputSettings out)
     {
         Validate.notNull(out);
@@ -65,6 +66,7 @@ public class Element extends Node {
      * Return the current output setting of this element.
      * @return the output setting of this element
      */
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     Document.OutputSettings getOutputSettings()
     {
         return this.outputSettings;
@@ -1642,6 +1644,11 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     * After cloning, copy the document's output setting to the element
+     * @return the cloned Element
+     */
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     @Override
     public Element clone() {
         Element clone = (Element)super.clone();

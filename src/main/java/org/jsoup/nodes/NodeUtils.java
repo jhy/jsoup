@@ -14,6 +14,7 @@ final class NodeUtils {
      * Get the output setting for this node,  or if this node has no document (or parent), retrieve the default output
      * settings, or if this node is an instance of Element, check if there is a designated output setting
      */
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     static Document.OutputSettings outputSettings(Node node) {
         Document owner = node.ownerDocument();
         if (owner == null && node instanceof Element)

@@ -399,6 +399,7 @@ public class Document extends Element {
      * This is used to override the function in Element, to avoid misuse.
      * @param out new output settings.
      */
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     @Override
     public void setOutputSettings(Document.OutputSettings out)
     {

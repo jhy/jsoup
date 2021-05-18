@@ -2040,6 +2040,8 @@ public class ElementTest {
         assertEquals(1, els.size());
     }
 
+    // CS304 (manually written) Issue link:
+    // CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     @Test void singleElementShouldHaveStandardOutputSetting()
     {
         Element li = new Element("li");
@@ -2047,6 +2049,8 @@ public class ElementTest {
         assertEquals("<li></li>", li.outerHtml());
     }
 
+    // CS304 (manually written) Issue link:
+    // CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     @Test void elementFromDocumentShouldHaveSameOutputSetting()
     {
         Document document = Jsoup.parse("<div> </div>");
@@ -2056,6 +2060,8 @@ public class ElementTest {
         assertEquals(element.outerHtml(), clone.outerHtml());
     }
 
+    // CS304 (manually written) Issue link:
+    // CS304 Issue link: https://github.com/jhy/jsoup/issues/763
     @Test void elementWithParentsFromDocumentShouldHaveSameOutputSetting()
     {
         Document document = Jsoup.parse("<div> <div> </div> </div>" +
