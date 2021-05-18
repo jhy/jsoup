@@ -1604,7 +1604,7 @@ public class Element extends Node {
         // Remove illegal XML characters if the output syntax of HTML is XML
         // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
         if (NodeUtils.outputSettings(this).syntax().equals(Document.OutputSettings.Syntax.xml)) {
-            String regex = "[<>&'\"\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f]";
+            String regex = "[\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f]";
             html = html.replaceAll(regex, "");
         }
         return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;

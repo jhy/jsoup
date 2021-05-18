@@ -527,7 +527,7 @@ public class DocumentTest {
         assertEquals(expected, doc.html());
     }
 
-    // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
+    // CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/887
     @Test
     public void testlegalCharactersInXml(){
         String legal_xml_html = "<td>before after</td>";
@@ -536,7 +536,7 @@ public class DocumentTest {
         assertEquals("before after",legal_xml_doc.body().html());
     }
 
-    // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
+    // CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/887
     @Test
     public void testIllegalCharactersInXml(){
         String illegal_xml_html = "<td>before &#9;&#10;&#12;&#11; after</td>";
@@ -545,7 +545,7 @@ public class DocumentTest {
         assertEquals("before  after",illegal_xml_doc.body().html());
     }
 
-    // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
+    // CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/887
     @Test
     public void testlegalCharactersNotInXml(){
         String legal_html = "<td>before after</td>";
@@ -553,7 +553,7 @@ public class DocumentTest {
         assertEquals("before after",legal_doc.body().html());
     }
 
-    // CS304 Issue link: https://github.com/jhy/jsoup/issues/887
+    // CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/887
     @Test
     public void testIllegalCharactersNotInXml(){
         String illegal_html = "<td>before &#9;&#10;&#12;&#11; after</td>";
