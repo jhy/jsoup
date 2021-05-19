@@ -1,5 +1,7 @@
 package org.jsoup.select;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,6 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley
  */
 public class QueryParserTest {
+
+    @Test public void testConsumeSubQuery() {
+        Document doc = Jsoup.parse("<html><head>h</head><body>" +
+                "<li><strong>l1</strong></li>" +
+                "<a><li><strong>l2</strong></li></a>" +
+                "<p><strong>yes</strong></p>" +
+                "</body></html>");
+        assertEquals("l1 l2 yes", doc.body().select(">p>strong,>*>li>strong").text());
+        assertEquals("l2 yes", doc.select("body>p>strong,body>*>li>strong").text());
+        assertEquals("yes", doc.select(">body>*>li>strong,>body>p>strong").text());
+        assertEquals("l2", doc.select(">body>p>strong,>body>*>li>strong").text());
+    }
+
     @Test public void testOrGetsCorrectPrecedence() {
         // tests that a selector "a b, c d, e f" evals to (a AND b) OR (c AND d) OR (e AND f)"
         // top level or, three child ands
