@@ -275,4 +275,28 @@ public class TokeniserStateTest {
         doc = Jsoup.parse("<p foo=");
         assertEquals("<p foo></p>", doc.body().html());
     }
+
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/1550
+    @Test
+    public void myTest1(){
+        String html = "<a\u00A0href=\"http://example.com/test\">test</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"http://example.com/test\">test</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
+
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/1550
+    @Test
+    public void myTest2(){
+        String html = "<a href=\"http://example.com/test\">test</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"http://example.com/test\">test</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
+
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/1550
+    @Test
+    public void myTest3(){
+        String html = "<a\u00A0href=\"https://test.com/example\">pass</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"https://test.com/example\">pass</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
 }

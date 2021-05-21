@@ -154,6 +154,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeAttributeName);
                     break;
@@ -227,6 +228,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     if (t.isAppropriateEndTagToken())
                         t.transition(BeforeAttributeName);
@@ -243,8 +245,7 @@ enum TokeniserState {
                     if (t.isAppropriateEndTagToken()) {
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
+                    } else
                         anythingElse(t, r);
                     break;
                 default:
@@ -556,7 +557,7 @@ enum TokeniserState {
     },
     ScriptDataDoubleEscapeEnd {
         void read(Tokeniser t, CharacterReader r) {
-            handleDataDoubleEscapeTag(t,r, ScriptDataEscaped, ScriptDataDoubleEscaped);
+            handleDataDoubleEscapeTag(t, r, ScriptDataEscaped, ScriptDataDoubleEscaped);
         }
     },
     BeforeAttributeName {
@@ -568,6 +569,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break; // ignore whitespace
                 case '/':
@@ -618,6 +620,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(AfterAttributeName);
                     break;
@@ -658,6 +661,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     // ignore
                     break;
@@ -703,6 +707,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     // ignore
                     break;
@@ -822,6 +827,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeAttributeName);
                     break;
@@ -867,6 +873,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeAttributeName);
                     break;
@@ -1113,6 +1120,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeDoctypeName);
                     break;
@@ -1145,6 +1153,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break; // ignore whitespace
                 case nullChar:
@@ -1184,6 +1193,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(AfterDoctypeName);
                     break;
@@ -1238,6 +1248,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeDoctypePublicIdentifier);
                     break;
@@ -1278,6 +1289,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break;
                 case '"':
@@ -1371,6 +1383,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BetweenDoctypePublicAndSystemIdentifiers);
                     break;
@@ -1409,6 +1422,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break;
                 case '>':
@@ -1446,6 +1460,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeDoctypeSystemIdentifier);
                     break;
@@ -1486,6 +1501,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break;
                 case '"':
@@ -1579,6 +1595,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     break;
                 case '>':
@@ -1659,6 +1676,7 @@ enum TokeniserState {
                 case '\n':
                 case '\r':
                 case '\f':
+                case 160:
                 case ' ':
                     t.transition(BeforeAttributeName);
                     break;
@@ -1737,6 +1755,7 @@ enum TokeniserState {
             case '\n':
             case '\r':
             case '\f':
+            case 160:
             case ' ':
             case '/':
             case '>':

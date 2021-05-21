@@ -377,6 +377,7 @@ public final class CharacterReader {
                 case '/':
                 case '>':
                 case '<':
+                case 160:
                 case TokeniserState.nullChar:
                     break OUTER;
             }
