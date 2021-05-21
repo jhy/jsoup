@@ -1,5 +1,7 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -336,4 +338,24 @@ public class CharacterReaderTest {
         assertTrue(r.isEmpty());
     }
 
+    @Test
+    public void spaceType1(){
+        String html = "<a\u00A0href=\"http://example.com/test\">test</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"http://example.com/test\">test</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
+
+    @Test
+    public void spaceType2(){
+        String html = "<a\u0020href=\"http://example.com/test\">test</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"http://example.com/test\">test</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
+
+    @Test
+    public void spaceType3(){
+        String html = "<a\u3000href=\"http://example.com/test\">test</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a href=\"http://example.com/test\">test</a>", doc.childNode(0).childNode(1).childNode(0).toString());
+    }
 }

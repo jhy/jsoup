@@ -150,6 +150,8 @@ enum TokeniserState {
 
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -223,6 +225,8 @@ enum TokeniserState {
 
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -564,6 +568,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -614,6 +620,8 @@ enum TokeniserState {
 
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -654,6 +662,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -699,6 +709,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -818,6 +830,8 @@ enum TokeniserState {
 
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -863,6 +877,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1109,6 +1125,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1141,6 +1159,8 @@ enum TokeniserState {
             }
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1180,6 +1200,8 @@ enum TokeniserState {
                     t.emitDoctypePending();
                     t.transition(Data);
                     break;
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1234,6 +1256,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1274,6 +1298,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1367,6 +1393,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1405,6 +1433,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1442,6 +1472,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1482,6 +1514,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1575,6 +1609,8 @@ enum TokeniserState {
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1655,6 +1691,8 @@ enum TokeniserState {
         if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
             char c = r.consume();
             switch (c) {
+                case '\u00A0':
+                case '\u3000':
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1733,6 +1771,8 @@ enum TokeniserState {
 
         char c = r.consume();
         switch (c) {
+            case '\u00A0':
+            case '\u3000':
             case '\t':
             case '\n':
             case '\r':
