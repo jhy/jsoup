@@ -339,4 +339,17 @@ public class CleanerTest {
         assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
         assertEquals("<p>test<br /></p>", result.body().html());
     }
+    @Test public void NoHeadCleanerTest(){
+        Safelist whitelist = Safelist.relaxed()
+                .addTags("!DOCTYPE html", "html","body","head","meta", "style")
+                .addAttributes("meta", "charset");
+        String value = "<html><head><style>.some {color: red}</style></head><body>3<script>alert('pwned')</script>4</body></html>";
+        String doc = Jsoup.clean(value, whitelist);
+        assertEquals("<head>\n" +
+                " <style>.some {color: red}</style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                " 34\n" +
+                "</body>",doc);
+    }
 }

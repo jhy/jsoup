@@ -65,7 +65,15 @@ public class Cleaner {
         Validate.notNull(dirtyDocument);
 
         Document clean = Document.createShell(dirtyDocument.baseUri());
-        copySafeNodes(dirtyDocument.body(), clean.body());
+        Element head,body;
+        if(dirtyDocument.head().childNodeSize() > 0){
+            head = dirtyDocument.head();
+            copySafeNodes(head, clean.body());
+        }
+        if(dirtyDocument.body().childNodeSize() > 0){
+            body = dirtyDocument.body();
+            copySafeNodes(body, clean.body());
+        }
         clean.outputSettings(dirtyDocument.outputSettings().clone());
 
         return clean;

@@ -227,7 +227,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
-        Document dirty = parseBodyFragment(bodyHtml, baseUri);
+        Document dirty = parse(bodyHtml, baseUri);
         Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         return clean.body().html();
