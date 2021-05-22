@@ -2060,4 +2060,11 @@ public class ElementTest {
             Element e = Element.of("");
         });
     }
+
+    @Test
+    public void elementOf04() {
+        assertThrows(IllegalArgumentException.class,()->{
+            Element e = Element.of("<html><head></head><body></body><html>");
+        });
+    }
 }
