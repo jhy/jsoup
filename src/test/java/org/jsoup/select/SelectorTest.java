@@ -996,4 +996,22 @@ public class SelectorTest {
         assertEquals("One Two", spans.get(0).text());
         assertEquals("Three Four", spans.get(1).text());
     }
+
+    @Test
+    public void MultipleSpaceSelectionTest(){
+        String html = "<div>    write     test  </div>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("div:contains(    write     test  )");
+        assertEquals(1,els.size());
+        assertEquals("write test", els.text());
+    }
+
+    @Test
+    public void NormalSpaceSelectionTest(){
+        String html = "<div><span>One <span>Two</span></span> <span>Three <span>Four</span></span>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("span:contains(    Three     Four  )");
+        assertEquals(1,els.size());
+        assertEquals("Three Four", els.text());
+    }
 }

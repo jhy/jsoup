@@ -293,9 +293,24 @@ public class TokenQueue {
         if (depth > 0) {// ran out of queue before seeing enough )
             Validate.fail("Did not find balanced marker at '" + out + "'");
         }
-        return out;
+        return format(out);
     }
-    
+    /**
+     * Remove any extra Spaces from the string
+     * @param str string needs to format
+     * @return format string
+     */
+    private String format(String str){
+        StringBuilder bd = new StringBuilder();
+        String[] spl = str.split(" ");
+        for (String s : spl) {
+            if(!s.equals("")){
+                bd.append(s.trim());
+                bd.append(" ");
+            }
+        }
+        return bd.toString().trim();
+    }
     /**
      * Unescape a \ escaped string.
      * @param in backslash escaped string
