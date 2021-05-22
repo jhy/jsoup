@@ -1628,9 +1628,11 @@ public class Element extends Node {
      * @see #html(String)
      */
     static Element of(final String html){
-        String head = html.trim().substring(1,5);
-        if (head.equals("html") || head.equals("head"))
-            throw new IllegalArgumentException("Element syntax error: Outer tag can not be <html> or <head>.");
+        if(html.trim().length() > 5) {
+            String head = html.trim().substring(1, 5);
+            if (head.equals("html") || head.equals("head"))
+                throw new IllegalArgumentException("Element syntax error: Outer tag can not be <html> or <head>.");
+        }
         Element e = new Element("div").html(html);
         if (e.childNodeSize() > 1){
             throw new IllegalArgumentException("Element syntax error: Number of outer element must be one.");
