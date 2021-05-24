@@ -3,6 +3,7 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.*;
+import org.jsoup.parser.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class ElementsTest {
-
     @Test public void replaceAlltest01() {
         String html =
                 "<html>" +
@@ -30,20 +30,19 @@ public class ElementsTest {
         Document document = Jsoup.parse(html);
         document.select("meta").replaceAll(element ->
         {
-            return new Element("miao");
+            return new Element("foo");
         });
         String expected =
                 "<html>\n" +
                 " <head>\n" +
-                "  <miao></miao><miao></miao>\n" +
+                "  <foo></foo><foo></foo>\n" +
                 " </head>\n" +
                 " <body>\n" +
                 "  <h1>a head</h1>\n" +
                 "  <p>a paragraph。</p>\n" +
                 " </body>\n" +
                 "</html>";
-        String given = document.toString();
-        assertEquals(expected, given);
+        assertEquals(expected, document.toString());
 
     }
 
@@ -62,18 +61,17 @@ public class ElementsTest {
         Document document = Jsoup.parse(html);
         document.select("head").replaceAll(element ->
         {
-            return new Element("miao");
+            return new Element("foo");
         });
         String expected =
                 "<html>\n" +
-                " <miao></miao>\n" +
+                " <foo></foo>\n" +
                 " <body>\n" +
                 "  <h1>a head</h1>\n" +
                 "  <p>a paragraph。</p>\n" +
                 " </body>\n" +
                 "</html>";
-        String given = document.toString();
-        assertEquals(expected, given);
+        assertEquals(expected, document.toString());
     }
 
     @Test public void replaceAlltest03() {
@@ -91,17 +89,16 @@ public class ElementsTest {
         Document document = Jsoup.parse(html);
         document.select("body").replaceAll(element ->
         {
-            return new Element("miao");
+            return new Element("foo");
         });
         String expected =
                 "<html>\n" +
                 " <head>\n" +
                 "  <meta content=\"text/html\">\n" +
                 "  <meta name=\"theme-color\">\n" +
-                " </head><miao></miao>\n" +
+                " </head><foo></foo>\n" +
                 "</html>";
-        String given = document.toString();
-        assertEquals(expected, given);
+        assertEquals(expected, document.toString());
     }
 
     @Test public void replaceAlltest04() {
@@ -119,11 +116,36 @@ public class ElementsTest {
         Document document = Jsoup.parse(html);
         document.select("html").replaceAll(element ->
         {
-            return new Element("miao");
+            return new Element("foo");
         });
-        String expected = "<miao></miao>";
+        String expected = "<foo></foo>";
         assertEquals(expected, document.toString());
     }
+
+    @Test public void replaceAlltest05() {
+        String html =
+            "<html>" +
+            "<head>" +
+            "<meta content=\"text/html\">" +
+            "<meta name=\"theme-color\">" +
+            "</head>" +
+            "<body>" +
+            "<h1>a head</h1>" +
+            "<p>a paragraph。</p>" +
+            "</body>" +
+            "</html>";
+        Document document = Jsoup.parse(html);
+        document.select("html").replaceAll(element ->
+        {
+            Attributes miao = new Attributes();
+            miao.add("attribute","value");
+            return new Element(Tag.valueOf("foo"), "", miao);
+        });
+        String expected = "<foo attribute=\"value\"></foo>";
+        System.out.println(document.toString());
+        assertEquals(expected, document.toString());
+    }
+
     @Test public void filter() {
         String h = "<p>Excl</p><div class=headline><p>Hello</p><p>There</p></div><div class=headline><h1>Headline</h1></div>";
         Document doc = Jsoup.parse(h);
