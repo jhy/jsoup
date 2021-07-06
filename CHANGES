@@ -118,6 +118,11 @@ jsoup changelog
 
   * Bugfix: if a HTML file ended with an open noscript tag, an "EOF" string would appear in the HTML output.
 
+  * Bugfix: when parsing a document as XML, automatically set the output syntax to XML, and ensure that "<" characters
+    in attributes are escaped as "&lt" (which is not required in HTML as the quoted attribute contents are safe, but is
+    required in XML).
+    <https://github.com/jhy/jsoup/issues/1420>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.

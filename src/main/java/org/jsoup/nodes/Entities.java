@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
@@ -11,6 +12,7 @@ import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import static org.jsoup.nodes.Document.OutputSettings.*;
 import static org.jsoup.nodes.Entities.EscapeMode.base;
 import static org.jsoup.nodes.Entities.EscapeMode.extended;
 
@@ -24,7 +26,7 @@ public class Entities {
     static final int codepointRadix = 36;
     private static final char[] codeDelims = {',', ';'};
     private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
-    private static final Document.OutputSettings DefaultOutput = new Document.OutputSettings();
+    private static final OutputSettings DefaultOutput = new OutputSettings();
 
     public enum EscapeMode {
         /**
@@ -135,7 +137,7 @@ public class Entities {
      * @param out the output settings to use
      * @return the escaped string
      */
-    public static String escape(String string, Document.OutputSettings out) {
+    public static String escape(String string, OutputSettings out) {
         if (string == null)
             return "";
         StringBuilder accum = StringUtil.borrowBuilder();
@@ -159,7 +161,7 @@ public class Entities {
     }
 
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
-    static void escape(Appendable accum, String string, Document.OutputSettings out,
+    static void escape(Appendable accum, String string, OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
 
         boolean lastWasWhite = false;
@@ -200,8 +202,8 @@ public class Entities {
                             accum.append("&#xa0;");
                         break;
                     case '<':
-                        // escape when in character data or when in a xml attribue val; not needed in html attr val
-                        if (!inAttribute || escapeMode == EscapeMode.xhtml)
+                        // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
+                        if (!inAttribute || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
                             accum.append("&lt;");
                         else
                             accum.append(c);

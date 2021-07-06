@@ -6,6 +6,7 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
@@ -33,6 +34,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
         doc.outputSettings()
             .syntax(Document.OutputSettings.Syntax.xml)
+            .escapeMode(Entities.EscapeMode.xhtml)
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
     }
 

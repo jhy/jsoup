@@ -163,7 +163,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async=\"\" checked=\"checked\" src=\"&amp;<>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;&lt;>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" +
                 " </body>\n" +
                 "</html>", doc.html());
     }

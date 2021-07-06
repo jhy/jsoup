@@ -262,4 +262,22 @@ public class XmlTreeBuilderTest {
         assertNull(treeBuilder.tokeniser);
     }
 
+    @Test public void xmlParserEnablesXmlOutputAndEscapes() {
+        // Test that when using the XML parser, the output mode and escape mode default to XHTML entities
+        // https://github.com/jhy/jsoup/issues/1420
+        Document doc = Jsoup.parse("<p one='&lt;two&gt;&copy'>Three</p>", "", Parser.xmlParser());
+        assertEquals(doc.outputSettings().syntax(), Syntax.xml);
+        assertEquals(doc.outputSettings().escapeMode(), Entities.EscapeMode.xhtml);
+        assertEquals("<p one=\"&lt;two>©\">Three</p>", doc.html()); // only the < should be escaped
+    }
+
+    @Test public void xmlSyntaxEscapesLtInAttributes() {
+        // Regardless of the entity escape mode, make sure < is escaped in attributes when in XML
+        Document doc = Jsoup.parse("<p one='&lt;two&gt;&copy'>Three</p>", "", Parser.xmlParser());
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
+        doc.outputSettings().charset("ascii"); // to make sure &copy; is output
+        assertEquals(doc.outputSettings().syntax(), Syntax.xml);
+        assertEquals("<p one=\"&lt;two>&copy;\">Three</p>", doc.html());
+    }
+
 }
