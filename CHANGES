@@ -13,6 +13,27 @@ jsoup changelog
     you may need to make a code update.
     <https://github.com/jhy/jsoup/issues/1431>
 
+  * Change: the org.jsoup.Connection interface has been modified to introduce new methods for sessions and the cookie store.
+    If you have a custom implementation of this interface, you will need to add implementations of these methods.
+    (jsoup supports Java 7, so default interface implementations are not available.)
+
+  * Improvement: added HTTP request session management support with Jsoup.newSession(). This extends the Connection
+    implementation to support (optional) sessions, which allow request defaults (timeout, proxy, etc) to be set once and
+    then applied to all requests within that session.
+
+    Cookies are re-implemented to correctly support path and domain filtering when used within a session. A default
+    in-memory cookie store is used for the session, or a custom implementation (perhaps disk-persistent, or pre-set)
+    can be used instead.
+
+    Forms submitted using the FormElement#submit() use the same session that was used to fetch the document and so pass
+    cookies and other defaults appropriately.
+
+    The session is multi-thread safe and can execute multiple requests concurrently. If the user accidentally tries to
+    execute the same request object across multiple threads (vs calling Connection#newRequest()),
+    that is detected cleanly and a clear exception is thrown (vs weird blowups in input stream reading, or forcing
+    everything through a synchronized bottleneck.
+    <https://github.com/jhy/jsoup/pull/1476>
+
   * Improvement: renamed the Whitelist class to Safelist, with the goal of more inclusive language. A shim is provided
     for backwards compatibility (source and binary). This shim is marked as deprecated and will be removed in the
     jsoup 1.15.1 release.
