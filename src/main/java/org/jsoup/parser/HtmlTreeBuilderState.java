@@ -1214,12 +1214,13 @@ enum HtmlTreeBuilderState {
                 } else if (name.equals("table")) {
                     return handleMissingTr(t, tb);
                 } else if (inSorted(name, InTableToBody)) {
-                    if (!tb.inTableScope(name)) {
+                    if (!tb.inTableScope(name) || !tb.inTableScope("tr")) {
                         tb.error(this);
                         return false;
                     }
-                    tb.processEndTag("tr");
-                    return tb.process(t);
+                    tb.clearStackToTableRowContext();
+                    tb.pop(); // tr
+                    tb.transition(InTableBody);
                 } else if (inSorted(name, InRowIgnore)) {
                     tb.error(this);
                     return false;

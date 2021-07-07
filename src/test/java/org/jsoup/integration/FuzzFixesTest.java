@@ -53,4 +53,11 @@ public class FuzzFixesTest {
 
         // I haven't been able to replicate this - per code, content is handed as a plain string, as here. File encoding issue? Tried UTF8, ascii, windows-1252.
     }
+
+    @Test public void stackOverflowState14() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1543
+        File in = ParseTest.getFile("/fuzztests/1543.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+    }
 }

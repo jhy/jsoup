@@ -133,6 +133,10 @@ jsoup changelog
   * Bugfix: [Fuzz] when parsing XML, could Stack Overflow when parsing XML declarations.
     <https://github.com/jhy/jsoup/issues/1539>
 
+  * Bugfix: [Fuzz] fixed a potential Stack Overflow when parsing mis-nested tfoot tags, and updated the tree parser for
+    this situation to match the updated HTML5 spec.
+    <https://github.com/jhy/jsoup/issues/1543>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.
