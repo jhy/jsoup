@@ -123,9 +123,12 @@ jsoup changelog
     required in XML).
     <https://github.com/jhy/jsoup/issues/1420>
 
-  * Bugfix: Fuzz testing: when parsing an attribute key containing "abs:abs", a validation error would be incorrectly
+  * Bugfix: [Fuzz] when parsing an attribute key containing "abs:abs", a validation error would be incorrectly
     thrown.
     <https://github.com/jhy/jsoup/issues/1541>
+
+  * Bugfix: [Fuzz] could NPE while parsing in resetInsertionMode().
+    <https://github.com/jhy/jsoup/issues/1538>
 
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the

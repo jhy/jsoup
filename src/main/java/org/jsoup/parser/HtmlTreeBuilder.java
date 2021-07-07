@@ -47,9 +47,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private HtmlTreeBuilderState originalState; // original / marked state
 
     private boolean baseUriSetFromDoc;
-    private Element headElement; // the current head element
-    private FormElement formElement; // the current form element
-    private Element contextElement; // fragment parse context -- could be null even if fragment parsing
+    private @Nullable Element headElement; // the current head element
+    private @Nullable FormElement formElement; // the current form element
+    private @Nullable Element contextElement; // fragment parse context -- could be null even if fragment parsing
     private ArrayList<Element> formattingElements; // active (open) formatting elements
     private List<String> pendingTableCharacters; // chars in table to be shifted out
     private Token.EndTag emptyEnd; // reused empty end tag
@@ -441,7 +441,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 last = true;
                 node = contextElement;
             }
-            String name = node.normalName();
+            String name = node != null ? node.normalName() : "";
             if ("select".equals(name)) {
                 transition(HtmlTreeBuilderState.InSelect);
                 break; // frag
