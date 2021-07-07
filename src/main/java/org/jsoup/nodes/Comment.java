@@ -5,6 +5,7 @@ import org.jsoup.parser.Parser;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  A comment node.
@@ -63,7 +64,12 @@ public class Comment extends LeafNode {
      */
     public boolean isXmlDeclaration() {
         String data = getData();
-        return (data.length() > 1 && (data.startsWith("!") || data.startsWith("?")));
+        return isXmlDeclarationData(data);
+    }
+
+    private static final Pattern xmlDeclPattern = Pattern.compile("^[!?]xml.*", Pattern.CASE_INSENSITIVE);
+    private static boolean isXmlDeclarationData(String data) {
+        return data.length() > 4 && xmlDeclPattern.matcher(data).matches();
     }
 
     /**
@@ -72,8 +78,14 @@ public class Comment extends LeafNode {
      */
     public @Nullable XmlDeclaration asXmlDeclaration() {
         String data = getData();
-        Document doc = Jsoup.parse("<" + data.substring(1, data.length() -1) + ">", baseUri(), Parser.xmlParser());
+
         XmlDeclaration decl = null;
+        String declContent = data.substring(1, data.length() - 1);
+        // make sure this bogus comment is not packed with recursive xml decls; null out if so
+        if (isXmlDeclarationData(declContent))
+            return null;
+
+        Document doc = Jsoup.parse("<" + declContent + ">", baseUri(), Parser.xmlParser());
         if (doc.children().size() > 0) {
             Element el = doc.child(0);
             decl = new XmlDeclaration(NodeUtils.parser(doc).settings().normalizeTag(el.tagName()), data.startsWith("!"));

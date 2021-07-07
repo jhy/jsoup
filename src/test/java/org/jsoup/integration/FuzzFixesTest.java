@@ -3,9 +3,11 @@ package org.jsoup.integration;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.HtmlParserTest;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,5 +29,16 @@ public class FuzzFixesTest {
         File in = ParseTest.getFile("/fuzztests/1538.html"); // lots of escape chars etc.
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
+    }
+
+    @Test public void xmlDeclOverflow() throws IOException {
+        File in = ParseTest.getFile("/fuzztests/1539.html"); // lots of escape chars etc.
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+
+
     }
 }
