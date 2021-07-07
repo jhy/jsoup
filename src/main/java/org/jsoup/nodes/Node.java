@@ -193,12 +193,10 @@ public abstract class Node implements Cloneable {
      */
     public String absUrl(String attributeKey) {
         Validate.notEmpty(attributeKey);
+        if (!(hasAttributes() && attributes().hasKeyIgnoreCase(attributeKey))) // not using hasAttr, so that we don't recurse down hasAttr->absUrl
+            return "";
 
-        if (!hasAttr(attributeKey)) {
-            return ""; // nothing to make absolute with
-        } else {
-            return StringUtil.resolve(baseUri(), attr(attributeKey));
-        }
+        return StringUtil.resolve(baseUri(), attributes().getIgnoreCase(attributeKey));
     }
 
     protected abstract List<Node> ensureChildNodes();
