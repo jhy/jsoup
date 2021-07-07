@@ -60,4 +60,11 @@ public class FuzzFixesTest {
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
+
+    @Test public void parseTimeout() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1544
+        File in = ParseTest.getFile("/fuzztests/1544.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+    }
 }

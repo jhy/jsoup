@@ -322,8 +322,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return isElementInQueue(stack, el);
     }
 
+    private static final int maxQueueDepth = 256; // an arbitrary tension point between real HTML and crafted pain
     private boolean isElementInQueue(ArrayList<Element> queue, Element element) {
-        for (int pos = queue.size() -1; pos >= 0; pos--) {
+        final int bottom = queue.size() - 1;
+        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
+        for (int pos = bottom; pos >= upper; pos--) {
             Element next = queue.get(pos);
             if (next == element) {
                 return true;
