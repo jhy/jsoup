@@ -1,0 +1,35 @@
+name: CodeQL
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 5 * * 3'
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    name: "CodeQL"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-java-codeql-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: CodeQL Initialization
+        uses: github/codeql-action/init@v1
+        with:
+          languages: java
+          queries: +security-and-quality
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v1
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
