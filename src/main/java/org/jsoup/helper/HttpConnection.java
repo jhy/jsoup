@@ -490,8 +490,10 @@ public class HttpConnection implements Connection {
         private static boolean looksLikeUtf8(byte[] input) {
             int i = 0;
             // BOM:
-            if (input.length >= 3 && (input[0] & 0xFF) == 0xEF
-                && (input[1] & 0xFF) == 0xBB & (input[2] & 0xFF) == 0xBF) {
+            if (input.length >= 3
+                && (input[0] & 0xFF) == 0xEF
+                && (input[1] & 0xFF) == 0xBB
+                && (input[2] & 0xFF) == 0xBF) {
                 i = 3;
             }
 
