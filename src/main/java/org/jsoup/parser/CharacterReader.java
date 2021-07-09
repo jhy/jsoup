@@ -137,9 +137,12 @@ public final class CharacterReader {
         return val;
     }
 
+    /**
+     Unconsume one character (bufPos--). MUST only be called directly after a consume(), and no chance of a bufferUp.
+     */
     void unconsume() {
         if (bufPos < 1)
-            throw new UncheckedIOException(new IOException("No buffer left to unconsume"));
+            throw new UncheckedIOException(new IOException("WTF: No buffer left to unconsume.")); // a bug if this fires, need to trace it.
 
         bufPos--;
     }

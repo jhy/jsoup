@@ -141,6 +141,10 @@ jsoup changelog
     the formatting tag search depth to 256. In practice, it's generally between 4 - 8.
     <https://github.com/jhy/jsoup/issues/1544>
 
+  * Bugfix: [Fuzz] when parsing an unterminated RCDATA token (e.g. a <title> tag), could throw an IO Exception "No
+    buffer left to unconsume" when trying to rewind the buffer.
+    <https://github.com/jhy/jsoup/issues/1542>
+
 *** Release 1.13.1 [2020-Feb-29]
   * Improvement: added Element#closest(selector), which walks up the tree to find the nearest element matching the
     selector.

@@ -191,8 +191,7 @@ enum TokeniserState {
                 // consuming to EOF; break out here
                 t.tagPending = t.createTagPending(false).name(t.appropriateEndTagName());
                 t.emitTagPending();
-                r.unconsume(); // undo "<"
-                t.transition(Data);
+                t.transition(TagOpen); // straight into TagOpen, as we came from < and looks like we're on a start tag
             } else {
                 t.emit("<");
                 t.transition(Rcdata);
