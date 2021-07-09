@@ -72,6 +72,9 @@ jsoup changelog
   * Improvement: added Element#insertChildren and Elment#prependChildren, as convenience methods in addition to
     Element#insertChildren(index, children), for bulk moving nodes.
 
+  * Improvement: clean up relative URLs with too many .. segments better.
+    <https://github.com/jhy/jsoup/pull/1482>
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
   * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.
