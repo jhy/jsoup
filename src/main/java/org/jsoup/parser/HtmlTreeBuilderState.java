@@ -8,6 +8,7 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 import static org.jsoup.internal.StringUtil.inSorted;
@@ -123,7 +124,7 @@ enum HtmlTreeBuilderState {
                         if (name.equals("base") && el.hasAttr("href"))
                             tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
-                        Element meta = tb.insertEmpty(start);
+                        tb.insertEmpty(start);
                         // todo: charset switches
                     } else if (name.equals("title")) {
                         handleRcData(start, tb);
@@ -842,7 +843,6 @@ enum HtmlTreeBuilderState {
                     tb.replaceOnStack(node, replacement);
                     node = replacement;
 
-                    //noinspection StatementWithEmptyBody
                     if (lastNode == furthestBlock) {
                         // move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
                         // not getting how this bookmark both straddles the element above, but is inbetween here...
@@ -855,14 +855,16 @@ enum HtmlTreeBuilderState {
                     lastNode = node;
                 }
 
-                if (inSorted(commonAncestor.normalName(), Constants.InBodyEndTableFosters)) {
-                    if (lastNode.parent() != null)
-                        lastNode.remove();
-                    tb.insertInFosterParent(lastNode);
-                } else {
-                    if (lastNode.parent() != null)
-                        lastNode.remove();
-                    commonAncestor.appendChild(lastNode);
+                if (commonAncestor != null) { // safety check, but would be an error if null
+                    if (inSorted(commonAncestor.normalName(), Constants.InBodyEndTableFosters)) {
+                        if (lastNode.parent() != null)
+                            lastNode.remove();
+                        tb.insertInFosterParent(lastNode);
+                    } else {
+                        if (lastNode.parent() != null)
+                            lastNode.remove();
+                        commonAncestor.appendChild(lastNode);
+                    }
                 }
 
                 Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
