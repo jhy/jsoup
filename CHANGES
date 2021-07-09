@@ -79,6 +79,10 @@ jsoup changelog
   * Build Improvement: added nullability annotations and initial settings.
     <https://github.com/jhy/jsoup/pull/1467>
 
+  * Bugfix: corrected the adoption agency algorithm, to handle cases where e.g. a <a> tag incorrectly nests further <a>
+    tags.
+    <https://github.com/jhy/jsoup/pull/1517> <https://github.com/jhy/jsoup/issues/845>
+
   * Bugfix: when parsing HTML, could throw NPEs on some tags (isindex or table>input).
     <https://github.com/jhy/jsoup/issues/1404>
 
