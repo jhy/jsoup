@@ -174,7 +174,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
         return (
             out.syntax() == Document.OutputSettings.Syntax.html &&
-                (val == null || ("".equals(val) || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+                (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
     }
 
     /**
