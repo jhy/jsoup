@@ -1,11 +1,10 @@
 package org.jsoup.nodes;
 
-import org.jsoup.Jsoup;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 /**
  A comment node.
@@ -67,9 +66,8 @@ public class Comment extends LeafNode {
         return isXmlDeclarationData(data);
     }
 
-    private static final Pattern xmlDeclPattern = Pattern.compile("^[!?]xml.*", Pattern.CASE_INSENSITIVE);
     private static boolean isXmlDeclarationData(String data) {
-        return data.length() > 4 && xmlDeclPattern.matcher(data).matches();
+        return (data.length() > 1 && (data.startsWith("!") || data.startsWith("?")));
     }
 
     /**
@@ -81,13 +79,15 @@ public class Comment extends LeafNode {
 
         XmlDeclaration decl = null;
         String declContent = data.substring(1, data.length() - 1);
-        // make sure this bogus comment is not packed with recursive xml decls; null out if so
+        // make sure this bogus comment is not immediately followed by another, treat as comment if so
         if (isXmlDeclarationData(declContent))
             return null;
 
-        Document doc = Jsoup.parse("<" + declContent + ">", baseUri(), Parser.xmlParser());
-        if (doc.children().size() > 0) {
-            Element el = doc.child(0);
+        String fragment = "<" + declContent + ">";
+        // use the HTML parser not XML, so we don't get into a recursive XML Declaration on contrived data
+        Document doc = Parser.htmlParser().settings(ParseSettings.preserveCase).parseInput(fragment, baseUri());
+        if (doc.body().children().size() > 0) {
+            Element el = doc.body().child(0);
             decl = new XmlDeclaration(NodeUtils.parser(doc).settings().normalizeTag(el.tagName()), data.startsWith("!"));
             decl.attributes().addAll(el.attributes());
         }

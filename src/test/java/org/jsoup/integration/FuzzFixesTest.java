@@ -44,6 +44,17 @@ public class FuzzFixesTest {
     }
 
     @Test
+    public void xmlDeclOverflowOOM() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1569
+        File in = ParseTest.getFile("/fuzztests/1569.html");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
+
+    @Test
     public void stackOverflowState14() throws IOException {
         // https://github.com/jhy/jsoup/issues/1543
         File in = ParseTest.getFile("/fuzztests/1543.html");
