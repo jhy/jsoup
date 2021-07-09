@@ -613,6 +613,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size()-1) : null;
     }
 
+    int positionOfElement(Element el){
+        for (int i = 0; i < formattingElements.size(); i++){
+            if (el == formattingElements.get(i))
+                return i;
+        }
+        return -1;
+    }
+
     Element removeLastFormattingElement() {
         int size = formattingElements.size();
         if (size > 0)
@@ -623,6 +631,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     // active formatting elements
     void pushActiveFormattingElements(Element in) {
+        this.checkActiveFormattingElements(in);
+        formattingElements.add(in);
+    }
+
+    void pushWithBookmark(Element in,int bookmark){
+        this.checkActiveFormattingElements(in);
+        formattingElements.add(bookmark, in);
+    }
+
+    void checkActiveFormattingElements(Element in){
         int numSeen = 0;
         for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
             Element el = formattingElements.get(pos);
@@ -637,7 +655,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 break;
             }
         }
-        formattingElements.add(in);
     }
 
     private boolean isSameFormattingElement(Element a, Element b) {

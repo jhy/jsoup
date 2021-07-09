@@ -806,11 +806,14 @@ enum HtmlTreeBuilderState {
                 // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
                 // run-aways
                 final int stackSize = stack.size();
+                int bookmark = -1;
                 for (int si = 0; si < stackSize && si < 64; si++) {
                     el = stack.get(si);
                     if (el == formatEl) {
                         commonAncestor = stack.get(si - 1);
                         seenFormattingElement = true;
+                        // Let a bookmark note the position of the formatting element in the list of active formatting elements relative to the elements on either side of it in the list.
+                        bookmark = tb.positionOfElement(el);
                     } else if (seenFormattingElement && tb.isSpecial(el)) {
                         furthestBlock = el;
                         break;
@@ -822,8 +825,6 @@ enum HtmlTreeBuilderState {
                     return true;
                 }
 
-                // todo: Let a bookmark note the position of the formatting element in the list of active formatting elements relative to the elements on either side of it in the list.
-                // does that mean: int pos of format el in list?
                 Element node = furthestBlock;
                 Element lastNode = furthestBlock;
                 for (int j = 0; j < 3; j++) {
@@ -843,8 +844,9 @@ enum HtmlTreeBuilderState {
 
                     //noinspection StatementWithEmptyBody
                     if (lastNode == furthestBlock) {
-                        // todo: move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
+                        // move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
                         // not getting how this bookmark both straddles the element above, but is inbetween here...
+                        bookmark = tb.positionOfElement(node) + 1;
                     }
                     if (lastNode.parent() != null)
                         lastNode.remove();
@@ -871,7 +873,8 @@ enum HtmlTreeBuilderState {
                 }
                 furthestBlock.appendChild(adopter);
                 tb.removeFromActiveFormattingElements(formatEl);
-                // todo: insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
+                // insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
+                tb.pushWithBookmark(adopter, bookmark);
                 tb.removeFromStack(formatEl);
                 tb.insertOnStackAfter(furthestBlock, adopter);
             }
