@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.14.1 [PENDING]
+*** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 
   * Change: updated the minimum Android API level from 8 to 10.
@@ -13,9 +13,8 @@ jsoup changelog
     you may need to make a code update.
     <https://github.com/jhy/jsoup/issues/1431>
 
-  * Change: the org.jsoup.Connection interface has been modified to introduce new methods for sessions and the cookie store.
-    If you have a custom implementation of this interface, you will need to add implementations of these methods.
-    (jsoup supports Java 7, so default interface implementations are not available.)
+  * Change: the org.jsoup.Connection interface has been modified to introduce new methods for sessions and the cookie
+    store. If you have a custom implementation of this interface, you will need to add implementations of these methods.
 
   * Improvement: added HTTP request session management support with Jsoup.newSession(). This extends the Connection
     implementation to support (optional) sessions, which allow request defaults (timeout, proxy, etc) to be set once and
@@ -75,9 +74,16 @@ jsoup changelog
   * Improvement: clean up relative URLs with too many .. segments better.
     <https://github.com/jhy/jsoup/pull/1482>
 
+  * Build Improvement: integrated jsoup into the OSS Fuzz project, which semi-randomly generates millions of different
+    HTML and XML input files, searching for areas to improve in the parser for increased robustness and throughput.
+    <https://github.com/jhy/jsoup/issues/1502>
+
+  * Build Improvement: integrated with GitHub's CodeQL static code analyzer.
+    <https://github.com/jhy/jsoup/pull/1494>
+
   * Build Improvement: moved to GitHub Workflows for build verification.
 
-  * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.35.v2020112.
+  * Build Improvement: updated Jetty (used for integration tests; not bundled) to 9.4.42.
 
   * Build Improvement: added nullability annotations and initial settings.
     <https://github.com/jhy/jsoup/pull/1467>
