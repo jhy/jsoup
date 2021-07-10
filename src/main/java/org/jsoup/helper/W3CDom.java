@@ -283,7 +283,7 @@ public class W3CDom {
             }
 
             // get the element prefix if any
-            int pos = el.tagName().indexOf(":");
+            int pos = el.tagName().indexOf(':');
             return pos > 0 ? el.tagName().substring(0, pos) : "";
         }
 
