@@ -27,7 +27,7 @@ public class FuzzFixesTest {
     @Test
     public void resetInsertionMode() throws IOException {
         // https://github.com/jhy/jsoup/issues/1538
-        File in = ParseTest.getFile("/fuzztests/1538.html"); // lots of escape chars etc.
+        File in = ParseTest.getFile("/fuzztests/1538.html.gz"); // lots of escape chars etc.
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
@@ -35,7 +35,7 @@ public class FuzzFixesTest {
     @Test
     public void xmlDeclOverflow() throws IOException {
         // https://github.com/jhy/jsoup/issues/1539
-        File in = ParseTest.getFile("/fuzztests/1539.html"); // lots of escape chars etc.
+        File in = ParseTest.getFile("/fuzztests/1539.html.gz"); // lots of escape chars etc.
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
 
@@ -46,7 +46,7 @@ public class FuzzFixesTest {
     @Test
     public void xmlDeclOverflowOOM() throws IOException {
         // https://github.com/jhy/jsoup/issues/1569
-        File in = ParseTest.getFile("/fuzztests/1569.html");
+        File in = ParseTest.getFile("/fuzztests/1569.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
 
@@ -57,7 +57,7 @@ public class FuzzFixesTest {
     @Test
     public void stackOverflowState14() throws IOException {
         // https://github.com/jhy/jsoup/issues/1543
-        File in = ParseTest.getFile("/fuzztests/1543.html");
+        File in = ParseTest.getFile("/fuzztests/1543.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
@@ -65,7 +65,7 @@ public class FuzzFixesTest {
     @Test
     public void parseTimeout() throws IOException {
         // https://github.com/jhy/jsoup/issues/1544
-        File in = ParseTest.getFile("/fuzztests/1544.html");
+        File in = ParseTest.getFile("/fuzztests/1544.html.gz");
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
