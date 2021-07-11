@@ -4,6 +4,9 @@ jsoup changelog
   * Bugfix [Fuzz]: fixed a slow parse when a tag has thousands of null characters in it.
     <https://github.com/jhy/jsoup/issues/1580>
 
+  * Bugfix [Fuzz]: the adoption agency algorithm can have an incorrect bookmark position
+    <https://github.com/jhy/jsoup/issues/1576>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

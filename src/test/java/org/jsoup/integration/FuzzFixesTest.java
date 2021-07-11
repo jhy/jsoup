@@ -78,4 +78,15 @@ public class FuzzFixesTest {
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
+
+    @Test
+    public void bookmark() {
+        // https://github.com/jhy/jsoup/issues/1576
+        String html = "<?a<U<P<A ";
+        Document doc = Jsoup.parse(html);
+        assertNotNull(doc);
+
+        Document xmlDoc = Parser.xmlParser().parseInput(html, "");
+        assertNotNull(xmlDoc);
+    }
 }

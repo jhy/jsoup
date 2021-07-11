@@ -631,13 +631,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     // active formatting elements
     void pushActiveFormattingElements(Element in) {
-        this.checkActiveFormattingElements(in);
+        checkActiveFormattingElements(in);
         formattingElements.add(in);
     }
 
-    void pushWithBookmark(Element in,int bookmark){
-        this.checkActiveFormattingElements(in);
-        formattingElements.add(bookmark, in);
+    void pushWithBookmark(Element in, int bookmark){
+        checkActiveFormattingElements(in);
+        // catch any range errors and assume bookmark is incorrect - saves a redundant range check.
+        try {
+            formattingElements.add(bookmark, in);
+        } catch (IndexOutOfBoundsException e) {
+            formattingElements.add(in);
+        }
     }
 
     void checkActiveFormattingElements(Element in){
