@@ -1,5 +1,9 @@
 jsoup changelog
 
+*** Release 1.14.2 [PENDING]
+  * Bugfix [Fuzz]: fixed a slow parse when a tag has thousands of null characters in it.
+    <https://github.com/jhy/jsoup/issues/1580>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

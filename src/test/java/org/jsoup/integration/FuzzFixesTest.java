@@ -69,4 +69,13 @@ public class FuzzFixesTest {
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
     }
+
+    @Test
+    public void parseTimeout1580() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1580
+        // a shedload of NULLs in append tagname so was spinning in there. Fixed to eat and replace all the chars in one hit
+        File in = ParseTest.getFile("/fuzztests/1580.html.gz");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+    }
 }

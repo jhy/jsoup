@@ -165,6 +165,8 @@ abstract class Token {
 
         // these appenders are rarely hit in not null state-- caused by null chars.
         final void appendTagName(String append) {
+            // might have null chars - need to replace with null replacement character
+            append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName = tagName == null ? append : tagName.concat(append);
             normalName = lowerCase(tagName);
         }

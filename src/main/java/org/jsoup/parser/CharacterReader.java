@@ -362,8 +362,8 @@ public final class CharacterReader {
     }
 
     String consumeTagName() {
-        // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
-        // NOTE: out of spec, added '<' to fix common author bugs
+        // '\t', '\n', '\r', '\f', ' ', '/', '>'
+        // NOTE: out of spec, added '<' to fix common author bugs; does not stop and append on nullChar but eats
         bufferUp();
         int pos = bufPos;
         final int start = pos;
@@ -380,7 +380,6 @@ public final class CharacterReader {
                 case '/':
                 case '>':
                 case '<':
-                case TokeniserState.nullChar:
                     break OUTER;
             }
             pos++;
