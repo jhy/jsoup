@@ -18,6 +18,9 @@ public class NodeTraversor {
      * @param root the root node point to traverse.
      */
     public static void traverse(NodeVisitor visitor, Node root) {
+        Validate.notNull(visitor);
+        Validate.notNull(root);
+        
         Node node = root;
         Node parent; // remember parent to find nodes that get replaced in .head
         int depth = 0;
