@@ -1,6 +1,8 @@
 jsoup changelog
 
 *** Release 1.14.2 [PENDING]
+  * Bugfix: corrected a potential case of the parser input stream not being closed immediately on a read exception.
+  
   * Bugfix [Fuzz]: fixed a slow parse when a tag has thousands of null characters in it.
     <https://github.com/jhy/jsoup/issues/1580>
 
