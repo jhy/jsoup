@@ -2,7 +2,9 @@ jsoup changelog
 
 *** Release 1.14.2 [PENDING]
   * Bugfix: corrected a potential case of the parser input stream not being closed immediately on a read exception.
-  
+
+  * Bugfix: when making a HTTP POST, if the request write fails, make sure the connection is immediately cleaned up.
+
   * Bugfix [Fuzz]: fixed a slow parse when a tag has thousands of null characters in it.
     <https://github.com/jhy/jsoup/issues/1580>
 

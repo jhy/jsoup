@@ -857,8 +857,10 @@ public class HttpConnection implements Connection {
             Response res = null;
             try {
                 conn.connect();
-                if (conn.getDoOutput())
-                    writePost(req, conn.getOutputStream(), mimeBoundary);
+                if (conn.getDoOutput()) {
+                    try { writePost(req, conn.getOutputStream(), mimeBoundary); }
+                    catch (IOException e) { conn.disconnect(); throw e; }
+                }
 
                 int status = conn.getResponseCode();
                 res = new Response(conn, req, previousResponse);
