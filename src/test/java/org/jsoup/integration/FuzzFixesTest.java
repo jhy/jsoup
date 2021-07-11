@@ -100,4 +100,16 @@ public class FuzzFixesTest {
         Document xmlDoc = Parser.xmlParser().parseInput(html, "");
         assertNotNull(xmlDoc);
     }
+
+    @Test
+    public void overflow1577() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1577
+        // no repro - fixed elsewhere?
+        File in = ParseTest.getFile("/fuzztests/1577.html.gz");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
 }
