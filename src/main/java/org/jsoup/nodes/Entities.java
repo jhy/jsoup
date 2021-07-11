@@ -310,37 +310,40 @@ public class Entities {
 
         int i = 0;
         CharacterReader reader = new CharacterReader(pointsData);
+        try {
+            while (!reader.isEmpty()) {
+                // NotNestedLessLess=10913,824;1887&
 
-        while (!reader.isEmpty()) {
-            // NotNestedLessLess=10913,824;1887&
-
-            final String name = reader.consumeTo('=');
-            reader.advance();
-            final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
-            final char codeDelim = reader.current();
-            reader.advance();
-            final int cp2;
-            if (codeDelim == ',') {
-                cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
+                final String name = reader.consumeTo('=');
                 reader.advance();
-            } else {
-                cp2 = empty;
-            }
-            final String indexS = reader.consumeTo('&');
-            final int index = Integer.parseInt(indexS, codepointRadix);
-            reader.advance();
+                final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
+                final char codeDelim = reader.current();
+                reader.advance();
+                final int cp2;
+                if (codeDelim == ',') {
+                    cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
+                    reader.advance();
+                } else {
+                    cp2 = empty;
+                }
+                final String indexS = reader.consumeTo('&');
+                final int index = Integer.parseInt(indexS, codepointRadix);
+                reader.advance();
 
-            e.nameKeys[i] = name;
-            e.codeVals[i] = cp1;
-            e.codeKeys[index] = cp1;
-            e.nameVals[index] = name;
+                e.nameKeys[i] = name;
+                e.codeVals[i] = cp1;
+                e.codeKeys[index] = cp1;
+                e.nameVals[index] = name;
 
-            if (cp2 != empty) {
-                multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                if (cp2 != empty) {
+                    multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                }
+                i++;
             }
-            i++;
+
+            Validate.isTrue(i == size, "Unexpected count of entities loaded");
+        } finally {
+            reader.close();
         }
-
-        Validate.isTrue(i == size, "Unexpected count of entities loaded");
     }
 }
