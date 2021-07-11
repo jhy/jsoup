@@ -1,6 +1,11 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -21,5 +26,13 @@ public class ParserTest {
 
         String body = longBody.toString();
         assertEquals(body, Parser.unescapeEntities(body, false));
+    }
+
+    @Test
+    public void testUtf8() throws IOException {
+        // testcase for https://github.com/jhy/jsoup/issues/1557. no repro.
+        Document parsed = Jsoup.parse(new ByteArrayInputStream("<p>H\u00E9llo, w\u00F6rld!".getBytes("UTF-8")), null, "");
+        String text = parsed.selectFirst("p").wholeText();
+        assertEquals(text, "H\u00E9llo, w\u00F6rld!");
     }
 }
