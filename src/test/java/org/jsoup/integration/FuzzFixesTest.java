@@ -89,4 +89,15 @@ public class FuzzFixesTest {
         Document xmlDoc = Parser.xmlParser().parseInput(html, "");
         assertNotNull(xmlDoc);
     }
+
+    @Test
+    public void scope1579() {
+        // https://github.com/jhy/jsoup/issues/1579
+        String html = "<table<html\u001D<ÛÛ<tr><body\u001D<b:<select<m<input></html> </html>";
+        Document doc = Jsoup.parse(html);
+        assertNotNull(doc);
+
+        Document xmlDoc = Parser.xmlParser().parseInput(html, "");
+        assertNotNull(xmlDoc);
+    }
 }

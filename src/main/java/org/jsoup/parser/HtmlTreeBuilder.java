@@ -356,6 +356,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
+    @Nullable
     Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);

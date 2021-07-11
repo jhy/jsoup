@@ -8,7 +8,6 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 import static org.jsoup.internal.StringUtil.inSorted;
@@ -1530,8 +1529,11 @@ enum HtmlTreeBuilderState {
                 //  that space into body if other tags get re-added. but that's overkill for now
                 Element html = tb.popStackToClose("html");
                 tb.insert(t.asCharacter());
-                tb.stack.add(html);
-                tb.stack.add(html.selectFirst("body"));
+                if (html != null) {
+                    tb.stack.add(html);
+                    Element body = html.selectFirst("body");
+                    if (body != null) tb.stack.add(body);
+                }
             }else if (t.isEOF()) {
                 // nice work chuck
             } else {
