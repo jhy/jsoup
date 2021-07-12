@@ -166,6 +166,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M3</version>
+        <configuration>
+          <!-- smaller stack to find stack overflows -->
+          <argLine>-Xss256k</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>

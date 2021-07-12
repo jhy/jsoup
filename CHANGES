@@ -17,6 +17,9 @@ jsoup changelog
   * Bugfiz [Fuzz]: malformed HTML could result in null elements on stack
     <https://github.com/jhy/jsoup/issues/1579>
 
+  * Bugfix [Fuzz]: malformed deeply nested table elements could create a stack overflow.
+    <https://github.com/jhy/jsoup/issues/1577>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

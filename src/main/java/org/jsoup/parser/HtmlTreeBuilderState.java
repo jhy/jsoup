@@ -903,7 +903,7 @@ enum HtmlTreeBuilderState {
     },
     InTable {
         boolean process(Token t, HtmlTreeBuilder tb) {
-            if (t.isCharacter()) {
+            if (t.isCharacter() && inSorted(tb.currentElement().normalName(), InTableFoster)) {
                 tb.newPendingTableCharacters();
                 tb.markInsertionMode();
                 tb.transition(InTableText);
@@ -927,6 +927,7 @@ enum HtmlTreeBuilderState {
                     tb.insert(startTag);
                     tb.transition(InColumnGroup);
                 } else if (name.equals("col")) {
+                    tb.clearStackToTableContext();
                     tb.processStartTag("colgroup");
                     return tb.process(t);
                 } else if (inSorted(name, InTableToBody)) {
@@ -934,13 +935,23 @@ enum HtmlTreeBuilderState {
                     tb.insert(startTag);
                     tb.transition(InTableBody);
                 } else if (inSorted(name, InTableAddBody)) {
+                    tb.clearStackToTableContext();
                     tb.processStartTag("tbody");
                     return tb.process(t);
                 } else if (name.equals("table")) {
                     tb.error(this);
-                    boolean processed = tb.processEndTag("table");
-                    if (processed) // only ignored if in fragment
+                    if (!tb.inTableScope(name)) { // ignore it
+                        return false;
+                    } else {
+                        tb.popStackToClose(name);
+                        tb.resetInsertionMode();
+                        if (tb.state() == InTable) {
+                            // not per spec - but haven't transitioned out of table. so try something else
+                            tb.insert(startTag);
+                            return true;
+                        }
                         return tb.process(t);
+                    }
                 } else if (inSorted(name, InTableToHead)) {
                     return tb.process(t, InHead);
                 } else if (name.equals("input")) {
@@ -970,8 +981,8 @@ enum HtmlTreeBuilderState {
                         return false;
                     } else {
                         tb.popStackToClose("table");
+                        tb.resetInsertionMode();
                     }
-                    tb.resetInsertionMode();
                 } else if (inSorted(name, InTableEndErr)) {
                     tb.error(this);
                     return false;
@@ -989,15 +1000,10 @@ enum HtmlTreeBuilderState {
 
         boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             tb.error(this);
-            boolean processed;
-            if (inSorted(tb.currentElement().normalName(), InTableFoster)) {
-                tb.setFosterInserts(true);
-                processed = tb.process(t, InBody);
-                tb.setFosterInserts(false);
-            } else {
-                processed = tb.process(t, InBody);
-            }
-            return processed;
+            tb.setFosterInserts(true);
+            tb.process(t, InBody);
+            tb.setFosterInserts(false);
+            return true;
         }
     },
     InTableText {
