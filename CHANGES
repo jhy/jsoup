@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.14.2 [PENDING]
+  * Bugfix: the *|el wildcard namespace selector now also matches elements with no namespace.
+    <https://github.com/jhy/jsoup/issues/1565>
+    
   * Bugfix: corrected a potential case of the parser input stream not being closed immediately on a read exception.
 
   * Bugfix: when making a HTTP POST, if the request write fails, make sure the connection is immediately cleaned up.

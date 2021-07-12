@@ -237,7 +237,11 @@ public class QueryParser {
 
         // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
         if (tagName.startsWith("*|")) {
-            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName), new Evaluator.TagEndsWith(tagName.replace("*|", ":"))));
+            String plainTag = tagName.substring(2); // strip *|
+            evals.add(new CombiningEvaluator.Or(
+                new Evaluator.Tag(plainTag),
+                new Evaluator.TagEndsWith(tagName.replace("*|", ":")))
+            );
         } else {
             // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
             if (tagName.contains("|"))

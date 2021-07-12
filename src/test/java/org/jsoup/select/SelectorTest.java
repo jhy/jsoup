@@ -996,4 +996,20 @@ public class SelectorTest {
         assertEquals("One Two", spans.get(0).text());
         assertEquals("Three Four", spans.get(1).text());
     }
+
+    @Test
+    public void wildcardNamespaceMatchesNoNamespace() {
+        // https://github.com/jhy/jsoup/issues/1565
+        String xml = "<package><meta>One</meta><opf:meta>Two</opf:meta></package>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+
+        Elements metaEls = doc.select("meta");
+        assertEquals(1, metaEls.size());
+        assertEquals("One", metaEls.get(0).text());
+
+        Elements nsEls = doc.select("*|meta");
+        assertEquals(2, nsEls.size());
+        assertEquals("One", nsEls.get(0).text());
+        assertEquals("Two", nsEls.get(1).text());
+    }
 }
