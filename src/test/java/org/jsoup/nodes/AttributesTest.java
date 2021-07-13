@@ -225,6 +225,10 @@ public class AttributesTest {
 
         a.put(Attributes.internalKey("baseUri"), "example.com");
         a.put(Attributes.internalKey("another"), "example.com");
-        assertEquals(2, a.size());
+        a.put(Attributes.internalKey("last"), "example.com");
+        a.remove(Attributes.internalKey("last"));
+
+        assertEquals(4, a.size());
+        assertEquals(2, a.asList().size()); // excluded from lists
     }
 }
