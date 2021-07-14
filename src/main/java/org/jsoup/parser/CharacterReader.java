@@ -555,7 +555,7 @@ public final class CharacterReader {
     }
 
     /**
-     * Caches short strings, as a flywheel pattern, to reduce GC load. Just for this doc, to prevent leaks.
+     * Caches short strings, as a flyweight pattern, to reduce GC load. Just for this doc, to prevent leaks.
      * <p />
      * Simplistic, and on hash collisions just falls back to creating a new string, vs a full HashMap with Entry list.
      * That saves both having to create objects as hash keys, and running through the entry list, at the expense of
@@ -569,27 +569,22 @@ public final class CharacterReader {
             return "";
 
         // calculate hash:
-        int hash = 31 * count;
-        int offset = start;
+        int hash = 0;
         for (int i = 0; i < count; i++) {
-            hash = 31 * hash + charBuf[offset++];
+            hash = 31 * hash + charBuf[start + i];
         }
 
         // get from cache
         final int index = hash & stringCacheSize - 1;
         String cached = stringCache[index];
 
-        if (cached == null) { // miss, add
+        if (cached != null && rangeEquals(charBuf, start, count, cached)) // positive hit
+            return cached;
+        else {
             cached = new String(charBuf, start, count);
-            stringCache[index] = cached;
-        } else { // hashcode hit, check equality
-            if (rangeEquals(charBuf, start, count, cached)) { // hit
-                return cached;
-            } else { // hashcode conflict
-                cached = new String(charBuf, start, count);
-                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
-            }
+            stringCache[index] = cached; // add or replace, assuming most recently used are most likely to recur next
         }
+
         return cached;
     }
 
