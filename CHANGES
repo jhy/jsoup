@@ -23,6 +23,10 @@ jsoup changelog
   * Bugfix [Fuzz]: malformed deeply nested table elements could create a stack overflow.
     <https://github.com/jhy/jsoup/issues/1577>
 
+  * Bugfix [Fuzz]: Speed optimized malformed HTML creating elements with thousands of elements - limit the attribute
+    count per element when parsing to 512 (in real-world HTML, P99 is ~ 8).
+    <https://github.com/jhy/jsoup/issues/1578>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

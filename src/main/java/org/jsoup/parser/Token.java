@@ -97,11 +97,16 @@ abstract class Token {
             return this;
         }
 
+        /* Limits runaway crafted HTML from spewing attributes and getting a little sluggish in ensureCapacity.
+        Real-world HTML will P99 around 8 attributes, so plenty of headroom. Implemented here and not in the Attributes
+        object so that API users can add more if ever required. */
+        private static final int MaxAttributes = 512;
+
         final void newAttribute() {
             if (attributes == null)
                 attributes = new Attributes();
 
-            if (pendingAttributeName != null) {
+            if (pendingAttributeName != null && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
                 pendingAttributeName = pendingAttributeName.trim();
                 if (pendingAttributeName.length() > 0) {
