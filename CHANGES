@@ -8,6 +8,9 @@ jsoup changelog
 
   * Bugfix: when making a HTTP POST, if the request write fails, make sure the connection is immediately cleaned up.
 
+  * Bugfix: in the XML parser, XML processing instructions without attributes would be serialized as if they did.
+    <https://github.com/jhy/jsoup/issues/770>
+
   * Bugfix: updated the HtmlTreeParser resetInsertionMode to the current spec for supported elements
     <https://github.com/jhy/jsoup/issues/1491>
 

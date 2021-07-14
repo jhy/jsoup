@@ -153,6 +153,16 @@ public class XmlTreeBuilderTest {
     }
 
     @Test
+    public void testParseDeclarationWithoutAttributes() {
+        String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<?myProcessingInstruction My Processing instruction.?>";
+        Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
+        XmlDeclaration decl = (XmlDeclaration) doc.childNode(2);
+        assertEquals("myProcessingInstruction", decl.name());
+        assertTrue(decl.hasAttr("My"));
+        assertEquals("<?myProcessingInstruction My Processing instruction.?>", decl.outerHtml());
+    }
+
+    @Test
     public void caseSensitiveDeclaration() {
         String xml = "<?XML version='1' encoding='UTF-8' something='else'?>";
         Document doc = Jsoup.parse(xml, "", Parser.xmlParser());
