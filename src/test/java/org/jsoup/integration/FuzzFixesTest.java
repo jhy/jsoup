@@ -104,8 +104,18 @@ public class FuzzFixesTest {
     @Test
     public void overflow1577() throws IOException {
         // https://github.com/jhy/jsoup/issues/1577
-        // no repro - fixed elsewhere?
         File in = ParseTest.getFile("/fuzztests/1577.html.gz");
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
+
+    @Test
+    public void parseTimeout36150() throws IOException {
+        File in = ParseTest.getFile("/fuzztests/1580-attrname.html.gz");
+        // pretty much 1MB of null chars in text head
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
 

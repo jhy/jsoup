@@ -181,6 +181,8 @@ abstract class Token {
         }
 
         final void appendAttributeName(String append) {
+            // might have null chars because we eat in one pass - need to replace with null replacement character
+            append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             pendingAttributeName = pendingAttributeName == null ? append : pendingAttributeName.concat(append);
         }
 

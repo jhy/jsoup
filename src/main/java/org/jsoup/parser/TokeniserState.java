@@ -144,7 +144,6 @@ enum TokeniserState {
         // from < or </ in data, will have start or end tag pending
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
-            //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
             String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
 
@@ -608,7 +607,7 @@ enum TokeniserState {
     AttributeName {
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
-            String name = r.consumeToAnySorted(attributeNameCharsSorted);
+            String name = r.consumeToAnySorted(attributeNameCharsSorted); // spec deviate - consume and emit nulls in one hit vs stepping
             t.tagPending.appendAttributeName(name);
 
             char c = r.consume();
@@ -629,10 +628,6 @@ enum TokeniserState {
                 case '>':
                     t.emitTagPending();
                     t.transition(Data);
-                    break;
-                case nullChar:
-                    t.error(this);
-                    t.tagPending.appendAttributeName(replacementChar);
                     break;
                 case eof:
                     t.eofError(this);
@@ -1631,7 +1626,7 @@ enum TokeniserState {
 
     static final char nullChar = '\u0000';
     // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
-    static final char[] attributeNameCharsSorted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
+    static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
     static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
 
     private static final char replacementChar = Tokeniser.replacementChar;
