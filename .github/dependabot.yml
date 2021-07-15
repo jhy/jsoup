@@ -5,3 +5,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Jetty 9.x needed for JDK8 compatibility; it still receives security updates
+      - dependency-name: "jetty-server"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jetty-servlet"
+        update-types: ["version-update:semver-major"]
