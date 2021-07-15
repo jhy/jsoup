@@ -73,6 +73,8 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:empty</code></td><td>elements that have no children at all</td><td></td></tr>
  * </table>
  *
+ * <p>A word on using regular expressions in these selectors: depending on the content of the regex, you will need to quote the pattern using <b><code>Pattern.quote("regex")</code></b> for it to parse correclty through both the selector parser and the regex parser. E.g. <code>String query = "div:matches(" + Pattern.quote(regex) + ");"</code>.</p>
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  * @see Element#select(String)
  */

@@ -264,7 +264,7 @@ public class TokenQueue {
         char last = 0;
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
-        boolean inEQ = false;
+        boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
 
         do {
             if (isEmpty()) break;
@@ -274,7 +274,7 @@ public class TokenQueue {
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
-                if (inSingleQuote || inDoubleQuote || inEQ){
+                if (inSingleQuote || inDoubleQuote || inRegexQE){
                     last = c;
                     continue;
                 }
@@ -287,9 +287,9 @@ public class TokenQueue {
                 else if (c == close)
                     depth--;
             } else if (c == 'Q') {
-                inEQ = true;
+                inRegexQE = true;
             } else if (c == 'E') {
-                inEQ = false;
+                inRegexQE = false;
             }
 
             if (depth > 0 && last != 0)
