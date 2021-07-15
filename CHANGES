@@ -3,7 +3,7 @@ jsoup changelog
 *** Release 1.14.2 [PENDING]
   * Improvement: support Pattern.quote \Q and \E escapes in the selector regex matchers.
     <https://github.com/jhy/jsoup/pull/1536>
-    
+
   * Bugfix: the *|el wildcard namespace selector now also matches elements with no namespace.
     <https://github.com/jhy/jsoup/issues/1565>
     
