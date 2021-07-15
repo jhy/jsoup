@@ -147,7 +147,10 @@ public class QueryParser {
             else if (tq.matches("["))
                 sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
             else if (tq.matchesAny(combinators))
-                break;
+                if (sq.length() > 0)
+                    break;
+                else
+                    tq.consume();
             else
                 sq.append(tq.consume());
         }
