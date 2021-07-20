@@ -33,6 +33,10 @@ jsoup changelog
     count per element when parsing to 512 (in real-world HTML, P99 is ~ 8).
     <https://github.com/jhy/jsoup/issues/1578>
 
+  * Bugfix [Fuzz]: Speed improvement for the foster formatting elements algo, by limiting how far up a crafted stack
+    to scan.
+    <https://github.com/jhy/jsoup/issues/1593>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

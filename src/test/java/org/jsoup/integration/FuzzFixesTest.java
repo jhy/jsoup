@@ -122,4 +122,18 @@ public class FuzzFixesTest {
         Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
         assertNotNull(docXml);
     }
+
+    @Test
+    public void parseTimeout1593() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1593
+        // had unbounded depth in the foster formatting element scan - now limited to <= 256
+        // realworld HTML generally has only a few
+        File in = ParseTest.getFile("/fuzztests/1593.html.gz");
+
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
 }
