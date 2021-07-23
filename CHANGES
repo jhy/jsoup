@@ -23,7 +23,7 @@ jsoup changelog
   * Bugfix [Fuzz]: the adoption agency algorithm can have an incorrect bookmark position
     <https://github.com/jhy/jsoup/issues/1576>
 
-  * Bugfiz [Fuzz]: malformed HTML could result in null elements on stack
+  * Bugfix [Fuzz]: malformed HTML could result in null elements on stack
     <https://github.com/jhy/jsoup/issues/1579>
 
   * Bugfix [Fuzz]: malformed deeply nested table elements could create a stack overflow.
