@@ -460,7 +460,8 @@ enum HtmlTreeBuilderState {
                     tb.processStartTag("form");
                     if (startTag.hasAttribute("action")) {
                         Element form = tb.getFormElement();
-                        form.attr("action", startTag.attributes.get("action"));
+                        String action = startTag.attributes.get("action");
+                        form.attributes().put("action", action); // always LC, so don't need to scan up for ownerdoc
                     }
                     tb.processStartTag("hr");
                     tb.processStartTag("label");

@@ -136,4 +136,17 @@ public class FuzzFixesTest {
         Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
         assertNotNull(docXml);
     }
+
+    @Test
+    public void parseTimeout1595() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1595
+        // Time was getting soaked when setting a form attribute by searching up the node.root for ownerdocuments
+        File in = ParseTest.getFile("/fuzztests/1595.html");
+
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
 }
