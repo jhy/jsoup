@@ -40,6 +40,9 @@ jsoup changelog
   * Bugfix [Fuzz]: Speed improvement when parsing crafted HTML when transferring form attributes.
     <https://github.com/jhy/jsoup/issues/1595>
 
+  * Bugfix [Fuzz]: Speed improvement when the stack was thousands of items deep, and non-matching close tags sent.
+    <https://github.com/jhy/jsoup/issues/1596>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

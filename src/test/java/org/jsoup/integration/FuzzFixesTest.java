@@ -141,10 +141,20 @@ public class FuzzFixesTest {
     public void parseTimeout1595() throws IOException {
         // https://github.com/jhy/jsoup/issues/1595
         // Time was getting soaked when setting a form attribute by searching up the node.root for ownerdocuments
-        File in = ParseTest.getFile("/fuzztests/1595.html");
+        File in = ParseTest.getFile("/fuzztests/1595.html.gz");
 
         Document doc = Jsoup.parse(in, "UTF-8");
         assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
+
+    @Test
+    public void parseTimeout1596() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1596
+        // Timesink when the stack was thousands of items deep, and non-matching close tags sent
+        File in = ParseTest.getFile("/fuzztests/1596.html.gz");
 
         Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
         assertNotNull(docXml);

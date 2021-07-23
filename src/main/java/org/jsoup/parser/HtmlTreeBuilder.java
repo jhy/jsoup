@@ -335,6 +335,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
+    @Nullable
     Element getFromStack(String elName) {
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;

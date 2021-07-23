@@ -762,6 +762,14 @@ enum HtmlTreeBuilderState {
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             final String name = t.asEndTag().normalName; // case insensitive search - goal is to preserve output case, not for the parse to be case sensitive
             final ArrayList<Element> stack = tb.getStack();
+
+            // deviate from spec slightly to speed when super deeply nested
+            Element elFromStack = tb.getFromStack(name);
+            if (elFromStack == null) {
+                tb.error(this);
+                return false;
+            }
+
             for (int pos = stack.size() - 1; pos >= 0; pos--) {
                 Element node = stack.get(pos);
                 if (node.normalName().equals(name)) {
