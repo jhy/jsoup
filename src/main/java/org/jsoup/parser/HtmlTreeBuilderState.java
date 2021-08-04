@@ -816,7 +816,8 @@ enum HtmlTreeBuilderState {
                 // run-aways
                 final int stackSize = stack.size();
                 int bookmark = -1;
-                for (int si = 0; si < stackSize && si < 64; si++) {
+                for (int si = 1; si < stackSize && si < 64; si++) {
+                    // TODO: this no longer matches the current spec at https://html.spec.whatwg.org/#adoption-agency-algorithm and should be updated
                     el = stack.get(si);
                     if (el == formatEl) {
                         commonAncestor = stack.get(si - 1);
