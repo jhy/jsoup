@@ -774,7 +774,7 @@ enum HtmlTreeBuilderState {
                 Element node = stack.get(pos);
                 if (node.normalName().equals(name)) {
                     tb.generateImpliedEndTags(name);
-                    if (!name.equals(tb.currentElement().normalName()))
+                    if (!tb.currentElementIs(name))
                         tb.error(this);
                     tb.popStackToClose(name);
                     break;
@@ -1000,7 +1000,6 @@ enum HtmlTreeBuilderState {
                 }
                 return true; // todo: as above todo
             } else if (t.isEOF()) {
-                Element el = tb.currentElement();
                 if (tb.currentElementIs("html"))
                     tb.error(this);
                 return true; // stops parsing

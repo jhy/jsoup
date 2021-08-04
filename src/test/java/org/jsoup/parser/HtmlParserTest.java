@@ -1431,4 +1431,13 @@ public class HtmlParserTest {
         element.html("<tr><td>One</td></tr>");
         assertEquals("<tr>\n <tr>\n  <td>One</td>\n </tr>\n</tr>", element.outerHtml());
     }
+
+    @Test public void parseFragmentOnCreatedDocument() {
+        String bareFragment = "<h2>text</h2>";
+        List<Node> nodes = new Document("").parser().parseFragmentInput(bareFragment, new Element("p"), "");
+        assertEquals(1, nodes.size());
+        Node node = nodes.get(0);
+        assertEquals("h2", node.nodeName());
+        assertEquals("<p><h2>text</h2></p>", node.parent().outerHtml());
+    }
 }

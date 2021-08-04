@@ -110,9 +110,14 @@ abstract class TreeBuilder {
     }
 
 
-    @Nullable protected Element currentElement() {
+    /**
+     Get the current element (last on the stack). If all items have been removed, returns the document instead
+     (which might not actually be on the stack; use stack.size() == 0 to test if required.
+     @return the last element on the stack, if any; or the root document
+     */
+    protected Element currentElement() {
         int size = stack.size();
-        return size > 0 ? stack.get(size-1) : null;
+        return size > 0 ? stack.get(size-1) : doc;
     }
 
     /**
@@ -121,6 +126,8 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     protected boolean currentElementIs(String normalName) {
+        if (stack.size() == 0)
+            return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName);
     }

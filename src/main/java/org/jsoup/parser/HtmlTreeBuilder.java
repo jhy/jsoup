@@ -274,9 +274,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void insert(Token.Character characterToken) {
         final Node node;
-        Element el = currentElement();
-        if (el == null)
-            el = doc; // allows for whitespace to be inserted into the doc root object (not on the stack)
+        Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
         final String tagName = el.normalName();
         final String data = characterToken.getData();
 
@@ -604,7 +602,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
-        while ((excludeTag != null && !currentElement().normalName().equals(excludeTag)) &&
+        while ((excludeTag != null && !currentElementIs(excludeTag)) &&
                 inSorted(currentElement().normalName(), TagSearchEndTags))
             pop();
     }

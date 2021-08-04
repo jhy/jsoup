@@ -17,8 +17,11 @@ jsoup changelog
   * Bugfix: updated the HtmlTreeParser resetInsertionMode to the current spec for supported elements.
     <https://github.com/jhy/jsoup/issues/1491>
 
-  * Bugfix: fixed an NPE when parsing fragment HTML into a table element.
+  * Bugfix: fixed an NPE when parsing fragment HTML into a standalone table element.
     <https://github.com/jhy/jsoup/issues/1603>
+
+  * Bugfix: fixed an NPE when parsing fragment heading HTML into a standalone p element.
+    <https://github.com/jhy/jsoup/issues/1601>
 
   * Bugfix [Fuzz]: fixed a slow parse when a tag or an attribute name has thousands of null characters in it.
     <https://github.com/jhy/jsoup/issues/1580>
