@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -109,9 +110,19 @@ abstract class TreeBuilder {
     }
 
 
-    protected Element currentElement() {
+    @Nullable protected Element currentElement() {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : null;
+    }
+
+    /**
+     Checks if the Current Element's normal name equals the supplied name.
+     @param normalName name to check
+     @return true if there is a current element on the stack, and its name equals the supplied
+     */
+    protected boolean currentElementIs(String normalName) {
+        Element current = currentElement();
+        return current != null && current.normalName().equals(normalName);
     }
 
     /**

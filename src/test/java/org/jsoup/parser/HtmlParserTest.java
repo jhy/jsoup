@@ -1424,4 +1424,11 @@ public class HtmlParserTest {
         int xmlElementCount = xml.getAllElements().size();
         return htmlElementCount > xmlElementCount;
     }
+
+    @Test public void canSetHtmlOnCreatedTableElements() {
+        // https://github.com/jhy/jsoup/issues/1603
+        Element element = new Element("tr");
+        element.html("<tr><td>One</td></tr>");
+        assertEquals("<tr>\n <tr>\n  <td>One</td>\n </tr>\n</tr>", element.outerHtml());
+    }
 }
