@@ -43,6 +43,10 @@ jsoup changelog
   * Bugfix [Fuzz]: Speed improvement when the stack was thousands of items deep, and non-matching close tags sent.
     <https://github.com/jhy/jsoup/issues/1596>
 
+  * Bugfix [Fuzz]: Speed improvement when an attribute name is 600K of quote characters or otherwise needs accumulation
+    vs being able to read in one hit.
+    <https://github.com/jhy/jsoup/issues/1605>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 
