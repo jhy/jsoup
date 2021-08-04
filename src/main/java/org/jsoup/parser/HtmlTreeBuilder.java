@@ -443,7 +443,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void resetInsertionMode() {
         // https://html.spec.whatwg.org/multipage/parsing.html#the-insertion-mode
         boolean last = false;
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
+        final int bottom = stack.size() - 1;
+        final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
+
+        for (int pos = bottom; pos >= upper; pos--) {
             Element node = stack.get(pos);
             if (pos == 0) {
                 last = true;

@@ -47,6 +47,10 @@ jsoup changelog
     vs being able to read in one hit.
     <https://github.com/jhy/jsoup/issues/1605>
 
+  * Bugfix [Fuzz]: Speed improvement when closing missing empty tags (in XML comment processed as HTML) when thousands
+    deep in stack.
+    <https://github.com/jhy/jsoup/issues/1606>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 
