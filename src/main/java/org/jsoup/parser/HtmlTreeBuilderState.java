@@ -1419,12 +1419,14 @@ enum HtmlTreeBuilderState {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isStartTag() && inSorted(t.asStartTag().normalName(), InSelecTableEnd)) {
                 tb.error(this);
-                tb.processEndTag("select");
+                tb.popStackToClose("select");
+                tb.resetInsertionMode();
                 return tb.process(t);
             } else if (t.isEndTag() && inSorted(t.asEndTag().normalName(),InSelecTableEnd )) {
                 tb.error(this);
                 if (tb.inTableScope(t.asEndTag().normalName())) {
-                    tb.processEndTag("select");
+                    tb.popStackToClose("select");
+                    tb.resetInsertionMode();
                     return (tb.process(t));
                 } else
                     return false;

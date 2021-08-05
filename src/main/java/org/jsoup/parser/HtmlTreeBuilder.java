@@ -444,6 +444,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
 
+        if (stack.size() == 0) { // nothing left of stack, just get to body
+            transition(HtmlTreeBuilderState.InBody);
+        }
+
         for (int pos = bottom; pos >= upper; pos--) {
             Element node = stack.get(pos);
             if (pos == 0) {

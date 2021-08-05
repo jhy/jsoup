@@ -60,6 +60,9 @@ jsoup changelog
     deep in stack.
     <https://github.com/jhy/jsoup/issues/1606>
 
+  * Bugfix [Fuzz]: Fix a potential stack-overflow in the parser given crafted HTML, when the parser looped in the
+    InSelectInTable state.
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 
