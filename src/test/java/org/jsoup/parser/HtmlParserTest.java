@@ -1450,4 +1450,12 @@ public class HtmlParserTest {
         Node node = nodes.get(0);
         assertEquals("<p><p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
     }
+
+    @Test public void nestedAnchorAdoption() {
+        // https://github.com/jhy/jsoup/issues/1608
+        String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
+        Document doc = Jsoup.parse(html);
+        assertNotNull(doc);
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a> </div> </b>", TextUtil.stripNewlines(doc.body().html()));
+    }
 }
