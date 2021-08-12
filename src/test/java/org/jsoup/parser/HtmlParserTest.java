@@ -586,7 +586,7 @@ public class HtmlParserTest {
     }
 
     @Test public void testHgroup() {
-        // jsoup used to not allow hroup in h{n}, but that's not in spec, and browsers are OK
+        // jsoup used to not allow hgroup in h{n}, but that's not in spec, and browsers are OK
         Document doc = Jsoup.parse("<h1>Hello <h2>There <hgroup><h1>Another<h2>headline</hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup>");
         assertEquals("<h1>Hello </h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
     }
@@ -651,10 +651,9 @@ public class HtmlParserTest {
         assertEquals("<b>1</b>\n<p><b>2</b>3</p>", doc.body().html());
     }
 
-    @Disabled // todo: test case for https://github.com/jhy/jsoup/issues/845. Doesn't work yet.
     @Test public void handlesMisnestedAInDivs() {
-        String h = "<a href='#1'><div><div><a href='#2'>child</a</div</div></a>";
-        String w = "<a href=\"#1\"></a><div><a href=\"#1\"></a><div><a href=\"#1\"></a><a href=\"#2\">child</a></div></div>";
+        String h = "<a href='#1'><div><div><a href='#2'>child</a></div</div></a>";
+        String w = "<a href=\"#1\"></a> <div> <a href=\"#1\"></a> <div> <a href=\"#1\"></a><a href=\"#2\">child</a> </div> </div>";
         Document doc = Jsoup.parse(h);
         assertEquals(
             StringUtil.normaliseWhitespace(w),
