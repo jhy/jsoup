@@ -62,4 +62,14 @@ public class AttributeTest {
         assertFalse(a2.hasDeclaredValue());
         assertTrue(a3.hasDeclaredValue());
     }
+
+    @Test public void canSetValueToNull() {
+        Attribute attr = new Attribute("one", "val");
+        String oldVal = attr.setValue(null);
+        assertEquals("one", attr.html());
+        assertEquals("val", oldVal);
+
+        oldVal = attr.setValue("foo");
+        assertEquals("", oldVal); // string, not null
+    }
 }

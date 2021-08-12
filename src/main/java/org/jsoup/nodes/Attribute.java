@@ -91,15 +91,17 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     /**
      Set the attribute value.
-     @param val the new attribute value; must not be null
+     @param val the new attribute value; may be null (to set an enabled boolean attribute)
+     @return the previous value (if was null; an empty string)
      */
-    public String setValue(String val) {
+    public String setValue(@Nullable String val) {
         String oldVal = this.val;
         if (parent != null) {
-            oldVal = parent.get(this.key); // trust the container more
             int i = parent.indexOfKey(this.key);
-            if (i != Attributes.NotFound)
+            if (i != Attributes.NotFound) {
+                oldVal = parent.get(this.key); // trust the container more
                 parent.vals[i] = val;
+            }
         }
         this.val = val;
         return Attributes.checkNotNull(oldVal);
