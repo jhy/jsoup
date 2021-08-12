@@ -814,7 +814,7 @@ public class HtmlParserTest {
 
     @Test public void handlesNullInData() {
         Document doc = Jsoup.parse("<p id=\u0000>Blah \u0000</p>");
-        assertEquals("<p id=\"\uFFFD\">Blah \u0000</p>", doc.body().html()); // replaced in attr, NOT replaced in data
+        assertEquals("<p id=\"\uFFFD\">Blah &#x0;</p>", doc.body().html()); // replaced in attr, NOT replaced in data (but is escaped as control char <0x20)
     }
 
     @Test public void handlesNullInComments() {

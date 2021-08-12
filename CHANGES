@@ -4,6 +4,10 @@ jsoup changelog
   * Improvement: support Pattern.quote \Q and \E escapes in the selector regex matchers.
     <https://github.com/jhy/jsoup/pull/1536>
 
+  * Bugfix: when serializing output, escape characters that are in the < 0x20 range. This improves XML output
+    compatibility, and makes HTML output with these characters easier to read (as they're otherwise invisible).
+    <https://github.com/jhy/jsoup/issues/1556>
+
   * Bugfix: the *|el wildcard namespace selector now also matches elements with no namespace.
     <https://github.com/jhy/jsoup/issues/1565>
     

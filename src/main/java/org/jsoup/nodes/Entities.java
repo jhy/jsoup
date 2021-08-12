@@ -220,11 +220,17 @@ public class Entities {
                         else
                             accum.append(c);
                         break;
+                    // we escape ascii control <x20 (other than tab, line-feed, carriage return)  for XML compliance (required) and HTML ease of reading (not required) - https://www.w3.org/TR/xml/#charsets
+                    case 0x9:
+                    case 0xA:
+                    case 0xD:
+                        accum.append(c);
+                        break;
                     default:
-                        if (canEncode(coreCharset, c, encoder))
-                            accum.append(c);
-                        else
+                        if (c < 0x20 || !canEncode(coreCharset, c, encoder))
                             appendEncoded(accum, escapeMode, codePoint);
+                        else
+                            accum.append(c);
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));

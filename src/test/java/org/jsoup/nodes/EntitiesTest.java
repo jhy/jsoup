@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import static org.jsoup.nodes.Document.OutputSettings;
@@ -149,5 +150,17 @@ public class EntitiesTest {
 
         doc.outputSettings().escapeMode(xhtml);
         assertEquals("<a title=\"&lt;p>One&lt;/p>\">One</a>", element.outerHtml());
+    }
+
+    @Test public void controlCharactersAreEscaped() {
+        // https://github.com/jhy/jsoup/issues/1556
+        // we escape ascii control characters in both HTML and XML for compatibility. Required in XML and probably
+        // easier to read in HTML
+        String input = "<a foo=\"&#x1b;esc&#x7;bell\">Text &#x1b; &#x7;</a>";
+        Document doc = Jsoup.parse(input);
+        assertEquals(input, doc.body().html());
+
+        Document xml = Jsoup.parse(input, "", Parser.xmlParser());
+        assertEquals(input, xml.html());
     }
 }
