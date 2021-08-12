@@ -127,7 +127,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @param value attribute value (may be null, to set a boolean attribute)
      * @return these attributes, for chaining
      */
-    public Attributes put(String key, String value) {
+    public Attributes put(String key, @Nullable String value) {
         Validate.notNull(key);
         int i = indexOfKey(key);
         if (i != NotFound)

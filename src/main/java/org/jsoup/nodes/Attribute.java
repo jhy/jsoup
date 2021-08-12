@@ -171,6 +171,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return shouldCollapseAttribute(key, val, out);
     }
 
+    // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
     protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
         return (
             out.syntax() == Document.OutputSettings.Syntax.html &&

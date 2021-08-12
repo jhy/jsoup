@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -230,5 +231,40 @@ public class AttributesTest {
 
         assertEquals(4, a.size());
         assertEquals(2, a.asList().size()); // excluded from lists
+    }
+
+    @Test public void testBooleans() {
+        // want unknown=null, and known like async=null, async="", and async=async to collapse
+        String html = "<a foo bar=\"\" async=async qux=qux defer=deferring ismap inert=\"\">";
+        Element el = Jsoup.parse(html).selectFirst("a");
+        assertEquals(" foo bar=\"\" async qux=\"qux\" defer=\"deferring\" ismap inert", el.attributes().html());
+
+    }
+
+    @Test public void booleanNullAttributesConsistent() {
+        Attributes attributes = new Attributes();
+        attributes.put("key", null);
+        Attribute attribute = attributes.iterator().next();
+
+        assertEquals("key", attribute.html());
+        assertEquals(" key", attributes.html());
+    }
+
+    @Test public void booleanEmptyString() {
+        Attributes attributes = new Attributes();
+        attributes.put("checked", "");
+        Attribute attribute = attributes.iterator().next();
+
+        assertEquals("checked", attribute.html());
+        assertEquals(" checked", attributes.html());
+    }
+
+    @Test public void booleanCaseInsensitive() {
+        Attributes attributes = new Attributes();
+        attributes.put("checked", "CHECKED");
+        Attribute attribute = attributes.iterator().next();
+
+        assertEquals("checked", attribute.html());
+        assertEquals(" checked", attributes.html());
     }
 }
