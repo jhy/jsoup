@@ -1042,11 +1042,11 @@ public class HtmlParserTest {
     }
 
     @Test public void testSupportsNonAsciiTags() {
-        String body = "<進捗推移グラフ>Yes</進捗推移グラフ><русский-тэг>Correct</<русский-тэг>";
+        String body = "<a進捗推移グラフ>Yes</a進捗推移グラフ><bрусский-тэг>Correct</<bрусский-тэг>";
         Document doc = Jsoup.parse(body);
-        Elements els = doc.select("進捗推移グラフ");
+        Elements els = doc.select("a進捗推移グラフ");
         assertEquals("Yes", els.text());
-        els = doc.select("русский-тэг");
+        els = doc.select("bрусский-тэг");
         assertEquals("Correct", els.text());
     }
 
@@ -1456,5 +1456,26 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
         assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a> </div> </b>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void tagsMustStartWithAscii() {
+        // https://github.com/jhy/jsoup/issues/1006
+        String[] valid = {"a一", "a会员挂单金额5", "table(╯°□°)╯"};
+        String[] invalid = {"一", "会员挂单金额5", "(╯°□°)╯"};
+
+        for (String tag : valid) {
+            Document doc = Jsoup.parse("<" + tag + ">Text</" + tag + ">");
+            Elements els = doc.getElementsByTag(tag);
+            assertEquals(1, els.size());
+            assertEquals(tag, els.get(0).tagName());
+            assertEquals("Text", els.get(0).text());
+        }
+
+        for (String tag : invalid) {
+            Document doc = Jsoup.parse("<" + tag + ">Text</" + tag + ">");
+            Elements els = doc.getElementsByTag(tag);
+            assertEquals(0, els.size());
+            assertEquals("&lt;" + tag + "&gt;Text<!--/" + tag + "-->", doc.body().html());
+        }
     }
 }

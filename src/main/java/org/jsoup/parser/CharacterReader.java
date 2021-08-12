@@ -514,6 +514,17 @@ public final class CharacterReader {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c);
     }
 
+    /**
+     Checks if the current pos matches an ascii alpha (A-Z a-z) per https://infra.spec.whatwg.org/#ascii-alpha
+     @return if it matches or not
+     */
+    boolean matchesAsciiAlpha() {
+        if (isEmpty())
+            return false;
+        char c = charBuf[bufPos];
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+    }
+
     boolean matchesDigit() {
         if (isEmpty())
             return false;

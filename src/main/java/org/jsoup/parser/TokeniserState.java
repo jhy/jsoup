@@ -109,7 +109,7 @@ enum TokeniserState {
                     t.advanceTransition(BogusComment);
                     break;
                 default:
-                    if (r.matchesLetter()) {
+                    if (r.matchesAsciiAlpha()) {
                         t.createTagPending(true);
                         t.transition(TagName);
                     } else {
@@ -127,7 +127,7 @@ enum TokeniserState {
                 t.eofError(this);
                 t.emit("</");
                 t.transition(Data);
-            } else if (r.matchesLetter()) {
+            } else if (r.matchesAsciiAlpha()) {
                 t.createTagPending(false);
                 t.transition(TagName);
             } else if (r.matches('>')) {
@@ -136,7 +136,7 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.advanceTransition(BogusComment);
+                t.transition(BogusComment); // reconsume char
             }
         }
     },
@@ -185,7 +185,7 @@ enum TokeniserState {
             if (r.matches('/')) {
                 t.createTempBuffer();
                 t.advanceTransition(RCDATAEndTagOpen);
-            } else if (r.matchesLetter() && t.appropriateEndTagName() != null && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
+            } else if (r.matchesAsciiAlpha() && t.appropriateEndTagName() != null && !r.containsIgnoreCase("</" + t.appropriateEndTagName())) {
                 // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
                 // consuming to EOF; break out here
                 t.tagPending = t.createTagPending(false).name(t.appropriateEndTagName());
@@ -199,7 +199,7 @@ enum TokeniserState {
     },
     RCDATAEndTagOpen {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 t.createTagPending(false);
                 t.tagPending.appendTagName(r.current());
                 t.dataBuffer.append(r.current());
@@ -212,7 +212,7 @@ enum TokeniserState {
     },
     RCDATAEndTagName {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 String name = r.consumeLetterSequence();
                 t.tagPending.appendTagName(name);
                 t.dataBuffer.append(name);
@@ -419,7 +419,7 @@ enum TokeniserState {
     },
     ScriptDataEscapedLessthanSign {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 t.createTempBuffer();
                 t.dataBuffer.append(r.current());
                 t.emit("<");
@@ -436,7 +436,7 @@ enum TokeniserState {
     },
     ScriptDataEscapedEndTagOpen {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 t.createTagPending(false);
                 t.tagPending.appendTagName(r.current());
                 t.dataBuffer.append(r.current());
@@ -925,7 +925,7 @@ enum TokeniserState {
             } else if (r.matchConsumeIgnoreCase("DOCTYPE")) {
                 t.transition(Doctype);
             } else if (r.matchConsume("[CDATA[")) {
-                // todo: should actually check current namepspace, and only non-html allows cdata. until namespace
+                // todo: should actually check current namespace, and only non-html allows cdata. until namespace
                 // is implemented properly, keep handling as cdata
                 //} else if (!t.currentNodeInHtmlNS() && r.matchConsume("[CDATA[")) {
                 t.createTempBuffer();
@@ -1128,7 +1128,7 @@ enum TokeniserState {
     },
     BeforeDoctypeName {
         void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 t.createDoctypePending();
                 t.transition(DoctypeName);
                 return;
@@ -1708,7 +1708,7 @@ enum TokeniserState {
     }
 
     private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState a, TokeniserState b) {
-        if (r.matchesLetter()) {
+        if (r.matchesAsciiAlpha()) {
             t.createTagPending(false);
             t.transition(a);
         } else {

@@ -30,6 +30,9 @@ jsoup changelog
   * Bugfix: fixed an IOOB when parsing a formatting fragment into a standalone p element.
     <https://github.com/jhy/jsoup/issues/1602>
 
+  * Bugfix: tag names must start with an ascii-alpha character.
+    <https://github.com/jhy/jsoup/issues/1006>
+
   * Bugfix [Fuzz]: fixed a slow parse when a tag or an attribute name has thousands of null characters in it.
     <https://github.com/jhy/jsoup/issues/1580>
 
