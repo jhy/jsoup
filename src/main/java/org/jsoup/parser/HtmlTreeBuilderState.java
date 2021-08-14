@@ -340,12 +340,15 @@ enum HtmlTreeBuilderState {
                     break;
                 case "html":
                     tb.error(this);
-                    // merge attributes onto real html
-                    Element html = tb.getStack().get(0);
-                    if (startTag.hasAttributes()) {
-                        for (Attribute attribute : startTag.attributes) {
-                            if (!html.hasAttr(attribute.getKey()))
-                                html.attributes().put(attribute);
+                    // merge attributes onto real html (if present)
+                    stack = tb.getStack();
+                    if (stack.size() > 0) {
+                        Element html = tb.getStack().get(0);
+                        if (startTag.hasAttributes()) {
+                            for (Attribute attribute : startTag.attributes) {
+                                if (!html.hasAttr(attribute.getKey()))
+                                    html.attributes().put(attribute);
+                            }
                         }
                     }
                     break;
