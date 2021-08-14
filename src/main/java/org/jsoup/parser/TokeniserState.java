@@ -106,7 +106,7 @@ enum TokeniserState {
                     break;
                 case '?':
                     t.createBogusCommentPending();
-                    t.advanceTransition(BogusComment);
+                    t.transition(BogusComment);
                     break;
                 default:
                     if (r.matchesAsciiAlpha()) {
@@ -136,7 +136,8 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.transition(BogusComment); // reconsume char
+                t.commentPending.append('/'); // push the / back on that got us here
+                t.transition(BogusComment);
             }
         }
     },
@@ -906,11 +907,9 @@ enum TokeniserState {
     BogusComment {
         void read(Tokeniser t, CharacterReader r) {
             // todo: handle bogus comment starting from eof. when does that trigger?
-            // rewind to capture character that lead us here
-            r.unconsume();
             t.commentPending.append(r.consumeTo('>'));
             // todo: replace nullChar with replaceChar
-            char next = r.consume();
+            char next = r.current();
             if (next == '>' || next == eof) {
                 t.emitCommentPending();
                 t.transition(Data);
@@ -933,7 +932,7 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.advanceTransition(BogusComment); // advance so this character gets in bogus comment data's rewind
+                t.transition(BogusComment);
             }
         }
     },

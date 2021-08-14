@@ -4,6 +4,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 /**
@@ -152,7 +153,7 @@ final class Tokeniser {
 
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
-    int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    @Nullable int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())

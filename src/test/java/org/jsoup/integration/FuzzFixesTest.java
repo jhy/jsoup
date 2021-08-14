@@ -205,4 +205,19 @@ public class FuzzFixesTest {
         Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
         assertNotNull(docXml);
     }
+
+    @Test
+    public void unconsume() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1612
+        // I wasn't able to repro this with different ways of loading strings - think somehow the fuzzers input
+        // buffer is different and the bufferUp() happened at a different point. Regardless, did find an unsafe use
+        // of unconsume() after a buffer up in bogus comment, so cleaned that up.
+        File in = ParseTest.getFile("/fuzztests/1612.html.gz");
+
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+
+        Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
+        assertNotNull(docXml);
+    }
 }
