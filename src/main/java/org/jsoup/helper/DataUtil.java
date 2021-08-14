@@ -80,25 +80,25 @@ public final class DataUtil {
     /**
      * Parses a Document from an input steam.
      * @param in input stream to parse. The stream will be closed after reading.
-     * @param charsetName character set of input
+     * @param charsetName character set of input (optional)
      * @param baseUri base URI of document, to resolve relative links against
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, String charsetName, String baseUri) throws IOException {
+    public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
     }
 
     /**
      * Parses a Document from an input steam, using the provided Parser.
      * @param in input stream to parse. The stream will be closed after reading.
-     * @param charsetName character set of input
+     * @param charsetName character set of input (optional)
      * @param baseUri base URI of document, to resolve relative links against
      * @param parser alternate {@link Parser#xmlParser() parser} to use.
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return parseInputStream(in, charsetName, baseUri, parser);
     }
 
