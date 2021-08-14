@@ -911,6 +911,7 @@ enum TokeniserState {
             // todo: replace nullChar with replaceChar
             char next = r.current();
             if (next == '>' || next == eof) {
+                r.consume();
                 t.emitCommentPending();
                 t.transition(Data);
             }
