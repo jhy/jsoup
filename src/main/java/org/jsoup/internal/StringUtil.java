@@ -288,8 +288,8 @@ public final class StringUtil {
      * @return an absolute URL if one was able to be generated, or the empty string if not
      */
     public static String resolve(final String baseUrl, final String relUrl) {
-        URL base;
         try {
+            URL base;
             try {
                 base = new URL(baseUrl);
             } catch (MalformedURLException e) {
@@ -299,7 +299,8 @@ public final class StringUtil {
             }
             return resolve(base, relUrl).toExternalForm();
         } catch (MalformedURLException e) {
-            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel:
+            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
+            // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
             return validUriScheme.matcher(relUrl).find() ? relUrl : "";
         }
     }
