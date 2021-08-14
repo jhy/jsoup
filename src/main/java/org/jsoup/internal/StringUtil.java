@@ -299,9 +299,11 @@ public final class StringUtil {
             }
             return resolve(base, relUrl).toExternalForm();
         } catch (MalformedURLException e) {
-            return "";
+            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel:
+            return validUriScheme.matcher(relUrl).find() ? relUrl : "";
         }
     }
+    private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
 
     private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
         @Override

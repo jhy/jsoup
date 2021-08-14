@@ -4,6 +4,10 @@ jsoup changelog
   * Improvement: support Pattern.quote \Q and \E escapes in the selector regex matchers.
     <https://github.com/jhy/jsoup/pull/1536>
 
+  * Improvement: Element.absUrl() now supports tel: URLs, and other URLs that are already absolute but that Java does
+    not have input stream handlers for.
+    <https://github.com/jhy/jsoup/issues/1610>
+
   * Bugfix: when serializing output, escape characters that are in the < 0x20 range. This improves XML output
     compatibility, and makes HTML output with these characters easier to read (as they're otherwise invisible).
     <https://github.com/jhy/jsoup/issues/1556>

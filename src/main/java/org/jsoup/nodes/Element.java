@@ -82,7 +82,7 @@ public class Element extends Node {
      * @param baseUri the base URI of this element. Optional, and will inherit from its parent, if any.
      * @see Tag#valueOf(String, ParseSettings)
      */
-    public Element(Tag tag, String baseUri) {
+    public Element(Tag tag, @Nullable String baseUri) {
         this(tag, baseUri, null);
     }
 
