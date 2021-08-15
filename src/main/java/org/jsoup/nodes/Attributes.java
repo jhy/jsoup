@@ -275,7 +275,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             // todo - should this be case insensitive?
             put(attr);
         }
-
     }
 
     public Iterator<Attribute> iterator() {

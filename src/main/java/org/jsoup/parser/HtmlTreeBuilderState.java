@@ -815,8 +815,7 @@ enum HtmlTreeBuilderState {
                 Element furthestBlock = null;
                 Element commonAncestor = null;
                 boolean seenFormattingElement = false;
-                // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents
-                // run-aways
+                // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents run-aways
                 final int stackSize = stack.size();
                 int bookmark = -1;
                 for (int si = 1; si < stackSize && si < 64; si++) {

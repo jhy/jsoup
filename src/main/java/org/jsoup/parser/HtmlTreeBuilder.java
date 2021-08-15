@@ -690,10 +690,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         Element entry = last;
         int size = formattingElements.size();
+        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
         int pos = size - 1;
         boolean skip = false;
         while (true) {
-            if (pos == 0) { // step 4. if none before, skip to 8
+            if (pos == ceil) { // step 4. if none before, skip to 8
                 skip = true;
                 break;
             }
@@ -710,7 +711,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
             skip = false; // can only skip increment from 4.
             Element newEl = insertStartTag(entry.normalName()); // todo: avoid fostering here?
             // newEl.namespace(entry.namespace()); // todo: namespaces
-            newEl.attributes().addAll(entry.attributes());
+            if (entry.attributesSize() > 0)
+                newEl.attributes().addAll(entry.attributes());
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);
@@ -720,6 +722,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 break;
         }
     }
+    private static final int maxUsedFormattingElements = 12; // limit how many elements get recreated
 
     void clearFormattingElementsToLastMarker() {
         while (!formattingElements.isEmpty()) {

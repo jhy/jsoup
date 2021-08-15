@@ -220,4 +220,13 @@ public class FuzzFixesTest {
         Document docXml = Jsoup.parse(new FileInputStream(in), "UTF-8", "https://example.com", Parser.xmlParser());
         assertNotNull(docXml);
     }
+
+    @Test
+    public void test36916() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1613
+        File in = ParseTest.getFile("/fuzztests/1613.html.gz");
+
+        Document doc = Jsoup.parse(in, "UTF-8");
+        assertNotNull(doc);
+    }
 }

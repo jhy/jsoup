@@ -77,6 +77,11 @@ jsoup changelog
   * Bugfix [Fuzz]: Fix an IOOB when the HTML root was cleared from the stack and then attributes were merged onto it.
     <https://github.com/jhy/jsoup/issues/1611>
 
+  * Bugfix [Fuzz]: Improved the speed of parsing when crafted HTML contains hundreds of active formatting elements
+    that were copied for all new elements (similar to an amplification attack). The number of considered active
+    formatting elements that will be cloned when mis-nested is now capped to 12.
+    <https://github.com/jhy/jsoup/issues/1613>
+
 *** Release 1.14.1 [2021-Jul-10]
   * Change: updated the minimum supported Java version from Java 7 to Java 8.
 

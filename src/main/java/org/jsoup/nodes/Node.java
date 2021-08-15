@@ -87,6 +87,16 @@ public abstract class Node implements Cloneable {
     public abstract Attributes attributes();
 
     /**
+     Get the number of attributes that this Node has.
+     @return the number of attributes
+     @since 1.14.2
+     */
+    public int attributesSize() {
+        // added so that we can test how many attributes exist without implicitly creating the Attributes object
+        return hasAttributes() ? attributes().size() : 0;
+    }
+
+    /**
      * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
      * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings.
      * @param attributeKey The attribute key.
@@ -100,7 +110,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Test if this element has an attribute. <b>Case insensitive</b>
+     * Test if this Node has an attribute. <b>Case insensitive</b>.
      * @param attributeKey The attribute key to check.
      * @return true if the attribute exists, false if not.
      */

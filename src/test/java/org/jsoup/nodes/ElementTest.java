@@ -2039,4 +2039,20 @@ public class ElementTest {
         els.add(new Element("a"));
         assertEquals(1, els.size());
     }
+
+    @Test public void attributeSizeDoesNotAutoVivify() {
+        Document doc = Jsoup.parse("<p></p>");
+        Element p = doc.selectFirst("p");
+        assertNotNull(p);
+        assertFalse(p.hasAttributes());
+        assertEquals(0, p.attributesSize());
+        assertFalse(p.hasAttributes());
+
+        p.attr("foo", "bar");
+        assertEquals(1, p.attributesSize());
+        assertTrue(p.hasAttributes());
+
+        p.removeAttr("foo");
+        assertEquals(0, p.attributesSize());
+    }
 }
