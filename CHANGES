@@ -1,6 +1,11 @@
 jsoup changelog
 
-*** Release 1.14.2 [PENDING]
+*** Release 1.14.3 [PENDING]
+  * Bugfix: the OSGi bundle meta-data incorrectly set a version on the import of java.annotation (used as a build-time
+    dependency for nullability assertions).
+    <https://github.com/jhy/jsoup/issues/1616>
+
+*** Release 1.14.2 [2021-Aug-15]
   * Improvement: support Pattern.quote \Q and \E escapes in the selector regex matchers.
     <https://github.com/jhy/jsoup/pull/1536>
 
