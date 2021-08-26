@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * Base combining (and, or) evaluator.
  */
-abstract class CombiningEvaluator extends Evaluator {
+public abstract class CombiningEvaluator extends Evaluator {
     final ArrayList<Evaluator> evaluators;
     int num = 0;
 
@@ -39,7 +39,7 @@ abstract class CombiningEvaluator extends Evaluator {
         num = evaluators.size();
     }
 
-    static final class And extends CombiningEvaluator {
+    public static final class And extends CombiningEvaluator {
         And(Collection<Evaluator> evaluators) {
             super(evaluators);
         }
@@ -64,7 +64,7 @@ abstract class CombiningEvaluator extends Evaluator {
         }
     }
 
-    static final class Or extends CombiningEvaluator {
+    public static final class Or extends CombiningEvaluator {
         /**
          * Create a new Or evaluator. The initial evaluators are ANDed together and used as the first clause of the OR.
          * @param evaluators initial OR clause (these are wrapped into an AND evaluator).
