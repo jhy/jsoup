@@ -150,7 +150,7 @@
           <instructions>
             <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
             <Export-Package>org.jsoup.*</Export-Package>
-            <Import-Package>javax.annotation;version=!,javax.annotation.meta;version=!,*</Import-Package>
+            <Import-Package>javax.annotation;version=!;resolution:=optional,javax.annotation.meta;version=!;resolution:=optional,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
