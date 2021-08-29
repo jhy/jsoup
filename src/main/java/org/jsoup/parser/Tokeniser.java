@@ -276,22 +276,22 @@ final class Tokeniser {
 
     void error(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), "Unexpected character '%s' in input state [%s]", reader.current(), state));
+            errors.add(new ParseError(reader, "Unexpected character '%s' in input state [%s]", reader.current(), state));
     }
 
     void eofError(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), "Unexpectedly reached end of file (EOF) in input state [%s]", state));
+            errors.add(new ParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
     private void characterReferenceError(String message) {
         if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), "Invalid character reference: %s", message));
+            errors.add(new ParseError(reader, "Invalid character reference: %s", message));
     }
 
     void error(String errorMsg) {
         if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), errorMsg));
+            errors.add(new ParseError(reader, errorMsg));
     }
 
     boolean currentNodeInHtmlNS() {

@@ -93,6 +93,7 @@ public class Parser {
     /**
      * Retrieve the parse errors, if any, from the last parse.
      * @return list of parse errors, up to the size of the maximum errors tracked.
+     * @see #setTrackErrors(int)
      */
     public ParseErrorList getErrors() {
         return errors;

@@ -5,16 +5,31 @@ package org.jsoup.parser;
  */
 public class ParseError {
     private int pos;
+    private String cursorPos;
     private String errorMsg;
+
+    ParseError(CharacterReader reader, String errorMsg) {
+        pos = reader.pos();
+        cursorPos = reader.cursorPos();
+        this.errorMsg = errorMsg;
+    }
+
+    ParseError(CharacterReader reader, String errorFormat, Object... args) {
+        pos = reader.pos();
+        cursorPos = reader.cursorPos();
+        this.errorMsg = String.format(errorFormat, args);
+    }
 
     ParseError(int pos, String errorMsg) {
         this.pos = pos;
+        cursorPos = String.valueOf(pos);
         this.errorMsg = errorMsg;
     }
 
     ParseError(int pos, String errorFormat, Object... args) {
-        this.errorMsg = String.format(errorFormat, args);
         this.pos = pos;
+        cursorPos = String.valueOf(pos);
+        this.errorMsg = String.format(errorFormat, args);
     }
 
     /**
@@ -33,8 +48,16 @@ public class ParseError {
         return pos;
     }
 
+    /**
+     Get the formatted line:column cursor position where the error occured.
+     @return line:number cursor position
+     */
+    public String getCursorPos() {
+        return cursorPos;
+    }
+
     @Override
     public String toString() {
-        return pos + ": " + errorMsg;
+        return "<" + cursorPos + ">: " + errorMsg;
     }
 }

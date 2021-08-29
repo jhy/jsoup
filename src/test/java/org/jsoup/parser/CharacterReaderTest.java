@@ -1,8 +1,10 @@
 package org.jsoup.parser;
 
+import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -334,6 +336,119 @@ public class CharacterReaderTest {
         }
 
         assertTrue(r.isEmpty());
+    }
+
+    @Test public void canEnableAndDisableLineNumberTracking() {
+        CharacterReader reader = new CharacterReader("Hello!");
+        assertFalse(reader.isTrackNewlines());
+        reader.trackNewlines(true);
+        assertTrue(reader.isTrackNewlines());
+        reader.trackNewlines(false);
+        assertFalse(reader.isTrackNewlines());
+    }
+
+    @Test public void canTrackNewlines() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("<foo>\n<bar>\n<qux>\n");
+        while (builder.length() < maxBufferLen)
+            builder.append("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+        builder.append("[foo]\n[bar]");
+        String content = builder.toString();
+
+        CharacterReader noTrack = new CharacterReader(content);
+        assertFalse(noTrack.isTrackNewlines());
+        CharacterReader track = new CharacterReader(content);
+        track.trackNewlines(true);
+        assertTrue(track.isTrackNewlines());
+
+        // check that no tracking works as expected (pos is 0 indexed, line number stays at 1, col is pos+1)
+        assertEquals(0, noTrack.pos());
+        assertEquals(1, noTrack.lineNumber());
+        assertEquals(1, noTrack.columnNumber());
+        noTrack.consumeTo("<qux>");
+        assertEquals(12, noTrack.pos());
+        assertEquals(1, noTrack.lineNumber());
+        assertEquals(13, noTrack.columnNumber());
+        assertEquals("1:13", noTrack.cursorPos());
+        // get over the buffer
+        while (!noTrack.matches("[foo]"))
+            noTrack.consumeTo("[foo]");
+        assertEquals(32778, noTrack.pos());
+        assertEquals(1, noTrack.lineNumber());
+        assertEquals(noTrack.pos()+1, noTrack.columnNumber());
+        assertEquals("1:32779", noTrack.cursorPos());
+
+        // and the line numbers: "<foo>\n<bar>\n<qux>\n"
+        assertEquals(0, track.pos());
+        assertEquals(1, track.lineNumber());
+        assertEquals(1, track.columnNumber());
+
+        track.consumeTo('\n');
+        assertEquals(1, track.lineNumber());
+        assertEquals(6, track.columnNumber());
+        track.consume();
+        assertEquals(2, track.lineNumber());
+        assertEquals(1, track.columnNumber());
+
+        assertEquals("<bar>", track.consumeTo('\n'));
+        assertEquals(2, track.lineNumber());
+        assertEquals(6, track.columnNumber());
+
+        assertEquals("\n", track.consumeTo("<qux>"));
+        assertEquals(12, track.pos());
+        assertEquals(3, track.lineNumber());
+        assertEquals(1, track.columnNumber());
+        assertEquals("3:1", track.cursorPos());
+        assertEquals("<qux>", track.consumeTo('\n'));
+        assertEquals("3:6", track.cursorPos());
+        // get over the buffer
+        while (!track.matches("[foo]"))
+            track.consumeTo("[foo]");
+        assertEquals(32778, track.pos());
+        assertEquals(4, track.lineNumber());
+        assertEquals(32761, track.columnNumber());
+        assertEquals("4:32761", track.cursorPos());
+        track.consumeTo('\n');
+        assertEquals("4:32766", track.cursorPos());
+
+        track.consumeTo("[bar]");
+        assertEquals(5, track.lineNumber());
+        assertEquals("5:1", track.cursorPos());
+        track.consumeToEnd();
+        assertEquals("5:6", track.cursorPos());
+    }
+
+    @Test public void countsColumnsOverBufferWhenNoNewlines() {
+        StringBuilder builder = new StringBuilder();
+        while (builder.length() < maxBufferLen * 4)
+            builder.append("Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+        String content = builder.toString();
+        CharacterReader reader = new CharacterReader(content);
+        reader.trackNewlines(true);
+
+        assertEquals("1:1", reader.cursorPos());
+        while (!reader.isEmpty())
+            reader.consume();
+        assertEquals(131096, reader.pos());
+        assertEquals(reader.pos() + 1, reader.columnNumber());
+        assertEquals(1, reader.lineNumber());
+    }
+
+    @Test public void linenumbersAgreeWithEditor() throws IOException {
+        String content = ParseTest.getFileAsString(ParseTest.getFile("/htmltests/large.html"));
+        CharacterReader reader = new CharacterReader(content);
+        reader.trackNewlines(true);
+
+        String scan = "<p>VESTIBULUM"; // near the end of the file
+        while (!reader.matches(scan))
+            reader.consumeTo(scan);
+
+        assertEquals(280218, reader.pos());
+        assertEquals(1002, reader.lineNumber());
+        assertEquals(1, reader.columnNumber());
+        reader.consumeTo(' ');
+        assertEquals(1002, reader.lineNumber());
+        assertEquals(14, reader.columnNumber());
     }
 
 }
