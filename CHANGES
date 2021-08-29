@@ -3,6 +3,7 @@ jsoup changelog
 *** Release 1.14.3 [PENDING]
   * Improvement: added support in CharacterReader to track newlines, so that parse errors can be reported more
     intuitively.
+    <https://github.com/jhy/jsoup/pull/1624>
 
   * Bugfix: the OSGi bundle meta-data incorrectly set a version on the import of java.annotation (used as a build-time
     dependency for nullability assertions).
