@@ -212,7 +212,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
             int dupes = startTag.attributes.deduplicate(settings);
             if (dupes > 0) {
-                error("Duplicate attribute");
+                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
             }
         }
 
@@ -249,7 +249,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (startTag.isSelfClosing()) {
             if (tag.isKnownTag()) {
                 if (!tag.isEmpty())
-                    tokeniser.error("Tag cannot be self closing; not a void tag");
+                    tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
             }
             else // unknown tag, remember this is self closing for output
                 tag.setSelfClosing();

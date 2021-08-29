@@ -87,7 +87,7 @@ final class Tokeniser {
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.hasAttributes())
-                error("Attributes incorrectly present on end tag");
+                error("Attributes incorrectly present on end tag [/%s]", endTag.normalName());
         }
     }
 
@@ -174,7 +174,7 @@ final class Tokeniser {
 
             reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon"); // missing semi
+                characterReferenceError("missing semicolon on [&#%s]", numRef); // missing semi
             int charval = -1;
             try {
                 int base = isHexMode ? 16 : 10;
@@ -182,12 +182,12 @@ final class Tokeniser {
             } catch (NumberFormatException ignored) {
             } // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
-                characterReferenceError("character outside of valid range");
+                characterReferenceError("character [%s] outside of valid range", charval);
                 codeRef[0] = replacementChar;
             } else {
                 // fix illegal unicode characters to match browser behavior
                 if (charval >= win1252ExtensionsStart && charval < win1252ExtensionsStart + win1252Extensions.length) {
-                    characterReferenceError("character is not a valid unicode code point");
+                    characterReferenceError("character [%s] is not a valid unicode code point", charval);
                     charval = win1252Extensions[charval - win1252ExtensionsStart];
                 }
 
@@ -206,7 +206,7 @@ final class Tokeniser {
             if (!found) {
                 reader.rewindToMark();
                 if (looksLegit) // named with semicolon
-                    characterReferenceError("invalid named reference");
+                    characterReferenceError("invalid named reference [%s]", nameRef);
                 return null;
             }
             if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
@@ -217,7 +217,7 @@ final class Tokeniser {
 
             reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon"); // missing semi
+                characterReferenceError("missing semicolon on [&%s]", nameRef); // missing semi
             int numChars = Entities.codepointsForName(nameRef, multipointHolder);
             if (numChars == 1) {
                 codeRef[0] = multipointHolder[0];
@@ -284,14 +284,19 @@ final class Tokeniser {
             errors.add(new ParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
-    private void characterReferenceError(String message) {
+    private void characterReferenceError(String message, Object... args) {
         if (errors.canAddError())
-            errors.add(new ParseError(reader, "Invalid character reference: %s", message));
+            errors.add(new ParseError(reader, String.format("Invalid character reference: " + message, args)));
     }
 
     void error(String errorMsg) {
         if (errors.canAddError())
             errors.add(new ParseError(reader, errorMsg));
+    }
+
+    void error(String errorMsg, Object... args) {
+        if (errors.canAddError())
+            errors.add(new ParseError(reader, errorMsg, args));
     }
 
     boolean currentNodeInHtmlNS() {

@@ -138,9 +138,18 @@ abstract class TreeBuilder {
      * @param msg error message
      */
     protected void error(String msg) {
+        error(msg, (Object[]) null);
+    }
+
+    /**
+     * If the parser is tracking errors, add an error at the current position.
+     * @param msg error message template
+     * @param args template arguments
+     */
+    protected void error(String msg, Object... args) {
         ParseErrorList errors = parser.getErrors();
         if (errors.canAddError())
-            errors.add(new ParseError(reader, msg));
+            errors.add(new ParseError(reader, msg, args));
     }
 
     /**

@@ -55,7 +55,7 @@ public class HtmlParserTest {
         assertEquals("<p one=\"One\" two=\"two\">Text</p>", p.outerHtml()); // normalized names due to lower casing
 
         assertEquals(1, parser.getErrors().size());
-        assertEquals("Duplicate attribute", parser.getErrors().get(0).getErrorMessage());
+        assertEquals("Dropped duplicate attribute(s) in tag [p]", parser.getErrors().get(0).getErrorMessage());
     }
 
     @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
@@ -835,17 +835,20 @@ public class HtmlParserTest {
     }
 
     @Test public void tracksErrorsWhenRequested() {
-        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font /><br /><foo";
+        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font />&#33 &amp &#xD800;<br /><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(500);
         Document doc = Jsoup.parse(html, "http://example.com", parser);
 
         List<ParseError> errors = parser.getErrors();
-        assertEquals(5, errors.size());
-        assertEquals("<1:21>: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals(8, errors.size());
+        assertEquals("<1:21>: Attributes incorrectly present on end tag [/p]", errors.get(0).toString());
         assertEquals("<2:16>: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
-        assertEquals("<3:2>: Invalid character reference: invalid named reference", errors.get(2).toString());
-        assertEquals("<3:16>: Tag cannot be self closing; not a void tag", errors.get(3).toString());
-        assertEquals("<3:27>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
+        assertEquals("<3:2>: Invalid character reference: invalid named reference [arrgh]", errors.get(2).toString());
+        assertEquals("<3:16>: Tag [font] cannot be self closing; not a void tag", errors.get(3).toString());
+        assertEquals("<3:20>: Invalid character reference: missing semicolon on [&#33]", errors.get(4).toString());
+        assertEquals("<3:25>: Invalid character reference: missing semicolon on [&amp]", errors.get(5).toString());
+        assertEquals("<3:34>: Invalid character reference: character [55296] outside of valid range", errors.get(6).toString());
+        assertEquals("<3:45>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(7).toString());
     }
 
     @Test public void tracksLimitedErrorsWhenRequested() {
@@ -855,9 +858,9 @@ public class HtmlParserTest {
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(3, errors.size());
-        assertEquals("<1:21>: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("<1:21>: Attributes incorrectly present on end tag [/p]", errors.get(0).toString());
         assertEquals("<2:16>: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
-        assertEquals("<3:2>: Invalid character reference: invalid named reference", errors.get(2).toString());
+        assertEquals("<3:2>: Invalid character reference: invalid named reference [arrgh]", errors.get(2).toString());
     }
 
     @Test public void noErrorsByDefault() {
@@ -1176,7 +1179,7 @@ public class HtmlParserTest {
         Parser parser = Parser.htmlParser().setTrackErrors(5);
         parser.parseInput(html, "");
         assertEquals(1, parser.getErrors().size());
-        assertEquals("<3:8>: Tag cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
+        assertEquals("<3:8>: Tag [div] cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
 
         assertFalse(Jsoup.isValid(html, Safelist.relaxed()));
         String clean = Jsoup.clean(html, Safelist.relaxed());
