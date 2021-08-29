@@ -40,6 +40,7 @@ abstract class TreeBuilder {
         this.parser = parser;
         settings = parser.settings();
         reader = new CharacterReader(input);
+        reader.trackNewlines(parser.isTrackErrors()); // when tracking errors, enable newline tracking for better error reports
         currentToken = null;
         tokeniser = new Tokeniser(reader, parser.getErrors());
         stack = new ArrayList<>(32);
@@ -139,7 +140,7 @@ abstract class TreeBuilder {
     protected void error(String msg) {
         ParseErrorList errors = parser.getErrors();
         if (errors.canAddError())
-            errors.add(new ParseError(reader.pos(), msg));
+            errors.add(new ParseError(reader, msg));
     }
 
     /**

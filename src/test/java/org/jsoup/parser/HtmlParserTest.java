@@ -835,29 +835,29 @@ public class HtmlParserTest {
     }
 
     @Test public void tracksErrorsWhenRequested() {
-        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font /><br /><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(500);
         Document doc = Jsoup.parse(html, "http://example.com", parser);
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(5, errors.size());
-        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
-        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
-        assertEquals("36: Invalid character reference: invalid named reference", errors.get(2).toString());
-        assertEquals("50: Tag cannot be self closing; not a void tag", errors.get(3).toString());
-        assertEquals("61: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
+        assertEquals("<1:21>: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("<2:16>: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("<3:2>: Invalid character reference: invalid named reference", errors.get(2).toString());
+        assertEquals("<3:16>: Tag cannot be self closing; not a void tag", errors.get(3).toString());
+        assertEquals("<3:27>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(4).toString());
     }
 
     @Test public void tracksLimitedErrorsWhenRequested() {
-        String html = "<p>One</p href='no'><!DOCTYPE html>&arrgh;<font /><br /><foo";
+        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font /><br /><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(3);
         Document doc = parser.parseInput(html, "http://example.com");
 
         List<ParseError> errors = parser.getErrors();
         assertEquals(3, errors.size());
-        assertEquals("20: Attributes incorrectly present on end tag", errors.get(0).toString());
-        assertEquals("35: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
-        assertEquals("36: Invalid character reference: invalid named reference", errors.get(2).toString());
+        assertEquals("<1:21>: Attributes incorrectly present on end tag", errors.get(0).toString());
+        assertEquals("<2:16>: Unexpected token [Doctype] when in state [InBody]", errors.get(1).toString());
+        assertEquals("<3:2>: Invalid character reference: invalid named reference", errors.get(2).toString());
     }
 
     @Test public void noErrorsByDefault() {
@@ -1172,11 +1172,11 @@ public class HtmlParserTest {
     }
 
     @Test public void selfClosingOnNonvoidIsError() {
-        String html = "<p>test</p><div /><div>Two</div>";
+        String html = "<p>test</p>\n\n<div /><div>Two</div>";
         Parser parser = Parser.htmlParser().setTrackErrors(5);
         parser.parseInput(html, "");
         assertEquals(1, parser.getErrors().size());
-        assertEquals("18: Tag cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
+        assertEquals("<3:8>: Tag cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
 
         assertFalse(Jsoup.isValid(html, Safelist.relaxed()));
         String clean = Jsoup.clean(html, Safelist.relaxed());

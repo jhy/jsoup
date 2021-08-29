@@ -204,7 +204,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
-            parser.getErrors().add(new ParseError(reader.pos(), "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
+            parser.getErrors().add(new ParseError(reader, "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
     }
 
     Element insert(final Token.StartTag startTag) {
