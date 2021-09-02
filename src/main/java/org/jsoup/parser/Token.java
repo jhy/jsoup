@@ -72,6 +72,11 @@ abstract class Token {
         public boolean isForceQuirks() {
             return forceQuirks;
         }
+
+        @Override
+        public String toString() {
+            return "<!doctype " + getName() + ">";
+        }
     }
 
     static abstract class Tag extends Token {

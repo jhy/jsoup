@@ -5,6 +5,11 @@ jsoup changelog
     intuitively.
     <https://github.com/jhy/jsoup/pull/1624>
 
+  * Improvement: tracked parse errors now have more details, including the erroneous token, to help clarify the errors.
+
+  * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
+    optional closing tags.
+
   * Bugfix: the OSGi bundle meta-data incorrectly set a version on the import of java.annotation (used as a build-time
     dependency for nullability assertions).
     <https://github.com/jhy/jsoup/issues/1616>

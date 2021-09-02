@@ -31,7 +31,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     static final String[] TagSearchButton = new String[]{"button"};
     static final String[] TagSearchTableScope = new String[]{"html", "table"};
     static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
-    static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rp", "rt"};
+    static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"};
     static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
         "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
         "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
@@ -204,7 +204,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
-            parser.getErrors().add(new ParseError(reader, "Unexpected token [%s] when in state [%s]", currentToken.tokenType(), state));
+            parser.getErrors().add(new ParseError(reader, "Unexpected %s token [%s] when in state [%s]",
+                currentToken.tokenType(), currentToken, state));
     }
 
     Element insert(final Token.StartTag startTag) {
@@ -606,9 +607,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
      process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
-        while ((excludeTag != null && !currentElementIs(excludeTag)) &&
-                inSorted(currentElement().normalName(), TagSearchEndTags))
+        while (inSorted(currentElement().normalName(), TagSearchEndTags)) {
+            if (excludeTag != null && currentElementIs(excludeTag))
+                break;
             pop();
+        }
     }
 
     void generateImpliedEndTags() {
