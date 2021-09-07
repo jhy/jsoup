@@ -691,7 +691,7 @@ public abstract class Node implements Cloneable {
      * @see Node#hasSameValue(Object)
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         // implemented just so that javadoc is clear this is an identity test
         return this == o;
     }

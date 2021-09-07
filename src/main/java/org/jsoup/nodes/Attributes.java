@@ -376,7 +376,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @return if both sets of attributes have the same content
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 

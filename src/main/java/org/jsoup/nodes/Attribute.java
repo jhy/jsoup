@@ -188,7 +188,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     @Override
-    public boolean equals(Object o) { // note parent not considered
+    public boolean equals(@Nullable Object o) { // note parent not considered
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Attribute attribute = (Attribute) o;
