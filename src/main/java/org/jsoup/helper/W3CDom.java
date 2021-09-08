@@ -133,11 +133,24 @@ public class W3CDom {
     }
 
     /**
-     * Convert a jsoup Element (or Document) to a W3C Document. The created nodes will link back to the original
+     * Convert a jsoup Document to a W3C Document. The created nodes will link back to the original
      * jsoup nodes in the user property {@link #SourceProperty} (but after conversion, changes on one side will not
      * flow to the other).
      *
-     * @param in jsoup element or odc
+     * @param in jsoup doc
+     * @return a W3C DOM Document representing the jsoup Document or Element contents.
+     */
+    public Document fromJsoup(org.jsoup.nodes.Document in) {
+        // just method API backcompat
+        return fromJsoup((org.jsoup.nodes.Element) in);
+    }
+
+    /**
+     * Convert a jsoup Element to a W3C Document. The created nodes will link back to the original
+     * jsoup nodes in the user property {@link #SourceProperty} (but after conversion, changes on one side will not
+     * flow to the other).
+     *
+     * @param in jsoup element or doc
      * @return a W3C DOM Document representing the jsoup Document or Element contents.
      */
     public Document fromJsoup(org.jsoup.nodes.Element in) {
@@ -165,10 +178,23 @@ public class W3CDom {
     }
 
     /**
-     * Converts a jsoup element/document into the provided W3C Document. If required, you can set options on the output
+     * Converts a jsoup document into the provided W3C Document. If required, you can set options on the output
      * document before converting.
      *
      * @param in jsoup doc
+     * @param out w3c doc
+     * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Element)
+     */
+    public void convert(org.jsoup.nodes.Document in, Document out) {
+        // just provides method API backcompat
+        convert((org.jsoup.nodes.Element) in, out);
+    }
+
+    /**
+     * Converts a jsoup element into the provided W3C Document. If required, you can set options on the output
+     * document before converting.
+     *
+     * @param in jsoup element
      * @param out w3c doc
      * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Element)
      */
