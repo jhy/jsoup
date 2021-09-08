@@ -506,6 +506,17 @@ public class Element extends Node {
         } while (el != null);
         return null;
     }
+
+    /**
+     <b>Beta:</b> find Elements that match the supplied XPath expression.
+     <p>(This functionality is currently in beta and
+     is subject to change. Feedback on the API is requested and welcomed!)</p>
+     @param xpath XML path expression
+     @return matching elements, or an empty list if none match.
+     */
+    public Elements selectXpath(String xpath) {
+        return NodeUtils.selectXpath(xpath, this);
+    }
     
     /**
      * Insert a node to the end of this Element's children. The incoming node will be re-parented.

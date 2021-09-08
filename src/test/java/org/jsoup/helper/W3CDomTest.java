@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
@@ -288,6 +289,25 @@ public class W3CDomTest {
 
         Map<String, String> properties = modeHtml ? W3CDom.OutputHtml() : W3CDom.OutputXml();
         return TextUtil.stripNewlines(W3CDom.asString(w3c, properties));
+    }
+
+    @Test public void convertsElementsAndMaintainsSource() {
+        org.jsoup.nodes.Document jdoc = Jsoup.parse("<body><div><p>One</div><div><p>Two");
+        W3CDom w3CDom = new W3CDom();
+        Element jDiv = jdoc.selectFirst("div");
+        assertNotNull(jDiv);
+        Document doc = w3CDom.fromJsoup(jDiv);
+        Node div = doc.getFirstChild();
+
+        assertEquals("div", div.getLocalName());
+        assertEquals(jDiv, div.getUserData(W3CDom.SourceProperty));
+
+        Node textNode = div.getFirstChild().getFirstChild();
+        assertEquals("One", textNode.getTextContent());
+        assertEquals(Node.TEXT_NODE, textNode.getNodeType());
+
+        org.jsoup.nodes.TextNode jText = (TextNode) jDiv.childNode(0).childNode(0);
+        assertEquals(jText, textNode.getUserData(W3CDom.SourceProperty));
     }
 
 }
