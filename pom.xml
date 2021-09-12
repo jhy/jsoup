@@ -345,6 +345,15 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <!-- Saxon for XPath 2 / 3 test cases. MPL 2.0 -->
+      <groupId>net.sf.saxon</groupId>
+      <artifactId>Saxon-HE</artifactId>
+      <version>10.5</version>
+      <scope>test</scope>
+    </dependency>
+
+
   </dependencies>
 
   <dependencyManagement>

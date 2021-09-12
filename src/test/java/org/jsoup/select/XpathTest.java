@@ -3,8 +3,10 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import static org.jsoup.helper.W3CDom.XPathFactoryProperty;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -58,5 +60,41 @@ public class XpathTest {
         }
         assertTrue(threw);
     }
+
+    @Test
+    public void supportsNamespaces() {
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";;
+        Document doc = Jsoup.parse(xhtml, Parser.xmlParser());
+        Elements elements = doc.selectXpath("//*[local-name()='body']");
+        assertEquals(1, elements.size());
+        assertEquals("One", elements.first().id());
+    }
+
+    @Test
+    public void canDitchNamespaces() {
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";;
+        Document doc = Jsoup.parse(xhtml, Parser.xmlParser());
+        doc.select("[xmlns]").removeAttr("xmlns");
+        Elements elements = doc.selectXpath("//*[local-name()='body']");
+        assertEquals(1, elements.size());
+
+        elements = doc.selectXpath("//body");
+        assertEquals(1, elements.size());
+        assertEquals("One", elements.first().id());
+    }
+
+    @Test
+    public void canSupportXpath2() {
+        System.setProperty(XPathFactoryProperty, "net.sf.saxon.xpath.XPathFactoryImpl");
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";;
+        Document doc = Jsoup.parse(xhtml, Parser.xmlParser());
+        Elements elements = doc.selectXpath("//*:body");
+        assertEquals(1, elements.size());
+        assertEquals("One", elements.first().id());
+
+        System.clearProperty(XPathFactoryProperty);
+    }
+
+
 
 }

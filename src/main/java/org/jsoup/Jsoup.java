@@ -49,8 +49,22 @@ public class Jsoup {
     }
 
     /**
-     Parse HTML into a Document. As no base URI is specified, absolute URL detection relies on the HTML including a
-     {@code <base href>} tag.
+     Parse HTML into a Document, using the provided Parser. You can provide an alternate parser, such as a simple XML
+     (non-HTML) parser.  As no base URI is specified, absolute URL resolution, if required, relies on the HTML including
+     a {@code <base href>} tag.
+
+     @param html    HTML to parse
+     before the HTML declares a {@code <base href>} tag.
+     @param parser alternate {@link Parser#xmlParser() parser} to use.
+     @return sane HTML
+     */
+    public static Document parse(String html, Parser parser) {
+        return parser.parseInput(html, "");
+    }
+
+    /**
+     Parse HTML into a Document. As no base URI is specified, absolute URL resolution, if required, relies on the HTML
+     including a {@code <base href>} tag.
 
      @param html HTML to parse
      @return sane HTML

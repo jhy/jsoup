@@ -3,8 +3,10 @@ package org.jsoup.helper;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Selector;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
@@ -12,6 +14,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import javax.annotation.Nullable;
@@ -24,6 +27,11 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +48,12 @@ import static javax.xml.transform.OutputKeys.METHOD;
 public class W3CDom {
     /** For W3C Documents created by this class, this property is set on each node to link back to the original jsoup node. */
     public static final String SourceProperty = "jsoupSource";
+
+    /**
+     To get support for XPath versions > 1, set this property to the classname of an alternate XPathFactory
+     implementation (e.g. <code>net.sf.saxon.xpath.XPathFactoryImpl</code>).
+     */
+    public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
     protected DocumentBuilderFactory factory;
 
@@ -207,6 +221,39 @@ public class W3CDom {
 
         org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
         NodeTraversor.traverse(new W3CBuilder(out), rootEl);
+    }
+
+    public NodeList selectXpath(String xpath, Document doc) {
+        Validate.notEmpty(xpath);
+        Validate.notNull(doc);
+
+        NodeList nodeList;
+        try {
+            // if there is a configured XPath factory, use that instead of the Java base impl:
+            String property = System.getProperty(XPathFactoryProperty);
+            final XPathFactory xPathFactory = property != null ?
+                XPathFactory.newInstance("jsoup") :
+                XPathFactory.newInstance();
+
+            XPathExpression expression = xPathFactory.newXPath().compile(xpath);
+            nodeList = (NodeList) expression.evaluate(doc, XPathConstants.NODESET); // love the strong typing here /s
+            Validate.notNull(nodeList);
+        } catch (XPathExpressionException | XPathFactoryConfigurationException e) {
+            throw new Selector.SelectorParseException("Could not evaluate XPath query [%s]: %s", xpath, e.getMessage());
+        }
+        return nodeList;
+    }
+
+    public Elements sourceElements(NodeList nodeList) {
+        Elements els = new Elements();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            org.w3c.dom.Node node = nodeList.item(i);
+            Object source = node.getUserData(W3CDom.SourceProperty);
+            if (source instanceof org.jsoup.nodes.Element)
+                els.add((org.jsoup.nodes.Element) source);
+        }
+
+        return els;
     }
 
     /**
