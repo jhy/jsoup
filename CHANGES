@@ -17,6 +17,9 @@ jsoup changelog
     dependency for nullability assertions).
     <https://github.com/jhy/jsoup/issues/1616>
 
+  * Bugfix: the Attributes::equals() method was sensitive to the order of its contents, but it should not be.
+    <https://github.com/jhy/jsoup/issues/1492>
+
   * Build Improvement: fixed nullability annotations for Node.equals(other) and other equals methods.
     <https://github.com/jhy/jsoup/issues/1628>
 

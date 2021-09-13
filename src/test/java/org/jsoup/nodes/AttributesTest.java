@@ -267,4 +267,38 @@ public class AttributesTest {
         assertEquals("checked", attribute.html());
         assertEquals(" checked", attributes.html());
     }
+
+    @Test public void equalsIsOrderInsensitive() {
+        Attributes one = new Attributes()
+            .add("Key1", "Val1")
+            .add("Key2", "Val2")
+            .add("Key3", null);
+
+        Attributes two = new Attributes()
+            .add("Key1", "Val1")
+            .add("Key2", "Val2")
+            .add("Key3", null);
+
+        Attributes three = new Attributes()
+            .add("Key2", "Val2")
+            .add("Key3", null)
+            .add("Key1", "Val1");
+
+        Attributes four = new Attributes()
+            .add("Key1", "Val1")
+            .add("Key2", "Val2")
+            .add("Key3", null)
+            .add("Key4", "Val4");
+
+        assertEquals(one, one.clone());
+        assertEquals(one, two);
+        assertEquals(two, two);
+        assertEquals(one, three);
+        assertEquals(two, three);
+        assertEquals(three, three);
+        assertEquals(three, three.clone());
+        assertEquals(four, four);
+        assertEquals(four, four.clone());
+        assertNotEquals(one, four);
+    }
 }
