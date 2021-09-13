@@ -5,6 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
@@ -12,12 +15,11 @@ import javax.xml.xpath.XPathFactoryConfigurationException;
 import javax.xml.xpath.XPathFunctionResolver;
 import javax.xml.xpath.XPathVariableResolver;
 
+import java.util.stream.Stream;
+
 import static org.jsoup.helper.W3CDom.XPathFactoryProperty;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- Needs more tests! Just a POC so far.
- */
 public class XpathTest {
 
     @Test
@@ -87,6 +89,30 @@ public class XpathTest {
         elements = doc.selectXpath("//body");
         assertEquals(1, elements.size());
         assertEquals("One", elements.first().id());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideEvaluators")
+    void cssAndXpathEquivalents(Document doc, String css, String xpath) {
+        Elements fromCss = doc.select(css);
+        Elements fromXpath = doc.selectXpath(xpath);
+
+        assertTrue(fromCss.size() >= 1);
+        assertTrue(fromXpath.size() >= 1);
+        // tests same size, order, and contents
+        assertEquals(fromCss, fromXpath);
+    }
+
+    private static Stream<Arguments> provideEvaluators() {
+        String html = "<div id=1><div id=2><p class=foo>Hello</p></div></div><DIV id=3>";
+        Document doc = Jsoup.parse(html);
+
+        return Stream.of(
+           Arguments.of(doc, "DIV", "//div"),
+           Arguments.of(doc, "div > p.foo", "//div/p[@class]"),
+           Arguments.of(doc, "div + div", "//div/following-sibling::div[1]"),
+           Arguments.of(doc, "p:containsOwn(Hello)", "//p[contains(text(),\"Hello\")]")
+        );
     }
 
     @Test
