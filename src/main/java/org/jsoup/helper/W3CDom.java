@@ -50,8 +50,8 @@ public class W3CDom {
     public static final String SourceProperty = "jsoupSource";
 
     /**
-     To get support for XPath versions > 1, set this property to the classname of an alternate XPathFactory
-     implementation (e.g. <code>net.sf.saxon.xpath.XPathFactoryImpl</code>).
+     To get support for XPath versions &gt; 1, set this property to the classname of an alternate XPathFactory
+     implementation (e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
      */
     public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
