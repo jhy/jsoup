@@ -385,14 +385,15 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (size != that.size) return false;
         for (int i = 0; i < size; i++) {
             String key = keys[i];
-            String val = vals[i];
-            if (!that.hasKey(key))
+            int thatI = that.indexOfKey(key);
+            if (thatI == NotFound)
                 return false;
-            String thatVal = that.vals[that.indexOfKey(key)];
+            String val = vals[i];
+            String thatVal = that.vals[thatI];
             if (val == null) {
                 if (thatVal != null)
                     return false;
-            } else  if (!vals[i].equals(that.get(key)))
+            } else if (!val.equals(thatVal))
                 return false;
         }
         return true;
