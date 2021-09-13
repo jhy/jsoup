@@ -1,7 +1,11 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.Validate;
+import org.jsoup.helper.W3CDom;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
+import org.w3c.dom.NodeList;
 
 /**
  * Internal helpers for Nodes, to keep the actual node APIs relatively clean. A jsoup internal class, so don't use it as
@@ -23,5 +27,21 @@ final class NodeUtils {
     static Parser parser(Node node) {
         Document doc = node.ownerDocument();
         return doc != null && doc.parser() != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
+    }
+
+    /**
+     This impl works by compiling the input xpath expression, and then evaluating it against a W3C Document converted
+     from the original jsoup element. The original jsoup elements are then fetched from the w3c doc user data (where we
+     stashed them during conversion). This process could potentially be optimized by transpiling the compiled xpath
+     expression to a jsoup Evaluator when there's 1:1 support, thus saving the W3C document conversion stage.
+     */
+    static Elements selectXpath(String xpath, Element el) {
+        Validate.notEmpty(xpath);
+        Validate.notNull(el);
+
+        W3CDom w3c = new W3CDom();
+        org.w3c.dom.Document wDoc = w3c.fromJsoup(el);
+        NodeList nodeList = w3c.selectXpath(xpath, wDoc);
+        return w3c.sourceElements(nodeList);
     }
 }

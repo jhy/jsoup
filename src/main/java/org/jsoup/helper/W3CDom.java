@@ -3,8 +3,10 @@ package org.jsoup.helper;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Selector;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
@@ -12,6 +14,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import javax.annotation.Nullable;
@@ -24,6 +27,11 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +46,15 @@ import static javax.xml.transform.OutputKeys.METHOD;
  * for integration with toolsets that use the W3C DOM.
  */
 public class W3CDom {
+    /** For W3C Documents created by this class, this property is set on each node to link back to the original jsoup node. */
+    public static final String SourceProperty = "jsoupSource";
+
+    /**
+     To get support for XPath versions > 1, set this property to the classname of an alternate XPathFactory
+     implementation (e.g. <code>net.sf.saxon.xpath.XPathFactoryImpl</code>).
+     */
+    public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
+
     protected DocumentBuilderFactory factory;
 
     public W3CDom() {
@@ -46,7 +63,7 @@ public class W3CDom {
     }
 
     /**
-     * Converts a jsoup DOM to a W3C DOM
+     * Converts a jsoup DOM to a W3C DOM.
      *
      * @param in jsoup Document
      * @return W3C Document
@@ -130,12 +147,27 @@ public class W3CDom {
     }
 
     /**
-     * Convert a jsoup Document to a W3C Document.
+     * Convert a jsoup Document to a W3C Document. The created nodes will link back to the original
+     * jsoup nodes in the user property {@link #SourceProperty} (but after conversion, changes on one side will not
+     * flow to the other).
      *
      * @param in jsoup doc
-     * @return w3c doc
+     * @return a W3C DOM Document representing the jsoup Document or Element contents.
      */
     public Document fromJsoup(org.jsoup.nodes.Document in) {
+        // just method API backcompat
+        return fromJsoup((org.jsoup.nodes.Element) in);
+    }
+
+    /**
+     * Convert a jsoup Element to a W3C Document. The created nodes will link back to the original
+     * jsoup nodes in the user property {@link #SourceProperty} (but after conversion, changes on one side will not
+     * flow to the other).
+     *
+     * @param in jsoup element or doc
+     * @return a W3C DOM Document representing the jsoup Document or Element contents.
+     */
+    public Document fromJsoup(org.jsoup.nodes.Element in) {
         Validate.notNull(in);
         DocumentBuilder builder;
         try {
@@ -144,7 +176,8 @@ public class W3CDom {
             Document out;
 
             out = builder.newDocument();
-            org.jsoup.nodes.DocumentType doctype = in.documentType();
+            org.jsoup.nodes.Document inDoc = in.ownerDocument();
+            org.jsoup.nodes.DocumentType doctype = inDoc != null ? inDoc.documentType() : null;
             if (doctype != null) {
                 org.w3c.dom.DocumentType documentType = impl.createDocumentType(doctype.name(), doctype.publicId(), doctype.systemId());
                 out.appendChild(documentType);
@@ -159,19 +192,68 @@ public class W3CDom {
     }
 
     /**
-     * Converts a jsoup document into the provided W3C Document. If required, you can set options on the output document
-     * before converting.
+     * Converts a jsoup document into the provided W3C Document. If required, you can set options on the output
+     * document before converting.
      *
      * @param in jsoup doc
      * @param out w3c doc
-     * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Document)
+     * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Element)
      */
     public void convert(org.jsoup.nodes.Document in, Document out) {
-        if (!StringUtil.isBlank(in.location()))
-            out.setDocumentURI(in.location());
+        // just provides method API backcompat
+        convert((org.jsoup.nodes.Element) in, out);
+    }
 
-        org.jsoup.nodes.Element rootEl = in.child(0); // skip the #root node
+    /**
+     * Converts a jsoup element into the provided W3C Document. If required, you can set options on the output
+     * document before converting.
+     *
+     * @param in jsoup element
+     * @param out w3c doc
+     * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Element)
+     */
+    public void convert(org.jsoup.nodes.Element in, Document out) {
+        org.jsoup.nodes.Document inDoc = in.ownerDocument();
+        if (inDoc != null) {
+            if (!StringUtil.isBlank(inDoc.location()))
+                out.setDocumentURI(inDoc.location());
+        }
+
+        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
         NodeTraversor.traverse(new W3CBuilder(out), rootEl);
+    }
+
+    public NodeList selectXpath(String xpath, Document doc) {
+        Validate.notEmpty(xpath);
+        Validate.notNull(doc);
+
+        NodeList nodeList;
+        try {
+            // if there is a configured XPath factory, use that instead of the Java base impl:
+            String property = System.getProperty(XPathFactoryProperty);
+            final XPathFactory xPathFactory = property != null ?
+                XPathFactory.newInstance("jsoup") :
+                XPathFactory.newInstance();
+
+            XPathExpression expression = xPathFactory.newXPath().compile(xpath);
+            nodeList = (NodeList) expression.evaluate(doc, XPathConstants.NODESET); // love the strong typing here /s
+            Validate.notNull(nodeList);
+        } catch (XPathExpressionException | XPathFactoryConfigurationException e) {
+            throw new Selector.SelectorParseException("Could not evaluate XPath query [%s]: %s", xpath, e.getMessage());
+        }
+        return nodeList;
+    }
+
+    public Elements sourceElements(NodeList nodeList) {
+        Elements els = new Elements();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            org.w3c.dom.Node node = nodeList.item(i);
+            Object source = node.getUserData(W3CDom.SourceProperty);
+            if (source instanceof org.jsoup.nodes.Element)
+                els.add((org.jsoup.nodes.Element) source);
+        }
+
+        return els;
     }
 
     /**
@@ -211,7 +293,7 @@ public class W3CDom {
                 String namespace = namespacesStack.peek().get(prefix);
                 String tagName = sourceEl.tagName();
 
-                /* Tag names in XML are quite, but less, permissive than HTML. Rather than reimplement the validation,
+                /* Tag names in XML are quite permissive, but less permissive than HTML. Rather than reimplement the validation,
                 we just try to use it as-is. If it fails, insert as a text node instead. We don't try to normalize the
                 tagname to something safe, because that isn't going to be meaningful downstream. This seems(?) to be
                 how browsers handle the situation, also. https://github.com/jhy/jsoup/issues/1093 */
@@ -220,32 +302,36 @@ public class W3CDom {
                         doc.createElementNS("", tagName) : // doesn't have a real namespace defined
                         doc.createElementNS(namespace, tagName);
                     copyAttributes(sourceEl, el);
-                    dest.appendChild(el);
+                    append(el, sourceEl);
                     dest = el; // descend
                 } catch (DOMException e) {
-                    dest.appendChild(doc.createTextNode("<" + tagName + ">"));
+                    append(doc.createTextNode("<" + tagName + ">"), sourceEl);
                 }
             } else if (source instanceof org.jsoup.nodes.TextNode) {
                 org.jsoup.nodes.TextNode sourceText = (org.jsoup.nodes.TextNode) source;
                 Text text = doc.createTextNode(sourceText.getWholeText());
-                dest.appendChild(text);
+                append(text, sourceText);
             } else if (source instanceof org.jsoup.nodes.Comment) {
                 org.jsoup.nodes.Comment sourceComment = (org.jsoup.nodes.Comment) source;
                 Comment comment = doc.createComment(sourceComment.getData());
-                dest.appendChild(comment);
+                append(comment, sourceComment);
             } else if (source instanceof org.jsoup.nodes.DataNode) {
                 org.jsoup.nodes.DataNode sourceData = (org.jsoup.nodes.DataNode) source;
                 Text node = doc.createTextNode(sourceData.getWholeData());
-                dest.appendChild(node);
+                append(node, sourceData);
             } else {
-                // unhandled
-                // not that doctype is not handled here - rather it is used in the initial doc creation
+                // unhandled. note that doctype is not handled here - rather it is used in the initial doc creation
             }
+        }
+
+        private void append(Node append, org.jsoup.nodes.Node source) {
+            append.setUserData(SourceProperty, source, null);
+            dest.appendChild(append);
         }
 
         public void tail(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
-                dest = dest.getParentNode(); // undescend. cromulent.
+                dest = dest.getParentNode(); // undescend
             }
             namespacesStack.pop();
         }
