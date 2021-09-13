@@ -6,6 +6,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
+import javax.xml.xpath.XPathFunctionResolver;
+import javax.xml.xpath.XPathVariableResolver;
+
 import static org.jsoup.helper.W3CDom.XPathFactoryProperty;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,17 +90,62 @@ public class XpathTest {
     }
 
     @Test
-    public void canSupportXpath2() {
-        System.setProperty(XPathFactoryProperty, "net.sf.saxon.xpath.XPathFactoryImpl");
-        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";;
-        Document doc = Jsoup.parse(xhtml, Parser.xmlParser());
-        Elements elements = doc.selectXpath("//*:body");
-        assertEquals(1, elements.size());
-        assertEquals("One", elements.first().id());
+    public void canSupplyAlternateFactoryImpl() {
+        // previously we had a test to load Saxon and do an XPath 2.0 query. But we know Saxon works and so that's
+        // redundant - really just need to test that an alternate XPath factory can be used
 
+        System.setProperty(XPathFactoryProperty, AlternateXpathFactory.class.getName());
+
+        String xhtml = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";
+        boolean threw = false;
+        try {
+            Document doc = Jsoup.parse(xhtml, Parser.xmlParser());
+            Elements elements = doc.selectXpath("//*:body");
+
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("Sorry, no can do!"));
+            threw = true;
+        }
+        assertTrue(threw);
         System.clearProperty(XPathFactoryProperty);
+
+
     }
 
+    // minimal, no-op implementation class to verify users can load a factory to support XPath 2.0 etc
+    public static class AlternateXpathFactory extends XPathFactory {
+        public AlternateXpathFactory() {
+            super();
+        }
 
+        @Override
+        public boolean isObjectModelSupported(String objectModel) {
+            return true;
+        }
 
+        @Override
+        public void setFeature(String name, boolean value) throws XPathFactoryConfigurationException {
+
+        }
+
+        @Override
+        public boolean getFeature(String name) throws XPathFactoryConfigurationException {
+            return true;
+        }
+
+        @Override
+        public void setXPathVariableResolver(XPathVariableResolver resolver) {
+
+        }
+
+        @Override
+        public void setXPathFunctionResolver(XPathFunctionResolver resolver) {
+
+        }
+
+        @Override
+        public XPath newXPath() {
+            throw new IllegalArgumentException("Sorry, no can do!");
+        }
+    }
 }
