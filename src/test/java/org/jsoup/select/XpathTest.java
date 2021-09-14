@@ -1,8 +1,11 @@
 package org.jsoup.select;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,6 +18,7 @@ import javax.xml.xpath.XPathFactoryConfigurationException;
 import javax.xml.xpath.XPathFunctionResolver;
 import javax.xml.xpath.XPathVariableResolver;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.jsoup.helper.W3CDom.XPathFactoryProperty;
@@ -113,6 +117,33 @@ public class XpathTest {
            Arguments.of(doc, "div + div", "//div/following-sibling::div[1]"),
            Arguments.of(doc, "p:containsOwn(Hello)", "//p[contains(text(),\"Hello\")]")
         );
+    }
+
+    @Test void canSelectTextNodes() {
+        String html = "<div><p>One<p><a>Two</a><p>Three and some more";
+        Document doc = Jsoup.parse(html);
+
+        //  as text nodes:
+        List<TextNode> text = doc.selectXpath("//body//p//text()", TextNode.class);
+        assertEquals(3, text.size());
+        assertEquals("One", text.get(0).text());
+        assertEquals("Two", text.get(1).text());
+        assertEquals("Three and some more", text.get(2).text());
+
+        //  as just nodes:
+        List<Node> nodes = doc.selectXpath("//body//p//text()", Node.class);
+        assertEquals(3, nodes.size());
+        assertEquals("One", nodes.get(0).outerHtml());
+        assertEquals("Two", nodes.get(1).outerHtml());
+        assertEquals("Three and some more", nodes.get(2).outerHtml());
+    }
+
+    @Test void selectByAttribute() {
+        Document doc = Jsoup.parse("<p><a href='/foo'>Foo</a><a href='/bar'>Bar</a><a>None</a>");
+        List<String> hrefs = doc.selectXpath("//a[@href]").eachAttr("href");
+        assertEquals(2, hrefs.size());
+        assertEquals("/foo", hrefs.get(0));
+        assertEquals("/bar", hrefs.get(1));
     }
 
     @Test

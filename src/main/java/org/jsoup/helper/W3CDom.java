@@ -3,7 +3,6 @@ package org.jsoup.helper;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
@@ -33,7 +32,9 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
@@ -244,16 +245,19 @@ public class W3CDom {
         return nodeList;
     }
 
-    public Elements sourceElements(NodeList nodeList) {
-        Elements els = new Elements();
+    public <T extends org.jsoup.nodes.Node> List<T> sourceNodes(NodeList nodeList, Class<T> nodeType) {
+        Validate.notNull(nodeList);
+        Validate.notNull(nodeType);
+        List<T> nodes = new ArrayList<>(nodeList.getLength());
+
         for (int i = 0; i < nodeList.getLength(); i++) {
             org.w3c.dom.Node node = nodeList.item(i);
             Object source = node.getUserData(W3CDom.SourceProperty);
-            if (source instanceof org.jsoup.nodes.Element)
-                els.add((org.jsoup.nodes.Element) source);
+            if (nodeType.isInstance(source))
+                nodes.add(nodeType.cast(source));
         }
 
-        return els;
+        return nodes;
     }
 
     /**

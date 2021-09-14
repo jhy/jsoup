@@ -520,11 +520,27 @@ public class Element extends Node {
      </li>
      </ol>
 
-     @param xpath XML path expression
+     @param xpath XPath expression
      @return matching elements, or an empty list if none match.
      */
     public Elements selectXpath(String xpath) {
-        return NodeUtils.selectXpath(xpath, this);
+        return new Elements(NodeUtils.selectXpath(xpath, this, Element.class));
+    }
+
+    /**
+     <b>Beta:</b> find Nodes that match the supplied XPath expression.
+     <p>For example, to select TextNodes under {@code p} elements: </p>
+     <pre>List&lt;TextNode&gt; textNodes = doc.selectXpath("//body//p//text()", TextNode.class);</pre>
+     <p>Note that in the jsoup DOM, Attribute objects are not Nodes. To directly select attribute values, do something
+     like:</p>
+     <pre>List&lt;String&gt; hrefs = doc.selectXpath("//a").eachAttr("href");</pre>
+     @param xpath XPath expression
+     @param nodeType the jsoup node type to return
+     @see #selectXpath(String)
+     @return a list of matching nodes
+     */
+    public <T extends Node> List<T> selectXpath(String xpath, Class<T> nodeType) {
+        return NodeUtils.selectXpath(xpath, this, nodeType);
     }
 
     /**

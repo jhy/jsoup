@@ -7,6 +7,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 
+import java.util.List;
+
 /**
  * Internal helpers for Nodes, to keep the actual node APIs relatively clean. A jsoup internal class, so don't use it as
  * there is no contract API).
@@ -35,13 +37,14 @@ final class NodeUtils {
      stashed them during conversion). This process could potentially be optimized by transpiling the compiled xpath
      expression to a jsoup Evaluator when there's 1:1 support, thus saving the W3C document conversion stage.
      */
-    static Elements selectXpath(String xpath, Element el) {
+    static <T extends Node> List<T> selectXpath(String xpath, Element el, Class<T> nodeType) {
         Validate.notEmpty(xpath);
         Validate.notNull(el);
+        Validate.notNull(nodeType);
 
         W3CDom w3c = new W3CDom();
         org.w3c.dom.Document wDoc = w3c.fromJsoup(el);
         NodeList nodeList = w3c.selectXpath(xpath, wDoc);
-        return w3c.sourceElements(nodeList);
+        return w3c.sourceNodes(nodeList, nodeType);
     }
 }

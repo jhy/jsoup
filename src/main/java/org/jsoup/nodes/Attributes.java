@@ -25,7 +25,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * Attributes are treated as a map: there can be only one value associated with an attribute key/name.
  * </p>
  * <p>
- * Attribute name and value comparisons are  generally <b>case sensitive</b>. By default for HTML, attribute names are
+ * Attribute name and value comparisons are generally <b>case sensitive</b>. By default for HTML, attribute names are
  * normalized to lower-case on parsing. That means you should use lower-case strings when referring to attributes by
  * name.
  * </p>
