@@ -183,7 +183,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     /**
      * Checks if this attribute name is defined as a boolean attribute in HTML5
      */
-    protected static boolean isBooleanAttribute(final String key) {
+    public static boolean isBooleanAttribute(final String key) {
         return Arrays.binarySearch(booleanAttributes, key) >= 0;
     }
 
