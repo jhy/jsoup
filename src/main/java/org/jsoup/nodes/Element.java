@@ -1315,7 +1315,8 @@ public class Element extends Node {
     }
 
     private void ownText(StringBuilder accum) {
-        for (Node child : childNodes) {
+        for (int i = 0; i < childNodeSize(); i++) {
+            Node child = childNodes.get(i);
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
