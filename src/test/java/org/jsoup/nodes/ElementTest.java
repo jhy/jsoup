@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
@@ -159,6 +160,16 @@ public class ElementTest {
 
         doc = Jsoup.parse("<p>Hello <br> there</p>");
         assertEquals("Hello there", doc.text());
+    }
+
+    @Test
+    public void testBrHasSpaceCaseSensitive() {
+        Document doc = Jsoup.parse("<p>Hello<br>there<BR>now</p>", Parser.htmlParser().settings(ParseSettings.preserveCase));
+        assertEquals("Hello there now", doc.text());
+        assertEquals("Hello there now", doc.select("p").first().ownText());
+
+        doc = Jsoup.parse("<p>Hello <br> there <BR> now</p>");
+        assertEquals("Hello there now", doc.text());
     }
 
     @Test

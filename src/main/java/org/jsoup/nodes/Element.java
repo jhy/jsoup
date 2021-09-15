@@ -1253,7 +1253,7 @@ public class Element extends Node {
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
                     if (accum.length() > 0 &&
-                        (element.isBlock() || element.tag.getName().equals("br")) &&
+                        (element.isBlock() || element.tag.normalName().equals("br")) &&
                         !TextNode.lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
@@ -1336,7 +1336,7 @@ public class Element extends Node {
     }
 
     private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
-        if (element.tag.getName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
+        if (element.tag.normalName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
             accum.append(" ");
     }
 
