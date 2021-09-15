@@ -10,6 +10,8 @@ jsoup changelog
 
   * Improvement: tracked parse errors now have more details, including the erroneous token, to help clarify the errors.
 
+  * Improvement: speed and memory optimizations for the :has(subquery) selector.
+
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 

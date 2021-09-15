@@ -352,7 +352,7 @@ public class QueryParser {
     private void has() {
         tq.consume(":has");
         String subQuery = tq.chompBalanced('(', ')');
-        Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+        Validate.notEmpty(subQuery, ":has(selector) subselect must not be empty");
         evals.add(new StructuralEvaluator.Has(parse(subQuery)));
     }
 

@@ -546,7 +546,7 @@ public class SelectorTest {
         assertEquals("2", divs3.get(2).id());
 
         Elements els1 = doc.body().select(":has(p)");
-        assertEquals(3, els1.size()); // body, div, dib
+        assertEquals(3, els1.size()); // body, div, div
         assertEquals("body", els1.first().tagName());
         assertEquals("0", els1.get(1).id());
         assertEquals("2", els1.get(2).id());

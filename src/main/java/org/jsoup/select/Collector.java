@@ -61,26 +61,31 @@ public class Collector {
      @return the first match; {@code null} if none
      */
     public static @Nullable Element findFirst(Evaluator eval, Element root) {
-        FirstFinder finder = new FirstFinder(root, eval);
-        NodeTraversor.filter(finder, root);
-        return finder.match;
+        FirstFinder finder = new FirstFinder(eval);
+        return finder.find(root, root);
     }
 
-    private static class FirstFinder implements NodeFilter {
-        private final Element root;
+    static class FirstFinder implements NodeFilter {
+        private @Nullable Element evalRoot = null;
         private @Nullable Element match = null;
         private final Evaluator eval;
 
-        FirstFinder(Element root, Evaluator eval) {
-            this.root = root;
+        FirstFinder(Evaluator eval) {
             this.eval = eval;
+        }
+
+        @Nullable Element find(Element root, Element start) {
+            evalRoot = root;
+            match = null;
+            NodeTraversor.filter(this, start);
+            return match;
         }
 
         @Override
         public FilterResult head(Node node, int depth) {
             if (node instanceof Element) {
                 Element el = (Element) node;
-                if (eval.matches(root, el)) {
+                if (eval.matches(evalRoot, el)) {
                     match = el;
                     return STOP;
                 }

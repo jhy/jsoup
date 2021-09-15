@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 /**
  * Base structural evaluator.
@@ -15,14 +16,22 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Has extends StructuralEvaluator {
+        final Collector.FirstFinder finder;
+
         public Has(Evaluator evaluator) {
             this.evaluator = evaluator;
+            finder = new Collector.FirstFinder(evaluator);
         }
 
         public boolean matches(Element root, Element element) {
-            for (Element e : element.getAllElements()) {
-                if (e != element && evaluator.matches(element, e))
-                    return true;
+            // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
+            for (int i = 0; i < element.childNodeSize(); i++) {
+                Node node = element.childNode(i);
+                if (node instanceof Element) {
+                    Element match = finder.find(element, (Element) node);
+                    if (match != null)
+                        return true;
+                }
             }
             return false;
         }
