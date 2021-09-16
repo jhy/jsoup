@@ -67,13 +67,13 @@ public class HtmlParserTest {
 
     @Test public void parsesQuiteRoughAttributes() {
         String html = "<p =a>One<a <p>Something</p>Else";
-        // this (used to; now gets cleaner) gets a <p> with attr '=a' and an <a tag with an attribue named '<p'; and then auto-recreated
+        // this (used to; now gets cleaner) gets a <p> with attr '=a' and an <a tag with an attribute named '<p'; and then auto-recreated
         Document doc = Jsoup.parse(html);
 
         // NOTE: per spec this should be the test case. but impacts too many ppl
         // assertEquals("<p =a>One<a <p>Something</a></p>\n<a <p>Else</a>", doc.body().html());
 
-        assertEquals("<p =a>One<a></a></p><p><a>Something</a></p><a>Else</a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p a>One<a></a></p><p><a>Something</a></p><a>Else</a>", TextUtil.stripNewlines(doc.body().html()));
 
         doc = Jsoup.parse("<p .....>");
         assertEquals("<p .....></p>", doc.body().html());
@@ -1489,5 +1489,14 @@ public class HtmlParserTest {
             assertEquals(0, els.size());
             assertEquals("&lt;" + tag + "&gt;Text<!--/" + tag + "-->", doc.body().html());
         }
+    }
+
+    @Test void htmlOutputCorrectsInvalidAttributeNames() {
+        String html = "<body style=\"color: red\" \" name\"><div =\"\"></div></body>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(Document.OutputSettings.Syntax.html, doc.outputSettings().syntax());
+
+        String out = doc.body().outerHtml();
+        assertEquals("<body style=\"color: red\" name>\n <div></div>\n</body>", out);
     }
 }

@@ -41,6 +41,7 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import static javax.xml.transform.OutputKeys.METHOD;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -340,15 +341,12 @@ public class W3CDom {
             namespacesStack.pop();
         }
 
-        private static final Pattern attrKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]");
-        private static final Pattern attrKeyValid = Pattern.compile("[a-zA-Z_:][-a-zA-Z0-9_:.]*");
-
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
-                // valid xml attribute names are: ^[a-zA-Z_:][-a-zA-Z0-9_:.]
-                String key = attrKeyReplace.matcher(attribute.getKey()).replaceAll("");
-                if (attrKeyValid.matcher(key).matches())
+                String key = Attribute.getValidKey(attribute.getKey(), xml);
+                if (key != null) { // null if couldn't be coerced to validity
                     el.setAttribute(key, attribute.getValue());
+                }
             }
         }
 

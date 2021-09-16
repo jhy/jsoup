@@ -350,18 +350,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         for (int i = 0; i < sz; i++) {
             if (isInternalKey(keys[i]))
                 continue;
-
-            // inlined from Attribute.html()
-            final String key = keys[i];
-            final String val = vals[i];
-            accum.append(' ').append(key);
-
-            // collapse checked=null, checked="", checked=checked; write out others
-            if (!Attribute.shouldCollapseAttribute(key, val, out)) {
-                accum.append("=\"");
-                Entities.escape(accum, val == null ? EmptyString : val, out, true, false, false);
-                accum.append('"');
-            }
+            final String key = Attribute.getValidKey(keys[i], out.syntax());
+            if (key != null)
+                Attribute.htmlNoValidate(key, vals[i], accum.append(' '), out);
         }
     }
 

@@ -1,13 +1,15 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  A single key + value attribute. (Only used for presentation.)
@@ -122,7 +124,18 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return StringUtil.releaseBuilder(sb);
     }
 
+    protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
+        html(key, val, accum, out);
+    }
+
     protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+        key = getValidKey(key, out.syntax());
+        if (key == null) return; // can't write it :(
+        htmlNoValidate(key, val, accum, out);
+    }
+
+    static void htmlNoValidate(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+        // structured like this so that Attributes can check we can write first, so it can add whitespace correctly
         accum.append(key);
         if (!shouldCollapseAttribute(key, val, out)) {
             accum.append("=\"");
@@ -130,9 +143,23 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
             accum.append('"');
         }
     }
-    
-    protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
-        html(key, val, accum, out);
+
+    private static final Pattern xmlKeyValid = Pattern.compile("[a-zA-Z_:][-a-zA-Z0-9_:.]*");
+    private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]");
+    private static final Pattern htmlKeyValid = Pattern.compile("[^\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
+    private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]");
+
+    @Nullable public static String getValidKey(String key, Syntax syntax) {
+        // we consider HTML attributes to always be valid. XML checks key validity
+        if (syntax == Syntax.xml && !xmlKeyValid.matcher(key).matches()) {
+            key = xmlKeyReplace.matcher(key).replaceAll("");
+            return xmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
+        }
+        else if (syntax == Syntax.html && !htmlKeyValid.matcher(key).matches()) {
+            key = htmlKeyReplace.matcher(key).replaceAll("");
+            return htmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
+        }
+        return key;
     }
 
     /**
@@ -176,7 +203,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
     protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
         return (
-            out.syntax() == Document.OutputSettings.Syntax.html &&
+            out.syntax() == Syntax.html &&
                 (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
     }
 

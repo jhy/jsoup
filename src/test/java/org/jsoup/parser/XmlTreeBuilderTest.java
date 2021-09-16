@@ -290,4 +290,12 @@ public class XmlTreeBuilderTest {
         assertEquals("<p one=\"&lt;two>&copy;\">Three</p>", doc.html());
     }
 
+    @Test void xmlOutputCorrectsInvalidAttributeNames() {
+        String xml = "<body style=\"color: red\" \" name\"><div =\"\"></div></body>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        assertEquals(Syntax.xml, doc.outputSettings().syntax());
+
+        String out = doc.html();
+        assertEquals("<body style=\"color: red\" name=\"\"><div></div></body>", out);
+    }
 }

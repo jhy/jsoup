@@ -25,6 +25,11 @@ jsoup changelog
   * Bugfix: when the HTML parser was configured to preserve case, Element text methods would miss adding whitespace for
     "BR" tags.
 
+  * Bugfix: attribute names are now normalized & validated correctly for the specific output syntax (HTML or XML).
+    Previously, syntactically invalid attribute names could be output by the html() methods. Such attributes are still
+    available in the DOM, and will be normalized if possible on output.
+    <https://github.com/jhy/jsoup/issues/1474>
+
   * Build Improvement: fixed nullability annotations for Node.equals(other) and other equals methods.
     <https://github.com/jhy/jsoup/issues/1628>
 
