@@ -15,7 +15,7 @@ jsoup changelog
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 
-  * Bugfix: the OSGi bundle meta-data incorrectly set a version on the import of java.annotation (used as a build-time
+  * Bugfix: the OSGi bundle meta-data incorrectly set a version on the import of javax.annotation (used as a build-time
     dependency for nullability assertions).
     <https://github.com/jhy/jsoup/issues/1616>
 
