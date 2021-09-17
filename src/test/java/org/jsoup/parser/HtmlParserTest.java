@@ -1585,4 +1585,12 @@ public class HtmlParserTest {
         want = "<html><head></head><body><tr><td><img></td></tr></body></html>";
         assertEquals(want, TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test void templateFragment() {
+        // https://github.com/jhy/jsoup/issues/1315
+        String html = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
+        Document frag = Jsoup.parseBodyFragment(html);
+        String want = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
+        assertEquals(want, TextUtil.stripNewlines(frag.body().html()));
+    }
 }
