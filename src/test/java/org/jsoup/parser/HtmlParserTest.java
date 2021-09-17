@@ -1499,4 +1499,98 @@ public class HtmlParserTest {
         String out = doc.body().outerHtml();
         assertEquals("<body style=\"color: red\" name>\n <div></div>\n</body>", out);
     }
+
+    @Test void templateInHead() {
+        // https://try.jsoup.org/~EGp3UZxQe503TJDHQEQEzm8IeUc
+        String html = "<head><template id=1><meta name=tmpl></template><title>Test</title><style>One</style></head><body><p>Two</p>";
+        Document doc = Jsoup.parse(html);
+
+        String want = "<html><head><template id=\"1\"><meta name=\"tmpl\"></template><title>Test</title><style>One</style></head><body><p>Two</p></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+
+        Elements template = doc.select("template#1");
+        template.select("meta").attr("content", "Yes");
+        template.unwrap();
+
+        want = "<html><head><meta name=\"tmpl\" content=\"Yes\"><title>Test</title><style>One</style></head><body><p>Two</p></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void nestedTemplateInBody() {
+        String html = "<body><template id=1><table><tr><template id=2><td>One</td><td>Two</td></template></tr></template></body>";
+        Document doc = Jsoup.parse(html);
+
+        String want = "<html><head></head><body><template id=\"1\"><table><tbody><tr><template id=\"2\"><td>One</td><td>Two</td></template></tr></tbody></table></template></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+
+        // todo - will be nice to add some simpler template element handling like clone children etc?
+        Element tmplTbl = doc.selectFirst("template#1");
+        Element tmplRow = doc.selectFirst("template#2");
+        assertNotNull(tmplRow);
+        assertNotNull(tmplTbl);
+        tmplRow.appendChild(tmplRow.clone());
+        doc.select("template").unwrap();
+
+        want = "<html><head></head><body><table><tbody><tr><td>One</td><td>Two</td><td>One</td><td>Two</td></tr></tbody></table></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void canSelectIntoTemplate() {
+        String html = "<body><div><template><p>Hello</p>";
+        Document doc = Jsoup.parse(html);
+        String want = "<html><head></head><body><div><template><p>Hello</p></template></div></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+
+        Element p = doc.selectFirst("div p");
+        Element p1 = doc.selectFirst("template :containsOwn(Hello)");
+        assertEquals("p", p.normalName());
+        assertEquals(p, p1);
+    }
+
+    @Test void tableRowFragment() {
+        Document doc = Jsoup.parse("<body><table></table></body");
+        String html = "<tr><td><img></td></tr>";
+        Element table = doc.selectFirst("table");
+        table.html(html); // invokes the fragment parser with table as context
+        String want = "<tbody><tr><td><img></td></tr></tbody>";
+        assertEquals(want, TextUtil.stripNewlines(table.html()));
+        want = "<table><tbody><tr><td><img></td></tr></tbody></table>";
+        assertEquals(want, TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void templateTableRowFragment() {
+        // https://github.com/jhy/jsoup/issues/1409 (per the fragment <tr> use case)
+        Document doc = Jsoup.parse("<body><table><template></template></table></body");
+        String html = "<tr><td><img></td></tr>";
+        Element tmpl = doc.selectFirst("template");
+        tmpl.html(html); // invokes the fragment parser with template as context
+        String want = "<tr><td><img></td></tr>";
+        assertEquals(want, TextUtil.stripNewlines(tmpl.html()));
+        tmpl.unwrap();
+
+        want = "<html><head></head><body><table><tr><td><img></td></tr></table></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void templateNotInTableRowFragment() {
+        // https://github.com/jhy/jsoup/issues/1409 (per the fragment <tr> use case)
+        Document doc = Jsoup.parse("<body><template></template></body");
+        String html = "<tr><td><img></td></tr>";
+        Element tmpl = doc.selectFirst("template");
+        tmpl.html(html); // invokes the fragment parser with template as context
+        String want = "<tr><td><img></td></tr>";
+        assertEquals(want, TextUtil.stripNewlines(tmpl.html()));
+        tmpl.unwrap();
+
+        want = "<html><head></head><body><tr><td><img></td></tr></body></html>";
+        assertEquals(want, TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void templateFragment() {
+        // https://github.com/jhy/jsoup/issues/1315
+        String html = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
+        Document frag = Jsoup.parseBodyFragment(html);
+        String want = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
+        assertEquals(want, TextUtil.stripNewlines(frag.body().html()));
+    }
 }

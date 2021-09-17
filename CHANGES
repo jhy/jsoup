@@ -4,6 +4,9 @@ jsoup changelog
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
 
+  * Improvement: added full support for the <template> tag to the HTML5 parser spec.
+    <https://github.com/jhy/jsoup/issues/1634>
+
   * Improvement: added support in CharacterReader to track newlines, so that parse errors can be reported more
     intuitively.
     <https://github.com/jhy/jsoup/pull/1624>
