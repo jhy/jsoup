@@ -15,6 +15,10 @@ jsoup changelog
 
   * Improvement: speed and memory optimizations for the :has(subquery) selector.
 
+  * Improvement: the :contains(text) and :containsOwn(text) selectors are now whitespace normalized, aligning to the
+    document text that they are matching against.
+    <https://github.com/jhy/jsoup/issues/876>
+
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 

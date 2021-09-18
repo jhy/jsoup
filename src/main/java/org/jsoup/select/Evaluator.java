@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.internal.StringUtil.normaliseWhitespace;
 
 
 /**
@@ -665,7 +667,7 @@ public abstract class Evaluator {
         private final String searchText;
 
         public ContainsText(String searchText) {
-            this.searchText = lowerCase(searchText);
+            this.searchText = lowerCase(normaliseWhitespace(searchText));
         }
 
         @Override
@@ -691,7 +693,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return lowerCase(element.data()).contains(searchText);
+            return lowerCase(element.data()).contains(searchText); // not whitespace normalized
         }
 
         @Override
@@ -707,7 +709,7 @@ public abstract class Evaluator {
         private final String searchText;
 
         public ContainsOwnText(String searchText) {
-            this.searchText = lowerCase(searchText);
+            this.searchText = lowerCase(normaliseWhitespace(searchText));
         }
 
         @Override

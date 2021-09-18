@@ -193,7 +193,7 @@ public final class StringUtil {
 
     /**
      * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
-     * (e.g. newline, tab) convert to a simple space
+     * (e.g. newline, tab) convert to a simple space.
      * @param string content to normalise
      * @return normalised string
      */

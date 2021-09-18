@@ -1012,4 +1012,20 @@ public class SelectorTest {
         assertEquals("One", nsEls.get(0).text());
         assertEquals("Two", nsEls.get(1).text());
     }
+
+    @Test void containsTextQueryIsNormalized() {
+        Document doc = Jsoup.parse("<p><p id=1>Hello  there now<em>!</em>");
+        Elements a = doc.select("p:contains(Hello   there  now!)");
+        Elements b = doc.select(":containsOwn(hello   there  now)");
+        Elements c = doc.select("p:contains(Hello there now)");
+        Elements d = doc.select(":containsOwn(hello There now)");
+        Elements e = doc.select("p:contains(HelloThereNow)");
+
+        assertEquals(1, a.size());
+        assertEquals(a, b);
+        assertEquals(a, c);
+        assertEquals(a, d);
+        assertEquals(0, e.size());
+        assertNotEquals(a, e);
+    }
 }
