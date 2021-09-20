@@ -1549,7 +1549,9 @@ enum HtmlTreeBuilderState {
                     tb.clearFormattingElementsToLastMarker();
                     tb.popTemplateMode();
                     tb.resetInsertionMode();
-                    return tb.process(t);
+                    if (tb.state() != InTemplate) // spec deviation - if we did not break out of Template, stop processing
+                        return tb.process(t);
+                    else return true;
             }
             return true;
         }
