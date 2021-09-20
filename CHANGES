@@ -19,6 +19,10 @@ jsoup changelog
     document text that they are matching against.
     <https://github.com/jhy/jsoup/issues/876>
 
+  * Improvement: in Element, speed optimized adopting all of an element's child nodes into a currently empty element.
+    Improves the HTML adoption agency algorithm when adopting elements with many children.
+    <https://github.com/jhy/jsoup/issues/1638>
+
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 

@@ -918,10 +918,7 @@ enum HtmlTreeBuilderState {
 
                 Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
                 adopter.attributes().addAll(formatEl.attributes());
-                Node[] childNodes = furthestBlock.childNodes().toArray(new Node[0]);
-                for (Node childNode : childNodes) {
-                    adopter.appendChild(childNode); // append will reparent. thus the clone to avoid concurrent mod.
-                }
+                adopter.appendChildren(furthestBlock.childNodes());
                 furthestBlock.appendChild(adopter);
                 tb.removeFromActiveFormattingElements(formatEl);
                 // insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
