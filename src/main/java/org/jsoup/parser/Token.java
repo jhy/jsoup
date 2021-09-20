@@ -178,7 +178,7 @@ abstract class Token {
 
         final Tag name(String name) {
             tagName = name;
-            normalName = lowerCase(name);
+            normalName = ParseSettings.normalName(tagName);
             return this;
         }
 
@@ -191,7 +191,7 @@ abstract class Token {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName = tagName == null ? append : tagName.concat(append);
-            normalName = lowerCase(tagName);
+            normalName = ParseSettings.normalName(tagName);
         }
 
         final void appendTagName(char append) {
@@ -283,7 +283,7 @@ abstract class Token {
         StartTag nameAttr(String name, Attributes attributes) {
             this.tagName = name;
             this.attributes = attributes;
-            normalName = lowerCase(tagName);
+            normalName = ParseSettings.normalName(tagName);
             return this;
         }
 

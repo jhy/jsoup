@@ -79,4 +79,9 @@ public class ParseSettings {
         }
         return attributes;
     }
+
+    /** Returns the normal name that a Tag will have (trimmed and lower-cased) */
+    static String normalName(String name) {
+        return lowerCase(name.trim());
+    }
 }
