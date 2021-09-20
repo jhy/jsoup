@@ -1593,4 +1593,12 @@ public class HtmlParserTest {
         String want = "<template id=\"lorem-ipsum\"><tr><td>Lorem</td><td>Ipsum</td></tr></template>";
         assertEquals(want, TextUtil.stripNewlines(frag.body().html()));
     }
+
+    @Test void templateInferredForm() {
+        // https://github.com/jhy/jsoup/issues/1637
+        Document doc = Jsoup.parse("<template><isindex action>");
+        assertNotNull(doc);
+        assertEquals("<template><form><hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label><hr></form></template>",
+            TextUtil.stripNewlines(doc.head().html()));
+    }
 }

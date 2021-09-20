@@ -599,7 +599,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         this.fosterInserts = fosterInserts;
     }
 
-    FormElement getFormElement() {
+    @Nullable FormElement getFormElement() {
         return formElement;
     }
 
