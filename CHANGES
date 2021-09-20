@@ -41,6 +41,9 @@ jsoup changelog
     available in the DOM, and will be normalized if possible on output.
     <https://github.com/jhy/jsoup/issues/1474>
 
+  * Bugfix [Fuzz]: fixed an IOOB when an empty select tag was followed by a body tag that needed reparenting.
+    <https://github.com/jhy/jsoup/issues/1639>
+
   * Build Improvement: fixed nullability annotations for Node.equals(other) and other equals methods.
     <https://github.com/jhy/jsoup/issues/1628>
 

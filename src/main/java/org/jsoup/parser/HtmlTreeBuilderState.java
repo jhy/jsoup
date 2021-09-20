@@ -544,6 +544,7 @@ enum HtmlTreeBuilderState {
                     tb.reconstructFormattingElements();
                     tb.insert(startTag);
                     tb.framesetOk(false);
+                    if (startTag.selfClosing) break; // don't change states if not added to the stack
 
                     HtmlTreeBuilderState state = tb.state();
                     if (state.equals(InTable) || state.equals(InCaption) || state.equals(InTableBody) || state.equals(InRow) || state.equals(InCell))
