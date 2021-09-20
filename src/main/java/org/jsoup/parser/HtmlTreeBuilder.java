@@ -463,7 +463,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             transition(HtmlTreeBuilderState.InBody);
         }
 
-        for (int pos = bottom; pos >= upper; pos--) {
+        LOOP: for (int pos = bottom; pos >= upper; pos--) {
             Element node = stack.get(pos);
             if (pos == 0) {
                 last = true;
@@ -471,46 +471,57 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     node = contextElement;
             }
             String name = node != null ? node.normalName() : "";
-            if ("select".equals(name)) {
-                transition(HtmlTreeBuilderState.InSelect);
-                // todo - should loop up (with some limit) and check for table or template hits
-                break;
-            } else if ((("td".equals(name) || "th".equals(name)) && !last)) {
-                transition(HtmlTreeBuilderState.InCell);
-                break;
-            } else if ("tr".equals(name)) {
-                transition(HtmlTreeBuilderState.InRow);
-                break;
-            } else if ("tbody".equals(name) || "thead".equals(name) || "tfoot".equals(name)) {
-                transition(HtmlTreeBuilderState.InTableBody);
-                break;
-            } else if ("caption".equals(name)) {
-                transition(HtmlTreeBuilderState.InCaption);
-                break;
-            } else if ("colgroup".equals(name)) {
-                transition(HtmlTreeBuilderState.InColumnGroup);
-                break;
-            } else if ("table".equals(name)) {
-                transition(HtmlTreeBuilderState.InTable);
-                break;
-            } else if ("template".equals(name)) {
-                HtmlTreeBuilderState tmplState = currentTemplateMode();
-                Validate.notNull(tmplState, "Bug: no template insertion mode on stack!");
-                transition(tmplState);
-                break;
-            } else if ("head".equals(name) && !last) {
-                transition(HtmlTreeBuilderState.InHead);
-                break;
-            } else if ("body".equals(name)) {
-                transition(HtmlTreeBuilderState.InBody);
-                break;
-            } else if ("frameset".equals(name)) {
-                transition(HtmlTreeBuilderState.InFrameset);
-                break;
-            } else if ("html".equals(name)) {
-                transition(headElement == null ? HtmlTreeBuilderState.BeforeHead : HtmlTreeBuilderState.AfterHead);
-                break;
-            } else if (last) {
+            switch (name) {
+                case "select":
+                    transition(HtmlTreeBuilderState.InSelect);
+                    // todo - should loop up (with some limit) and check for table or template hits
+                    break LOOP;
+                case "td":
+                case "th":
+                    if (!last) {
+                        transition(HtmlTreeBuilderState.InCell);
+                        break LOOP;
+                    }
+                    break;
+                case "tr":
+                    transition(HtmlTreeBuilderState.InRow);
+                    break LOOP;
+                case "tbody":
+                case "thead":
+                case "tfoot":
+                    transition(HtmlTreeBuilderState.InTableBody);
+                    break LOOP;
+                case "caption":
+                    transition(HtmlTreeBuilderState.InCaption);
+                    break LOOP;
+                case "colgroup":
+                    transition(HtmlTreeBuilderState.InColumnGroup);
+                    break LOOP;
+                case "table":
+                    transition(HtmlTreeBuilderState.InTable);
+                    break LOOP;
+                case "template":
+                    HtmlTreeBuilderState tmplState = currentTemplateMode();
+                    Validate.notNull(tmplState, "Bug: no template insertion mode on stack!");
+                    transition(tmplState);
+                    break LOOP;
+                case "head":
+                    if (!last) {
+                        transition(HtmlTreeBuilderState.InHead);
+                        break LOOP;
+                    }
+                    break;
+                case "body":
+                    transition(HtmlTreeBuilderState.InBody);
+                    break LOOP;
+                case "frameset":
+                    transition(HtmlTreeBuilderState.InFrameset);
+                    break LOOP;
+                case "html":
+                    transition(headElement == null ? HtmlTreeBuilderState.BeforeHead : HtmlTreeBuilderState.AfterHead);
+                    break LOOP;
+            }
+            if (last) {
                 transition(HtmlTreeBuilderState.InBody);
                 break;
             }
