@@ -31,7 +31,7 @@ for (Element headline : newsHeadlines) {
 [Online sample](https://try.jsoup.org/~LGB7rk_atM2roavV0d-czMt3J_g), [full source](https://github.com/jhy/jsoup/blob/master/src/main/java/org/jsoup/examples/Wikipedia.java).
 
 ## Open source
-jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available at [GitHub](https://github.com/jhy/jsoup).
+jsoup is an open source project distributed under the liberal [MIT license](https://jsoup.org/license). The source code is available on [GitHub](https://github.com/jhy/jsoup).
 
 ## Getting started
 1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
