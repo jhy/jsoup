@@ -258,7 +258,7 @@ public class Element extends Node {
         return attributes().dataset();
     }
 
-    @Override
+    @Override @Nullable
     public final Element parent() {
         return (Element) parentNode;
     }

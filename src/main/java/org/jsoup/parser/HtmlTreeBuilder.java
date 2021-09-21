@@ -138,13 +138,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
             // with form correctly
-            Elements contextChain = context.parents();
-            contextChain.add(0, context);
-            for (Element parent: contextChain) {
-                if (parent instanceof FormElement) {
-                    formElement = (FormElement) parent;
+            Element formSearch = context;
+            while (formSearch != null) {
+                if (formSearch instanceof FormElement) {
+                    formElement = (FormElement) formSearch;
                     break;
                 }
+                formSearch = formSearch.parent();
             }
         }
 
