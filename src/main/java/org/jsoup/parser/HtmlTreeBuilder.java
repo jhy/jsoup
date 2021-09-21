@@ -103,24 +103,37 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // initialise the tokeniser state:
             String contextTag = context.normalName();
-            if (StringUtil.in(contextTag, "title", "textarea"))
-                tokeniser.transition(TokeniserState.Rcdata);
-            else if (StringUtil.in(contextTag, "iframe", "noembed", "noframes", "style", "xmp"))
-                tokeniser.transition(TokeniserState.Rawtext);
-            else if (contextTag.equals("script"))
-                tokeniser.transition(TokeniserState.ScriptData);
-            else if (contextTag.equals(("noscript")))
-                tokeniser.transition(TokeniserState.Data); // if scripting enabled, rawtext
-            else if (contextTag.equals("plaintext"))
-                tokeniser.transition(TokeniserState.PLAINTEXT);
-            else
-                tokeniser.transition(TokeniserState.Data); // default
-
+            switch (contextTag) {
+                case "title":
+                case "textarea":
+                    tokeniser.transition(TokeniserState.Rcdata);
+                    break;
+                case "iframe":
+                case "noembed":
+                case "noframes":
+                case "style":
+                case "xml":
+                    tokeniser.transition(TokeniserState.Rawtext);
+                    break;
+                case "script":
+                    tokeniser.transition(TokeniserState.ScriptData);
+                    break;
+                case "noscript":
+                    tokeniser.transition(TokeniserState.Data); // if scripting enabled, rawtext
+                    break;
+                case "plaintext":
+                    tokeniser.transition(TokeniserState.PLAINTEXT);
+                    break;
+                case "template":
+                    tokeniser.transition(TokeniserState.Data);
+                    pushTemplateMode(HtmlTreeBuilderState.InTemplate);
+                    break;
+                default:
+                    tokeniser.transition(TokeniserState.Data);
+            }
             root = new Element(Tag.valueOf(contextTag, settings), baseUri);
             doc.appendChild(root);
             stack.add(root);
-            if (contextTag.equals("template"))
-                pushTemplateMode(HtmlTreeBuilderState.InTemplate);
             resetInsertionMode();
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
