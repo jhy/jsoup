@@ -700,6 +700,17 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Provides a hashCode for this Node, based on it's object identity. Changes to the Node's content will not impact the
+     result.
+     @return an object identity based hashcode for this Node
+     */
+    @Override
+    public int hashCode() {
+        // implemented so that javadoc and scanners are clear this is an identity test
+        return super.hashCode();
+    }
+
+    /**
      * Check if this node is has the same content as another node. A node is considered the same if its name, attributes and content match the
      * other node; particularly its position in the tree does not influence its similarity.
      * @param o other object to compare to
