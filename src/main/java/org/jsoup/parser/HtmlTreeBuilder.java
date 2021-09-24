@@ -478,7 +478,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         LOOP: for (int pos = bottom; pos >= upper; pos--) {
             Element node = stack.get(pos);
-            if (pos == 0) {
+            if (pos == upper) {
                 last = true;
                 if (fragmentParsing)
                     node = contextElement;
