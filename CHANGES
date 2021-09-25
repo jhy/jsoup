@@ -51,6 +51,9 @@ jsoup changelog
   * Build Improvement: fixed nullability annotations for Node.equals(other) and other equals methods.
     <https://github.com/jhy/jsoup/issues/1628>
 
+  * Build Improvement: added JDK 17 to the CI builds.
+    <https://github.com/jhy/jsoup/pull/1641>
+
 *** Release 1.14.2 [2021-Aug-15]
   * Improvement: support Pattern.quote \Q and \E escapes in the selector regex matchers.
     <https://github.com/jhy/jsoup/pull/1536>
