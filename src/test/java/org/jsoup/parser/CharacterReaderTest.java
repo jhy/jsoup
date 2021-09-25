@@ -220,6 +220,43 @@ public class CharacterReaderTest {
         assertFalse(r.containsIgnoreCase("one"));
     }
 
+    @Test void containsIgnoreCaseBuffer() {
+        String html = "<p><p><p></title><p></TITLE><p>" + BufferBuster("Foo Bar Qux ") + "<foo><bar></title>";
+        CharacterReader r = new CharacterReader(html);
+
+        assertTrue(r.containsIgnoreCase("</title>"));
+        assertFalse(r.containsIgnoreCase("</not>"));
+        assertFalse(r.containsIgnoreCase("</not>")); // cached, but we only test functionally here
+        assertTrue(r.containsIgnoreCase("</title>"));
+        r.consumeTo("</title>");
+        assertTrue(r.containsIgnoreCase("</title>"));
+        r.consumeTo("<p>");
+        assertTrue(r.matches("<p>"));
+
+        assertTrue(r.containsIgnoreCase("</title>"));
+        assertTrue(r.containsIgnoreCase("</title>"));
+        assertFalse(r.containsIgnoreCase("</not>"));
+        assertFalse(r.containsIgnoreCase("</not>"));
+
+        r.consumeTo("</TITLE>");
+        r.consumeTo("<p>");
+        assertTrue(r.matches("<p>"));
+        assertFalse(r.containsIgnoreCase("</title>")); // because we haven't buffered up yet, we don't know
+        r.consumeTo("<foo>");
+        assertFalse(r.matches("<foo>")); // buffer underrun
+        r.consumeTo("<foo>");
+        assertTrue(r.matches("<foo>")); // cross the buffer
+        assertTrue(r.containsIgnoreCase("</TITLE>"));
+        assertTrue(r.containsIgnoreCase("</title>"));
+    }
+
+    static String BufferBuster(String content) {
+        StringBuilder builder = new StringBuilder();
+        while (builder.length() < maxBufferLen)
+            builder.append(content);
+        return builder.toString();
+    }
+
     @Test public void matchesAny() {
         char[] scan = {' ', '\n', '\t'};
         CharacterReader r = new CharacterReader("One\nTwo\tThree");

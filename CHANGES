@@ -23,6 +23,10 @@ jsoup changelog
     Improves the HTML adoption agency algorithm when adopting elements with many children.
     <https://github.com/jhy/jsoup/issues/1638>
 
+  * Improvement: increased the parse speed when in RCData (e.g. <title>) and unescaped <tag> tokens are found, by
+    memoizing the </title> scan and reducing GC.
+    <https://github.com/jhy/jsoup/issues/1644>
+
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 

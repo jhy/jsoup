@@ -104,7 +104,8 @@ public final class CharacterReader {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        scanBufferForNewlines();
+        scanBufferForNewlines(); // if enabled, we index newline positions for line number tracking
+        lastIcSeq = null; // cache for last containsIgnoreCase(seq)
     }
 
     /**
@@ -656,11 +657,31 @@ public final class CharacterReader {
         }
     }
 
+    // we maintain a cache of the previously scanned sequence, and return that if applicable on repeated scans.
+    // that improves the situation where there is a sequence of <p<p<p<p<p<p<p...</title> and we're bashing on the <p
+    // looking for the </title>. Resets in bufferUp()
+    @Nullable private String lastIcSeq; // scan cache
+    private int lastIcIndex; // nearest found indexOf
+
+    /** Used to check presence of </title>, </style> when we're in RCData and see a <xxx. Only finds consistent case. */
     boolean containsIgnoreCase(String seq) {
-        // used to check presence of </title>, </style>. only finds consistent case.
+        if (seq.equals(lastIcSeq)) {
+            if (lastIcIndex == -1) return false;
+            if (lastIcIndex >= bufPos) return true;
+        }
+        lastIcSeq = seq;
+
         String loScan = seq.toLowerCase(Locale.ENGLISH);
+        int lo = nextIndexOf(loScan);
+        if (lo > -1) {
+            lastIcIndex = bufPos + lo; return true;
+        }
+
         String hiScan = seq.toUpperCase(Locale.ENGLISH);
-        return (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1);
+        int hi = nextIndexOf(hiScan);
+        boolean found = hi > -1;
+        lastIcIndex = found ? bufPos + hi : -1; // we don't care about finding the nearest, just that buf contains
+        return found;
     }
 
     @Override

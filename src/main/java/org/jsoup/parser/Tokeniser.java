@@ -47,6 +47,7 @@ final class Tokeniser {
     Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     Token.Comment commentPending = new Token.Comment(); // comment building up
     private String lastStartTag; // the last start tag emitted, to test appropriate end tag
+    @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
@@ -84,6 +85,7 @@ final class Tokeniser {
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
             lastStartTag = startTag.tagName;
+            lastStartCloseSeq = null; // only lazy inits
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.hasAttributes())
@@ -272,6 +274,13 @@ final class Tokeniser {
 
     String appropriateEndTagName() {
         return lastStartTag; // could be null
+    }
+
+    /** Returns the closer sequence {@code </lastStart} */
+    String appropriateEndTagSeq() {
+        if (lastStartCloseSeq == null) // reset on start tag emit
+            lastStartCloseSeq = "</" + lastStartTag;
+        return lastStartCloseSeq;
     }
 
     void error(TokeniserState state) {
