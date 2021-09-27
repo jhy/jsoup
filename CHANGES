@@ -28,8 +28,9 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/1644>
 
   * Improvement: when parsing custom tags (in HTML or XML), added a flyweight cache on Tag.valueOf(name) to reduce
-    memory overhead when many tags are repeated.
-
+    memory overhead when many tags are repeated. Also tuned other areas of the parser when many very deeply stacked
+    custom elements were present.
+    <https://github.com/jhy/jsoup/issues/1646>
 
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
