@@ -632,7 +632,9 @@ enum HtmlTreeBuilderState {
                     break;
                 default:
                     // todo - bring scan groups in if desired
-                    if (inSorted(name, Constants.InBodyStartEmptyFormatters)) {
+                    if (!Tag.isKnownTag(name)) { // no special rules for custom tags
+                        tb.insert(startTag);
+                    } else if (inSorted(name, Constants.InBodyStartEmptyFormatters)) {
                         tb.reconstructFormattingElements();
                         tb.insertEmpty(startTag);
                         tb.framesetOk(false);
@@ -658,8 +660,7 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     } else {
-                        if (Tag.isKnownTag(name)) // don't reconstruct for custom elements
-                            tb.reconstructFormattingElements();
+                        tb.reconstructFormattingElements();
                         tb.insert(startTag);
                     }
             }

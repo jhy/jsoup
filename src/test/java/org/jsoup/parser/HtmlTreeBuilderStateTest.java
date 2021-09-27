@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.jupiter.api.Test;
 
@@ -10,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InBodyStartInputAttribs;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HtmlTreeBuilderStateTest {
     static List<Object[]> findConstantArrays(Class aClass) {
@@ -45,6 +46,18 @@ public class HtmlTreeBuilderStateTest {
         List<Object[]> constants = findConstantArrays(Constants.class);
         ensureSorted(constants);
         assertEquals(40, constants.size());
+    }
+
+    @Test public void ensureTagSearchesAreKnownTags() {
+        List<Object[]> constants = findConstantArrays(Constants.class);
+        for (Object[] constant : constants) {
+            String[] tagNames = (String[]) constant;
+            for (String tagName : tagNames) {
+                if (StringUtil.inSorted(tagName, InBodyStartInputAttribs))
+                    continue; // odd one out in the constant
+                assertTrue(Tag.isKnownTag(tagName), String.format("Unknown tag name: %s", tagName));
+            }
+        }
     }
 
 
