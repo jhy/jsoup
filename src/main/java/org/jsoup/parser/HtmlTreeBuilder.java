@@ -10,7 +10,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -20,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jsoup.internal.StringUtil.inSorted;
+import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InTableFoster;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -315,7 +315,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
         if (stack.isEmpty())
             doc.appendChild(node);
-        else if (isFosterInserts())
+        else if (isFosterInserts() && StringUtil.inSorted(currentElement().normalName(), InTableFoster))
             insertInFosterParent(node);
         else
             currentElement().appendChild(node);
