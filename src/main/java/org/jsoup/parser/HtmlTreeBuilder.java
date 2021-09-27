@@ -131,7 +131,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 default:
                     tokeniser.transition(TokeniserState.Data);
             }
-            root = new Element(Tag.valueOf(contextTag, settings), baseUri);
+            root = new Element(tagFor(contextTag, settings), baseUri);
             doc.appendChild(root);
             stack.add(root);
             resetInsertionMode();
@@ -245,13 +245,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
             return el;
         }
 
-        Element el = new Element(Tag.valueOf(startTag.name(), settings), null, settings.normalizeAttributes(startTag.attributes));
+        Element el = new Element(tagFor(startTag.name(), settings), null, settings.normalizeAttributes(startTag.attributes));
         insert(el);
         return el;
     }
 
     Element insertStartTag(String startTagName) {
-        Element el = new Element(Tag.valueOf(startTagName, settings), null);
+        Element el = new Element(tagFor(startTagName, settings), null);
         insert(el);
         return el;
     }
@@ -262,7 +262,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
-        Tag tag = Tag.valueOf(startTag.name(), settings);
+        Tag tag = tagFor(startTag.name(), settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el);
         if (startTag.isSelfClosing()) {
@@ -277,7 +277,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
-        Tag tag = Tag.valueOf(startTag.name(), settings);
+        Tag tag = tagFor(startTag.name(), settings);
         FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         if (checkTemplateStack) {
             if(!onStack("template"))

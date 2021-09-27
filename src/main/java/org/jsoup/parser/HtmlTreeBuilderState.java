@@ -891,7 +891,7 @@ enum HtmlTreeBuilderState {
                     } else if (node == formatEl)
                         break;
 
-                    Element replacement = new Element(Tag.valueOf(node.nodeName(), ParseSettings.preserveCase), tb.getBaseUri());
+                    Element replacement = new Element(tb.tagFor(node.nodeName(), ParseSettings.preserveCase), tb.getBaseUri());
                     // case will follow the original node (so honours ParseSettings)
                     tb.replaceActiveFormattingElement(node, replacement);
                     tb.replaceOnStack(node, replacement);

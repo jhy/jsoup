@@ -27,6 +27,10 @@ jsoup changelog
     memoizing the </title> scan and reducing GC.
     <https://github.com/jhy/jsoup/issues/1644>
 
+  * Improvement: when parsing custom tags (in HTML or XML), added a flyweight cache on Tag.valueOf(name) to reduce
+    memory overhead when many tags are repeated.
+
+
   * Bugfix: when tracking errors or checking for validity in the Cleaner, errors were incorrectly raised for missing
     optional closing tags.
 

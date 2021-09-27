@@ -10,7 +10,9 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Jonathan Hedley
@@ -24,6 +26,7 @@ abstract class TreeBuilder {
     protected String baseUri; // current base uri, for creating new elements
     protected Token currentToken; // currentToken is used only for error tracking.
     protected ParseSettings settings;
+    protected Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
     private Token.StartTag start = new Token.StartTag(); // start tag to process
     private Token.EndTag end  = new Token.EndTag();
@@ -44,6 +47,7 @@ abstract class TreeBuilder {
         currentToken = null;
         tokeniser = new Tokeniser(reader, parser.getErrors());
         stack = new ArrayList<>(32);
+        seenTags = new HashMap<>();
         this.baseUri = baseUri;
     }
 
@@ -57,6 +61,7 @@ abstract class TreeBuilder {
         reader = null;
         tokeniser = null;
         stack = null;
+        seenTags = null;
 
         return doc;
     }
@@ -158,5 +163,14 @@ abstract class TreeBuilder {
      */
     protected boolean isContentForTagData(String normalName) {
         return false;
+    }
+
+    protected Tag tagFor(String tagName, ParseSettings settings) {
+        Tag tag = seenTags.get(tagName); // note that we don't normalize the cache key. But tag via valueOf may be normalized.
+        if (tag == null) {
+            tag = Tag.valueOf(tagName, settings);
+            seenTags.put(tagName, tag);
+        }
+        return tag;
     }
 }
