@@ -593,7 +593,9 @@ enum HtmlTreeBuilderState {
                 case "dt":
                     tb.framesetOk(false);
                     stack = tb.getStack();
-                    for (int i = stack.size() - 1; i > 0; i--) {
+                    final int bottom = stack.size() - 1;
+                    final int upper = bottom >= MaxStackScan ? bottom - MaxStackScan : 0;
+                    for (int i = bottom; i >= upper; i--) {
                         el = stack.get(i);
                         if (inSorted(el.normalName(), Constants.DdDt)) {
                             tb.processEndTag(el.normalName());
@@ -656,12 +658,14 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     } else {
-                        tb.reconstructFormattingElements();
+                        if (Tag.isKnownTag(name)) // don't reconstruct for custom elements
+                            tb.reconstructFormattingElements();
                         tb.insert(startTag);
                     }
             }
             return true;
         }
+        private static final int MaxStackScan = 24; // used for DD / DT scan, prevents runaway
 
         private boolean inBodyEndTag(Token t, HtmlTreeBuilder tb) {
             final Token.EndTag endTag = t.asEndTag();
