@@ -191,6 +191,20 @@ public class W3CDomTest {
     }
 
     @Test
+    public void handlesAccentedCharsAttributeNames() {
+        String html = "<!DOCTYPE html><html><head></head><body style=\"color: red\" \" name\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+        org.jsoup.nodes.Document jsoupDoc;
+        jsoupDoc = Jsoup.parse(html);
+        Element body = jsoupDoc.select("body").first();
+        assertTrue(body.hasAttr("\"")); // actually an attribute with key '"'. Correct per HTML5 spec, but w3c xml dom doesn't dig it
+        assertTrue(body.hasAttr("name\""));
+
+        Document w3Doc = W3CDom.convert(jsoupDoc);
+        String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
+        assertEquals("<!DOCTYPE html SYSTEM \"about:legacy-compat\">\n<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body name=\"\" style=\"color: red\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>", out);
+    }
+
+    @Test
     public void handlesInvalidTagAsText() {
         org.jsoup.nodes.Document jsoup = Jsoup.parse("<インセンティブで高収入！>Text <p>More</p>");
 

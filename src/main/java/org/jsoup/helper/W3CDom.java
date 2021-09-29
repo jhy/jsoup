@@ -38,10 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
-import java.util.regex.Pattern;
+import java.util.Locale;
 
 import static javax.xml.transform.OutputKeys.METHOD;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -342,8 +344,15 @@ public class W3CDom {
         }
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
+            final Syntax syntax;
+            if (this.doc.getDoctype() != null &&
+                    this.doc.getDoctype().getName().toLowerCase(Locale.ROOT).equals("html")) {
+                syntax = html;
+            } else {
+                syntax = xml;
+            }
             for (Attribute attribute : source.attributes()) {
-                String key = Attribute.getValidKey(attribute.getKey(), xml);
+                String key = Attribute.getValidKey(attribute.getKey(), syntax);
                 if (key != null) { // null if couldn't be coerced to validity
                     el.setAttribute(key, attribute.getValue());
                 }
