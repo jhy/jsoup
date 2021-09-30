@@ -522,7 +522,8 @@ public class Element extends Node {
 
      @param xpath XPath expression
      @return matching elements, or an empty list if none match.
-     @since 1.14.3.
+     @see #selectXpath(String, Class)
+     @since 1.14.3
      */
     public Elements selectXpath(String xpath) {
         return new Elements(NodeUtils.selectXpath(xpath, this, Element.class));
@@ -539,6 +540,7 @@ public class Element extends Node {
      @param nodeType the jsoup node type to return
      @see #selectXpath(String)
      @return a list of matching nodes
+     @since 1.14.3
      */
     public <T extends Node> List<T> selectXpath(String xpath, Class<T> nodeType) {
         return NodeUtils.selectXpath(xpath, this, nodeType);
