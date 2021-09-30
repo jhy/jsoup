@@ -509,19 +509,20 @@ public class Element extends Node {
 
     /**
      <b>Beta:</b> find Elements that match the supplied XPath expression.
-     <p>(This functionality is currently in beta and
-     is subject to change. Feedback on the API is requested and welcomed!)</p>
+     <p>(This functionality is currently in beta and is subject to change. Feedback on the API is requested and
+     welcomed!)</p>
      <p>By default, XPath 1.0 expressions are supported. If you would to use XPath 2.0 or higher, you can provide an
      alternate XPathFactory implementation:</p>
      <ol>
-        <li>Add the implementation to your classpath. E.g. to use <a href="https://www.saxonica.com/products/products.xml">Saxon-HE</a>, add <a href="https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE">net.sf.saxon:Saxon-HE</a> to your build.</li>
+     <li>Add the implementation to your classpath. E.g. to use <a href="https://www.saxonica.com/products/products.xml">Saxon-HE</a>, add <a href="https://mvnrepository.com/artifact/net.sf.saxon/Saxon-HE">net.sf.saxon:Saxon-HE</a> to your build.</li>
      <li>Set the system property <code>javax.xml.xpath.XPathFactory:jsoup</code> to the implementing classname. E.g.:<br>
-        <code>System.setProperty(W3CDom.XPathFactoryProperty, "net.sf.saxon.xpath.XPathFactoryImpl");</code>
+     <code>System.setProperty(W3CDom.XPathFactoryProperty, "net.sf.saxon.xpath.XPathFactoryImpl");</code>
      </li>
      </ol>
 
      @param xpath XPath expression
      @return matching elements, or an empty list if none match.
+     @since 1.14.3.
      */
     public Elements selectXpath(String xpath) {
         return new Elements(NodeUtils.selectXpath(xpath, this, Element.class));
