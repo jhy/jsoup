@@ -11,7 +11,7 @@ import org.jsoup.nodes.Element;
  removed in <code>v1.15.1</code>. Until that release, this class acts as a shim to maintain code compatibility
  (source and binary).
  <p>
- For a clear rationale of the removal of this change, please see
+ For a clear rationale for this change, please see
  <a href="https://tools.ietf.org/html/draft-knodel-terminology-04" title="draft-knodel-terminology-04">Terminology,
  Power, and Inclusive Language in Internet-Drafts and RFCs</a> */
 @Deprecated

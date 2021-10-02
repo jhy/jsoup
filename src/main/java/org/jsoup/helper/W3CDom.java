@@ -53,7 +53,7 @@ public class W3CDom {
 
     /**
      To get support for XPath versions &gt; 1, set this property to the classname of an alternate XPathFactory
-     implementation (e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
+     implementation. (For e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
      */
     public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
