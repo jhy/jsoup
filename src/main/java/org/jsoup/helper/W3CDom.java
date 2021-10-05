@@ -38,11 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
-import java.util.Locale;
 
 import static javax.xml.transform.OutputKeys.METHOD;
-import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
-import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 /**
@@ -223,8 +220,16 @@ public class W3CDom {
                 out.setDocumentURI(inDoc.location());
         }
 
-        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
-        NodeTraversor.traverse(new W3CBuilder(out), rootEl);
+        final org.jsoup.nodes.Document.OutputSettings outputSettings;
+        final org.jsoup.nodes.Element rootEl;
+        if (in instanceof org.jsoup.nodes.Document) {
+            outputSettings = ((org.jsoup.nodes.Document) in).outputSettings();
+            rootEl = in.child(0); // skip the #root node if a Document
+        } else {
+            outputSettings = new org.jsoup.nodes.Document.OutputSettings();
+            rootEl = in;
+        }
+        NodeTraversor.traverse(new W3CBuilder(out, outputSettings), rootEl);
     }
 
     public NodeList selectXpath(String xpath, Document doc) {
@@ -284,11 +289,13 @@ public class W3CDom {
         private final Document doc;
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Node dest;
+        private final org.jsoup.nodes.Document.OutputSettings outputSettings; // the outputsettings used by the parser of original jsoup Document
 
-        public W3CBuilder(Document doc) {
+        public W3CBuilder(Document doc, org.jsoup.nodes.Document.OutputSettings outputSettings) {
             this.doc = doc;
             this.namespacesStack.push(new HashMap<>());
             this.dest = doc;
+            this.outputSettings = outputSettings;
         }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
@@ -308,7 +315,7 @@ public class W3CDom {
                     Element el = namespace == null && tagName.contains(":") ?
                         doc.createElementNS("", tagName) : // doesn't have a real namespace defined
                         doc.createElementNS(namespace, tagName);
-                    copyAttributes(sourceEl, el);
+                    copyAttributes(sourceEl, el, outputSettings.syntax());
                     append(el, sourceEl);
                     dest = el; // descend
                 } catch (DOMException e) {
@@ -343,14 +350,14 @@ public class W3CDom {
             namespacesStack.pop();
         }
 
-        private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
-            final Syntax syntax;
-            if (this.doc.getDoctype() != null &&
-                    this.doc.getDoctype().getName().toLowerCase(Locale.ROOT).equals("html")) {
-                syntax = html;
-            } else {
-                syntax = xml;
-            }
+        private void copyAttributes(org.jsoup.nodes.Node source, Element el, Syntax syntax) {
+//            final Syntax syntax;
+//            if (this.doc.getDoctype() != null &&
+//                    this.doc.getDoctype().getName().toLowerCase(Locale.ROOT).equals("html")) {
+//                syntax = html;
+//            } else {
+//                syntax = xml;
+//            }
             for (Attribute attribute : source.attributes()) {
                 String key = Attribute.getValidKey(attribute.getKey(), syntax);
                 if (key != null) { // null if couldn't be coerced to validity
