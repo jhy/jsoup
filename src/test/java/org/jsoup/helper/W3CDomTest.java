@@ -201,7 +201,8 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
-        assertEquals("<!DOCTYPE html SYSTEM \"about:legacy-compat\">\n<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body name=\"\" style=\"color: red\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>", out);
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body name=\"\" style=\"color: red\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out)); // on windows, DOM will write newlines as \r\n
     }
 
     @Test
