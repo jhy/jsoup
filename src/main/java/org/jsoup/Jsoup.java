@@ -6,7 +6,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
-import org.jsoup.safety.Whitelist;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -265,15 +264,6 @@ Connection con3 = session.newRequest();
     }
 
     /**
-     Use {@link #clean(String, String, Safelist)} instead.
-     @deprecated as of 1.14.1.
-     */
-    @Deprecated
-    public static String clean(String bodyHtml, String baseUri, Whitelist safelist) {
-        return clean(bodyHtml, baseUri, (Safelist) safelist);
-    }
-
-    /**
      Get safe HTML from untrusted input HTML, by parsing input HTML and filtering it through a safe-list of permitted
      tags and attributes.
 
@@ -289,15 +279,6 @@ Connection con3 = session.newRequest();
      */
     public static String clean(String bodyHtml, Safelist safelist) {
         return clean(bodyHtml, "", safelist);
-    }
-
-    /**
-     Use {@link #clean(String, Safelist)} instead.
-     @deprecated as of 1.14.1.
-     */
-    @Deprecated
-    public static String clean(String bodyHtml, Whitelist safelist) {
-        return clean(bodyHtml, (Safelist) safelist);
     }
 
     /**
@@ -323,15 +304,6 @@ Connection con3 = session.newRequest();
     }
 
     /**
-     Use {@link #clean(String, String, Safelist, Document.OutputSettings)} instead.
-     @deprecated as of 1.14.1.
-     */
-    @Deprecated
-    public static String clean(String bodyHtml, String baseUri, Whitelist safelist, Document.OutputSettings outputSettings) {
-        return clean(bodyHtml, baseUri, (Safelist) safelist, outputSettings);
-    }
-
-    /**
      Test if the input body HTML has only tags and attributes allowed by the Safelist. Useful for form validation.
      <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
@@ -343,14 +315,4 @@ Connection con3 = session.newRequest();
     public static boolean isValid(String bodyHtml, Safelist safelist) {
         return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
     }
-
-    /**
-     Use {@link #isValid(String, Safelist)} instead.
-     @deprecated as of 1.14.1.
-     */
-    @Deprecated
-    public static boolean isValid(String bodyHtml, Whitelist safelist) {
-        return isValid(bodyHtml, (Safelist) safelist);
-    }
-    
 }

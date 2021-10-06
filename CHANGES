@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.15.1 [PENDING]
+  * Change: removed previously deprecated methods and classes (including org.jsoup.safety.Whitelist; use
+    org.jsoup.safety.Safelist instead).
+
   * Improvement: when converting jsoup Documents to W3C Documents in W3CDom, preserve HTML valid attribute names if the
     input document is using the HTML syntax. (Previously, would always coerce using the more restrictive XML syntax.)
     <https://github.com/jhy/jsoup/pull/1648>

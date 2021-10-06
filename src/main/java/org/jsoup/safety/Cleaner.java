@@ -45,16 +45,6 @@ public class Cleaner {
     }
 
     /**
-     Use {@link #Cleaner(Safelist)} instead.
-     @deprecated as of 1.14.1.
-     */
-    @Deprecated
-    public Cleaner(Whitelist whitelist) {
-        Validate.notNull(whitelist);
-        this.safelist = whitelist;
-    }
-
-    /**
      Creates a new, clean document, from the original dirty document, containing only elements allowed by the safelist.
      The original document is not modified. Only elements from the dirty document's <code>body</code> are used. The
      OutputSettings of the original document are cloned into the clean document.
