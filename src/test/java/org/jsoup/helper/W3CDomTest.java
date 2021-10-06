@@ -191,18 +191,28 @@ public class W3CDomTest {
     }
 
     @Test
-    public void handlesAccentedCharsAttributeNames() {
-        String html = "<!DOCTYPE html><html><head></head><body style=\"color: red\" \" name\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+    public void htmlInputDocMaintainsHtmlAttributeNames() {
+        String html = "<!DOCTYPE html><html><head></head><body><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
         org.jsoup.nodes.Document jsoupDoc;
         jsoupDoc = Jsoup.parse(html);
-        Element body = jsoupDoc.select("body").first();
-        assertTrue(body.hasAttr("\"")); // actually an attribute with key '"'. Correct per HTML5 spec, but w3c xml dom doesn't dig it
-        assertTrue(body.hasAttr("name\""));
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
-        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body name=\"\" style=\"color: red\"><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
-        assertEquals(expected, TextUtil.stripNewlines(out)); // on windows, DOM will write newlines as \r\n
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out));
+    }
+
+    @Test
+    public void xmlInputDocMaintainsHtmlAttributeNames() {
+        String html = "<!DOCTYPE html><html><head></head><body><p hành=\"1\" hình=\"2\">unicode attr names coerced</p></body></html>";
+        org.jsoup.nodes.Document jsoupDoc;
+        jsoupDoc = Jsoup.parse(html);
+        jsoupDoc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
+
+        Document w3Doc = W3CDom.convert(jsoupDoc);
+        String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hnh=\"2\">unicode attr names coerced</p></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out));
     }
 
     @Test

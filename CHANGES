@@ -1,6 +1,10 @@
 jsoup changelog
 
-*** Release 1.14.3 [PENDING]
+*** Release 1.15.1 [PENDING]
+  * Improvement: when converting jsoup Documents to W3C Documents in W3CDom, preserve HTML valid attribute names if the
+    input document is using the HTML syntax. (Previously, would always coerce using the more restrictive XML syntax.)
+
+*** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
 
