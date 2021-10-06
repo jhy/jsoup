@@ -333,9 +333,9 @@ public class CleanerTest {
         Document orig = Jsoup.parse("<p>test<br></p>");
         orig.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
         orig.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-        Safelist whitelist = Safelist.none().addTags("p", "br");
+        Safelist safelist = Safelist.none().addTags("p", "br");
 
-        Document result = new Cleaner(whitelist).clean(orig);
+        Document result = new Cleaner(safelist).clean(orig);
         assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
         assertEquals("<p>test<br /></p>", result.body().html());
     }
