@@ -191,6 +191,31 @@ public class W3CDomTest {
     }
 
     @Test
+    public void htmlInputDocMaintainsHtmlAttributeNames() {
+        String html = "<!DOCTYPE html><html><head></head><body><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+        org.jsoup.nodes.Document jsoupDoc;
+        jsoupDoc = Jsoup.parse(html);
+
+        Document w3Doc = W3CDom.convert(jsoupDoc);
+        String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hành=\"1\" hình=\"2\">unicode attr names</p></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out));
+    }
+
+    @Test
+    public void xmlInputDocMaintainsHtmlAttributeNames() {
+        String html = "<!DOCTYPE html><html><head></head><body><p hành=\"1\" hình=\"2\">unicode attr names coerced</p></body></html>";
+        org.jsoup.nodes.Document jsoupDoc;
+        jsoupDoc = Jsoup.parse(html);
+        jsoupDoc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
+
+        Document w3Doc = W3CDom.convert(jsoupDoc);
+        String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hnh=\"2\">unicode attr names coerced</p></body></html>";
+        assertEquals(expected, TextUtil.stripNewlines(out));
+    }
+
+    @Test
     public void handlesInvalidTagAsText() {
         org.jsoup.nodes.Document jsoup = Jsoup.parse("<インセンティブで高収入！>Text <p>More</p>");
 

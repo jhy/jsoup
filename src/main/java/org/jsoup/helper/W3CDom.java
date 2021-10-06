@@ -38,10 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
-import java.util.regex.Pattern;
 
 import static javax.xml.transform.OutputKeys.METHOD;
-import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
@@ -215,14 +214,16 @@ public class W3CDom {
      * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Element)
      */
     public void convert(org.jsoup.nodes.Element in, Document out) {
+        W3CBuilder builder = new W3CBuilder(out);
         org.jsoup.nodes.Document inDoc = in.ownerDocument();
         if (inDoc != null) {
-            if (!StringUtil.isBlank(inDoc.location()))
+            if (!StringUtil.isBlank(inDoc.location())) {
                 out.setDocumentURI(inDoc.location());
+            }
+            builder.syntax = inDoc.outputSettings().syntax();
         }
-
         org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
-        NodeTraversor.traverse(new W3CBuilder(out), rootEl);
+        NodeTraversor.traverse(builder, rootEl);
     }
 
     public NodeList selectXpath(String xpath, Document doc) {
@@ -282,6 +283,7 @@ public class W3CDom {
         private final Document doc;
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Node dest;
+        private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
@@ -343,7 +345,7 @@ public class W3CDom {
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
-                String key = Attribute.getValidKey(attribute.getKey(), xml);
+                String key = Attribute.getValidKey(attribute.getKey(), syntax);
                 if (key != null) { // null if couldn't be coerced to validity
                     el.setAttribute(key, attribute.getValue());
                 }
