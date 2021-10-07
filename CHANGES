@@ -8,6 +8,10 @@ jsoup changelog
     input document is using the HTML syntax. (Previously, would always coerce using the more restrictive XML syntax.)
     <https://github.com/jhy/jsoup/pull/1648>
 
+  * Improvement: added the :containsWholeText(text) selector, to match against non-normalized Element text. That can be
+    useful when elements can only be distinguished by e.g. specific case, or leading whitespace, etc.
+    <https://github.com/jhy/jsoup/issues/1636>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
