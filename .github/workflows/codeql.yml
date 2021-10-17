@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: 11
-          distribution: 'temurin'
+          distribution: 'zulu'
           cache: 'maven'
       - name: CodeQL Initialization
         uses: github/codeql-action/init@v1
