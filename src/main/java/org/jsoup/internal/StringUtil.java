@@ -16,11 +16,10 @@ import java.util.regex.Pattern;
  notice.
  */
 public final class StringUtil {
-    // memoised padding up to 21
+    // memoised padding up to 21 (blocks 0 to 20 spaces)
     static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
         "         ", "          ", "           ", "            ", "             ", "              ", "               ",
         "                ", "                 ", "                  ", "                   ", "                    "};
-    private static final int maxPaddingWidth = 30; // so very deeply nested nodes don't get insane padding amounts
 
     /**
      * Join a collection of strings by a separator
@@ -115,17 +114,29 @@ public final class StringUtil {
     }
 
     /**
-     * Returns space padding (up to a max of 30).
+     * Returns space padding (up to a max of 30).  Use {@link #padding(int, int)} if you need
+     * more than 30 spaces padded.
      * @param width amount of padding desired
      * @return string of spaces * width
-     */
+      */
     public static String padding(int width) {
+        return padding(width, 30);
+    }
+
+    /**
+     * Returns space padding (up to a max of maxPaddingWidth - default 30).
+     * @param width amount of padding desired
+     * @param maxPaddingWidth amount of max space padding with default set at 30 and -1 means no max.
+     * @return string of spaces * width
+     */
+    public static String padding(int width, int maxPaddingWidth) {
         if (width < 0)
             throw new IllegalArgumentException("width must be > 0");
 
         if (width < padding.length)
             return padding[width];
-        width = Math.min(width, maxPaddingWidth);
+        if (maxPaddingWidth != -1)
+            width = Math.min(width, maxPaddingWidth);
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';

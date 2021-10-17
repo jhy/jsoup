@@ -21,6 +21,10 @@ jsoup changelog
     case.
     <https://github.com/jhy/jsoup/issues/1656>
 
+  * Improvement: allow maxPaddingWidth in OutputSettings for pretty printing.  This will continue to default to 30
+    so very deeply nested nodes don't get insane padding amounts but now allows for user decision.  Using -1 will
+    result in original unlimited length.
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
