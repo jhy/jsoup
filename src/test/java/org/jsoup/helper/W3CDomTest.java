@@ -328,7 +328,7 @@ public class W3CDomTest {
         Element jDiv = jdoc.selectFirst("div");
         assertNotNull(jDiv);
         Document doc = w3CDom.fromJsoup(jDiv);
-        Node div = doc.getFirstChild();
+        Node div = w3CDom.contextNode(doc);
 
         assertEquals("div", div.getLocalName());
         assertEquals(jDiv, div.getUserData(W3CDom.SourceProperty));

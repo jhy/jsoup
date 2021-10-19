@@ -12,6 +12,11 @@ jsoup changelog
     useful when elements can only be distinguished by e.g. specific case, or leading whitespace, etc.
     <https://github.com/jhy/jsoup/issues/1636>
 
+  * Improvement: when evaluating an XPath query against a context element, the complete document is now visible to the
+    query, vs only the context element's sub-tree. This enables support for queries outside (parent or sibling) the
+    element, e.g. ancestor-or-self::*.
+    <https://github.com/jhy/jsoup/issues/1652>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>

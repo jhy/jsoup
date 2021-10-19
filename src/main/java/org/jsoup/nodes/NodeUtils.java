@@ -44,7 +44,8 @@ final class NodeUtils {
 
         W3CDom w3c = new W3CDom();
         org.w3c.dom.Document wDoc = w3c.fromJsoup(el);
-        NodeList nodeList = w3c.selectXpath(xpath, wDoc);
+        org.w3c.dom.Node contextNode = w3c.contextNode(wDoc);
+        NodeList nodeList = w3c.selectXpath(xpath, contextNode);
         return w3c.sourceNodes(nodeList, nodeType);
     }
 }

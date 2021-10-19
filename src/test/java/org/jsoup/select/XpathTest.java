@@ -43,13 +43,15 @@ public class XpathTest {
 
         Element div = doc.selectFirst("div");
         assertNotNull(div);
+        Element w3cDiv = div.selectXpath(".").first(); // self
+        assertSame(div, w3cDiv);
 
-        Elements els = div.selectXpath("/div/p");
+        Elements els = div.selectXpath("p");
         assertEquals(1, els.size());
         assertEquals("One", els.get(0).text());
         assertEquals("p", els.get(0).tagName());
 
-        assertEquals(0, div.selectXpath("//body").size());
+        assertEquals(1, div.selectXpath("//body").size()); // the whole document is visible on the div context
         assertEquals(1, doc.selectXpath("//body").size());
     }
 
@@ -144,6 +146,31 @@ public class XpathTest {
         assertEquals(2, hrefs.size());
         assertEquals("/foo", hrefs.get(0));
         assertEquals("/bar", hrefs.get(1));
+    }
+
+    @Test void selectOutsideOfElementTree() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three");
+        Elements ps = doc.selectXpath("//p");
+        assertEquals(3, ps.size());
+
+        Element p1 = ps.get(0);
+        assertEquals("One", p1.text());
+
+        Elements sibs = p1.selectXpath("following-sibling::p");
+        assertEquals(2, sibs.size());
+        assertEquals("Two", sibs.get(0).text());
+        assertEquals("Three", sibs.get(1).text());
+    }
+
+    @Test void selectAncestorsOnContextElement() {
+        // https://github.com/jhy/jsoup/issues/1652
+        Document doc = Jsoup.parse("<div><p>Hello");
+        Element p = doc.selectFirst("p");
+        assertNotNull(p);
+        Elements chain = p.selectXpath("ancestor-or-self::*");
+        assertEquals(4, chain.size());
+        assertEquals("html", chain.get(0).tagName());
+        assertEquals("p", chain.get(3).tagName());
     }
 
     @Test
