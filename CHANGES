@@ -17,6 +17,10 @@ jsoup changelog
     element, e.g. ancestor-or-self::*.
     <https://github.com/jhy/jsoup/issues/1652>
 
+  * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
+    case.
+    <https://github.com/jhy/jsoup/issues/1656>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>

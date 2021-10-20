@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 
@@ -211,7 +212,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * Checks if this attribute name is defined as a boolean attribute in HTML5
      */
     public static boolean isBooleanAttribute(final String key) {
-        return Arrays.binarySearch(booleanAttributes, key) >= 0;
+        return Arrays.binarySearch(booleanAttributes, Normalizer.lowerCase(key)) >= 0;
     }
 
     @Override
