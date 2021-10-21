@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
@@ -428,6 +429,38 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div><p>Hello\nthere</p></div>");
         doc.outputSettings().indentAmount(0);
         assertEquals("<html>\n<head></head>\n<body>\n<div>\n<p>Hello there</p>\n</div>\n</body>\n</html>", doc.html());
+    }
+
+    @Test void testIndentLevel() {
+        // deep to test default and extended max
+        StringBuilder divs = new StringBuilder();
+        for (int i = 0; i < 40; i++) {
+            divs.append("<div>");
+        }
+        divs.append("Foo");
+        Document doc = Jsoup.parse(divs.toString());
+        Document.OutputSettings settings = doc.outputSettings();
+
+        int defaultMax = 30;
+        assertEquals(defaultMax, settings.maxPaddingWidth());
+        String html = doc.html();
+        assertTrue(html.contains("                              <div>\n" +
+            "                              Foo\n" +
+            "                              </div>"));
+
+        settings.maxPaddingWidth(32);
+        assertEquals(32, settings.maxPaddingWidth());
+        html = doc.html();
+        assertTrue(html.contains("                                <div>\n" +
+            "                                Foo\n" +
+            "                                </div>"));
+
+        settings.maxPaddingWidth(-1);
+        assertEquals(-1, settings.maxPaddingWidth());
+        html = doc.html();
+        assertTrue(html.contains("                                         <div>\n" +
+            "                                          Foo\n" +
+            "                                         </div>"));
     }
 
     @Test

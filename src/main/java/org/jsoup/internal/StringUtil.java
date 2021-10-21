@@ -16,11 +16,10 @@ import java.util.regex.Pattern;
  notice.
  */
 public final class StringUtil {
-    // memoised padding up to 21
+    // memoised padding up to 21 (blocks 0 to 20 spaces)
     static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
         "         ", "          ", "           ", "            ", "             ", "              ", "               ",
         "                ", "                 ", "                  ", "                   ", "                    "};
-    private static final int maxPaddingWidth = 30; // so very deeply nested nodes don't get insane padding amounts
 
     /**
      * Join a collection of strings by a separator
@@ -115,17 +114,28 @@ public final class StringUtil {
     }
 
     /**
-     * Returns space padding (up to a max of 30).
+     * Returns space padding (up to the default max of 30). Use {@link #padding(int, int)} to specify a different limit.
      * @param width amount of padding desired
      * @return string of spaces * width
-     */
+     * @see #padding(int, int) 
+      */
     public static String padding(int width) {
-        if (width < 0)
-            throw new IllegalArgumentException("width must be > 0");
+        return padding(width, 30);
+    }
 
+    /**
+     * Returns space padding, up to a max of maxPaddingWidth.
+     * @param width amount of padding desired
+     * @param maxPaddingWidth maximum padding to apply. Set to {@code -1} for unlimited.
+     * @return string of spaces * width
+     */
+    public static String padding(int width, int maxPaddingWidth) {
+        Validate.isTrue(width >= 0, "width must be >= 0");
+        Validate.isTrue(maxPaddingWidth >= -1);
+        if (maxPaddingWidth != -1)
+            width = Math.min(width, maxPaddingWidth);
         if (width < padding.length)
-            return padding[width];
-        width = Math.min(width, maxPaddingWidth);
+            return padding[width];        
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';
