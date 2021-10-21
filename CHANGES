@@ -17,13 +17,13 @@ jsoup changelog
     element, e.g. ancestor-or-self::*.
     <https://github.com/jhy/jsoup/issues/1652>
 
+  * Improvement: allow a maxPaddingWidth on the indent level in OutputSettings when pretty printing. This defaults to
+    30 to limit the indent level for very deeply nested elements, and may be disabled by setting to -1.
+    <https://github.com/jhy/jsoup/pull/1655>
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>
-
-  * Improvement: allow maxPaddingWidth in OutputSettings for pretty printing.  This will continue to default to 30
-    so very deeply nested nodes don't get insane padding amounts but now allows for user decision.  Using -1 will
-    result in original unlimited length.
 
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)

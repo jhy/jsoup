@@ -114,29 +114,28 @@ public final class StringUtil {
     }
 
     /**
-     * Returns space padding (up to a max of 30).  Use {@link #padding(int, int)} if you need
-     * more than 30 spaces padded.
+     * Returns space padding (up to the default max of 30). Use {@link #padding(int, int)} to specify a different limit.
      * @param width amount of padding desired
      * @return string of spaces * width
+     * @see #padding(int, int) 
       */
     public static String padding(int width) {
         return padding(width, 30);
     }
 
     /**
-     * Returns space padding (up to a max of maxPaddingWidth - default 30).
+     * Returns space padding, up to a max of maxPaddingWidth.
      * @param width amount of padding desired
-     * @param maxPaddingWidth amount of max space padding with default set at 30 and -1 means no max.
+     * @param maxPaddingWidth maximum padding to apply. Set to {@code -1} for unlimited.
      * @return string of spaces * width
      */
     public static String padding(int width, int maxPaddingWidth) {
-        if (width < 0)
-            throw new IllegalArgumentException("width must be > 0");
-
-        if (width < padding.length)
-            return padding[width];
+        Validate.isTrue(width >= 0, "width must be >= 0");
+        Validate.isTrue(maxPaddingWidth >= -1);
         if (maxPaddingWidth != -1)
             width = Math.min(width, maxPaddingWidth);
+        if (width < padding.length)
+            return padding[width];        
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';
