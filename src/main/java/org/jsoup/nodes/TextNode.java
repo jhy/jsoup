@@ -89,8 +89,15 @@ public class TextNode extends LeafNode {
         if (parentIndent && StringUtil.startsWithNewline(coreValue()) && blank) // we are skippable whitespace
             return;
 
-        if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size()>0 && !blank) ))
-            indent(accum, depth, out);
+        if (prettyPrint && ((siblingIndex() == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && !siblingNodes().isEmpty() && !blank) )) {
+            String normalized = StringUtil.normaliseWhitespace(coreValue());
+            boolean startsWithSpace = normalized.startsWith(" ");
+            if (startsWithSpace) {
+                indent(accum, depth, out, 1);
+            } else {
+                indent(accum, depth, out);
+            }
+        }
 
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
         final boolean stripWhite = prettyPrint && parentNode instanceof Document;

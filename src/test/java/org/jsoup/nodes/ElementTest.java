@@ -499,7 +499,7 @@ public class ElementTest {
         Document document = Jsoup.parse(html);
         document.outputSettings().outline(true);
 
-        assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n &nbsp;p.m.\n</div>", document.body().html());
+        assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n&nbsp;p.m.\n</div>", document.body().html());
     }
 
     @Test

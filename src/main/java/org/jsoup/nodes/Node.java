@@ -696,6 +696,10 @@ public abstract class Node implements Cloneable {
         return outerHtml();
     }
 
+    protected void indent(Appendable accum, int depth, Document.OutputSettings out, int lessSpace) throws IOException {
+        accum.append('\n').append(StringUtil.padding((depth * out.indentAmount()) - lessSpace, out.maxPaddingWidth()));
+    }
+
     protected void indent(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum.append('\n').append(StringUtil.padding(depth * out.indentAmount(), out.maxPaddingWidth()));
     }
