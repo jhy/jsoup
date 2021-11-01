@@ -135,7 +135,7 @@ public final class StringUtil {
         if (maxPaddingWidth != -1)
             width = Math.min(width, maxPaddingWidth);
         if (width < padding.length)
-            return padding[width];        
+            return padding[width];
         char[] out = new char[width];
         for (int i = 0; i < width; i++)
             out[i] = ' ';
