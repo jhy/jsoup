@@ -21,7 +21,8 @@ public class CommentTest {
 
     @Test
     public void testToString() {
-        assertEquals("<!-- This is one heck of a comment! -->", comment.toString());
+        // Tests under toString are pretty printed with first being simulated license header (no content), respect new line
+        assertEquals("<!-- This is one heck of a comment! -->\n", comment.toString());
 
         Document doc = Jsoup.parse("<div><!-- comment--></div>");
         assertEquals("<div>\n <!-- comment-->\n</div>", doc.body().html());
