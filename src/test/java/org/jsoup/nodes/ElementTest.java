@@ -2099,4 +2099,21 @@ public class ElementTest {
         p.removeAttr("foo");
         assertEquals(0, p.attributesSize());
     }
+
+    @Test void parseFromHtmlOneElementSuccess() {
+        Element e = Element.parse("<div><text>test</text></div>");
+        assertEquals(e.tagName(), "div");
+        assertEquals(e.child(0).tagName(), "text");
+        assertEquals(e.child(0).text(), "test");
+    }
+
+    @Test void parseFromHtmlMultiElementsError() {
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> Element.parse("<li>item1</li><li>item2</li>"));
+        assertEquals("Element syntax error: Number of outer element must be one", exception.getMessage());
+    }
+
+    @Test void parseFromHtmlNoElementError() {
+        Throwable exception = assertThrows(IllegalArgumentException.class, () -> Element.parse(""));
+        assertEquals("Element syntax error: No legal element detected", exception.getMessage());
+    }
 }
