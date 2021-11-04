@@ -729,7 +729,7 @@ public class ElementTest {
 
     @Test
     public void testWrapOnOrphan() {
-        Element orphan = new Element("span").text("Hello!");
+        Element orphan = Element.parse("<span>Hello!</span>");
         assertFalse(orphan.hasParent());
         Element wrapped = orphan.wrap("<div></div> There!");
         assertSame(orphan, wrapped);
@@ -1445,8 +1445,8 @@ public class ElementTest {
         assertEquals(2, els.size()); // the two Ps
         assertEquals(3, nodes.size()); // the "Three" textnode
 
-        Element p3 = new Element("p").text("P3");
-        Element p4 = new Element("p").text("P4");
+        Element p3 = Element.parse("<p>P3</p>");
+        Element p4 = Element.parse("<p>P4</p>");
         div.insertChildren(1, p3);
         div.insertChildren(3, p4);
         Elements els2 = div.children();
@@ -1839,8 +1839,8 @@ public class ElementTest {
     public void testReparentSeperateNodes() {
         String html = "<div><p>One<p>Two";
         Document doc = Jsoup.parse(html);
-        Element new1 = new Element("p").text("Three");
-        Element new2 = new Element("p").text("Four");
+        Element new1 = Element.parse("<p>Three</p>");
+        Element new2 = Element.parse("<p>Four</p>");
 
         doc.body().insertChildren(-1, new1, new2);
         assertEquals("<div><p>One</p><p>Two</p></div><p>Three</p><p>Four</p>", TextUtil.stripNewlines(doc.body().html()));
@@ -1863,14 +1863,14 @@ public class ElementTest {
         String html = "<div>";
         Document doc = Jsoup.parse(html);
         Element div = doc.selectFirst("div");
-        Element new1 = new Element("p").text("One");
-        Element new2 = new Element("p").text("Two");
+        Element new1 = Element.parse("<p>One</p>");
+        Element new2 = Element.parse("<p>Two</p>");
         div.addChildren(new1, new2);
 
         assertEquals("<div><p>One</p><p>Two</p></div>", TextUtil.stripNewlines(div.outerHtml()));
 
         // and the issue setup:
-        Element new3 = new Element("p").text("Three");
+        Element new3 = Element.parse("<p>Three</p>");
         Element wrap = new Element("nav");
         wrap.addChildren(0, new1, new3);
 

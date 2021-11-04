@@ -111,7 +111,9 @@ public class Element extends Node {
         if (dummyElement.childNodeSize() == 0) {
             throw new IllegalArgumentException("Element syntax error: No legal element detected");
         }
-        return dummyElement.child(0);
+        Element e = dummyElement.child(0);
+        e.parentNode = null;
+        return e;
     }
 
     /**
