@@ -81,10 +81,10 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
 
         int read;
-        int remaining = max;
+        int remaining = bufferSize;
 
         while (true) {
-            read = read(readBuffer);
+            read = read(readBuffer, 0, remaining);
             if (read == -1) break;
             if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
                 if (read >= remaining) {

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import static org.jsoup.integration.ParseTest.getFile;
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,6 +129,21 @@ public class DataUtilTest {
         Document doc = DataUtil.parseInputStream(stream(html, "iso-8859-1"), null, "http://example.com", Parser.htmlParser());
 
         assertEquals("Übergrößenträger", doc.body().text());
+    }
+
+    @Test
+    public void parseSequenceInputStream() throws IOException {
+        File in = getFile("/htmltests/medium.html");
+        String fileContent = new String(Files.readAllBytes(in.toPath()));
+        int halfLength = fileContent.length() / 2;
+        String firstPart = fileContent.substring(0, halfLength);
+        String secondPart = fileContent.substring(halfLength);
+        SequenceInputStream sequenceStream = new SequenceInputStream(
+                stream(firstPart),
+                stream(secondPart)
+        );
+        Document doc = DataUtil.parseInputStream(sequenceStream, null, "", Parser.htmlParser());
+        assertEquals(fileContent, doc.outerHtml());
     }
 
     @Test
