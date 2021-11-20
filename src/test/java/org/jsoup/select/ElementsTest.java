@@ -3,10 +3,11 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.*;
+import org.jsoup.parser.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-
+import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -159,12 +160,38 @@ public class ElementsTest {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").before("<span>foo</span>");
         assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        
+        Document doc2 = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        List<Node> nodeList = Parser.parseXmlFragment("<span>boo</span>", "uri");
+        doc2.select("a").before(nodeList.get(0));
+        assertEquals("<p>This <span>boo</span><a>is</a> <span>boo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc2.body().html()));
+        
     }
 
     @Test public void after() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");
         assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
+
+        Document doc2 = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        List<Node> nodeList = Parser.parseXmlFragment("<span>boo</span>", "uri");
+        doc2.select("a").after(nodeList.get(0));
+        assertEquals("<p>This <a>is</a><span>boo</span> <a>jsoup</a><span>boo</span>.</p>", TextUtil.stripNewlines(doc2.body().html()));
+    }
+
+    @Test public void append() {
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        List<Node> nodeList = Parser.parseXmlFragment("<span>boo</span>", "uri");
+        doc.select("a").append(nodeList.get(0));
+        assertEquals("<p>This <a>is<span>boo</span></a> <a>jsoup<span>boo</span></a>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        List<Node> emptyNodeList = new ArrayList<Node>();
+    }
+
+    @Test public void prepend() {
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
+        List<Node> nodeList = Parser.parseXmlFragment("<span>boo</span>", "uri");
+        doc.select("a").prepend(nodeList.get(0));
+        assertEquals("<p>This <a><span>boo</span>is</a> <a><span>boo</span>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void wrap() {
@@ -426,4 +453,6 @@ public class ElementsTest {
         assertEquals("http://example.com/bar", absAttrs.get(1));
         assertEquals("http://example.com", absAttrs.get(2));
     }
+
+
 }
