@@ -21,6 +21,8 @@ public class ReproduceTest {
         Document doc = Jsoup.parse(input, "UTF-8", "");
 
         Element rv = doc.select("body").get(0).children().get(0);
+        assertEquals("testU00003Ah1", rv.tag().unicodeName());
         assertEquals("test:h1", rv.tagName());
+
     }
 }

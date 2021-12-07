@@ -16,6 +16,7 @@ public class Tag implements Cloneable {
 
     private String tagName;
     private String normalName; // always the lower case version of this tag, regardless of case preservation mode
+    private String unicodeName; // always the converted version of this tag with symbols in Uni-16 and original letters, regardless of case preservation mode
     private boolean isBlock = true; // block
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean empty = false; // can hold nothing; e.g. img
@@ -27,6 +28,7 @@ public class Tag implements Cloneable {
     private Tag(String tagName) {
         this.tagName = tagName;
         normalName = Normalizer.lowerCase(tagName);
+        unicodeName = convertSymbol(tagName);
     }
 
     /**
@@ -47,21 +49,40 @@ public class Tag implements Cloneable {
     }
 
     /**
+     * Get this tag's name whose symbols are converted to Unicode.
+     * @return the tag's converted name.
+     */
+    public String unicodeName() {
+        return unicodeName;
+    }
+
+    /**
      * Get the tag name whose symbols are converted to Unicodes.
+     *
+     * @param tagName Name of tag, e.g. "p". Case insensitive.
      * @return the tag's converted name.
      */
     public String convertSymbol(String tagName) {
         String convertName = "";
         for(int i = 0; i < tagName.length(); i++){
-            char curr = tagName.charAt(i);
+            char c = tagName.charAt(i);
+
+            boolean isDigit = Character.isDigit(c);
+            boolean isLowerLetter = Character.isLowerCase(c);
+            boolean isUpperLetter = Character.isUpperCase(c);
+
+            // check whether the char is a digit or letter
+            if(!(isDigit | isLowerLetter | isUpperLetter)){
+                // convert the symbol to Unicode `U00` + unicode
+                int uni16 = (int) c;
 
 
-            // TODO: check whether the char is symbol
 
-
-            // TODO: convert the symbol to Unicode `U00` + unicode
-
-            convertName += curr;
+                convertName += "U";
+                convertName += Integer.toHexString(uni16 | 0x000000);
+            }else{
+                convertName += c;
+            }
         }
 
         return convertName;
