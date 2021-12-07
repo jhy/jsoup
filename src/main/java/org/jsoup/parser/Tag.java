@@ -75,11 +75,19 @@ public class Tag implements Cloneable {
             if(!(isDigit | isLowerLetter | isUpperLetter)){
                 // convert the symbol to Unicode `U00` + unicode
                 int uni16 = (int) c;
+                String hexString = Integer.toHexString(uni16);
 
-
-
+                // Reference: https://stackoverflow.com/questions/8689526/integer-to-two-digits-hex-in-java
                 convertName += "U";
-                convertName += Integer.toHexString(uni16 | 0x000000);
+
+                if(hexString.length() < 6){
+                    for(int idx = 0; idx < (6 - hexString.length()); idx++){
+                        convertName += "0";
+                    }
+                }
+
+                convertName += hexString.toUpperCase();
+
             }else{
                 convertName += c;
             }

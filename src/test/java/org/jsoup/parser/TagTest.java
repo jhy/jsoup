@@ -1,8 +1,12 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,5 +84,29 @@ public class TagTest {
     @Test public void knownTags() {
         assertTrue(Tag.isKnownTag("div"));
         assertFalse(Tag.isKnownTag("explain"));
+    }
+
+    // Test the tag containing symbols like `:`
+    // Issue #1341
+    // https://github.com/jhy/jsoup/issues/1341
+    @Test public void handleSymbolTags() {
+        String h = "<!doctype html>\n" +
+                "<html lang=\"de\">\n" +
+                "    <head>\n" +
+                "\n" +
+                "    </head>\n" +
+                "    <body>\n" +
+                "\t<test:h1>UnboundPrefix</test:h1>\n" +
+                "\t<svg width=\"180\" height=\"180\" xlink:href=\"UnboundPrefix\">\n" +
+                "        \t<rect x=\"20\" y=\"20\" rx=\"20\" ry=\"20\" width=\"100\" height=\"100\" style=\"fill:lightgray; stroke:#1c87c9; stroke-width:4;\"/>\n" +
+                "      \t</svg>\n" +
+                "    </body>\n" +
+                "</html>\n";
+
+        Document doc = Jsoup.parse(h);
+
+        Element rv = doc.select("body").get(0).children().get(0);
+        assertEquals("testU00003Ah1", rv.tag().unicodeName());
+        assertEquals("test:h1", rv.tagName());
     }
 }
