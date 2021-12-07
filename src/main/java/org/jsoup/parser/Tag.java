@@ -47,6 +47,28 @@ public class Tag implements Cloneable {
     }
 
     /**
+     * Get the tag name whose symbols are converted to Unicodes.
+     * @return the tag's converted name.
+     */
+    public String convertSymbol(String tagName) {
+        String convertName = "";
+        for(int i = 0; i < tagName.length(); i++){
+            char curr = tagName.charAt(i);
+
+
+            // TODO: check whether the char is symbol
+
+
+            // TODO: convert the symbol to Unicode `U00` + unicode
+
+            convertName += curr;
+        }
+
+        return convertName;
+    }
+
+
+    /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
      * <p>
      * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
