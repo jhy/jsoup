@@ -24,6 +24,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     };
 
     private String key;
+    private String convertedKey; // the converted version of the key with symbols in Uni-16 and original letters
     @Nullable private String val;
     @Nullable Attributes parent; // used to update the holding Attributes when the key / value is changed via this interface
 
@@ -48,8 +49,50 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         key = key.trim();
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         this.key = key;
+        this.convertedKey = convertSymbol(key);
         this.val = val;
         this.parent = parent;
+    }
+
+    /**
+     * Convert the unencoded (raw) key that contains unrecognized symbols to Unicode 16 following
+     * HTML Living Standard https://html.spec.whatwg.org/#coercing-an-html-dom-into-an-infoset.
+     *
+     * @param key attribute key; case is preserved.
+     * @return the converted key.
+     */
+    public String convertSymbol(String key) {
+        String convertedKey = "";
+        for(int i = 0; i < key.length(); i++){
+            char c = key.charAt(i);
+
+            boolean isDigit = Character.isDigit(c);
+            boolean isLowerLetter = Character.isLowerCase(c);
+            boolean isUpperLetter = Character.isUpperCase(c);
+
+            // check whether the char is a digit or letter
+            if(!(isDigit | isLowerLetter | isUpperLetter)){
+                // convert the symbol to Unicode `U00` + unicode
+                int uni16 = (int) c;
+                String hexString = Integer.toHexString(uni16);
+
+                // Reference: https://stackoverflow.com/questions/8689526/integer-to-two-digits-hex-in-java
+                convertedKey += "U";
+
+                if(hexString.length() < 6){
+                    for(int idx = 0; idx < (6 - hexString.length()); idx++){
+                        convertedKey += "0";
+                    }
+                }
+
+                convertedKey += hexString.toUpperCase();
+
+            }else{
+                convertedKey += c;
+            }
+        }
+
+        return convertedKey;
     }
 
     /**
@@ -58,6 +101,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      */
     public String getKey() {
         return key;
+    }
+
+    /**
+     Get the attribute converted key.
+     @return the attribute converted key
+     */
+    public String getConvertedKey() {
+        return convertedKey;
     }
 
     /**

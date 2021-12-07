@@ -118,6 +118,9 @@ public class AttributeParseTest {
 
         Element rv = doc.select("body").get(0).children().get(1);
 
+        assertEquals("xlinkU00003Ahref", rv.attributes().asList().get(2).getConvertedKey());
+
+        assertEquals("UnboundPrefix", rv.attributes().asList().get(2).getValue());
         assertEquals("UnboundPrefix", rv.attributes().get("xlink:href"));
     }
 }

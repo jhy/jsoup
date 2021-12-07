@@ -57,9 +57,10 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Get the tag name whose symbols are converted to Unicodes.
+     * Get the tag name whose symbols are converted to Unicode 16 following
+     * HTML Living Standard https://html.spec.whatwg.org/#coercing-an-html-dom-into-an-infoset.
      *
-     * @param tagName Name of tag, e.g. "p". Case insensitive.
+     * @param tagName Name of tag, e.g. "p", case is preserved.
      * @return the tag's converted name.
      */
     public String convertSymbol(String tagName) {
