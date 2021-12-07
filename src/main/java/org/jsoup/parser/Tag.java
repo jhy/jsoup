@@ -74,7 +74,7 @@ public class Tag implements Cloneable {
 
             // check whether the char is a digit or letter
             if(!(isDigit | isLowerLetter | isUpperLetter)){
-                // convert the symbol to Unicode `U00` + unicode
+                // convert the symbol to Unicode `U` + unicode with 6 hex chars
                 int uni16 = (int) c;
                 String hexString = Integer.toHexString(uni16);
 
