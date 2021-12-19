@@ -29,6 +29,9 @@ jsoup changelog
     in missed content.
     <https://github.com/jhy/jsoup/pull/1671>
 
+  * Bugfix: a comment with all dashes (<!----->) should not emit a parse error.
+    <https://github.com/jhy/jsoup/issues/1667>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>

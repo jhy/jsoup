@@ -102,6 +102,17 @@ public class HtmlParserTest {
         assertEquals(" <tr><td>", comment.getData());
     }
 
+    @Test void allDashCommentsAreNotParseErrors() {
+        // https://github.com/jhy/jsoup/issues/1667
+        // <!-----> is not a parse error
+        String html = "<!------>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        Comment comment = (Comment) doc.childNode(0);
+        assertEquals("--", comment.getData());
+        assertEquals(0, parser.getErrors().size());
+    }
+
     @Test public void dropsUnterminatedTag() {
         // jsoup used to parse this to <p>, but whatwg, webkit will drop.
         String h1 = "<p";
