@@ -133,6 +133,7 @@ public class DataUtilTest {
 
     @Test
     public void parseSequenceInputStream() throws IOException {
+        // https://github.com/jhy/jsoup/pull/1671
         File in = getFile("/htmltests/medium.html");
         String fileContent = new String(Files.readAllBytes(in.toPath()));
         int halfLength = fileContent.length() / 2;

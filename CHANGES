@@ -25,6 +25,10 @@ jsoup changelog
     case.
     <https://github.com/jhy/jsoup/issues/1656>
 
+  * Bugfix: when reading from SequenceInputStreams across the buffer, the input stream was closed too early, resulting
+    in missed content.
+    <https://github.com/jhy/jsoup/pull/1671>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
