@@ -78,7 +78,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         return true;
     }
 
-    private void insertNode(Node node) {
+    protected void insertNode(Node node) {
         currentElement().appendChild(node);
     }
 
@@ -129,7 +129,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      *
      * @param endTag tag to close
      */
-    private void popStackToClose(Token.EndTag endTag) {
+    protected void popStackToClose(Token.EndTag endTag) {
         // like in HtmlTreeBuilder - don't scan up forever for very (artificially) deeply nested stacks
         String elName = settings.normalizeTag(endTag.tagName);
         Element firstFound = null;
