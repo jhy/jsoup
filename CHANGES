@@ -25,6 +25,10 @@ jsoup changelog
     case.
     <https://github.com/jhy/jsoup/issues/1656>
 
+  * Bugfix: when reading from SequenceInputStreams across the buffer, the input stream was closed too early, resulting
+    in missed content.
+    <https://github.com/jhy/jsoup/pull/1671>
+
   * Bugfix: a comment with all dashes (<!----->) should not emit a parse error.
     <https://github.com/jhy/jsoup/issues/1667>
 
