@@ -466,11 +466,17 @@ public class HtmlTreeBuilder extends TreeBuilder {
         queue.set(i, in);
     }
 
-    void resetInsertionMode() {
+    /**
+     * Reset the insertion mode, by searching up the stack for an appropriate insertion mode. The stack search depth
+     * is limited to {@link #maxQueueDepth}.
+     * @return true if the insertion mode was actually changed.
+     */
+    boolean resetInsertionMode() {
         // https://html.spec.whatwg.org/multipage/parsing.html#the-insertion-mode
         boolean last = false;
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
+        final HtmlTreeBuilderState origState = this.state;
 
         if (stack.size() == 0) { // nothing left of stack, just get to body
             transition(HtmlTreeBuilderState.InBody);
@@ -539,6 +545,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 break;
             }
         }
+        return state != origState;
     }
 
     // todo: tidy up in specific scope methods

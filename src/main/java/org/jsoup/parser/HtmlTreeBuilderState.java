@@ -997,8 +997,7 @@ enum HtmlTreeBuilderState {
                         return false;
                     } else {
                         tb.popStackToClose(name);
-                        tb.resetInsertionMode();
-                        if (tb.state() == InTable) {
+                        if (!tb.resetInsertionMode()) {
                             // not per spec - but haven't transitioned out of table. so try something else
                             tb.insert(startTag);
                             return true;

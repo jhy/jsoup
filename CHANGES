@@ -40,6 +40,10 @@ jsoup changelog
     elements with many attributes.
     <https://github.com/jhy/jsoup/issues/1695>
 
+  * Bugfix [Fuzz]: during parsing, a StackOverflowException was possible given crafted HTML with hundreds of nested
+    table elements followed by invalid formatting elements.
+    <https://github.com/jhy/jsoup/issues/1697>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
