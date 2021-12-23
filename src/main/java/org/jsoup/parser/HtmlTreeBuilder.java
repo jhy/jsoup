@@ -724,7 +724,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void checkActiveFormattingElements(Element in){
         int numSeen = 0;
-        for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
+        final int size = formattingElements.size() -1;
+        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
+
+        for (int pos = size; pos >= ceil; pos--) {
             Element el = formattingElements.get(pos);
             if (el == null) // marker
                 break;

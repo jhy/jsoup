@@ -271,9 +271,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             return;
         checkCapacity(size + incoming.size);
 
+        boolean needsPut = size != 0; // if this set is empty, no need to check existing set, so can add() vs put()
+        // (and save bashing on the indexOfKey()
         for (Attribute attr : incoming) {
-            // todo - should this be case insensitive?
-            put(attr);
+            if (needsPut)
+                put(attr);
+            else
+                add(attr.getKey(), attr.getValue());
         }
     }
 

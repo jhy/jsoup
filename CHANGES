@@ -36,6 +36,10 @@ jsoup changelog
     that could throw an IllegalFormatException.
     <https://github.com/jhy/jsoup/issues/1691>
 
+  * Bugfix [Fuzz]: speed improvement when parsing constructed HTML containing very deeply incorrectly stacked formatting
+    elements with many attributes.
+    <https://github.com/jhy/jsoup/issues/1695>
+
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)
     <https://github.com/jhy/jsoup/pull/1629>
