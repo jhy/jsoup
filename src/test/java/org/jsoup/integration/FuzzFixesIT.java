@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class FuzzFixesIT {
     static int numIters = 50;
-    static int timeout = 20; // external fuzzer is set to 60 for 100 runs
+    static int timeout = 30; // external fuzzer is set to 60 for 100 runs
     static File testDir = ParseTest.getFile("/fuzztests/");
 
     private static Stream<File> testFiles() {
