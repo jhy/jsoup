@@ -508,9 +508,7 @@ public class Element extends Node {
     }
 
     /**
-     <b>Beta:</b> find Elements that match the supplied XPath expression.
-     <p>(This functionality is currently in beta and is subject to change. Feedback on the API is requested and
-     welcomed!)</p>
+     Find Elements that match the supplied XPath expression.
      <p>By default, XPath 1.0 expressions are supported. If you would to use XPath 2.0 or higher, you can provide an
      alternate XPathFactory implementation:</p>
      <ol>
@@ -530,7 +528,7 @@ public class Element extends Node {
     }
 
     /**
-     <b>Beta:</b> find Nodes that match the supplied XPath expression.
+     Find Nodes that match the supplied XPath expression.
      <p>For example, to select TextNodes under {@code p} elements: </p>
      <pre>List&lt;TextNode&gt; textNodes = doc.selectXpath("//body//p//text()", TextNode.class);</pre>
      <p>Note that in the jsoup DOM, Attribute objects are not Nodes. To directly select attribute values, do something
