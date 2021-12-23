@@ -415,8 +415,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             throw new RuntimeException(e);
         }
         clone.size = size;
-        keys = Arrays.copyOf(keys, size);
-        vals = Arrays.copyOf(vals, size);
+        clone.keys = Arrays.copyOf(keys, size);
+        clone.vals = Arrays.copyOf(vals, size);
         return clone;
     }
 

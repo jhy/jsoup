@@ -758,6 +758,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void reconstructFormattingElements() {
+        if (stack.size() > maxQueueDepth)
+            return;
         Element last = lastFormattingElement();
         if (last == null || onStack(last))
             return;
@@ -783,10 +785,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = insertStartTag(entry.normalName()); // todo: avoid fostering here?
-            // newEl.namespace(entry.namespace()); // todo: namespaces
-            if (entry.attributesSize() > 0)
-                newEl.attributes().addAll(entry.attributes());
+            Element newEl = new Element(tagFor(entry.normalName(), settings), null, entry.attributes().clone());
+            insert(newEl);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);

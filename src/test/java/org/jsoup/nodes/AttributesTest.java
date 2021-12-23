@@ -301,4 +301,21 @@ public class AttributesTest {
         assertEquals(four, four.clone());
         assertNotEquals(one, four);
     }
+
+    @Test void cloneAttributes() {
+        Attributes one = new Attributes()
+            .add("Key1", "Val1")
+            .add("Key2", "Val2")
+            .add("Key3", null);
+        Attributes two = one.clone();
+        assertEquals(3, two.size());
+        assertEquals("Val2", two.get("Key2"));
+        assertEquals(one, two);
+
+        two.add("Key4", "Val4");
+        assertEquals(4, two.size());
+        assertEquals(3, one.size());
+        assertNotEquals(one, two);
+
+    }
 }
