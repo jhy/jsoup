@@ -296,6 +296,20 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
+    /**
+     * Returns the fragment identifier of the url.
+     *
+     * It is called reference in {@code java.net.URL} class ({@code URL::getRef}).
+     *
+     * @param url the url string
+     * @return the url fragment part or empty string if the url contains no fragment
+     */
+    static String getUrlFragment(String url) {
+        int index = url.indexOf('#');
+        if (index < 0) return "";
+        return url.substring(index + 1);
+    }
+
     private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
         @SuppressWarnings("UnnecessaryLocalVariable") final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
         buffer.mark();

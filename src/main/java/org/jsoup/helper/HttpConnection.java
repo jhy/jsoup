@@ -70,6 +70,7 @@ public class HttpConnection implements Connection {
     private static final String DefaultUploadType = "application/octet-stream";
     private static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, not in Android API 10.
     private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+    private static String urlFragment = "";
 
     /**
      Create a new Connection, with the request URL specified.
@@ -78,6 +79,7 @@ public class HttpConnection implements Connection {
      */
     public static Connection connect(String url) {
         Connection con = new HttpConnection();
+        urlFragment = DataUtil.getUrlFragment(url);
         con.url(url);
         return con;
     }
@@ -89,6 +91,7 @@ public class HttpConnection implements Connection {
      */
     public static Connection connect(URL url) {
         Connection con = new HttpConnection();
+        urlFragment = url.getRef();
         con.url(url);
         return con;
     }
@@ -960,6 +963,7 @@ public class HttpConnection implements Connection {
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
             Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
+            doc.urlFragment(urlFragment);
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             inputStreamRead = true;

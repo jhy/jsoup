@@ -28,6 +28,7 @@ public class Document extends Element {
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
     private boolean updateMetaCharset = false;
+    private String urlFragment = "";
 
     /**
      Create a new, empty Document.
@@ -393,7 +394,14 @@ public class Document extends Element {
             }
         }
     }
-    
+
+    public void urlFragment(String fragmentId) {
+        this.urlFragment = fragmentId;
+    }
+
+    public String urlFragment() {
+        return urlFragment;
+    }
 
     /**
      * A Document's output settings control the form of the text() and html() methods.

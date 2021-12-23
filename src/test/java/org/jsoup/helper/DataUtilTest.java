@@ -4,13 +4,19 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.jsoup.integration.ParseTest.getFile;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DataUtilTest {
     @Test
@@ -231,5 +237,27 @@ public class DataUtilTest {
         Document doc = Jsoup.parse(in, null);
         assertEquals("This is not gzipped", doc.title());
         assertEquals("And should still be readable.", doc.selectFirst("p").text());
+    }
+
+    @ParameterizedTest
+    @MethodSource("urlProvider")
+    public void getUrlFragment(String url, String expectedFragment) {
+        String fragment = DataUtil.getUrlFragment(url);
+        assertEquals(expectedFragment, fragment);
+    }
+
+    private static List<Arguments> urlProvider() {
+        return Arrays.asList(
+                arguments("", ""),
+                arguments("#", ""),
+                arguments("##", "#"),
+                arguments("a#", ""),
+                arguments("#a", "a"),
+                arguments("a#b", "b"),
+                arguments("abc", ""),
+                arguments("a#bc", "bc"),
+                arguments("a#b#", "b#"),
+                arguments("a#b#c", "b#c")
+        );
     }
 }
