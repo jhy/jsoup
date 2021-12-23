@@ -164,6 +164,10 @@ public class Selector {
     }
 
     public static class SelectorParseException extends IllegalStateException {
+        public SelectorParseException(String msg) {
+            super(msg);
+        }
+
         public SelectorParseException(String msg, Object... params) {
             super(String.format(msg, params));
         }

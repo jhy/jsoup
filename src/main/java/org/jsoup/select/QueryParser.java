@@ -130,7 +130,7 @@ public class QueryParser {
                 currentEval = or;
                 break;
             default:
-                throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
+                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
 
         if (replaceRightMost)
