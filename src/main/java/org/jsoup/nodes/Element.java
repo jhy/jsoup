@@ -86,6 +86,36 @@ public class Element extends Node {
         this(tag, baseUri, null);
     }
 
+    private Element() {
+        this("-");
+    }
+
+    /**
+     * Parse HTML String into an Element
+     * <p>
+     * Use examples:
+     * <ul>
+     *     <li><code>Element e = Element.parse("<div></div>");</code></li>
+     *     <li><code>Element e = Element.parse("<div><span>Some stuff</span><span>Second part</span></div>");</code></li>
+     *     <li><code>Element e = Element.parse("<ul><li>item1</li><li>item2</li></ul>");</code></li>
+     * </ul>
+     * </p>
+     * @param html  HTML to parse
+     * @return an Element
+     */
+    public static Element parse(String html) {
+        Element dummyElement = new Element().html(html);
+        if (dummyElement.childNodeSize() > 1) {
+            throw new IllegalArgumentException("Element syntax error: Number of outer element must be one");
+        }
+        if (dummyElement.childNodeSize() == 0) {
+            throw new IllegalArgumentException("Element syntax error: No legal element detected");
+        }
+        Element e = dummyElement.child(0);
+        e.parentNode = null;
+        return e;
+    }
+
     /**
      Internal test to check if a nodelist object has been created.
      */
