@@ -1048,4 +1048,9 @@ public class SelectorTest {
         assertEquals(0, e.size());
         assertNotEquals(a, e);
     }
+
+    @Test public void selectorExceptionNotStringFormatException() {
+        Selector.SelectorParseException ex = new Selector.SelectorParseException("%&");
+        assertEquals("%&", ex.getMessage());
+    }
 }
