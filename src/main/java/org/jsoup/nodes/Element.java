@@ -47,7 +47,7 @@ public class Element extends Node {
     private Tag tag;
     private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
-    private @Nullable Attributes attributes; // field is nullable but all methods for attributes are non null
+    protected @Nullable Attributes attributes; // field is nullable but all methods for attributes are non null
 
     /**
      * Create a new, standalone element.

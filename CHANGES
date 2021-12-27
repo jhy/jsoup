@@ -21,6 +21,10 @@ jsoup changelog
     30 to limit the indent level for very deeply nested elements, and may be disabled by setting to -1.
     <https://github.com/jhy/jsoup/pull/1655>
 
+  * Improvement: when cloning a Node or an Element, the clone gets a cloned OwnerDocument containing only that clone, so
+    as to preserve applicable settings, such as the Pretty Print settings.
+    <https://github.com/jhy/jsoup/issues/763>
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>

@@ -866,7 +866,10 @@ public class ElementTest {
         Element p = doc.select("p").get(1);
         Element clone = p.clone();
 
-        assertNull(clone.parent()); // should be orphaned
+        assertNotNull(clone.parentNode); // should be a cloned document just containing this clone
+        assertEquals(1, clone.parentNode.childNodeSize());
+        assertSame(clone.ownerDocument(), clone.parentNode);
+
         assertEquals(0, clone.siblingIndex);
         assertEquals(1, p.siblingIndex);
         assertNotNull(p.parent());
@@ -2098,5 +2101,29 @@ public class ElementTest {
 
         p.removeAttr("foo");
         assertEquals(0, p.attributesSize());
+    }
+
+    @Test void clonedElementsHaveOwnerDocsAndIndependentSettings() {
+        // https://github.com/jhy/jsoup/issues/763
+        Document doc = Jsoup.parse("<div>Text</div><div>Two</div>");
+        doc.outputSettings().prettyPrint(false);
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        Node text = div.childNode(0);
+        assertNotNull(text);
+
+        Element divClone = div.clone();
+        Document docClone = divClone.ownerDocument();
+        assertNotNull(docClone);
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertNotSame(doc, docClone);
+        assertSame(docClone, divClone.childNode(0).ownerDocument());
+        // the cloned text has same owner doc as the cloned div
+
+        doc.outputSettings().prettyPrint(true);
+        assertTrue(doc.outputSettings().prettyPrint());
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertEquals(1, docClone.children().size()); // check did not get the second div as the owner's children
+        assertEquals(divClone, docClone.child(0)); // note not the head or the body -- not normalized
     }
 }

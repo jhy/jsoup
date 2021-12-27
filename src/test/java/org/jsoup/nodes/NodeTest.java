@@ -332,4 +332,26 @@ public class NodeTest {
         attributes.put("value", "bar");
         return attributes;
     }
+
+    @Test void clonedNodesHaveOwnerDocsAndIndependentSettings() {
+        // https://github.com/jhy/jsoup/issues/763
+        Document doc = Jsoup.parse("<div>Text</div><div>Two</div>");
+        doc.outputSettings().prettyPrint(false);
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        TextNode text = (TextNode) div.childNode(0);
+        assertNotNull(text);
+
+        TextNode textClone = text.clone();
+        Document docClone = textClone.ownerDocument();
+        assertNotNull(docClone);
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertNotSame(doc, docClone);
+
+        doc.outputSettings().prettyPrint(true);
+        assertTrue(doc.outputSettings().prettyPrint());
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertEquals(1, docClone.childNodes().size()); // check did not get the second div as the owner's children
+        assertEquals(textClone, docClone.childNode(0)); // note not the head or the body -- not normalized
+    }
 }

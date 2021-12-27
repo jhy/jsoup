@@ -781,6 +781,15 @@ public abstract class Node implements Cloneable {
 
         clone.parentNode = parent; // can be null, to create an orphan split
         clone.siblingIndex = parent == null ? 0 : siblingIndex;
+        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Document docClone = doc.shallowClone();
+                clone.parentNode = docClone;
+                docClone.ensureChildNodes().add(clone);
+            }
+        }
 
         return clone;
     }
