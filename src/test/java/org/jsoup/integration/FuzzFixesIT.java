@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- Tests fixes for issues raised by the OSS Fuzz project @ https://oss-fuzz.com/testcases?project=jsoup As some of these
- are timeout tests - run each file 100 times and ensure under time.
+ Tests fixes for issues raised by the <a href="https://oss-fuzz.com/testcases?project=jsoup">OSS Fuzz project</a>. As
+ some of these are timeout tests - run each file 100 times and ensure under time.
  */
 public class FuzzFixesIT {
     static int numIters = 50;
