@@ -190,6 +190,10 @@ public class QueryParser {
             matches(false);
         else if (tq.matches(":matchesOwn("))
             matches(true);
+        else if (tq.matches(":matchesWholeText("))
+            matchesWholeText(false);
+        else if (tq.matches(":matchesWholeOwnText("))
+            matchesWholeText(true);
         else if (tq.matches(":not("))
             not();
 		else if (tq.matchChomp(":nth-child("))
@@ -391,14 +395,26 @@ public class QueryParser {
 
     // :matches(regex), matchesOwn(regex)
     private void matches(boolean own) {
-        tq.consume(own ? ":matchesOwn" : ":matches");
+        String query = own ? ":matchesOwn" : ":matches";
+        tq.consume(query);
         String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
-        Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+        Validate.notEmpty(regex, query + "(regex) query must not be empty");
 
-        if (own)
-            evals.add(new Evaluator.MatchesOwn(Pattern.compile(regex)));
-        else
-            evals.add(new Evaluator.Matches(Pattern.compile(regex)));
+        evals.add(own
+            ? new Evaluator.MatchesOwn(Pattern.compile(regex))
+            : new Evaluator.Matches(Pattern.compile(regex)));
+    }
+
+    // :matches(regex), matchesOwn(regex)
+    private void matchesWholeText(boolean own) {
+        String query = own ? ":matchesWholeOwnText" : ":matchesWholeText";
+        tq.consume(query);
+        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        Validate.notEmpty(regex, query + "(regex) query must not be empty");
+
+        evals.add(own
+            ? new Evaluator.MatchesWholeOwnText(Pattern.compile(regex))
+            : new Evaluator.MatchesWholeText(Pattern.compile(regex)));
     }
 
     // :not(selector)

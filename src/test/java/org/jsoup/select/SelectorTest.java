@@ -710,6 +710,43 @@ public class SelectorTest {
         assertEquals(0, doc.select("p:matchesOwn(there)").size());
     }
 
+    @Test public void matchesWholeText() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b>\n now</p><p id=2> </p><p id=3></p>");
+
+        Elements p1 = doc.select("p:matchesWholeText((?i)hello there\n now)");
+        assertEquals(1, p1.size());
+        assertEquals("1", p1.first().id());
+
+        assertEquals(1, doc.select("p:matchesWholeText(there\n now)").size());
+        assertEquals(0, doc.select("p:matchesWholeText(There\n now)").size());
+
+        Elements p2 = doc.select("p:matchesWholeText(^\\s+$)");
+        assertEquals(1, p2.size());
+        assertEquals("2", p2.first().id());
+
+        Elements p3 = doc.select("p:matchesWholeText(^$)");
+        assertEquals(1, p3.size());
+        assertEquals("3", p3.first().id());
+    }
+
+    @Test public void matchesWholeOwnText() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b>\n now</p><p id=2> </p><p id=3><i>Text</i></p>");
+
+        Elements p1 = doc.select("p:matchesWholeOwnText((?i)hello \n now)");
+        assertEquals(1, p1.size());
+        assertEquals("1", p1.first().id());
+
+        assertEquals(0, doc.select("p:matchesWholeOwnText(there\n now)").size());
+
+        Elements p2 = doc.select("p:matchesWholeOwnText(^\\s+$)");
+        assertEquals(1, p2.size());
+        assertEquals("2", p2.first().id());
+
+        Elements p3 = doc.select("p:matchesWholeOwnText(^$)");
+        assertEquals(1, p3.size());
+        assertEquals("3", p3.first().id());
+    }
+
     @Test public void testRelaxedTags() {
         Document doc = Jsoup.parse("<abc_def id=1>Hello</abc_def> <abc-def id=2>There</abc-def>");
 

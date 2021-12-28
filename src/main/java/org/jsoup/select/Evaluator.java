@@ -813,6 +813,50 @@ public abstract class Evaluator {
         }
     }
 
+    /**
+     * Evaluator for matching Element (and its descendants) whole text with regex
+     */
+    public static final class MatchesWholeText extends Evaluator {
+        private final Pattern pattern;
+
+        public MatchesWholeText(Pattern pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            Matcher m = pattern.matcher(element.wholeText());
+            return m.find();
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":matchesWholeText(%s)", pattern);
+        }
+    }
+
+    /**
+     * Evaluator for matching Element's own whole text with regex
+     */
+    public static final class MatchesWholeOwnText extends Evaluator {
+        private final Pattern pattern;
+
+        public MatchesWholeOwnText(Pattern pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            Matcher m = pattern.matcher(element.wholeOwnText());
+            return m.find();
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":matchesWholeOwnText(%s)", pattern);
+        }
+    }
+
     public static final class MatchText extends Evaluator {
 
         @Override

@@ -17,6 +17,10 @@ jsoup changelog
     in the wholeText methods.
     <https://github.com/jhy/jsoup/issues/1636>
 
+  * Improvement: added the :matchesWholeText(regex) and :matchesWholeOwnText(regex) selectors, to match against whole
+    (non-normalized, case sensitive> element text and own text, respectively.
+    <https://github.com/jhy/jsoup/issues/1636>
+
   * Improvement: when evaluating an XPath query against a context element, the complete document is now visible to the
     query, vs only the context element's sub-tree. This enables support for queries outside (parent or sibling) the
     element, e.g. ancestor-or-self::*.
