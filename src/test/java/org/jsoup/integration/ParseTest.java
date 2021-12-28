@@ -229,6 +229,13 @@ public class ParseTest {
         assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
     }
 
+    @Test public void testFileParseNoCharsetMethod() throws IOException {
+        File in = getFile("/htmltests/xwiki-1324.html.gz");
+        Document doc = Jsoup.parse(in);
+        assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
+    }
+
+
     public static File getFile(String resourceName) {
         try {
             URL resource = ParseTest.class.getResource(resourceName);

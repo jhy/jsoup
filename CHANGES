@@ -25,6 +25,9 @@ jsoup changelog
     as to preserve applicable settings, such as the Pretty Print settings.
     <https://github.com/jhy/jsoup/issues/763>
 
+  * Improvement: added a convenience method Jsoup.parse(File).
+    <https://github.com/jhy/jsoup/issues/1693>
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>
