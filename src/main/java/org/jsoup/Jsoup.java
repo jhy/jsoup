@@ -159,6 +159,7 @@ Connection con3 = session.newRequest();
      @return sane HTML
      @throws IOException if the file could not be found or read.
      @see #parse(File, String, String) parse(file, charset, baseUri)
+     @since 1.15.1
      */
     public static Document parse(File file) throws IOException {
         return DataUtil.load(file, null, file.getAbsolutePath());
