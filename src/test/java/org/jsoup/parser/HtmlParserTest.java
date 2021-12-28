@@ -1429,6 +1429,15 @@ public class HtmlParserTest {
         assertEquals(html, doc.body().html()); // disabling pretty-printing - round-trips the tab throughout, as no normalization occurs
     }
 
+    @Test void wholeTextTreatsBRasNewline() {
+        String html = "<div>\nOne<br>Two <p>Three<br>Four</div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        assertEquals("\nOne\nTwo Three\nFour", div.wholeText());
+        assertEquals("\nOne\nTwo ", div.wholeOwnText());
+    }
+
     @Test public void canDetectAutomaticallyAddedElements() {
         String bare = "<script>One</script>";
         String full = "<html><head><title>Check</title></head><body><p>One</p></body></html>";

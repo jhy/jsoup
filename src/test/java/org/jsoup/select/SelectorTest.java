@@ -637,6 +637,26 @@ public class SelectorTest {
         assertEquals(".  ", blanks.first().wholeText());
     }
 
+    @Test void containsWholeOwnText() {
+        Document doc = Jsoup.parse("<div><p> jsoup\n The <i>HTML</i> Parser</p><p>jsoup The HTML Parser<br></div>");
+        Elements ps = doc.select("p");
+
+        Elements es1 = doc.select("p:containsWholeOwnText( jsoup\n The  Parser)");
+        Elements es2 = doc.select("p:containsWholeOwnText(jsoup The HTML Parser\n)");
+        assertEquals(1, es1.size());
+        assertEquals(1, es2.size());
+        assertEquals(ps.get(0), es1.first());
+        assertEquals(ps.get(1), es2.first());
+
+        assertEquals(0, doc.select("div:containsWholeOwnText(jsoup the html parser)").size());
+        assertEquals(0, doc.select("div:containsWholeOwnText(jsoup\n the  parser)").size());
+
+        doc = Jsoup.parse("<div><p></p><p> </p><p>.  </p>");
+        Elements blanks = doc.select("p:containsWholeOwnText(  )");
+        assertEquals(1, blanks.size());
+        assertEquals(".  ", blanks.first().wholeText());
+    }
+
     @MultiLocaleTest
     public void containsOwn(Locale locale) {
         Locale.setDefault(locale);

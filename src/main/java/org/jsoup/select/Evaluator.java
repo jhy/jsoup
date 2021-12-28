@@ -705,6 +705,29 @@ public abstract class Evaluator {
     }
 
     /**
+     * Evaluator for matching Element (but <b>not</b> its descendants) wholeText. Neither the input nor the element text is
+     * normalized. <code>:containsWholeOwnText()</code>
+     * @since 1.15.1.
+     */
+    public static final class ContainsWholeOwnText extends Evaluator {
+        private final String searchText;
+
+        public ContainsWholeOwnText(String searchText) {
+            this.searchText = searchText;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return element.wholeOwnText().contains(searchText);
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":containsWholeOwnText(%s)", searchText);
+        }
+    }
+
+    /**
      * Evaluator for matching Element (and its descendants) data
      */
     public static final class ContainsData extends Evaluator {

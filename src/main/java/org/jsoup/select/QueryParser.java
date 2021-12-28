@@ -182,6 +182,8 @@ public class QueryParser {
             contains(true);
         else if (tq.matches(":containsWholeText("))
             containsWholeText();
+        else if (tq.matches(":containsWholeOwnText("))
+            containsWholeOwnText();
         else if (tq.matches(":containsData("))
             containsData();
         else if (tq.matches(":matches("))
@@ -374,6 +376,13 @@ public class QueryParser {
         String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
         Validate.notEmpty(searchText, ":containsWholeText(text) query must not be empty");
         evals.add(new Evaluator.ContainsWholeText(searchText));
+    }
+
+    private void containsWholeOwnText() {
+        tq.consume(":containsWholeOwnText");
+        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+        Validate.notEmpty(searchText, ":containsWholeOwnText(text) query must not be empty");
+        evals.add(new Evaluator.ContainsWholeOwnText(searchText));
     }
 
     // pseudo selector :containsData(data)

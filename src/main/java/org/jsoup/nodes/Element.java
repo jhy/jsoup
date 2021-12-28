@@ -1285,15 +1285,40 @@ public class Element extends Node {
         final StringBuilder accum = StringUtil.borrowBuilder();
         NodeTraversor.traverse(new NodeVisitor() {
             public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    TextNode textNode = (TextNode) node;
-                    accum.append(textNode.getWholeText());
-                }
+                appendWholeText(node, accum);
             }
 
-            public void tail(Node node, int depth) {
-            }
+            public void tail(Node node, int depth) {}
         }, this);
+
+        return StringUtil.releaseBuilder(accum);
+    }
+
+    private static void appendWholeText(Node node, StringBuilder accum) {
+        if (node instanceof TextNode) {
+            accum.append(((TextNode) node).getWholeText());
+        } else if (node instanceof Element) {
+            appendNewlineIfBr((Element) node, accum);
+        }
+    }
+
+    /**
+     Get the (unencoded) text of this element, <b>not including</b> any child elements, including any newlines and spaces
+     present in the original.
+
+     @return unencoded, un-normalized text that is a direct child of this Element
+     @see #text()
+     @see #wholeText()
+     @see #ownText()
+     @since 1.15.1
+     */
+    public String wholeOwnText() {
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        final int size = childNodeSize();
+        for (int i = 0; i < size; i++) {
+            Node node = childNodes.get(i);
+            appendWholeText(node, accum);
+        }
 
         return StringUtil.releaseBuilder(accum);
     }
@@ -1336,9 +1361,16 @@ public class Element extends Node {
             StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
     }
 
+    /** For normalized text, treat a br element as a space, if there is not already a space. */
     private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
         if (element.tag.normalName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
             accum.append(" ");
+    }
+
+    /** For WholeText, treat a br element as a newline. */
+    private static void appendNewlineIfBr(Element element, StringBuilder accum) {
+        if (element.tag.normalName().equals("br"))
+            accum.append("\n");
     }
 
     static boolean preserveWhitespace(@Nullable Node node) {
