@@ -814,7 +814,8 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching Element (and its descendants) whole text with regex
+     * Evaluator for matching Element (and its descendants) whole text with regex.
+     * @since 1.15.1.
      */
     public static final class MatchesWholeText extends Evaluator {
         private final Pattern pattern;
@@ -836,7 +837,8 @@ public abstract class Evaluator {
     }
 
     /**
-     * Evaluator for matching Element's own whole text with regex
+     * Evaluator for matching Element's own whole text with regex.
+     * @since 1.15.1.
      */
     public static final class MatchesWholeOwnText extends Evaluator {
         private final Pattern pattern;
