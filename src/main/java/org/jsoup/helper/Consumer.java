@@ -8,7 +8,7 @@ package org.jsoup.helper;
 public interface Consumer<T> {
 
     /**
-     * Executre this operation on the supplied argument. It is expected to have side effects.
+     * Execute this operation on the supplied argument. It is expected to have side effects.
      *
      * @param t the input argument
      */
