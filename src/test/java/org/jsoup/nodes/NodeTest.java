@@ -250,6 +250,21 @@ public class NodeTest {
         assertEquals("<div><p><#text></#text></p></div>", accum.toString());
     }
 
+    @Test public void forEachNode() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div><div id=1>Gone<p></div>");
+        doc.forEachNode(node -> {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                if (textNode.text().equals("There")) {
+                    textNode.text("There Now");
+                    textNode.after("<p>Another");
+                }
+            } else if (node.attr("id").equals("1"))
+                node.remove();
+        });
+        assertEquals("<div><p>Hello</p></div><div>There Now<p>Another</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test public void orphanNodeReturnsNullForSiblingElements() {
         Node node = new Element(Tag.valueOf("p"), "");
         Element el = new Element(Tag.valueOf("p"), "");

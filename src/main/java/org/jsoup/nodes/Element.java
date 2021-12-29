@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -1735,7 +1736,28 @@ public class Element extends Node {
 
     @Override
     public Element traverse(NodeVisitor nodeVisitor) {
-        return  (Element) super.traverse(nodeVisitor);
+        return (Element) super.traverse(nodeVisitor);
+    }
+
+    @Override
+    public Element forEachNode(Consumer<? super Node> action) {
+        return (Element) super.forEachNode(action);
+    }
+
+    /**
+     Perform the supplied action on this Element and each of its descendant Elements, during a depth-first traversal.
+     Elements may be inspected, changed, added, replaced, or removed.
+     @param action the function to perform on the element
+     @return this Element, for chaining
+     @see Node#forEachNode(Consumer)
+     */
+    public Element forEach(Consumer<? super Element> action) {
+        Validate.notNull(action);
+        NodeTraversor.traverse((node, depth) -> {
+            if (node instanceof Element)
+                action.accept((Element) node);
+        }, this);
+        return this;
     }
 
     @Override

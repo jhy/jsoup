@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -623,6 +624,19 @@ public abstract class Node implements Cloneable {
     public Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
         NodeTraversor.traverse(nodeVisitor, this);
+        return this;
+    }
+
+    /**
+     Perform the supplied action on this Node and each of its descendants, during a depth-first traversal. Nodes may be
+     inspected, changed, added, replaced, or removed.
+     @param action the function to perform on the node
+     @return this Node, for chaining
+     @see Element#forEach(Consumer)
+     */
+    public Node forEachNode(Consumer<? super Node> action) {
+        Validate.notNull(action);
+        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
         return this;
     }
 

@@ -1845,6 +1845,19 @@ public class ElementTest {
         assertEquals("<div><p>One</p><p>Three</p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test void testForEach() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div><div id=1>Gone<p></div>");
+        doc.forEach(el -> {
+            if (el.id().equals("1"))
+                el.remove();
+            else if (el.text().equals("There")) {
+                el.text("There Now");
+                el.append("<p>Another</p>");
+            }
+        });
+        assertEquals("<div><p>Hello</p></div><div>There Now<p>Another</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test
     public void doesntDeleteZWJWhenNormalizingText() {
         String text = "\uD83D\uDC69\u200D\uD83D\uDCBB\uD83E\uDD26\uD83C\uDFFB\u200D\u2642\uFE0F";

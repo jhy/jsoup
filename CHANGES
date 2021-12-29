@@ -43,6 +43,10 @@ jsoup changelog
   * Improvement: in NodeTraversor, added support for removing nodes via Node.remove() during NodeVisitor.head().
     <https://github.com/jhy/jsoup/issues/1699>
 
+  * Improvement: added Node.forEachNode(Consumer<Node>) and Element.forEach(Consumer<Element) methods, to efficiently
+    traverse the DOM with a functional interface.
+    <https://github.com/jhy/jsoup/issues/1700>
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>
