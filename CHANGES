@@ -41,6 +41,7 @@ jsoup changelog
     that code using only head() methods can be written as lambdas.
 
   * Improvement: in NodeTraversor, added support for removing nodes via Node.remove() during NodeVisitor.head().
+    <https://github.com/jhy/jsoup/issues/1699>
 
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
