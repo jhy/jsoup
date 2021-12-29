@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -170,5 +171,13 @@ public class TraversorTest {
             " <p><span>0</span><span>1</span></p>\n" +
             " <p><span>2</span><span>3</span></p>\n" +
             "</div>", doc.body().html());
+    }
+
+    @Test public void canSpecifyOnlyHead() {
+        // really, a compilation test - works as a lambda if just head
+        Document doc = Jsoup.parse("<div><p>One</p></div>");
+        final int[] count = {0};
+        NodeTraversor.traverse((node, depth) -> count[0]++, doc);
+        assertEquals(7, count[0]);
     }
 }

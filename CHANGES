@@ -37,6 +37,9 @@ jsoup changelog
   * Improvement: added a convenience method Jsoup.parse(File).
     <https://github.com/jhy/jsoup/issues/1693>
 
+  * Improvement: in the NodeTraversor, added default implementations for NodeVisitor.tail() and NodeFilter.tail(), so
+    that code using only head() methods can be written as lambdas.
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>

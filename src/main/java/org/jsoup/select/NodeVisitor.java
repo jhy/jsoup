@@ -27,11 +27,14 @@ public interface NodeVisitor {
 
     /**
      Callback for when a node is last visited, after all of its descendants have been visited.
-     <p>Note that replacement with {@link Node#replaceWith(Node)}</p> is not supported in {@code tail}.
+     <p>This method has a default no-op implementation.</p>
+     <p>Note that replacement with {@link Node#replaceWith(Node)} is not supported during {@code tail()}.
 
      @param node the node being visited.
      @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node
      of that will have depth 1.
      */
-    void tail(Node node, int depth);
+    default void tail(Node node, int depth) {
+        // no-op by default, to allow just specifying the head() method
+    }
 }

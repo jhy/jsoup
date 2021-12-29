@@ -1783,6 +1783,7 @@ public class ElementTest {
     public void testTraverse() {
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
         Element div = doc.selectFirst("div");
+        assertNotNull(div);
         final AtomicInteger counter = new AtomicInteger(0);
 
         Element div2 = div.traverse(new NodeVisitor() {
@@ -1802,11 +1803,24 @@ public class ElementTest {
         assertEquals(div2, div);
     }
 
-    @Test
-    public void voidTestFilterCallReturnsElement() {
-        // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an acutal test
+    @Test void testTraverseLambda() {
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
         Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        final AtomicInteger counter = new AtomicInteger(0);
+
+        Element div2 = div.traverse((node, depth) -> counter.incrementAndGet());
+
+        assertEquals(7, counter.get());
+        assertEquals(div2, div);
+    }
+
+    @Test
+    public void testFilterCallReturnsElement() {
+        // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an actual test
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
         Element div2 = div.filter(new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
@@ -1820,6 +1834,15 @@ public class ElementTest {
         });
 
         assertSame(div, div2);
+    }
+
+    @Test void testFilterAsLambda() {
+        Document doc = Jsoup.parse("<div><p>One<p id=2>Two<p>Three");
+        doc.filter((node, depth) -> node.attr("id").equals("2")
+            ? NodeFilter.FilterResult.REMOVE
+            : NodeFilter.FilterResult.CONTINUE);
+
+        assertEquals("<div><p>One</p><p>Three</p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test
