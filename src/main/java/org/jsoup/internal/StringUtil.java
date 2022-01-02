@@ -147,7 +147,7 @@ public final class StringUtil {
      * @param string string to test
      * @return if string is blank
      */
-    public static boolean isBlank(String string) {
+    public static boolean isBlank(final String string) {
         if (string == null || string.length() == 0)
             return true;
 
@@ -157,6 +157,17 @@ public final class StringUtil {
                 return false;
         }
         return true;
+    }
+
+    /**
+     Tests if a string starts with a newline character
+     @param string string to test
+     @return if its first character is a newline
+     */
+    public static boolean startsWithNewline(final String string) {
+        if (string == null || string.length() == 0)
+            return false;
+        return string.charAt(0) == '\n';
     }
 
     /**
