@@ -2205,4 +2205,15 @@ public class ElementTest {
         String html2 = doc2.html();
         assertEquals(html, html2);
     }
+
+    @Test void elementBrText() {
+        // testcase for https://github.com/jhy/jsoup/issues/1437
+        String html = "<p>Hello<br>World</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.select("p").first();
+        assertNotNull(p);
+        assertEquals(html, p.outerHtml());
+        assertEquals("Hello World", p.text());
+        assertEquals("Hello\nWorld", p.wholeText());
+    }
 }
