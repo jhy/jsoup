@@ -1284,14 +1284,7 @@ public class Element extends Node {
      */
     public String wholeText() {
         final StringBuilder accum = StringUtil.borrowBuilder();
-        NodeTraversor.traverse(new NodeVisitor() {
-            public void head(Node node, int depth) {
-                appendWholeText(node, accum);
-            }
-
-            public void tail(Node node, int depth) {}
-        }, this);
-
+        NodeTraversor.traverse((node, depth) -> appendWholeText(node, accum), this);
         return StringUtil.releaseBuilder(accum);
     }
 
