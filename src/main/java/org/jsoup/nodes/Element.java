@@ -1624,8 +1624,12 @@ public class Element extends Node {
         return this;
     }
 
+    boolean shouldIndent(final Document.OutputSettings out) {
+        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out);
+    }
+
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out)) {
+        if (shouldIndent(out)) {
             if (accum instanceof StringBuilder) {
                 if (((StringBuilder) accum).length() > 0)
                     indent(accum, depth, out);
@@ -1650,7 +1654,7 @@ public class Element extends Node {
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && !(childNodes.get(0) instanceof TextNode))))
+                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
             )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append('>');

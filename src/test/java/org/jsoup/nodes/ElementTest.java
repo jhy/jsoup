@@ -12,6 +12,8 @@ import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -525,7 +528,7 @@ public class ElementTest {
     public void testNoIndentOnScriptAndStyle() {
         // don't newline+indent closing </script> and </style> tags
         Document doc = Jsoup.parse("<script>one\ntwo</script>\n<style>three\nfour</style>");
-        assertEquals("<script>one\ntwo</script> \n<style>three\nfour</style>", doc.head().html());
+        assertEquals("<script>one\ntwo</script>\n<style>three\nfour</style>", doc.head().html());
     }
 
     @Test
@@ -2161,5 +2164,45 @@ public class ElementTest {
         assertFalse(docClone.outputSettings().prettyPrint());
         assertEquals(1, docClone.children().size()); // check did not get the second div as the owner's children
         assertEquals(divClone, docClone.child(0)); // note not the head or the body -- not normalized
+    }
+
+    private static Stream<Document.OutputSettings> testOutputSettings() {
+        return Stream.of(
+            new Document.OutputSettings().prettyPrint(true).indentAmount(4),
+            new Document.OutputSettings().prettyPrint(true).indentAmount(1),
+            new Document.OutputSettings().prettyPrint(true).indentAmount(4).outline(true),
+            new Document.OutputSettings().prettyPrint(false)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testOutputSettings")
+    void prettySerializationRoundTrips(Document.OutputSettings settings) {
+        // https://github.com/jhy/jsoup/issues/1688
+        // tests that repeated html() and parse() does not accumulate errant spaces / newlines
+        Document doc = Jsoup.parse("<div>\nFoo\n<p>\nBar\nqux</p></div>\n<script>\n alert('Hello!');\n</script>");
+        doc.outputSettings(settings);
+        String html = doc.html();
+        Document doc2 = Jsoup.parse(html);
+        doc2.outputSettings(settings);
+        String html2 = doc2.html();
+
+        assertEquals(html, html2);
+    }
+
+    @Test void prettyPrintScriptsDoesNotGrowOnRepeat() {
+        Document doc = Jsoup.parse("<div>\nFoo\n<p>\nBar\nqux</p></div>\n<script>\n alert('Hello!');\n</script>");
+        Document.OutputSettings settings = doc.outputSettings();
+        settings
+            .prettyPrint(true)
+            .outline(true)
+            .indentAmount(4)
+            ;
+
+        String html = doc.html();
+        Document doc2 = Jsoup.parse(html);
+        doc2.outputSettings(settings);
+        String html2 = doc2.html();
+        assertEquals(html, html2);
     }
 }

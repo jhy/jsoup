@@ -62,6 +62,11 @@ jsoup changelog
     that could throw an IllegalFormatException.
     <https://github.com/jhy/jsoup/issues/1691>
 
+  * Bugfix: when serializing HTML with Pretty Print enabled, extraneous whitespace may be added on closing tags, or
+    extra newlines may be added at the end of script blocks.
+    <https://github.com/jhy/jsoup/issues/1688>
+    <https://github.com/jhy/jsoup/issues/1689>
+
   * Bugfix [Fuzz]: speed improvement when parsing constructed HTML containing very deeply incorrectly stacked formatting
     elements with many attributes.
     <https://github.com/jhy/jsoup/issues/1695>

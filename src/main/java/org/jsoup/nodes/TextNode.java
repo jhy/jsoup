@@ -82,7 +82,12 @@ public class TextNode extends LeafNode {
 
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
-        if (prettyPrint && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
+        Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
+        boolean parentIndent = parent != null && parent.shouldIndent(out);
+        if (parentIndent && getWholeText().startsWith("\n") && isBlank()) // we are skippable whitespace
+            return;
+
+        if (prettyPrint && ((siblingIndex() == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
             indent(accum, depth, out);
 
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
