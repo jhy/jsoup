@@ -192,7 +192,7 @@
         <!-- API version compat check - https://siom79.github.io/japicmp/ -->
         <groupId>com.github.siom79.japicmp</groupId>
         <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.15.4</version>
+        <version>0.15.6</version>
         <configuration>
           <!-- hard code previous version; can't detect when running stateless on build server -->
           <oldVersion>
