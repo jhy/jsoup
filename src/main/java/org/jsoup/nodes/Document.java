@@ -338,6 +338,15 @@ public class Document extends Element {
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
+
+    @Override
+    public Document shallowClone() {
+        Document clone = new Document(baseUri());
+        if (attributes != null)
+            clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        return clone;
+    }
     
     /**
      * Ensures a meta charset (html) or xml declaration (xml) with the current

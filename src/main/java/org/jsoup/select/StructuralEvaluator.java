@@ -10,6 +10,7 @@ abstract class StructuralEvaluator extends Evaluator {
     Evaluator evaluator;
 
     static class Root extends Evaluator {
+        @Override
         public boolean matches(Element root, Element element) {
             return root == element;
         }
@@ -23,6 +24,7 @@ abstract class StructuralEvaluator extends Evaluator {
             finder = new Collector.FirstFinder(evaluator);
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
             for (int i = 0; i < element.childNodeSize(); i++) {
@@ -47,6 +49,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element node) {
             return !evaluator.matches(root, node);
         }
@@ -62,6 +65,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -88,6 +92,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -107,6 +112,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
@@ -133,6 +139,7 @@ abstract class StructuralEvaluator extends Evaluator {
             this.evaluator = evaluator;
         }
 
+        @Override
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;

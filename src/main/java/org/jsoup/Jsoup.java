@@ -142,10 +142,27 @@ Connection con3 = session.newRequest();
      @return sane HTML
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
-     @see #parse(File, String, String)
+     @see #parse(File, String, String) parse(file, charset, baseUri)
      */
     public static Document parse(File file, @Nullable String charsetName) throws IOException {
         return DataUtil.load(file, charsetName, file.getAbsolutePath());
+    }
+
+    /**
+     Parse the contents of a file as HTML. The location of the file is used as the base URI to qualify relative URLs.
+     The charset used to read the file will be determined by the byte-order-mark (BOM), or a {@code <meta charset>} tag,
+     or if neither is present, will be {@code UTF-8}.
+
+     <p>This is the equivalent of calling {@link #parse(File, String) parse(file, null)}</p>
+
+     @param file the file to load HTML from. Supports gzipped files (ending in .z or .gz).
+     @return sane HTML
+     @throws IOException if the file could not be found or read.
+     @see #parse(File, String, String) parse(file, charset, baseUri)
+     @since 1.15.1
+     */
+    public static Document parse(File file) throws IOException {
+        return DataUtil.load(file, null, file.getAbsolutePath());
     }
 
     /**

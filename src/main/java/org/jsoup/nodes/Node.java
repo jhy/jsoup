@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.Consumer;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
@@ -627,6 +628,19 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Perform the supplied action on this Node and each of its descendants, during a depth-first traversal. Nodes may be
+     inspected, changed, added, replaced, or removed.
+     @param action the function to perform on the node
+     @return this Node, for chaining
+     @see Element#forEach(Consumer)
+     */
+    public Node forEachNode(Consumer<? super Node> action) {
+        Validate.notNull(action);
+        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
+        return this;
+    }
+
+    /**
      * Perform a depth-first filtering through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
@@ -781,6 +795,15 @@ public abstract class Node implements Cloneable {
 
         clone.parentNode = parent; // can be null, to create an orphan split
         clone.siblingIndex = parent == null ? 0 : siblingIndex;
+        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Document docClone = doc.shallowClone();
+                clone.parentNode = docClone;
+                docClone.ensureChildNodes().add(clone);
+            }
+        }
 
         return clone;
     }

@@ -12,6 +12,15 @@ jsoup changelog
     useful when elements can only be distinguished by e.g. specific case, or leading whitespace, etc.
     <https://github.com/jhy/jsoup/issues/1636>
 
+  * Improvement: added Element#wholeOwnText() to retrieve the original (non-normalized) ownText of an Element. Also
+    added the :containsWholeOwnText(text) selector, to match against that. BR elements are now treated as newlines
+    in the wholeText methods.
+    <https://github.com/jhy/jsoup/issues/1636>
+
+  * Improvement: added the :matchesWholeText(regex) and :matchesWholeOwnText(regex) selectors, to match against whole
+    (non-normalized, case sensitive> element text and own text, respectively.
+    <https://github.com/jhy/jsoup/issues/1636>
+
   * Improvement: when evaluating an XPath query against a context element, the complete document is now visible to the
     query, vs only the context element's sub-tree. This enables support for queries outside (parent or sibling) the
     element, e.g. ancestor-or-self::*.
@@ -21,9 +30,50 @@ jsoup changelog
     30 to limit the indent level for very deeply nested elements, and may be disabled by setting to -1.
     <https://github.com/jhy/jsoup/pull/1655>
 
+  * Improvement: when cloning a Node or an Element, the clone gets a cloned OwnerDocument containing only that clone, so
+    as to preserve applicable settings, such as the Pretty Print settings.
+    <https://github.com/jhy/jsoup/issues/763>
+
+  * Improvement: added a convenience method Jsoup.parse(File).
+    <https://github.com/jhy/jsoup/issues/1693>
+
+  * Improvement: in the NodeTraversor, added default implementations for NodeVisitor.tail() and NodeFilter.tail(), so
+    that code using only head() methods can be written as lambdas.
+
+  * Improvement: in NodeTraversor, added support for removing nodes via Node.remove() during NodeVisitor.head().
+    <https://github.com/jhy/jsoup/issues/1699>
+
+  * Improvement: added Node.forEachNode(Consumer<Node>) and Element.forEach(Consumer<Element) methods, to efficiently
+    traverse the DOM with a functional interface.
+    <https://github.com/jhy/jsoup/issues/1700>
+
   * Bugfix: boolean attribute names should be case-insensitive, but were not when the parser was configured to preserve
     case.
     <https://github.com/jhy/jsoup/issues/1656>
+
+  * Bugfix: when reading from SequenceInputStreams across the buffer, the input stream was closed too early, resulting
+    in missed content.
+    <https://github.com/jhy/jsoup/pull/1671>
+
+  * Bugfix: a comment with all dashes (<!----->) should not emit a parse error.
+    <https://github.com/jhy/jsoup/issues/1667>
+
+  * Bugfix: when throwing a SelectorParseException for an invalid selector, don't try to String.format the input, as
+    that could throw an IllegalFormatException.
+    <https://github.com/jhy/jsoup/issues/1691>
+
+  * Bugfix: when serializing HTML with Pretty Print enabled, extraneous whitespace may be added on closing tags, or
+    extra newlines may be added at the end of script blocks.
+    <https://github.com/jhy/jsoup/issues/1688>
+    <https://github.com/jhy/jsoup/issues/1689>
+
+  * Bugfix [Fuzz]: speed improvement when parsing constructed HTML containing very deeply incorrectly stacked formatting
+    elements with many attributes.
+    <https://github.com/jhy/jsoup/issues/1695>
+
+  * Bugfix [Fuzz]: during parsing, a StackOverflowException was possible given crafted HTML with hundreds of nested
+    table elements followed by invalid formatting elements.
+    <https://github.com/jhy/jsoup/issues/1697>
 
 *** Release 1.14.3 [2021-Sep-30]
   * Improvement: added native XPath support in Element#selectXpath(String)

@@ -466,11 +466,17 @@ public class HtmlTreeBuilder extends TreeBuilder {
         queue.set(i, in);
     }
 
-    void resetInsertionMode() {
+    /**
+     * Reset the insertion mode, by searching up the stack for an appropriate insertion mode. The stack search depth
+     * is limited to {@link #maxQueueDepth}.
+     * @return true if the insertion mode was actually changed.
+     */
+    boolean resetInsertionMode() {
         // https://html.spec.whatwg.org/multipage/parsing.html#the-insertion-mode
         boolean last = false;
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
+        final HtmlTreeBuilderState origState = this.state;
 
         if (stack.size() == 0) { // nothing left of stack, just get to body
             transition(HtmlTreeBuilderState.InBody);
@@ -539,6 +545,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 break;
             }
         }
+        return state != origState;
     }
 
     // todo: tidy up in specific scope methods
@@ -724,7 +731,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void checkActiveFormattingElements(Element in){
         int numSeen = 0;
-        for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
+        final int size = formattingElements.size() -1;
+        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
+
+        for (int pos = size; pos >= ceil; pos--) {
             Element el = formattingElements.get(pos);
             if (el == null) // marker
                 break;
@@ -748,6 +758,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void reconstructFormattingElements() {
+        if (stack.size() > maxQueueDepth)
+            return;
         Element last = lastFormattingElement();
         if (last == null || onStack(last))
             return;
@@ -773,10 +785,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = insertStartTag(entry.normalName()); // todo: avoid fostering here?
-            // newEl.namespace(entry.namespace()); // todo: namespaces
-            if (entry.attributesSize() > 0)
-                newEl.attributes().addAll(entry.attributes());
+            Element newEl = new Element(tagFor(entry.normalName(), settings), null, entry.attributes().clone());
+            insert(newEl);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);

@@ -130,7 +130,7 @@ public class QueryParser {
                 currentEval = or;
                 break;
             default:
-                throw new Selector.SelectorParseException("Unknown combinator: " + combinator);
+                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
 
         if (replaceRightMost)
@@ -181,13 +181,19 @@ public class QueryParser {
         else if (tq.matches(":containsOwn("))
             contains(true);
         else if (tq.matches(":containsWholeText("))
-            containsWholeText();
+            containsWholeText(false);
+        else if (tq.matches(":containsWholeOwnText("))
+            containsWholeText(true);
         else if (tq.matches(":containsData("))
             containsData();
         else if (tq.matches(":matches("))
             matches(false);
         else if (tq.matches(":matchesOwn("))
             matches(true);
+        else if (tq.matches(":matchesWholeText("))
+            matchesWholeText(false);
+        else if (tq.matches(":matchesWholeOwnText("))
+            matchesWholeText(true);
         else if (tq.matches(":not("))
             not();
 		else if (tq.matchChomp(":nth-child("))
@@ -360,20 +366,23 @@ public class QueryParser {
 
     // pseudo selector :contains(text), containsOwn(text)
     private void contains(boolean own) {
-        tq.consume(own ? ":containsOwn" : ":contains");
+        String query = own ? ":containsOwn" : ":contains";
+        tq.consume(query);
         String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
-        if (own)
-            evals.add(new Evaluator.ContainsOwnText(searchText));
-        else
-            evals.add(new Evaluator.ContainsText(searchText));
+        Validate.notEmpty(searchText, query + "(text) query must not be empty");
+        evals.add(own
+            ? new Evaluator.ContainsOwnText(searchText)
+            : new Evaluator.ContainsText(searchText));
     }
 
-    private void containsWholeText() {
-        tq.consume(":containsWholeText");
+    private void containsWholeText(boolean own) {
+        String query = own ? ":containsWholeOwnText" : ":containsWholeText";
+        tq.consume(query);
         String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
-        Validate.notEmpty(searchText, ":containsWholeText(text) query must not be empty");
-        evals.add(new Evaluator.ContainsWholeText(searchText));
+        Validate.notEmpty(searchText, query + "(text) query must not be empty");
+        evals.add(own
+            ? new Evaluator.ContainsWholeOwnText(searchText)
+            : new Evaluator.ContainsWholeText(searchText));
     }
 
     // pseudo selector :containsData(data)
@@ -386,14 +395,26 @@ public class QueryParser {
 
     // :matches(regex), matchesOwn(regex)
     private void matches(boolean own) {
-        tq.consume(own ? ":matchesOwn" : ":matches");
+        String query = own ? ":matchesOwn" : ":matches";
+        tq.consume(query);
         String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
-        Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+        Validate.notEmpty(regex, query + "(regex) query must not be empty");
 
-        if (own)
-            evals.add(new Evaluator.MatchesOwn(Pattern.compile(regex)));
-        else
-            evals.add(new Evaluator.Matches(Pattern.compile(regex)));
+        evals.add(own
+            ? new Evaluator.MatchesOwn(Pattern.compile(regex))
+            : new Evaluator.Matches(Pattern.compile(regex)));
+    }
+
+    // :matches(regex), matchesOwn(regex)
+    private void matchesWholeText(boolean own) {
+        String query = own ? ":matchesWholeOwnText" : ":matchesWholeText";
+        tq.consume(query);
+        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        Validate.notEmpty(regex, query + "(regex) query must not be empty");
+
+        evals.add(own
+            ? new Evaluator.MatchesWholeOwnText(Pattern.compile(regex))
+            : new Evaluator.MatchesWholeText(Pattern.compile(regex)));
     }
 
     // :not(selector)

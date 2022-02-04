@@ -12,6 +12,8 @@ import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -525,7 +528,7 @@ public class ElementTest {
     public void testNoIndentOnScriptAndStyle() {
         // don't newline+indent closing </script> and </style> tags
         Document doc = Jsoup.parse("<script>one\ntwo</script>\n<style>three\nfour</style>");
-        assertEquals("<script>one\ntwo</script> \n<style>three\nfour</style>", doc.head().html());
+        assertEquals("<script>one\ntwo</script>\n<style>three\nfour</style>", doc.head().html());
     }
 
     @Test
@@ -866,7 +869,10 @@ public class ElementTest {
         Element p = doc.select("p").get(1);
         Element clone = p.clone();
 
-        assertNull(clone.parent()); // should be orphaned
+        assertNotNull(clone.parentNode); // should be a cloned document just containing this clone
+        assertEquals(1, clone.parentNode.childNodeSize());
+        assertSame(clone.ownerDocument(), clone.parentNode);
+
         assertEquals(0, clone.siblingIndex);
         assertEquals(1, p.siblingIndex);
         assertNotNull(p.parent());
@@ -1780,6 +1786,7 @@ public class ElementTest {
     public void testTraverse() {
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
         Element div = doc.selectFirst("div");
+        assertNotNull(div);
         final AtomicInteger counter = new AtomicInteger(0);
 
         Element div2 = div.traverse(new NodeVisitor() {
@@ -1799,11 +1806,24 @@ public class ElementTest {
         assertEquals(div2, div);
     }
 
-    @Test
-    public void voidTestFilterCallReturnsElement() {
-        // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an acutal test
+    @Test void testTraverseLambda() {
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
         Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        final AtomicInteger counter = new AtomicInteger(0);
+
+        Element div2 = div.traverse((node, depth) -> counter.incrementAndGet());
+
+        assertEquals(7, counter.get());
+        assertEquals(div2, div);
+    }
+
+    @Test
+    public void testFilterCallReturnsElement() {
+        // doesn't actually test the filter so much as the return type for Element. See node.nodeFilter for an actual test
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
         Element div2 = div.filter(new NodeFilter() {
             @Override
             public FilterResult head(Node node, int depth) {
@@ -1817,6 +1837,28 @@ public class ElementTest {
         });
 
         assertSame(div, div2);
+    }
+
+    @Test void testFilterAsLambda() {
+        Document doc = Jsoup.parse("<div><p>One<p id=2>Two<p>Three");
+        doc.filter((node, depth) -> node.attr("id").equals("2")
+            ? NodeFilter.FilterResult.REMOVE
+            : NodeFilter.FilterResult.CONTINUE);
+
+        assertEquals("<div><p>One</p><p>Three</p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void testForEach() {
+        Document doc = Jsoup.parse("<div><p>Hello</p></div><div>There</div><div id=1>Gone<p></div>");
+        doc.forEach(el -> {
+            if (el.id().equals("1"))
+                el.remove();
+            else if (el.text().equals("There")) {
+                el.text("There Now");
+                el.append("<p>Another</p>");
+            }
+        });
+        assertEquals("<div><p>Hello</p></div><div>There Now<p>Another</p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test
@@ -2098,5 +2140,80 @@ public class ElementTest {
 
         p.removeAttr("foo");
         assertEquals(0, p.attributesSize());
+    }
+
+    @Test void clonedElementsHaveOwnerDocsAndIndependentSettings() {
+        // https://github.com/jhy/jsoup/issues/763
+        Document doc = Jsoup.parse("<div>Text</div><div>Two</div>");
+        doc.outputSettings().prettyPrint(false);
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        Node text = div.childNode(0);
+        assertNotNull(text);
+
+        Element divClone = div.clone();
+        Document docClone = divClone.ownerDocument();
+        assertNotNull(docClone);
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertNotSame(doc, docClone);
+        assertSame(docClone, divClone.childNode(0).ownerDocument());
+        // the cloned text has same owner doc as the cloned div
+
+        doc.outputSettings().prettyPrint(true);
+        assertTrue(doc.outputSettings().prettyPrint());
+        assertFalse(docClone.outputSettings().prettyPrint());
+        assertEquals(1, docClone.children().size()); // check did not get the second div as the owner's children
+        assertEquals(divClone, docClone.child(0)); // note not the head or the body -- not normalized
+    }
+
+    private static Stream<Document.OutputSettings> testOutputSettings() {
+        return Stream.of(
+            new Document.OutputSettings().prettyPrint(true).indentAmount(4),
+            new Document.OutputSettings().prettyPrint(true).indentAmount(1),
+            new Document.OutputSettings().prettyPrint(true).indentAmount(4).outline(true),
+            new Document.OutputSettings().prettyPrint(false)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("testOutputSettings")
+    void prettySerializationRoundTrips(Document.OutputSettings settings) {
+        // https://github.com/jhy/jsoup/issues/1688
+        // tests that repeated html() and parse() does not accumulate errant spaces / newlines
+        Document doc = Jsoup.parse("<div>\nFoo\n<p>\nBar\nqux</p></div>\n<script>\n alert('Hello!');\n</script>");
+        doc.outputSettings(settings);
+        String html = doc.html();
+        Document doc2 = Jsoup.parse(html);
+        doc2.outputSettings(settings);
+        String html2 = doc2.html();
+
+        assertEquals(html, html2);
+    }
+
+    @Test void prettyPrintScriptsDoesNotGrowOnRepeat() {
+        Document doc = Jsoup.parse("<div>\nFoo\n<p>\nBar\nqux</p></div>\n<script>\n alert('Hello!');\n</script>");
+        Document.OutputSettings settings = doc.outputSettings();
+        settings
+            .prettyPrint(true)
+            .outline(true)
+            .indentAmount(4)
+            ;
+
+        String html = doc.html();
+        Document doc2 = Jsoup.parse(html);
+        doc2.outputSettings(settings);
+        String html2 = doc2.html();
+        assertEquals(html, html2);
+    }
+
+    @Test void elementBrText() {
+        // testcase for https://github.com/jhy/jsoup/issues/1437
+        String html = "<p>Hello<br>World</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.select("p").first();
+        assertNotNull(p);
+        assertEquals(html, p.outerHtml());
+        assertEquals("Hello World", p.text());
+        assertEquals("Hello\nWorld", p.wholeText());
     }
 }

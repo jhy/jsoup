@@ -56,6 +56,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Get the attribute key.
      @return the attribute key
      */
+    @Override
     public String getKey() {
         return key;
     }
@@ -80,6 +81,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      Get the attribute value. Will return an empty string if the value is not set.
      @return the attribute value
      */
+    @Override
     public String getValue() {
         return Attributes.checkNotNull(val);
     }

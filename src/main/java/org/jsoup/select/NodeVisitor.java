@@ -14,10 +14,9 @@ import org.jsoup.nodes.Node;
 public interface NodeVisitor {
     /**
      Callback for when a node is first visited.
-     <p>The node may be modified (e.g. {@link Node#attr(String)} or replaced {@link Node#replaceWith(Node)}). If it's
-     {@code instanceOf Element}, you may cast it to an {@link Element} and access those methods.</p>
-     <p>Note that nodes may not be removed during traversal using this method; use {@link
-    NodeTraversor#filter(NodeFilter, Node)} with a {@link NodeFilter.FilterResult#REMOVE} return instead.</p>
+     <p>The node may be modified (e.g. {@link Node#attr(String)}, replaced {@link Node#replaceWith(Node)}) or removed
+     {@link Node#remove()}. If it's {@code instanceOf Element}, you may cast it to an {@link Element} and access those
+     methods.</p>
 
      @param node the node being visited.
      @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node
@@ -27,11 +26,15 @@ public interface NodeVisitor {
 
     /**
      Callback for when a node is last visited, after all of its descendants have been visited.
-     <p>Note that replacement with {@link Node#replaceWith(Node)}</p> is not supported in {@code tail}.
+     <p>This method has a default no-op implementation.</p>
+     <p>Note that neither replacement with {@link Node#replaceWith(Node)} nor removal with {@link Node#remove()} is
+     supported during {@code tail()}.
 
      @param node the node being visited.
      @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node
      of that will have depth 1.
      */
-    void tail(Node node, int depth);
+    default void tail(Node node, int depth) {
+        // no-op by default, to allow just specifying the head() method
+    }
 }

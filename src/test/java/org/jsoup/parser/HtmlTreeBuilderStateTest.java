@@ -45,7 +45,7 @@ public class HtmlTreeBuilderStateTest {
     public void ensureArraysAreSorted() {
         List<Object[]> constants = findConstantArrays(Constants.class);
         ensureSorted(constants);
-        assertEquals(40, constants.size());
+        assertEquals(38, constants.size());
     }
 
     @Test public void ensureTagSearchesAreKnownTags() {
@@ -64,50 +64,50 @@ public class HtmlTreeBuilderStateTest {
     @Test
     public void nestedAnchorElements01() {
         String html = "<html>\n" +
-                "  <body>\n" +
-                "    <a href='#1'>\n" +
-                "        <div>\n" +
-                "          <a href='#2'>child</a>\n" +
-                "        </div>\n" +
-                "    </a>\n" +
-                "  </body>\n" +
-                "</html>";
+            "  <body>\n" +
+            "    <a href='#1'>\n" +
+            "        <div>\n" +
+            "          <a href='#2'>child</a>\n" +
+            "        </div>\n" +
+            "    </a>\n" +
+            "  </body>\n" +
+            "</html>";
         String s = Jsoup.parse(html).toString();
-        assertEquals("<html> \n" +
-                " <head></head>\n" +
-                " <body> <a href=\"#1\"> </a>\n" +
-                "  <div>\n" +
-                "   <a href=\"#1\"> </a><a href=\"#2\">child</a> \n" +
-                "  </div>   \n" +
-                " </body>\n" +
-                "</html>", s);
+        assertEquals("<html>\n" +
+            " <head></head>\n" +
+            " <body><a href=\"#1\"> </a>\n" +
+            "  <div>\n" +
+            "   <a href=\"#1\"></a><a href=\"#2\">child</a>\n" +
+            "  </div>\n" +
+            " </body>\n" +
+            "</html>", s);
     }
 
     @Test
     public void nestedAnchorElements02() {
         String html = "<html>\n" +
-                "  <body>\n" +
-                "    <a href='#1'>\n" +
-                "      <div>\n" +
-                "        <div>\n" +
-                "          <a href='#2'>child</a>\n" +
-                "        </div>\n" +
-                "      </div>\n" +
-                "    </a>\n" +
-                "  </body>\n" +
-                "</html>";
+            "  <body>\n" +
+            "    <a href='#1'>\n" +
+            "      <div>\n" +
+            "        <div>\n" +
+            "          <a href='#2'>child</a>\n" +
+            "        </div>\n" +
+            "      </div>\n" +
+            "    </a>\n" +
+            "  </body>\n" +
+            "</html>";
         String s = Jsoup.parse(html).toString();
-        assertEquals("<html> \n" +
-                " <head></head>\n" +
-                " <body> <a href=\"#1\"> </a>\n" +
-                "  <div>\n" +
-                "   <a href=\"#1\"> </a>\n" +
-                "   <div>\n" +
-                "    <a href=\"#1\"> </a><a href=\"#2\">child</a> \n" +
-                "   </div> \n" +
-                "  </div>   \n" +
-                " </body>\n" +
-                "</html>", s);
+        assertEquals("<html>\n" +
+            " <head></head>\n" +
+            " <body><a href=\"#1\"> </a>\n" +
+            "  <div>\n" +
+            "   <a href=\"#1\"></a>\n" +
+            "   <div>\n" +
+            "    <a href=\"#1\"></a><a href=\"#2\">child</a>\n" +
+            "   </div>\n" +
+            "  </div>\n" +
+            " </body>\n" +
+            "</html>", s);
     }
 
 }

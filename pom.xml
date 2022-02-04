@@ -86,7 +86,7 @@
         <version>3.3.1</version>
         <configuration>
             <doclint>none</doclint>
-            <source>7</source>
+            <source>8</source>
         </configuration>
         <executions>
           <execution>
@@ -136,7 +136,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>5.1.2</version>
+        <version>5.1.3</version>
         <executions>
           <execution>
             <id>bundle-manifest</id>
@@ -211,6 +211,19 @@
             <excludes>
               <exclude>@java.lang.Deprecated</exclude>
             </excludes>
+            <overrideCompatibilityChangeParameters>
+              <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
+              <overrideCompatibilityChangeParameter>
+                <compatibilityChange>METHOD_NEW_DEFAULT</compatibilityChange>
+                <binaryCompatible>true</binaryCompatible>
+                <sourceCompatible>true</sourceCompatible>
+              </overrideCompatibilityChangeParameter>
+              <overrideCompatibilityChangeParameter>
+                <compatibilityChange>METHOD_ABSTRACT_NOW_DEFAULT</compatibilityChange>
+                <binaryCompatible>true</binaryCompatible>
+                <sourceCompatible>true</sourceCompatible>
+              </overrideCompatibilityChangeParameter>
+            </overrideCompatibilityChangeParameters>
           </parameter>
         </configuration>
         <executions>

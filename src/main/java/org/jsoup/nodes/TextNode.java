@@ -74,15 +74,22 @@ public class TextNode extends LeafNode {
         String tail = text.substring(offset);
         text(head);
         TextNode tailNode = new TextNode(tail);
-        if (parent() != null)
-            parent().addChildren(siblingIndex()+1, tailNode);
+        if (parentNode != null)
+            parentNode.addChildren(siblingIndex()+1, tailNode);
 
         return tailNode;
     }
 
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
-        if (prettyPrint && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock() && !isBlank()) || (out.outline() && siblingNodes().size()>0 && !isBlank()) ))
+        final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
+        final boolean parentIndent = parent != null && parent.shouldIndent(out);
+        final boolean blank = isBlank();
+
+        if (parentIndent && StringUtil.startsWithNewline(coreValue()) && blank) // we are skippable whitespace
+            return;
+
+        if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size()>0 && !blank) ))
             indent(accum, depth, out);
 
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);

@@ -970,7 +970,7 @@ enum TokeniserState {
             char c = r.consume();
             switch (c) {
                 case '-':
-                    t.transition(CommentStartDash);
+                    t.transition(CommentEnd);
                     break;
                 case nullChar:
                     t.error(this);
@@ -1052,11 +1052,9 @@ enum TokeniserState {
                     t.transition(Comment);
                     break;
                 case '!':
-                    t.error(this);
                     t.transition(CommentEndBang);
                     break;
                 case '-':
-                    t.error(this);
                     t.commentPending.append('-');
                     break;
                 case eof:
@@ -1065,7 +1063,6 @@ enum TokeniserState {
                     t.transition(Data);
                     break;
                 default:
-                    t.error(this);
                     t.commentPending.append("--").append(c);
                     t.transition(Comment);
             }

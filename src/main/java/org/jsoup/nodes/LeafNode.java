@@ -38,9 +38,8 @@ abstract class LeafNode extends Node {
 
     @Override
     public String attr(String key) {
-        Validate.notNull(key);
         if (!hasAttributes()) {
-            return key.equals(nodeName()) ? (String) value : EmptyString;
+            return nodeName().equals(key) ? (String) value : EmptyString;
         }
         return super.attr(key);
     }

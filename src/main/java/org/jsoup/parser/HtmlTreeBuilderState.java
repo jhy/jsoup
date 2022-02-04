@@ -630,14 +630,38 @@ enum HtmlTreeBuilderState {
                     }
                     // todo - is this right? drops rp, rt if ruby not in scope?
                     break;
+                // InBodyStartEmptyFormatters:
+                case "area":
+                case "br":
+                case "embed":
+                case "img":
+                case "keygen":
+                case "wbr":
+                    tb.reconstructFormattingElements();
+                    tb.insertEmpty(startTag);
+                    tb.framesetOk(false);
+                    break;
+                // Formatters:
+                case "b":
+                case "big":
+                case "code":
+                case "em":
+                case "font":
+                case "i":
+                case "s":
+                case "small":
+                case "strike":
+                case "strong":
+                case "tt":
+                case "u":
+                    tb.reconstructFormattingElements();
+                    el = tb.insert(startTag);
+                    tb.pushActiveFormattingElements(el);
+                    break;
                 default:
                     // todo - bring scan groups in if desired
                     if (!Tag.isKnownTag(name)) { // no special rules for custom tags
                         tb.insert(startTag);
-                    } else if (inSorted(name, Constants.InBodyStartEmptyFormatters)) {
-                        tb.reconstructFormattingElements();
-                        tb.insertEmpty(startTag);
-                        tb.framesetOk(false);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) {
                             tb.processEndTag("p");
@@ -645,10 +669,6 @@ enum HtmlTreeBuilderState {
                         tb.insert(startTag);
                     } else if (inSorted(name, Constants.InBodyStartToHead)) {
                         return tb.process(t, InHead);
-                    } else if (inSorted(name, Constants.Formatters)) {
-                        tb.reconstructFormattingElements();
-                        el = tb.insert(startTag);
-                        tb.pushActiveFormattingElements(el);
                     } else if (inSorted(name, Constants.InBodyStartApplets)) {
                         tb.reconstructFormattingElements();
                         tb.insert(startTag);
@@ -997,8 +1017,7 @@ enum HtmlTreeBuilderState {
                         return false;
                     } else {
                         tb.popStackToClose(name);
-                        tb.resetInsertionMode();
-                        if (tb.state() == InTable) {
+                        if (!tb.resetInsertionMode()) {
                             // not per spec - but haven't transitioned out of table. so try something else
                             tb.insert(startTag);
                             return true;
@@ -1757,9 +1776,7 @@ enum HtmlTreeBuilderState {
         static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
         static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
         static final String[] DdDt = new String[]{"dd", "dt"};
-        static final String[] Formatters = new String[]{"b", "big", "code", "em", "font", "i", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InBodyStartApplets = new String[]{"applet", "marquee", "object"};
-        static final String[] InBodyStartEmptyFormatters = new String[]{"area", "br", "embed", "img", "keygen", "wbr"};
         static final String[] InBodyStartMedia = new String[]{"param", "source", "track"};
         static final String[] InBodyStartInputAttribs = new String[]{"action", "name", "prompt"};
         static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};

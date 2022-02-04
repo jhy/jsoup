@@ -637,6 +637,26 @@ public class SelectorTest {
         assertEquals(".  ", blanks.first().wholeText());
     }
 
+    @Test void containsWholeOwnText() {
+        Document doc = Jsoup.parse("<div><p> jsoup\n The <i>HTML</i> Parser</p><p>jsoup The HTML Parser<br></div>");
+        Elements ps = doc.select("p");
+
+        Elements es1 = doc.select("p:containsWholeOwnText( jsoup\n The  Parser)");
+        Elements es2 = doc.select("p:containsWholeOwnText(jsoup The HTML Parser\n)");
+        assertEquals(1, es1.size());
+        assertEquals(1, es2.size());
+        assertEquals(ps.get(0), es1.first());
+        assertEquals(ps.get(1), es2.first());
+
+        assertEquals(0, doc.select("div:containsWholeOwnText(jsoup the html parser)").size());
+        assertEquals(0, doc.select("div:containsWholeOwnText(jsoup\n the  parser)").size());
+
+        doc = Jsoup.parse("<div><p></p><p> </p><p>.  </p>");
+        Elements blanks = doc.select("p:containsWholeOwnText(  )");
+        assertEquals(1, blanks.size());
+        assertEquals(".  ", blanks.first().wholeText());
+    }
+
     @MultiLocaleTest
     public void containsOwn(Locale locale) {
         Locale.setDefault(locale);
@@ -688,6 +708,43 @@ public class SelectorTest {
         assertEquals("1", p1.first().id());
 
         assertEquals(0, doc.select("p:matchesOwn(there)").size());
+    }
+
+    @Test public void matchesWholeText() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b>\n now</p><p id=2> </p><p id=3></p>");
+
+        Elements p1 = doc.select("p:matchesWholeText((?i)hello there\n now)");
+        assertEquals(1, p1.size());
+        assertEquals("1", p1.first().id());
+
+        assertEquals(1, doc.select("p:matchesWholeText(there\n now)").size());
+        assertEquals(0, doc.select("p:matchesWholeText(There\n now)").size());
+
+        Elements p2 = doc.select("p:matchesWholeText(^\\s+$)");
+        assertEquals(1, p2.size());
+        assertEquals("2", p2.first().id());
+
+        Elements p3 = doc.select("p:matchesWholeText(^$)");
+        assertEquals(1, p3.size());
+        assertEquals("3", p3.first().id());
+    }
+
+    @Test public void matchesWholeOwnText() {
+        Document doc = Jsoup.parse("<p id=1>Hello <b>there</b>\n now</p><p id=2> </p><p id=3><i>Text</i></p>");
+
+        Elements p1 = doc.select("p:matchesWholeOwnText((?i)hello \n now)");
+        assertEquals(1, p1.size());
+        assertEquals("1", p1.first().id());
+
+        assertEquals(0, doc.select("p:matchesWholeOwnText(there\n now)").size());
+
+        Elements p2 = doc.select("p:matchesWholeOwnText(^\\s+$)");
+        assertEquals(1, p2.size());
+        assertEquals("2", p2.first().id());
+
+        Elements p3 = doc.select("p:matchesWholeOwnText(^$)");
+        assertEquals(1, p3.size());
+        assertEquals("3", p3.first().id());
     }
 
     @Test public void testRelaxedTags() {
@@ -1047,5 +1104,10 @@ public class SelectorTest {
         assertEquals(a, d);
         assertEquals(0, e.size());
         assertNotEquals(a, e);
+    }
+
+    @Test public void selectorExceptionNotStringFormatException() {
+        Selector.SelectorParseException ex = new Selector.SelectorParseException("%&");
+        assertEquals("%&", ex.getMessage());
     }
 }

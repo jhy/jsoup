@@ -41,4 +41,10 @@ public class ParseErrorList extends ArrayList<ParseError>{
     public static ParseErrorList tracking(int maxSize) {
         return new ParseErrorList(INITIAL_CAPACITY, maxSize);
     }
+
+    @Override
+    public Object clone() {
+        // all class fields are primitive, so native clone is enough.
+        return super.clone();
+    }
 }
