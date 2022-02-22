@@ -14,8 +14,7 @@ public final class Validate {
      * @param obj object to test
      */
     public static void notNull(@Nullable Object obj) {
-        if (obj == null)
-            throw new IllegalArgumentException("Object must not be null");
+        notNull(obj, "Object must not be null");
     }
 
     /**
@@ -33,8 +32,7 @@ public final class Validate {
      * @param val object to test
      */
     public static void isTrue(boolean val) {
-        if (!val)
-            throw new IllegalArgumentException("Must be true");
+        isTrue(val, "Must be true");
     }
 
     /**
@@ -52,8 +50,7 @@ public final class Validate {
      * @param val object to test
      */
     public static void isFalse(boolean val) {
-        if (val)
-            throw new IllegalArgumentException("Must be false");
+        isFalse(val, "Must be false");
     }
 
     /**
@@ -90,8 +87,7 @@ public final class Validate {
      * @param string the string to test
      */
     public static void notEmpty(@Nullable String string) {
-        if (string == null || string.length() == 0)
-            throw new IllegalArgumentException("String must not be empty");
+        notEmpty(string, "String must not be empty");
     }
 
     /**
