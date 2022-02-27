@@ -5,7 +5,7 @@ import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import static org.jsoup.parser.CharacterReader.maxBufferLen;
@@ -165,9 +165,9 @@ public class TokeniserTest {
         assertEquals(1, parser.getErrors().size());
     }
 
-    @Test public void cp1252SubstitutionTable() throws UnsupportedEncodingException {
+    @Test public void cp1252SubstitutionTable() {
         for (int i = 0; i < Tokeniser.win1252Extensions.length; i++) {
-            String s = new String(new byte[]{ (byte) (i + Tokeniser.win1252ExtensionsStart) }, "Windows-1252");
+            String s = new String(new byte[]{ (byte) (i + Tokeniser.win1252ExtensionsStart) }, Charset.forName("Windows-1252"));
             assertEquals(1, s.length());
 
             // some of these characters are illegal

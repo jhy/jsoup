@@ -206,7 +206,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize); // Android level does not allow us try-with-resources
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), bufferSize); // Android level does not allow us try-with-resources
                 try {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
