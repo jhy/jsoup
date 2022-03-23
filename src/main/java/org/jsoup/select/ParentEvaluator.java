@@ -1,6 +1,6 @@
 package org.jsoup.select;
 
-public class ParentEvaluator extends abstractEvaluator {
+public class ParentEvaluator extends AbstractEvaluator {
 
     public ParentEvaluator() {
     }

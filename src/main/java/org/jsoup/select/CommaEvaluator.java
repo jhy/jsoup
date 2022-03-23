@@ -1,7 +1,7 @@
 package org.jsoup.select;
 
 
-public class CommaEvaluator extends abstractEvaluator{
+public class CommaEvaluator extends AbstractEvaluator{
     public CommaEvaluator() {
     }
 
