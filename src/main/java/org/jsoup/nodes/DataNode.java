@@ -6,6 +6,7 @@ import java.io.IOException;
  A data node, for contents of style, script tags etc, where contents should not show in text().
 
  @author Jonathan Hedley, jonathan@hedley.net */
+
 public class DataNode extends LeafNode {
 
     /**
@@ -16,6 +17,7 @@ public class DataNode extends LeafNode {
         value = data;
     }
 
+    @Override
     public String nodeName() {
         return "#data";
     }
@@ -42,12 +44,12 @@ public class DataNode extends LeafNode {
         accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
-
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
+//	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+//
+//    @Override
+//    public String toString() {
+//        return outerHtml();
+//    }
 
     @Override
     public DataNode clone() {

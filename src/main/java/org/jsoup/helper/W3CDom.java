@@ -17,6 +17,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import javax.annotation.Nullable;
+import javax.print.Doc;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,17 +41,18 @@ import java.util.Properties;
 import java.util.Stack;
 
 import static javax.xml.transform.OutputKeys.METHOD;
+import static org.jsoup.helper.W3CDom.ContextProperty;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
  * for integration with toolsets that use the W3C DOM.
  */
-public class W3CDom {
+public class W3CDom{
     /** For W3C Documents created by this class, this property is set on each node to link back to the original jsoup node. */
     public static final String SourceProperty = "jsoupSource";
-    private static final String ContextProperty = "jsoupContextSource"; // tracks the jsoup context element on w3c doc
-    private static final String ContextNodeProperty = "jsoupContextNode"; // the w3c node used as the creating context
+    static final String ContextProperty = "jsoupContextSource"; // tracks the jsoup context element on w3c doc
+    public static final String ContextNodeProperty = "jsoupContextNode"; // the w3c node used as the creating context
 
 
     /**
@@ -60,6 +62,8 @@ public class W3CDom {
     public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
     protected DocumentBuilderFactory factory;
+
+    Document doc;
 
     public W3CDom() {
         factory = DocumentBuilderFactory.newInstance();
@@ -314,6 +318,8 @@ public class W3CDom {
     /**
      * Implements the conversion by walking the input.
      */
+
+
     protected static class W3CBuilder implements NodeVisitor {
         private static final String xmlnsKey = "xmlns";
         private static final String xmlnsPrefix = "xmlns:";
@@ -421,3 +427,4 @@ public class W3CDom {
 
     }
 }
+

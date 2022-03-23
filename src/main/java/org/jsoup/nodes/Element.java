@@ -76,6 +76,11 @@ public class Element extends Node {
             this.setBaseUri(baseUri);
     }
 
+//    public boolean hasParent() {
+//        return parentNode != null;
+//    }
+
+
     /**
      * Create a new Element from a Tag and a base URI.
      *

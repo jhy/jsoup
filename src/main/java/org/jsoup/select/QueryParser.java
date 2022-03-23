@@ -4,6 +4,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -105,39 +106,44 @@ public class QueryParser {
         evals.clear();
 
         // for most combinators: change the current eval into an AND of the current eval and the new eval
-        switch (combinator) {
-            case '>':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediateParent(currentEval), newEval);
-                break;
-            case ' ':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
-                break;
-            case '+':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
-                break;
-            case '~':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
-                break;
-            case ',':
-                CombiningEvaluator.Or or;
-                if (currentEval instanceof CombiningEvaluator.Or) {
-                    or = (CombiningEvaluator.Or) currentEval;
-                } else {
-                    or = new CombiningEvaluator.Or();
-                    or.add(currentEval);
-                }
-                or.add(newEval);
-                currentEval = or;
-                break;
-            default:
-                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
-        }
+        currentEval = getEvaluator(combinator, currentEval, newEval);
 
         if (replaceRightMost)
             ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
         else rootEval = currentEval;
         evals.add(rootEval);
     }
+//extract method implemented
+    ImmediateParentEvaluator greater_than_case = new ImmediateParentEvaluator();
+    ParentEvaluator space_case = new ParentEvaluator();
+    ImmediatePreviousSiblingEvaluator add_case = new ImmediatePreviousSiblingEvaluator();
+    PreviousSiblingEvaluator tilt_case = new PreviousSiblingEvaluator();
+    CommaEvaluator comma_case = new CommaEvaluator();
+
+
+    private Evaluator getEvaluator(char combinator, Evaluator currentEval, Evaluator newEval) {
+        switch (combinator) {
+            case '>':
+                currentEval = greater_than_case.getEvaluator(currentEval, newEval);
+                break;
+            case ' ':
+                currentEval = space_case.getEvaluator(currentEval, newEval);
+                break;
+            case '+':
+                currentEval = add_case.getEvaluator(currentEval, newEval);
+                break;
+            case '~':
+                currentEval = tilt_case.getEvaluator(currentEval, newEval);
+                break;
+            case ',':
+                currentEval = comma_case.getEvaluator(currentEval, newEval);
+                break;
+            default:
+                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
+        }
+        return currentEval;
+    }
+
 
     private String consumeSubQuery() {
         StringBuilder sq = StringUtil.borrowBuilder();

@@ -76,6 +76,7 @@ public class DocumentType extends LeafNode {
         return "#doctype";
     }
 
+ //1.2 Extract Method move all the if condition in one method
     @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
@@ -84,6 +85,20 @@ public class DocumentType extends LeafNode {
         } else {
             accum.append("<!DOCTYPE");
         }
+//        if (has(NAME))
+//            accum.append(" ").append(attr(NAME));
+//        if (has(PUB_SYS_KEY))
+//            accum.append(" ").append(attr(PUB_SYS_KEY));
+//        if (has(PUBLIC_ID))
+//            accum.append(" \"").append(attr(PUBLIC_ID)).append('"');
+//        if (has(SYSTEM_ID))
+//            accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
+//        accum.append('>');
+        addAttributes(accum);
+
+    }
+
+    void addAttributes(Appendable accum) throws IOException {
         if (has(NAME))
             accum.append(" ").append(attr(NAME));
         if (has(PUB_SYS_KEY))
@@ -93,11 +108,12 @@ public class DocumentType extends LeafNode {
         if (has(SYSTEM_ID))
             accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
         accum.append('>');
+
     }
 
-    @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
-    }
+//    @Override
+//    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+//    }
 
     private boolean has(final String attribute) {
         return !StringUtil.isBlank(attr(attribute));

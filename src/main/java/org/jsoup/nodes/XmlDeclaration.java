@@ -24,6 +24,7 @@ public class XmlDeclaration extends LeafNode {
         this.isProcessingInstruction = isProcessingInstruction;
     }
 
+    @Override
     public String nodeName() {
         return "#declaration";
     }
@@ -78,13 +79,13 @@ public class XmlDeclaration extends LeafNode {
             .append(">");
     }
 
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
-    }
-
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
+//    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+//    }
+//
+//    @Override
+//    public String toString() {
+//        return outerHtml();
+//    }
 
     @Override
     public XmlDeclaration clone() {

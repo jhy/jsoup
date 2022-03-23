@@ -113,6 +113,7 @@ public final class CharacterReader {
      * @return current position
      */
     public int pos() {
+
         return readerPos + bufPos;
     }
 

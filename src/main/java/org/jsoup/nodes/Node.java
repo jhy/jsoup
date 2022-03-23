@@ -222,7 +222,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get this node's children. Presented as an unmodifiable list: new children can not be added, but the child nodes
+     Get this node's children. presented as an unmodifiable list: new children can not be added, but the child nodes
      themselves can be manipulated.
      @return list of children. If no children, returns an empty list.
      */

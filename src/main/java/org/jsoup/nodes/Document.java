@@ -339,7 +339,7 @@ public class Document extends Element {
         return clone;
     }
 
-    @Override
+
     public Document shallowClone() {
         Document clone = new Document(baseUri());
         if (attributes != null)
@@ -435,6 +435,7 @@ public class Document extends Element {
          * @return the document's current escape mode
          */
         public Entities.EscapeMode escapeMode() {
+
             return escapeMode;
         }
 

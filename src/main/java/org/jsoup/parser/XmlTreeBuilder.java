@@ -37,10 +37,10 @@ public class XmlTreeBuilder extends TreeBuilder {
             .escapeMode(Entities.EscapeMode.xhtml)
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
     }
-
-    Document parse(Reader input, String baseUri) {
-        return parse(input, baseUri, new Parser(this));
-    }
+//UNWANTED CODE
+//    Document parse(Reader input, String baseUri) {
+//        return parse(input, baseUri, new Parser(this));
+//    }
 
     Document parse(String input, String baseUri) {
         return parse(new StringReader(input), baseUri, new Parser(this));
@@ -87,16 +87,17 @@ public class XmlTreeBuilder extends TreeBuilder {
         // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         if (startTag.hasAttributes())
             startTag.attributes.deduplicate(settings);
-
-        Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
-        insertNode(el);
+//1.1 rename variable smell
+        Element new_standalone_element = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
+//        Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
+        insertNode(new_standalone_element);
         if (startTag.isSelfClosing()) {
             if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output. see above.
                 tag.setSelfClosing();
         } else {
-            stack.add(el);
+            stack.add(new_standalone_element);
         }
-        return el;
+        return new_standalone_element;
     }
 
     void insert(Token.Comment commentToken) {

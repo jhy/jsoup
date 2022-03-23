@@ -47,6 +47,7 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
+import static org.jsoup.helper.CookieUtil.storeCookies;
 import static org.jsoup.internal.Normalizer.lowerCase;
 
 /**
@@ -1012,6 +1013,8 @@ public class HttpConnection implements Connection {
             return ConstrainableInputStream.wrap(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
+
+
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(HttpConnection.Request req) throws IOException {
             Proxy proxy = req.proxy();
@@ -1059,7 +1062,12 @@ public class HttpConnection implements Connection {
             }
         }
 
-        // set up url, method, header, cookies
+
+//        static void storeCookies(HttpConnection.Request req, URL url, Map<String, List<String>> resHeaders) throws IOException {
+//        req.cookieManager().put(CookieUtil.asUri(url), resHeaders); // stores cookies for session
+//
+//    }
+//        // set up url, method, header, cookies
         private Response(HttpURLConnection conn, HttpConnection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
             this.conn = conn;
             this.req = request;
@@ -1071,7 +1079,7 @@ public class HttpConnection implements Connection {
 
             Map<String, List<String>> resHeaders = createHeaderMap(conn);
             processResponseHeaders(resHeaders); // includes cookie key/val read during header scan
-            CookieUtil.storeCookies(req, url, resHeaders); // add set cookies to cookie store
+            storeCookies(req, url, resHeaders); // add set cookies to cookie store
 
             if (previousResponse != null) { // was redirected
                 // map previous response cookies into this response cookies() object

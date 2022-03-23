@@ -36,6 +36,9 @@ abstract class LeafNode extends Node {
         attr(nodeName(), value);
     }
 
+
+
+
     @Override
     public String attr(String key) {
         if (!hasAttributes()) {
@@ -97,6 +100,13 @@ abstract class LeafNode extends Node {
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
     }
+
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
+
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     protected LeafNode doClone(Node parent) {

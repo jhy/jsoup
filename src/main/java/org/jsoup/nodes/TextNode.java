@@ -97,12 +97,12 @@ public class TextNode extends LeafNode {
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, stripWhite);
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+//	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
+//    @Override
+//    public String toString() {
+//        return outerHtml();
+//    }
 
     @Override
     public TextNode clone() {

@@ -95,7 +95,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
         contextElement = context;
         fragmentParsing = true;
-        Element root = null;
+        Element parent_node = null;
+//        Element root = null;
 
         if (context != null) {
             if (context.ownerDocument() != null) // quirks setup:
@@ -131,9 +132,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 default:
                     tokeniser.transition(TokeniserState.Data);
             }
-            root = new Element(tagFor(contextTag, settings), baseUri);
-            doc.appendChild(root);
-            stack.add(root);
+            parent_node = new Element(tagFor(contextTag, settings), baseUri);
+            doc.appendChild(parent_node);
+            stack.add(parent_node);
             resetInsertionMode();
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
@@ -152,10 +153,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (context != null) {
             // depending on context and the input html, content may have been added outside of the root el
             // e.g. context=p, input=div, the div will have been pushed out.
-            List<Node> nodes = root.siblingNodes();
+            List<Node> nodes = parent_node.siblingNodes();
             if (!nodes.isEmpty())
-                root.insertChildren(-1, nodes);
-            return root.childNodes();
+                parent_node.insertChildren(-1, nodes);
+            return parent_node.childNodes();
         }
         else
             return doc.childNodes();

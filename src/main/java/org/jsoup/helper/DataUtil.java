@@ -11,6 +11,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
+//import org.jsoup.helper.BomCharset;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -317,13 +318,14 @@ public final class DataUtil {
         return null;
     }
 
-    private static class BomCharset {
-        private final String charset;
-        private final boolean offset;
-
-        public BomCharset(String charset, boolean offset) {
-            this.charset = charset;
-            this.offset = offset;
-        }
-    }
+//    private static class BomCharset {
+//        private final String charset;
+//        private final boolean offset;
+//
+//        public BomCharset(String charset, boolean offset) {
+//            this.charset = charset;
+//            this.offset = offset;
+//        }
+//    }
 }
+
