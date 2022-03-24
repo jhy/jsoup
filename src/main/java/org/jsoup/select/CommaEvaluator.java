@@ -1,11 +1,18 @@
 package org.jsoup.select;
 
 
-public class CommaEvaluator extends AbstractEvaluator{
+import org.jsoup.nodes.Element;
+
+public class CommaEvaluator extends Evaluator{
     public CommaEvaluator() {
     }
 
-      Evaluator getEvaluator(Evaluator currentEval, Evaluator newEval) {
+    @Override
+    public boolean matches(Element root, Element element) {
+        return false;
+    }
+
+    public Evaluator getEvaluator(Evaluator currentEval, Evaluator newEval) {
         CombiningEvaluator.Or or;
         if (currentEval instanceof CombiningEvaluator.Or) {
             or = (CombiningEvaluator.Or) currentEval;

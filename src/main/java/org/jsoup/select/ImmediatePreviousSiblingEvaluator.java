@@ -1,10 +1,18 @@
 package org.jsoup.select;
 
-public class ImmediatePreviousSiblingEvaluator extends AbstractEvaluator {
+import org.jsoup.nodes.Element;
+
+public class ImmediatePreviousSiblingEvaluator extends Evaluator {
     public ImmediatePreviousSiblingEvaluator() {
     }
 
-     CombiningEvaluator.And getEvaluator(Evaluator currentEval, Evaluator newEval) {
+    @Override
+    public boolean matches(Element root, Element element) {
+        return false;
+    }
+
+    @Override
+    public CombiningEvaluator.And getEvaluator(Evaluator currentEval, Evaluator newEval) {
         return new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
     }
 }

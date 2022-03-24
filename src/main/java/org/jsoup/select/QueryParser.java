@@ -113,34 +113,14 @@ public class QueryParser {
         else rootEval = currentEval;
         evals.add(rootEval);
     }
-//extract method implemented
-    ImmediateParentEvaluator greater_than_case = new ImmediateParentEvaluator();
-    ParentEvaluator space_case = new ParentEvaluator();
-    ImmediatePreviousSiblingEvaluator add_case = new ImmediatePreviousSiblingEvaluator();
-    PreviousSiblingEvaluator tilt_case = new PreviousSiblingEvaluator();
-    CommaEvaluator comma_case = new CommaEvaluator();
 
 
     private Evaluator getEvaluator(char combinator, Evaluator currentEval, Evaluator newEval) {
-        switch (combinator) {
-            case '>':
-                currentEval = greater_than_case.getEvaluator(currentEval, newEval);
-                break;
-            case ' ':
-                currentEval = space_case.getEvaluator(currentEval, newEval);
-                break;
-            case '+':
-                currentEval = add_case.getEvaluator(currentEval, newEval);
-                break;
-            case '~':
-                currentEval = tilt_case.getEvaluator(currentEval, newEval);
-                break;
-            case ',':
-                currentEval = comma_case.getEvaluator(currentEval, newEval);
-                break;
-            default:
-                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
+        currentEval = EvaluatorFactory.createEvaluator(combinator);
+        if (currentEval == null) {
+            throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
+        currentEval = currentEval.getEvaluator(currentEval, newEval);
         return currentEval;
     }
 

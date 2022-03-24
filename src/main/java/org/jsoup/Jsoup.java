@@ -1,6 +1,6 @@
 package org.jsoup;
 
-import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.DocumentLoader;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -130,7 +130,7 @@ Connection con3 = session.newRequest();
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
     public static Document parse(File file, @Nullable String charsetName, String baseUri) throws IOException {
-        return DataUtil.load(file, charsetName, baseUri);
+        return DocumentLoader.load(file, charsetName, baseUri);
     }
 
     /**
@@ -145,7 +145,7 @@ Connection con3 = session.newRequest();
      @see #parse(File, String, String) parse(file, charset, baseUri)
      */
     public static Document parse(File file, @Nullable String charsetName) throws IOException {
-        return DataUtil.load(file, charsetName, file.getAbsolutePath());
+        return DocumentLoader.load(file, charsetName, file.getAbsolutePath());
     }
 
     /**
@@ -162,7 +162,7 @@ Connection con3 = session.newRequest();
      @since 1.15.1
      */
     public static Document parse(File file) throws IOException {
-        return DataUtil.load(file, null, file.getAbsolutePath());
+        return DocumentLoader.load(file, null, file.getAbsolutePath());
     }
 
     /**
@@ -179,7 +179,7 @@ Connection con3 = session.newRequest();
      @since 1.14.2
      */
     public static Document parse(File file, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        return DataUtil.load(file, charsetName, baseUri, parser);
+        return DocumentLoader.load(file, charsetName, baseUri, parser);
     }
 
      /**
@@ -194,7 +194,7 @@ Connection con3 = session.newRequest();
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
     public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
-        return DataUtil.load(in, charsetName, baseUri);
+        return DocumentLoader.load(in, charsetName, baseUri);
     }
 
     /**
@@ -211,7 +211,7 @@ Connection con3 = session.newRequest();
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
     public static Document parse(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        return DataUtil.load(in, charsetName, baseUri, parser);
+        return DocumentLoader.load(in, charsetName, baseUri, parser);
     }
 
     /**

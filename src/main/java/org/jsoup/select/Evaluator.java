@@ -881,4 +881,8 @@ public abstract class Evaluator {
             return ":matchText";
         }
     }
+
+    public Evaluator getEvaluator(Evaluator e, Evaluator b){
+        return null;
+    };
 }
