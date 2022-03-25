@@ -76,9 +76,9 @@ public class Element extends Node {
             this.setBaseUri(baseUri);
     }
 
-//    public boolean hasParent() {
-//        return parentNode != null;
-//    }
+    public boolean hasParent() {
+        return parentNode != null;
+    }
 
     static boolean lastCharIsWhitespace(StringBuilder sb) {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';

@@ -82,10 +82,10 @@ public class XmlDeclaration extends LeafNode {
 //    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
 //    }
 //
-//    @Override
-//    public String toString() {
-//        return outerHtml();
-//    }
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
 
     @Override
     public XmlDeclaration clone() {
