@@ -99,10 +99,10 @@ public class TextNode extends LeafNode {
 
 //	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
-//    @Override
-//    public String toString() {
-//        return outerHtml();
-//    }
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
 
     @Override
     public TextNode clone() {
@@ -128,9 +128,9 @@ public class TextNode extends LeafNode {
         return text.replaceFirst("^\\s+", "");
     }
 
-    static boolean lastCharIsWhitespace(StringBuilder sb) {
+    /*static boolean lastCharIsWhitespace(StringBuilder sb) {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
-    }
+    }*/
 
 
 }

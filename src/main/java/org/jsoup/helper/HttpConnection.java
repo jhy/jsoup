@@ -47,7 +47,6 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
-import static org.jsoup.helper.CookieUtil.storeCookies;
 import static org.jsoup.internal.Normalizer.lowerCase;
 
 /**
@@ -62,7 +61,7 @@ public class HttpConnection implements Connection {
      * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
      */
     public static final String DEFAULT_UA =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
     private static final String USER_AGENT = "User-Agent";
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String MULTIPART_FORM_DATA = "multipart/form-data";
@@ -114,17 +113,17 @@ public class HttpConnection implements Connection {
      * @param url unescaped URL
      * @return escaped URL
      */
-	private static String encodeUrl(String url) {
+    private static String encodeUrl(String url) {
         try {
             URL u = new URL(url);
             return encodeUrl(u).toExternalForm();
         } catch (Exception e) {
             return url;
         }
-	}
+    }
 
     static URL encodeUrl(URL u) {
-	    u = punyUrl(u);
+        u = punyUrl(u);
         try {
             //  odd way to encode urls, but it works!
             String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
@@ -232,9 +231,9 @@ public class HttpConnection implements Connection {
     }
 
     public Connection ignoreHttpErrors(boolean ignoreHttpErrors) {
-		req.ignoreHttpErrors(ignoreHttpErrors);
-		return this;
-	}
+        req.ignoreHttpErrors(ignoreHttpErrors);
+        return this;
+    }
 
     public Connection ignoreContentType(boolean ignoreContentType) {
         req.ignoreContentType(ignoreContentType);
@@ -248,8 +247,8 @@ public class HttpConnection implements Connection {
     }
 
     public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
-	    req.sslSocketFactory(sslSocketFactory);
-	    return this;
+        req.sslSocketFactory(sslSocketFactory);
+        return this;
     }
 
     public Connection data(String key, String filename, InputStream inputStream) {
@@ -492,9 +491,9 @@ public class HttpConnection implements Connection {
             int i = 0;
             // BOM:
             if (input.length >= 3
-                && (input[0] & 0xFF) == 0xEF
-                && (input[1] & 0xFF) == 0xBB
-                && (input[2] & 0xFF) == 0xBF) {
+                    && (input[0] & 0xFF) == 0xEF
+                    && (input[1] & 0xFF) == 0xBB
+                    && (input[2] & 0xFF) == 0xBF) {
                 i = 3;
             }
 
@@ -888,7 +887,7 @@ public class HttpConnection implements Connection {
                     return execute(req, res);
                 }
                 if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
-                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+                    throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
 
                 // check that we can handle the returned content type; if not, abort before fetching it
                 String contentType = res.contentType();
@@ -896,7 +895,7 @@ public class HttpConnection implements Connection {
                         && !req.ignoreContentType()
                         && !contentType.startsWith("text/")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
-                        )
+                )
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml",
                             contentType, req.url().toString());
 
@@ -915,8 +914,8 @@ public class HttpConnection implements Connection {
                         res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
                     }
                     res.bodyStream = ConstrainableInputStream
-                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
-                        .timeout(startTime, req.timeout())
+                            .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
+                            .timeout(startTime, req.timeout())
                     ;
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
@@ -988,7 +987,7 @@ public class HttpConnection implements Connection {
             Validate.notNull(byteData);
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body = (charset == null ? DataUtil.UTF_8 : Charset.forName(charset))
-                .decode(byteData).toString();
+                    .decode(byteData).toString();
             ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
         }
@@ -1013,15 +1012,13 @@ public class HttpConnection implements Connection {
             return ConstrainableInputStream.wrap(bodyStream, DataUtil.bufferSize, req.maxBodySize());
         }
 
-
-
         // set up connection defaults, and details from request
         private static HttpURLConnection createConnection(HttpConnection.Request req) throws IOException {
             Proxy proxy = req.proxy();
             final HttpURLConnection conn = (HttpURLConnection) (
-                proxy == null ?
-                req.url().openConnection() :
-                req.url().openConnection(proxy)
+                    proxy == null ?
+                            req.url().openConnection() :
+                            req.url().openConnection(proxy)
             );
 
             conn.setRequestMethod(req.method().name());
@@ -1062,12 +1059,7 @@ public class HttpConnection implements Connection {
             }
         }
 
-
-//        static void storeCookies(HttpConnection.Request req, URL url, Map<String, List<String>> resHeaders) throws IOException {
-//        req.cookieManager().put(CookieUtil.asUri(url), resHeaders); // stores cookies for session
-//
-//    }
-//        // set up url, method, header, cookies
+        // set up url, method, header, cookies
         private Response(HttpURLConnection conn, HttpConnection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
             this.conn = conn;
             this.req = request;
@@ -1079,7 +1071,7 @@ public class HttpConnection implements Connection {
 
             Map<String, List<String>> resHeaders = createHeaderMap(conn);
             processResponseHeaders(resHeaders); // includes cookie key/val read during header scan
-            storeCookies(req, url, resHeaders); // add set cookies to cookie store
+            CookieUtil.storeCookies(req, url, resHeaders); // add set cookies to cookie store
 
             if (previousResponse != null) { // was redirected
                 // map previous response cookies into this response cookies() object
@@ -1233,11 +1225,11 @@ public class HttpConnection implements Connection {
             boolean first = true;
             // reconstitute the query, ready for appends
             url
-                .append(in.getProtocol())
-                .append("://")
-                .append(in.getAuthority()) // includes host, port
-                .append(in.getPath())
-                .append("?");
+                    .append(in.getProtocol())
+                    .append("://")
+                    .append(in.getAuthority()) // includes host, port
+                    .append(in.getPath())
+                    .append("?");
             if (in.getQuery() != null) {
                 url.append(in.getQuery());
                 first = false;
@@ -1249,9 +1241,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
-                    .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
+                        .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
+                        .append('=')
+                        .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
             }
             req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params
@@ -1279,7 +1271,7 @@ public class HttpConnection implements Connection {
 
         public static KeyVal create(String key, String filename, InputStream stream) {
             return new KeyVal(key, filename)
-                .inputStream(stream);
+                    .inputStream(stream);
         }
 
         private KeyVal(String key, String value) {

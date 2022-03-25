@@ -80,6 +80,10 @@ public class Element extends Node {
 //        return parentNode != null;
 //    }
 
+    static boolean lastCharIsWhitespace(StringBuilder sb) {
+        return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
+    }
+
 
     /**
      * Create a new Element from a Tag and a base URI.
@@ -1260,8 +1264,8 @@ public class Element extends Node {
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
                     if (accum.length() > 0 &&
-                        (element.isBlock() || element.tag.normalName().equals("br")) &&
-                        !TextNode.lastCharIsWhitespace(accum))
+                        (element.isBlock() || element.tag.normalName().equals("br")) && !lastCharIsWhitespace(accum))
+                       // !TextNode.lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
             }
@@ -1270,7 +1274,7 @@ public class Element extends Node {
                 // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
                 if (node instanceof Element) {
                     Element element = (Element) node;
-                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
 
@@ -1357,12 +1361,13 @@ public class Element extends Node {
         if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
-            StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
+            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
+            //StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
     }
 
     /** For normalized text, treat a br element as a space, if there is not already a space. */
     private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
-        if (element.tag.normalName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
+        if (element.tag.normalName().equals("br") && !lastCharIsWhitespace(accum))
             accum.append(" ");
     }
 

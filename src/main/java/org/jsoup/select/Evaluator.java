@@ -37,6 +37,8 @@ public abstract class Evaluator {
      */
     public abstract boolean matches(Element root, Element element);
 
+//    public abstract CombiningEvaluator.And getEvaluator(char c, Evaluator currentEval, Evaluator newEval);
+
     /**
      * Evaluator for tag name
      */
@@ -882,7 +884,7 @@ public abstract class Evaluator {
         }
     }
 
-    public Evaluator getEvaluator(Evaluator e, Evaluator b){
-        return null;
-    };
+//    public Evaluator getEvaluator(char c,Evaluator e, Evaluator b){
+//        return null;
+//    };
 }

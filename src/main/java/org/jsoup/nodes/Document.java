@@ -194,9 +194,9 @@ public class Document extends Element {
 
         normaliseStructure("head", htmlEl);
         normaliseStructure("body", htmlEl);
-        
+
         ensureMetaCharsetElement();
-        
+
         return this;
     }
 
@@ -236,7 +236,7 @@ public class Document extends Element {
         }
         // ensure parented by <html>
         if (master.parent() != null && !master.parent().equals(htmlEl)) {
-            htmlEl.appendChild(master); // includes remove()            
+            htmlEl.appendChild(master); // includes remove()
         }
     }
 
@@ -260,71 +260,71 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
-    
+
     /**
      * Sets the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset(java.nio.charset.Charset)
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
-     * 
+     *
      * <p>This enables
      * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
-     * 
+     *
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
      * </ul>
-     * 
+     *
      * @param charset Charset
-     * 
-     * @see #updateMetaCharsetElement(boolean) 
-     * @see OutputSettings#charset(java.nio.charset.Charset) 
+     *
+     * @see #updateMetaCharsetElement(boolean)
+     * @see OutputSettings#charset(java.nio.charset.Charset)
      */
     public void charset(Charset charset) {
         updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
-    
+
     /**
      * Returns the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset()}.
-     * 
+     *
      * @return Current Charset
-     * 
-     * @see OutputSettings#charset() 
+     *
+     * @see OutputSettings#charset()
      */
     public Charset charset() {
         return outputSettings.charset();
     }
-    
+
     /**
      * Sets whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
      * modified.</p>
-     * 
+     *
      * @param update If <tt>true</tt> the element updated on charset
      * changes, <tt>false</tt> if not
-     * 
-     * @see #charset(java.nio.charset.Charset) 
+     *
+     * @see #charset(java.nio.charset.Charset)
      */
     public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = update;
     }
-    
+
     /**
      * Returns whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * @return Returns <tt>true</tt> if the element is updated on charset
      * changes, <tt>false</tt> if not
      */
@@ -347,21 +347,21 @@ public class Document extends Element {
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
-    
+
     /**
      * Ensures a meta charset (html) or xml declaration (xml) with the current
      * encoding used. This only applies with
      * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
      * <tt>true</tt>, otherwise this method does nothing.
-     * 
+     *
      * <ul>
      * <li>An existing element gets updated with the current charset</li>
      * <li>If there's no element yet it will be inserted</li>
      * <li>Obsolete elements are removed</li>
      * </ul>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
@@ -402,7 +402,7 @@ public class Document extends Element {
             }
         }
     }
-    
+
 
     /**
      * A Document's output settings control the form of the text() and html() methods.
@@ -425,7 +425,7 @@ public class Document extends Element {
         private Syntax syntax = Syntax.html;
 
         public OutputSettings() {}
-        
+
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
          * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
@@ -532,7 +532,7 @@ public class Document extends Element {
             prettyPrint = pretty;
             return this;
         }
-        
+
         /**
          * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
          * all tags as block.
@@ -541,7 +541,7 @@ public class Document extends Element {
         public boolean outline() {
             return outline;
         }
-        
+
         /**
          * Enable or disable HTML outline mode.
          * @param outlineMode new outline setting
