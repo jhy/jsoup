@@ -34,10 +34,12 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <integration.test.arguments>
+      <!-- compatibility with jdk 8 -->
+      -XX:+IgnoreUnrecognizedVMOptions
       <!-- junit use reflection to run tests -->
-      --add-exports jsoup/org.jsoup.integration=ALL-UNNAMED
-      --add-exports jsoup/org.jsoup.integration.servlets=ALL-UNNAMED
-      --add-opens jsoup/org.jsoup.integration=ALL-UNNAMED
+      --add-exports=org.jsoup/org.jsoup.integration=ALL-UNNAMED
+      --add-exports=org.jsoup/org.jsoup.integration.servlets=ALL-UNNAMED
+      --add-opens=org.jsoup/org.jsoup.integration=ALL-UNNAMED
     </integration.test.arguments>
   </properties>
 
@@ -247,15 +249,12 @@
                     <artifactId>${project.artifactId}</artifactId>
                     <version>${project.version}</version>
                   </artifact>
-                  <moduleInfo>
-                    <name>jsoup</name>
-                    <requires>
-                      !jsr305;
-                    </requires>
-                    <exports>
-                      org.jsoup;
-                    </exports>
-                  </moduleInfo>
+                  <moduleInfoSource>
+                    module org.jsoup {
+                      requires java.xml;
+                      exports org.jsoup;
+                    }
+                  </moduleInfoSource>
                 </module>
               </modules>
               <jdepsExtraArgs>
