@@ -34,9 +34,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <integration.test.arguments>
-      --add-exports org.jsoup/org.jsoup.integration=ALL-UNNAMED
-      --add-exports org.jsoup/org.jsoup.integration.servlets=ALL-UNNAMED
-      --add-opens org.jsoup/org.jsoup.integration=ALL-UNNAMED
+      <!-- junit use reflection to run tests -->
+      --add-exports jsoup/org.jsoup.integration=ALL-UNNAMED
+      --add-exports jsoup/org.jsoup.integration.servlets=ALL-UNNAMED
+      --add-opens jsoup/org.jsoup.integration=ALL-UNNAMED
     </integration.test.arguments>
   </properties>
 
@@ -128,9 +129,6 @@
         <version>3.2.0</version>
         <configuration>
           <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
-            </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
           <excludes>
@@ -260,6 +258,9 @@
                   </moduleInfo>
                 </module>
               </modules>
+              <jdepsExtraArgs>
+                <arg>--ignore-missing-deps</arg>
+              </jdepsExtraArgs>
             </configuration>
           </execution>
         </executions>
