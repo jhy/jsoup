@@ -33,6 +33,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <integration.test.arguments>
+      --add-exports org.jsoup/org.jsoup.integration=ALL-UNNAMED
+      --add-exports org.jsoup/org.jsoup.integration.servlets=ALL-UNNAMED
+      --add-opens org.jsoup/org.jsoup.integration=ALL-UNNAMED
+    </integration.test.arguments>
   </properties>
 
   <build>
@@ -181,6 +186,9 @@
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
+            <configuration>
+              <argLine>${integration.test.arguments}</argLine>
+            </configuration>
           </execution>
         </executions>
         <configuration>
@@ -216,6 +224,43 @@
             <goals>
               <goal>cmp</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>1.0.0.RC1</version>
+        <executions>
+          <execution>
+            <id>add-module-info</id>
+            <phase>package</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <overwriteExistingFiles>true</overwriteExistingFiles>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <jvmVersion>9</jvmVersion>
+              <modules>
+                <module>
+                  <artifact>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>${project.artifactId}</artifactId>
+                    <version>${project.version}</version>
+                  </artifact>
+                  <moduleInfo>
+                    <name>jsoup</name>
+                    <requires>
+                      !jsr305;
+                    </requires>
+                    <exports>
+                      org.jsoup;
+                    </exports>
+                  </moduleInfo>
+                </module>
+              </modules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -287,6 +332,9 @@
                   <goal>integration-test</goal>
                   <goal>verify</goal>
                 </goals>
+                <configuration>
+                  <argLine>${integration.test.arguments}</argLine>
+                </configuration>
               </execution>
             </executions>
           </plugin>
