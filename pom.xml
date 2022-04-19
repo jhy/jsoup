@@ -249,15 +249,13 @@
                     <artifactId>${project.artifactId}</artifactId>
                     <version>${project.version}</version>
                   </artifact>
-                  <moduleInfoSource>
-                    module org.jsoup {
-                      requires java.xml;
-                      exports org.jsoup;
-                    }
-                  </moduleInfoSource>
+                  <moduleInfoFile>
+                    ${project.build.sourceDirectory}/../moditect/module-info.java
+                  </moduleInfoFile>
                 </module>
               </modules>
               <jdepsExtraArgs>
+                <!-- Ignore jsr305 -->
                 <arg>--ignore-missing-deps</arg>
               </jdepsExtraArgs>
             </configuration>
