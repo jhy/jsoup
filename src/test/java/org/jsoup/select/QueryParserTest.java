@@ -25,6 +25,21 @@ public class QueryParserTest {
         assertEquals("l2", doc.select(">body>p>strong,>body>*>li>strong").text());
     }
 
+    @Test public void testConsumeSubQuery_Class() {
+        Document doc = Jsoup.parse("<html><head>h</head><body>" +
+                "<div class=\"entry__header\">" +
+                "<span class=\"item1\">A</span>" +
+                "<span class=\"item2\">B</span></div>" +
+                "<div class=\"entry__body\">" +
+                "<div class=\"entry__header\">"+
+                "<span class=\"item1\">C</span>" +
+                "<span class=\"item2\">D</span></div></div></html>");
+        assertEquals("A B",doc.body().select(">.entry__header>.item1, >.entry__header>.item2").text());
+        assertEquals("A B C D",doc.body().select(".entry__header>.item1, .entry__header>.item2").text());
+        assertEquals("A B D",doc.body().select(">.entry__header>.item1, .entry__header>.item2").text());
+        assertEquals("A B C",doc.body().select(".entry__header>.item1, >.entry__header>.item2").text());
+    }
+
     @Test public void testOrGetsCorrectPrecedence() {
         // tests that a selector "a b, c d, e f" evals to (a AND b) OR (c AND d) OR (e AND f)"
         // top level or, three child ands
