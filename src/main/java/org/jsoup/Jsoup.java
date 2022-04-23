@@ -94,19 +94,19 @@ public class Jsoup {
     /**
      Creates a new {@link Connection} to use as a session. Connection settings (user-agent, timeouts, URL, etc), and
      cookies will be maintained for the session. Use examples:
-<pre><code>
-Connection session = Jsoup.newSession()
+     <pre><code>
+     Connection session = Jsoup.newSession()
      .timeout(20 * 1000)
      .userAgent("FooBar 2000");
 
-Document doc1 = session.newRequest()
+     Document doc1 = session.newRequest()
      .url("https://jsoup.org/").data("ref", "example")
      .get();
-Document doc2 = session.newRequest()
+     Document doc2 = session.newRequest()
      .url("https://en.wikipedia.org/wiki/Main_Page")
      .get();
-Connection con3 = session.newRequest();
-</code></pre>
+     Connection con3 = session.newRequest();
+     </code></pre>
 
      <p>For multi-threaded requests, it is safe to use this session between threads, but take care to call {@link
     Connection#newRequest()} per request and not share that instance between threads when executing or parsing.</p>
@@ -182,7 +182,7 @@ Connection con3 = session.newRequest();
         return DataUtil.load(file, charsetName, baseUri, parser);
     }
 
-     /**
+    /**
      Read an input stream, and parse it to a Document.
 
      @param in          input stream to read. Make sure to close it after parsing.
@@ -278,17 +278,32 @@ Connection con3 = session.newRequest();
         Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
         String body = clean.body().html();
+        // Remove the none used segment of body to get the pure link name.
         if (body.startsWith("<a") && body.endsWith("</a>")) {
-            StringBuilder sb = new StringBuilder();
-            int begin = body.indexOf('>', 2);
-            int end = body.indexOf("</a>");
-            if (begin + 1 == end) {
-                return "";
+            StringBuilder cleanSb = new StringBuilder();
+            int nameBegin = body.indexOf('>');
+            int segmentBegin;
+            int nameEnd = body.indexOf("</a>");
+            while (true) {
+                segmentBegin = nameEnd + 4;
+                if (nameBegin + 1 != nameEnd) {
+                    for (int i = nameBegin + 1; i < nameEnd; i++) {
+                        cleanSb.append(body.charAt(i));
+                    }
+                }
+                if (segmentBegin != body.indexOf("<a", segmentBegin)) {
+                    for (int i = segmentBegin; i < body.indexOf("<a", segmentBegin); i++) {
+                        cleanSb.append(body.charAt(i));
+                    }
+                    segmentBegin = body.indexOf("<a", segmentBegin);
+                }
+                if (nameEnd == body.length() - 4) {
+                    break;
+                }
+                nameBegin = body.indexOf('>', segmentBegin);
+                nameEnd = body.indexOf("</a>", segmentBegin);
             }
-            for (int i = begin + 1; i < end; i++) {
-                sb.append(body.charAt(i));
-            }
-            return sb.toString();
+            return cleanSb.toString();
         } else {
             return body;
         }
