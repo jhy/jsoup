@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +28,6 @@ import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -523,16 +520,6 @@ public class ConnectTest {
         String url =
             "https://gist.githubusercontent.com/krystiangorecki/d3bad50ef5615f06b077438607423533/raw/71adfdf81121282ea936510ed6cfe440adeb2d83/JsoupIssue1218.html";
         String localUrl = FileServlet.urlTo(localPath);
-
-        boolean is_connected = false;
-        try {
-            URL url1 = new URL(url);
-            URLConnection urlConnection = url1.openConnection();
-            urlConnection.connect();
-            is_connected = true;
-            assumeTrue(is_connected);
-        }catch (Exception e){
-        }
 
         Document docFromGithub = Jsoup.connect(url).get(); // different chunks meant GH would error but local not...
         Document docFromLocalServer = Jsoup.connect(localUrl).get();

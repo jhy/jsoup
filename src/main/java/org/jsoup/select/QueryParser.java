@@ -141,6 +141,7 @@ public class QueryParser {
 
     private String consumeSubQuery() {
         StringBuilder sq = StringUtil.borrowBuilder();
+        boolean is_new_class_query = false;
         while (!tq.isEmpty()) {
             if (tq.matches("("))
                 sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
@@ -152,7 +153,19 @@ public class QueryParser {
                 else
                     tq.consume();
             else
+                else{
+                if (tq.consume()=='>')
+                    is_new_class_query = true;
+            }
+            else{
+                //  If it is a new sub query of class, add '>' back into the query.
+                if (is_new_class_query && tq.toString().charAt(0)=='.'){
+                    sq.append('>');
+                    is_new_class_query = false;
+                }
                 sq.append(tq.consume());
+
+            }
         }
         return StringUtil.releaseBuilder(sq);
     }
