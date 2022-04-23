@@ -313,6 +313,14 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <!-- use 2.8.0 for Java 7 projects -->
+      <version>3.8.0</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- junit -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

@@ -262,6 +262,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
+        if (startTag.hasAttributes())
+            startTag.attributes.deduplicate(settings);
+
         Tag tag = tagFor(startTag.name(), settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el);
