@@ -277,7 +277,21 @@ Connection con3 = session.newRequest();
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
         Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);
-        return clean.body().html();
+        String body = clean.body().html();
+        if (body.startsWith("<a") && body.endsWith("</a>")) {
+            StringBuilder sb = new StringBuilder();
+            int begin = body.indexOf('>', 2);
+            int end = body.indexOf("</a>");
+            if (begin + 1 == end) {
+                return "";
+            }
+            for (int i = begin + 1; i < end; i++) {
+                sb.append(body.charAt(i));
+            }
+            return sb.toString();
+        } else {
+            return body;
+        }
     }
 
     /**
