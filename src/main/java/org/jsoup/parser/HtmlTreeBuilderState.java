@@ -329,8 +329,11 @@ enum HtmlTreeBuilderState {
             final ArrayList<Element> stack;
             Element el;
 //             cleanup duplicate attributes:
-            if (startTag.hasAttributes()) {
-                startTag.attributes.deduplicate(tb.settings);
+            if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
+                int dupes = startTag.attributes.deduplicate(tb.settings);
+                if (dupes > 0) {
+                    tb.error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
+                }
             }
 
             switch (name) {
