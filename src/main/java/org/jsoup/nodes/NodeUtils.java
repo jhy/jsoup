@@ -32,6 +32,31 @@ final class NodeUtils {
     }
 
     /**
+     * Judge whether the input document has a xmlns property,
+     * which will cause the selectXpath method return null.
+     * @param wDoc document to be judged.
+     * @param contextNode node to be judged.
+     * @param nodeList nodeList to be judged.
+     * @param nodeType nodeType to be judged.
+     */
+    public static <T extends Node> void judge(org.w3c.dom.Document wDoc, org.w3c.dom.Node contextNode, NodeList nodeList, Class<T> nodeType) {
+        if (wDoc == null) {
+            System.out.println("[Warning] the result may be null because the HTML Dom has a xmlns property!");
+        }
+        if (contextNode == null) {
+            System.out.println("[Warning] the result may be null because the HTML Dom has a xmlns property!");
+        }
+        if (nodeList == null) {
+            System.out.println("[Warning] the result may be null because the HTML Dom has a xmlns property!");
+        }
+        W3CDom w3c = new W3CDom();
+        List<T> result = w3c.sourceNodes(nodeList, nodeType);
+        if (result == null || result.size() == 0) {
+            System.out.println("[Warning] the result may be null because the HTML Dom has a xmlns property!");
+        }
+    }
+
+    /**
      This impl works by compiling the input xpath expression, and then evaluating it against a W3C Document converted
      from the original jsoup element. The original jsoup elements are then fetched from the w3c doc user data (where we
      stashed them during conversion). This process could potentially be optimized by transpiling the compiled xpath
@@ -46,6 +71,7 @@ final class NodeUtils {
         org.w3c.dom.Document wDoc = w3c.fromJsoup(el);
         org.w3c.dom.Node contextNode = w3c.contextNode(wDoc);
         NodeList nodeList = w3c.selectXpath(xpath, contextNode);
+        judge(wDoc, contextNode, nodeList, nodeType);
         return w3c.sourceNodes(nodeList, nodeType);
     }
 }
