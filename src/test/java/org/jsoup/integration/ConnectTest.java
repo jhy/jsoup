@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.Validate;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
 import org.jsoup.internal.StringUtil;
@@ -28,6 +29,7 @@ import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests Jsoup.connect against a local server.
@@ -520,6 +522,8 @@ public class ConnectTest {
         String url =
             "https://gist.githubusercontent.com/krystiangorecki/d3bad50ef5615f06b077438607423533/raw/71adfdf81121282ea936510ed6cfe440adeb2d83/JsoupIssue1218.html";
         String localUrl = FileServlet.urlTo(localPath);
+
+        assumeTrue(Validate.check_connection(url));
 
         Document docFromGithub = Jsoup.connect(url).get(); // different chunks meant GH would error but local not...
         Document docFromLocalServer = Jsoup.connect(localUrl).get();

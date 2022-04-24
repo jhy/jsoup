@@ -1,6 +1,8 @@
 package org.jsoup.helper;
 
 import javax.annotation.Nullable;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * Simple validation methods. Designed for jsoup internal use
@@ -118,5 +120,23 @@ public final class Validate {
      */
     public static void fail(String msg) {
         throw new IllegalArgumentException(msg);
+    }
+
+    /**
+     * Validate the connection
+     * @param url url needs to be connected
+     * @return if the connection is OK
+     */
+    public static boolean check_connection(String url) {
+        boolean if_connected = false;
+        try {
+            URL url1 = new URL(url);
+            URLConnection urlConnection = url1.openConnection();
+            urlConnection.connect();
+            if_connected = true;
+        } catch (Exception e){
+            if_connected = false;
+        }
+        return if_connected;
     }
 }
