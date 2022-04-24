@@ -423,6 +423,22 @@ public class Element extends Node {
     }
 
     /**
+     * Find the n th elements that match the query.
+     * @param n the n th element to be selected
+     * @return result an Elements that is the n th matched
+     */
+    public Elements nthOfType(int n,String query) {
+        Elements elements = Selector.select(query,this);
+        Elements result;
+        try {
+            result = elements.eq(n - 1);
+        } catch (IndexOutOfBoundsException e){
+            return new Elements();
+        }
+        return result;
+    }
+
+    /**
      * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
      * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
      * repeatedly parsing the CSS query.
