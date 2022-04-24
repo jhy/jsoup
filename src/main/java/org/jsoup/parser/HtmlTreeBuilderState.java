@@ -316,11 +316,22 @@ enum HtmlTreeBuilderState {
             return true;
         }
 
+        /**
+         * Current StartTag is inBody, and need to insert next tags, consist of different situations.
+
+         * @param t  next want to add to tb tree.
+         * @param tb   HtmlTreeBuilder to construct the nodes as tree
+         */
+
         private boolean inBodyStartTag(Token t, HtmlTreeBuilder tb) {
             final Token.StartTag startTag = t.asStartTag();
             final String name = startTag.normalName();
             final ArrayList<Element> stack;
             Element el;
+//             cleanup duplicate attributes:
+            if (startTag.hasAttributes()) {
+                startTag.attributes.deduplicate(tb.settings);
+            }
 
             switch (name) {
                 case "a":
