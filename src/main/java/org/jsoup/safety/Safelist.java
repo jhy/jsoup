@@ -203,9 +203,19 @@ public class Safelist {
     public Safelist(Safelist copy) {
         this();
         tagNames.addAll(copy.tagNames);
-        attributes.putAll(copy.attributes);
-        enforcedAttributes.putAll(copy.enforcedAttributes);
-        protocols.putAll(copy.protocols);
+        for (Map.Entry<TagName, Set<AttributeKey>> copyTagAttributes : copy.attributes.entrySet()) {
+            attributes.put(copyTagAttributes.getKey(), new HashSet<>(copyTagAttributes.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, AttributeValue>> enforcedEntry : copy.enforcedAttributes.entrySet()) {
+            enforcedAttributes.put(enforcedEntry.getKey(), new HashMap<>(enforcedEntry.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, Set<Protocol>>> protocolsEntry : copy.protocols.entrySet()) {
+            Map<AttributeKey, Set<Protocol>> attributeProtocolsCopy = new HashMap<>();
+            for (Map.Entry<AttributeKey, Set<Protocol>> attributeProtocols : protocolsEntry.getValue().entrySet()) {
+                attributeProtocolsCopy.put(attributeProtocols.getKey(), new HashSet<>(attributeProtocols.getValue()));
+            }
+            protocols.put(protocolsEntry.getKey(), attributeProtocolsCopy);
+        }
         preserveRelativeLinks = copy.preserveRelativeLinks;
     }
 
