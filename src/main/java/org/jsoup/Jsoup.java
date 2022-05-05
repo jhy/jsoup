@@ -90,6 +90,39 @@ public class Jsoup {
     public static Connection connect(String url) {
         return HttpConnection.connect(url);
     }
+    
+    /**
+     * Creates a new {@link Connection} (session), with the defined request URL. Use to fetch and parse a HTML page.
+     * <p>
+     * Use examples:
+     * <ul>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com",3).userAgent("Mozilla").data("name", "jsoup").get();</code></li>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com",3).cookie("auth", "token").post();</code></li>
+     * </ul>
+     * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
+     * @param attempt_time Attempt time of connect to. The range must be larger than 0.
+     * @return the connection. You can add data, cookies, and headers; set the user-agent, referrer, method; and then execute.
+     * @see #newSession()
+     * @see Connection#newRequest()
+     */
+    public static Connection connect(String url, int attempt_time) {
+        try {
+            Exception e = new IllegalArgumentException("Variable is illegal!");
+            Connection conn;
+            for (int i = 0; i < attempt_time; i++) {
+                try {
+                    conn = HttpConnection.connect(url);
+                    return conn;
+                } catch (Exception exception){
+                    e = exception;
+                }
+            }
+            throw e;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return null;
+    }
 
     /**
      Creates a new {@link Connection} to use as a session. Connection settings (user-agent, timeouts, URL, etc), and
