@@ -57,7 +57,7 @@
         <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.20</version>
+        <version>1.21</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
@@ -174,7 +174,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.0.0-M6</version>
         <executions>
           <execution>
             <goals>
@@ -296,7 +296,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.0.0-M5</version>
+            <version>3.0.0-M6</version>
             <executions>
               <execution>
                 <goals>
