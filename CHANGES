@@ -67,6 +67,10 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/1688>
     <https://github.com/jhy/jsoup/issues/1689>
 
+  * Bugfix: when copy-creating a Safelist from another, perform a deep-copy of the original's settings, so that changes
+    to the original after creation do not affect the copy.
+    <https://github.com/jhy/jsoup/pull/1763>
+
   * Bugfix [Fuzz]: speed improvement when parsing constructed HTML containing very deeply incorrectly stacked formatting
     elements with many attributes.
     <https://github.com/jhy/jsoup/issues/1695>
