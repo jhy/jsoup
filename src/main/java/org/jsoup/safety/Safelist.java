@@ -63,10 +63,10 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </p>
  */
 public class Safelist {
-    private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
-    private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
-    private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
-    private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
+    private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
+    private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
+    private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
+    private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
@@ -203,9 +203,19 @@ public class Safelist {
     public Safelist(Safelist copy) {
         this();
         tagNames.addAll(copy.tagNames);
-        attributes.putAll(copy.attributes);
-        enforcedAttributes.putAll(copy.enforcedAttributes);
-        protocols.putAll(copy.protocols);
+        for (Map.Entry<TagName, Set<AttributeKey>> copyTagAttributes : copy.attributes.entrySet()) {
+            attributes.put(copyTagAttributes.getKey(), new HashSet<>(copyTagAttributes.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, AttributeValue>> enforcedEntry : copy.enforcedAttributes.entrySet()) {
+            enforcedAttributes.put(enforcedEntry.getKey(), new HashMap<>(enforcedEntry.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, Set<Protocol>>> protocolsEntry : copy.protocols.entrySet()) {
+            Map<AttributeKey, Set<Protocol>> attributeProtocolsCopy = new HashMap<>();
+            for (Map.Entry<AttributeKey, Set<Protocol>> attributeProtocols : protocolsEntry.getValue().entrySet()) {
+                attributeProtocolsCopy.put(attributeProtocols.getKey(), new HashSet<>(attributeProtocols.getValue()));
+            }
+            protocols.put(protocolsEntry.getKey(), attributeProtocolsCopy);
+        }
         preserveRelativeLinks = copy.preserveRelativeLinks;
     }
 
@@ -620,7 +630,7 @@ public class Safelist {
     }
 
     abstract static class TypedValue {
-        private String value;
+        private final String value;
 
         TypedValue(String value) {
             Validate.notNull(value);
