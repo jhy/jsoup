@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.15.1 [PENDING]
+*** Release 1.15.1 [2022-May-15]
   * Change: removed previously deprecated methods and classes (including org.jsoup.safety.Whitelist; use
     org.jsoup.safety.Safelist instead).
 
@@ -18,7 +18,7 @@ jsoup changelog
     <https://github.com/jhy/jsoup/issues/1636>
 
   * Improvement: added the :matchesWholeText(regex) and :matchesWholeOwnText(regex) selectors, to match against whole
-    (non-normalized, case sensitive> element text and own text, respectively.
+    (non-normalized, case sensitive) element text and own text, respectively.
     <https://github.com/jhy/jsoup/issues/1636>
 
   * Improvement: when evaluating an XPath query against a context element, the complete document is now visible to the
