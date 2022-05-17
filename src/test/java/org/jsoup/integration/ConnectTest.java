@@ -671,4 +671,24 @@ public class ConnectTest {
         assertEquals("Large HTML", doc1.title());
         assertEquals("Large HTML", doc2.title());
     }
+
+    @Test
+    public void maxBodySizeInReadToByteBuffer() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1774
+        // when calling readToByteBuffer, contents were not buffered up
+        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+
+        Connection.Response defaultRes = Jsoup.connect(url).execute();
+        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
+        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
+        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
+        Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
+
+        int actualDocText = 280735;
+        assertEquals(actualDocText, defaultRes.body().length());
+        assertEquals(50 * 1024, smallRes.body().length());
+        assertEquals(200 * 1024, mediumRes.body().length());
+        assertEquals(actualDocText, largeRes.body().length());
+        assertEquals(actualDocText, unlimitedRes.body().length());
+    }
 }

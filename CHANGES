@@ -1,5 +1,11 @@
 jsoup changelog
 
+*** Release 1.15.2 [PENDING]
+  * Bugfix: when using the readToByteBuffer method, such as in Connection.Response.body(), if the document has not
+    already been parsed and must be read fully, and there is any maximum buffer size being applied, only the default
+    internal buffer size is read.
+    <https://github.com/jhy/jsoup/issues/1774>
+
 *** Release 1.15.1 [2022-May-15]
   * Change: removed previously deprecated methods and classes (including org.jsoup.safety.Whitelist; use
     org.jsoup.safety.Safelist instead).
