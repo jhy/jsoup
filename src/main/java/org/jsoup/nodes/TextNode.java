@@ -85,14 +85,14 @@ public class TextNode extends LeafNode {
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
         final boolean parentIndent = parent != null && parent.shouldIndent(out);
         final boolean blank = isBlank();
+        final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
 
-        if (parentIndent && StringUtil.startsWithNewline(coreValue()) && blank) // we are skippable whitespace
+        if (normaliseWhite && parentIndent && StringUtil.startsWithNewline(coreValue()) && blank) // we are skippable whitespace
             return;
 
         if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size()>0 && !blank) ))
             indent(accum, depth, out);
 
-        final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
         final boolean stripWhite = prettyPrint && parentNode instanceof Document;
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, stripWhite);
     }

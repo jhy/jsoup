@@ -6,6 +6,10 @@ jsoup changelog
     internal buffer size is read.
     <https://github.com/jhy/jsoup/issues/1774>
 
+  * Bugfix: when serializing HTML, newlines in elements descending from a pre tag were incorrectly skipped. That caused
+    what should have been preformatted output to instead be a run of text.
+    <https://github.com/jhy/jsoup/issues/1776>
+
 *** Release 1.15.1 [2022-May-15]
   * Change: removed previously deprecated methods and classes (including org.jsoup.safety.Whitelist; use
     org.jsoup.safety.Safelist instead).

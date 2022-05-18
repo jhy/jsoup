@@ -2216,4 +2216,42 @@ public class ElementTest {
         assertEquals("Hello World", p.text());
         assertEquals("Hello\nWorld", p.wholeText());
     }
+
+    @Test void preformatFlowsToChildTextNodes() {
+        // https://github.com/jhy/jsoup/issues/1776
+        String html = "<div><pre>One\n<span>\nTwo</span>\n <span>  \nThree</span>\n <span>Four <span>Five</span>\n  Six\n</pre>";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().indentAmount(2).prettyPrint(true);
+
+        Element div = doc.selectFirst("div");
+        assertNotNull(div);
+        String actual = div.outerHtml();
+        String expect = "<div>\n" +
+            "  <pre>One\n" +
+            "<span>\n" +
+            "Two</span>\n" +
+            " <span>  \n" +
+            "Three</span>\n" +
+            " <span>Four <span>Five</span>\n" +
+            "  Six\n" +
+            "</span></pre>\n" +
+            "</div>";
+        assertEquals(expect, actual);
+
+        String expectText = "One\n" +
+            "\n" +
+            "Two\n" +
+            "   \n" +
+            "Three\n" +
+            " Four Five\n" +
+            "  Six\n";
+        assertEquals(expectText, div.wholeText());
+
+        String expectOwn = "One\n" +
+            "\n" +
+            " \n" +
+            " ";
+        assertEquals(expectOwn, div.child(0).wholeOwnText());
+
+    }
 }
