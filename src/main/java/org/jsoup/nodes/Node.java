@@ -617,6 +617,32 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Gets the first child node of this node, or {@code null} if there is none. This could be any Node type, such as an
+     Element, TextNode, Comment, etc. Use {@link Element#firstElementChild()} to get the first Element child.
+     @return the first child node, or null if there are no children.
+     @see Element#firstElementChild()
+     @see #lastChild()
+     @since 1.15.2
+     */
+    public @Nullable Node firstChild() {
+        if (childNodeSize() == 0) return null;
+        return ensureChildNodes().get(0);
+    }
+
+    /**
+     Gets the last child node of this node, or {@code null} if there is none.
+     @return the last child node, or null if there are no children.
+     @see Element#lastElementChild()
+     @see #firstChild()
+     @since 1.15.2
+     */
+    public @Nullable Node lastChild() {
+        if (childNodeSize() == 0) return null;
+        List<Node> children = ensureChildNodes();
+        return children.get(children.size() - 1);
+    }
+
+    /**
      * Perform a depth-first traversal through this node and its descendants.
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining

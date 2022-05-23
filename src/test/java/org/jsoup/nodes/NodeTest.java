@@ -369,4 +369,37 @@ public class NodeTest {
         assertEquals(1, docClone.childNodes().size()); // check did not get the second div as the owner's children
         assertEquals(textClone, docClone.childNode(0)); // note not the head or the body -- not normalized
     }
+
+    @Test
+    void firstAndLastChild() {
+        String html = "<div>One <span>Two</span> <a href></a> Three</div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.selectFirst("div");
+        Element a = doc.selectFirst("a");
+        assertNotNull(div);
+        assertNotNull(a);
+
+        // nodes
+        TextNode first = (TextNode) div.firstChild();
+        assertEquals("One ", first.text());
+
+        TextNode last = (TextNode) div.lastChild();
+        assertEquals(" Three", last.text());
+
+        assertNull(a.firstChild());
+        assertNull(a.lastChild());
+
+        // elements
+        Element firstEl = div.firstElementChild();
+        assertEquals("span", firstEl.tagName());
+
+        Element lastEl = div.lastElementChild();
+        assertEquals("a", lastEl.tagName());
+
+        assertNull(a.firstElementChild());
+        assertNull(a.lastElementChild());
+
+        assertNull(firstEl.firstElementChild());
+        assertNull(firstEl.lastElementChild());
+    }
 }

@@ -1,6 +1,9 @@
 jsoup changelog
 
 *** Release 1.15.2 [PENDING]
+  * Improvement: added Element.firstElementChild(), Element.lastElementChild(), Node.firstChild(), Node.lastChild(),
+    as convenient accessors to those child nodes and elements.
+
   * Bugfix: when using the readToByteBuffer method, such as in Connection.Response.body(), if the document has not
     already been parsed and must be read fully, and there is any maximum buffer size being applied, only the default
     internal buffer size is read.
