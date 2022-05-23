@@ -969,9 +969,9 @@ public class Element extends Node {
      @since 1.15.2
      */
     public @Nullable Element firstElementChild() {
-        if (childNodeSize() == 0) return null;
+        final int size = childNodeSize();
+        if (size == 0) return null;
         List<Node> children = ensureChildNodes();
-        int size = children.size();
         for (int i = 0; i < size; i++) {
             Node node = children.get(i);
             if (node instanceof Element) return (Element) node;
@@ -987,9 +987,10 @@ public class Element extends Node {
      @since 1.15.2
      */
     public @Nullable Element lastElementChild() {
-        if (childNodeSize() == 0) return null;
+        final int size = childNodeSize();
+        if (size == 0) return null;
         List<Node> children = ensureChildNodes();
-        for (int i = children.size() -1; i >= 0; i--) {
+        for (int i = size -1; i >= 0; i--) {
             Node node = children.get(i);
             if (node instanceof Element) return (Element) node;
         }

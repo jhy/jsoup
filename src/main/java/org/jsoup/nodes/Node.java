@@ -546,9 +546,9 @@ public abstract class Node implements Cloneable {
     }
 
     private void reindexChildren(int start) {
-        if (childNodeSize() == 0) return;
+        final int size = childNodeSize();
+        if (size == 0) return;
         final List<Node> childNodes = ensureChildNodes();
-        final int size = childNodes.size();
         for (int i = start; i < size; i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
@@ -636,9 +636,10 @@ public abstract class Node implements Cloneable {
      @since 1.15.2
      */
     public @Nullable Node lastChild() {
-        if (childNodeSize() == 0) return null;
+        final int size = childNodeSize();
+        if (size == 0) return null;
         List<Node> children = ensureChildNodes();
-        return children.get(children.size() - 1);
+        return children.get(size - 1);
     }
 
     /**
