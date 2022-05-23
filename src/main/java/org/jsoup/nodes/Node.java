@@ -431,8 +431,7 @@ public abstract class Node implements Cloneable {
      */
     public @Nullable Node unwrap() {
         Validate.notNull(parentNode);
-        final List<Node> childNodes = ensureChildNodes();
-        Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
+        Node firstChild = firstChild();
         parentNode.addChildren(siblingIndex, this.childNodesAsArray());
         this.remove();
 
@@ -549,14 +548,14 @@ public abstract class Node implements Cloneable {
     private void reindexChildren(int start) {
         if (childNodeSize() == 0) return;
         final List<Node> childNodes = ensureChildNodes();
-
-        for (int i = start; i < childNodes.size(); i++) {
+        final int size = childNodes.size();
+        for (int i = start; i < size; i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
 
     /**
-     Retrieves this node's sibling nodes. Similar to {@link #childNodes()  node.parent.childNodes()}, but does not
+     Retrieves this node's sibling nodes. Similar to {@link #childNodes() node.parent.childNodes()}, but does not
      include this node (a node is not a sibling of itself).
      @return node siblings. If the node has no parent, returns an empty list.
      */
