@@ -1654,19 +1654,31 @@ public class Element extends Node {
         }
     }
 
-    /**
-     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
-     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
-     *
-     * @return String of HTML.
-     * @see #outerHtml()
-     */
-    public String html() {
-        StringBuilder accum = StringUtil.borrowBuilder();
-        html(accum);
-        String html = StringUtil.releaseBuilder(accum);
-        return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
+  /**
+   * Retrieves the element's inner HTML.
+   * E.g. on a {@code <div>} with one empty {@code <p>}, would return
+   * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
+   *
+   * @return String of HTML.
+   * @see #outerHtml()
+   */
+  public String html() {
+    final StringBuilder accum = StringUtil.borrowBuilder();
+    html(accum);
+    final String html = StringUtil.releaseBuilder(accum);
+    String newHtml;
+    if (html.contains("<!--[if true]-->") && html.contains("<!--[endif]-->")) {
+      final int start = html.indexOf("<!--[if true]-->");
+      final int end = html.indexOf("<!--[endif]-->") + 14;
+      final String oldContent = html.substring(start, end);
+      final String newContent = oldContent.replace("-", "");
+      newHtml = html;
+      newHtml = newHtml.replace(oldContent, newContent);
+    } else {
+      newHtml = NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }
+    return newHtml;
+  }
 
     @Override
     public <T extends Appendable> T html(T appendable) {
