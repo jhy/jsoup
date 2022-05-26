@@ -40,6 +40,39 @@ public abstract class Node implements Cloneable {
     public abstract String nodeName();
 
     /**
+     * Get node type of this node.
+     * ELEMENT_NODE is 1.
+     * TEXT_NODE is 3.
+     * CDATA_SECTION_NODE is 4.
+     * PROCESSING_INSTRUCTION_NODE is 7.
+     * COMMENT_NODE is 8.
+     * DOCUMENT_NODE is 9.
+     * DOCUMENT_TYPE_NODE is 10.
+     * DOCUMENT_FRAGMENT_NODE is 11.
+     */
+    public int nodeType(){
+        switch (nodeName()){
+            case "#text":
+                return 3;
+            case "#cdata":
+                return 4;
+            case "#declaration":
+                return 7;
+            case "#comment":
+                return 8;
+            case "#document":
+                return 9;
+            case "#doctype":
+                return 10;
+            case "#data":
+                return 11;
+
+            default:
+                return 1;
+        }
+    }
+
+    /**
      * Check if this Node has an actual Attributes object.
      */
     protected abstract boolean hasAttributes();
