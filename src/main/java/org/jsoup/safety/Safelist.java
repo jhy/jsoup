@@ -142,7 +142,7 @@ public class Safelist {
     /**
      This safelist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
      code, col, colgroup, dd, div, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, span, strike, strong, sub,
-     sup, table, tbody, td, tfoot, th, thead, tr, u, ul</code>
+     sup, table, tbody, td, tfoot, th, thead, tr, u, ul, details, optgroup, acronym, address, label, fieldset, summary</code>
      <p>
      Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
      </p>
@@ -156,7 +156,7 @@ public class Safelist {
                         "colgroup", "dd", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4", "h5", "h6",
                         "i", "img", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong",
                         "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u",
-                        "ul")
+                        "ul", "details", "optgroup", "acronym", "address", "label", "fieldset", "summary")
 
                 .addAttributes("a", "href", "title")
                 .addAttributes("blockquote", "cite")
@@ -171,12 +171,22 @@ public class Safelist {
                         "th", "abbr", "axis", "colspan", "rowspan", "scope",
                         "width")
                 .addAttributes("ul", "type")
+                .addAttributes("details","summary","open")
+                .addAttributes("optgroup","option")
+                .addAttributes("address","br")
+                .addAttributes("label","br","input")
+                .addAttributes("fieldset","br","legend")
 
                 .addProtocols("a", "href", "ftp", "http", "https", "mailto")
                 .addProtocols("blockquote", "cite", "http", "https")
                 .addProtocols("cite", "cite", "http", "https")
                 .addProtocols("img", "src", "http", "https")
                 .addProtocols("q", "cite", "http", "https")
+                .addProtocols("details","http","https")
+                .addProtocols("optgroup","http","https")
+                .addProtocols("address","http","https")
+                .addProtocols("label","http","https")
+                .addProtocols("fieldset","http","https")
                 ;
     }
 
