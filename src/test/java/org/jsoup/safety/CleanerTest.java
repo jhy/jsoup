@@ -50,6 +50,13 @@ public class CleanerTest {
         assertEquals("<h1>Head</h1><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table>", TextUtil.stripNewlines(cleanHtml));
     }
 
+    @Test public void testRelaxedHTML5() {
+        String h = "<details open><summary>Requirements</summary><p>Text</p><table><tr><td>One<td>Two</td></tr></table></details>";
+        String cleanHtml = Jsoup.clean(h, Safelist.relaxedHTML5());
+        assertEquals("<details open><summary>Requirements</summary><p>Text</p><table><tbody><tr><td>One</td><td>Two</td></tr></tbody></table></details>",
+                TextUtil.stripNewlines(cleanHtml));
+    }
+
     @Test public void testRemoveTags() {
         String h = "<div><p><A HREF='HTTP://nice.com'>Nice</a></p><blockquote>Hello</blockquote>";
         String cleanHtml = Jsoup.clean(h, Safelist.basic().removeTags("a"));
