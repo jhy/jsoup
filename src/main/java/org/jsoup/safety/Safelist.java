@@ -509,6 +509,14 @@ public class Safelist {
     }
 
     /**
+     * Test if the supplied tag is allowed by this safelist
+     * Can use in outer package
+     * @param tag test tag
+     * @return true if allowed
+     */
+    public boolean testSafeTag(String tag) { return tagNames.contains(TagName.valueOf(tag)); }
+
+    /**
      * Test if the supplied attribute is allowed by this safelist for this tag
      * @param tagName tag to consider allowing the attribute in
      * @param el element under test, to confirm protocol
@@ -516,6 +524,41 @@ public class Safelist {
      * @return true if allowed
      */
     protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
+        TagName tag = TagName.valueOf(tagName);
+        AttributeKey key = AttributeKey.valueOf(attr.getKey());
+
+        Set<AttributeKey> okSet = attributes.get(tag);
+        if (okSet != null && okSet.contains(key)) {
+            if (protocols.containsKey(tag)) {
+                Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
+                // ok if not defined protocol; otherwise test
+                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
+            } else { // attribute found, no protocols defined, so OK
+                return true;
+            }
+        }
+        // might be an enforced attribute?
+        Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
+        if (enforcedSet != null) {
+            Attributes expect = getEnforcedAttributes(tagName);
+            String attrKey = attr.getKey();
+            if (expect.hasKeyIgnoreCase(attrKey)) {
+                return expect.getIgnoreCase(attrKey).equals(attr.getValue());
+            }
+        }
+        // no attributes defined for tag, try :all tag
+        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
+    }
+
+    /**
+     * Test if the supplied attribute is allowed by this safelist for this tag
+     * Can use in outer package
+     * @param tagName tag to consider allowing the attribute in
+     * @param el element under test, to confirm protocol
+     * @param attr attribute under test
+     * @return true if allowed
+     */
+    public boolean testSafeAttribute(String tagName, Element el, Attribute attr) {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
@@ -576,6 +619,23 @@ public class Safelist {
     }
 
     Attributes getEnforcedAttributes(String tagName) {
+        Attributes attrs = new Attributes();
+        TagName tag = TagName.valueOf(tagName);
+        if (enforcedAttributes.containsKey(tag)) {
+            Map<AttributeKey, AttributeValue> keyVals = enforcedAttributes.get(tag);
+            for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
+                attrs.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+        return attrs;
+    }
+
+    /**
+     * public usage to get enforced attributes
+     * @param tagName test tag
+     * @return attrs enforced attributes
+     */
+    public Attributes enforcedAttributes(String tagName) {
         Attributes attrs = new Attributes();
         TagName tag = TagName.valueOf(tagName);
         if (enforcedAttributes.containsKey(tag)) {
