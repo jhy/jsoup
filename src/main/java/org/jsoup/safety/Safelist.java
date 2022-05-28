@@ -29,6 +29,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  <li>{@link #basic}
  <li>{@link #basicWithImages}
  <li>{@link #relaxed}
+ <li>{@link #relaxedHTML5()}
  </ul>
  <p>
  If you need to allow more through (please be careful!), tweak a base safelist with:
@@ -181,12 +182,35 @@ public class Safelist {
     }
 
     /**
+     This safelist allows a full range of text and structural body HTML with HTML5 standard, which is based on relaxed list:
+     <code>a, abbr, area, article, aside, b, blockquote, br, caption, cite, code, col, colgroup, dd, del, details,
+     div, dl, dt, em, footer, h1, h2, h3, h4, h5, h6, i, img, label, li, ol, p, pre, q, section, small, span, strike,
+     strong, sub, summary, sup, table, tbody, td, textarea, tfoot, th, thead, tr, u, ul</code>
+     <p>
+     Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
+     </p>
+
+     @return safelist
+     */
+    public static Safelist relaxedHTML5() {
+        return relaxed().addTags("abbr", "area", "article", "aside", "blockquote", "del", "details", "footer",
+                        "label", "section", "summary", "textarea")
+                .addAttributes("abbr", "title")
+                .addAttributes("area", "alt")
+                .addAttributes("details", "open")
+                .addAttributes("label", "for", "form")
+                .addAttributes("section", "aria-labelledby", "aria-live", "aria-relevant")
+                .addAttributes("textarea", "id", "name", "rows", "cols");
+    }
+
+    /**
      Create a new, empty safelist. Generally it will be better to start with a default prepared safelist instead.
 
      @see #basic()
      @see #basicWithImages()
      @see #simpleText()
      @see #relaxed()
+     @see #relaxedHTML5()
      */
     public Safelist() {
         tagNames = new HashSet<>();
