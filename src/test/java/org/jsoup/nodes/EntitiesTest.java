@@ -32,6 +32,36 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1278
+    @Test public void publicEscapeAscii() {
+        String text = "Hello &<> Å å π 新 there ¾ © »";
+        String escapedAscii = Entities.escapeInAttribute(text, new OutputSettings().charset("ascii").escapeMode(base));
+
+        assertEquals("Hello &amp;<> &Aring; &aring; &#x3c0; &#x65b0; there &frac34; &copy; &raquo;", escapedAscii);
+        // round trip
+        assertEquals(text, Entities.unescape(escapedAscii));
+    }
+
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1278
+    @Test public void publicEscapeAsciiFull() {
+        String text = "Hello &<> Å å π 新 there ¾ © »";
+        String escapedAsciiFull = Entities.escapeInAttribute(text, new OutputSettings().charset("ascii").escapeMode(extended));
+
+        assertEquals("Hello &amp;<> &angst; &aring; &pi; &#x65b0; there &frac34; &copy; &raquo;", escapedAsciiFull);
+        // round trip
+        assertEquals(text, Entities.unescape(escapedAsciiFull));
+    }
+
+    //CS304 (manually written) Issue link: https://github.com/jhy/jsoup/issues/1278
+    @Test public void publicEscapeUtfFull() {
+        String text = "Hello &<> Å å π 新 there ¾ © »";
+        String escapedUtfFull = Entities.escapeInAttribute(text, new OutputSettings().charset("UTF-8").escapeMode(extended));
+
+        assertEquals("Hello &amp;<> Å å π 新 there ¾ © »", escapedUtfFull);
+        // round trip
+        assertEquals(text, Entities.unescape(escapedUtfFull));
+    }
+
     @Test public void escapedSupplementary() {
         String text = "\uD835\uDD59";
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));

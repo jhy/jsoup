@@ -160,6 +160,84 @@ public class Entities {
         return escape(string, DefaultOutput);
     }
 
+    //CS304 Issue link: https://github.com/jhy/jsoup/issues/1278
+    /**
+     * HTML escape an input string within an attribute. Set inAttribute to be true.
+     *
+     * @param string the un-escaped string within an attribute to escape
+     * @param out the output settings to use
+     * @return the escaped string
+     */
+    public static String escapeInAttribute(String string, Document.OutputSettings out) {
+        if (string == null)
+            return "";
+        StringBuilder accum = StringUtil.borrowBuilder();
+        try {
+
+            boolean lastWasWhite = false;
+            boolean reachedNonWhite = false;
+            final EscapeMode escapeMode = out.escapeMode();
+            final CharsetEncoder encoder = out.encoder();
+            final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
+            final int length = string.length();
+
+            int codePoint;
+            for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+                codePoint = string.codePointAt(offset);
+                // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+                if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                    final char c = (char) codePoint;
+                    // html specific and required escapes:
+                    switch (c) {
+                        case '&':
+                            accum.append("&amp;");
+                            break;
+                        case 0xA0:
+                            if (escapeMode != EscapeMode.xhtml)
+                                accum.append("&nbsp;");
+                            else
+                                accum.append("&#xa0;");
+                            break;
+                        case '<':
+                            // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
+                            if (escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
+                                accum.append("&lt;");
+                            else
+                                accum.append(c);
+                            break;
+                        case '>':
+                            accum.append(c);
+                            break;
+                        case '"':
+                            accum.append("&quot;");
+                            break;
+                        // we escape ascii control <x20 (other than tab, line-feed, carriage return)  for XML compliance (required) and HTML ease of reading (not required) - https://www.w3.org/TR/xml/#charsets
+                        case 0x9:
+                        case 0xA:
+                        case 0xD:
+                            accum.append(c);
+                            break;
+                        default:
+                            if (c < 0x20 || !canEncode(coreCharset, c, encoder))
+                                appendEncoded(accum, escapeMode, codePoint);
+                            else
+                                accum.append(c);
+                    }
+                } else {
+                    final String c = new String(Character.toChars(codePoint));
+                    if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                        accum.append(c);
+                    else
+                        appendEncoded(accum, escapeMode, codePoint);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new SerializationException(e); // doesn't happen
+        }
+        return StringUtil.releaseBuilder(accum);
+    }
+
     // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
     static void escape(Appendable accum, String string, OutputSettings out,
                        boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
