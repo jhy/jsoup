@@ -104,9 +104,14 @@ public class HttpConnection implements Connection {
      Create a new Request by deep-copying an existing Request
      @param copy the request to copy
      */
-    HttpConnection(Request copy) {
+    public HttpConnection(Request copy) {
         req = new Request(copy);
     }
+
+    public HttpConnection(Request copy,Collection<Connection.KeyVal> new_data) {
+        req = new Request(copy,new_data);
+    }
+
 
     /**
      * Encodes the input URL into a safe ASCII URL string
@@ -165,6 +170,11 @@ public class HttpConnection implements Connection {
     public Connection newRequest() {
         // copy the prototype request for the different settings, cookie manager, etc
         return new HttpConnection(req);
+    }
+
+    public Connection newRequest(Collection<Connection.KeyVal> new_data) {
+        // copy the prototype request for the different settings, cookie manager, etc
+        return new HttpConnection(req,new_data);
     }
 
     /** Create a new Connection that just wraps the provided Request and Response */
@@ -632,7 +642,7 @@ public class HttpConnection implements Connection {
             System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
             // make sure that we can send Sec-Fetch-Site headers etc.
         }
-
+        //only used to test
         private @Nullable Proxy proxy;
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
@@ -669,6 +679,25 @@ public class HttpConnection implements Connection {
             maxBodySizeBytes = copy.maxBodySizeBytes;
             followRedirects = copy.followRedirects;
             data = new ArrayList<>(); data.addAll(copy.data()); // this is shallow, but holds immutable string keyval, and possibly an InputStream which can only be read once anyway, so using as a prototype would be unsupported
+            body = copy.body;
+            ignoreHttpErrors = copy.ignoreHttpErrors;
+            ignoreContentType = copy.ignoreContentType;
+            parser = copy.parser.newInstance(); // parsers and their tree-builders maintain state, so need a fresh copy
+            parserDefined = copy.parserDefined;
+            sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
+            cookieManager = copy.cookieManager;
+            executing = false;
+        }
+
+        // this will make new data for the same old connection.
+        Request(Request copy,Collection<Connection.KeyVal> new_data) {
+            super(copy);
+            proxy = copy.proxy;
+            postDataCharset = copy.postDataCharset;
+            timeoutMilliseconds = copy.timeoutMilliseconds;
+            maxBodySizeBytes = copy.maxBodySizeBytes;
+            followRedirects = copy.followRedirects;
+            data=new_data; // this will make new data for the same old connection.
             body = copy.body;
             ignoreHttpErrors = copy.ignoreHttpErrors;
             ignoreContentType = copy.ignoreContentType;
