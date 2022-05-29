@@ -25,6 +25,31 @@ public class DocumentTest {
     private static final String charsetUtf8 = "UTF-8";
     private static final String charsetIso8859 = "ISO-8859-1";
 
+    /**
+     * Following two test are created by playmaker_v6 as a virtual name.
+     */
+    @Test public void testxml() {
+        Document doc = Jsoup.parse("<p>Hello</p>");
+        assertEquals("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<html>\n" +
+                " <head></head>\n" +
+                " <body>\n" +
+                "  <p>Hello</p>\n" +
+                " </body>\n" +
+                "</html>",doc.xml());
+    }
+
+    @Test public void testxml2() {
+        Document doc = Jsoup.parse("<head>Hello</head><body><p>nothing</p></body>");
+        assertEquals("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<html>\n" +
+                " <head></head>\n" +
+                " <body>\n" +
+                "  Hello\n" +
+                "  <p>nothing</p>\n" +
+                " </body>\n" +
+                "</html>",doc.xml());
+    }
 
     @Test public void setTextPreservesDocumentStructure() {
         Document doc = Jsoup.parse("<p>Hello</p>");
