@@ -69,6 +69,15 @@ public class Document extends Element {
     }
 
     /**
+     * Generate an extra header for xml.
+     * @return String of this xml.
+     */
+    public String xml(){
+        String xmlHead = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+        return xmlHead.concat(html());
+    }
+
+    /**
      Returns the Connection (Request/Response) object that was used to fetch this document, if any; otherwise, a new
      default Connection object. This can be used to continue a session, preserving settings and cookies, etc.
      @return the Connection (session) associated with this Document, or an empty one otherwise.
