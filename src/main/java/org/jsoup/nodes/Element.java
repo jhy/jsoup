@@ -961,6 +961,42 @@ public class Element extends Node {
         return 0;
     }
 
+    /**
+     Gets the first child of this Element that is an Element, or {@code null} if there is none.
+     @return the first Element child node, or null.
+     @see #firstChild()
+     @see #lastElementChild()
+     @since 1.15.2
+     */
+    public @Nullable Element firstElementChild() {
+        final int size = childNodeSize();
+        if (size == 0) return null;
+        List<Node> children = ensureChildNodes();
+        for (int i = 0; i < size; i++) {
+            Node node = children.get(i);
+            if (node instanceof Element) return (Element) node;
+        }
+        return null;
+    }
+
+    /**
+     Gets the last child of this Element that is an Element, or @{code null} if there is none.
+     @return the last Element child node, or null.
+     @see #lastChild()
+     @see #firstElementChild()
+     @since 1.15.2
+     */
+    public @Nullable Element lastElementChild() {
+        final int size = childNodeSize();
+        if (size == 0) return null;
+        List<Node> children = ensureChildNodes();
+        for (int i = size -1; i >= 0; i--) {
+            Node node = children.get(i);
+            if (node instanceof Element) return (Element) node;
+        }
+        return null;
+    }
+
     // DOM type methods
 
     /**

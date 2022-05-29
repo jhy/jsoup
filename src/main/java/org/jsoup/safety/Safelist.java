@@ -63,10 +63,10 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </p>
  */
 public class Safelist {
-    private Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
-    private Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
-    private Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
-    private Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
+    private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
+    private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
+    private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
+    private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
@@ -142,7 +142,7 @@ public class Safelist {
     /**
      This safelist allows a full range of text and structural body HTML: <code>a, b, blockquote, br, caption, cite,
      code, col, colgroup, dd, div, dl, dt, em, h1, h2, h3, h4, h5, h6, i, img, li, ol, p, pre, q, small, span, strike, strong, sub,
-     sup, table, tbody, td, tfoot, th, thead, tr, u, ul</code>
+     sup, table, tbody, td, tfoot, th, thead, tr, u, ul, details, optgroup, acronym, address, label, fieldset, summary</code>
      <p>
      Links do not have an enforced <code>rel=nofollow</code> attribute, but you can add that if desired.
      </p>
@@ -156,7 +156,7 @@ public class Safelist {
                         "colgroup", "dd", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4", "h5", "h6",
                         "i", "img", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong",
                         "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u",
-                        "ul")
+                        "ul", "details", "optgroup", "acronym", "address", "label", "fieldset", "summary")
 
                 .addAttributes("a", "href", "title")
                 .addAttributes("blockquote", "cite")
@@ -171,12 +171,22 @@ public class Safelist {
                         "th", "abbr", "axis", "colspan", "rowspan", "scope",
                         "width")
                 .addAttributes("ul", "type")
+                .addAttributes("details","summary","open")
+                .addAttributes("optgroup","option")
+                .addAttributes("address","br")
+                .addAttributes("label","br","input")
+                .addAttributes("fieldset","br","legend")
 
                 .addProtocols("a", "href", "ftp", "http", "https", "mailto")
                 .addProtocols("blockquote", "cite", "http", "https")
                 .addProtocols("cite", "cite", "http", "https")
                 .addProtocols("img", "src", "http", "https")
                 .addProtocols("q", "cite", "http", "https")
+                .addProtocols("details","http","https")
+                .addProtocols("optgroup","http","https")
+                .addProtocols("address","http","https")
+                .addProtocols("label","http","https")
+                .addProtocols("fieldset","http","https")
                 ;
     }
 
@@ -203,9 +213,19 @@ public class Safelist {
     public Safelist(Safelist copy) {
         this();
         tagNames.addAll(copy.tagNames);
-        attributes.putAll(copy.attributes);
-        enforcedAttributes.putAll(copy.enforcedAttributes);
-        protocols.putAll(copy.protocols);
+        for (Map.Entry<TagName, Set<AttributeKey>> copyTagAttributes : copy.attributes.entrySet()) {
+            attributes.put(copyTagAttributes.getKey(), new HashSet<>(copyTagAttributes.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, AttributeValue>> enforcedEntry : copy.enforcedAttributes.entrySet()) {
+            enforcedAttributes.put(enforcedEntry.getKey(), new HashMap<>(enforcedEntry.getValue()));
+        }
+        for (Map.Entry<TagName, Map<AttributeKey, Set<Protocol>>> protocolsEntry : copy.protocols.entrySet()) {
+            Map<AttributeKey, Set<Protocol>> attributeProtocolsCopy = new HashMap<>();
+            for (Map.Entry<AttributeKey, Set<Protocol>> attributeProtocols : protocolsEntry.getValue().entrySet()) {
+                attributeProtocolsCopy.put(attributeProtocols.getKey(), new HashSet<>(attributeProtocols.getValue()));
+            }
+            protocols.put(protocolsEntry.getKey(), attributeProtocolsCopy);
+        }
         preserveRelativeLinks = copy.preserveRelativeLinks;
     }
 
@@ -499,6 +519,14 @@ public class Safelist {
     }
 
     /**
+     * Test if the supplied tag is allowed by this safelist
+     * Can use in outer package
+     * @param tag test tag
+     * @return true if allowed
+     */
+    public boolean testSafeTag(String tag) { return tagNames.contains(TagName.valueOf(tag)); }
+
+    /**
      * Test if the supplied attribute is allowed by this safelist for this tag
      * @param tagName tag to consider allowing the attribute in
      * @param el element under test, to confirm protocol
@@ -506,6 +534,41 @@ public class Safelist {
      * @return true if allowed
      */
     protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
+        TagName tag = TagName.valueOf(tagName);
+        AttributeKey key = AttributeKey.valueOf(attr.getKey());
+
+        Set<AttributeKey> okSet = attributes.get(tag);
+        if (okSet != null && okSet.contains(key)) {
+            if (protocols.containsKey(tag)) {
+                Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
+                // ok if not defined protocol; otherwise test
+                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
+            } else { // attribute found, no protocols defined, so OK
+                return true;
+            }
+        }
+        // might be an enforced attribute?
+        Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
+        if (enforcedSet != null) {
+            Attributes expect = getEnforcedAttributes(tagName);
+            String attrKey = attr.getKey();
+            if (expect.hasKeyIgnoreCase(attrKey)) {
+                return expect.getIgnoreCase(attrKey).equals(attr.getValue());
+            }
+        }
+        // no attributes defined for tag, try :all tag
+        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
+    }
+
+    /**
+     * Test if the supplied attribute is allowed by this safelist for this tag
+     * Can use in outer package
+     * @param tagName tag to consider allowing the attribute in
+     * @param el element under test, to confirm protocol
+     * @param attr attribute under test
+     * @return true if allowed
+     */
+    public boolean testSafeAttribute(String tagName, Element el, Attribute attr) {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
@@ -576,6 +639,23 @@ public class Safelist {
         }
         return attrs;
     }
+
+    /**
+     * public usage to get enforced attributes
+     * @param tagName test tag
+     * @return attrs enforced attributes
+     */
+    public Attributes enforcedAttributes(String tagName) {
+        Attributes attrs = new Attributes();
+        TagName tag = TagName.valueOf(tagName);
+        if (enforcedAttributes.containsKey(tag)) {
+            Map<AttributeKey, AttributeValue> keyVals = enforcedAttributes.get(tag);
+            for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
+                attrs.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+        return attrs;
+    }
     
     // named types for config. All just hold strings, but here for my sanity.
 
@@ -620,7 +700,7 @@ public class Safelist {
     }
 
     abstract static class TypedValue {
-        private String value;
+        private final String value;
 
         TypedValue(String value) {
             Validate.notNull(value);
