@@ -150,9 +150,10 @@ public class QueryParser {
             else if (tq.matchesAny(combinators))
                 if (sq.length() > 0)
                     break;
-                else
+                else {
                     if (tq.consume()=='>')
                         isNewQuery = true;
+                }
             else {
                 //  If it is a new sub query of class, add '>' back into the query.
                 if (isNewQuery && tq.toString().charAt(0)=='.'){
