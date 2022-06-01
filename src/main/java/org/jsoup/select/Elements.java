@@ -333,6 +333,19 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
+
+    /**
+     * Add the supplied HTML to the start of each matched element's inner HTML.
+     * @param Node node to add inside each element, before the existing HTML
+     * @return this, for chaining
+     * @see Element#prepend(Node)
+     */
+    public Elements prepend(Node node) {
+        for (Element element: this) {
+            element.prepend(node.toString());
+        }
+        return this;
+    }
     
     /**
      * Add the supplied HTML to the end of each matched element's inner HTML.
@@ -343,6 +356,19 @@ public class Elements extends ArrayList<Element> {
     public Elements append(String html) {
         for (Element element : this) {
             element.append(html);
+        }
+        return this;
+    }
+
+    /**
+     * Add the supplied HTML to the end of each matched element's inner HTML.
+     * @param node node to add inside each element, after the existing HTML
+     * @return this, for chaining
+     * @see Element#append(Node)
+     */
+    public Elements append(Node node) {
+        for (Element element : this) {
+            element.append(node.toString());
         }
         return this;
     }
@@ -361,6 +387,20 @@ public class Elements extends ArrayList<Element> {
     }
     
     /**
+     * Insert the supplied HTML before each matched element's outer HTML.
+     * @param node node to insert before each element
+     * @return this, for chaining
+     * @see Element#before(Node)
+     */
+    public Elements before(Node node) {
+        for (Element element: this) {
+            element.before(node.toString());
+        }
+        return this;
+    }
+
+
+    /**
      * Insert the supplied HTML after each matched element's outer HTML.
      * @param html HTML to insert after each element
      * @return this, for chaining
@@ -372,6 +412,20 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
+
+    /**
+     * Insert the supplied HTML after each matched element's outer HTML.
+     * @param node Node to insert after each element
+     * @return this, for chaining
+     * @see Element#after(Node)
+     */
+    public Elements after(Node node) {
+        for (Element element: this) {
+            element.after(node.toString());
+        }
+        return this;
+    }
+
 
     /**
      Wrap the supplied HTML around each matched elements. For example, with HTML
