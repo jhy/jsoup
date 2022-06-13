@@ -109,7 +109,7 @@ public final class CharacterReader {
     }
 
     /**
-     * Gets the current cursor position in the content.
+     * Gets the position currently read to in the content. Starts at 0.
      * @return current position
      */
     public int pos() {
@@ -149,14 +149,18 @@ public final class CharacterReader {
      @see #trackNewlines(boolean)
      */
     public int lineNumber() {
+        return lineNumber(pos());
+    }
+
+    int lineNumber(int pos) {
+        // note that this impl needs to be called before the next buffer up or line numberoffset will be wrong. if that
+        // causes issues, can remove the reset of newlinepositions during buffer, at the cost of a larger tracking array
         if (!isTrackNewlines())
             return 1;
 
-        int i = lineNumIndex();
+        int i = lineNumIndex(pos);
         if (i == -1)
             return lineNumberOffset; // first line
-        if (i < 0)
-            return Math.abs(i) + lineNumberOffset - 1;
         return i + lineNumberOffset + 1;
     }
 
@@ -166,16 +170,18 @@ public final class CharacterReader {
      @since 1.14.3
      @see #trackNewlines(boolean)
      */
-    int columnNumber() {
-        if (!isTrackNewlines())
-            return pos() + 1;
+    public int columnNumber() {
+        return columnNumber(pos());
+    }
 
-        int i = lineNumIndex();
+    int columnNumber(int pos) {
+        if (!isTrackNewlines())
+            return pos + 1;
+
+        int i = lineNumIndex(pos);
         if (i == -1)
-            return pos() + 1;
-        if (i < 0)
-            i = Math.abs(i) - 2;
-        return pos() - newlinePositions.get(i) + 1;
+          return pos + 1;
+        return pos - newlinePositions.get(i) + 1;
     }
 
     /**
@@ -189,9 +195,11 @@ public final class CharacterReader {
         return lineNumber() + ":" + columnNumber();
     }
 
-    private int lineNumIndex() {
+    private int lineNumIndex(int pos) {
         if (!isTrackNewlines()) return 0;
-        return Collections.binarySearch(newlinePositions, pos());
+        int i = Collections.binarySearch(newlinePositions, pos);
+        if (i < -1) i = Math.abs(i) - 2;
+        return i;
     }
 
     /**
@@ -201,13 +209,16 @@ public final class CharacterReader {
         if (!isTrackNewlines())
             return;
 
-        lineNumberOffset += newlinePositions.size();
-        int lastPos = newlinePositions.size() > 0 ? newlinePositions.get(newlinePositions.size() -1) : -1;
-        newlinePositions.clear();
-        if (lastPos != -1) {
-            newlinePositions.add(lastPos); // roll the last pos to first, for cursor num after buffer
-            lineNumberOffset--; // as this takes a position
+        if (newlinePositions.size() > 0) {
+            // work out the line number that we have read up to (as we have likely scanned past this point)
+            int index = lineNumIndex(readerPos);
+            if (index == -1) index = 0; // first line
+            int linePos = newlinePositions.get(index);
+            lineNumberOffset += index; // the num lines we've read up to
+            newlinePositions.clear();
+            newlinePositions.add(linePos); // roll the last read pos to first, for cursor num after buffer
         }
+
         for (int i = bufPos; i < bufLength; i++) {
             if (charBuf[i] == '\n')
                 newlinePositions.add(1 + readerPos + i);

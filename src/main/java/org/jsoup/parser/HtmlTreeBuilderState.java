@@ -31,6 +31,7 @@ enum HtmlTreeBuilderState {
                     tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
+                tb.onNodeInserted(doctype, t);
                 if (d.isForceQuirks())
                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);
                 tb.transition(BeforeHtml);

@@ -652,7 +652,7 @@ public class ConnectTest {
         Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
 
-        int actualDocText = 269541;
+        int actualDocText = 269535;
         assertEquals(actualDocText, defaultRes.parse().text().length());
         assertEquals(49165, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());

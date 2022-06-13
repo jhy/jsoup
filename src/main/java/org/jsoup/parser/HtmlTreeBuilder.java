@@ -246,7 +246,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         Element el = new Element(tagFor(startTag.name(), settings), null, settings.normalizeAttributes(startTag.attributes));
-        insert(el);
+        insert(el, startTag);
         return el;
     }
 
@@ -257,14 +257,19 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insert(Element el) {
-        insertNode(el);
+        insertNode(el, null);
+        stack.add(el);
+    }
+
+    private void insert(Element el, @Nullable Token token) {
+        insertNode(el, token);
         stack.add(el);
     }
 
     Element insertEmpty(Token.StartTag startTag) {
         Tag tag = tagFor(startTag.name(), settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
-        insertNode(el);
+        insertNode(el, startTag);
         if (startTag.isSelfClosing()) {
             if (tag.isKnownTag()) {
                 if (!tag.isEmpty())
@@ -285,7 +290,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         } else
             setFormElement(el);
 
-        insertNode(el);
+        insertNode(el, startTag);
         if (onStack)
             stack.add(el);
         return el;
@@ -293,7 +298,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void insert(Token.Comment commentToken) {
         Comment comment = new Comment(commentToken.getData());
-        insertNode(comment);
+        insertNode(comment, commentToken);
     }
 
     void insert(Token.Character characterToken) {
@@ -309,9 +314,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         else
             node = new TextNode(data);
         el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
+        onNodeInserted(node, characterToken);
     }
 
-    private void insertNode(Node node) {
+    private void insertNode(Node node, @Nullable Token token) {
         // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
         if (stack.isEmpty())
             doc.appendChild(node);
@@ -325,6 +331,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (formElement != null)
                 formElement.addElement((Element) node);
         }
+        onNodeInserted(node, token);
     }
 
     Element pop() {
@@ -390,8 +397,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             stack.remove(pos);
-            if (el.normalName().equals(elName))
+            if (el.normalName().equals(elName)) {
+                if (currentToken instanceof Token.EndTag)
+                    onNodeClosed(el, currentToken);
                 return el;
+            }
         }
         return null;
     }

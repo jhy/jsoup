@@ -1653,6 +1653,19 @@ public class Element extends Node {
         return this;
     }
 
+    /**
+     Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
+     enabled prior to parsing the content.
+     @return the range of the closing tag for this element, if it was explicitly closed in the source. {@code Untracked}
+     otherwise.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Node#sourceRange()
+     @since 1.15.2
+     */
+    public Range endSourceRange() {
+        return Range.of(this, false);
+    }
+
     boolean shouldIndent(final Document.OutputSettings out) {
         return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out);
     }
