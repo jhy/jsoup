@@ -714,6 +714,18 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Get the source range (start and end positions) in the original input source that this node was parsed from. Position
+     tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the start tag.
+     @return the range for the start of the node.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Element#endSourceRange()
+     @since 1.15.2
+     */
+    public Range sourceRange() {
+        return Range.of(this, true);
+    }
+
+    /**
      * Gets this node's outer HTML.
      * @return outer HTML.
      * @see #outerHtml()

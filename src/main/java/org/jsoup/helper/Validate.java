@@ -29,6 +29,18 @@ public final class Validate {
     }
 
     /**
+     Verifies the input object is not null, and returns that object. Effectively this casts a nullable object to a non-
+     null object. (Works around lack of Objects.requestNonNull in Android version.)
+     * @param obj nullable object to case to not-null
+     * @return the object, or throws an NPE.
+     */
+    public static Object ensureNotNull(@Nullable Object obj) {
+        if (obj == null)
+            throw new NullPointerException();
+        else return obj;
+    }
+
+    /**
      * Validates that the value is true
      * @param val object to test
      */

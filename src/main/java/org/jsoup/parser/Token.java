@@ -5,13 +5,13 @@ import org.jsoup.nodes.Attributes;
 
 import javax.annotation.Nullable;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
-
 /**
  * Parse tokens for the Tokeniser.
  */
 abstract class Token {
     TokenType type;
+    static final int Unset = -1;
+    private int startPos, endPos = Unset; // position in CharacterReader this token was read from
 
     private Token() {
     }
@@ -24,7 +24,27 @@ abstract class Token {
      * Reset the data represent by this token, for reuse. Prevents the need to create transfer objects for every
      * piece of data, which immediately get GCed.
      */
-    abstract Token reset();
+    Token reset() {
+        startPos = Unset;
+        endPos = Unset;
+        return this;
+    }
+
+    int startPos() {
+        return startPos;
+    }
+
+    void startPos(int pos) {
+        startPos = pos;
+    }
+
+    int endPos() {
+        return endPos;
+    }
+
+    void endPos(int pos) {
+        endPos = pos;
+    }
 
     static void reset(StringBuilder sb) {
         if (sb != null) {
@@ -45,6 +65,7 @@ abstract class Token {
 
         @Override
         Token reset() {
+            super.reset();
             reset(name);
             pubSysKey = null;
             reset(publicIdentifier);
@@ -97,6 +118,7 @@ abstract class Token {
 
         @Override
         Tag reset() {
+            super.reset();
             tagName = null;
             normalName = null;
             reset(attrName);
@@ -315,6 +337,7 @@ abstract class Token {
 
         @Override
         Token reset() {
+            super.reset();
             reset(data);
             dataS = null;
             bogus = false;
@@ -369,6 +392,7 @@ abstract class Token {
 
         @Override
         Token reset() {
+            super.reset();
             data = null;
             return this;
         }
@@ -408,6 +432,7 @@ abstract class Token {
 
         @Override
         Token reset() {
+            super.reset();
             return this;
         }
 

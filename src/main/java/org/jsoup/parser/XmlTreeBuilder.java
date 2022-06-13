@@ -80,6 +80,12 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     protected void insertNode(Node node) {
         currentElement().appendChild(node);
+        onNodeInserted(node, null);
+    }
+
+    protected void insertNode(Node node, Token token) {
+        currentElement().appendChild(node);
+        onNodeInserted(node, token);
     }
 
     Element insert(Token.StartTag startTag) {
@@ -89,7 +95,7 @@ public class XmlTreeBuilder extends TreeBuilder {
             startTag.attributes.deduplicate(settings);
 
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
-        insertNode(el);
+        insertNode(el, startTag);
         if (startTag.isSelfClosing()) {
             if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output. see above.
                 tag.setSelfClosing();
@@ -109,18 +115,18 @@ public class XmlTreeBuilder extends TreeBuilder {
             if (decl != null)
                 insert = decl;
         }
-        insertNode(insert);
+        insertNode(insert, commentToken);
     }
 
     void insert(Token.Character token) {
         final String data = token.getData();
-        insertNode(token.isCData() ? new CDataNode(data) : new TextNode(data));
+        insertNode(token.isCData() ? new CDataNode(data) : new TextNode(data), token);
     }
 
     void insert(Token.Doctype d) {
         DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
         doctypeNode.setPubSysKey(d.getPubSysKey());
-        insertNode(doctypeNode);
+        insertNode(doctypeNode, d);
     }
 
     /**
@@ -150,8 +156,10 @@ public class XmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
-            if (next == firstFound)
+            if (next == firstFound) {
+                onNodeClosed(next, endTag);
                 break;
+            }
         }
     }
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain

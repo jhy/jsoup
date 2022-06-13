@@ -49,7 +49,7 @@ public class ParseError {
     }
 
     /**
-     Get the formatted line:column cursor position where the error occured.
+     Get the formatted line:column cursor position where the error occurred.
      @return line:number cursor position
      */
     public String getCursorPos() {
