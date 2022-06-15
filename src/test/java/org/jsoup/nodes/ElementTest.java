@@ -2252,6 +2252,21 @@ public class ElementTest {
             " \n" +
             " ";
         assertEquals(expectOwn, div.child(0).wholeOwnText());
+    }
 
+    @Test void testExpectFirst() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two <span>Three</span> <span>Four</span>");
+
+        Element span = doc.expectFirst("span");
+        assertEquals("Three", span.text());
+
+        assertNull(doc.selectFirst("div"));
+        boolean threw = false;
+        try {
+            Element div = doc.expectFirst("div");
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        assertTrue(threw);
     }
 }

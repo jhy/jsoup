@@ -441,6 +441,7 @@ public class Element extends Node {
      * <p>Also known as {@code querySelector()} in the Web DOM.</p>
      * @param cssQuery cssQuery a {@link Selector} CSS-like query
      * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     * @see #expectFirst(String)
      */
     public @Nullable Element selectFirst(String cssQuery) {
         return Selector.selectFirst(cssQuery, this);
@@ -456,6 +457,17 @@ public class Element extends Node {
      */
     public @Nullable Element selectFirst(Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param cssQuery a {@link Selector} CSS-like query
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     */
+    public Element expectFirst(String cssQuery) {
+        return (Element) Validate.ensureNotNull(Selector.selectFirst(cssQuery, this));
     }
 
     /**
