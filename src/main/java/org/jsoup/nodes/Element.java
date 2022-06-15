@@ -452,7 +452,7 @@ public class Element extends Node {
      *
      * @param evaluator an element evaluator
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
-     *     matchn.
+     * match.
      */
     public @Nullable Element selectFirst(Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
