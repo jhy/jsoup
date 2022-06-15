@@ -34,19 +34,19 @@ final class Tokeniser {
     private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
-    private Token emitPending; // the token we are about to emit on next read
+    @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
-    private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
-    private StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
+    @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
+    private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
-    Token.Tag tagPending; // tag we are building up
     Token.StartTag startPending = new Token.StartTag();
     Token.EndTag endPending = new Token.EndTag();
+    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
     Token.Character charPending = new Token.Character();
     Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     Token.Comment commentPending = new Token.Comment(); // comment building up
-    private String lastStartTag; // the last start tag emitted, to test appropriate end tag
+    @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     private static final int Unset = -1;
@@ -76,6 +76,7 @@ final class Tokeniser {
             return token;
         } else {
             isEmitPending = false;
+            assert emitPending != null;
             return emitPending;
         }
     }
@@ -175,7 +176,7 @@ final class Tokeniser {
 
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
-    @Nullable int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    @Nullable int[] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -292,7 +293,7 @@ final class Tokeniser {
         return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
-    String appropriateEndTagName() {
+    @Nullable String appropriateEndTagName() {
         return lastStartTag; // could be null
     }
 
