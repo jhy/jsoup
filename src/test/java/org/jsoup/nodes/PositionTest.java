@@ -35,12 +35,15 @@ class PositionTest {
         String html = "<p id=1\n class=foo>\n<span>Hello\n &reg;\n there &copy.</span> now.\n <!-- comment --> ";
         Document doc = Jsoup.parse(html, TrackingParser);
 
-        Element body = doc.selectFirst("body");
-        Element p = doc.selectFirst("p");
-        Element span = doc.selectFirst("span");
+        Element body = doc.expectFirst("body");
+        Element p = doc.expectFirst("p");
+        Element span = doc.expectFirst("span");
         TextNode text = (TextNode) span.firstChild();
+        assertNotNull(text);
         TextNode now = (TextNode) span.nextSibling();
+        assertNotNull(now);
         Comment comment = (Comment) now.nextSibling();
+        assertNotNull(comment);
 
         assertFalse(body.sourceRange().isTracked());
 
@@ -94,8 +97,9 @@ class PositionTest {
         assertEquals("html", doctype.name());
         assertEquals("1,1:0-2,6:15", doctype.sourceRange().toString());
 
-        Element title = doc.selectFirst("title");
+        Element title = doc.expectFirst("title");
         TextNode titleText = (TextNode) title.firstChild();
+        assertNotNull(titleText);
         assertEquals("jsoup ©\n2022", title.text());
         assertEquals(titleText.getWholeText(), title.text());
         assertEquals("3,1:16-3,8:23", title.sourceRange().toString());
@@ -110,10 +114,11 @@ class PositionTest {
         String html = "<head>\n<script>foo;\nbar()\n5 <= 4;</script>";
         Document doc = Jsoup.parse(html, TrackingParser);
 
-        Element script = doc.selectFirst("script");
+        Element script = doc.expectFirst("script");
         assertNotNull(script);
         assertEquals("2,1:7-2,9:15", script.sourceRange().toString());
         DataNode data = (DataNode) script.firstChild();
+        assertNotNull(data);
         assertEquals("2,9:15-4,8:33", data.sourceRange().toString());
     }
 
@@ -154,16 +159,17 @@ class PositionTest {
         String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
         Document doc = Jsoup.connect(url).parser(TrackingParser).get();
 
-        Element firstP = doc.selectFirst("p");
+        Element firstP = doc.expectFirst("p");
         assertNotNull(firstP);
         assertEquals("4,1:53-4,4:56", firstP.sourceRange().toString());
 
-        Element p = doc.selectFirst("#xy");
+        Element p = doc.expectFirst("#xy");
         assertNotNull(p);
         assertEquals("1000,1:279646-1000,10:279655", p.sourceRange().toString());
         assertEquals("1000,567:280212-1000,571:280216", p.endSourceRange().toString());
 
         TextNode text = (TextNode) p.firstChild();
+        assertNotNull(text);
         assertEquals("1000,10:279655-1000,357:280002", text.sourceRange().toString());
     }
 
@@ -171,7 +177,7 @@ class PositionTest {
         String url = FileServlet.urlTo("/htmltests/test-rss.xml");
         Document doc = Jsoup.connect(url).parser(Parser.xmlParser().setTrackPosition(true)).get();
 
-        Element item = doc.selectFirst("item + item");
+        Element item = doc.expectFirst("item + item");
         assertNotNull(item);
         assertEquals("13,5:496-13,11:502", item.sourceRange().toString());
         assertEquals("17,5:779-17,12:786", item.endSourceRange().toString());
