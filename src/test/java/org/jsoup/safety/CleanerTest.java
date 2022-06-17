@@ -195,13 +195,13 @@ public class CleanerTest {
     @Test public void resolvesRelativeLinks() {
         String html = "<a href='/foo'>Link</a><img src='/bar'>";
         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages());
-        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a>\n<img src=\"http://example.com/bar\">", clean);
+        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a><img src=\"http://example.com/bar\">", clean);
     }
 
     @Test public void preservesRelativeLinksIfConfigured() {
         String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages().preserveRelativeLinks(true));
-        assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a>\n<img src=\"/bar\"> \n<img>", clean);
+        assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a><img src=\"/bar\"> <img>", clean);
     }
 
     @Test public void dropsUnresolvableRelativeLinks() {
@@ -213,10 +213,10 @@ public class CleanerTest {
     @Test public void handlesCustomProtocols() {
         String html = "<img src='cid:12345' /> <img src='data:gzzt' />";
         String dropped = Jsoup.clean(html, Safelist.basicWithImages());
-        assertEquals("<img> \n<img>", dropped);
+        assertEquals("<img> <img>", dropped);
 
         String preserved = Jsoup.clean(html, Safelist.basicWithImages().addProtocols("img", "src", "cid", "data"));
-        assertEquals("<img src=\"cid:12345\"> \n<img src=\"data:gzzt\">", preserved);
+        assertEquals("<img src=\"cid:12345\"> <img src=\"data:gzzt\">", preserved);
     }
 
     @Test public void handlesAllPseudoTag() {

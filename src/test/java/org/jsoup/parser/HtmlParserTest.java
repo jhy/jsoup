@@ -273,13 +273,13 @@ public class HtmlParserTest {
 
     @Test public void handlesNestedImplicitTable() {
         Document doc = Jsoup.parse("<table><td>1</td></tr> <td>2</td></tr> <td> <table><td>3</td> <td>4</td></table> <tr><td>5</table>");
-        assertEquals("<table><tbody><tr><td>1</td></tr> <tr><td>2</td></tr> <tr><td> <table><tbody><tr><td>3</td> <td>4</td></tr></tbody></table> </td></tr><tr><td>5</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><td>1</td></tr><tr><td>2</td></tr><tr><td><table><tbody><tr><td>3</td><td>4</td></tr></tbody></table></td></tr><tr><td>5</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesWhatWgExpensesTableExample() {
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#examples-0
         Document doc = Jsoup.parse("<table> <colgroup> <col> <colgroup> <col> <col> <col> <thead> <tr> <th> <th>2008 <th>2007 <th>2006 <tbody> <tr> <th scope=rowgroup> Research and development <td> $ 1,109 <td> $ 782 <td> $ 712 <tr> <th scope=row> Percentage of net sales <td> 3.4% <td> 3.3% <td> 3.7% <tbody> <tr> <th scope=rowgroup> Selling, general, and administrative <td> $ 3,761 <td> $ 2,963 <td> $ 2,433 <tr> <th scope=row> Percentage of net sales <td> 11.6% <td> 12.3% <td> 12.6% </table>");
-        assertEquals("<table> <colgroup> <col> </colgroup><colgroup> <col> <col> <col> </colgroup><thead> <tr> <th> </th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody> <tr> <th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody> <tr> <th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><colgroup><col></colgroup><colgroup><col><col><col></colgroup><thead><tr><th></th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody><tr><th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr><th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody><tr><th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr><th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesTbodyTable() {
@@ -294,7 +294,7 @@ public class HtmlParserTest {
 
     @Test public void noTableDirectInTable() {
         Document doc = Jsoup.parse("<table> <td>One <td><table><td>Two</table> <table><td>Three");
-        assertEquals("<table> <tbody><tr><td>One </td><td><table><tbody><tr><td>Two</td></tr></tbody></table> <table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
+        assertEquals("<table><tbody><tr><td>One </td><td><table><tbody><tr><td>Two</td></tr></tbody></table><table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
             TextUtil.stripNewlines(doc.body().html()));
     }
 
@@ -472,7 +472,7 @@ public class HtmlParserTest {
         // if a known tag, allow self closing outside of spec, but force an end tag. unknown tags can be self closing.
         String h = "<div id='1' /><script src='/foo' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
         Document doc = Jsoup.parse(h);
-        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo><hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesKnownEmptyNoFrames() {
@@ -599,7 +599,7 @@ public class HtmlParserTest {
     @Test public void testHgroup() {
         // jsoup used to not allow hgroup in h{n}, but that's not in spec, and browsers are OK
         Document doc = Jsoup.parse("<h1>Hello <h2>There <hgroup><h1>Another<h2>headline</hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup>");
-        assertEquals("<h1>Hello </h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello </h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup><hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testRelaxedTags() {
@@ -611,7 +611,7 @@ public class HtmlParserTest {
         // h* tags (h1 .. h9) in browsers can handle any internal content other than other h*. which is not per any
         // spec, which defines them as containing phrasing content only. so, reality over theory.
         Document doc = Jsoup.parse("<h1>Hello <div>There</div> now</h1> <h2>More <h3>Content</h3></h2>");
-        assertEquals("<h1>Hello <div>There</div> now</h1> <h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello <div>There</div> now</h1><h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testSpanContents() {
@@ -720,7 +720,7 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p><b> \n" +
+        String want = "<p><b>One</b></p><b>\n" +
             " <table>\n" +
             "  <tbody>\n" +
             "   <tr>\n" +
@@ -1246,7 +1246,7 @@ public class HtmlParserTest {
         File in = ParseTest.getFile("/htmltests/comments.html");
         Document doc = Jsoup.parse(in, "UTF-8");
 
-        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"><!-- now --> <head><!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
+        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"> <!-- now --> <head> <!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
             StringUtil.normaliseWhitespace(doc.html()));
 
         assertEquals("A Certain Kind of Test", doc.head().select("title").text());
@@ -1399,15 +1399,14 @@ public class HtmlParserTest {
         String html = "\n<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n";
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n\n</body></html>\n", doc.outerHtml());
+        assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n", doc.outerHtml());
     }
 
     @Test public void handleContentAfterBody() {
         String html = "<body>One</body>  <p>Hello!</p></html> <p>There</p>";
-        // todo - ideally would move that space afer /html to the body when the There <p> is seen
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
+        assertEquals("<html><head></head><body>One<p>Hello!</p><p>There</p></body>  </html> ", doc.outerHtml());
     }
 
     @Test public void preservesTabs() {
@@ -1487,7 +1486,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a><b> </b></a><b><div><a></a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a></a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {

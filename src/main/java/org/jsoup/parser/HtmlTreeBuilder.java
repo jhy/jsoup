@@ -558,6 +558,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return state != origState;
     }
 
+    /** Places the body back onto the stack and moves to InBody, for cases in AfterBody / AfterAfterBody when more content comes */
+    void resetBody() {
+        if (!onStack("body")) {
+            stack.add(doc.body());
+        }
+        transition(HtmlTreeBuilderState.InBody);
+    }
+
     // todo: tidy up in specific scope methods
     private String[] specificScopeTarget = {null};
 

@@ -109,11 +109,17 @@ public class DocumentTest {
         Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
         Document clone = doc.clone();
 
-        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
         clone.title("Hello there");
-        clone.select("p").first().text("One more").attr("id", "1");
-        assertEquals("<html><head><title>Hello there</title> </head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
-        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        clone.expectFirst("p").text("One more").attr("id", "1");
+        assertEquals("<html><head><title>Hello there</title></head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void testBasicIndent() {
+        Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
+        String expect = "<html>\n <head>\n  <title>Hello</title>\n </head>\n <body>\n  <p>One</p>\n  <p>Two</p>\n </body>\n</html>";
+        assertEquals(expect, doc.html());
     }
 
     @Test public void testClonesDeclarations() {

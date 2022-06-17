@@ -718,6 +718,7 @@ enum HtmlTreeBuilderState {
                         return false;
                     } else {
                         // todo: error if stack contains something not dd, dt, li, optgroup, option, p, rp, rt, tbody, td, tfoot, th, thead, tr, body, html
+                        anyOtherEndTag(t, tb);
                         tb.transition(AfterBody);
                     }
                     break;
@@ -1597,13 +1598,14 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     return false;
                 } else {
+                    if (tb.onStack("html")) tb.popStackToClose("html");
                     tb.transition(AfterAfterBody);
                 }
             } else if (t.isEOF()) {
                 // chillax! we're done
             } else {
                 tb.error(this);
-                tb.transition(InBody);
+                tb.resetBody();
                 return tb.process(t);
             }
             return true;
@@ -1688,21 +1690,12 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype() || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
                 return tb.process(t, InBody);
             } else if (isWhitespace(t)) {
-                // allows space after </html>, and put the body back on stack to allow subsequent tags if any
-                // todo - might be better for </body> and </html> to close them, allow trailing space, and then reparent
-                //  that space into body if other tags get re-added. but that's overkill for now
-                Element html = tb.popStackToClose("html");
                 tb.insert(t.asCharacter());
-                if (html != null) {
-                    tb.stack.add(html);
-                    Element body = html.selectFirst("body");
-                    if (body != null) tb.stack.add(body);
-                }
             }else if (t.isEOF()) {
                 // nice work chuck
             } else {
                 tb.error(this);
-                tb.transition(InBody);
+                tb.resetBody();
                 return tb.process(t);
             }
             return true;

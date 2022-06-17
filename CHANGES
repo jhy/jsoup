@@ -21,6 +21,11 @@ jsoup changelog
     what should have been preformatted output to instead be a run of text.
     <https://github.com/jhy/jsoup/issues/1776>
 
+  * Bugfix: when pretty-print serializing HTML, newlines separating phrasing content (e.g. a <span> tag within a <p> tag
+    would be incorrectly skipped, instead of normalized to a space. Additionally, improved space normalization between
+    other end of line occurences, and whitespace handling after a closing </body>
+    <https://github.com/jhy/jsoup/issues/1787>
+
 *** Release 1.15.1 [2022-May-15]
   * Change: removed previously deprecated methods and classes (including org.jsoup.safety.Whitelist; use
     org.jsoup.safety.Safelist instead).

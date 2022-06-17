@@ -1,7 +1,7 @@
 package org.jsoup.nodes;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 
 import java.io.IOException;
 
@@ -80,17 +80,30 @@ public class TextNode extends LeafNode {
         return tailNode;
     }
 
-	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
-        final boolean parentIndent = parent != null && parent.shouldIndent(out);
         final boolean blank = isBlank();
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
 
-        if (normaliseWhite && parentIndent && StringUtil.startsWithNewline(coreValue()) && blank) // we are skippable whitespace
-            return;
+        // if this text is just whitespace, and the next node will cause an indent, skip this text:
+        if (normaliseWhite && blank) {
+            boolean canSkip = false;
+            Node next = this.nextSibling();
+            if (next instanceof Element) {
+                Element nextEl = (Element) next;
+                canSkip = nextEl.shouldIndent(out);
+            } else if (next == null && parent != null) { // we are the last child, check parent
+                canSkip = parent.shouldIndent(out);
+            } else if (next instanceof TextNode && (((TextNode) next).isBlank())) {
+                // sometimes get a run of textnodes from parser if nodes are re-parented
+                canSkip = true;
+            }
+            if (canSkip)
+                return;
+        }
 
-        if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size()>0 && !blank) ))
+        if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size() > 0 && !blank)))
             indent(accum, depth, out);
 
         final boolean stripWhite = prettyPrint && parentNode instanceof Document;

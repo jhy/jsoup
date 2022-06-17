@@ -536,7 +536,7 @@ public class ElementTest {
         Document doc = Jsoup.parse("<title>Hello there</title> <div><p>Hello</p><p>there</p></div> <div>Another</div>");
         assertEquals("<title>Hello there</title>", doc.select("title").first().outerHtml());
         assertEquals("<div>\n <p>Hello</p>\n <p>there</p>\n</div>", doc.select("div").first().outerHtml());
-        assertEquals("<div>\n <p>Hello</p>\n <p>there</p>\n</div> \n<div>\n Another\n</div>", doc.select("body").first().html());
+        assertEquals("<div>\n <p>Hello</p>\n <p>there</p>\n</div>\n<div>\n Another\n</div>", doc.select("body").first().html());
     }
 
     @Test
@@ -2268,5 +2268,20 @@ public class ElementTest {
             threw = true;
         }
         assertTrue(threw);
+    }
+
+    @Test void spanRunsMaintainSpace() {
+        // https://github.com/jhy/jsoup/issues/1787
+        Document doc = Jsoup.parse("<p><span>One</span>\n<span>Two</span>\n<span>Three</span></p>");
+        String text = "One Two Three";
+        Element body = doc.body();
+        assertEquals(text, body.text());
+
+        Element p = doc.expectFirst("p");
+        String html = p.html();
+        p.html(html);
+        assertEquals(text, body.text());
+
+        assertEquals("<p><span>One</span> <span>Two</span> <span>Three</span></p>", body.html());
     }
 }
