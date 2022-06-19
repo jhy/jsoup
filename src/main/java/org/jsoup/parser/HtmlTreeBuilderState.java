@@ -385,8 +385,9 @@ enum HtmlTreeBuilderState {
                         return false; // ignore
                     } else {
                         tb.framesetOk(false);
-                        Element body = stack.get(1);
-                        if (startTag.hasAttributes()) {
+                        // will be on stack if this is a nested body. won't be if closed (which is a variance from spec, which leaves it on)
+                        Element body;
+                        if (startTag.hasAttributes() && (body = tb.getFromStack("body")) != null) { // we only ever put one body on stack
                             for (Attribute attribute : startTag.attributes) {
                                 if (!body.hasAttr(attribute.getKey()))
                                     body.attributes().put(attribute);
