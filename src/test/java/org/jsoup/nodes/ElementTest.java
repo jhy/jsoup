@@ -2284,4 +2284,25 @@ public class ElementTest {
 
         assertEquals("<p><span>One</span> <span>Two</span> <span>Three</span></p>", body.html());
     }
+
+    @Test void doctypeIsPrettyPrinted() {
+        // resolves underlying issue raised in https://github.com/jhy/jsoup/pull/1664
+        Document doc1 = Jsoup.parse("<!--\nlicense\n-->\n \n<!doctype html>\n<html>");
+        Document doc2 = Jsoup.parse("\n  <!doctype html><html>");
+        Document doc3 = Jsoup.parse("<!doctype html>\n<html>");
+        Document doc4 = Jsoup.parse("\n<!doctype html>\n<html>");
+        Document doc5 = Jsoup.parse("\n<!--\n comment \n -->  <!doctype html>\n<html>");
+        Document doc6 = Jsoup.parse("<!--\n comment \n -->  <!doctype html>\n<html>");
+
+        assertEquals("<!--\nlicense\n-->\n<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc1.html());
+        doc1.outputSettings().prettyPrint(false);
+        assertEquals("<!--\nlicense\n--><!doctype html>\n<html><head></head><body></body></html>", doc1.html());
+        // note that the whitespace between the comment and the doctype is not retained, in Initial state
+
+        assertEquals("<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc2.html());
+        assertEquals("<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc3.html());
+        assertEquals("<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc4.html());
+        assertEquals("<!--\n comment \n -->\n<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc5.html());
+        assertEquals("<!--\n comment \n -->\n<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc6.html());
+    }
 }

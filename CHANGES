@@ -12,6 +12,9 @@ jsoup changelog
     a null if there is no match, will throw an IllegalArgumentException. This is useful if you want to simply abort
     processing if an expected match is not found.
 
+  * Improvement: when pretty-printing HTML, doctypes are emitted on a newline if there is a preceeding comment.
+    <https://github.com/jhy/jsoup/pull/1664>
+
   * Bugfix: when using the readToByteBuffer method, such as in Connection.Response.body(), if the document has not
     already been parsed and must be read fully, and there is any maximum buffer size being applied, only the default
     internal buffer size is read.
