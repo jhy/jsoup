@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
@@ -37,12 +38,7 @@ public class DataUtilTest {
     }
 
     private InputStream stream(String data, String charset) {
-        try {
-            return new ByteArrayInputStream(data.getBytes(charset));
-        } catch (UnsupportedEncodingException e) {
-            fail();
-        }
-        return null;
+        return new ByteArrayInputStream(data.getBytes(Charset.forName(charset)));
     }
 
     @Test
@@ -180,7 +176,7 @@ public class DataUtilTest {
 
     @Test
     public void noExtraNULLBytes() throws IOException {
-    	final byte[] b = "<html><head><meta charset=\"UTF-8\"></head><body><div><u>ü</u>ü</div></body></html>".getBytes("UTF-8");
+    	final byte[] b = "<html><head><meta charset=\"UTF-8\"></head><body><div><u>ü</u>ü</div></body></html>".getBytes(StandardCharsets.UTF_8);
     	
     	Document doc = Jsoup.parse(new ByteArrayInputStream(b), null, "");
     	assertFalse( doc.outerHtml().contains("\u0000") );
@@ -201,7 +197,7 @@ public class DataUtilTest {
                 "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" +
                         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">" +
                         "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">Hellö Wörld!</html>"
-        ).getBytes(encoding));
+        ).getBytes(Charset.forName(encoding)));
 
         Document doc = Jsoup.parse(soup, null, "");
         assertEquals("Hellö Wörld!", doc.body().text());

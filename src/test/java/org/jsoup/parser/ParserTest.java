@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,7 +32,7 @@ public class ParserTest {
     @Test
     public void testUtf8() throws IOException {
         // testcase for https://github.com/jhy/jsoup/issues/1557. no repro.
-        Document parsed = Jsoup.parse(new ByteArrayInputStream("<p>H\u00E9llo, w\u00F6rld!".getBytes("UTF-8")), null, "");
+        Document parsed = Jsoup.parse(new ByteArrayInputStream("<p>H\u00E9llo, w\u00F6rld!".getBytes(StandardCharsets.UTF_8)), null, "");
         String text = parsed.selectFirst("p").wholeText();
         assertEquals(text, "H\u00E9llo, w\u00F6rld!");
     }
