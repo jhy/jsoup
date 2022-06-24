@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -625,6 +626,7 @@ public class ElementTest {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
         Element div = doc.getElementById("1");
         div.appendText(" there & now >");
+        assertEquals ("Hello there & now >", div.text());
         assertEquals("<p>Hello</p> there &amp; now &gt;", TextUtil.stripNewlines(div.html()));
     }
 
@@ -2304,5 +2306,32 @@ public class ElementTest {
         assertEquals("<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc4.html());
         assertEquals("<!--\n comment \n -->\n<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc5.html());
         assertEquals("<!--\n comment \n -->\n<!doctype html>\n<html>\n <head></head>\n <body></body>\n</html>", doc6.html());
+    }
+
+    @Test void textnodeInBlockIndent() {
+        String html ="<div>\n{{ msg }} \n </div>\n<div>\n{{ msg }} \n </div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<div>\n {{ msg }}\n</div>\n<div>\n {{ msg }}\n</div>", doc.body().html());
+    }
+
+    @Test void stripTrailing() {
+        String html = "<p> This <span>is </span>fine. </p>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<p>This <span>is </span>fine.</p>", doc.body().html());
+    }
+
+    @Test void elementIndentAndSpaceTrims() {
+        String html = "<body><div> <p> One Two </p> <a>  Hello </a><p>\nSome text \n</p>\n </div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<div>\n" +
+            " <p>One Two</p> <a> Hello </a>\n" +
+            " <p>Some text</p>\n" +
+            "</div>", doc.body().html());
+    }
+
+    @Test void divAInlineable() {
+        String html = "<body><div> <a>Text</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<div><a>Text</a>\n</div>", doc.body().html());
     }
 }

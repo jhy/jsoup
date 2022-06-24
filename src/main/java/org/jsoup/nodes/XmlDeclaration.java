@@ -60,7 +60,7 @@ public class XmlDeclaration extends LeafNode {
                 accum.append(key);
                 if (!val.isEmpty()) {
                     accum.append("=\"");
-                    Entities.escape(accum, val, out, true, false, false);
+                    Entities.escape(accum, val, out, true, false, false, false);
                     accum.append('"');
                 }
             }

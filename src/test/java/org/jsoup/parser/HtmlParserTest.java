@@ -158,7 +158,7 @@ public class HtmlParserTest {
 
     @Test public void testSpaceAfterTag() {
         Document doc = Jsoup.parse("<div > <a name=\"top\"></a ><p id=1 >Hello</p></div>");
-        assertEquals("<div> <a name=\"top\"></a><p id=\"1\">Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div><a name=\"top\"></a><p id=\"1\">Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void createsDocumentStructure() {
@@ -279,7 +279,7 @@ public class HtmlParserTest {
     @Test public void handlesWhatWgExpensesTableExample() {
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#examples-0
         Document doc = Jsoup.parse("<table> <colgroup> <col> <colgroup> <col> <col> <col> <thead> <tr> <th> <th>2008 <th>2007 <th>2006 <tbody> <tr> <th scope=rowgroup> Research and development <td> $ 1,109 <td> $ 782 <td> $ 712 <tr> <th scope=row> Percentage of net sales <td> 3.4% <td> 3.3% <td> 3.7% <tbody> <tr> <th scope=rowgroup> Selling, general, and administrative <td> $ 3,761 <td> $ 2,963 <td> $ 2,433 <tr> <th scope=row> Percentage of net sales <td> 11.6% <td> 12.3% <td> 12.6% </table>");
-        assertEquals("<table><colgroup><col></colgroup><colgroup><col><col><col></colgroup><thead><tr><th></th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody><tr><th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr><th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody><tr><th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr><th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><colgroup><col></colgroup><colgroup><col><col><col></colgroup><thead><tr><th></th><th>2008</th><th>2007</th><th>2006</th></tr></thead><tbody><tr><th scope=\"rowgroup\">Research and development</th><td>$ 1,109</td><td>$ 782</td><td>$ 712</td></tr><tr><th scope=\"row\">Percentage of net sales</th><td>3.4%</td><td>3.3%</td><td>3.7%</td></tr></tbody><tbody><tr><th scope=\"rowgroup\">Selling, general, and administrative</th><td>$ 3,761</td><td>$ 2,963</td><td>$ 2,433</td></tr><tr><th scope=\"row\">Percentage of net sales</th><td>11.6%</td><td>12.3%</td><td>12.6%</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesTbodyTable() {
@@ -294,7 +294,7 @@ public class HtmlParserTest {
 
     @Test public void noTableDirectInTable() {
         Document doc = Jsoup.parse("<table> <td>One <td><table><td>Two</table> <table><td>Three");
-        assertEquals("<table><tbody><tr><td>One </td><td><table><tbody><tr><td>Two</td></tr></tbody></table><table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
+        assertEquals("<table><tbody><tr><td>One</td><td><table><tbody><tr><td>Two</td></tr></tbody></table><table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
             TextUtil.stripNewlines(doc.body().html()));
     }
 
@@ -568,7 +568,7 @@ public class HtmlParserTest {
     @Test public void normalisesDocument() {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
-        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
+        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven</body></html>",
             TextUtil.stripNewlines(doc.html()));
     }
 
@@ -599,7 +599,7 @@ public class HtmlParserTest {
     @Test public void testHgroup() {
         // jsoup used to not allow hgroup in h{n}, but that's not in spec, and browsers are OK
         Document doc = Jsoup.parse("<h1>Hello <h2>There <hgroup><h1>Another<h2>headline</hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup>");
-        assertEquals("<h1>Hello </h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup><hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello</h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup><hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testRelaxedTags() {
@@ -611,7 +611,7 @@ public class HtmlParserTest {
         // h* tags (h1 .. h9) in browsers can handle any internal content other than other h*. which is not per any
         // spec, which defines them as containing phrasing content only. so, reality over theory.
         Document doc = Jsoup.parse("<h1>Hello <div>There</div> now</h1> <h2>More <h3>Content</h3></h2>");
-        assertEquals("<h1>Hello <div>There</div> now</h1><h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello <div>There</div> now</h1><h2>More</h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testSpanContents() {
@@ -1175,7 +1175,8 @@ public class HtmlParserTest {
         Document doc = Parser.htmlParser()
             .settings(preserveCase)
             .parseInput(html, "");
-        assertEquals("<A>ONE </A><A>Two</A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        //assertEquals("<A>ONE </A><A>Two</A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        assertEquals("<A>ONE </A><A>Two</A>", doc.body().html());
     }
 
     @Test public void normalizesDiscordantTags() {
@@ -1246,7 +1247,7 @@ public class HtmlParserTest {
         File in = ParseTest.getFile("/htmltests/comments.html");
         Document doc = Jsoup.parse(in, "UTF-8");
 
-        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --> <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"> <!-- now --> <head> <!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
+        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --> <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"><!-- now --> <head><!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
             StringUtil.normaliseWhitespace(doc.html()));
 
         assertEquals("A Certain Kind of Test", doc.head().select("title").text());
@@ -1486,7 +1487,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a> <b> </b></a><b><div><a></a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {

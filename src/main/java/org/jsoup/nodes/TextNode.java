@@ -83,31 +83,27 @@ public class TextNode extends LeafNode {
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
-        final boolean blank = isBlank();
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
 
-        // if this text is just whitespace, and the next node will cause an indent, skip this text:
-        if (normaliseWhite && blank) {
-            boolean canSkip = false;
+        boolean trimLeading = false;
+        boolean trimTrailing = false;
+        if (normaliseWhite) {
+            trimLeading = (siblingIndex == 0 && parent != null && parent.tag().isBlock()) ||
+                parentNode instanceof Document;
+            trimTrailing = nextSibling() == null && parent != null && parent.tag().isBlock();
+
+            // if this text is just whitespace, and the next node will cause an indent, skip this text:
             Node next = this.nextSibling();
-            if (next instanceof Element) {
-                Element nextEl = (Element) next;
-                canSkip = nextEl.shouldIndent(out);
-            } else if (next == null && parent != null) { // we are the last child, check parent
-                canSkip = parent.shouldIndent(out);
-            } else if (next instanceof TextNode && (((TextNode) next).isBlank())) {
-                // sometimes get a run of textnodes from parser if nodes are re-parented
-                canSkip = true;
-            }
-            if (canSkip)
-                return;
+            boolean couldSkip = (next instanceof Element && ((Element) next).shouldIndent(out)) // next will indent
+                || (next instanceof TextNode && (((TextNode) next).isBlank())); // next is blank text, from re-parenting
+            if (couldSkip && isBlank()) return;
+
+            if ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank()) ||
+                (out.outline() && siblingNodes().size() > 0 && !isBlank()))
+                indent(accum, depth, out);
         }
 
-        if (prettyPrint && ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !blank) || (out.outline() && siblingNodes().size() > 0 && !blank)))
-            indent(accum, depth, out);
-
-        final boolean stripWhite = prettyPrint && parentNode instanceof Document;
-        Entities.escape(accum, coreValue(), out, false, normaliseWhite, stripWhite);
+        Entities.escape(accum, coreValue(), out, false, normaliseWhite, trimLeading, trimTrailing);
     }
 
 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}

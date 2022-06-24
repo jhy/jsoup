@@ -142,7 +142,7 @@ public class Entities {
             return "";
         StringBuilder accum = StringUtil.borrowBuilder();
         try {
-            escape(accum, string, out, false, false, false);
+            escape(accum, string, out, false, false, false, false);
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
@@ -160,9 +160,9 @@ public class Entities {
         return escape(string, DefaultOutput);
     }
 
-    // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
+    // this method does a lot, but other breakups cause rescanning and stringbuilder generations
     static void escape(Appendable accum, String string, OutputSettings out,
-                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
 
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
@@ -172,19 +172,28 @@ public class Entities {
         final int length = string.length();
 
         int codePoint;
+        boolean skipped = false;
         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
 
             if (normaliseWhite) {
                 if (StringUtil.isWhitespace(codePoint)) {
-                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                    if (stripLeadingWhite && !reachedNonWhite) continue;
+                    if (lastWasWhite) continue;
+                    if (trimTrailing) {
+                        skipped = true;
                         continue;
+                    }
                     accum.append(' ');
                     lastWasWhite = true;
                     continue;
                 } else {
                     lastWasWhite = false;
                     reachedNonWhite = true;
+                    if (skipped) {
+                        accum.append(' '); // wasn't the end, so need to place a normalized space
+                        skipped = false;
+                    }
                 }
             }
             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
