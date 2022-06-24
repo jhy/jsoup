@@ -8,6 +8,8 @@ import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 
 import javax.annotation.Nullable;
+import javax.annotation.WillClose;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -185,7 +187,7 @@ Connection con3 = session.newRequest();
      /**
      Read an input stream, and parse it to a Document.
 
-     @param in          input stream to read. Make sure to close it after parsing.
+     @param in          input stream to read. The stream will be closed after reading.
      @param charsetName (optional) character set of file contents. Set to {@code null} to determine from {@code http-equiv} meta tag, if
      present, or fall back to {@code UTF-8} (which is often safe to do).
      @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
@@ -193,7 +195,7 @@ Connection con3 = session.newRequest();
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
+    public static Document parse(@WillClose InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
     }
 

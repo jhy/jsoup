@@ -13,6 +13,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import javax.annotation.Nullable;
+import javax.annotation.WillClose;
+
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.File;
@@ -103,7 +105,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
+    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
     }
 
@@ -116,7 +118,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return parseInputStream(in, charsetName, baseUri, parser);
     }
 
@@ -134,7 +136,7 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
+    static Document parseInputStream(@Nullable @WillClose InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
