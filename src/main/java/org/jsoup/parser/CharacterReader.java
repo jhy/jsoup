@@ -1,12 +1,14 @@
 package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
+import org.jsoup.helper.BufferRecycler;
 import org.jsoup.helper.Validate;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +18,33 @@ import java.util.Locale;
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
 public final class CharacterReader {
+    protected static final ThreadLocal<SoftReference<BufferRecycler>> _recyclerRef = new ThreadLocal<>();
+    protected static final ThreadLocal<SoftReference<String[]>> stringCacheRef = new ThreadLocal<>();
+
+    public static BufferRecycler getBufferRecycler() {
+        SoftReference<BufferRecycler> ref = _recyclerRef.get();
+        BufferRecycler br = (ref == null) ? null : ref.get();
+
+        if (br == null) {
+            br = new BufferRecycler();
+            ref = new SoftReference<>(br);
+            _recyclerRef.set(ref);
+        }
+        return br;
+    }
+
+    public static String[] getStringCache() {
+        SoftReference<String[]> ref = stringCacheRef.get();
+        String[] stringCache = (ref == null) ? null : ref.get();
+
+        if (stringCache == null) {
+            stringCache = new String[stringCacheSize];
+            ref = new SoftReference<>(stringCache);
+            stringCacheRef.set(ref);
+        }
+        return stringCache;
+    }
+
     static final char EOF = (char) -1;
     private static final int maxStringCacheLen = 12;
     static final int maxBufferLen = 1024 * 32; // visible for testing
@@ -30,7 +59,7 @@ public final class CharacterReader {
     private int readerPos;
     private int bufMark = -1;
     private static final int stringCacheSize = 512;
-    private String[] stringCache = new String[stringCacheSize]; // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache = getStringCache(); // holds reused strings in this doc, to lessen garbage
 
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
@@ -39,7 +68,7 @@ public final class CharacterReader {
         Validate.notNull(input);
         Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = new char[Math.min(sz, maxBufferLen)];
+        charBuf = getBufferRecycler().allocCharBuffer(Math.min(sz, maxBufferLen));
         bufferUp();
     }
 
@@ -59,8 +88,8 @@ public final class CharacterReader {
         } catch (IOException ignored) {
         } finally {
             reader = null;
-            charBuf = null;
             stringCache = null;
+            getBufferRecycler().releaseCharBuffer(charBuf);
         }
     }
 

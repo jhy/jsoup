@@ -63,6 +63,7 @@ abstract class TreeBuilder {
         // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
         reader.close();
         reader = null;
+        tokeniser.release();
         tokeniser = null;
         stack = null;
         seenTags = null;
