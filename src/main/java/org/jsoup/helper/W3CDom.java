@@ -52,7 +52,6 @@ public class W3CDom {
     private static final String ContextProperty = "jsoupContextSource"; // tracks the jsoup context element on w3c doc
     private static final String ContextNodeProperty = "jsoupContextNode"; // the w3c node used as the creating context
 
-
     /**
      To get support for XPath versions &gt; 1, set this property to the classname of an alternate XPathFactory
      implementation. (For e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
@@ -60,10 +59,31 @@ public class W3CDom {
     public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
     protected DocumentBuilderFactory factory;
+    private boolean namespaceAware = true; // false when using selectXpath, for user's query convenience
 
     public W3CDom() {
         factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
+    }
+
+    /**
+     Returns if this W3C DOM is namespace aware. By default, this will be {@code true}, but is disabled for simplicity
+     when using XPath selectors in {@link org.jsoup.nodes.Element#selectXpath(String)}.
+     @return the current namespace aware setting.
+     */
+    public boolean namespaceAware() {
+        return namespaceAware;
+    }
+
+    /**
+     Update the namespace aware setting. This impacts the factory that is used to create W3C nodes from jsoup nodes.
+     @param namespaceAware the updated setting
+     @return this W3CDom, for chaining.
+     */
+    public W3CDom namespaceAware(boolean namespaceAware) {
+        this.namespaceAware = namespaceAware;
+        factory.setNamespaceAware(namespaceAware);
+        return this;
     }
 
     /**
@@ -91,7 +111,6 @@ public class W3CDom {
      * @see OutputKeys#OMIT_XML_DECLARATION
      * @see OutputKeys#STANDALONE
      * @see OutputKeys#STANDALONE
-     * @see OutputKeys#DOCTYPE_PUBLIC
      * @see OutputKeys#DOCTYPE_PUBLIC
      * @see OutputKeys#CDATA_SECTION_ELEMENTS
      * @see OutputKeys#INDENT
@@ -314,7 +333,7 @@ public class W3CDom {
     /**
      * Implements the conversion by walking the input.
      */
-    protected static class W3CBuilder implements NodeVisitor {
+    protected class W3CBuilder implements NodeVisitor {
         private static final String xmlnsKey = "xmlns";
         private static final String xmlnsPrefix = "xmlns:";
 
@@ -337,7 +356,7 @@ public class W3CDom {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
 
                 String prefix = updateNamespaces(sourceEl);
-                String namespace = namespacesStack.peek().get(prefix);
+                String namespace = namespaceAware ? namespacesStack.peek().get(prefix) : null;
                 String tagName = sourceEl.tagName();
 
                 /* Tag names in XML are quite permissive, but less permissive than HTML. Rather than reimplement the validation,

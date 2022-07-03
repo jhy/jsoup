@@ -19,6 +19,10 @@ jsoup changelog
     so that they are indented correctly.
     <https://github.com/jhy/jsoup/issues/1798>
 
+  * Improvement: in Element#selectXpath(), disable namespace awareness. This makes it possible to always select elements
+    by their simple local name, regardless of whether an xmlns attribute was set.
+    <https://github.com/jhy/jsoup/issues/1801>
+
   * Bugfix: when using the readToByteBuffer method, such as in Connection.Response.body(), if the document has not
     already been parsed and must be read fully, and there is any maximum buffer size being applied, only the default
     internal buffer size is read.

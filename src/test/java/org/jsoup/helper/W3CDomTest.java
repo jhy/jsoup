@@ -278,6 +278,20 @@ public class W3CDomTest {
         assertNull(nodeList);
     }
 
+    @Test
+    void canDisableNamespaces() throws XPathExpressionException {
+        W3CDom w3c = new W3CDom();
+        assertTrue(w3c.namespaceAware());
+
+        w3c.namespaceAware(false);
+        assertFalse(w3c.namespaceAware());
+
+        String html = "<html xmlns='http://www.w3.org/1999/xhtml'><body id='One'><div>hello</div></body></html>";
+        Document dom = w3c.fromJsoup(Jsoup.parse(html));
+        NodeList nodeList = xpath(dom, "//body");// no ns, so needs no prefix
+        assertEquals("div", nodeList.item(0).getLocalName());
+    }
+
     private NodeList xpath(Document w3cDoc, String query) throws XPathExpressionException {
         XPathExpression xpath = XPathFactory.newInstance().newXPath().compile(query);
         return ((NodeList) xpath.evaluate(w3cDoc, XPathConstants.NODE));

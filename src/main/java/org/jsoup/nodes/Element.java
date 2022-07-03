@@ -522,6 +522,8 @@ public class Element extends Node {
 
     /**
      Find Elements that match the supplied XPath expression.
+     <p>Note that for convenience of writing the Xpath expression, namespaces are disabled, and queries can be
+     expressed using the elements local name only.</p>
      <p>By default, XPath 1.0 expressions are supported. If you would to use XPath 2.0 or higher, you can provide an
      alternate XPathFactory implementation:</p>
      <ol>
