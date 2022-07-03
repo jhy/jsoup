@@ -240,6 +240,7 @@ public class W3CDom {
      */
     public void convert(org.jsoup.nodes.Element in, Document out) {
         W3CBuilder builder = new W3CBuilder(out);
+        builder.namespaceAware = namespaceAware;
         org.jsoup.nodes.Document inDoc = in.ownerDocument();
         if (inDoc != null) {
             if (!StringUtil.isBlank(inDoc.location())) {
@@ -333,11 +334,12 @@ public class W3CDom {
     /**
      * Implements the conversion by walking the input.
      */
-    protected class W3CBuilder implements NodeVisitor {
+    protected static class W3CBuilder implements NodeVisitor {
         private static final String xmlnsKey = "xmlns";
         private static final String xmlnsPrefix = "xmlns:";
 
         private final Document doc;
+        private boolean namespaceAware = true;
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Node dest;
         private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
