@@ -1,6 +1,6 @@
 jsoup changelog
 
-*** Release 1.15.2 [PENDING]
+*** Release 1.15.2 [2022-Jul-04]
   * Improvement: added the ability to track the position (line, column, index) in the original input source from where
     a given node was parsed. Accessible via Node.sourceRange() and Element.endSourceRange().
     <https://github.com/jhy/jsoup/pull/1790>
