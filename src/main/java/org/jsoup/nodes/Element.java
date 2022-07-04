@@ -465,6 +465,7 @@ public class Element extends Node {
      @param cssQuery a {@link Selector} CSS-like query
      @return the first matching element
      @throws IllegalArgumentException if no match is found
+     @since 1.15.2
      */
     public Element expectFirst(String cssQuery) {
         return (Element) Validate.ensureNotNull(Selector.selectFirst(cssQuery, this));
@@ -523,7 +524,7 @@ public class Element extends Node {
     /**
      Find Elements that match the supplied XPath expression.
      <p>Note that for convenience of writing the Xpath expression, namespaces are disabled, and queries can be
-     expressed using the elements local name only.</p>
+     expressed using the element's local name only.</p>
      <p>By default, XPath 1.0 expressions are supported. If you would to use XPath 2.0 or higher, you can provide an
      alternate XPathFactory implementation:</p>
      <ol>
