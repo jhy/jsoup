@@ -160,6 +160,13 @@ public class Cleaner {
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
 
+        // Copy the original start and end range, if set
+        // TODO - might be good to make a generic Element#userData set type interface, and copy those all over
+        if (sourceEl.sourceRange().isTracked())
+            sourceEl.sourceRange().track(dest, true);
+        if (sourceEl.endSourceRange().isTracked())
+            sourceEl.endSourceRange().track(dest, false);
+
         return new ElementMeta(dest, numDiscarded);
     }
 

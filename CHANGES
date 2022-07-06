@@ -1,5 +1,9 @@
 jsoup changelog
 
+Release 1.15.3 [PENDING]
+  * Improvement: the Cleaner will preserve the source position of cleaned elements, if source tracking is enabled in the
+    original parse.
+
 *** Release 1.15.2 [2022-Jul-04]
   * Improvement: added the ability to track the position (line, column, index) in the original input source from where
     a given node was parsed. Accessible via Node.sourceRange() and Element.endSourceRange().

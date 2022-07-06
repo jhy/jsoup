@@ -4,7 +4,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
+import org.jsoup.nodes.Range;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -338,5 +341,18 @@ public class CleanerTest {
         Document result = new Cleaner(safelist).clean(orig);
         assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
         assertEquals("<p>test<br /></p>", result.body().html());
+    }
+
+    @Test void preservesSourcePositionViaUserData() {
+        Document orig = Jsoup.parse("<script>xss</script>\n <p>Hello</p>", Parser.htmlParser().setTrackPosition(true));
+        Element p = orig.expectFirst("p");
+        Range origRange = p.sourceRange();
+        assertEquals("2,2:22-2,5:25", origRange.toString());
+
+        Document clean = new Cleaner(Safelist.relaxed()).clean(orig);
+        Element cleanP = clean.expectFirst("p");
+        Range cleanRange = cleanP.sourceRange();
+        assertEquals(cleanRange, origRange);
+        assertEquals(clean.endSourceRange(), orig.endSourceRange());
     }
 }
