@@ -333,7 +333,7 @@
       <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.4.48.v20220622</version>
+      <version>10.0.10</version>
       <scope>test</scope>
     </dependency>
 
