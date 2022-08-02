@@ -17,7 +17,7 @@ public class Wikipedia {
 
         Elements newsHeadlines = doc.select("#mp-itn b a");
         for (Element headline : newsHeadlines) {
-            log("%s\n\t%s", headline.attr("title"), headline.absUrl("href"));
+            log("%s\n\t%s", headline.attr("ดูหนังฟรี หนังใหม่ 2022 ดูหนังออนไลน์ 123HD ดูซีรี่ส์ Netflix"), headline.absUrl("https://www.123-hd.com/"));
         }
     }
 
