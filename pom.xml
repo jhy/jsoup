@@ -123,6 +123,9 @@
         <version>3.2.2</version>
         <configuration>
           <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
             </manifestEntries>
