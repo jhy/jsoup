@@ -4,6 +4,10 @@ Release 1.15.3 [PENDING]
   * Improvement: the Cleaner will preserve the source position of cleaned elements, if source tracking is enabled in the
     original parse.
 
+  * Bugfix: the DataUtil would incorrectly read from InputStreams that emitted reads less than the requested size. This
+    lead to incorrect results when parsing from chunked server responses, for e.g.
+    <https://github.com/jhy/jsoup/issues/1807>
+
   * Build Improvement: added implementation version and related fields to the jar manifest.
     <https://github.com/jhy/jsoup/issues/1809>
 

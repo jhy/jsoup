@@ -1,11 +1,13 @@
 package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
+import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -227,5 +229,50 @@ public class DataUtilTest {
         Document doc = Jsoup.parse(in, null);
         assertEquals("This is not gzipped", doc.title());
         assertEquals("And should still be readable.", doc.selectFirst("p").text());
+    }
+
+    // an input stream to give a range of output sizes, that changes on each read
+    static class VaryingReadInputStream extends InputStream {
+        final InputStream in;
+        int stride = 0;
+
+        VaryingReadInputStream(InputStream in) {
+            this.in = in;
+        }
+
+        public int read() throws IOException {
+            return in.read();
+        }
+
+        public int read(byte[] b) throws IOException {
+            return in.read(b, 0, Math.min(b.length, ++stride));
+        }
+
+        public int read(byte[] b, int off, int len) throws IOException {
+            return in.read(b, off, Math.min(len, ++stride));
+        }
+    }
+
+    @Test
+    void handlesChunkedInputStream() throws IOException {
+        File inputFile = ParseTest.getFile("/htmltests/large.html");
+        String input = ParseTest.getFileAsString(inputFile);
+        VaryingReadInputStream stream = new VaryingReadInputStream(ParseTest.inputStreamFrom(input));
+
+        Document expected = Jsoup.parse(input, "https://example.com");
+        Document doc = Jsoup.parse(stream, null, "https://example.com");
+        assertTrue(doc.hasSameValue(expected));
+    }
+
+    @Test
+    void handlesUnlimitedRead() throws IOException {
+        File inputFile = ParseTest.getFile("/htmltests/large.html");
+        String input = ParseTest.getFileAsString(inputFile);
+        VaryingReadInputStream stream = new VaryingReadInputStream(ParseTest.inputStreamFrom(input));
+
+        ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
+        String read = new String(byteBuffer.array());
+
+        assertEquals(input, read);
     }
 }
