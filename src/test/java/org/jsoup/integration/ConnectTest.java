@@ -12,7 +12,6 @@ import org.jsoup.nodes.FormElement;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -39,11 +38,6 @@ public class ConnectTest {
     public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
     }
 
     @Test

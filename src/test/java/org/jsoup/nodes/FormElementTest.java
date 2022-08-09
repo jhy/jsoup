@@ -7,7 +7,6 @@ import org.jsoup.integration.servlets.CookieServlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -25,11 +24,6 @@ public class FormElementTest {
     @BeforeAll
     public static void setUp() {
         TestServer.start();
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
     }
 
     @Test public void hasAssociatedControls() {

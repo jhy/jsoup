@@ -3,11 +3,9 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.UncheckedIOException;
-import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -21,11 +19,6 @@ public class SessionIT {
     @BeforeAll
     public static void setUp() {
         TestServer.start();
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
     }
 
     @Test

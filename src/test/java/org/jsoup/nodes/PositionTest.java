@@ -1,12 +1,8 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.jsoup.integration.TestServer;
-import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.parser.Parser;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -143,16 +139,6 @@ class PositionTest {
 
         Comment comment = (Comment) rss.nextSibling().nextSibling();
         assertEquals("6,1:80-6,17:96", comment.sourceRange().toString());
-    }
-
-    @BeforeAll
-    static void setUp() {
-        TestServer.start();
-    }
-
-    @AfterAll
-    static void tearDown() {
-        TestServer.stop();
     }
 
     @Test void tracksFromFetch() throws IOException {
