@@ -269,8 +269,8 @@ public class W3CDom {
      @return the matches nodes
      */
     public NodeList selectXpath(String xpath, Node contextNode) {
-        Validate.notEmpty(xpath);
-        Validate.notNull(contextNode);
+        Validate.notEmptyParam(xpath, "xpath");
+        Validate.notNullParam(contextNode, "contextNode");
 
         NodeList nodeList;
         try {

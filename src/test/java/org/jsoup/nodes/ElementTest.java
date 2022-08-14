@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -2268,6 +2269,32 @@ public class ElementTest {
             Element div = doc.expectFirst("div");
         } catch (IllegalArgumentException e) {
             threw = true;
+        }
+        assertTrue(threw);
+    }
+
+    @Test void testExpectFirstMessage() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two <span>Three</span> <span>Four</span>");
+        boolean threw = false;
+        Element p = doc.expectFirst("P");
+        try {
+            Element span = p.expectFirst("span.doesNotExist");
+        } catch (ValidationException e) {
+            threw = true;
+            assertEquals("No elements matched the query 'span.doesNotExist' on element 'p'.", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test void testExpectFirstMessageDoc() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two <span>Three</span> <span>Four</span>");
+        boolean threw = false;
+        Element p = doc.expectFirst("P");
+        try {
+            Element span = doc.expectFirst("span.doesNotExist");
+        } catch (ValidationException e) {
+            threw = true;
+            assertEquals("No elements matched the query 'span.doesNotExist' in the document.", e.getMessage());
         }
         assertTrue(threw);
     }

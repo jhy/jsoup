@@ -9,7 +9,13 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -292,5 +298,16 @@ public class HttpConnectionTest {
             urlThrew = e.getMessage().contains("URL");
         }
         assertTrue(urlThrew);
+    }
+
+    @Test void testMalformedException() {
+        boolean threw = false;
+        try {
+            Jsoup.connect("jsoup.org/test");
+        } catch (IllegalArgumentException e) {
+            threw = true;
+            assertEquals("The supplied URL, 'jsoup.org/test', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'.", e.getMessage());
+        }
+        assertTrue(threw);
     }
 }

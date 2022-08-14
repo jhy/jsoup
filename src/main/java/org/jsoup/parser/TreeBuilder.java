@@ -37,8 +37,8 @@ abstract class TreeBuilder {
 
     @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
-        Validate.notNull(input, "String input must not be null");
-        Validate.notNull(baseUri, "BaseURI must not be null");
+        Validate.notNullParam(input, "input");
+        Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
 
         doc = new Document(baseUri);

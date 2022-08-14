@@ -179,11 +179,11 @@ public class HttpConnection implements Connection {
     }
 
     public Connection url(String url) {
-        Validate.notEmpty(url, "Must supply a valid URL");
+        Validate.notEmptyParam(url, "url");
         try {
             req.url(new URL(encodeUrl(url)));
         } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Malformed URL: " + url, e);
+            throw new IllegalArgumentException(String.format("The supplied URL, '%s', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'.", url), e);
         }
         return this;
     }
@@ -199,7 +199,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection userAgent(String userAgent) {
-        Validate.notNull(userAgent, "User agent must not be null");
+        Validate.notNullParam(userAgent, "userAgent");
         req.header(USER_AGENT, userAgent);
         return this;
     }
@@ -220,7 +220,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection referrer(String referrer) {
-        Validate.notNull(referrer, "Referrer must not be null");
+        Validate.notNullParam(referrer, "referrer");
         req.header("Referer", referrer);
         return this;
     }
@@ -263,7 +263,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(Map<String, String> data) {
-        Validate.notNull(data, "Data map must not be null");
+        Validate.notNullParam(data, "data");
         for (Map.Entry<String, String> entry : data.entrySet()) {
             req.data(KeyVal.create(entry.getKey(), entry.getValue()));
         }
@@ -271,7 +271,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(String... keyvals) {
-        Validate.notNull(keyvals, "Data key value pairs must not be null");
+        Validate.notNullParam(keyvals, "keyvals");
         Validate.isTrue(keyvals.length %2 == 0, "Must supply an even number of key value pairs");
         for (int i = 0; i < keyvals.length; i += 2) {
             String key = keyvals[i];
@@ -284,7 +284,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection data(Collection<Connection.KeyVal> data) {
-        Validate.notNull(data, "Data collection must not be null");
+        Validate.notNullParam(data, "data");
         for (Connection.KeyVal entry: data) {
             req.data(entry);
         }
@@ -292,7 +292,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection.KeyVal data(String key) {
-        Validate.notEmpty(key, "Data key must not be empty");
+        Validate.notEmptyParam(key, "key");
         for (Connection.KeyVal keyVal : request().data()) {
             if (keyVal.key().equals(key))
                 return keyVal;
@@ -311,7 +311,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection headers(Map<String,String> headers) {
-        Validate.notNull(headers, "Header map must not be null");
+        Validate.notNullParam(headers, "headers");
         for (Map.Entry<String,String> entry : headers.entrySet()) {
             req.header(entry.getKey(),entry.getValue());
         }
@@ -324,7 +324,7 @@ public class HttpConnection implements Connection {
     }
 
     public Connection cookies(Map<String, String> cookies) {
-        Validate.notNull(cookies, "Cookie map must not be null");
+        Validate.notNullParam(cookies, "cookies");
         for (Map.Entry<String, String> entry : cookies.entrySet()) {
             req.cookie(entry.getKey(), entry.getValue());
         }
@@ -432,7 +432,7 @@ public class HttpConnection implements Connection {
         }
 
         public T url(URL url) {
-            Validate.notNull(url, "URL must not be null");
+            Validate.notNullParam(url, "url");
             this.url = punyUrl(url); // if calling url(url) directly, does not go through encodeUrl, so we punycode it explicitly. todo - should we encode here as well?
             return (T) this;
         }
@@ -442,13 +442,13 @@ public class HttpConnection implements Connection {
         }
 
         public T method(Method method) {
-            Validate.notNull(method, "Method must not be null");
+            Validate.notNullParam(method, "method");
             this.method = method;
             return (T) this;
         }
 
         public String header(String name) {
-            Validate.notNull(name, "Header name must not be null");
+            Validate.notNullParam(name, "name");
             List<String> vals = getHeadersCaseInsensitive(name);
             if (vals.size() > 0) {
                 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
@@ -460,7 +460,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public T addHeader(String name, String value) {
-            Validate.notEmpty(name);
+            Validate.notEmptyParam(name, "name");
             //noinspection ConstantConditions
             value = value == null ? "" : value;
 
@@ -476,7 +476,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public List<String> headers(String name) {
-            Validate.notEmpty(name);
+            Validate.notEmptyParam(name, "name");
             return getHeadersCaseInsensitive(name);
         }
 
@@ -530,14 +530,14 @@ public class HttpConnection implements Connection {
         }
 
         public T header(String name, String value) {
-            Validate.notEmpty(name, "Header name must not be empty");
+            Validate.notEmptyParam(name, "name");
             removeHeader(name); // ensures we don't get an "accept-encoding" and a "Accept-Encoding"
             addHeader(name, value);
             return (T) this;
         }
 
         public boolean hasHeader(String name) {
-            Validate.notEmpty(name, "Header name must not be empty");
+            Validate.notEmptyParam(name, "name");
             return !getHeadersCaseInsensitive(name).isEmpty();
         }
 
@@ -556,8 +556,8 @@ public class HttpConnection implements Connection {
         }
 
         public T removeHeader(String name) {
-            Validate.notEmpty(name, "Header name must not be empty");
-            Map.Entry<String, List<String>> entry = scanHeaders(name); // remove is case insensitive too
+            Validate.notEmptyParam(name, "name");
+            Map.Entry<String, List<String>> entry = scanHeaders(name); // remove is case-insensitive too
             if (entry != null)
                 headers.remove(entry.getKey()); // ensures correct case
             return (T) this;
@@ -600,24 +600,24 @@ public class HttpConnection implements Connection {
         }
 
         public String cookie(String name) {
-            Validate.notEmpty(name, "Cookie name must not be empty");
+            Validate.notEmptyParam(name, "name");
             return cookies.get(name);
         }
 
         public T cookie(String name, String value) {
-            Validate.notEmpty(name, "Cookie name must not be empty");
-            Validate.notNull(value, "Cookie value must not be null");
+            Validate.notEmptyParam(name, "name");
+            Validate.notNullParam(value, "value");
             cookies.put(name, value);
             return (T) this;
         }
 
         public boolean hasCookie(String name) {
-            Validate.notEmpty(name, "Cookie name must not be empty");
+            Validate.notEmptyParam(name, "name");
             return cookies.containsKey(name);
         }
 
         public T removeCookie(String name) {
-            Validate.notEmpty(name, "Cookie name must not be empty");
+            Validate.notEmptyParam(name, "name");
             cookies.remove(name);
             return (T) this;
         }
@@ -749,7 +749,7 @@ public class HttpConnection implements Connection {
         }
 
         public Request data(Connection.KeyVal keyval) {
-            Validate.notNull(keyval, "Key val must not be null");
+            Validate.notNullParam(keyval, "keyval");
             data.add(keyval);
             return this;
         }
@@ -778,7 +778,7 @@ public class HttpConnection implements Connection {
         }
 
         public Connection.Request postDataCharset(String charset) {
-            Validate.notNull(charset, "Charset must not be null");
+            Validate.notNullParam(charset, "charset");
             if (!Charset.isSupported(charset)) throw new IllegalCharsetNameException(charset);
             this.postDataCharset = charset;
             return this;
@@ -834,7 +834,7 @@ public class HttpConnection implements Connection {
                 Validate.isFalse(req.executing, "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
                 req.executing = true;
             }
-            Validate.notNull(req, "Request must not be null");
+            Validate.notNullParam(req, "req");
             URL url = req.url();
             Validate.notNull(url, "URL must be specified to connect");
             String protocol = url.getProtocol();
@@ -1275,14 +1275,14 @@ public class HttpConnection implements Connection {
         }
 
         private KeyVal(String key, String value) {
-            Validate.notEmpty(key, "Data key must not be empty");
-            Validate.notNull(value, "Data value must not be null");
+            Validate.notEmptyParam(key, "key");
+            Validate.notNullParam(value, "value");
             this.key = key;
             this.value = value;
         }
 
         public KeyVal key(String key) {
-            Validate.notEmpty(key, "Data key must not be empty");
+            Validate.notEmptyParam(key, "key");
             this.key = key;
             return this;
         }
@@ -1292,7 +1292,7 @@ public class HttpConnection implements Connection {
         }
 
         public KeyVal value(String value) {
-            Validate.notNull(value, "Data value must not be null");
+            Validate.notNullParam(value, "value");
             this.value = value;
             return this;
         }
@@ -1302,7 +1302,7 @@ public class HttpConnection implements Connection {
         }
 
         public KeyVal inputStream(InputStream inputStream) {
-            Validate.notNull(value, "Data input stream must not be null");
+            Validate.notNullParam(value, "inputStream");
             this.stream = inputStream;
             return this;
         }

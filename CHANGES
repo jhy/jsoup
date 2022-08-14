@@ -4,6 +4,11 @@ Release 1.15.3 [PENDING]
   * Improvement: the Cleaner will preserve the source position of cleaned elements, if source tracking is enabled in the
     original parse.
 
+  * Improvement: the error messages output from Validate are more descriptive. Exceptions are now ValidationExceptions
+    (extending IllegalArgumentException). Stack traces do not include the Validate class, to make it simpler to see
+    where the exception originated. Common validation errors including malformed URLs and empty selector results have
+    more explicit error messages.
+
   * Bugfix: the DataUtil would incorrectly read from InputStreams that emitted reads less than the requested size. This
     lead to incorrect results when parsing from chunked server responses, for e.g.
     <https://github.com/jhy/jsoup/issues/1807>

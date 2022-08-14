@@ -172,7 +172,7 @@ public class Element extends Node {
      * @see Elements#tagName(String)
      */
     public Element tagName(String tagName) {
-        Validate.notEmpty(tagName, "Tag name must not be empty.");
+        Validate.notEmptyParam(tagName, "tagName");
         tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
         return this;
     }
@@ -468,7 +468,13 @@ public class Element extends Node {
      @since 1.15.2
      */
     public Element expectFirst(String cssQuery) {
-        return (Element) Validate.ensureNotNull(Selector.selectFirst(cssQuery, this));
+        return (Element) Validate.ensureNotNull(
+            Selector.selectFirst(cssQuery, this),
+            parent() != null ?
+                "No elements matched the query '%s' on element '%s'.":
+                "No elements matched the query '%s' in the document."
+            , cssQuery, this.tagName()
+        );
     }
 
     /**
