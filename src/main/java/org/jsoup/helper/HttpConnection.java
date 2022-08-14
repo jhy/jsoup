@@ -183,7 +183,7 @@ public class HttpConnection implements Connection {
         try {
             req.url(new URL(encodeUrl(url)));
         } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(String.format("The supplied URL, '%s', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'.", url), e);
+            throw new IllegalArgumentException(String.format("The supplied URL, '%s', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'. See https://jsoup.org/cookbook/extracting-data/working-with-urls", url), e);
         }
         return this;
     }

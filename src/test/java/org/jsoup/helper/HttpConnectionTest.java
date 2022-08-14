@@ -306,7 +306,7 @@ public class HttpConnectionTest {
             Jsoup.connect("jsoup.org/test");
         } catch (IllegalArgumentException e) {
             threw = true;
-            assertEquals("The supplied URL, 'jsoup.org/test', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'.", e.getMessage());
+            assertEquals("The supplied URL, 'jsoup.org/test', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'. See https://jsoup.org/cookbook/extracting-data/working-with-urls", e.getMessage());
         }
         assertTrue(threw);
     }
