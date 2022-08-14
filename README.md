@@ -17,7 +17,7 @@ See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API document
 [![Build Status](https://github.com/jhy/jsoup/workflows/Build/badge.svg)](https://github.com/jhy/jsoup/actions?query=workflow%3ABuild)
 
 ## Example
-Fetch the [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/index.html?org/jsoup/select/Elements.html):
+Fetch the [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/org/jsoup/select/Elements.html):
 
 ```java
 Document doc = Jsoup.connect("https://en.wikipedia.org/").get();
