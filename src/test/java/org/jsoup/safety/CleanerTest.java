@@ -213,6 +213,24 @@ public class CleanerTest {
         assertEquals("<a rel=\"nofollow\">Link</a>", clean);
     }
 
+    @Test void dropsConcealedJavascriptProtocolWhenRelativesLinksEnabled() {
+        Safelist safelist = Safelist.basic().preserveRelativeLinks(true);
+        String html = "<a href=\"&#0013;ja&Tab;va&Tab;script&#0010;:alert(1)\">Link</a>";
+        String clean = Jsoup.clean(html, "https://", safelist);
+        assertEquals("<a rel=\"nofollow\">Link</a>", clean);
+
+        String colon = "<a href=\"ja&Tab;va&Tab;script&colon;alert(1)\">Link</a>";
+        String cleanColon = Jsoup.clean(colon, "https://", safelist);
+        assertEquals("<a rel=\"nofollow\">Link</a>", cleanColon);
+    }
+
+    @Test void dropsConcealedJavascriptProtocolWhenRelativesLinksDisabled() {
+        Safelist safelist = Safelist.basic().preserveRelativeLinks(false);
+        String html = "<a href=\"ja&Tab;vas&#0013;cript:alert(1)\">Link</a>";
+        String clean = Jsoup.clean(html, "https://", safelist);
+        assertEquals("<a rel=\"nofollow\">Link</a>", clean);
+    }
+
     @Test public void handlesCustomProtocols() {
         String html = "<img src='cid:12345' /> <img src='data:gzzt' />";
         String dropped = Jsoup.clean(html, Safelist.basicWithImages());
