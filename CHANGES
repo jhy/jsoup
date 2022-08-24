@@ -1,6 +1,10 @@
 jsoup changelog
 
-Release 1.15.3 [PENDING]
+Release 1.15.3 [2022-Aug-24]
+  * Security: fixed an issue where the jsoup cleaner may incorrectly sanitize crafted XSS attempts if
+    SafeList.preserveRelativeLinks is enabled.
+    <https://github.com/jhy/jsoup/security/advisories/GHSA-gp7f-rwcx-9369>
+
   * Improvement: the Cleaner will preserve the source position of cleaned elements, if source tracking is enabled in the
     original parse.
 
