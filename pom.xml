@@ -57,7 +57,7 @@
         <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.21</version>
+        <version>1.22</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
