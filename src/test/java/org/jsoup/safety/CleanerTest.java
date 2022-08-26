@@ -389,28 +389,32 @@ public class CleanerTest {
 
     @Test public void cleanAttributeWithUnsafeHTML() {
         String h = "<img src=\"<script>alert(1);</script>\">";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+        String baseUri = "http://example.com/";
+        String cleanHtml = Jsoup.clean(h, baseUri, getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true).baseUri(baseUri));
 
         assertEquals("<img src=\"\">", TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void dontCleanAttributeWithSafeHTML() {
         String h = "<img src=\"<h1>This is safe</h1>\">";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", Safelist.relaxed(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+        String baseUri = "http://example.com/";
+        String cleanHtml = Jsoup.clean(h, baseUri, Safelist.relaxed(), new Cleaner.CleanerSettings().cleanAttributeValues(true).baseUri(baseUri));
 
         assertEquals(h, TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void dontCleanAttributeWithNoHTML() {
         String h = "<span data-mention=\"123AB\">A Span</span>";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+        String baseUri = "http://example.com/";
+        String cleanHtml = Jsoup.clean(h, baseUri, getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true).baseUri(baseUri));
 
         assertEquals(h, TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void shouldStripTagsWithURLEncoding() {
         String h = "<img src=\"%-->2F%3E<script>alert(1);</script> javascript:alert('XSS');\" />";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+        String baseUri = "http://example.com/";
+        String cleanHtml = Jsoup.clean(h, baseUri, getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true).baseUri(baseUri));
 
         assertEquals("<img src=\"%-->2F%3E javascript:alert('XSS');\">", TextUtil.stripNewlines(cleanHtml));
     }

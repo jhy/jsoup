@@ -292,7 +292,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
-        return clean(bodyHtml, baseUri, safelist, new Cleaner.CleanerSettings());
+        return clean(bodyHtml, baseUri, safelist, new Cleaner.CleanerSettings().baseUri(baseUri));
     }
 
     /**
@@ -308,7 +308,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings) {
-        return clean(bodyHtml, baseUri, safelist, outputSettings, new Cleaner.CleanerSettings());
+        return clean(bodyHtml, baseUri, safelist, outputSettings, new Cleaner.CleanerSettings().baseUri(baseUri));
     }
 
     /**

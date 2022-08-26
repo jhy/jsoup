@@ -193,7 +193,7 @@ public class Cleaner {
     }
 
     private String getCleanedAttributeValue(Attribute attr) {
-        Document dirty = Parser.htmlParser().parseInput(attr.getValue(), "http://bogus.com");
+        Document dirty = Parser.htmlParser().parseInput(attr.getValue(), cleanerSettings.baseUri());
         Elements headChildren = dirty.head().children();
         Elements bodyChildren = dirty.body().children();
         if (headChildren.size() == 0 && bodyChildren.size() == 0) {
@@ -230,6 +230,7 @@ public class Cleaner {
     public static class CleanerSettings implements Cloneable {
 
         private boolean cleanAttributeValues = false;
+        private String baseUri = "";
 
         public CleanerSettings() {}
 
@@ -248,6 +249,24 @@ public class Cleaner {
          */
         public Cleaner.CleanerSettings cleanAttributeValues(boolean clean) {
             this.cleanAttributeValues = clean;
+            return this;
+        }
+
+        /**
+         * Get base Uri for the cleaner. Default is empty string.
+         * @return the base Uri
+         */
+        public String baseUri() {
+            return this.baseUri == null || this.baseUri.trim().length() == 0 ?  "" : this.baseUri;
+        }
+
+        /**
+         * Set a base Uri for the cleaner.
+         * @param baseUri the base Uri
+         * @return this, for chaining
+         */
+        public Cleaner.CleanerSettings baseUri(String baseUri) {
+            this.baseUri = baseUri;
             return this;
         }
 
