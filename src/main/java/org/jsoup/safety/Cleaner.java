@@ -225,7 +225,7 @@ public class Cleaner {
     }
 
     /**
-     * A Cleaner's output settings control how it cleans.
+     * A Cleaner's settings control how it cleans.
      */
     public static class CleanerSettings implements Cloneable {
 
