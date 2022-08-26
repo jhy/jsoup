@@ -32,6 +32,7 @@ final class Tokeniser {
 
     private final CharacterReader reader; // html input
     private final ParseErrorList errors; // errors found while tokenising
+    private final ParseSettings parseSettings; // parser settings
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
@@ -53,8 +54,13 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
+        this(reader, errors, null);
+    }
+
+    Tokeniser(CharacterReader reader, ParseErrorList errors, ParseSettings parseSettings) {
         this.reader = reader;
         this.errors = errors;
+        this.parseSettings = parseSettings;
     }
 
     Token read() {
@@ -224,7 +230,9 @@ final class Tokeniser {
             String nameRef = reader.consumeLetterThenDigitSequence();
             boolean looksLegit = reader.matches(';');
             // found if a base named entity without a ;, or an extended entity with the ;.
-            boolean found = (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
+            boolean found = parseSettings != null && parseSettings.preserveHTMLEntities()
+                    ? false
+                    : (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
 
             if (!found) {
                 reader.rewindToMark();

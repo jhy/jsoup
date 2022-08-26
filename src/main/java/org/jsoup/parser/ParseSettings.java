@@ -16,14 +16,20 @@ public class ParseSettings {
      * Preserve both tag and attribute case.
      */
     public static final ParseSettings preserveCase;
+    /**
+     * Do not decode entities.
+     */
+    public static final ParseSettings preserveEntities;
 
     static {
         htmlDefault = new ParseSettings(false, false);
         preserveCase = new ParseSettings(true, true);
+        preserveEntities = new ParseSettings(true, true, true);
     }
 
     private final boolean preserveTagCase;
     private final boolean preserveAttributeCase;
+    private final boolean preserveHTMLEntities;
 
     /**
      * Returns true if preserving tag name case.
@@ -40,17 +46,35 @@ public class ParseSettings {
     }
 
     /**
+     * Returns true if preserving entities.
+     */
+    public boolean preserveHTMLEntities() {
+        return preserveHTMLEntities;
+    }
+
+    /**
      * Define parse settings.
      * @param tag preserve tag case?
      * @param attribute preserve attribute name case?
      */
     public ParseSettings(boolean tag, boolean attribute) {
+        this(tag, attribute, false);
+    }
+
+    /**
+     * Define parse settings.
+     * @param tag preserve tag case?
+     * @param attribute preserve attribute name case?
+     * @param preserveEntities do not encode or decode HTML entities
+     */
+    public ParseSettings(boolean tag, boolean attribute, boolean preserveEntities) {
         preserveTagCase = tag;
         preserveAttributeCase = attribute;
+        preserveHTMLEntities = preserveEntities;
     }
 
     ParseSettings(ParseSettings copy) {
-        this(copy.preserveTagCase, copy.preserveAttributeCase);
+        this(copy.preserveTagCase, copy.preserveAttributeCase, copy.preserveHTMLEntities);
     }
 
     /**

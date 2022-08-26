@@ -172,8 +172,22 @@ public class Parser {
      * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
-        HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, new Parser(treeBuilder));
+        return parseFragment(fragmentHtml, context, baseUri, (ParseSettings) null);
+    }
+
+    /**
+     * Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
+     *
+     * @param fragmentHtml the fragment of HTML to parse
+     * @param context (optional) the element that this HTML fragment is being parsed for (i.e. for inner HTML). This
+     * provides stack context (for implicit element creation).
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @param parseSettings parse settings
+     *
+     * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
+     */
+    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri, ParseSettings parseSettings) {
+        return parseFragment(fragmentHtml, context, baseUri, ParseErrorList.noTracking(), parseSettings);
     }
 
     /**
@@ -188,9 +202,28 @@ public class Parser {
      * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri, ParseErrorList errorList) {
+        return parseFragment(fragmentHtml, context, baseUri, errorList, null);
+    }
+
+    /**
+     * Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
+     *
+     * @param fragmentHtml the fragment of HTML to parse
+     * @param context (optional) the element that this HTML fragment is being parsed for (i.e. for inner HTML). This
+     * provides stack context (for implicit element creation).
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @param errorList list to add errors to
+     * @param parseSettings parse settings
+     *
+     * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
+     */
+    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri, ParseErrorList errorList, ParseSettings parseSettings) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
         Parser parser = new Parser(treeBuilder);
         parser.errors = errorList;
+        if (parseSettings != null) {
+            parser.settings(parseSettings);
+        }
         return treeBuilder.parseFragment(fragmentHtml, context, baseUri, parser);
     }
 
@@ -215,9 +248,22 @@ public class Parser {
      * @return Document, with empty head, and HTML parsed into body
      */
     public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+        return parseBodyFragment(bodyHtml, baseUri, null);
+    }
+
+    /**
+     * Parse a fragment of HTML into the {@code body} of a Document.
+     *
+     * @param bodyHtml fragment of HTML
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @param parseSettings the parse settings to use.
+     *
+     * @return Document, with empty head, and HTML parsed into body
+     */
+    public static Document parseBodyFragment(String bodyHtml, String baseUri, ParseSettings parseSettings) {
         Document doc = Document.createShell(baseUri);
         Element body = doc.body();
-        List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
+        List<Node> nodeList = parseFragment(bodyHtml, body, baseUri, parseSettings);
         Node[] nodes = nodeList.toArray(new Node[0]); // the node list gets modified when re-parented
         for (int i = nodes.length - 1; i > 0; i--) {
             nodes[i].remove();

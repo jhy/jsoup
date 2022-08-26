@@ -14,11 +14,66 @@ import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 /**
  Tests for the cleaner.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class CleanerTest {
+    public static final Safelist SAFELIST = new Safelist()
+
+            // Links
+            .addTags("a")
+            .addAttributes("a", "href")
+            .addProtocols("a", "href", "ftp", "http", "https", "mailto")
+
+            // Structural / Misc
+            .addTags("br", "center", "div", "hr", "p", "span")
+
+            // Lists
+            .addTags("dd", "dl", "dt", "li", "ol", "ul")
+
+            // Headers
+            .addTags("h1", "h2", "h3", "h4", "h5", "h6")
+
+            // Formatting
+            .addTags("b", "blockquote", "code", "em", "font", "i", "pre", "small", "strike", "strong", "sub", "sup", "u")
+            .addAttributes("font", "color", "face", "size", "attribute")
+            .addProtocols("blockquote", "http", "https")
+
+            // Tables
+            .addTags("col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr")
+            .addAttributes("table", "border", "cellspacing", "cellpadding")
+
+            // Images
+            .addTags("img")
+            .addAttributes("img", "align", "alt", "height", "src", "title", "width", "link")
+            .addProtocols("img", "src", "http", "https")
+
+            // Allow attributes on all tags
+            .addAttributes(":all", "class", "color", "height", "size", "style", "width")
+
+            // Allow data-mention, contenteditable for @mentions
+            .addAttributes("span", "data-mention", "contenteditable", "attribute")
+
+            .addAttributes("b", "attribute")
+            .addAttributes("i", "attribute")
+            .addAttributes("strong", "attribute")
+            .addAttributes("center", "attribute")
+            .addAttributes("table", "attribute")
+            .addAttributes("div", "attribute")
+            .addAttributes("tr", "attribute")
+
+            .preserveRelativeLinks(true);
+
+    @Test public void rallyTest() {
+        String h = "<img src=\"<script>alert(1);</script>\">";
+//        String h = "<img src=\"hello.png\">";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, true);
+
+        assertEquals("<img src=\"\" />", TextUtil.stripNewlines(cleanHtml));
+    }
+
     @Test public void simpleBehaviourTest() {
         String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
         String cleanHtml = Jsoup.clean(h, Safelist.simpleText());
@@ -281,6 +336,19 @@ public class CleanerTest {
         os.escapeMode(Entities.EscapeMode.base);
         String customOut2 = Jsoup.clean(html, "http://foo.com/", Safelist.relaxed(), os);
         assertEquals("<div><p>&#x212c;</p></div>", customOut2);
+    }
+
+    @Test public void supplyNoEntitiesOutputSettings() {
+        // test that one can override the default document output settings
+        Document.OutputSettings os = new Document.OutputSettings();
+        os.prettyPrint(false);
+        os.escapeMode(Entities.EscapeMode.none);
+        os.charset("ascii");
+
+        String html = "&lt; &amp; &quot; &gt; < & ' \" >";
+        String result = Jsoup.clean(html, "http://foo.com/", Safelist.none(), os);
+
+        assertEquals(html, result); // entities now prefers shorted names if aliased
     }
 
     @Test public void handlesFramesets() {

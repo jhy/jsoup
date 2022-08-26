@@ -1,5 +1,6 @@
 package org.jsoup.safety;
 
+import org.jsoup.Jsoup;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -14,6 +15,7 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import javax.print.Doc;
 import java.util.List;
 
 
@@ -34,14 +36,25 @@ import java.util.List;
  */
 public class Cleaner {
     private final Safelist safelist;
+    private final boolean cleanAttributeValues;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
      @param safelist safe-list to clean with
      */
     public Cleaner(Safelist safelist) {
+        this(safelist, false);
+    }
+
+    /**
+     Create a new cleaner, that sanitizes documents using the supplied safelist.
+     @param safelist safe-list to clean with
+     @param cleanAttributeValues if true, clean attribute values
+     */
+    public Cleaner(Safelist safelist, boolean cleanAttributeValues) {
         Validate.notNull(safelist);
         this.safelist = safelist;
+        this.cleanAttributeValues = cleanAttributeValues;
     }
 
     /**
@@ -85,7 +98,7 @@ public class Cleaner {
         Document clean = Document.createShell("");
         Document dirty = Document.createShell("");
         ParseErrorList errorList = ParseErrorList.tracking(1);
-        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), "", errorList);
+        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), "", errorList, null);
         dirty.body().insertChildren(0, nodes);
         int numDiscarded = copySafeNodes(dirty.body(), clean.body());
         return numDiscarded == 0 && errorList.isEmpty();
@@ -152,8 +165,10 @@ public class Cleaner {
 
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
-            if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
+            if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr)) {
+                sourceAttr.setValue(cleanAttributeValue(sourceAttr));
                 destAttrs.put(sourceAttr);
+            }
             else
                 numDiscarded++;
         }
@@ -168,6 +183,17 @@ public class Cleaner {
             sourceEl.endSourceRange().track(dest, false);
 
         return new ElementMeta(dest, numDiscarded);
+    }
+
+    private String cleanAttributeValue(Attribute attr) {
+        if (!cleanAttributeValues) {
+            return attr.getValue();
+        }
+        Document docFromAttribute = Document.createShell("http://bogus.com");
+        docFromAttribute.body().attributes().add(attr.getKey(), attr.getValue());
+//        Document docFromAttribute = this.clean(Jsoup.parse(attr.getValue()));
+        Document cleaned = this.clean(docFromAttribute);
+        return cleaned.body().text();
     }
 
     private static class ElementMeta {

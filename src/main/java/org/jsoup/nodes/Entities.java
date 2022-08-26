@@ -40,7 +40,11 @@ public class Entities {
         /**
          * Complete HTML entities.
          */
-        extended(EntitiesData.fullPoints, 2125);
+        extended(EntitiesData.fullPoints, 2125),
+        /**
+         * No HTML entities.
+         */
+        none(EntitiesData.noPoints, 0);
 
         // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
         private String[] nameKeys;
@@ -199,6 +203,10 @@ public class Entities {
             // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
                 final char c = (char) codePoint;
+                if (EscapeMode.none.equals(out.escapeMode())) {
+                    accum.append(c);
+                    continue;
+                }
                 // html specific and required escapes:
                 switch (c) {
                     case '&':

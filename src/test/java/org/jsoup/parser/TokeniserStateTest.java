@@ -213,7 +213,7 @@ public class TokeniserStateTest {
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
-        Parser.parseFragment(paddedSnippet, null, "", errorList);
+        Parser.parseFragment(paddedSnippet, null, "", errorList, null);
 
         assertEquals(CharacterReader.readAheadLimit - 1, errorList.get(0).getPosition());
     }
@@ -226,7 +226,7 @@ public class TokeniserStateTest {
         Arrays.fill(padding, ' ');
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
-        Parser.parseFragment(paddedSnippet, null, "", errorList);
+        Parser.parseFragment(paddedSnippet, null, "", errorList, null);
         // just asserting we don't get a WTF on unconsume
     }
 
@@ -235,7 +235,7 @@ public class TokeniserStateTest {
         String triggeringSnippet = "<html <";
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
-        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        Parser.parseFragment(triggeringSnippet, null, "", errorList, null);
 
         assertEquals(6, errorList.get(0).getPosition());
     }
@@ -245,7 +245,7 @@ public class TokeniserStateTest {
         String triggeringSnippet = "<html /ouch";
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
-        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        Parser.parseFragment(triggeringSnippet, null, "", errorList, null);
 
         assertEquals(7, errorList.get(0).getPosition());
     }
@@ -255,7 +255,7 @@ public class TokeniserStateTest {
         String triggeringSnippet = "<html<";
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
-        Parser.parseFragment(triggeringSnippet, null, "", errorList);
+        Parser.parseFragment(triggeringSnippet, null, "", errorList, null);
 
         assertEquals(5, errorList.get(0).getPosition());
     }
