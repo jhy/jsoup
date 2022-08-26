@@ -426,7 +426,7 @@ public class CleanerTest {
                 .addAttributes("img", "align", "alt", "height", "src", "title", "width", "link")
                 .addProtocols("img", "src", "http", "https")
 
-                // Allow data-mention, contenteditable for @mentions
+                // Allow data-mention and contenteditable
                 .addAttributes("span", "data-mention", "contenteditable", "attribute")
 
                 .preserveRelativeLinks(true);
