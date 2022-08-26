@@ -20,80 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class CleanerTest {
-    public static final Safelist SAFELIST = new Safelist()
-
-            // Links
-            .addTags("a")
-            .addAttributes("a", "href")
-            .addProtocols("a", "href", "ftp", "http", "https", "mailto")
-
-            // Structural / Misc
-            .addTags("br", "center", "div", "hr", "p", "span")
-
-            // Lists
-            .addTags("dd", "dl", "dt", "li", "ol", "ul")
-
-            // Headers
-            .addTags("h1", "h2", "h3", "h4", "h5", "h6")
-
-            // Formatting
-            .addTags("b", "blockquote", "code", "em", "font", "i", "pre", "small", "strike", "strong", "sub", "sup", "u")
-            .addAttributes("font", "color", "face", "size", "attribute")
-            .addProtocols("blockquote", "http", "https")
-
-            // Tables
-            .addTags("col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr")
-            .addAttributes("table", "border", "cellspacing", "cellpadding")
-
-            // Images
-            .addTags("img")
-            .addAttributes("img", "align", "alt", "height", "src", "title", "width", "link")
-            .addProtocols("img", "src", "http", "https")
-
-            // Allow attributes on all tags
-            .addAttributes(":all", "class", "color", "height", "size", "style", "width")
-
-            // Allow data-mention, contenteditable for @mentions
-            .addAttributes("span", "data-mention", "contenteditable", "attribute")
-
-            .addAttributes("b", "attribute")
-            .addAttributes("i", "attribute")
-            .addAttributes("strong", "attribute")
-            .addAttributes("center", "attribute")
-            .addAttributes("table", "attribute")
-            .addAttributes("div", "attribute")
-            .addAttributes("tr", "attribute")
-
-            .preserveRelativeLinks(true);
-
-    @Test public void cleanAttributeWithUnsafeHTML() {
-        String h = "<img src=\"<script>alert(1);</script>\">";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
-
-        assertEquals("<img src=\"\">", TextUtil.stripNewlines(cleanHtml));
-    }
-
-    @Test public void dontCleanAttributeWithSafeHTML() {
-        String h = "<img src=\"<h1>This is safe</h1>\">";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
-
-        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
-    }
-
-    @Test public void dontCleanAttributeWithNoHTML() {
-        String h = "<span data-mention=\"123AB\">A Span</span>";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
-
-        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
-    }
-
-    @Test public void shouldStripTagsWithURLEncoding() {
-        String h = "<img src=\"%-->2F%3E<script>alert(1);</script> javascript:alert('XSS');\" />";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
-
-        assertEquals("<img src=\"%-->2F%3E javascript:alert('XSS');\">", TextUtil.stripNewlines(cleanHtml));
-    }
-
     @Test public void simpleBehaviourTest() {
         String h = "<div><p class=foo><a href='http://evil.com'>Hello <b id=bar>there</b>!</a></div>";
         String cleanHtml = Jsoup.clean(h, Safelist.simpleText());
@@ -460,5 +386,46 @@ public class CleanerTest {
         Range cleanRange = cleanP.sourceRange();
         assertEquals(cleanRange, origRange);
         assertEquals(clean.endSourceRange(), orig.endSourceRange());
+    }
+
+    @Test public void cleanAttributeWithUnsafeHTML() {
+        String h = "<img src=\"<script>alert(1);</script>\">";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals("<img src=\"\">", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void dontCleanAttributeWithSafeHTML() {
+        String h = "<img src=\"<h1>This is safe</h1>\">";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", Safelist.relaxed(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void dontCleanAttributeWithNoHTML() {
+        String h = "<span data-mention=\"123AB\">A Span</span>";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void shouldStripTagsWithURLEncoding() {
+        String h = "<img src=\"%-->2F%3E<script>alert(1);</script> javascript:alert('XSS');\" />";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", getSafeList(), new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals("<img src=\"%-->2F%3E javascript:alert('XSS');\">", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    private final Safelist getSafeList() {
+        return new Safelist()
+                // Images
+                .addTags("img")
+                .addAttributes("img", "align", "alt", "height", "src", "title", "width", "link")
+                .addProtocols("img", "src", "http", "https")
+
+                // Allow data-mention, contenteditable for @mentions
+                .addAttributes("span", "data-mention", "contenteditable", "attribute")
+
+                .preserveRelativeLinks(true);
     }
 }
