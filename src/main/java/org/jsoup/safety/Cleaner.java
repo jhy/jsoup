@@ -1,6 +1,5 @@
 package org.jsoup.safety;
 
-import org.jsoup.Jsoup;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -12,10 +11,10 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import javax.print.Doc;
 import java.util.List;
 
 
@@ -36,25 +35,25 @@ import java.util.List;
  */
 public class Cleaner {
     private final Safelist safelist;
-    private final boolean cleanAttributeValues;
+    private final Cleaner.CleanerSettings cleanerSettings;
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
      @param safelist safe-list to clean with
      */
     public Cleaner(Safelist safelist) {
-        this(safelist, false);
+        this(safelist, new CleanerSettings().cleanAttributeValues(false));
     }
 
     /**
      Create a new cleaner, that sanitizes documents using the supplied safelist.
      @param safelist safe-list to clean with
-     @param cleanAttributeValues if true, clean attribute values
+     @param cleanerSettings control how cleaner cleans
      */
-    public Cleaner(Safelist safelist, boolean cleanAttributeValues) {
+    public Cleaner(Safelist safelist, Cleaner.CleanerSettings cleanerSettings) {
         Validate.notNull(safelist);
         this.safelist = safelist;
-        this.cleanAttributeValues = cleanAttributeValues;
+        this.cleanerSettings = cleanerSettings;
     }
 
     /**
@@ -169,8 +168,9 @@ public class Cleaner {
                 sourceAttr.setValue(cleanAttributeValue(sourceAttr));
                 destAttrs.put(sourceAttr);
             }
-            else
+            else {
                 numDiscarded++;
+            }
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
@@ -186,14 +186,32 @@ public class Cleaner {
     }
 
     private String cleanAttributeValue(Attribute attr) {
-        if (!cleanAttributeValues) {
+        if (!cleanerSettings.cleanAttributeValues()) {
             return attr.getValue();
         }
-        Document docFromAttribute = Document.createShell("http://bogus.com");
-        docFromAttribute.body().attributes().add(attr.getKey(), attr.getValue());
-//        Document docFromAttribute = this.clean(Jsoup.parse(attr.getValue()));
-        Document cleaned = this.clean(docFromAttribute);
-        return cleaned.body().text();
+        return getCleanedAttributeValue(attr);
+    }
+
+    private String getCleanedAttributeValue(Attribute attr) {
+        Document dirty = Parser.htmlParser().parseInput(attr.getValue(), "http://bogus.com");
+        Elements headChildren = dirty.head().children();
+        Elements bodyChildren = dirty.body().children();
+        if (headChildren.size() == 0 && bodyChildren.size() == 0) {
+            return attr.getValue();
+        }
+
+        Document cleaned = this.clean(dirty);
+        Elements cleanedHeadChildren = cleaned.head().children();
+        Elements cleanedBodyChildren = cleaned.body().children();
+        if (headChildren.size() > 0 && cleanedHeadChildren.size() == 0) {
+            return attr.getValue().replace(headChildren.outerHtml(), "");
+        }
+        if (bodyChildren.size() > 0 && cleanedBodyChildren.size() == 0) {
+            return attr.getValue().replace(bodyChildren.outerHtml(), "");
+        }
+        return headChildren.size() > 0
+            ? headChildren.outerHtml()
+            : bodyChildren.outerHtml();
     }
 
     private static class ElementMeta {
@@ -206,4 +224,42 @@ public class Cleaner {
         }
     }
 
+    /**
+     * A Cleaner's output settings control how it cleans.
+     */
+    public static class CleanerSettings implements Cloneable {
+
+        private boolean cleanAttributeValues = false;
+
+        public CleanerSettings() {}
+
+        /**
+         * Get if clean attribute values is enabled. Default is false.
+         * @return if pretty printing is enabled.
+         */
+        public boolean cleanAttributeValues() {
+            return cleanAttributeValues;
+        }
+
+        /**
+         * Enable or disable clean attribute values.
+         * @param clean new clean attribute values setting
+         * @return this, for chaining
+         */
+        public Cleaner.CleanerSettings cleanAttributeValues(boolean clean) {
+            this.cleanAttributeValues = clean;
+            return this;
+        }
+
+        @Override
+        public Cleaner.CleanerSettings clone() {
+            Cleaner.CleanerSettings clone;
+            try {
+                clone = (Cleaner.CleanerSettings) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+            return clone;
+        }
+    }
 }

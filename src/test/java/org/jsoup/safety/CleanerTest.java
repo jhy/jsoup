@@ -66,12 +66,32 @@ public class CleanerTest {
 
             .preserveRelativeLinks(true);
 
-    @Test public void rallyTest() {
+    @Test public void cleanAttributeWithUnsafeHTML() {
         String h = "<img src=\"<script>alert(1);</script>\">";
-//        String h = "<img src=\"hello.png\">";
-        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, true);
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
 
-        assertEquals("<img src=\"\" />", TextUtil.stripNewlines(cleanHtml));
+        assertEquals("<img src=\"\">", TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void dontCleanAttributeWithSafeHTML() {
+        String h = "<img src=\"<h1>This is safe</h1>\">";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void dontCleanAttributeWithNoHTML() {
+        String h = "<span data-mention=\"123AB\">A Span</span>";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals(h, TextUtil.stripNewlines(cleanHtml));
+    }
+
+    @Test public void shouldStripTagsWithURLEncoding() {
+        String h = "<img src=\"%-->2F%3E<script>alert(1);</script> javascript:alert('XSS');\" />";
+        String cleanHtml = Jsoup.clean(h, "http://example.com/", SAFELIST, new Cleaner.CleanerSettings().cleanAttributeValues(true));
+
+        assertEquals("<img src=\"%-->2F%3E javascript:alert('XSS');\">", TextUtil.stripNewlines(cleanHtml));
     }
 
     @Test public void simpleBehaviourTest() {
