@@ -452,7 +452,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Replace this node in the DOM with the supplied node.
-     * @param in the node that will will replace the existing node.
+     * @param in the node that will replace the existing node.
      */
     public void replaceWith(Node in) {
         Validate.notNull(in);
