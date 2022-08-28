@@ -763,7 +763,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Check if this node is has the same content as another node. A node is considered the same if its name, attributes and content match the
+     * Check if this node has the same content as another node. A node is considered the same if its name, attributes and content match the
      * other node; particularly its position in the tree does not influence its similarity.
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other

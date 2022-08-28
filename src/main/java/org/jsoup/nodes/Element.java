@@ -59,7 +59,7 @@ public class Element extends Node {
     }
 
     /**
-     * Create a new, standalone Element. (Standalone in that is has no parent.)
+     * Create a new, standalone Element. (Standalone in that it has no parent.)
      *
      * @param tag tag of this element
      * @param baseUri the base URI (optional, may be null to inherit from parent, or "" to clear parent's)
