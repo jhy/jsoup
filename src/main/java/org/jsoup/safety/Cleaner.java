@@ -236,7 +236,7 @@ public class Cleaner {
 
         /**
          * Get if clean attribute values is enabled. Default is false.
-         * @return if pretty printing is enabled.
+         * @return if clean attribute values is enabled.
          */
         public boolean cleanAttributeValues() {
             return cleanAttributeValues;
@@ -262,7 +262,7 @@ public class Cleaner {
 
         /**
          * Set a base Uri for the cleaner.
-         * @param baseUri the base Uri
+         * @param baseUri the new base Uri
          * @return this, for chaining
          */
         public Cleaner.CleanerSettings baseUri(String baseUri) {
