@@ -388,7 +388,6 @@ public class CleanerTest {
         assertEquals(clean.endSourceRange(), orig.endSourceRange());
     }
 
-
     @Test public void cleanAttributeWithUnsafeHTML() {
         String h = "<img src=\"<script>alert(1);</script>\">";
         String baseUri = "http://example.com/";
@@ -432,4 +431,5 @@ public class CleanerTest {
                 .addAttributes("span", "data-mention", "contenteditable", "attribute")
 
                 .preserveRelativeLinks(true);
-    }}
+    }
+}
