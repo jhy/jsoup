@@ -98,19 +98,19 @@ public class Jsoup {
     /**
      Creates a new {@link Connection} to use as a session. Connection settings (user-agent, timeouts, URL, etc), and
      cookies will be maintained for the session. Use examples:
-<pre><code>
-Connection session = Jsoup.newSession()
+     <pre><code>
+     Connection session = Jsoup.newSession()
      .timeout(20 * 1000)
      .userAgent("FooBar 2000");
 
-Document doc1 = session.newRequest()
+     Document doc1 = session.newRequest()
      .url("https://jsoup.org/").data("ref", "example")
      .get();
-Document doc2 = session.newRequest()
+     Document doc2 = session.newRequest()
      .url("https://en.wikipedia.org/wiki/Main_Page")
      .get();
-Connection con3 = session.newRequest();
-</code></pre>
+     Connection con3 = session.newRequest();
+     </code></pre>
 
      <p>For multi-threaded requests, it is safe to use this session between threads, but take care to call {@link
     Connection#newRequest()} per request and not share that instance between threads when executing or parsing.</p>
@@ -186,7 +186,7 @@ Connection con3 = session.newRequest();
         return DataUtil.load(file, charsetName, baseUri, parser);
     }
 
-     /**
+    /**
      Read an input stream, and parse it to a Document.
 
      @param in          input stream to read. The stream will be closed after reading.
@@ -292,7 +292,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
-       return clean(bodyHtml, baseUri, safelist, false);
+        return clean(bodyHtml, baseUri, safelist, new Cleaner.CleanerSettings().baseUri(baseUri));
     }
 
     /**
@@ -308,7 +308,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings) {
-        return clean(bodyHtml, baseUri, safelist, outputSettings, false);
+        return clean(bodyHtml, baseUri, safelist, outputSettings, new Cleaner.CleanerSettings().baseUri(baseUri));
     }
 
     /**
@@ -318,13 +318,13 @@ Connection con3 = session.newRequest();
      @param bodyHtml  input untrusted HTML (body fragment)
      @param baseUri   URL to resolve relative URLs against
      @param safelist  list of permitted HTML elements
-     @param cleanAttributeValues  if true, clean attribute values
+     @param cleanerSettings control how cleaner cleans
      @return safe HTML (body fragment)
 
      @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Safelist safelist, boolean cleanAttributeValues) {
-        return clean(bodyHtml, baseUri, safelist, null, cleanAttributeValues);
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist, Cleaner.CleanerSettings cleanerSettings) {
+        return clean(bodyHtml, baseUri, safelist, new Document.OutputSettings(), cleanerSettings);
     }
 
     /**
@@ -342,7 +342,7 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, Safelist safelist) {
-        return clean(bodyHtml, "", safelist, false);
+        return clean(bodyHtml, "", safelist, new Cleaner.CleanerSettings());
     }
 
     /**
@@ -356,16 +356,16 @@ Connection con3 = session.newRequest();
      * @param baseUri URL to resolve relative URLs against
      * @param safelist list of permitted HTML elements
      * @param outputSettings document output settings; use to control pretty-printing and entity escape modes
-     * @param cleanAttributeValues  if true, clean attribute values
+     * @param cleanerSettings  control how cleaner cleans
      * @return safe HTML (body fragment)
      * @see Cleaner#clean(Document)
      */
-    public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings, boolean cleanAttributeValues) {
+    public static String clean(String bodyHtml, String baseUri, Safelist safelist, Document.OutputSettings outputSettings, Cleaner.CleanerSettings cleanerSettings) {
         Document dirty = parseBodyFragment(
                 bodyHtml,
                 baseUri,
-                outputSettings != null && outputSettings.escapeMode().equals(Entities.EscapeMode.none) ? ParseSettings.preserveEntities : null);
-        Cleaner cleaner = new Cleaner(safelist, cleanAttributeValues);
+                outputSettings.escapeMode().equals(Entities.EscapeMode.none) ? ParseSettings.preserveEntities : null);
+        Cleaner cleaner = new Cleaner(safelist, cleanerSettings);
         Document clean = cleaner.clean(dirty);
         clean.outputSettings(outputSettings);
         return clean.body().html();
