@@ -784,7 +784,7 @@ Release 1.15.3 [2022-Aug-24]
   * Improved Node traversal, including less object creation, and partial and filtering traversor support.
     <https://github.com/jhy/jsoup/pull/849>
 
-  * Bugfix: if a document was was re-decoded after character set detection, the HTML parser was not reset correctly,
+  * Bugfix: if a document was re-decoded after character set detection, the HTML parser was not reset correctly,
     which could lead to an incorrect DOM.
     <https://github.com/jhy/jsoup/issues/877>
 
@@ -1003,7 +1003,7 @@ Release 1.15.3 [2022-Aug-24]
  * Added not-null validators to Element.appendText() and Element.prependText()
    <https://github.com/jhy/jsoup/issues/690>
 
- * Fixed an issue when moving moving nodes using Element.insert(index, children) where the sibling index would be set
+ * Fixed an issue when moving nodes using Element.insert(index, children) where the sibling index would be set
    incorrectly, leading to the original loads being lost.
    <https://github.com/jhy/jsoup/issues/689>
 

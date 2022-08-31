@@ -59,7 +59,7 @@ public class Element extends Node {
     }
 
     /**
-     * Create a new, standalone Element. (Standalone in that is has no parent.)
+     * Create a new, standalone Element. (Standalone in that it has no parent.)
      *
      * @param tag tag of this element
      * @param baseUri the base URI (optional, may be null to inherit from parent, or "" to clear parent's)
@@ -1085,7 +1085,7 @@ public class Element extends Node {
      * Find elements that have an attribute name starting with the supplied prefix. Use {@code data-} to find elements
      * that have HTML5 datasets.
      * @param keyPrefix name prefix of the attribute e.g. {@code data-}
-     * @return elements that have attribute names that start with with the prefix, empty if none.
+     * @return elements that have attribute names that start with the prefix, empty if none.
      */
     public Elements getElementsByAttributeStarting(String keyPrefix) {
         Validate.notEmpty(keyPrefix);
