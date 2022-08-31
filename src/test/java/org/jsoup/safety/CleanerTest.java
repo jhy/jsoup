@@ -14,7 +14,6 @@ import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 /**
  Tests for the cleaner.
 
