@@ -187,7 +187,7 @@ public class TokenQueue {
      @return consumed string   
      */
     // todo: method name. not good that consumeTo cares for case, and consume to any doesn't. And the only use for this
-    // is is a case sensitive time...
+    // is a case sensitive time...
     public String consumeToAny(String... seq) {
         int start = pos;
         while (!isEmpty() && !matchesAny(seq)) {

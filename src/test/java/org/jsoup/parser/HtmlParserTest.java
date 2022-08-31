@@ -672,7 +672,7 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesUnexpectedMarkupInTables() {
-        // whatwg - tests markers in active formatting (if they didn't work, would get in in table)
+        // whatwg - tests markers in active formatting (if they didn't work, would get in table)
         // also tests foster parenting
         String h = "<table><b><tr><td>aaa</td></tr>bbb</table>ccc";
         Document doc = Jsoup.parse(h);
