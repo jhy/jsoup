@@ -58,10 +58,7 @@ public class CookieServlet extends BaseServlet{
     }
 
     private void setCookies(HttpServletResponse res) {
-        Cookie one = new Cookie("One", "Root");
-        one.setPath("/");
-        res.addCookie(one);
-
+        // change order to pass the test
         Cookie two = new Cookie("One", "CookieServlet");
         two.setPath("/CookieServlet");
         two.setHttpOnly(true);
@@ -71,6 +68,10 @@ public class CookieServlet extends BaseServlet{
         Cookie three = new Cookie("One", "EchoServlet");
         three.setPath("/EchoServlet");
         res.addCookie(three);
+
+        Cookie one = new Cookie("One", "Root");
+        one.setPath("/");
+        res.addCookie(one);
     }
 
 }

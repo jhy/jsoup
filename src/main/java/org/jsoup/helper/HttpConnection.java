@@ -1128,7 +1128,8 @@ public class HttpConnection implements Connection {
                         String cookieVal = cd.consumeTo(";").trim();
                         // ignores path, date, domain, validateTLSCertificates et al. full details will be available in cookiestore if required
                         // name not blank, value not null
-                        if (cookieName.length() > 0 && !cookies.containsKey(cookieName)) // if duplicates, only keep the first
+                        //  If repeated, overwrite it with the latest one
+                        if (!StringUtil.isBlank(cookieName))
                             cookie(cookieName, cookieVal);
                     }
                 }
