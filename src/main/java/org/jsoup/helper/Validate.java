@@ -10,6 +10,18 @@ public final class Validate {
     private Validate() {}
 
     /**
+     * Validates that the two objects are not the same.
+     * @param a First object
+     * @param b Second object
+     * @param message Error message to use if the objects are the same
+     * @throws IllegalArgumentException if the objects are the same
+     */
+    public static void notStrictlyEqual(Object a, Object b, String message) {
+        if (a == b)
+            throw new ValidationException(message);
+    }
+
+    /**
      * Validates that the object is not null
      * @param obj object to test
      * @throws ValidationException if the object is null

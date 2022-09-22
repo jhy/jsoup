@@ -457,6 +457,7 @@ public abstract class Node implements Cloneable {
     public void replaceWith(Node in) {
         Validate.notNull(in);
         Validate.notNull(parentNode);
+        Validate.notStrictlyEqual(this, in, "Cannot replace a node with itself");
         parentNode.replaceChild(this, in);
     }
 

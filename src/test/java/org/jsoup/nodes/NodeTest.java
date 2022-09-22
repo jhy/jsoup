@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeVisitor;
 import org.junit.jupiter.api.Test;
@@ -401,5 +402,26 @@ public class NodeTest {
 
         assertNull(firstEl.firstElementChild());
         assertNull(firstEl.lastElementChild());
+    }
+
+    @Test
+    void replaceWithSelf() {
+        // Issue 1843
+
+        Document doc = new Document("");
+        Element h1 = doc.body().appendElement("h1");
+        Element div = doc.body().appendElement("div");
+
+        assertDoesNotThrow(doc::toString);
+
+        assertThrowsExactly(ValidationException.class, () -> h1.replaceWith(h1));
+
+        assertTrue(doc.body().children().contains(h1));
+        assertTrue(doc.body().children().contains(div));
+        assertNotNull(h1.parent());
+        assertNotNull(div.parent());
+        assertDoesNotThrow(doc::toString);
+
+
     }
 }
