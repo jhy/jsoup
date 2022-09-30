@@ -1320,6 +1320,16 @@ public class ElementTest {
     }
 
     @Test
+    public void testSelectByNamespace() {
+        String html = "<html><body><ns:p>p in namespace ns</ns:p><ns:img>img in namespace ns</ns:img></body></html>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select("ns|*");
+        assertEquals(2, els.size());
+        assertEquals("html > body > ns|p", els.get(0).cssSelector());
+        assertEquals("html > body > ns|img", els.get(1).cssSelector());
+    }
+
+    @Test
     public void testChainedRemoveAttributes() {
         String html = "<a one two three four>Text</a>";
         Document doc = Jsoup.parse(html);
