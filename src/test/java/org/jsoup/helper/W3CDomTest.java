@@ -26,6 +26,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,6 +53,43 @@ public class W3CDomTest {
     }
 
     @Test
+    public void htmlDefaultNamespaceRemovalPatternDoubleQuotes() {
+        String xml =
+            "<!doctype html system \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>";
+        Matcher matcher = W3CDom.HTML_DEFAULT_NAMESPACE_PATTERN.matcher(xml);
+        assertTrue(matcher.find());
+        assertTrue(matcher.group(1).equals(" xmlns=\"http://www.w3.org/1999/xhtml\""));
+    }
+
+    @Test
+    public void htmlDefaultNamespaceRemovalPatternSingleQuotes() {
+        String xml =
+            "<!doctype html system \"about:legacy-compat\"><html xmlns='http://www.w3.org/1999/xhtml'><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>";
+        Matcher matcher = W3CDom.HTML_DEFAULT_NAMESPACE_PATTERN.matcher(xml);
+        assertTrue(matcher.find());
+        assertTrue(matcher.group(1).equals(" xmlns='http://www.w3.org/1999/xhtml'"));
+    }
+
+    @Test
+    public void htmlDefaultNamespaceRemovalPatternOtherAttributes() {
+        String xml =
+            "<!doctype html system \"about:legacy-compat\"><html foo=\"bar\" xmlns=\"http://www.w3.org/1999/xhtml\" test=\"example\"><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>";
+        Matcher matcher = W3CDom.HTML_DEFAULT_NAMESPACE_PATTERN.matcher(xml);
+        assertTrue(matcher.find());
+        assertTrue(matcher.group(1).equals(" xmlns=\"http://www.w3.org/1999/xhtml\""));
+    }
+
+    @Test
+    public void removeDefaultHtmlNamespaceDeclaration() {
+        String htmlWithXmlns =
+            "<!doctype html system \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>";
+        String htmlWithoutXmlns =
+            "<!doctype html system \"about:legacy-compat\"><html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>";
+        assertTrue(W3CDom.removeDefaultHtmlNamespaceDeclaration(htmlWithXmlns).equals(htmlWithoutXmlns), "Removes default HTML namespace declaration.");
+        assertTrue(W3CDom.removeDefaultHtmlNamespaceDeclaration(htmlWithoutXmlns).equals(htmlWithoutXmlns), "Still works if no default HTML namespace declaration.");
+    }
+
+    @Test
     public void simpleConversion() {
         String html = "<html><head><title>W3c</title></head><body><p class='one' id=12>Text</p><!-- comment --><invalid>What<script>alert('!')";
         org.jsoup.nodes.Document doc = Jsoup.parse(html);
@@ -62,7 +100,7 @@ public class W3CDomTest {
         assertEquals(0, meta.getLength());
 
         String out = W3CDom.asString(wDoc, W3CDom.OutputXml());
-        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
+        String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(expected, TextUtil.stripNewlines(out));
 
         Document roundTrip = parseXml(out, true);
@@ -74,7 +112,7 @@ public class W3CDomTest {
         String furtherOut = W3CDom.asString(wDoc, properties);
         assertTrue(furtherOut.length() > out.length()); // wanted to assert formatting, but actual indentation is platform specific so breaks in CI
         String furtherExpected =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(furtherExpected, TextUtil.stripNewlines(furtherOut)); // on windows, DOM will write newlines as \r\n
     }
 
@@ -86,7 +124,7 @@ public class W3CDomTest {
         W3CDom w3c = new W3CDom();
         Document wDoc = w3c.fromJsoup(doc);
         Node htmlEl = wDoc.getChildNodes().item(1);
-        assertNull(htmlEl.getNamespaceURI());
+        assertEquals("http://www.w3.org/1999/xhtml", htmlEl.getNamespaceURI());
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
@@ -187,7 +225,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body name=\"\" style=\"color: red\"/></html>", xml);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body name=\"\" style=\"color: red\"/></html>", xml);
     }
 
     @Test
@@ -221,7 +259,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoup);
         String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body>&lt;インセンティブで高収入！&gt;Text <p>More</p></body></html>", xml);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body>&lt;インセンティブで高収入！&gt;Text <p>More</p></body></html>", xml);
     }
 
     @Test
@@ -232,7 +270,7 @@ public class W3CDomTest {
         Document w3Doc = new W3CDom().fromJsoup(doc);
         Node htmlEl = w3Doc.getFirstChild();
 
-        assertNull(htmlEl.getNamespaceURI());
+        assertEquals("http://www.w3.org/1999/xhtml", htmlEl.getNamespaceURI());
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
@@ -247,7 +285,7 @@ public class W3CDomTest {
         W3CDom w3c = new W3CDom();
         String html = "<html><body><div>hello</div></body></html>";
         Document dom = w3c.fromJsoup(Jsoup.parse(html));
-        NodeList nodeList = xpath(dom, "//body");// no ns, so needs no prefix
+        NodeList nodeList = xpath(dom, "//*[local-name()=\"body\"]");// namespace aware; HTML namespace is default
         assertEquals("div", nodeList.item(0).getLocalName());
 
         // default output is namespace aware, so query needs to be as well
@@ -302,9 +340,8 @@ public class W3CDomTest {
         // TODO - not super happy with this output - but plain DOM doesn't let it out, and don't want to rebuild the writer
         // because we have Saxon on the test classpath, the transformer will change to that, and so case may change (e.g. Java base in META, Saxon is meta for HTML)
         String base = "<!DOCTYPE html><p>One</p>";
-        assertEqualsIgnoreCase("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>",
-            output(base, true));
-        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head/><body><p>One</p></body></html>", output(base, false));
+        assertEqualsIgnoreCase("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>", output(base, true));
+        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><p>One</p></body></html>", output(base, false));
 
         String publicDoc = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
         assertEqualsIgnoreCase("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(publicDoc, true));
@@ -313,15 +350,15 @@ public class W3CDomTest {
 
         String systemDoc = "<!DOCTYPE html SYSTEM \"exampledtdfile.dtd\">";
         assertEqualsIgnoreCase("<!DOCTYPE html SYSTEM \"exampledtdfile.dtd\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(systemDoc, true));
-        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"exampledtdfile.dtd\"><html><head/><body/></html>", output(systemDoc, false));
+        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"exampledtdfile.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body/></html>", output(systemDoc, false));
 
         String legacyDoc = "<!DOCTYPE html SYSTEM \"about:legacy-compat\">";
         assertEqualsIgnoreCase("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body></body></html>", output(legacyDoc, true));
-        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html><head/><body/></html>", output(legacyDoc, false));
+        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body/></html>", output(legacyDoc, false));
 
         String noDoctype = "<p>One</p>";
         assertEqualsIgnoreCase("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>", output(noDoctype, true));
-        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body><p>One</p></body></html>", output(noDoctype, false));
+        assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><p>One</p></body></html>", output(noDoctype, false));
     }
 
     private String output(String in, boolean modeHtml) {
