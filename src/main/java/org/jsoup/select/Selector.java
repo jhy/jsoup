@@ -27,6 +27,7 @@ import java.util.IdentityHashMap;
  * <tr><td><code>tag</code></td><td>elements with the given tag name</td><td><code>div</code></td></tr>
  * <tr><td><code>*|E</code></td><td>elements of type E in any namespace (including non-namespaced)</td><td><code>*|name</code> finds <code>&lt;fb:name&gt;</code> and <code>&lt;name&gt;</code> elements</td></tr>
  * <tr><td><code>ns|E</code></td><td>elements of type E in the namespace <i>ns</i></td><td><code>fb|name</code> finds <code>&lt;fb:name&gt;</code> elements</td></tr>
+ * <tr><td><code>ns|*</code></td><td>all elements in the namespace <i>ns</i></td><td><code>fb|*</code> finds <code>&lt;fb:name&gt;</code> and <code>&lt;fb:school&gt;</code> elements</td></tr>
  * <tr><td><code>#id</code></td><td>elements with attribute ID of "id"</td><td><code>div#wrap</code>, <code>#logo</code></td></tr>
  * <tr><td><code>.class</code></td><td>elements with a class name of "class"</td><td><code>div.left</code>, <code>.result</code></td></tr>
  * <tr><td><code>[attr]</code></td><td>elements with an attribute named "attr" (with any value)</td><td><code>a[href]</code>, <code>[title]</code></td></tr>
