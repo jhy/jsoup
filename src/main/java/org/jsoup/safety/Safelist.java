@@ -315,7 +315,7 @@ public class Safelist {
      @param dataPrefixes List of valid prefixes of the data attributes for the tag
      @return this (for chaining)
      */
-    public Safelist addDataAttributes(String tag, String... dataPrefixes) {
+    public Safelist addDataAttributePrefixes(String tag, String... dataPrefixes) {
         return addAttributes(tag, this.dataAttributes, dataPrefixes);
     }
 
@@ -333,7 +333,7 @@ public class Safelist {
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
      @return this (for chaining)
      */
-    public Safelist addDataAttributes(String tag) {
+    public Safelist addDataAttributePrefixes(String tag) {
         return addAttributes(tag, this.dataAttributes, "data-");
     }
 
