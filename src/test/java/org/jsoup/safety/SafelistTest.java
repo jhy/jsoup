@@ -64,7 +64,7 @@ public class SafelistTest {
     public void testDataAttributes_forSingleTag() {
         Safelist safelist1 = Safelist.none()
                 .addDataAttributePrefixes(TEST_TAG);
-        Safelist safelist3 = Safelist.none()
+        Safelist safelist2 = Safelist.none()
                 .addDataAttributePrefixes(TEST_TAG, "customData-");
         Attributes attributes = new Attributes();
         Attribute attr1 = new Attribute("data-test1", "data value 1");
@@ -79,7 +79,7 @@ public class SafelistTest {
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr1));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr2));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
