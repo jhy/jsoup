@@ -76,6 +76,7 @@
                 <artifactId>android-api-level-10</artifactId>
                 <version>2.3.3_r2</version>
               </signature>
+              <ignores>java.util.function.Consumer</ignores>
             </configuration>
           </execution>
         </executions>
