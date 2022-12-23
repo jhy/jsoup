@@ -322,12 +322,12 @@ public class Safelist {
     /**
      Add the default "data-" prefix for the allowed data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
-     E.g.: <code>allowDataAttributePrefixes("a")</code> allows data attributes prefixed with <code>data-</code>
+     E.g.: <code>allowDataAttributePrefix("a")</code> allows data attributes prefixed with <code>data-</code>
        on <code>a</code> tags.
      </p>
      <p>
      To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
-     <code>allowDataAttributePrefixes(":all")</code>.
+     <code>allowDataAttributePrefix(":all")</code>.
      </p>
 
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.

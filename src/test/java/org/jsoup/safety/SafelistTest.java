@@ -136,9 +136,11 @@ public class SafelistTest {
         assertTrue(safelist1.isSafeAttribute("div", elem2, attr1));
         assertTrue(safelist1.isSafeAttribute("div", elem2, attr2));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+
         assertFalse(safelist2.isSafeAttribute("div", elem2, attr1));
         assertFalse(safelist2.isSafeAttribute("div", elem2, attr2));
         assertTrue(safelist2.isSafeAttribute("div", elem2, attr3));
+
         assertTrue(safelist3.isSafeAttribute("div", elem2, attr1));
         assertTrue(safelist3.isSafeAttribute("div", elem2, attr2));
         assertTrue(safelist3.isSafeAttribute("div", elem2, attr3));
