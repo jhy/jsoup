@@ -81,7 +81,11 @@ public class SafelistTest {
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
+
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr1));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
+
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
@@ -89,9 +93,11 @@ public class SafelistTest {
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr1));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr2));
         assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+
         assertFalse(safelist2.isSafeAttribute("div", elem2, attr1));
         assertFalse(safelist2.isSafeAttribute("div", elem2, attr2));
         assertFalse(safelist2.isSafeAttribute("div", elem2, attr3));
+
         assertFalse(safelist3.isSafeAttribute("div", elem2, attr1));
         assertFalse(safelist3.isSafeAttribute("div", elem2, attr2));
         assertFalse(safelist3.isSafeAttribute("div", elem2, attr3));
@@ -118,9 +124,11 @@ public class SafelistTest {
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
+
         assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
+
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
