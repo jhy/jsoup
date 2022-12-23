@@ -14,6 +14,8 @@ jsoup is designed to deal with all varieties of HTML found in the wild; from pri
 
 See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API documentation](https://jsoup.org/apidocs/).
 
+**Note:** For use in Android projects with a `minSdk` below 24, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) is required if the `forEach` methods are being used.
+
 [![Build Status](https://github.com/jhy/jsoup/workflows/Build/badge.svg)](https://github.com/jhy/jsoup/actions?query=workflow%3ABuild)
 
 ## Example
