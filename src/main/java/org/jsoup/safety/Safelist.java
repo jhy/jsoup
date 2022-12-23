@@ -63,8 +63,10 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </p>
  */
 public class Safelist {
+    public static final String TAG_ALL = ":all";
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
+    private final Map<TagName, Set<AttributeKey>> dataAttributes; // tag -> attribute[].
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
@@ -191,6 +193,7 @@ public class Safelist {
     public Safelist() {
         tagNames = new HashSet<>();
         attributes = new HashMap<>();
+        dataAttributes = new HashMap<>();
         enforcedAttributes = new HashMap<>();
         protocols = new HashMap<>();
         preserveRelativeLinks = false;
@@ -257,6 +260,27 @@ public class Safelist {
         return this;
     }
 
+    private Safelist addAttributes(String tag, Map<Safelist.TagName, Set<Safelist.AttributeKey>> attributeMap, String... attributes) {
+        Validate.notEmpty(tag);
+        Validate.notNull(attributes);
+        Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
+
+        TagName tagName = TagName.valueOf(tag);
+        tagNames.add(tagName);
+        Set<AttributeKey> attributeSet = new HashSet<>();
+        for (String key : attributes) {
+            Validate.notEmpty(key);
+            attributeSet.add(AttributeKey.valueOf(key));
+        }
+        if (attributeMap.containsKey(tagName)) {
+            Set<AttributeKey> currentSet = attributeMap.get(tagName);
+            currentSet.addAll(attributeSet);
+        } else {
+            attributeMap.put(tagName, attributeSet);
+        }
+        return this;
+    }
+
     /**
      Add a list of allowed attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
@@ -273,24 +297,44 @@ public class Safelist {
      @return this (for chaining)
      */
     public Safelist addAttributes(String tag, String... attributes) {
-        Validate.notEmpty(tag);
-        Validate.notNull(attributes);
-        Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
+        return addAttributes(tag, this.attributes, attributes);
+    }
 
-        TagName tagName = TagName.valueOf(tag);
-        tagNames.add(tagName);
-        Set<AttributeKey> attributeSet = new HashSet<>();
-        for (String key : attributes) {
-            Validate.notEmpty(key);
-            attributeSet.add(AttributeKey.valueOf(key));
-        }
-        if (this.attributes.containsKey(tagName)) {
-            Set<AttributeKey> currentSet = this.attributes.get(tagName);
-            currentSet.addAll(attributeSet);
-        } else {
-            this.attributes.put(tagName, attributeSet);
-        }
-        return this;
+    /**
+     Add a list of allowed prefixes of data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
+     <p>
+     E.g.: <code>addDataAttributes("a", "data-", "ng-")</code> allows data attributes prefixed with <code>data-</code>
+     and <code>ng-</code> on <code>a</code> tags.
+     </p>
+     <p>
+     To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
+     <code>addDataAttributes(":all", "data-")</code>.
+     </p>
+
+     @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
+     @param dataPrefixes List of valid prefixes of the data attributes for the tag
+     @return this (for chaining)
+     */
+    public Safelist addDataAttributes(String tag, String... dataPrefixes) {
+        return addAttributes(tag, this.dataAttributes, dataPrefixes);
+    }
+
+    /**
+     Add the default "data-" prefix for the allowed data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
+     <p>
+     E.g.: <code>addDataAttributes("a")</code> allows data attributes prefixed with <code>data-</code>
+       on <code>a</code> tags.
+     </p>
+     <p>
+     To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
+     <code>addDataAttributes(":all")</code>.
+     </p>
+
+     @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
+     @return this (for chaining)
+     */
+    public Safelist addDataAttributes(String tag) {
+        return addAttributes(tag, this.dataAttributes, "data-");
     }
 
     /**
@@ -326,7 +370,7 @@ public class Safelist {
             if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                 this.attributes.remove(tagName);
         }
-        if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
+        if(tag.equals(TAG_ALL)) // Attribute needs to be removed from all individually set tags
             for(TagName name: this.attributes.keySet()) {
                 Set<AttributeKey> currentSet = this.attributes.get(name);
                 currentSet.removeAll(attributeSet);
@@ -508,6 +552,19 @@ public class Safelist {
         return tagNames.contains(TagName.valueOf(tag));
     }
 
+    private boolean isSafeDataAttribute(String tagName, AttributeKey key) {
+        Set<AttributeKey> okSet = dataAttributes.get(TagName.valueOf(tagName));
+        if (dataAttributes.isEmpty() || okSet == null) {
+            return false;
+        }
+        for (AttributeKey okKey : okSet) {
+            if (key.toString().startsWith(okKey.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Test if the supplied attribute is allowed by this safelist for this tag
      * @param tagName tag to consider allowing the attribute in
@@ -520,7 +577,7 @@ public class Safelist {
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
         Set<AttributeKey> okSet = attributes.get(tag);
-        if (okSet != null && okSet.contains(key)) {
+        if (okSet != null && okSet.contains(key) || isSafeDataAttribute(tagName, key)) {
             if (protocols.containsKey(tag)) {
                 Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
                 // ok if not defined protocol; otherwise test
@@ -539,7 +596,7 @@ public class Safelist {
             }
         }
         // no attributes defined for tag, try :all tag
-        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
+        return !tagName.equals(TAG_ALL) && (isSafeAttribute(TAG_ALL, el, attr) || isSafeDataAttribute(TAG_ALL, key));
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {

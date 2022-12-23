@@ -6,8 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
@@ -61,5 +60,55 @@ public class SafelistTest {
         assertFalse(safelist2.isSafeAttribute(TEST_TAG, invalidElement, invalidAttribute));
     }
 
+    @Test
+    public void testDataAttributes_forSingleTag() {
+        Safelist safelist1 = Safelist.none()
+                .addDataAttributes(TEST_TAG);
+        Safelist safelist2 = Safelist.none()
+                .addDataAttributes(TEST_TAG, "customData-");
+        Attributes attributes = new Attributes();
+        Attribute attr1 = new Attribute("data-test1", "data value 1");
+        Attribute attr2 = new Attribute("data-test2", "data value 2");
+        Attribute attr3 = new Attribute("customData-test3", "data value 3");
+        attributes.put(attr1);
+        attributes.put(attr2);
+        attributes.put(attr3);
+        Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
+        Element elem2 = new Element(Tag.valueOf("div"), "", attributes);
+
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertFalse(safelist1.isSafeAttribute("div", elem2, attr1));
+        assertFalse(safelist1.isSafeAttribute("div", elem2, attr2));
+        assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+    }
+
+    @Test
+    public void testDataAttributes_forAll() {
+        Safelist safelist1 = Safelist.none()
+                .addDataAttributes(Safelist.TAG_ALL);
+        Safelist safelist2 = Safelist.none()
+                .addDataAttributes(Safelist.TAG_ALL, "customData-");
+        Attributes attributes = new Attributes();
+        Attribute attr1 = new Attribute("data-test1", "data value 1");
+        Attribute attr2 = new Attribute("data-test2", "data value 2");
+        Attribute attr3 = new Attribute("customData-test3", "data value 3");
+        attributes.put(attr1);
+        attributes.put(attr2);
+        attributes.put(attr3);
+        Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
+        Element elem2 = new Element(Tag.valueOf("div"), "", attributes);
+
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist1.isSafeAttribute("div", elem2, attr1));
+        assertTrue(safelist1.isSafeAttribute("div", elem2, attr2));
+        assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+        assertTrue(safelist2.isSafeAttribute("div", elem2, attr3));
+    }
 
 }
