@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
+    private static final String TEST_TAG2 = "testTag2";
     private static final String TEST_ATTRIBUTE = "testAttribute";
     private static final String TEST_SCHEME = "valid-scheme";
     private static final String TEST_VALUE = TEST_SCHEME + "://testValue";
@@ -76,7 +77,7 @@ public class SafelistTest {
         attributes.put(attr2);
         attributes.put(attr3);
         Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
-        Element elem2 = new Element(Tag.valueOf("div"), "", attributes);
+        Element elem2 = new Element(Tag.valueOf(TEST_TAG2), "", attributes);
 
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
@@ -90,17 +91,17 @@ public class SafelistTest {
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
 
-        assertFalse(safelist1.isSafeAttribute("div", elem2, attr1));
-        assertFalse(safelist1.isSafeAttribute("div", elem2, attr2));
-        assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr3));
 
-        assertFalse(safelist2.isSafeAttribute("div", elem2, attr1));
-        assertFalse(safelist2.isSafeAttribute("div", elem2, attr2));
-        assertFalse(safelist2.isSafeAttribute("div", elem2, attr3));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr3));
 
-        assertFalse(safelist3.isSafeAttribute("div", elem2, attr1));
-        assertFalse(safelist3.isSafeAttribute("div", elem2, attr2));
-        assertFalse(safelist3.isSafeAttribute("div", elem2, attr3));
+        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr3));
     }
 
     @Test
@@ -119,7 +120,7 @@ public class SafelistTest {
         attributes.put(attr2);
         attributes.put(attr3);
         Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
-        Element elem2 = new Element(Tag.valueOf("div"), "", attributes);
+        Element elem2 = new Element(Tag.valueOf(TEST_TAG2), "", attributes);
 
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
         assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
@@ -133,17 +134,17 @@ public class SafelistTest {
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
 
-        assertTrue(safelist1.isSafeAttribute("div", elem2, attr1));
-        assertTrue(safelist1.isSafeAttribute("div", elem2, attr2));
-        assertFalse(safelist1.isSafeAttribute("div", elem2, attr3));
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertTrue(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr3));
 
-        assertFalse(safelist2.isSafeAttribute("div", elem2, attr1));
-        assertFalse(safelist2.isSafeAttribute("div", elem2, attr2));
-        assertTrue(safelist2.isSafeAttribute("div", elem2, attr3));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr3));
 
-        assertTrue(safelist3.isSafeAttribute("div", elem2, attr1));
-        assertTrue(safelist3.isSafeAttribute("div", elem2, attr2));
-        assertTrue(safelist3.isSafeAttribute("div", elem2, attr3));
+        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr3));
     }
 
 }

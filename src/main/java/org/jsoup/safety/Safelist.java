@@ -596,7 +596,7 @@ public class Safelist {
             }
         }
         // no attributes defined for tag, try :all tag
-        return !tagName.equals(TAG_ALL) && (isSafeAttribute(TAG_ALL, el, attr) || isSafeDataAttribute(TAG_ALL, key));
+        return !tagName.equals(TAG_ALL) && isSafeAttribute(TAG_ALL, el, attr);
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
