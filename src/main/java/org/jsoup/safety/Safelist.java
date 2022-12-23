@@ -303,12 +303,12 @@ public class Safelist {
     /**
      Add a list of allowed prefixes of data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
-     E.g.: <code>addDataAttributes("a", "data-", "ng-")</code> allows data attributes prefixed with <code>data-</code>
+     E.g.: <code>addDataAttributePrefixes("a", "data-", "ng-")</code> allows data attributes prefixed with <code>data-</code>
      and <code>ng-</code> on <code>a</code> tags.
      </p>
      <p>
      To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
-     <code>addDataAttributes(":all", "data-")</code>.
+     <code>addDataAttributePrefixes(":all", "data-")</code>.
      </p>
 
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
@@ -322,12 +322,12 @@ public class Safelist {
     /**
      Add the default "data-" prefix for the allowed data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
-     E.g.: <code>addDataAttributes("a")</code> allows data attributes prefixed with <code>data-</code>
+     E.g.: <code>addDataAttributePrefixes("a")</code> allows data attributes prefixed with <code>data-</code>
        on <code>a</code> tags.
      </p>
      <p>
      To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
-     <code>addDataAttributes(":all")</code>.
+     <code>addDataAttributePrefixes(":all")</code>.
      </p>
 
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
