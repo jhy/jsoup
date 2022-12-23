@@ -303,38 +303,38 @@ public class Safelist {
     /**
      Add a list of allowed prefixes of data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
-     E.g.: <code>addDataAttributePrefixes("a", "data-", "ng-")</code> allows data attributes prefixed with <code>data-</code>
+     E.g.: <code>allowDataAttributePrefixes("a", "data-", "customData-")</code> allows data attributes prefixed with <code>data-</code>
      and <code>ng-</code> on <code>a</code> tags.
      </p>
      <p>
      To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
-     <code>addDataAttributePrefixes(":all", "data-")</code>.
+     <code>allowDataAttributePrefixes(":all", "data-", "customData-")</code>.
      </p>
 
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
      @param dataPrefixes List of valid prefixes of the data attributes for the tag
      @return this (for chaining)
      */
-    public Safelist addDataAttributePrefixes(String tag, String... dataPrefixes) {
+    public Safelist allowDataAttributePrefixes(String tag, String... dataPrefixes) {
         return addAttributes(tag, this.dataAttributes, dataPrefixes);
     }
 
     /**
      Add the default "data-" prefix for the allowed data attributes to a tag. (If an attribute is not allowed on an element, it will be removed.)
      <p>
-     E.g.: <code>addDataAttributePrefixes("a")</code> allows data attributes prefixed with <code>data-</code>
+     E.g.: <code>allowDataAttributePrefixes("a")</code> allows data attributes prefixed with <code>data-</code>
        on <code>a</code> tags.
      </p>
      <p>
      To make an data attribute valid for <b>all tags</b>, use the pseudo tag <code>:all</code>, e.g.
-     <code>addDataAttributePrefixes(":all")</code>.
+     <code>allowDataAttributePrefixes(":all")</code>.
      </p>
 
      @param tag  The tag the attributes are for. The tag will be added to the allowed tag list if necessary.
      @return this (for chaining)
      */
-    public Safelist addDataAttributePrefixes(String tag) {
-        return addAttributes(tag, this.dataAttributes, "data-");
+    public Safelist allowDataAttributePrefix(String tag) {
+        return allowDataAttributePrefixes(tag, "data-");
     }
 
     /**
