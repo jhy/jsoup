@@ -8,11 +8,9 @@ import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,10 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public class DocumentTest {
-    private static final String charsetUtf8 = "UTF-8";
-    private static final String charsetIso8859 = "ISO-8859-1";
-
-
     @Test public void setTextPreservesDocumentStructure() {
         Document doc = Jsoup.parse("<p>Hello</p>");
         doc.text("Replaced");
@@ -230,19 +224,19 @@ public class DocumentTest {
     public void testMetaCharsetUpdateUtf8() {
         final Document doc = createHtmlDocument("changeThis");
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetUtf8));
+        doc.charset(StandardCharsets.UTF_8);
 
         final String htmlCharsetUTF8 = "<html>\n" +
                                         " <head>\n" +
-                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        "  <meta charset=\"" + "UTF-8" + "\">\n" +
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
         assertEquals(htmlCharsetUTF8, doc.toString());
 
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals(charsetUtf8, doc.charset().name());
-        assertEquals(charsetUtf8, selectedElement.attr("charset"));
+        assertEquals("UTF-8", doc.charset().name());
+        assertEquals("UTF-8", selectedElement.attr("charset"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
 
@@ -250,19 +244,19 @@ public class DocumentTest {
     public void testMetaCharsetUpdateIso8859() {
         final Document doc = createHtmlDocument("changeThis");
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetIso8859));
+        doc.charset(StandardCharsets.ISO_8859_1);
 
         final String htmlCharsetISO = "<html>\n" +
                                         " <head>\n" +
-                                        "  <meta charset=\"" + charsetIso8859 + "\">\n" +
+                                        "  <meta charset=\"" + "ISO-8859-1" + "\">\n" +
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
         assertEquals(htmlCharsetISO, doc.toString());
 
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals(charsetIso8859, doc.charset().name());
-        assertEquals(charsetIso8859, selectedElement.attr("charset"));
+        assertEquals("ISO-8859-1", doc.charset().name());
+        assertEquals("ISO-8859-1", selectedElement.attr("charset"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
 
@@ -270,13 +264,13 @@ public class DocumentTest {
     public void testMetaCharsetUpdateNoCharset() {
         final Document docNoCharset = Document.createShell("");
         docNoCharset.updateMetaCharsetElement(true);
-        docNoCharset.charset(Charset.forName(charsetUtf8));
+        docNoCharset.charset(StandardCharsets.UTF_8);
 
-        assertEquals(charsetUtf8, docNoCharset.select("meta[charset]").first().attr("charset"));
+        assertEquals("UTF-8", docNoCharset.select("meta[charset]").first().attr("charset"));
 
         final String htmlCharsetUTF8 = "<html>\n" +
                                         " <head>\n" +
-                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        "  <meta charset=\"" + "UTF-8" + "\">\n" +
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
@@ -320,10 +314,10 @@ public class DocumentTest {
     @Test
     public void testMetaCharsetUpdateEnabledAfterCharsetChange() {
         final Document doc = createHtmlDocument("dontTouch");
-        doc.charset(Charset.forName(charsetUtf8));
+        doc.charset(StandardCharsets.UTF_8);
 
         Element selectedElement = doc.select("meta[charset]").first();
-        assertEquals(charsetUtf8, selectedElement.attr("charset"));
+        assertEquals("UTF-8", selectedElement.attr("charset"));
         assertTrue(doc.select("meta[name=charset]").isEmpty());
     }
 
@@ -331,11 +325,11 @@ public class DocumentTest {
     public void testMetaCharsetUpdateCleanup() {
         final Document doc = createHtmlDocument("dontTouch");
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetUtf8));
+        doc.charset(StandardCharsets.UTF_8);
 
         final String htmlCharsetUTF8 = "<html>\n" +
                                         " <head>\n" +
-                                        "  <meta charset=\"" + charsetUtf8 + "\">\n" +
+                                        "  <meta charset=\"" + "UTF-8" + "\">\n" +
                                         " </head>\n" +
                                         " <body></body>\n" +
                                         "</html>";
@@ -347,17 +341,17 @@ public class DocumentTest {
     public void testMetaCharsetUpdateXmlUtf8() {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetUtf8));
+        doc.charset(StandardCharsets.UTF_8);
 
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + "UTF-8" + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
         assertEquals(xmlCharsetUTF8, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
-        assertEquals(charsetUtf8, doc.charset().name());
-        assertEquals(charsetUtf8, selectedNode.attr("encoding"));
+        assertEquals("UTF-8", doc.charset().name());
+        assertEquals("UTF-8", selectedNode.attr("encoding"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
 
@@ -365,17 +359,17 @@ public class DocumentTest {
     public void testMetaCharsetUpdateXmlIso8859() {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetIso8859));
+        doc.charset(StandardCharsets.ISO_8859_1);
 
-        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\"?>\n" +
+        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + "ISO-8859-1" + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
         assertEquals(xmlCharsetISO, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
-        assertEquals(charsetIso8859, doc.charset().name());
-        assertEquals(charsetIso8859, selectedNode.attr("encoding"));
+        assertEquals("ISO-8859-1", doc.charset().name());
+        assertEquals("ISO-8859-1", selectedNode.attr("encoding"));
         assertEquals(doc.charset(), doc.outputSettings().charset());
     }
 
@@ -383,16 +377,16 @@ public class DocumentTest {
     public void testMetaCharsetUpdateXmlNoCharset() {
         final Document doc = createXmlDocument("1.0", "none", false);
         doc.updateMetaCharsetElement(true);
-        doc.charset(Charset.forName(charsetUtf8));
+        doc.charset(StandardCharsets.UTF_8);
 
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + "UTF-8" + "\"?>\n" +
                                         "<root>\n" +
                                         " node\n" +
                                         "</root>";
         assertEquals(xmlCharsetUTF8, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
-        assertEquals(charsetUtf8, selectedNode.attr("encoding"));
+        assertEquals("UTF-8", selectedNode.attr("encoding"));
     }
 
     @Test

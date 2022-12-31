@@ -35,6 +35,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,7 +54,6 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
  */
-@SuppressWarnings("CharsetObjectCanBeUsed")
 public class HttpConnection implements Connection {
     public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
@@ -68,8 +68,6 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
-    private static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, not in Android API 10.
-    private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
     /**
      Create a new Connection, with the request URL specified.
@@ -481,10 +479,10 @@ public class HttpConnection implements Connection {
         }
 
         private static String fixHeaderEncoding(String val) {
-            byte[] bytes = val.getBytes(ISO_8859_1);
+            byte[] bytes = val.getBytes(StandardCharsets.ISO_8859_1);
             if (!looksLikeUtf8(bytes))
                 return val;
-            return new String(bytes, UTF_8);
+            return new String(bytes, StandardCharsets.UTF_8);
         }
 
         private static boolean looksLikeUtf8(byte[] input) {
@@ -643,7 +641,7 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
-        private String postDataCharset = DataUtil.defaultCharsetName;
+        private String postDataCharset = StandardCharsets.UTF_8.name();
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
         private volatile boolean executing = false;
@@ -986,7 +984,7 @@ public class HttpConnection implements Connection {
             prepareByteData();
             Validate.notNull(byteData);
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
-            String body = (charset == null ? DataUtil.UTF_8 : Charset.forName(charset))
+            String body = (charset == null ? StandardCharsets.UTF_8 : Charset.forName(charset))
                 .decode(byteData).toString();
             ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
@@ -1241,9 +1239,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
+                    .append(URLEncoder.encode(keyVal.key(), StandardCharsets.UTF_8.name()))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
+                    .append(URLEncoder.encode(keyVal.value(), StandardCharsets.UTF_8.name()));
             }
             req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params

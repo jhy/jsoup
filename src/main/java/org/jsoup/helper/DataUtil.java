@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -38,11 +39,8 @@ import java.util.zip.GZIPInputStream;
  * Internal static utilities for handling data.
  *
  */
-@SuppressWarnings("CharsetObjectCanBeUsed")
 public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
-    public static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, as those only appear in Android API 19, and we target 10.
-    static final String defaultCharsetName = UTF_8.name(); // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
     static final int bufferSize = 1024 * 32;
     private static final char[] mimeBoundaryChars =
@@ -157,7 +155,7 @@ public final class DataUtil {
 
             if (charsetName == null) { // determine from meta. safe first parse as UTF-8
                 try {
-                    CharBuffer defaultDecoded = UTF_8.decode(firstBytes);
+                    CharBuffer defaultDecoded = StandardCharsets.UTF_8.decode(firstBytes);
                     if (defaultDecoded.hasArray())
                         doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
                     else
@@ -195,7 +193,7 @@ public final class DataUtil {
                     }
                 }
                 foundCharset = validateCharset(foundCharset);
-                if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case insensitive check here to match how validate works)
+                if (foundCharset != null && !foundCharset.equalsIgnoreCase(StandardCharsets.UTF_8.name())) { // need to re-decode. (case insensitive check here to match how validate works)
                     foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                     charsetName = foundCharset;
                     doc = null;
@@ -207,7 +205,7 @@ public final class DataUtil {
             }
             if (doc == null) {
                 if (charsetName == null)
-                    charsetName = defaultCharsetName;
+                    charsetName = StandardCharsets.UTF_8.name();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), bufferSize); // Android level does not allow us try-with-resources
                 try {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
@@ -220,11 +218,11 @@ public final class DataUtil {
                         // io exception when parsing (not seen before because reading the stream as we go)
                         throw e.ioException();
                     }
-                    Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
+                    Charset charset = charsetName.equals(StandardCharsets.UTF_8.name()) ? StandardCharsets.UTF_8 : Charset.forName(charsetName);
                     doc.outputSettings().charset(charset);
                     if (!charset.canEncode()) {
                         // some charsets can read but not encode; switch to an encodable charset and update the meta el
-                        doc.charset(UTF_8);
+                        doc.charset(StandardCharsets.UTF_8);
                     }
                 }
                 finally {
