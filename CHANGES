@@ -3,6 +3,9 @@ jsoup changelog
 Release 1.15.4 [PENDING]
   * Improvement: when pretty-printing, wrap text that follows a <br> tag.
     <https://github.com/jhy/jsoup/issues/1858>
+
+  * Improvement: when pretty-printing, normalize newlines that follow self-closing tags in custom tags.
+    <https://github.com/jhy/jsoup/issues/1852>
     
   * Bugfix: URLs containing characters such as [ and ] were not escaped correctly, and would throw a
     MalformedURLException when fetched.

@@ -84,13 +84,12 @@ public class TextNode extends LeafNode {
         final boolean prettyPrint = out.prettyPrint();
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
+        final boolean trimLikeBlock = parent != null && (parent.tag().isBlock() || parent.tag().formatAsBlock());
+        boolean trimLeading = false, trimTrailing = false;
 
-        boolean trimLeading = false;
-        boolean trimTrailing = false;
         if (normaliseWhite) {
-            trimLeading = (siblingIndex == 0 && parent != null && parent.tag().isBlock()) ||
-                parentNode instanceof Document;
-            trimTrailing = nextSibling() == null && parent != null && parent.tag().isBlock();
+            trimLeading = (trimLikeBlock && siblingIndex == 0) || parentNode instanceof Document;
+            trimTrailing = trimLikeBlock && nextSibling() == null;
 
             // if this text is just whitespace, and the next node will cause an indent, skip this text:
             Node next = nextSibling();

@@ -2369,4 +2369,15 @@ public class ElementTest {
         Document doc = Jsoup.parse(html);
         assertEquals("<div><a>Text</a>\n</div>", doc.body().html());
     }
+
+    @Test void noDanglingSpaceAfterCustomElement() {
+        // https://github.com/jhy/jsoup/issues/1852
+        String html = "<bar><p/>\n</bar>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<bar>\n <p></p>\n</bar>", doc.body().html());
+
+        html = "<foo>\n  <bar />\n</foo>";
+        doc = Jsoup.parse(html);
+        assertEquals("<foo>\n <bar />\n</foo>", doc.body().html());
+    }
 }
