@@ -17,6 +17,10 @@ Release 1.15.3 [2022-Aug-24]
     lead to incorrect results when parsing from chunked server responses, for e.g.
     <https://github.com/jhy/jsoup/issues/1807>
 
+  * Bugfix: URLs containing characters such as [ and ] were not escaped correctly, and would throw a
+    MalformedURLException when fetched.
+    <https://github.com/jhy/jsoup/issues/1873>
+
   * Build Improvement: added implementation version and related fields to the jar manifest.
     <https://github.com/jhy/jsoup/issues/1809>
 

@@ -125,11 +125,9 @@ public class HttpConnection implements Connection {
     static URL encodeUrl(URL u) {
 	    u = punyUrl(u);
         try {
-            //  odd way to encode urls, but it works!
-            String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
-            urlS = urlS.replace(" ", "%20");
-            final URI uri = new URI(urlS);
-            return new URL(uri.toASCIIString());
+            // run the URL through URI, so components are encoded
+            URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+            return uri.toURL();
         } catch (URISyntaxException | MalformedURLException e) {
             // give up and return the original input
             return u;

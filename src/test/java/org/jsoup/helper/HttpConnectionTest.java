@@ -255,9 +255,9 @@ public class HttpConnectionTest {
     }
 
     @Test public void encodeUrl() throws MalformedURLException {
-        URL url1 = new URL("http://test.com/?q=white space");
+        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag");
         URL url2 = HttpConnection.encodeUrl(url1);
-        assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white%20space#frag", url2.toExternalForm());
     }
 
     @Test public void noUrlThrowsValidationError() throws IOException {
