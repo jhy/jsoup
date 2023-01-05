@@ -93,13 +93,18 @@ public class TextNode extends LeafNode {
             trimTrailing = nextSibling() == null && parent != null && parent.tag().isBlock();
 
             // if this text is just whitespace, and the next node will cause an indent, skip this text:
-            Node next = this.nextSibling();
+            Node next = nextSibling();
+            boolean isBlank = isBlank();
             boolean couldSkip = (next instanceof Element && ((Element) next).shouldIndent(out)) // next will indent
                 || (next instanceof TextNode && (((TextNode) next).isBlank())); // next is blank text, from re-parenting
-            if (couldSkip && isBlank()) return;
+            if (couldSkip && isBlank) return;
 
-            if ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank()) ||
-                (out.outline() && siblingNodes().size() > 0 && !isBlank()))
+            Node prev = previousSibling();
+            if (
+                (siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
+                (out.outline() && siblingNodes().size() > 0 && !isBlank) ||
+                (siblingIndex > 0 && prev instanceof Element && ((Element) prev).normalName().equals("br")) // special case wrap on inline <br> - doesn't make sense as a block tag
+            )
                 indent(accum, depth, out);
         }
 

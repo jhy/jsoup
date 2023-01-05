@@ -1,6 +1,9 @@
 jsoup changelog
 
 Release 1.15.4 [PENDING]
+  * Improvement: when pretty-printing, wrap text that follows a <br> tag.
+    <https://github.com/jhy/jsoup/issues/1858>
+    
   * Bugfix: URLs containing characters such as [ and ] were not escaped correctly, and would throw a
     MalformedURLException when fetched.
     <https://github.com/jhy/jsoup/issues/1873>

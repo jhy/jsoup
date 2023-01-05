@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
@@ -907,6 +908,7 @@ public class SelectorTest {
     @Test public void matchText() {
         String html = "<p>One<br>Two</p>";
         Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
         String origHtml = doc.html();
 
         Elements one = doc.select("p:matchText:first-child");

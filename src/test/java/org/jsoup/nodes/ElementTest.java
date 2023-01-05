@@ -2213,11 +2213,19 @@ public class ElementTest {
         // testcase for https://github.com/jhy/jsoup/issues/1437
         String html = "<p>Hello<br>World</p>";
         Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false); // otherwise html serializes as Hello<br>\n World.
         Element p = doc.select("p").first();
         assertNotNull(p);
         assertEquals(html, p.outerHtml());
         assertEquals("Hello World", p.text());
         assertEquals("Hello\nWorld", p.wholeText());
+    }
+
+    @Test void wrapTextAfterBr() {
+        // https://github.com/jhy/jsoup/issues/1858
+        String html = "<p>Hello<br>there<br>now.</p>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<p>Hello<br>\n there<br>\n now.</p>", doc.body().html());
     }
 
     @Test void preformatFlowsToChildTextNodes() {

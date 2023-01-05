@@ -1192,7 +1192,7 @@ public class HtmlParserTest {
 
         assertTrue(Jsoup.isValid(html, Safelist.basic()));
         String clean = Jsoup.clean(html, Safelist.basic());
-        assertEquals("<p>test<br>test<br></p>", clean);
+        assertEquals("<p>test<br>\n test<br></p>", clean);
     }
 
     @Test public void selfClosingOnNonvoidIsError() {
