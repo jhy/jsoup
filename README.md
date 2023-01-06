@@ -14,8 +14,6 @@ jsoup is designed to deal with all varieties of HTML found in the wild; from pri
 
 See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API documentation](https://jsoup.org/apidocs/).
 
-**Note:** For use in Android projects with a `minSdk` below 24, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) is required if the `forEach` methods are being used.
-
 [![Build Status](https://github.com/jhy/jsoup/workflows/Build/badge.svg)](https://github.com/jhy/jsoup/actions?query=workflow%3ABuild)
 
 ## Example
@@ -39,6 +37,9 @@ jsoup is an open source project distributed under the liberal [MIT license](http
 1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
 2. Read the [cookbook](https://jsoup.org/cookbook/)
 3. Enjoy!
+
+### Android support
+When used in Android projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) should be enabled to support Java 8+ features.
 
 ## Development and support
 If you have any questions on how to use jsoup, or have ideas for future development, please get in touch via the [mailing list](https://jsoup.org/discussion).

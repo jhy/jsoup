@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
-import org.jsoup.helper.Consumer;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
@@ -27,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -859,7 +859,7 @@ public class Element extends Node {
             selector.append(String.format(
                 ":nth-child(%d)", elementSiblingIndex() + 1));
 
-        return parent().cssSelector() + selector.toString();
+        return parent().cssSelector() + selector;
     }
 
     /**
@@ -1819,6 +1819,18 @@ public class Element extends Node {
      @see Node#forEachNode(Consumer)
      */
     public Element forEach(Consumer<? super Element> action) {
+        Validate.notNull(action);
+        NodeTraversor.traverse((node, depth) -> {
+            if (node instanceof Element)
+                action.accept((Element) node);
+        }, this);
+        return this;
+    }
+
+    /**
+     @deprecated Use {@link #forEach(Consumer)} instead.
+     */
+    public Element forEach(org.jsoup.helper.Consumer<? super Element> action) {
         Validate.notNull(action);
         NodeTraversor.traverse((node, depth) -> {
             if (node instanceof Element)
