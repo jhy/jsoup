@@ -178,6 +178,17 @@ public class ElementTest {
         assertEquals("Hello there now", doc.text());
     }
 
+    @Test public void textHasSpacesAfterBlock() {
+        Document doc = Jsoup.parse("<div>One</div><div>Two</div><span>Three</span><p>Fou<i>r</i></p>");
+        String text = doc.text();
+        String wholeText = doc.wholeText();
+
+        assertEquals("One Two Three Four", text);
+        assertEquals("OneTwoThreeFour",wholeText);
+
+        assertEquals("OneTwo",Jsoup.parse("<span>One</span><span>Two</span>").text());
+    }
+
     @Test
     public void testWholeText() {
         Document doc = Jsoup.parse("<p> Hello\nthere &nbsp;  </p>");

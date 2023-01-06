@@ -717,7 +717,7 @@ public class Element extends Node {
     /**
      * Create and prepend a new TextNode to this element.
      *
-     * @param text the unencoded text to add
+     * @param text the decoded text to add
      * @return this element
      */
     public Element prependText(String text) {
@@ -1297,7 +1297,7 @@ public class Element extends Node {
      nodes (such as {@code <script>} tags are not considered text. Use {@link #data()} or {@link #html()} to retrieve
      that content.
 
-     @return unencoded, normalized text, or empty string if none.
+     @return decoded, normalized text, or empty string if none.
      @see #wholeText()
      @see #ownText()
      @see #textNodes()
@@ -1319,10 +1319,11 @@ public class Element extends Node {
             }
 
             public void tail(Node node, int depth) {
-                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
+                // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
                 if (node instanceof Element) {
                     Element element = (Element) node;
-                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                    Node next = node.nextSibling();
+                    if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !TextNode.lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
 
@@ -1333,11 +1334,11 @@ public class Element extends Node {
     }
 
     /**
-     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
-     * original.
-     *
-     * @return unencoded, un-normalized text
-     * @see #text()
+     Get the non-normalized, decoded text of this element and its children, including only any newlines and spaces
+     present in the original source.
+     @return decoded, non-normalized text
+     @see #text()
+     @see #wholeOwnText()
      */
     public String wholeText() {
         final StringBuilder accum = StringUtil.borrowBuilder();
@@ -1354,10 +1355,9 @@ public class Element extends Node {
     }
 
     /**
-     Get the (unencoded) text of this element, <b>not including</b> any child elements, including any newlines and spaces
-     present in the original.
-
-     @return unencoded, un-normalized text that is a direct child of this Element
+     Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including only any
+     newlines and spaces present in the original source.
+     @return decoded, non-normalized text that is a direct child of this Element
      @see #text()
      @see #wholeText()
      @see #ownText()
@@ -1381,7 +1381,7 @@ public class Element extends Node {
      * whereas {@code p.text()} returns {@code "Hello there now!"}.
      * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
      *
-     * @return unencoded text, or empty string if none.
+     * @return decoded text, or empty string if none.
      * @see #text()
      * @see #textNodes()
      */
@@ -1443,7 +1443,7 @@ public class Element extends Node {
      * Set the text of this element. Any existing contents (text or elements) will be cleared.
      * <p>As a special case, for {@code <script>} and {@code <style>} tags, the input text will be treated as data,
      * not visible text.</p>
-     * @param text unencoded text
+     * @param text decoded text
      * @return this element
      */
     public Element text(String text) {

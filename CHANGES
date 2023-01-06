@@ -14,6 +14,9 @@ Release 1.15.4 [PENDING]
     MalformedURLException when fetched.
     <https://github.com/jhy/jsoup/issues/1873>
 
+  * Bgufix: element.text() should have a space between a block and an inline element.
+    <https://github.com/jhy/jsoup/issues/1877>
+
 Release 1.15.3 [2022-Aug-24]
   * Security: fixed an issue where the jsoup cleaner may incorrectly sanitize crafted XSS attempts if
     SafeList.preserveRelativeLinks is enabled.
