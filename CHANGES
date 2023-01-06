@@ -9,6 +9,10 @@ Release 1.15.4 [PENDING]
 
   * Improvement: when pretty-printing, collapse non-significant whitespace between a block and an inline tag.
     <https://github.com/jhy/jsoup/issues/1802>
+
+  * Improvement: in Element#forEach and Node#forEachNode, use java.util.function.Consumer instead of the previous
+    Android compatibility shim org.jsoup.helper.Consumer. Subsequently, the latter has been deprecated.
+    <https://github.com/jhy/jsoup/pull/1870>
     
   * Bugfix: URLs containing characters such as [ and ] were not escaped correctly, and would throw a
     MalformedURLException when fetched.
