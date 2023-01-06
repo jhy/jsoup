@@ -2359,7 +2359,7 @@ public class ElementTest {
         String html = "<body><div> <p> One Two </p> <a>  Hello </a><p>\nSome text \n</p>\n </div>";
         Document doc = Jsoup.parse(html);
         assertEquals("<div>\n" +
-            " <p>One Two</p> <a> Hello </a>\n" +
+            " <p>One Two</p><a> Hello </a>\n" +
             " <p>Some text</p>\n" +
             "</div>", doc.body().html());
     }
@@ -2379,5 +2379,12 @@ public class ElementTest {
         html = "<foo>\n  <bar />\n</foo>";
         doc = Jsoup.parse(html);
         assertEquals("<foo>\n <bar />\n</foo>", doc.body().html());
+    }
+
+    @Test void spanInBlockTrims() {
+        String html = "<p>Lorem ipsum</p>\n<span>Thanks</span>";
+        Document doc = Jsoup.parse(html);
+        String outHtml = doc.body().html();
+        assertEquals("<p>Lorem ipsum</p><span>Thanks</span>", outHtml);
     }
 }

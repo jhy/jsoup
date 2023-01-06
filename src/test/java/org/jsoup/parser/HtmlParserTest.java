@@ -617,7 +617,7 @@ public class HtmlParserTest {
     @Test public void testSpanContents() {
         // like h1 tags, the spec says SPAN is phrasing only, but browsers and publisher treat span as a block tag
         Document doc = Jsoup.parse("<span>Hello <div>there</div> <span>now</span></span>");
-        assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<span>Hello <div>there</div><span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testNoImagesInNoScriptInHead() {
@@ -638,13 +638,13 @@ public class HtmlParserTest {
     @Test public void testAFlowContents() {
         // html5 has <a> as either phrasing or block
         Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
-        assertEquals("<a>Hello <div>there</div> <span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a>Hello <div>there</div><span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testFontFlowContents() {
         // html5 has no definition of <font>; often used as flow
         Document doc = Jsoup.parse("<font>Hello <div>there</div> <span>now</span></font>");
-        assertEquals("<font>Hello <div>there</div> <span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<font>Hello <div>there</div><span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesMisnestedTagsBI() {
@@ -727,7 +727,7 @@ public class HtmlParserTest {
             "    <td><p><i>Three</i></p><p><i>Four</i></p></td>\n" +
             "   </tr>\n" +
             "  </tbody>\n" +
-            " </table> <p>Five</p></b>";
+            " </table><p>Five</p></b>";
         assertEquals(want, doc.body().html());
     }
 
@@ -1487,7 +1487,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div></b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {

@@ -93,12 +93,14 @@ public class TextNode extends LeafNode {
 
             // if this text is just whitespace, and the next node will cause an indent, skip this text:
             Node next = nextSibling();
+            Node prev = previousSibling();
             boolean isBlank = isBlank();
             boolean couldSkip = (next instanceof Element && ((Element) next).shouldIndent(out)) // next will indent
-                || (next instanceof TextNode && (((TextNode) next).isBlank())); // next is blank text, from re-parenting
+                || (next instanceof TextNode && (((TextNode) next).isBlank())) // next is blank text, from re-parenting
+                || (prev instanceof Element && ((Element) prev).isBlock())
+                ;
             if (couldSkip && isBlank) return;
 
-            Node prev = previousSibling();
             if (
                 (siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
                 (out.outline() && siblingNodes().size() > 0 && !isBlank) ||
