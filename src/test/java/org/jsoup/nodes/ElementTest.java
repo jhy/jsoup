@@ -3,7 +3,6 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.ValidationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
