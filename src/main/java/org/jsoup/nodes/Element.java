@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -276,7 +277,7 @@ public class Element extends Node {
 
     private static void accumulateParents(Element el, Elements parents) {
         Element parent = el.parent();
-        if (parent != null && !parent.tagName().equals("#root")) {
+        if (parent != null && !parent.isNode("#root")) {
             parents.add(parent);
             accumulateParents(parent, parents);
         }
@@ -1312,8 +1313,8 @@ public class Element extends Node {
                 } else if (node instanceof Element) {
                     Element element = (Element) node;
                     if (accum.length() > 0 &&
-                        (element.isBlock() || element.tag.normalName().equals("br")) &&
-                        !TextNode.lastCharIsWhitespace(accum))
+                        (element.isBlock() || element.isNode("br")) &&
+                        !lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
             }
@@ -1323,7 +1324,7 @@ public class Element extends Node {
                 if (node instanceof Element) {
                     Element element = (Element) node;
                     Node next = node.nextSibling();
-                    if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !TextNode.lastCharIsWhitespace(accum))
+                    if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
                         accum.append(' ');
                 }
 
@@ -1349,8 +1350,8 @@ public class Element extends Node {
     private static void appendWholeText(Node node, StringBuilder accum) {
         if (node instanceof TextNode) {
             accum.append(((TextNode) node).getWholeText());
-        } else if (node instanceof Element) {
-            appendNewlineIfBr((Element) node, accum);
+        } else if (node.isNode("br")) {
+            accum.append("\n");
         }
     }
 
@@ -1397,31 +1398,18 @@ public class Element extends Node {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
-            } else if (child instanceof Element) {
-                appendWhitespaceIfBr((Element) child, accum);
+            } else if (child.isNode("br") && !lastCharIsWhitespace(accum)) {
+                accum.append(" ");
             }
         }
     }
 
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
-
         if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
-            StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
-    }
-
-    /** For normalized text, treat a br element as a space, if there is not already a space. */
-    private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
-        if (element.tag.normalName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
-            accum.append(" ");
-    }
-
-    /** For WholeText, treat a br element as a newline. */
-    private static void appendNewlineIfBr(Element element, StringBuilder accum) {
-        if (element.tag.normalName().equals("br"))
-            accum.append("\n");
+            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
     }
 
     static boolean preserveWhitespace(@Nullable Node node) {

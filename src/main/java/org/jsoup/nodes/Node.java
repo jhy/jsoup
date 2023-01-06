@@ -40,6 +40,16 @@ public abstract class Node implements Cloneable {
     public abstract String nodeName();
 
     /**
+     Get the normalized name of this node. For node types other than Element, this is the same as {@link #nodeName()}.
+     For an Element, will be the lower-cased tag name.
+     @return normalized node name
+     @since 1.15.4.
+     */
+    public String normalName() {
+        return nodeName();
+    }
+
+    /**
      * Check if this Node has an actual Attributes object.
      */
     protected abstract boolean hasAttributes();
@@ -723,6 +733,16 @@ public abstract class Node implements Cloneable {
      */
     public Range sourceRange() {
         return Range.of(this, true);
+    }
+
+    /** Test if this node is not null and has the supplied normal name. */
+    static boolean isNode(@Nullable Node node, String normalName) {
+        return node != null && node.normalName().equals(normalName);
+    }
+
+    /** Test if this node has the supplied normal name. */
+    final boolean isNode(String normalName) {
+        return normalName().equals(normalName);
     }
 
     /**
