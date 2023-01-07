@@ -1,7 +1,6 @@
 package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
-import org.jsoup.helper.BufferRecycler;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.BufferPool;
 
@@ -9,7 +8,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

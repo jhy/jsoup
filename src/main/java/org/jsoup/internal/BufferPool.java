@@ -41,7 +41,12 @@ public final class BufferPool<T> {
     public BufferPool(int maxIdle, Lifecycle<T> lifecycle) {
         this.lifecycle = lifecycle;
         this.maxIdle = maxIdle;
-        pool = ThreadLocal.withInitial(() -> new SoftReference<>(new Stack<>()));
+        pool = new ThreadLocal<SoftReference<Stack<T>>>() {
+            @Override protected SoftReference<Stack<T>> initialValue() {
+                return new SoftReference<>(new Stack<>());
+            }
+        };
+        // todo - not yet using .withInitialValue as it's not in Android default - give our new instructions to enable desugaring some time to land. simplify getStack
     }
 
     /**
