@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 /**
@@ -256,7 +255,7 @@ public final class StringUtil {
         final int len = haystack.length;
         for (int i = 0; i < len; i++) {
             if (haystack[i].equals(needle))
-            return true;
+                return true;
         }
         return false;
     }
@@ -335,13 +334,6 @@ public final class StringUtil {
         return controlChars.matcher(input).replaceAll("");
     }
 
-    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
-        @Override
-        protected Stack<StringBuilder> initialValue() {
-            return new Stack<>();
-        }
-    };
-
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
      * prevented from growing too large.
@@ -350,10 +342,7 @@ public final class StringUtil {
      * @return an empty StringBuilder
      */
     public static StringBuilder borrowBuilder() {
-        Stack<StringBuilder> builders = threadLocalBuilders.get();
-        return builders.empty() ?
-            new StringBuilder(MaxCachedBuilderSize) :
-            builders.pop();
+        return StringBuilders.borrow();
     }
 
     /**
@@ -365,21 +354,24 @@ public final class StringUtil {
     public static String releaseBuilder(StringBuilder sb) {
         Validate.notNull(sb);
         String string = sb.toString();
-
-        if (sb.length() > MaxCachedBuilderSize)
-            sb = new StringBuilder(MaxCachedBuilderSize); // make sure it hasn't grown too big
-        else
-            sb.delete(0, sb.length()); // make sure it's emptied on release
-
-        Stack<StringBuilder> builders = threadLocalBuilders.get();
-        builders.push(sb);
-
-        while (builders.size() > MaxIdleBuilders) {
-            builders.pop();
-        }
+        StringBuilders.release(sb);
         return string;
     }
 
-    private static final int MaxCachedBuilderSize = 8 * 1024;
+    private static final int MinCapacity = 1024;
+    private static final int MaxCapacity = 8 * MinCapacity;
     private static final int MaxIdleBuilders = 8;
+
+    private static final BufferPool<StringBuilder> StringBuilders =
+        new BufferPool<>(MaxIdleBuilders, new BufferPool.Lifecycle<StringBuilder>() {
+            @Override public StringBuilder create() {
+                return new StringBuilder(MinCapacity);
+            }
+
+            @Override public StringBuilder reset(StringBuilder sb) {
+                if (sb.length() > MaxCapacity)
+                    return create();
+                return sb.delete(0, sb.length());
+            }
+        });
 }

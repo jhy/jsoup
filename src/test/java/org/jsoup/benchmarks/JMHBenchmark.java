@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.jsoup.Jsoup;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Mode;
@@ -15,6 +16,7 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
+@Disabled
 public class JMHBenchmark {
     private static final String CONTENT_SMALL = "<p>small</p>";
     private static final String CONTENT_MEDIUM = "<html> \n" +

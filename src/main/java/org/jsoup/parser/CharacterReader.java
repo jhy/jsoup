@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.BufferRecycler;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.BufferPool;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -18,36 +19,9 @@ import java.util.Locale;
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
 public final class CharacterReader {
-    protected static final ThreadLocal<SoftReference<BufferRecycler>> _recyclerRef = new ThreadLocal<>();
-    protected static final ThreadLocal<SoftReference<String[]>> stringCacheRef = new ThreadLocal<>();
-
-    public static BufferRecycler getBufferRecycler() {
-        SoftReference<BufferRecycler> ref = _recyclerRef.get();
-        BufferRecycler br = (ref == null) ? null : ref.get();
-
-        if (br == null) {
-            br = new BufferRecycler();
-            ref = new SoftReference<>(br);
-            _recyclerRef.set(ref);
-        }
-        return br;
-    }
-
-    public static String[] getStringCache() {
-        SoftReference<String[]> ref = stringCacheRef.get();
-        String[] stringCache = (ref == null) ? null : ref.get();
-
-        if (stringCache == null) {
-            stringCache = new String[stringCacheSize];
-            ref = new SoftReference<>(stringCache);
-            stringCacheRef.set(ref);
-        }
-        return stringCache;
-    }
-
     static final char EOF = (char) -1;
     private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 32; // visible for testing
+    static final int maxBufferLen = 1024 * 8; // visible for testing
     static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
     private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
 
@@ -59,16 +33,18 @@ public final class CharacterReader {
     private int readerPos;
     private int bufMark = -1;
     private static final int stringCacheSize = 512;
-    private String[] stringCache = getStringCache(); // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache; // holds reused strings in this doc, to lessen garbage
 
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
     public CharacterReader(Reader input, int sz) {
+        // todo - sz is defunct now that we have a fixed sized re-used buffer; remove
         Validate.notNull(input);
         Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = getBufferRecycler().allocCharBuffer(Math.min(sz, maxBufferLen));
+        charBuf = CharArrayPool.borrow();
+        stringCache = StringCachePool.borrow();
         bufferUp();
     }
 
@@ -88,8 +64,10 @@ public final class CharacterReader {
         } catch (IOException ignored) {
         } finally {
             reader = null;
+            CharArrayPool.release(charBuf);
+            charBuf = null;
+            StringCachePool.release(stringCache);
             stringCache = null;
-            getBufferRecycler().releaseCharBuffer(charBuf);
         }
     }
 
@@ -785,4 +763,32 @@ public final class CharacterReader {
     boolean rangeEquals(final int start, final int count, final String cached) {
         return rangeEquals(charBuf, start, count, cached);
     }
+
+    // only useful for CharacterReader - does not reset so can be used across reads
+    private static final BufferPool<String[]> StringCachePool =
+        new BufferPool<>(2, new BufferPool.Lifecycle<String[]>() {
+
+        @Override public String[] create() {
+            return new String[stringCacheSize];
+        }
+
+        @Override public String[] reset(String[] arr) {
+            // no-op as we don't grow, and want to reuse the contents between parses
+            return arr;
+        }
+    });
+
+    public static final BufferPool<char[]> CharArrayPool =
+        new BufferPool<>(2, new BufferPool.Lifecycle<char[]>() {
+            @Override public char[] create() {
+                return new char[maxBufferLen];
+            }
+
+            @Override public char[] reset(char[] arr) {
+                if (arr.length > maxBufferLen)
+                    return create();
+                // does not clear contents, as the consumer (CharacterReader) reads into it and maintains length/pos etc
+                return arr;
+            }
+        });
 }
