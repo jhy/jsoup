@@ -19,7 +19,7 @@ import java.util.Locale;
 public final class CharacterReader {
     static final char EOF = (char) -1;
     private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 8; // visible for testing
+    static final int maxBufferLen = 1024 * 32; // visible for testing
     static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
     private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
 
