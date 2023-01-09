@@ -449,7 +449,7 @@ public class HttpConnection implements Connection {
         public String header(String name) {
             Validate.notNullParam(name, "name");
             List<String> vals = getHeadersCaseInsensitive(name);
-            if (vals.size() > 0) {
+            if (!vals.isEmpty()) {
                 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
                 return StringUtil.join(vals, ", ");
             }
@@ -567,7 +567,7 @@ public class HttpConnection implements Connection {
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 String header = entry.getKey();
                 List<String> values = entry.getValue();
-                if (values.size() > 0)
+                if (!values.isEmpty())
                     map.put(header, values.get(0));
             }
             return map;
@@ -846,7 +846,7 @@ public class HttpConnection implements Connection {
 
             // set up the request for execution
             String mimeBoundary = null;
-            if (req.data().size() > 0 && (!methodHasBody || hasRequestBody))
+            if (!req.data().isEmpty() && (!methodHasBody || hasRequestBody))
                 serialiseRequestUrl(req);
             else if (methodHasBody)
                 mimeBoundary = setOutputContentType(req);

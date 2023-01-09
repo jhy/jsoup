@@ -137,7 +137,7 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     protected boolean currentElementIs(String normalName) {
-        if (stack.size() == 0)
+        if (stack.isEmpty())
             return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName);

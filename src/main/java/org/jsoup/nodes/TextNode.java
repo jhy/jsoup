@@ -104,7 +104,7 @@ public class TextNode extends LeafNode {
 
             if (
                 (siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
-                (out.outline() && siblingNodes().size() > 0 && !isBlank) ||
+                (out.outline() && !siblingNodes().isEmpty() && !isBlank) ||
                 (siblingIndex > 0 && isNode(prev, "br")) // special case wrap on inline <br> - doesn't make sense as a block tag
             )
                 indent(accum, depth, out);

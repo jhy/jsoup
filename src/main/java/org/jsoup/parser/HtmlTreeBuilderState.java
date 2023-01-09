@@ -367,7 +367,7 @@ enum HtmlTreeBuilderState {
                     if (tb.onStack("template")) return false; // ignore
                     // otherwise, merge attributes onto real html (if present)
                     stack = tb.getStack();
-                    if (stack.size() > 0) {
+                    if (!stack.isEmpty()) {
                         Element html = tb.getStack().get(0);
                         if (startTag.hasAttributes()) {
                             for (Attribute attribute : startTag.attributes) {
@@ -1102,7 +1102,7 @@ enum HtmlTreeBuilderState {
                     tb.getPendingTableCharacters().add(c.getData());
                 }
             } else {// todo - don't really like the way these table character data lists are built
-                if (tb.getPendingTableCharacters().size() > 0) {
+                if (!tb.getPendingTableCharacters().isEmpty()) {
                     for (String character : tb.getPendingTableCharacters()) {
                         if (!isWhitespace(character)) {
                             // InTable anything else section:

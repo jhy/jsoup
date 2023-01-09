@@ -209,7 +209,7 @@ public final class CharacterReader {
         if (!isTrackNewlines())
             return;
 
-        if (newlinePositions.size() > 0) {
+        if (!newlinePositions.isEmpty()) {
             // work out the line number that we have read up to (as we have likely scanned past this point)
             int index = lineNumIndex(readerPos);
             if (index == -1) index = 0; // first line

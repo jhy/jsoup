@@ -488,7 +488,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
         final HtmlTreeBuilderState origState = this.state;
 
-        if (stack.size() == 0) { // nothing left of stack, just get to body
+        if (stack.isEmpty()) { // nothing left of stack, just get to body
             transition(HtmlTreeBuilderState.InBody);
         }
 
@@ -712,7 +712,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element lastFormattingElement() {
-        return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size()-1) : null;
+        return !formattingElements.isEmpty() ? formattingElements.get(formattingElements.size()-1) : null;
     }
 
     int positionOfElement(Element el){
@@ -886,7 +886,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Nullable HtmlTreeBuilderState popTemplateMode() {
-        if (tmplInsertMode.size() > 0) {
+        if (!tmplInsertMode.isEmpty()) {
             return tmplInsertMode.remove(tmplInsertMode.size() -1);
         } else {
             return null;
@@ -898,7 +898,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Nullable HtmlTreeBuilderState currentTemplateMode() {
-        return (tmplInsertMode.size() > 0) ? tmplInsertMode.get(tmplInsertMode.size() -1)  : null;
+        return !tmplInsertMode.isEmpty() ? tmplInsertMode.get(tmplInsertMode.size() -1)  : null;
     }
 
     @Override
