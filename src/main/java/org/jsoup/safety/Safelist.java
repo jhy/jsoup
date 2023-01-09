@@ -70,7 +70,23 @@ public class Safelist {
     private boolean preserveRelativeLinks; // option to preserve relative links
 
     /**
-     This safelist allows only text nodes: all HTML will be stripped.
+     This safelist allows only text nodes: any HTML Element or any Node other than a TextNode will be removed.
+     <p>
+     Note that the output of {@link org.jsoup.Jsoup#clean(String, Safelist)} is still <b>HTML</b> even when using
+     this Safelist, and so any HTML entities in the output will be appropriately escaped. If you want plain text, not
+     HTML, you should use a text method such as {@link Element#text()} instead, after cleaning the document.
+     </p>
+     <p>Example:</p>
+     <pre>{@code
+     String sourceBodyHtml = "<p>5 is &lt; 6.</p>";
+     String html = Jsoup.clean(sourceBodyHtml, Safelist.none());
+
+     Cleaner cleaner = new Cleaner(Safelist.none());
+     String text = cleaner.clean(Jsoup.parse(sourceBodyHtml)).text();
+
+     // html is: 5 is &lt; 6.
+     // text is: 5 is < 6.
+     }</pre>
 
      @return safelist
      */
