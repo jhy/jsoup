@@ -36,22 +36,30 @@ public final class CharacterReader {
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
-    public CharacterReader(Reader input, int sz) {
-        // todo - sz is defunct now that we have a fixed sized re-used buffer; remove
+    /**
+     Create a new CharacterReader that reads from the input Reader.
+     @param input the Reader to read from. Need not be a BufferedReader, as CharacterReader maintains a buffer
+     internally.
+     */
+    public CharacterReader(Reader input) {
         Validate.notNull(input);
-        Validate.isTrue(input.markSupported());
         reader = input;
         charBuf = CharArrayPool.borrow();
         stringCache = StringCachePool.borrow();
         bufferUp();
     }
 
-    public CharacterReader(Reader input) {
-        this(input, maxBufferLen);
+    /**
+     @deprecated The initial buffer size parameter is no longer supported. This method will be removed in the next
+     release.
+     */
+    @Deprecated
+    public CharacterReader(Reader input, int sz) {
+        this(input);
     }
 
     public CharacterReader(String input) {
-        this(new StringReader(input), input.length());
+        this(new StringReader(input));
     }
 
     public void close() {
@@ -70,40 +78,36 @@ public final class CharacterReader {
     }
 
     private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
+
     private void bufferUp() {
         if (readFully || bufPos < bufSplitPoint)
             return;
 
-        final int pos;
-        final int offset;
-        if (bufMark != -1) {
-            pos = bufMark;
-            offset = bufPos - bufMark;
-        } else {
-            pos = bufPos;
-            offset = 0;
+        // discard the consumed characters from the buffer and pull the remainder forward:
+        if (bufPos > 0) {
+            int offset = bufMark == -1 ? bufPos : bufMark; // if set, mark is before pos
+            int remainder = bufLength - offset;
+            System.arraycopy(charBuf, offset, charBuf, 0, remainder);
+            readerPos += offset;
+            bufLength = remainder;
+            if (bufMark != -1) {
+                bufPos = bufMark;
+                bufMark = 0;
+            } else {
+                bufPos = 0;
+            }
         }
 
+        // blocking read until we get the minimum buffered up, then read until would block
         try {
-            final long skipped = reader.skip(pos);
-            reader.mark(maxBufferLen);
-            int read = 0;
-            while (read <= minReadAheadLen) {
-                int thisRead = reader.read(charBuf, read, charBuf.length - read);
-                if (thisRead == -1)
+            while (bufLength <= minReadAheadLen || (bufLength < charBuf.length && reader.ready())) {
+                int thisRead = reader.read(charBuf, bufLength, charBuf.length - bufLength);
+                if (thisRead == -1) {
                     readFully = true;
-                if (thisRead <= 0)
                     break;
-                read += thisRead;
-            }
-            reader.reset();
-            if (read > 0) {
-                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
-                bufLength = read;
-                readerPos += pos;
-                bufPos = offset;
-                if (bufMark != -1)
-                    bufMark = 0;
+                }
+                bufLength += thisRead;
+                if (bufMark != -1) bufMark = 0;
                 bufSplitPoint = Math.min(bufLength, readAheadLimit);
             }
         } catch (IOException e) {
@@ -783,9 +787,8 @@ public final class CharacterReader {
             }
 
             @Override public char[] reset(char[] arr) {
-                if (arr.length > maxBufferLen)
-                    return create();
-                // does not clear contents, as the consumer (CharacterReader) reads into it and maintains length/pos etc
+                // no size check as it's fixed size
+                Arrays.fill(arr, '\0'); // zero it to make sure we never inadvertently read stale input
                 return arr;
             }
         });

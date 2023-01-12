@@ -332,7 +332,7 @@ public class CharacterReaderTest {
 
     @Test
     public void notEmptyAtBufferSplitPoint() {
-        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
+        CharacterReader r = new CharacterReader(new StringReader("How about now"));
         assertEquals("How", r.consumeTo(' '));
         assertFalse(r.isEmpty(), "Should not be empty");
 

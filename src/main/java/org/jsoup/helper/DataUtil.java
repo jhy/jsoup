@@ -15,7 +15,6 @@ import org.jsoup.select.Elements;
 import javax.annotation.Nullable;
 import javax.annotation.WillClose;
 
-import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -90,7 +89,6 @@ public final class DataUtil {
                 zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
             } finally {
                 stream.close();
-
             }
             stream = zipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file);
         }
@@ -208,7 +206,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), bufferSize); // Android level does not allow us try-with-resources
+                InputStreamReader reader = new InputStreamReader(input, Charset.forName(charsetName)); // Android level does not allow us try-with-resources
                 try {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
