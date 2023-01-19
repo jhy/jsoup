@@ -849,7 +849,7 @@ public class Element extends Node {
 
         // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
         String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
-        StringBuilder selector = new StringBuilder(tagName);
+        StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
         // String classes = StringUtil.join(classNames().stream().map(TokenQueue::escapeCssIdentifier).iterator(), ".");
         // todo - replace with ^^ in 1.16.1 when we enable Android support for stream etc
         StringUtil.StringJoiner escapedClasses = new StringUtil.StringJoiner(".");
@@ -859,14 +859,14 @@ public class Element extends Node {
             selector.append('.').append(classes);
 
         if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
-            return selector.toString();
+            return StringUtil.releaseBuilder(selector);
 
         selector.insert(0, " > ");
         if (parent().select(selector.toString()).size() > 1)
             selector.append(String.format(
                 ":nth-child(%d)", elementSiblingIndex() + 1));
 
-        return parent().cssSelector() + selector;
+        return parent().cssSelector() + StringUtil.releaseBuilder(selector);
     }
 
     /**
