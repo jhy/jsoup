@@ -292,6 +292,23 @@ public class TokenQueue {
         return StringUtil.releaseBuilder(out);
     }
 
+    /*
+    Given a CSS identifier (such as a tag, ID, or class), escape any CSS special characters that would otherwise not be
+    valid in a selector.
+     */
+    public static String escapeCssIdentifier(String in) {
+        StringBuilder out = StringUtil.borrowBuilder();
+        TokenQueue q = new TokenQueue(in);
+        while (!q.isEmpty()) {
+            if (q.matchesCssIdentifier(ElementSelectorChars)) {
+                out.append(q.consume());
+            } else {
+                out.append(ESC).append(q.consume());
+            }
+        }
+        return StringUtil.releaseBuilder(out);
+    }
+
     /**
      * Pulls the next run of whitespace characters of the queue.
      * @return Whether consuming whitespace or not
@@ -323,8 +340,9 @@ public class TokenQueue {
      * @return tag name
      */
     public String consumeElementSelector() {
-        return consumeEscapedCssIdentifier("*|", "|", "_", "-");
+        return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
+    private static final String[] ElementSelectorChars = {"*|", "|", "_", "-"};
 
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
@@ -332,8 +350,10 @@ public class TokenQueue {
      @return identifier
      */
     public String consumeCssIdentifier() {
-        return consumeEscapedCssIdentifier("-", "_");
+        return consumeEscapedCssIdentifier(CssIdentifierChars);
     }
+    private static final String[] CssIdentifierChars = {"-", "_"};
+
 
     private String consumeEscapedCssIdentifier(String... matches) {
         int start = pos;
@@ -342,7 +362,7 @@ public class TokenQueue {
             if (queue.charAt(pos) == ESC && remainingLength() >1 ) {
                 escaped = true;
                 pos+=2; // skip the escape and the escaped
-            } else if (matchesWord() || matchesAny(matches)) {
+            } else if (matchesCssIdentifier(matches)) {
                 pos++;
             } else {
                 break;
@@ -351,6 +371,10 @@ public class TokenQueue {
 
         String consumed = queue.substring(start, pos);
         return escaped ? unescape(consumed) : consumed;
+    }
+
+    private boolean matchesCssIdentifier(String... matches) {
+        return matchesWord() || matchesAny(matches);
     }
 
     /**

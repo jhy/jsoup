@@ -1170,6 +1170,27 @@ public class ElementTest {
         assertSame(divC, doc.select(divC.cssSelector()).first());
     }
 
+    @Test public void cssSelectorEscaped() {
+        // https://github.com/jhy/jsoup/issues/1742
+        Document doc = Jsoup.parse("<p\\p>One</p\\p> <p id='one.two'>Two</p> <p class='one.two:three/four'>Three</p>");
+        Element one = doc.expectFirst("p\\\\p");
+        Elements ps = doc.select("p");
+        Element two = ps.get(0);
+        Element three = ps.get(1);
+
+        String oneSelect = one.cssSelector();
+        assertEquals("html > body > p\\\\p", oneSelect);
+        assertEquals(one, doc.expectFirst(oneSelect));
+
+        String twoSelect = two.cssSelector();
+        assertEquals("#one\\.two", twoSelect);
+        assertEquals(two, doc.expectFirst(twoSelect));
+
+        String threeSelect = three.cssSelector();
+        assertEquals("html > body > p.one\\.two\\:three\\/four", threeSelect);
+        assertEquals(three, doc.expectFirst(threeSelect));
+    }
+
     @Test
     public void testClassNames() {
         Document doc = Jsoup.parse("<div class=\"c1 c2\">C</div>");

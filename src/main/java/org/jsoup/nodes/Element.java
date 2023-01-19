@@ -6,6 +6,7 @@ import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
+import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
@@ -32,6 +33,7 @@ import java.util.regex.PatternSyntaxException;
 
 import static org.jsoup.internal.Normalizer.normalize;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
+import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -834,7 +836,7 @@ public class Element extends Node {
     public String cssSelector() {
         if (id().length() > 0) {
             // prefer to return the ID - but check that it's actually unique first!
-            String idSel = "#" + id();
+            String idSel = "#" + escapeCssIdentifier(id());
             Document doc = ownerDocument();
             if (doc != null) {
                 Elements els = doc.select(idSel);
@@ -845,10 +847,14 @@ public class Element extends Node {
             }
         }
 
-        // Translate HTML namespace ns:tag to CSS namespace syntax ns|tag
-        String tagName = tagName().replace(':', '|');
+        // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
+        String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
         StringBuilder selector = new StringBuilder(tagName);
-        String classes = StringUtil.join(classNames(), ".");
+        // String classes = StringUtil.join(classNames().stream().map(TokenQueue::escapeCssIdentifier).iterator(), ".");
+        // todo - replace with ^^ in 1.16.1 when we enable Android support for stream etc
+        StringUtil.StringJoiner escapedClasses = new StringUtil.StringJoiner(".");
+        for (String name : classNames()) escapedClasses.add(escapeCssIdentifier(name));
+        String classes = escapedClasses.complete();
         if (classes.length() > 0)
             selector.append('.').append(classes);
 

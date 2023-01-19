@@ -46,6 +46,10 @@ public class TokenQueueTest {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
 
+    @Test public void escapeCssIdentifier() {
+        assertEquals("one\\#two\\.three\\/four\\\\five", TokenQueue.escapeCssIdentifier("one#two.three/four\\five"));
+    }
+
     @Test public void chompToIgnoreCase() {
         String t = "<textarea>one < two </TEXTarea>";
         TokenQueue tq = new TokenQueue(t);

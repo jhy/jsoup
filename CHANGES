@@ -22,6 +22,10 @@ Release 1.15.4 [PENDING]
     MalformedURLException when fetched.
     <https://github.com/jhy/jsoup/issues/1873>
 
+  * Bugfix: Element.cssSelector would create invalid selectors for elements where the tag name, ID, or classnames needed
+    to be escaped (e.g. if a class name contained a ':' or '.').
+    <https://github.com/jhy/jsoup/issues/1742>
+
   * Bgufix: element.text() should have a space between a block and an inline element.
     <https://github.com/jhy/jsoup/issues/1877>
 
