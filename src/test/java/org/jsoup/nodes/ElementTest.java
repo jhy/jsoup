@@ -1191,6 +1191,29 @@ public class ElementTest {
         assertEquals(three, doc.expectFirst(threeSelect));
     }
 
+    @Test public void cssEscapedAmp() {
+        Document doc = Jsoup.parse("<p class='\\&'>One</p>");
+        Element one = doc.expectFirst(".\\\\\\&"); // tested matches js querySelector
+        assertEquals("One", one.text());
+
+        String q = one.cssSelector();
+        assertEquals("html > body > p.\\\\\\&", q);
+        assertEquals(one, doc.expectFirst(q));
+    }
+
+    @Test public void cssSelectorEscapedClass() {
+        // example in https://github.com/jhy/jsoup/issues/838
+        String html = "<div class='B\\&W\\?'><div class=test>Text</div></div>";
+        Document parse = Jsoup.parse(html);
+        Element el = parse.expectFirst(".test");
+        assertEquals("Text", el.text());
+
+        String q = el.cssSelector();
+        assertEquals("html > body > div.B\\\\\\&W\\\\\\? > div.test", q);
+        Element found = parse.expectFirst(q);
+        assertEquals(found, el);
+    }
+
     @Test
     public void testClassNames() {
         Document doc = Jsoup.parse("<div class=\"c1 c2\">C</div>");

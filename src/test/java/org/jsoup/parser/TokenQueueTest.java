@@ -46,6 +46,10 @@ public class TokenQueueTest {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
 
+    @Test public void unescape_2() {
+        assertEquals("\\&", TokenQueue.unescape("\\\\\\&"));
+    }
+
     @Test public void escapeCssIdentifier() {
         assertEquals("one\\#two\\.three\\/four\\\\five", TokenQueue.escapeCssIdentifier("one#two.three/four\\five"));
     }

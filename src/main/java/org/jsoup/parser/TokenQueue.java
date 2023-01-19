@@ -282,8 +282,10 @@ public class TokenQueue {
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
-                if (last == ESC)
+                if (last == ESC) {
                     out.append(c);
+                    c = 0;
+                }
             }
             else 
                 out.append(c);
