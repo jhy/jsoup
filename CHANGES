@@ -1,6 +1,10 @@
 jsoup changelog
 
 Release 1.15.4 [PENDING]
+  * Improvement: added the ability to escape CSS selectors (tags, IDs, classes) to match elements that don't follow
+    regular CSS syntax. For example, to match by classname <p class="one.two">, use document.select("p.one\\.two");
+    <https://github.com/jhy/jsoup/issues/838>
+
   * Improvement: when pretty-printing, wrap text that follows a <br> tag.
     <https://github.com/jhy/jsoup/issues/1858>
 

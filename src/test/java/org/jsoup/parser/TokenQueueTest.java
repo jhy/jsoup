@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Token queue tests.
@@ -105,5 +104,31 @@ public class TokenQueueTest {
         assertEquals("\n\\) foo1",doc.select("div:matches(" + Pattern.quote("\\)") + ")").get(0).childNode(0).toString());
         assertEquals("\n( foo2",doc.select("div:matches(" + Pattern.quote("(") + ")").get(0).childNode(0).toString());
         assertEquals("\n1) foo3",doc.select("div:matches(" + Pattern.quote("1)") + ")").get(0).childNode(0).toString());
+    }
+
+    @Test public void consumeEscapedTag() {
+        TokenQueue q = new TokenQueue("p\\\\p p\\.p p\\:p p\\!p");
+
+        assertEquals("p\\p", q.consumeElementSelector());
+        assertTrue(q.consumeWhitespace());
+
+        assertEquals("p.p", q.consumeElementSelector());
+        assertTrue(q.consumeWhitespace());
+
+        assertEquals("p:p", q.consumeElementSelector());
+        assertTrue(q.consumeWhitespace());
+
+        assertEquals("p!p", q.consumeElementSelector());
+        assertTrue(q.isEmpty());
+    }
+
+    @Test public void consumeEscapedId() {
+        TokenQueue q = new TokenQueue("i\\.d i\\\\d");
+
+        assertEquals("i.d", q.consumeCssIdentifier());
+        assertTrue(q.consumeWhitespace());
+
+        assertEquals("i\\d", q.consumeCssIdentifier());
+        assertTrue(q.isEmpty());
     }
 }

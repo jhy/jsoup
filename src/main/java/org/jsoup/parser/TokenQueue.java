@@ -323,11 +323,7 @@ public class TokenQueue {
      * @return tag name
      */
     public String consumeElementSelector() {
-        int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-")))
-            pos++;
-        
-        return queue.substring(start, pos);
+        return consumeEscapedCssIdentifier("*|", "|", "_", "-");
     }
 
     /**
@@ -336,11 +332,25 @@ public class TokenQueue {
      @return identifier
      */
     public String consumeCssIdentifier() {
-        int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
-            pos++;
+        return consumeEscapedCssIdentifier("-", "_");
+    }
 
-        return queue.substring(start, pos);
+    private String consumeEscapedCssIdentifier(String... matches) {
+        int start = pos;
+        boolean escaped = false;
+        while (!isEmpty()) {
+            if (queue.charAt(pos) == ESC && remainingLength() >1 ) {
+                escaped = true;
+                pos+=2; // skip the escape and the escaped
+            } else if (matchesWord() || matchesAny(matches)) {
+                pos++;
+            } else {
+                break;
+            }
+        }
+
+        String consumed = queue.substring(start, pos);
+        return escaped ? unescape(consumed) : consumed;
     }
 
     /**
