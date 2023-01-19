@@ -26,8 +26,11 @@ Release 1.15.4 [PENDING]
     to be escaped (e.g. if a class name contained a ':' or '.').
     <https://github.com/jhy/jsoup/issues/1742>
 
-  * Bgufix: element.text() should have a space between a block and an inline element.
+  * Bugfix: element.text() should have a space between a block and an inline element.
     <https://github.com/jhy/jsoup/issues/1877>
+
+  * Bugfix: if a Node or an Element was replaced with itself, that node would incorrectly be orphaned.
+    <https://github.com/jhy/jsoup/issues/1843>
 
 Release 1.15.3 [2022-Aug-24]
   * Security: fixed an issue where the jsoup cleaner may incorrectly sanitize crafted XSS attempts if

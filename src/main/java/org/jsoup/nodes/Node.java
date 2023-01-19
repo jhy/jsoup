@@ -480,6 +480,8 @@ public abstract class Node implements Cloneable {
     protected void replaceChild(Node out, Node in) {
         Validate.isTrue(out.parentNode == this);
         Validate.notNull(in);
+        if (out == in) return; // no-op self replacement
+
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
 

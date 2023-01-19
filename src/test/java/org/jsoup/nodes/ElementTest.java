@@ -2440,4 +2440,16 @@ public class ElementTest {
         String outHtml = doc.body().html();
         assertEquals("<p>Lorem ipsum</p><span>Thanks</span>", outHtml);
     }
+
+    @Test void replaceWithSelf() {
+        // https://github.com/jhy/jsoup/issues/1843
+        Document doc = Jsoup.parse("<p>One<p>Two");
+        Elements ps = doc.select("p");
+        Element first = ps.first();
+
+        assertNotNull(first);
+        first.replaceWith(first);
+        assertEquals(ps.get(1), first.nextSibling());
+        assertEquals("<p>One</p>\n<p>Two</p>", first.parent().html());
+    }
 }
