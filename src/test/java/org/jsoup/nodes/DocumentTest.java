@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -531,5 +532,20 @@ public class DocumentTest {
             " </frameset>\n" +
             "</html>";
         assertEquals(expected, doc.html());
+    }
+
+    @Test void forms() {
+        String html = "<body><form id=1><input name=foo></form><form id=2><input name=bar>";
+        Document doc = Jsoup.parse(html);
+
+        List<FormElement> forms = doc.forms();
+        assertEquals(2, forms.size());
+        FormElement form = forms.get(1);
+        assertEquals(1, form.elements().size());
+        assertEquals("bar", form.elements().first().attr("name"));
+
+        String emptyHtml = "<body>";
+        Document emptyDoc = Jsoup.parse(emptyHtml);
+        assertEquals(0, emptyDoc.forms().size());
     }
 }

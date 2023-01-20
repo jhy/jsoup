@@ -144,6 +144,17 @@ public class Document extends Element {
     }
 
     /**
+     Get each of the {@code <form>} elements contained in this document.
+     @return a List of FormElement objects, which will be empty if there are none.
+     @see Elements#forms()
+     @see FormElement#elements()
+     @since 1.15.4
+     */
+    public List<FormElement> forms() {
+        return select("form").forms();
+    }
+
+    /**
      Get the string contents of the document's {@code title} element.
      @return Trimmed title, or empty string if none set.
      */
