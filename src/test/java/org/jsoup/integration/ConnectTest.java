@@ -689,7 +689,7 @@ public class ConnectTest {
 
         String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
         Document loginDoc = Jsoup.connect(startUrl).get();
-        FormElement form = loginDoc.select("#login").forms().get(0);
+        FormElement form = loginDoc.expectForm("#login");
         assertNotNull(form);
         form.expectFirst("[name=username]").val("admin");
         form.expectFirst("[name=password]").val("Netscape engineers are weenies!");
@@ -722,7 +722,7 @@ public class ConnectTest {
 
         Connection session = Jsoup.newSession();
         Document loginDoc = session.newRequest().url(startUrl).get();
-        FormElement form = loginDoc.select("#login2").forms().get(0);
+        FormElement form = loginDoc.expectForm("#login2");
         assertNotNull(form);
         String username = "admin";
         form.expectFirst("[name=username]").val(username);
