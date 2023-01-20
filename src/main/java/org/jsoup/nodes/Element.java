@@ -6,7 +6,6 @@ import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Tag;
-import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
@@ -36,13 +35,10 @@ import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
 
 /**
- * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
- * other elements).
- *
- * From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
- *
- * @author Jonathan Hedley, jonathan@hedley.net
- */
+ An HTML Element consists of a tag name, attributes, and child nodes (including text nodes and other elements).
+ <p>
+ From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
+*/
 @NonnullByDefault
 public class Element extends Node {
     private static final List<Element> EmptyChildren = Collections.emptyList();
@@ -157,7 +153,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
+     * Get the normalized name of this Element's tag. This will always be the lower-cased version of the tag, regardless
      * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
      * normal name of {@code div}.
      * @return normal name
@@ -269,7 +265,7 @@ public class Element extends Node {
 
     /**
      * Get this element's parent and ancestors, up to the document root.
-     * @return this element's stack of parents, closest first.
+     * @return this element's stack of parents, starting with the closest first.
      */
     public Elements parents() {
         Elements parents = new Elements();
@@ -707,7 +703,7 @@ public class Element extends Node {
     /**
      * Create and append a new TextNode to this element.
      *
-     * @param text the unencoded text to add
+     * @param text the (un-encoded) text to add
      * @return this element
      */
     public Element appendText(String text) {
@@ -803,7 +799,7 @@ public class Element extends Node {
     }
 
     /**
-     * Remove all of the element's child nodes. Any attributes are left as-is.
+     * Remove all the element's child nodes. Any attributes are left as-is.
      * @return this element
      */
     @Override
@@ -1059,9 +1055,9 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have this class, including or under this element. Case insensitive.
+     * Find elements that have this class, including or under this element. Case-insensitive.
      * <p>
-     * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
+     * Elements can have multiple classes (e.g. {@code <div class="header round first">}). This method
      * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
      *
      * @param className the name of the class to search for.
@@ -1076,7 +1072,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have a named attribute set. Case insensitive.
+     * Find elements that have a named attribute set. Case-insensitive.
      *
      * @param key name of the attribute, e.g. {@code href}
      * @return elements that have this attribute, empty if none
@@ -1102,7 +1098,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have an attribute with the specific value. Case insensitive.
+     * Find elements that have an attribute with the specific value. Case-insensitive.
      *
      * @param key name of the attribute
      * @param value value of the attribute
@@ -1113,7 +1109,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that either do not have this attribute, or have it with a different value. Case insensitive.
+     * Find elements that either do not have this attribute, or have it with a different value. Case-insensitive.
      *
      * @param key name of the attribute
      * @param value value of the attribute
@@ -1124,7 +1120,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes that start with the value prefix. Case insensitive.
+     * Find elements that have attributes that start with the value prefix. Case-insensitive.
      *
      * @param key name of the attribute
      * @param valuePrefix start of attribute value
@@ -1135,7 +1131,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes that end with the value suffix. Case insensitive.
+     * Find elements that have attributes that end with the value suffix. Case-insensitive.
      *
      * @param key name of the attribute
      * @param valueSuffix end of the attribute value
@@ -1146,7 +1142,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes whose value contains the match string. Case insensitive.
+     * Find elements that have attributes whose value contains the match string. Case-insensitive.
      *
      * @param key name of the attribute
      * @param match substring of value to search for
@@ -1211,10 +1207,10 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
+     * Find elements that contain the specified string. The search is case-insensitive. The text may appear directly
      * in the element, or in any of its descendants.
      * @param searchText to look for in the element's text
-     * @return elements that contain the string, case insensitive.
+     * @return elements that contain the string, case-insensitive.
      * @see Element#text()
      */
     public Elements getElementsContainingText(String searchText) {
@@ -1222,10 +1218,10 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
+     * Find elements that directly contain the specified string. The search is case-insensitive. The text must appear directly
      * in the element, not in any of its descendants.
      * @param searchText to look for in the element's own text
-     * @return elements that contain the string, case insensitive.
+     * @return elements that contain the string, case-insensitive.
      * @see Element#ownText()
      */
     public Elements getElementsContainingOwnText(String searchText) {
@@ -1301,7 +1297,7 @@ public class Element extends Node {
      <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
      children), use {@link #ownText()}
      <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
-     nodes (such as {@code <script>} tags are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     nodes (such as {@code <script>} tags) are not considered text. Use {@link #data()} or {@link #html()} to retrieve
      that content.
 
      @return decoded, normalized text, or empty string if none.
@@ -1498,7 +1494,7 @@ public class Element extends Node {
                 sb.append(elementData);
             } else if (childNode instanceof CDataNode) {
                 // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
-                // but incase another type gets through.
+                // but in case another type gets through.
                 CDataNode cDataNode = (CDataNode) childNode;
                 sb.append(cDataNode.getWholeText());
             }
@@ -1516,7 +1512,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get all of the element's class names. E.g. on element {@code <div class="header gray">},
+     * Get each of the element's class names. E.g. on element {@code <div class="header gray">},
      * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
      * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
@@ -1545,7 +1541,7 @@ public class Element extends Node {
     }
 
     /**
-     * Tests if this element has a class. Case insensitive.
+     * Tests if this element has a class. Case-insensitive.
      * @param className name of class to check for
      * @return true if it does, false if not
      */

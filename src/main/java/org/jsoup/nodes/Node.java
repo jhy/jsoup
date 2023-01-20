@@ -28,7 +28,7 @@ public abstract class Node implements Cloneable {
     int siblingIndex;
 
     /**
-     * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
+     * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
      */
     protected Node() {
     }
@@ -92,7 +92,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get all of the element's attributes.
+     * Get each of the element's attributes.
      * @return attributes (which implements iterable, in same order as presented in original HTML).
      */
     public abstract Attributes attributes();
@@ -151,7 +151,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Clear (remove) all of the attributes in this node.
+     * Clear (remove) each of the attributes in this node.
      * @return this, for chaining
      */
     public Node clearAttributes() {
@@ -783,7 +783,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Provides a hashCode for this Node, based on it's object identity. Changes to the Node's content will not impact the
+     Provides a hashCode for this Node, based on its object identity. Changes to the Node's content will not impact the
      result.
      @return an object identity based hashcode for this Node
      */
