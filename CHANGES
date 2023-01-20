@@ -32,6 +32,12 @@ Release 1.15.4 [PENDING]
   * Bugfix: if a Node or an Element was replaced with itself, that node would incorrectly be orphaned.
     <https://github.com/jhy/jsoup/issues/1843>
 
+  * Bugfix: form data on a previous request was copied to a new request in newRequest(), resulting in an accumulation of
+    form data when executing multi-step form submissions, or data sent to later requests incorrectly. Now, newRequest()
+    only copies session related settings (cookies, proxy settings, user-agent, etc) but not the request data nor the
+    body.
+    <https://github.com/jhy/jsoup/issues/1778>
+
 Release 1.15.3 [2022-Aug-24]
   * Security: fixed an issue where the jsoup cleaner may incorrectly sanitize crafted XSS attempts if
     SafeList.preserveRelativeLinks is enabled.

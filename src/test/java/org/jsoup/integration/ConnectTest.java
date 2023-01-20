@@ -682,4 +682,64 @@ public class ConnectTest {
         assertEquals(actualDocText, largeRes.body().length());
         assertEquals(actualDocText, unlimitedRes.body().length());
     }
+
+    @Test void formLoginFlow() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+        Document loginDoc = Jsoup.connect(startUrl).get();
+        FormElement form = loginDoc.select("#login").forms().get(0);
+        assertNotNull(form);
+        form.expectFirst("[name=username]").val("admin");
+        form.expectFirst("[name=password]").val("Netscape engineers are weenies!");
+
+        // post it- should go to Cookie then bounce to Echo
+        Connection submit = form.submit();
+        assertEquals(Connection.Method.POST, submit.request().method());
+        Connection.Response postRes = submit.execute();
+        assertEquals(echoUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.GET, postRes.method());
+        Document resultDoc = postRes.parse();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", resultDoc));
+        // should be no form data sent to the echo redirect
+        assertEquals("", ihVal("Query String", resultDoc));
+
+        // new request to echo, should not have form data, but should have cookies from implicit session
+        Document newEcho = submit.newRequest().url(echoUrl).get();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
+        assertEquals("", ihVal("Query String", newEcho));
+
+        Document cookieDoc = submit.newRequest().url(cookieUrl).get();
+        assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
+
+    }
+
+    @Test void formLoginFlow2() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+
+        Connection session = Jsoup.newSession();
+        Document loginDoc = session.newRequest().url(startUrl).get();
+        FormElement form = loginDoc.select("#login2").forms().get(0);
+        assertNotNull(form);
+        String username = "admin";
+        form.expectFirst("[name=username]").val(username);
+        String password = "Netscape engineers are weenies!";
+        form.expectFirst("[name=password]").val(password);
+
+        Connection submit = form.submit();
+        assertEquals(username, submit.data("username").value());
+        assertEquals(password, submit.data("password").value());
+
+        Connection.Response postRes = submit.execute();
+        assertEquals(cookieUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.POST, postRes.method());
+        Document resultDoc = postRes.parse();
+
+        Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
+        assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
+    }
 }

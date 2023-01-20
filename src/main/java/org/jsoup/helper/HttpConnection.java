@@ -101,7 +101,8 @@ public class HttpConnection implements Connection {
     }
 
     /**
-     Create a new Request by deep-copying an existing Request
+     Create a new Request by deep-copying an existing Request. Note that the data and body of the original are not
+     copied. All other settings (proxy, parser, cookies, etc) are copied.
      @param copy the request to copy
      */
     HttpConnection(Request copy) {
@@ -666,8 +667,8 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = copy.timeoutMilliseconds;
             maxBodySizeBytes = copy.maxBodySizeBytes;
             followRedirects = copy.followRedirects;
-            data = new ArrayList<>(); data.addAll(copy.data()); // this is shallow, but holds immutable string keyval, and possibly an InputStream which can only be read once anyway, so using as a prototype would be unsupported
-            body = copy.body;
+            data = new ArrayList<>(); // data not copied
+            //body not copied
             ignoreHttpErrors = copy.ignoreHttpErrors;
             ignoreContentType = copy.ignoreContentType;
             parser = copy.parser.newInstance(); // parsers and their tree-builders maintain state, so need a fresh copy
