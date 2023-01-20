@@ -182,4 +182,14 @@ public final class Validate {
     public static void fail(String msg) {
         throw new ValidationException(msg);
     }
+
+    /**
+     Cause a failure.
+     @param msg message to output.
+     @param args the format arguments to the msg
+     @throws IllegalStateException if we reach this state
+     */
+    public static void fail(String msg, Object... args) {
+        throw new ValidationException(String.format(msg, args));
+    }
 }

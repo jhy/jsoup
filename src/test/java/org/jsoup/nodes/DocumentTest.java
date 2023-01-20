@@ -548,4 +548,28 @@ public class DocumentTest {
         Document emptyDoc = Jsoup.parse(emptyHtml);
         assertEquals(0, emptyDoc.forms().size());
     }
+
+    @Test void expectForm() {
+        String html = "<body><div name=form></div><form id=1 name=form><input name=foo></form><form id=2><input name=bar>";
+        Document doc = Jsoup.parse(html);
+
+        // test finds first <form>
+        FormElement formEl1 = doc.expectForm("[name=form]");
+        assertEquals("1", formEl1.id()); // and not the div
+
+        FormElement formEl2 = doc.expectForm("form");
+        assertEquals("1", formEl2.id());
+
+        FormElement formEl3 = doc.expectForm("form:has([name=bar])");
+        assertEquals("2", formEl3.id());
+
+        boolean threw = false;
+        try {
+            FormElement nix = doc.expectForm("div");
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+
+    }
 }

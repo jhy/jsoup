@@ -10,6 +10,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.Selector;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
@@ -152,6 +153,23 @@ public class Document extends Element {
      */
     public List<FormElement> forms() {
         return select("form").forms();
+    }
+
+    /**
+     Selects the first {@link FormElement} in this document that matches the query. If none match, throws an
+     {@link IllegalArgumentException}.
+     @param cssQuery a {@link Selector} CSS query
+     @return the first matching {@code <form>} element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.4
+     */
+    public FormElement expectForm(String cssQuery) {
+        Elements els = select(cssQuery);
+        for (Element el : els) {
+            if (el instanceof FormElement) return (FormElement) el;
+        }
+        Validate.fail("No form elements matched the query '%s' in the document.", cssQuery);
+        return null; // (not really)
     }
 
     /**
