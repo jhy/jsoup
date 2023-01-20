@@ -209,7 +209,10 @@ public class Document extends Element {
      Normalise the document. This happens after the parse phase so generally does not need to be called.
      Moves any text content that is not in the body element into the body.
      @return this document after normalisation
+     @deprecated as normalization occurs during the HTML parse, this method is no longer useful and will be retired
+     in the next release.
      */
+    @Deprecated
     public Document normalise() {
         Element htmlEl = htmlEl(); // these all create if not found
         Element head = head();
