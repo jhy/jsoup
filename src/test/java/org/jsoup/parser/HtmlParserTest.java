@@ -1642,6 +1642,6 @@ public class HtmlParserTest {
         assertEquals(2, errors.size());
         assertEquals("<1:36>: Unexpected Doctype token [<!doctype something>] when in state [BeforeHtml]", errors.get(0).toString());
         assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
-        assertEquals("", TextUtil.stripNewlines(doc.html()));
+        assertEquals("<!doctype html><html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 }
