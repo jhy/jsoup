@@ -1,7 +1,5 @@
 package org.jsoup.nodes;
 
-import org.jsoup.UncheckedIOException;
-
 import java.io.IOException;
 
 /**
