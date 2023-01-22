@@ -1633,4 +1633,15 @@ public class HtmlParserTest {
         assertEquals("<template><select></select><input>&lt;</template>",
             TextUtil.stripNewlines(doc.head().html()));
     }
+
+    @Test void errorsBeforeHtml() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<!doctype html><!doctype something></div>", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        assertEquals("<1:36>: Unexpected Doctype token [<!doctype something>] when in state [BeforeHtml]", errors.get(0).toString());
+        assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
+        assertEquals("", TextUtil.stripNewlines(doc.html()));
+    }
 }
