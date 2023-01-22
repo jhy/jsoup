@@ -1153,7 +1153,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes whose values match the supplied regular expression.
+     * Find elements that have an attribute whose value matches the supplied regular expression.
      * @param key name of the attribute
      * @param pattern compiled regular expression to match against attribute values
      * @return elements that have attributes matching this regular expression
