@@ -112,7 +112,7 @@ public class TextNode extends LeafNode {
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, trimLeading, trimTrailing);
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {}
 
     @Override
     public String toString() {
