@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
+import org.jsoup.helper.ValidationException;
 import org.jsoup.internal.StringUtil;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +69,19 @@ public class TextNodeTest {
         tail.wrap("<b></b>");
 
         assertEquals("Hello <b>there</b>", TextUtil.stripNewlines(div.html())); // not great that we get \n<b>there there... must correct
+    }
+
+    @Test void testSplitTextValidation() {
+        Document doc = Jsoup.parse("<div>Hello there</div>");
+        Element div = doc.expectFirst("div");
+        TextNode tn = (TextNode) div.childNode(0);
+        Throwable ex = assertThrows(ValidationException.class,
+            () -> tn.splitText(-5));
+        assertEquals("Split offset must be not be negative", ex.getMessage());
+
+        ex = assertThrows(ValidationException.class,
+            () -> tn.splitText(500));
+        assertEquals("Split offset must not be greater than current text length", ex.getMessage());
     }
 
     @Test public void testWithSupplementaryCharacter(){
@@ -156,5 +170,59 @@ public class TextNodeTest {
             }
         }
         assertTrue(foundFirst);
+    }
+
+    @Test void createFromEncoded() {
+        TextNode tn = TextNode.createFromEncoded("&lt;One&gt;");
+        assertEquals("<One>", tn.text());
+    }
+
+    @Test void normaliseWhitespace() {
+        assertEquals(" One Two ", TextNode.normaliseWhitespace("  One \n Two\n"));
+    }
+
+    @Test void stripLeadingWhitespace() {
+        assertEquals("One Two  ", TextNode.stripLeadingWhitespace("\n One Two  "));
+    }
+
+    // Lead Node tests
+    @Test void leafNodeAttributes() {
+        TextNode t = new TextNode("First");
+
+        // will hit the !hasAttributes flow
+        t.attr(t.nodeName(), "One");
+        assertEquals("One", t.attr(t.nodeName()));
+        assertFalse(t.hasAttributes());
+
+        Attributes attr = t.attributes();
+        assertEquals(1, attr.asList().size()); // vivifies 'One' as an attribute
+        assertEquals("One", attr.get(t.nodeName()));
+        t.coreValue("Two");
+        assertEquals("Two", t.text());
+
+        // arbitrary attributes
+        assertFalse(t.hasAttr("foo"));
+        t.attr("foo", "bar");
+        assertTrue(t.hasAttr("foo"));
+        t.removeAttr("foo");
+        assertFalse(t.hasAttr("foo"));
+
+        assertEquals("", t.baseUri());
+        t.attr("href", "/foo.html");
+        assertEquals("", t.absUrl("href")); // cannot abs
+
+        Element p = new Element("p");
+        p.doSetBaseUri("https://example.com/");
+        p.appendChild(t);
+        assertEquals("https://example.com/foo.html", t.absUrl("href"));
+
+        assertEquals(0, t.childNodeSize());
+        assertSame(t, t.empty());
+        assertEquals(0, t.ensureChildNodes().size());
+
+        TextNode clone = t.clone();
+        assertTrue(t.hasSameValue(clone));
+        assertEquals("/foo.html", clone.attr("href"));
+        assertEquals("Two", clone.text());
     }
 }

@@ -126,8 +126,8 @@ public class TextNode extends LeafNode {
 
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
-     * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
-     * @return TextNode containing unencoded data (e.g. &lt;)
+     * @param encodedText Text containing encoded HTML (e.g. {@code &lt;})
+     * @return TextNode containing unencoded data (e.g. {@code <})
      */
     public static TextNode createFromEncoded(String encodedText) {
         String text = Entities.unescape(encodedText);
