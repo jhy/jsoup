@@ -258,7 +258,7 @@ public class ConnectTest {
     @Test
     public void postFiles() throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
-        File html = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File html = ParseTest.getFile("/htmltests/large.html");
 
         Document res = Jsoup
             .connect(EchoServlet.Url)
@@ -272,8 +272,8 @@ public class ConnectTest {
 
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
-        assertEquals("google-ipod.html.gz", ihVal("Part secondPart Filename", res));
-        assertEquals("12212", ihVal("Part secondPart Size", res));
+        assertEquals("large.html", ihVal("Part secondPart Filename", res));
+        assertEquals("280735", ihVal("Part secondPart Size", res));
 
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
@@ -533,7 +533,7 @@ public class ConnectTest {
         FormElement form = forms.get(0);
         Connection post = form.submit();
 
-        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File uploadFile = ParseTest.getFile("/htmltests/large.html");
         FileInputStream stream = new FileInputStream(uploadFile);
 
         Connection.KeyVal fileData = post.data("_file");

@@ -26,15 +26,15 @@ public class SessionIT {
         int numThreads = 20;
         int numThreadLoops = 5;
         String[] urls = {
-            FileServlet.urlTo("/htmltests/smh-biz-article-1.html.gz"),
-            FileServlet.urlTo("/htmltests/news-com-au-home.html.gz"),
-            FileServlet.urlTo("/htmltests/google-ipod.html.gz"),
+            FileServlet.urlTo("/htmltests/medium.html"),
+            FileServlet.urlTo("/htmltests/upload-form.html"),
+            FileServlet.urlTo("/htmltests/comments.html"),
             FileServlet.urlTo("/htmltests/large.html"),
         };
         String[] titles = {
-            "The board’s next fear: the female quota",
-            "News.com.au | News from Australia and around the world online | NewsComAu",
-            "ipod - Google Search",
+            "Medium HTML",
+            "Upload Form Test",
+            "A Certain Kind of Test",
             "Large HTML"
         };
         ThreadCatcher catcher = new ThreadCatcher();
