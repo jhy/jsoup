@@ -1644,4 +1644,25 @@ public class HtmlParserTest {
         assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
         assertEquals("<!doctype html><html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test void afterHeadReAdds() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<head></head><meta charset=UTF8><p>Hello", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("<1:33>: Unexpected StartTag token [<meta  charset=\"UTF8\">] when in state [AfterHead]", errors.get(0).toString());
+        assertEquals("<html><head><meta charset=\"UTF8\"></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        // meta gets added back into head
+    }
+
+    @Test void mergeHtmlAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html class=bar data=x><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\" data=\"x\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void mergeHtmlNoAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
 }
