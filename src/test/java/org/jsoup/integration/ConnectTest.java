@@ -742,4 +742,11 @@ public class ConnectTest {
         assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
     }
+
+    @Test void preservesUrlFragment() throws IOException {
+        // confirms https://github.com/jhy/jsoup/issues/1686
+        String url = EchoServlet.Url + "#fragment";
+        Document doc = Jsoup.connect(url).get();
+        assertEquals(url, doc.location());
+    }
 }
