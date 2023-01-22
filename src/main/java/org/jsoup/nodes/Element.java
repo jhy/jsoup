@@ -1681,6 +1681,7 @@ public class Element extends Node {
         return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out);
     }
 
+    @Override
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
         if (shouldIndent(out)) {
             if (accum instanceof StringBuilder) {
@@ -1704,6 +1705,7 @@ public class Element extends Node {
             accum.append('>');
     }
 
+    @Override
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (

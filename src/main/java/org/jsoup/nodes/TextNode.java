@@ -80,6 +80,7 @@ public class TextNode extends LeafNode {
         return tailNode;
     }
 
+    @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
@@ -112,7 +113,8 @@ public class TextNode extends LeafNode {
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, trimLeading, trimTrailing);
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {}
+    @Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {}
 
     @Override
     public String toString() {
@@ -146,6 +148,4 @@ public class TextNode extends LeafNode {
     static boolean lastCharIsWhitespace(StringBuilder sb) {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
-
-
 }
