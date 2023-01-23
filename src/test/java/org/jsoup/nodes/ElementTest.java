@@ -2607,7 +2607,7 @@ public class ElementTest {
     }
 
     @Test void hasText() {
-        Document doc = Jsoup.parse("<div id=1><p><i>One</i></p></div><div id=2>Two</div><div id=3> </div>");
+        Document doc = Jsoup.parse("<div id=1><p><i>One</i></p></div><div id=2>Two</div><div id=3><script>data</script> </div>");
         assertTrue(doc.getElementById("1").hasText());
         assertTrue(doc.getElementById("2").hasText());
         assertFalse(doc.getElementById("3").hasText());

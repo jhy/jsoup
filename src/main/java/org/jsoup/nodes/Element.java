@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -1451,22 +1452,22 @@ public class Element extends Node {
     }
 
     /**
-     Test if this element has any text content (that is not just whitespace).
-     @return true if element has non-blank text content.
+     Checks if the current element or any of its child elements contain non-whitespace text.
+     @return {@code true} if the element has non-blank text content, {@code false} otherwise.
      */
     public boolean hasText() {
-        for (Node child: childNodes) {
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                if (!textNode.isBlank())
-                    return true;
-            } else if (child instanceof Element) {
-                Element el = (Element) child;
-                if (el.hasText())
-                    return true;
+        AtomicBoolean hasText = new AtomicBoolean(false);
+        filter((node, depth) -> {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                if (!textNode.isBlank()) {
+                    hasText.set(true);
+                    return NodeFilter.FilterResult.STOP;
+                }
             }
-        }
-        return false;
+            return NodeFilter.FilterResult.CONTINUE;
+        });
+        return hasText.get();
     }
 
     /**
