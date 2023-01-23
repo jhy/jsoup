@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,6 +64,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </p>
  */
 public class Safelist {
+    private static final String All = ":all";
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
@@ -342,14 +344,16 @@ public class Safelist {
             if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
                 this.attributes.remove(tagName);
         }
-        if(tag.equals(":all")) // Attribute needs to be removed from all individually set tags
-            for(TagName name: this.attributes.keySet()) {
-                Set<AttributeKey> currentSet = this.attributes.get(name);
+        if(tag.equals(All)) { // Attribute needs to be removed from all individually set tags
+            Iterator<Map.Entry<TagName, Set<AttributeKey>>> it = this.attributes.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<TagName, Set<AttributeKey>> entry = it.next();
+                Set<AttributeKey> currentSet = entry.getValue();
                 currentSet.removeAll(attributeSet);
-
                 if(currentSet.isEmpty()) // Remove tag from attribute map if no attributes are allowed for tag
-                    this.attributes.remove(name);
+                    it.remove();
             }
+        }
         return this;
     }
 
@@ -555,7 +559,7 @@ public class Safelist {
             }
         }
         // no attributes defined for tag, try :all tag
-        return !tagName.equals(":all") && isSafeAttribute(":all", el, attr);
+        return !tagName.equals(All) && isSafeAttribute(All, el, attr);
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {

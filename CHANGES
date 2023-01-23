@@ -44,6 +44,9 @@ Release 1.15.4 [PENDING]
     body.
     <https://github.com/jhy/jsoup/issues/1778>
 
+  * Bugfix: fixed an issue in Safelist.removeAttributes which could throw a ConcurrentModificationException when using
+    the ":all" pseudo-attribute.
+
   * Change: deprecated the unused Document#normalise() method. Normalization occurs during the HTML tree construction,
     and no longer as a distinct phase.
 
