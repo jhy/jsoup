@@ -270,16 +270,12 @@ public class Element extends Node {
      */
     public Elements parents() {
         Elements parents = new Elements();
-        accumulateParents(this, parents);
-        return parents;
-    }
-
-    private static void accumulateParents(Element el, Elements parents) {
-        Element parent = el.parent();
+        Element parent = this.parent();
         while (parent != null && !parent.isNode("#root")) {
             parents.add(parent);
             parent = parent.parent();
         }
+        return parents;
     }
 
     /**
