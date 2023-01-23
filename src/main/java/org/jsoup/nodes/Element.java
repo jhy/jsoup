@@ -1481,25 +1481,20 @@ public class Element extends Node {
      */
     public String data() {
         StringBuilder sb = StringUtil.borrowBuilder();
-
-        for (Node childNode : childNodes) {
+        traverse((childNode, depth) -> {
             if (childNode instanceof DataNode) {
                 DataNode data = (DataNode) childNode;
                 sb.append(data.getWholeData());
             } else if (childNode instanceof Comment) {
                 Comment comment = (Comment) childNode;
                 sb.append(comment.getData());
-            } else if (childNode instanceof Element) {
-                Element element = (Element) childNode;
-                String elementData = element.data();
-                sb.append(elementData);
             } else if (childNode instanceof CDataNode) {
                 // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
                 // but in case another type gets through.
                 CDataNode cDataNode = (CDataNode) childNode;
                 sb.append(cDataNode.getWholeText());
             }
-        }
+        });
         return StringUtil.releaseBuilder(sb);
     }
 
