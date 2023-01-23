@@ -276,9 +276,9 @@ public class Element extends Node {
 
     private static void accumulateParents(Element el, Elements parents) {
         Element parent = el.parent();
-        if (parent != null && !parent.isNode("#root")) {
+        while (parent != null && !parent.isNode("#root")) {
             parents.add(parent);
-            accumulateParents(parent, parents);
+            parent = parent.parent();
         }
     }
 

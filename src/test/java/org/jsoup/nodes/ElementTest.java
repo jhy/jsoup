@@ -256,6 +256,10 @@ public class ElementTest {
         assertEquals("div", parents.get(1).tagName());
         assertEquals("body", parents.get(2).tagName());
         assertEquals("html", parents.get(3).tagName());
+
+        Element orphan = new Element("p");
+        Elements none = orphan.parents();
+        assertEquals(0, none.size());
     }
 
     @Test
