@@ -119,4 +119,19 @@ public class ElementIT {
         assertEquals(num+2, parents.size()); // +2 for html and body
         assertEquals(doc, el.ownerDocument());
     }
+
+    @Test void wrapNoOverflow() {
+        // deepChild was recursive, so could overflow if presented with a fairly insane wrap
+        Document doc = new Document("https://example.com/");
+        Element el = doc.body().appendElement("p");
+        int num = 50000;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i <= num; i++) {
+            sb.append("<div>");
+        }
+        el.wrap(sb.toString());
+        String html = doc.body().html();
+        assertTrue(html.startsWith("<div>"));
+        assertEquals(num + 3, el.parents().size());
+    }
 }
