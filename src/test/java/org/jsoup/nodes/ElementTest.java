@@ -2286,6 +2286,12 @@ public class ElementTest {
         assertEquals("<p>Hello<br>\n there<br>\n now.</p>", doc.body().html());
     }
 
+    @Test void prettyprintBrInBlock() {
+        String html = "<div><br> </div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<div>\n <br>\n</div>", doc.body().html()); // not div\n br\n \n/div
+    }
+
     @Test void preformatFlowsToChildTextNodes() {
         // https://github.com/jhy/jsoup/issues/1776
         String html = "<div><pre>One\n<span>\nTwo</span>\n <span>  \nThree</span>\n <span>Four <span>Five</span>\n  Six\n</pre>";
