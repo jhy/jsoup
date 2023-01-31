@@ -38,8 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 import static javax.xml.transform.OutputKeys.METHOD;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
@@ -98,35 +97,6 @@ public class W3CDom {
     }
 
     /**
-     * Pattern to detect the <code>xmlns="http://www.w3.org/1999/xhtml"</code> default namespace
-     * declaration when serializing the DOM to HTML. This pattern is "good enough", relying in part
-     * on the output of the {@link Transformer} used in the implementation, but is not a complete
-     * solution for all the serializations possible; that is, if one constructed an XML string
-     * manually, it might be possible to find an obscure variation that this pattern would not
-     * match.
-     */
-    static final Pattern HTML_DEFAULT_NAMESPACE_PATTERN =
-        Pattern.compile("<html[^>]*(\\sxmlns=['\"]http://www.w3.org/1999/xhtml['\"])");
-
-    /**
-     * Removes the default <code>xmlns="http://www.w3.org/1999/xhtml"</code> HTML namespace
-     * declaration if present in the string.
-     * 
-     * @param html The serialized HTML.
-     * @return A string without the default <code>xmlns="http://www.w3.org/1999/xhtml"</code> HTML
-     *         namespace declaration.
-     * @see <a href="https://github.com/jhy/jsoup/issues/1837">Issue #1837: Bug: DOM elements not
-     *      being placed in (X)HTML namespace.</a>
-     */
-    static String removeDefaultHtmlNamespaceDeclaration(String html) {
-        Matcher matcher = HTML_DEFAULT_NAMESPACE_PATTERN.matcher(html);
-        if (matcher.find()) {
-          html = html.substring(0, matcher.start(1)) + html.substring(matcher.end(1));
-        }
-        return html;
-    }
-
-    /**
      * Serialize a W3C document to a String. Provide Properties to define output settings including if HTML or XML. If
      * you don't provide the properties ({@code null}), the output will be auto-detected based on the content of the
      * document.
@@ -170,16 +140,7 @@ public class W3CDom {
             }
 
             transformer.transform(domSource, result);
-            String resultString = writer.toString();
-            String outputMethod = properties != null ? properties.get(METHOD) : null;
-            // Remove any default xmlns="http://www.w3.org/1999/xhtml" namespace declaration,
-            // but only if it was added during serialization (not if the document already had it).
-            // Monitor https://stackoverflow.com/q/73919306 for a better approach.
-            if ((outputMethod == null || outputMethod.equals("html"))   //only for HTML output
-                && !doc.getDocumentElement().hasAttribute("xmlns")) {
-              resultString = removeDefaultHtmlNamespaceDeclaration(resultString);
-            }
-            return resultString;
+            return writer.toString();
 
         } catch (TransformerException e) {
             throw new IllegalStateException(e);
