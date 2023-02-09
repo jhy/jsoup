@@ -1240,9 +1240,9 @@ public class HttpConnection implements Connection {
                 else
                     first = false;
                 url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
+                    .append(URLEncoder.encode(keyVal.key(), req.postDataCharset()))
                     .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
+                    .append(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
             }
             req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params
