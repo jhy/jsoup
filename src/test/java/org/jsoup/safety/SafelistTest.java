@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
     private static final String TEST_TAG2 = "testTag2";
-    private static final String TEST_ATTRIBUTE = "testAttribute";
+    private static final String TEST_ATTRIBUTE = "testAttribute-*";
     private static final String TEST_SCHEME = "valid-scheme";
     private static final String TEST_VALUE = TEST_SCHEME + "://testValue";
 
@@ -62,89 +62,44 @@ public class SafelistTest {
     }
 
     @Test
-    public void testDataAttributes_forSingleTag() {
-        Safelist safelist1 = Safelist.none()
-                .allowDataAttributePrefix(TEST_TAG);
+    public void testIsSafeAttribute() {
+        String[] attrs = {"-*", "data-", "data-*", "custom-data-*"};
+        Safelist safelist = Safelist.none()
+                .addAttributes(TEST_TAG, attrs);
         Safelist safelist2 = Safelist.none()
-                .allowDataAttributePrefixes(TEST_TAG, "customData-");
-        Safelist safelist3 = Safelist.none()
-                .allowDataAttributePrefixes(TEST_TAG, "data-", "customData-");
+                .addAttributes(":all", attrs);
         Attributes attributes = new Attributes();
-        Attribute attr1 = new Attribute("data-test1", "data value 1");
-        Attribute attr2 = new Attribute("data-test2", "data value 2");
-        Attribute attr3 = new Attribute("customData-test3", "data value 3");
-        attributes.put(attr1);
-        attributes.put(attr2);
-        attributes.put(attr3);
+        Attribute attr1 = new Attribute("-*", "data value 1");
+        Attribute attr2 = new Attribute("data-", "data value 2");
+        Attribute attr3 = new Attribute("data-test3", "data value 3");
+        Attribute attr4 = new Attribute("data-test4", "data value 4");
+        Attribute attr5 = new Attribute("custom-data-test5", "data value 5");
+        attributes.put(attr1).put(attr2).put(attr3).put(attr4).put(attr5);
         Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
         Element elem2 = new Element(Tag.valueOf(TEST_TAG2), "", attributes);
 
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr1));
+        assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr2));
+        assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr3));
+        assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr4));
+        assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr5));
 
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr2));
+        assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr3));
+        assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr4));
+        assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr5));
+
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr1));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr2));
         assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
-
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
-
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr2));
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr3));
-
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr2));
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr3));
-
-        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr2));
-        assertFalse(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr3));
-    }
-
-    @Test
-    public void testDataAttributes_forAll() {
-        Safelist safelist1 = Safelist.none()
-                .allowDataAttributePrefix(Safelist.TAG_ALL);
-        Safelist safelist2 = Safelist.none()
-                .allowDataAttributePrefixes(Safelist.TAG_ALL, "customData-");
-        Safelist safelist3 = Safelist.none()
-                .allowDataAttributePrefixes(Safelist.TAG_ALL, "data-", "customData-");
-        Attributes attributes = new Attributes();
-        Attribute attr1 = new Attribute("data-test1", "data value 1");
-        Attribute attr2 = new Attribute("data-test2", "data value 2");
-        Attribute attr3 = new Attribute("customData-test3", "data value 3");
-        attributes.put(attr1);
-        attributes.put(attr2);
-        attributes.put(attr3);
-        Element elem1 = new Element(Tag.valueOf(TEST_TAG), "", attributes);
-        Element elem2 = new Element(Tag.valueOf(TEST_TAG2), "", attributes);
-
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG, elem1, attr2));
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG, elem1, attr3));
-
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG, elem1, attr2));
-        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr3));
-
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr1));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr2));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG, elem1, attr3));
-
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertTrue(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr2));
-        assertFalse(safelist1.isSafeAttribute(TEST_TAG2, elem2, attr3));
-
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertFalse(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr2));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr4));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, elem1, attr5));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr1));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr2));
         assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr3));
-
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr1));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr2));
-        assertTrue(safelist3.isSafeAttribute(TEST_TAG2, elem2, attr3));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr4));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG2, elem2, attr5));
     }
 
 }
