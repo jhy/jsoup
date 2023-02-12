@@ -79,42 +79,6 @@ public class W3CDomTest {
     }
 
     @Test
-    public void convertsGoogle() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
-        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
-
-        W3CDom w3c = new W3CDom();
-        Document wDoc = w3c.fromJsoup(doc);
-        Node htmlEl = wDoc.getChildNodes().item(1);
-        assertNull(htmlEl.getNamespaceURI());
-        assertEquals("html", htmlEl.getLocalName());
-        assertEquals("html", htmlEl.getNodeName());
-
-        DocumentType doctype = wDoc.getDoctype();
-        Node doctypeNode = wDoc.getChildNodes().item(0);
-        assertSame(doctype, doctypeNode);
-        assertEquals("html", doctype.getName());
-
-        String xml = W3CDom.asString(wDoc, W3CDom.OutputXml());
-        assertTrue(xml.contains("ipod"));
-
-        Document roundTrip = parseXml(xml, true);
-        assertEquals("Images", roundTrip.getElementsByTagName("a").item(0).getTextContent());
-    }
-
-    @Test
-    public void convertsGoogleLocation() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
-        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
-
-        W3CDom w3c = new W3CDom();
-        Document wDoc = w3c.fromJsoup(doc);
-
-        String out = w3c.asString(wDoc);
-        assertEquals(doc.location(), wDoc.getDocumentURI());
-    }
-
-    @Test
     public void namespacePreservation() throws IOException {
         File in = ParseTest.getFile("/htmltests/namespaces.xhtml");
         org.jsoup.nodes.Document jsoupDoc;

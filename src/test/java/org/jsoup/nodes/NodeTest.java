@@ -402,4 +402,17 @@ public class NodeTest {
         assertNull(firstEl.firstElementChild());
         assertNull(firstEl.lastElementChild());
     }
+
+    @Test void nodeName() {
+        Element div = new Element("DIV");
+        assertEquals("DIV", div.tagName());
+        assertEquals("DIV", div.nodeName());
+        assertEquals("div", div.normalName());
+        assertTrue(div.isNode("div"));
+        assertTrue(Node.isNode(div, "div"));
+
+        TextNode text = new TextNode("Some Text");
+        assertEquals("#text", text.nodeName());
+        assertEquals("#text", text.normalName());
+    }
 }

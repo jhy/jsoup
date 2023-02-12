@@ -76,6 +76,9 @@
                 <artifactId>android-api-level-10</artifactId>
                 <version>2.3.3_r2</version>
               </signature>
+              <ignores>java.util.function.Consumer</ignores>
+              <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring
+               Possibly OK to remove androidscents; keep for now to validate other additions are supported. -->
             </configuration>
           </execution>
         </executions>
@@ -120,7 +123,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.3.0</version>
         <configuration>
           <archive>
             <manifest>
@@ -169,7 +172,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.0.0-M8</version>
         <configuration>
           <!-- smaller stack to find stack overflows -->
           <argLine>-Xss256k</argLine>
@@ -177,7 +180,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.0.0-M8</version>
         <executions>
           <execution>
             <goals>
@@ -195,14 +198,14 @@
         <!-- API version compat check - https://siom79.github.io/japicmp/ -->
         <groupId>com.github.siom79.japicmp</groupId>
         <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.15.7</version>
+        <version>0.17.1</version>
         <configuration>
           <!-- hard code previous version; can't detect when running stateless on build server -->
           <oldVersion>
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.15.1</version>
+              <version>1.15.3</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
@@ -211,9 +214,11 @@
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
-            <!-- <excludes>
-              <exclude>@java.lang.Deprecated</exclude>
-            </excludes> -->
+            <excludes>
+              <!-- <exclude>@java.lang.Deprecated</exclude> -->
+              <exclude>org.jsoup.nodes.Element#forEachNode(org.jsoup.helper.Consumer)</exclude>
+            </excludes>
+            <!-- japicmp is tripping on a non-removed method when changed ancestor of Consumer in Element - have manually ensure binary and source compat for Consumer changes -->
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
               <overrideCompatibilityChangeParameter>
@@ -299,7 +304,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.0.0-M7</version>
+            <version>3.0.0-M8</version>
             <executions>
               <execution>
                 <goals>
@@ -320,7 +325,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.9.0</version>
+      <version>5.9.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -328,7 +333,7 @@
       <!-- gson, to fetch entities from w3.org -->
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.9.1</version>
+      <version>2.10.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -336,7 +341,7 @@
       <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.4.48.v20220622</version>
+      <version>9.4.50.v20221201</version>
       <scope>test</scope>
     </dependency>
 
@@ -344,7 +349,7 @@
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.4.48.v20220622</version>
+      <version>9.4.50.v20221201</version>
       <scope>test</scope>
     </dependency>
 

@@ -617,7 +617,7 @@ public class HtmlParserTest {
     @Test public void testSpanContents() {
         // like h1 tags, the spec says SPAN is phrasing only, but browsers and publisher treat span as a block tag
         Document doc = Jsoup.parse("<span>Hello <div>there</div> <span>now</span></span>");
-        assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<span>Hello <div>there</div><span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testNoImagesInNoScriptInHead() {
@@ -638,13 +638,13 @@ public class HtmlParserTest {
     @Test public void testAFlowContents() {
         // html5 has <a> as either phrasing or block
         Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
-        assertEquals("<a>Hello <div>there</div> <span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a>Hello <div>there</div><span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testFontFlowContents() {
         // html5 has no definition of <font>; often used as flow
         Document doc = Jsoup.parse("<font>Hello <div>there</div> <span>now</span></font>");
-        assertEquals("<font>Hello <div>there</div> <span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<font>Hello <div>there</div><span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesMisnestedTagsBI() {
@@ -727,7 +727,7 @@ public class HtmlParserTest {
             "    <td><p><i>Three</i></p><p><i>Four</i></p></td>\n" +
             "   </tr>\n" +
             "  </tbody>\n" +
-            " </table> <p>Five</p></b>";
+            " </table><p>Five</p></b>";
         assertEquals(want, doc.body().html());
     }
 
@@ -1192,7 +1192,7 @@ public class HtmlParserTest {
 
         assertTrue(Jsoup.isValid(html, Safelist.basic()));
         String clean = Jsoup.clean(html, Safelist.basic());
-        assertEquals("<p>test<br>test<br></p>", clean);
+        assertEquals("<p>test<br>\n test<br></p>", clean);
     }
 
     @Test public void selfClosingOnNonvoidIsError() {
@@ -1487,7 +1487,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div></b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {
@@ -1632,5 +1632,37 @@ public class HtmlParserTest {
         assertNotNull(doc);
         assertEquals("<template><select></select><input>&lt;</template>",
             TextUtil.stripNewlines(doc.head().html()));
+    }
+
+    @Test void errorsBeforeHtml() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<!doctype html><!doctype something></div>", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        assertEquals("<1:36>: Unexpected Doctype token [<!doctype something>] when in state [BeforeHtml]", errors.get(0).toString());
+        assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
+        assertEquals("<!doctype html><html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void afterHeadReAdds() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<head></head><meta charset=UTF8><p>Hello", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("<1:33>: Unexpected StartTag token [<meta  charset=\"UTF8\">] when in state [AfterHead]", errors.get(0).toString());
+        assertEquals("<html><head><meta charset=\"UTF8\"></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        // meta gets added back into head
+    }
+
+    @Test void mergeHtmlAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html class=bar data=x><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\" data=\"x\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void mergeHtmlNoAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 }

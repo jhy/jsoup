@@ -101,7 +101,8 @@ public class HttpConnection implements Connection {
     }
 
     /**
-     Create a new Request by deep-copying an existing Request
+     Create a new Request by deep-copying an existing Request. Note that the data and body of the original are not
+     copied. All other settings (proxy, parser, cookies, etc) are copied.
      @param copy the request to copy
      */
     HttpConnection(Request copy) {
@@ -125,11 +126,9 @@ public class HttpConnection implements Connection {
     static URL encodeUrl(URL u) {
 	    u = punyUrl(u);
         try {
-            //  odd way to encode urls, but it works!
-            String urlS = u.toExternalForm(); // URL external form may have spaces which is illegal in new URL() (odd asymmetry)
-            urlS = urlS.replace(" ", "%20");
-            final URI uri = new URI(urlS);
-            return new URL(uri.toASCIIString());
+            // run the URL through URI, so components are encoded
+            URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+            return uri.toURL();
         } catch (URISyntaxException | MalformedURLException e) {
             // give up and return the original input
             return u;
@@ -668,8 +667,8 @@ public class HttpConnection implements Connection {
             timeoutMilliseconds = copy.timeoutMilliseconds;
             maxBodySizeBytes = copy.maxBodySizeBytes;
             followRedirects = copy.followRedirects;
-            data = new ArrayList<>(); data.addAll(copy.data()); // this is shallow, but holds immutable string keyval, and possibly an InputStream which can only be read once anyway, so using as a prototype would be unsupported
-            body = copy.body;
+            data = new ArrayList<>(); // data not copied
+            //body not copied
             ignoreHttpErrors = copy.ignoreHttpErrors;
             ignoreContentType = copy.ignoreContentType;
             parser = copy.parser.newInstance(); // parsers and their tree-builders maintain state, so need a fresh copy

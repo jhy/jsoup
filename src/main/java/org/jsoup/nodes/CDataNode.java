@@ -1,7 +1,5 @@
 package org.jsoup.nodes;
 
-import org.jsoup.UncheckedIOException;
-
 import java.io.IOException;
 
 /**
@@ -34,12 +32,8 @@ public class CDataNode extends TextNode {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
-        try {
-            accum.append("]]>");
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+        accum.append("]]>");
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
@@ -291,6 +292,22 @@ Connection con3 = session.newRequest();
      the {@link Jsoup#clean(String html, String baseHref, Safelist)} method instead, and enable
      {@link Safelist#preserveRelativeLinks(boolean)}.</p>
 
+     <p>Note that the output of this method is still <b>HTML</b> even when using the TextNode only
+     {@link Safelist#none()}, and so any HTML entities in the output will be appropriately escaped.
+     If you want plain text, not HTML, you should use a text method such as {@link Element#text()} instead, after
+     cleaning the document.</p>
+     <p>Example:</p>
+     <pre>{@code
+     String sourceBodyHtml = "<p>5 is &lt; 6.</p>";
+     String html = Jsoup.clean(sourceBodyHtml, Safelist.none());
+
+     Cleaner cleaner = new Cleaner(Safelist.none());
+     String text = cleaner.clean(Jsoup.parse(sourceBodyHtml)).text();
+
+     // html is: 5 is &lt; 6.
+     // text is: 5 is < 6.
+     }</pre>
+
      @param bodyHtml input untrusted HTML (body fragment)
      @param safelist list of permitted HTML elements
      @return safe HTML (body fragment)
@@ -324,7 +341,19 @@ Connection con3 = session.newRequest();
 
     /**
      Test if the input body HTML has only tags and attributes allowed by the Safelist. Useful for form validation.
-     <p>The input HTML should still be run through the cleaner to set up enforced attributes, and to tidy the output.
+     <p>
+     This method is intended to be used in a user interface as a validator for user input. Note that regardless of the
+     output of this method, the input document <b>must always</b> be normalized using a method such as
+     {@link #clean(String, String, Safelist)}, and the result of that method used to store or serialize the document
+     before later reuse such as presentation to end users. This ensures that enforced attributes are set correctly, and
+     that any differences between how a given browser and how jsoup parses the input HTML are normalized.
+     </p>
+     <p>Example:</p>
+     <pre>{@code
+     Safelist safelist = Safelist.relaxed();
+     boolean isValid = Jsoup.isValid(sourceBodyHtml, safelist);
+     String normalizedHtml = Jsoup.clean(sourceBodyHtml, "https://example.com/", safelist);
+     }</pre>
      <p>Assumes the HTML is a body fragment (i.e. will be used in an existing HTML document body.)
      @param bodyHtml HTML to test
      @param safelist safelist to test against
