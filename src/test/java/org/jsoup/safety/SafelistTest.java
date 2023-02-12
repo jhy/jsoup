@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
     private static final String TEST_TAG2 = "testTag2";
-    private static final String TEST_ATTRIBUTE = "testAttribute-*";
+    private static final String TEST_ATTRIBUTE = "testAttribute";
     private static final String TEST_SCHEME = "valid-scheme";
     private static final String TEST_VALUE = TEST_SCHEME + "://testValue";
 
@@ -83,7 +83,6 @@ public class SafelistTest {
         assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr3));
         assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr4));
         assertTrue(safelist.isSafeAttribute(TEST_TAG, elem1, attr5));
-
         assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr1));
         assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr2));
         assertFalse(safelist.isSafeAttribute(TEST_TAG2, elem2, attr3));

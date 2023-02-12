@@ -305,7 +305,7 @@ public class Safelist {
         Set<AttributeKey> wildcardAttributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
-            if (isWildcard(key)) {
+            if (!key.equals(WILD_CARD) && key.endsWith(WILD_CARD)) {
                 wildcardAttributeSet.add(AttributeKey.valueOf(key.replace(WILD_CARD, EMPTY_STRING)));
             } else {
                 attributeSet.add(AttributeKey.valueOf(key));
@@ -577,9 +577,6 @@ public class Safelist {
         return !tagName.equals(All) && isSafeAttribute(All, el, attr);
     }
 
-    private boolean isWildcard(String attrKey) {
-        return !attrKey.equals(WILD_CARD) && attrKey.endsWith(WILD_CARD);
-    }
     private boolean isSafeWildcardAttribute(String tagName, AttributeKey key) {
         Set<AttributeKey> okSet = wildcardAttributes.get(TagName.valueOf(tagName));
         if (this.wildcardAttributes.isEmpty() || okSet == null) {
