@@ -9,9 +9,10 @@ import java.io.StringReader;
 import java.util.List;
 
 /**
- * Parses HTML into a {@link org.jsoup.nodes.Document}. Generally best to use one of the  more convenient parse methods
- * in {@link org.jsoup.Jsoup}.
- */
+ Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
+ {@link org.jsoup.Jsoup}.
+ <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
+ environment, use {@link #newInstance()} to make copies. */
 public class Parser {
     private TreeBuilder treeBuilder;
     private ParseErrorList errors;
