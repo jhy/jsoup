@@ -843,7 +843,7 @@ public class Element extends Node {
         // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
         String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
         StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
-        // String classes = StringUtil.join(classNames().stream().map(TokenQueue::escapeCssIdentifier).iterator(), ".");
+        // String classes = classNames().stream().map(TokenQueue::escapeCssIdentifier).collect(Collectors.joining("."));
         // todo - replace with ^^ in 1.16.1 when we enable Android support for stream etc
         StringUtil.StringJoiner escapedClasses = new StringUtil.StringJoiner(".");
         for (String name : classNames()) escapedClasses.add(escapeCssIdentifier(name));
