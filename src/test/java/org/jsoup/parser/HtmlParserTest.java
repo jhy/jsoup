@@ -1665,4 +1665,16 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse("<html id=1 class=foo><body><html><p>One");
         assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
+
+    @Test void supportsRuby() {
+        String html = "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rtc></ruby>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html);
+        assertEquals(0, parser.getErrors().size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rp></rtc></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+    }
 }

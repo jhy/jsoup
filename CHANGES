@@ -1,6 +1,10 @@
 jsoup changelog
 
-Release 1.15.4 [PENDING]
+Release 1.16.1 [PENDING]
+  * Bugfix: Corrected support for ruby elements (<ruby>, <rp>, <rt>, and <rtc>) to current spec.
+    <https://github.com/jhy/jsoup/issues/1294>
+
+Release 1.15.4 [18-Feb-2023]
   * Improvement: added the ability to escape CSS selectors (tags, IDs, classes) to match elements that don't follow
     regular CSS syntax. For example, to match by classname <p class="one.two">, use document.select("p.one\\.two");
     <https://github.com/jhy/jsoup/issues/838>

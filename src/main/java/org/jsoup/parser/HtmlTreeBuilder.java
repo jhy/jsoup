@@ -838,6 +838,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return onStack(formattingElements, el);
     }
 
+    @Nullable
     Element getActiveFormattingElement(String nodeName) {
         for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
             Element next = formattingElements.get(pos);

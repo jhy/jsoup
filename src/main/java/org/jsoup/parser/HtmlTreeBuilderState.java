@@ -611,7 +611,7 @@ enum HtmlTreeBuilderState {
                     }
                     tb.insert(startTag);
                     break;
-                // static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
+
                 case "optgroup":
                 case "option":
                     if (tb.currentElementIs("option"))
@@ -619,19 +619,27 @@ enum HtmlTreeBuilderState {
                     tb.reconstructFormattingElements();
                     tb.insert(startTag);
                     break;
-                // static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
+
+                case "rb":
+                case "rtc":
+                    if (tb.onStack("ruby")) {
+                        tb.generateImpliedEndTags();
+                        if (!tb.currentElementIs("ruby"))
+                            tb.error(this);
+                    }
+                    tb.insert(startTag);
+                    break;
+
                 case "rp":
                 case "rt":
                     if (tb.inScope("ruby")) {
-                        tb.generateImpliedEndTags();
-                        if (!tb.currentElementIs("ruby")) {
+                        tb.generateImpliedEndTags("rtc");
+                        if (!tb.currentElementIs("rtc") && !tb.currentElementIs("ruby"))
                             tb.error(this);
-                            tb.popStackToBefore("ruby"); // i.e. close up to but not include name
-                        }
-                        tb.insert(startTag);
                     }
-                    // todo - is this right? drops rp, rt if ruby not in scope?
+                    tb.insert(startTag);
                     break;
+
                 // InBodyStartEmptyFormatters:
                 case "area":
                 case "br":
