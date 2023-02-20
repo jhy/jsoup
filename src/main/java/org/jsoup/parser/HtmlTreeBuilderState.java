@@ -622,7 +622,7 @@ enum HtmlTreeBuilderState {
 
                 case "rb":
                 case "rtc":
-                    if (tb.onStack("ruby")) {
+                    if (tb.inScope("ruby")) {
                         tb.generateImpliedEndTags();
                         if (!tb.currentElementIs("ruby"))
                             tb.error(this);

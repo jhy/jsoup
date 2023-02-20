@@ -574,7 +574,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return inSpecificScope(specificScopeTarget, baseTypes, extraTypes);
     }
 
-    private boolean inSpecificScope(String[] targetNames, String[] baseTypes, String[] extraTypes) {
+    private boolean inSpecificScope(String[] targetNames, String[] baseTypes, @Nullable String[] extraTypes) {
         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
         final int bottom = stack.size() -1;
         final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
