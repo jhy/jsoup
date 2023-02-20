@@ -700,6 +700,20 @@ public class ElementTest {
         }
     }
 
+    @Test void prependNodes() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element p = doc.expectFirst("p");
+        p.prepend("Text <!-- comment --> ");
+        assertEquals("Text <!-- comment --> Hello", TextUtil.stripNewlines(p.html()));
+    }
+
+    @Test void appendNodes() {
+        Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
+        Element p = doc.expectFirst("p");
+        p.append(" Text <!-- comment -->");
+        assertEquals("Hello Text <!-- comment -->", TextUtil.stripNewlines(p.html()));
+    }
+
     @Test
     public void testSetHtml() {
         Document doc = Jsoup.parse("<div id=1><p>Hello</p></div>");
