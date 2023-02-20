@@ -1670,11 +1670,39 @@ public class HtmlParserTest {
         String html = "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rtc></ruby>";
         Parser parser = Parser.htmlParser();
         parser.setTrackErrors(10);
-        Document doc = Jsoup.parse(html);
-        assertEquals(0, parser.getErrors().size());
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(3, errors.size());
         Element ruby = doc.expectFirst("ruby");
         assertEquals(
             "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rp></rtc></ruby>",
             TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:38>: Unexpected StartTag token [<rb>] when in state [InBody]", errors.get(2).toString()); // 3 errors from rb in rtc as undefined
+    }
+
+    @Test void rubyRpRtImplicitClose() {
+        String html = "<ruby><rp>(<rt>Hello<rt>Hello<rp>)</ruby>\n";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rp>(</rp><rt>Hello</rt><rt>Hello</rt><rp>)</rp></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+    }
+
+    @Test void rubyScopeError() {
+        String html = "<ruby><div><rp>Hello";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><div><rp>Hello</rp></div></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:16>: Unexpected StartTag token [<rp>] when in state [InBody]", errors.get(0).toString());
     }
 }
