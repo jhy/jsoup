@@ -157,6 +157,14 @@ public class NodeTest {
         assertEquals("<span>two</span> three", TextUtil.stripNewlines(p.html()));
     }
 
+    @Test void removeOnOrphanIsNoop() {
+        // https://github.com/jhy/jsoup/issues/1898
+        Element node = new Element("div");
+        assertNull(node.parentNode());
+        node.remove();
+        assertNull(node.parentNode());
+    }
+
     @Test public void testReplace() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();

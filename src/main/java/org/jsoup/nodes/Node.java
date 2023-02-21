@@ -315,11 +315,12 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
+     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed. If this node is
+     * an orphan, nothing happens.
      */
     public void remove() {
-        Validate.notNull(parentNode);
-        parentNode.removeChild(this);
+        if (parentNode != null)
+            parentNode.removeChild(this);
     }
 
     /**

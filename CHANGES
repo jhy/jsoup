@@ -1,6 +1,9 @@
 jsoup changelog
 
 Release 1.16.1 [PENDING]
+  * Improvement: Calling Node.remove() on a node with no parent is now a no-op, vs a validation error.
+    <https://github.com/jhy/jsoup/issues/1898>
+    
   * Bugfix: Corrected support for ruby elements (<ruby>, <rp>, <rt>, and <rtc>) to current spec.
     <https://github.com/jhy/jsoup/issues/1294>
 
