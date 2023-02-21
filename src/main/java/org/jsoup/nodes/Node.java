@@ -343,6 +343,9 @@ public abstract class Node implements Cloneable {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
+
         parentNode.addChildren(siblingIndex, node);
         return this;
     }
@@ -367,6 +370,9 @@ public abstract class Node implements Cloneable {
     public Node after(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex + 1, node);
         return this;
