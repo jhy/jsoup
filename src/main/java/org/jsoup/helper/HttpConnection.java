@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.CookieStore;
 import java.net.HttpURLConnection;
@@ -30,6 +31,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -127,12 +129,19 @@ public class HttpConnection implements Connection {
 	    u = punyUrl(u);
         try {
             // run the URL through URI, so components are encoded
-            URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+            URI uri = new URI(
+                u.getProtocol(), decodePart(u.getUserInfo()), u.getHost(), u.getPort(),
+                decodePart(u.getPath()), decodePart(u.getQuery()), decodePart(u.getRef()));
             return uri.toURL();
-        } catch (URISyntaxException | MalformedURLException e) {
+        } catch (URISyntaxException | MalformedURLException | UnsupportedEncodingException e) {
             // give up and return the original input
             return u;
         }
+    }
+
+    @Nullable private static String decodePart(@Nullable String encoded) throws UnsupportedEncodingException {
+        if (encoded == null) return null;
+        return URLDecoder.decode(encoded, UTF_8.name());
     }
 
     /**

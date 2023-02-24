@@ -3,13 +3,17 @@ jsoup changelog
 Release 1.16.1 [PENDING]
   * Improvement: Calling Node.remove() on a node with no parent is now a no-op, vs a validation error.
     <https://github.com/jhy/jsoup/issues/1898>
-    
+
   * Bugfix: Corrected support for ruby elements (<ruby>, <rp>, <rt>, and <rtc>) to current spec.
     <https://github.com/jhy/jsoup/issues/1294>
 
   * Bugfix: When using Node.before(node) or Node.after(node), if the incoming node was a sibling of the context node,
     the incoming node may be inserted into the wrong relative location.
     <https://github.com/jhy/jsoup/issues/1898>
+
+  * Bugfix: In Jsoup.connect(url), if the input URL had components that were already % escaped, they would be escaped
+    again, causing errors when fetched.
+    <https://github.com/jhy/jsoup/issues/1902>
 
 Release 1.15.4 [18-Feb-2023]
   * Improvement: added the ability to escape CSS selectors (tags, IDs, classes) to match elements that don't follow

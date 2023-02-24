@@ -260,6 +260,20 @@ public class HttpConnectionTest {
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white%20space#frag", url2.toExternalForm());
     }
 
+    @Test void encodedUrlDoesntDoubleEncode() throws MalformedURLException {
+        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag ment");
+        URL url2 = HttpConnection.encodeUrl(url1);
+        URL url3 = HttpConnection.encodeUrl(url2);
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white%20space#frag%20ment", url2.toExternalForm());
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white%20space#frag%20ment", url3.toExternalForm());
+    }
+
+    @Test void connectToEncodedUrl() {
+        Connection connect = Jsoup.connect("https://example.com/a%20b%20c?query+string");
+        URL url = connect.request().url();
+        assertEquals("https://example.com/a%20b%20c?query%20string", url.toExternalForm());
+    }
+
     @Test public void noUrlThrowsValidationError() throws IOException {
         HttpConnection con = new HttpConnection();
         boolean threw = false;
