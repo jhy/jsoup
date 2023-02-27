@@ -2,6 +2,8 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 
+import java.util.Objects;
+
 /**
  A Range object tracks the character positions in the original input source where a Node starts or ends. If you want to
  track these positions, tracking must be enabled in the Parser with
@@ -62,7 +64,7 @@ public class Range {
         if (!node.hasAttr(key))
             return Untracked;
         else
-            return (Range) Validate.ensureNotNull(node.attributes().getUserData(key));
+            return (Range) Objects.requireNonNull(node.attributes().getUserData(key));
     }
 
     /**

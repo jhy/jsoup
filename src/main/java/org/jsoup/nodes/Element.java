@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -460,17 +461,13 @@ public class Element extends Node {
      is useful if you want to simply abort processing on a failed match.
      @param cssQuery a {@link Selector} CSS-like query
      @return the first matching element
-     @throws IllegalArgumentException if no match is found
+     @throws NullPointerException if no match is found
      @since 1.15.2
      */
     public Element expectFirst(String cssQuery) {
-        return (Element) Validate.ensureNotNull(
-            Selector.selectFirst(cssQuery, this),
-            parent() != null ?
-                "No elements matched the query '%s' on element '%s'.":
-                "No elements matched the query '%s' in the document."
-            , cssQuery, this.tagName()
-        );
+        final String message = "No elements matched the query '" + cssQuery + "' " +
+                (parent() != null ? "on element '" + tagName() + "'." : "in the document.");
+        return Objects.requireNonNull(Selector.selectFirst(cssQuery, this), message);
     }
 
     /**

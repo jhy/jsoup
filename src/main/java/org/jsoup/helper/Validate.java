@@ -1,6 +1,7 @@
 package org.jsoup.helper;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 /**
  * Validators to check that method arguments meet expectations. 
@@ -48,7 +49,9 @@ public final class Validate {
      * @param obj nullable object to case to not-null
      * @return the object, or throws an exception if it is null
      * @throws ValidationException if the object is null
+     * @deprecated Use {@link Objects#requireNonNull(Object)} instead.
      */
+    @Deprecated
     public static Object ensureNotNull(@Nullable Object obj) {
         if (obj == null)
             throw new ValidationException("Object must not be null");
@@ -63,7 +66,9 @@ public final class Validate {
      * @param args the arguments to the msg
      * @return the object, or throws an exception if it is null
      * @throws ValidationException if the object is null
+     * @deprecated Use {@link Objects#requireNonNull(Object, String)} instead.
      */
+    @Deprecated
     public static Object ensureNotNull(@Nullable Object obj, String msg, Object... args) {
         if (obj == null)
             throw new ValidationException(String.format(msg, args));

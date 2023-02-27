@@ -2353,7 +2353,7 @@ public class ElementTest {
         boolean threw = false;
         try {
             Element div = doc.expectFirst("div");
-        } catch (IllegalArgumentException e) {
+        } catch (NullPointerException e) {
             threw = true;
         }
         assertTrue(threw);
@@ -2365,7 +2365,7 @@ public class ElementTest {
         Element p = doc.expectFirst("P");
         try {
             Element span = p.expectFirst("span.doesNotExist");
-        } catch (ValidationException e) {
+        } catch (NullPointerException e) {
             threw = true;
             assertEquals("No elements matched the query 'span.doesNotExist' on element 'p'.", e.getMessage());
         }
@@ -2378,7 +2378,7 @@ public class ElementTest {
         Element p = doc.expectFirst("P");
         try {
             Element span = doc.expectFirst("span.doesNotExist");
-        } catch (ValidationException e) {
+        } catch (NullPointerException e) {
             threw = true;
             assertEquals("No elements matched the query 'span.doesNotExist' in the document.", e.getMessage());
         }
