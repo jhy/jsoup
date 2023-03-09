@@ -2314,6 +2314,17 @@ public class ElementTest {
         assertEquals("<div>\n <br>\n</div>", doc.body().html()); // not div\n br\n \n/div
     }
 
+    @Test void prettyprintBrWhenNotFirstChild() {
+        // https://github.com/jhy/jsoup/issues/1911
+        String h = "<div><p><br>Foo</p><br></div>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("<div>\n" +
+            " <p><br>\n  Foo</p>\n" +
+            " <br>\n" +
+            "</div>", doc.body().html());
+        // br gets wrapped if in div, but not in p (block vs inline), but always wraps after
+    }
+
     @Test void preformatFlowsToChildTextNodes() {
         // https://github.com/jhy/jsoup/issues/1776
         String html = "<div><pre>One\n<span>\nTwo</span>\n <span>  \nThree</span>\n <span>Four <span>Five</span>\n  Six\n</pre>";

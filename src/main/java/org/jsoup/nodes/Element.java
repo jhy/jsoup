@@ -1851,6 +1851,7 @@ public class Element extends Node {
             return false;
         return (parent() == null || parent().isBlock())
             && !isEffectivelyFirst()
-            && !out.outline();
+            && !out.outline()
+            && !isNode("br");
     }
 }
