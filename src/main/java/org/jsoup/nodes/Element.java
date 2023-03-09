@@ -1670,7 +1670,7 @@ public class Element extends Node {
     }
 
     boolean shouldIndent(final Document.OutputSettings out) {
-        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out);
+        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out) && !preserveWhitespace(parentNode);
     }
 
     @Override
@@ -1701,7 +1701,8 @@ public class Element extends Node {
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
+                (tag.formatAsBlock() && !preserveWhitespace(parentNode)) ||
+                    (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
             )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append('>');

@@ -22,6 +22,9 @@ Release 1.16.1 [PENDING]
   * Bugfix: when pretty-printing, the first inline element in a block would not be wrap-indented if it were preceded by
     a blank text node.
 
+  * Bugfix: when pretty-printing a <pre> containing block tags, those tags were incorrectly indented.
+    <https://github.com/jhy/jsoup/issues/1891>
+
 Release 1.15.4 [18-Feb-2023]
   * Improvement: added the ability to escape CSS selectors (tags, IDs, classes) to match elements that don't follow
     regular CSS syntax. For example, to match by classname <p class="one.two">, use document.select("p.one\\.two");

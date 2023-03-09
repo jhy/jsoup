@@ -157,6 +157,14 @@ public class ElementTest {
         assertEquals("<pre><code><span><b>code\n\ncode</b></span></code></pre>", doc.body().html());
     }
 
+    @Test void doesNotWrapBlocksInPre() {
+        // https://github.com/jhy/jsoup/issues/1891
+        String h = "<pre><span><foo><div>TEST\n TEST</div></foo></span></pre>";
+        Document doc = Jsoup.parse(h);
+        assertEquals("TEST\n TEST", doc.wholeText());
+        assertEquals(h, doc.body().html());
+    }
+
     @Test
     public void testBrHasSpace() {
         Document doc = Jsoup.parse("<p>Hello<br>there</p>");
