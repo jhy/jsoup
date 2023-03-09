@@ -2676,4 +2676,10 @@ public class ElementTest {
         doc.body().outerHtml(builder);
         assertEquals("<body>\n <div>\n  One\n </div>\n</body>", builder.toString());
     }
+
+    @Test void rubyInline() {
+        String html = "<ruby>T<rp>(</rp><rtc>!</rtc><rt>)</rt></ruby>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(html, doc.body().html());
+    }
 }
