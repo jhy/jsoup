@@ -33,6 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jetty.version>9.4.51.v20230217</jetty.version>
   </properties>
 
   <build>
@@ -341,7 +342,7 @@
       <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.4.51.v20230217</version>
+      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -349,7 +350,7 @@
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.4.50.v20221201</version>
+      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
 
