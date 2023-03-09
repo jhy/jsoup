@@ -1846,9 +1846,15 @@ public class Element extends Node {
     }
 
     private boolean isInlineable(Document.OutputSettings out) {
-        return tag().isInline()
-            && (parent() == null || parent().isBlock())
-            && previousSibling() != null
+        if (!tag.isInline())
+            return false;
+
+        final Node prev = previousSibling();
+        boolean isFirst = siblingIndex == 0;
+        if (siblingIndex == 1 && prev instanceof TextNode && (((TextNode) prev).isBlank()))
+            isFirst = true;
+        return (parent() == null || parent().isBlock())
+            && !isFirst
             && !out.outline();
     }
 }

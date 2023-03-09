@@ -75,7 +75,8 @@ public class HtmlTreeBuilderStateTest {
         String s = Jsoup.parse(html).toString();
         assertEquals("<html>\n" +
             " <head></head>\n" +
-            " <body><a href=\"#1\"> </a>\n" +
+            " <body>\n" +
+            "  <a href=\"#1\"> </a>\n" +
             "  <div>\n" +
             "   <a href=\"#1\"> </a><a href=\"#2\">child</a>\n" +
             "  </div>\n" +
@@ -99,7 +100,8 @@ public class HtmlTreeBuilderStateTest {
         String s = Jsoup.parse(html).toString();
         assertEquals("<html>\n" +
             " <head></head>\n" +
-            " <body><a href=\"#1\"> </a>\n" +
+            " <body>\n" +
+            "  <a href=\"#1\"> </a>\n" +
             "  <div>\n" +
             "   <a href=\"#1\"> </a>\n" +
             "   <div>\n" +

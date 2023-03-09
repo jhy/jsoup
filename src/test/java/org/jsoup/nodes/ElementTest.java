@@ -2343,6 +2343,23 @@ public class ElementTest {
         assertEquals(expectOwn, div.child(0).wholeOwnText());
     }
 
+    @Test void inlineInBlockShouldIndent() {
+        // was inconsistent between <div>\n<span> and <div><span> - former would print inline, latter would wrap(!)
+        String html = "<div>One <span>Hello</span><span>!</span></div><div>\n<span>There</span></div><div> <span>Now</span></div>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(
+            "<div>\n" +
+                " One <span>Hello</span><span>!</span>\n" +
+                "</div>\n" +
+                "<div>\n" +
+                " <span>There</span>\n" +
+                "</div>\n" +
+                "<div>\n" +
+                " <span>Now</span>\n" +
+                "</div>",
+            doc.body().html());
+    }
+
     @Test void testExpectFirst() {
         Document doc = Jsoup.parse("<p>One</p><p>Two <span>Three</span> <span>Four</span>");
 
@@ -2445,7 +2462,9 @@ public class ElementTest {
     @Test void divAInlineable() {
         String html = "<body><div> <a>Text</a>";
         Document doc = Jsoup.parse(html);
-        assertEquals("<div><a>Text</a>\n</div>", doc.body().html());
+        assertEquals("<div>\n" +
+            " <a>Text</a>\n" +
+            "</div>", doc.body().html());
     }
 
     @Test void noDanglingSpaceAfterCustomElement() {
