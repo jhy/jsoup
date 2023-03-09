@@ -1849,13 +1849,8 @@ public class Element extends Node {
     private boolean isInlineable(Document.OutputSettings out) {
         if (!tag.isInline())
             return false;
-
-        final Node prev = previousSibling();
-        boolean isFirst = siblingIndex == 0;
-        if (siblingIndex == 1 && prev instanceof TextNode && (((TextNode) prev).isBlank()))
-            isFirst = true;
         return (parent() == null || parent().isBlock())
-            && !isFirst
+            && !isEffectivelyFirst()
             && !out.outline();
     }
 }

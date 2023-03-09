@@ -19,8 +19,9 @@ Release 1.16.1 [PENDING]
     thrown due to a class loading circular dependency.
     <https://github.com/jhy/jsoup/issues/1910>
 
-  * Bugfix: when pretty-printing, the first inline element in a block would not be wrap-indented if it were preceded by
-    a blank text node.
+  * Bugfix: when pretty-printing, the first inline Element or Comment in a block would not be wrap-indented if it were
+    preceded by a blank text node.
+    <https://github.com/jhy/jsoup/issues/1906>
 
   * Bugfix: when pretty-printing a <pre> containing block tags, those tags were incorrectly indented.
     <https://github.com/jhy/jsoup/issues/1891>
