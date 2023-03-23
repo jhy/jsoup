@@ -1725,10 +1725,7 @@ public class Element extends Node {
 
     @Override
     public <T extends Appendable> T html(T appendable) {
-        final int size = childNodes.size();
-        for (int i = 0; i < size; i++)
-            childNodes.get(i).outerHtml(appendable);
-
+        for (Node childNode : childNodes) childNode.outerHtml(appendable);
         return appendable;
     }
 
