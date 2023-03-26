@@ -91,7 +91,7 @@ public class HttpConnection implements Connection {
     }
 
     /**
-     Creates a new, empty HttpConnection.
+     Create a new, empty HttpConnection.
      */
     public HttpConnection() {
         req = new Request();
