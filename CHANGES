@@ -1,7 +1,8 @@
 jsoup changelog
 
 Release 1.16.1 [PENDING]
-  * Improvement: in Jsoup.connect(url), support URLs with Unicode characters in the path
+  * Improvement: in Jsoup.connect(url), natively support URLs with Unicode characters in the path or query string,
+    without having to be escaped by the caller.
     <https://github.com/jhy/jsoup/issues/1914>
 
   * Improvement: Calling Node.remove() on a node with no parent is now a no-op, vs a validation error.

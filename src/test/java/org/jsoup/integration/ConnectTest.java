@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
 import org.jsoup.internal.StringUtil;
@@ -20,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
@@ -751,10 +753,11 @@ public class ConnectTest {
     }
 
     @Test void fetchUnicodeUrl() throws IOException {
-        String url = EchoServlet.Url + "/✔/?%E9%8D%B5=%E5%80%A4"; // encoded 鍵=値
+        String url = EchoServlet.Url + "/✔/?鍵=値";
         Document doc = Jsoup.connect(url).get();
 
         assertEquals("/✔/", ihVal("Path Info", doc));
         assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
+        assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
 }
