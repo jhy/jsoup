@@ -184,6 +184,17 @@ public final class Validate {
     }
 
     /**
+     Cause a failure, but return false so it can be used in an assert statement.
+     @param msg message to output.
+     @return false, always
+     @throws IllegalStateException if we reach this state
+     */
+    static boolean assertFail(String msg) {
+        fail(msg);
+        return false;
+    }
+
+    /**
      Cause a failure.
      @param msg message to output.
      @param args the format arguments to the msg

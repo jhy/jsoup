@@ -749,4 +749,12 @@ public class ConnectTest {
         Document doc = Jsoup.connect(url).get();
         assertEquals(url, doc.location());
     }
+
+    @Test void fetchUnicodeUrl() throws IOException {
+        String url = EchoServlet.Url + "/✔/?鍵=値";
+        Document doc = Jsoup.connect(url).get();
+
+        assertEquals("/✔/", ihVal("Path Info", doc));
+        assertEquals("鍵=値", ihVal("Query String", doc));
+    }
 }

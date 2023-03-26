@@ -20,18 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.CookieStore;
 import java.net.HttpURLConnection;
-import java.net.IDN;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -49,6 +44,7 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
+import static org.jsoup.helper.DataUtil.UTF_8;
 import static org.jsoup.internal.Normalizer.lowerCase;
 
 /**
@@ -70,7 +66,6 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
-    private static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, not in Android API 10.
     private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
     /**
@@ -111,57 +106,6 @@ public class HttpConnection implements Connection {
         req = new Request(copy);
     }
 
-    /**
-     * Encodes the input URL into a safe ASCII URL string
-     * @param url unescaped URL
-     * @return escaped URL
-     */
-	private static String encodeUrl(String url) {
-        try {
-            URL u = new URL(url);
-            return encodeUrl(u).toExternalForm();
-        } catch (Exception e) {
-            return url;
-        }
-	}
-
-    static URL encodeUrl(URL u) {
-	    u = punyUrl(u);
-        try {
-            // run the URL through URI, so components are encoded
-            URI uri = new URI(
-                u.getProtocol(), decodePart(u.getUserInfo()), u.getHost(), u.getPort(),
-                decodePart(u.getPath()), decodePart(u.getQuery()), decodePart(u.getRef()));
-            return uri.toURL();
-        } catch (URISyntaxException | MalformedURLException | UnsupportedEncodingException e) {
-            // give up and return the original input
-            return u;
-        }
-    }
-
-    @Nullable private static String decodePart(@Nullable String encoded) throws UnsupportedEncodingException {
-        if (encoded == null) return null;
-        return URLDecoder.decode(encoded, UTF_8.name());
-    }
-
-    /**
-     Convert an International URL to a Punycode URL.
-     @param url input URL that may include an international hostname
-     @return a punycode URL if required, or the original URL
-     */
-    private static URL punyUrl(URL url) {
-        if (!StringUtil.isAscii(url.getHost())) {
-            try {
-                String puny = IDN.toASCII(url.getHost());
-                url = new URL(url.getProtocol(), puny, url.getPort(), url.getFile()); // file will include ref, query if any
-            } catch (MalformedURLException e) {
-                // if passed a valid URL initially, cannot happen
-                throw new IllegalArgumentException(e);
-            }
-        }
-        return url;
-    }
-
     private static String encodeMimeName(String val) {
         return val.replace("\"", "%22");
     }
@@ -189,7 +133,7 @@ public class HttpConnection implements Connection {
     public Connection url(String url) {
         Validate.notEmptyParam(url, "url");
         try {
-            req.url(new URL(encodeUrl(url)));
+            req.url(new URL(url));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(String.format("The supplied URL, '%s', is malformed. Make sure it is an absolute URL, and starts with 'http://' or 'https://'. See https://jsoup.org/cookbook/extracting-data/working-with-urls", url), e);
         }
@@ -441,7 +385,7 @@ public class HttpConnection implements Connection {
 
         public T url(URL url) {
             Validate.notNullParam(url, "url");
-            this.url = punyUrl(url); // if calling url(url) directly, does not go through encodeUrl, so we punycode it explicitly. todo - should we encode here as well?
+            this.url = new UrlBuilder(url).build();
             return (T) this;
         }
 
@@ -889,7 +833,7 @@ public class HttpConnection implements Connection {
                     if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
-                    req.url(encodeUrl(redir));
+                    req.url(redir);
 
                     req.executing = false;
                     return execute(req, res);
@@ -994,7 +938,7 @@ public class HttpConnection implements Connection {
             prepareByteData();
             Validate.notNull(byteData);
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
-            String body = (charset == null ? DataUtil.UTF_8 : Charset.forName(charset))
+            String body = (charset == null ? UTF_8 : Charset.forName(charset))
                 .decode(byteData).toString();
             ((Buffer)byteData).rewind(); // cast to avoid covariant return type change in jdk9
             return body;
@@ -1228,32 +1172,13 @@ public class HttpConnection implements Connection {
 
         // for get url reqs, serialise the data map into the url
         private static void serialiseRequestUrl(Connection.Request req) throws IOException {
-            URL in = req.url();
-            StringBuilder url = StringUtil.borrowBuilder();
-            boolean first = true;
-            // reconstitute the query, ready for appends
-            url
-                .append(in.getProtocol())
-                .append("://")
-                .append(in.getAuthority()) // includes host, port
-                .append(in.getPath())
-                .append("?");
-            if (in.getQuery() != null) {
-                url.append(in.getQuery());
-                first = false;
-            }
+            UrlBuilder in = new UrlBuilder(req.url());
+
             for (Connection.KeyVal keyVal : req.data()) {
                 Validate.isFalse(keyVal.hasInputStream(), "InputStream data not supported in URL query string.");
-                if (!first)
-                    url.append('&');
-                else
-                    first = false;
-                url
-                    .append(URLEncoder.encode(keyVal.key(), DataUtil.defaultCharsetName))
-                    .append('=')
-                    .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharsetName));
+                in.appendKeyVal(keyVal);
             }
-            req.url(new URL(StringUtil.releaseBuilder(url)));
+            req.url(in.build());
             req.data().clear(); // moved into url as get params
         }
     }

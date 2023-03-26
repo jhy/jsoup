@@ -67,6 +67,7 @@ public class EchoServlet extends BaseServlet {
         // some get items
         write(w, "Method", req.getMethod());
         write(w, "Request URI", req.getRequestURI());
+        write(w, "Path Info", req.getPathInfo());
         write(w, "Query String", req.getQueryString());
 
         // request headers (why is it an enumeration?)
