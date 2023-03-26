@@ -751,10 +751,10 @@ public class ConnectTest {
     }
 
     @Test void fetchUnicodeUrl() throws IOException {
-        String url = EchoServlet.Url + "/✔/?鍵=値";
+        String url = EchoServlet.Url + "/✔/?%E9%8D%B5=%E5%80%A4"; // encoded 鍵=値
         Document doc = Jsoup.connect(url).get();
 
         assertEquals("/✔/", ihVal("Path Info", doc));
-        assertEquals("鍵=値", ihVal("Query String", doc));
+        assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
     }
 }
