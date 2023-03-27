@@ -246,7 +246,8 @@ public class Tag implements Cloneable {
             "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
             "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
-            "data", "bdi", "s", "strike", "nobr"
+            "data", "bdi", "s", "strike", "nobr",
+            "rb" // deprecated but still known / special handling
     };
     private static final String[] emptyTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",

@@ -301,9 +301,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         insertNode(comment, commentToken);
     }
 
+    /** Inserts the provided character token into the current element. */
     void insert(Token.Character characterToken) {
+        final Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
+        insert(characterToken, el);
+    }
+
+    void insert(Token.Character characterToken, Element el) {
         final Node node;
-        Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
         final String tagName = el.normalName();
         final String data = characterToken.getData();
 
@@ -317,6 +322,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node, characterToken);
     }
 
+    /** Inserts the provided character token into the provided element. Use when not going onto stack element */
     private void insertNode(Node node, @Nullable Token token) {
         // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
         if (stack.isEmpty())
@@ -629,6 +635,20 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 return false;
         }
         Validate.fail("Should not be reachable");
+        return false;
+    }
+
+    /** Tests if there is some element on the stack that is not in the provided set. */
+    boolean onStackNot(String[] allowedTags) {
+        final int bottom = stack.size() -1;
+        final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
+        // don't walk too far up the tree
+
+        for (int pos = bottom; pos >= top; pos--) {
+            final String elName = stack.get(pos).normalName();
+            if (!inSorted(elName, allowedTags))
+                return true;
+        }
         return false;
     }
 

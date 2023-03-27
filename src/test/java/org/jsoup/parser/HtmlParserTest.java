@@ -1698,11 +1698,38 @@ public class HtmlParserTest {
         parser.setTrackErrors(10);
         Document doc = Jsoup.parse(html, parser);
         ParseErrorList errors = parser.getErrors();
-        assertEquals(1, errors.size());
+        assertEquals(2, errors.size());
         Element ruby = doc.expectFirst("ruby");
         assertEquals(
             "<ruby><div><rp>Hello</rp></div></ruby>",
             TextUtil.stripNewlines(ruby.outerHtml()));
         assertEquals("<1:16>: Unexpected StartTag token [<rp>] when in state [InBody]", errors.get(0).toString());
+    }
+
+    @Test void errorOnEofIfOpen() {
+        String html = "<div>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpected EOF token [] when in state [InBody]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void NoErrorOnEofIfBodyOpen() {
+        String html = "<body>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(0, errors.size());
+    }
+
+    @Test void htmlClose() {
+        // https://github.com/jhy/jsoup/issues/1851
+        String html = "<body><div>One</html>Two</div></body>";
+        Document doc = Jsoup.parse(html);
+        //assertEquals("OneTwo", doc.expectFirst("body > div").text());
+        System.out.println(doc.html());
     }
 }

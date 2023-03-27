@@ -8,6 +8,11 @@ Release 1.16.1 [PENDING]
   * Improvement: Calling Node.remove() on a node with no parent is now a no-op, vs a validation error.
     <https://github.com/jhy/jsoup/issues/1898>
 
+  * Bugfix: aligned the HTML Tree Builder processing steps for AfterBody and AfterAfterBody to the updated WHATWG
+    standard, to not pop the stack to close <body> or <html> elements. This prevents an errant </html> closing preceding
+    structure. Also added appropriate error message outputs in this case.
+    <https://github.com/jhy/jsoup/issues/1851>
+
   * Bugfix: Corrected support for ruby elements (<ruby>, <rp>, <rt>, and <rtc>) to current spec.
     <https://github.com/jhy/jsoup/issues/1294>
 
