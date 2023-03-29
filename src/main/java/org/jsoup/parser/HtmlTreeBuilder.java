@@ -53,7 +53,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private @Nullable Element contextElement; // fragment parse context -- could be null even if fragment parsing
     private ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
-    private List<String> pendingTableCharacters; // chars in table to be shifted out
+    private List<Token.Character> pendingTableCharacters; // chars in table to be shifted out
     private Token.EndTag emptyEnd; // reused empty end tag
 
     private boolean framesetOk; // if ok to go into frameset
@@ -676,12 +676,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
         this.formElement = formElement;
     }
 
-    void newPendingTableCharacters() {
+    void resetPendingTableCharacters() {
         pendingTableCharacters = new ArrayList<>();
     }
 
-    List<String> getPendingTableCharacters() {
+    List<Token.Character> getPendingTableCharacters() {
         return pendingTableCharacters;
+    }
+
+    void addPendingTableCharacters(Token.Character c) {
+        // make a clone of the token to maintain its state (as Tokens are otherwise reset)
+        Token.Character clone = c.clone();
+        pendingTableCharacters.add(clone);
     }
 
     /**

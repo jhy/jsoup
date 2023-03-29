@@ -6,7 +6,6 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 
 import java.util.ArrayList;
 
@@ -995,7 +994,7 @@ enum HtmlTreeBuilderState {
     InTable {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter() && inSorted(tb.currentElement().normalName(), InTableFoster)) {
-                tb.newPendingTableCharacters();
+                tb.resetPendingTableCharacters();
                 tb.markInsertionMode();
                 tb.transition(InTableText);
                 return tb.process(t);
@@ -1106,25 +1105,25 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     return false;
                 } else {
-                    tb.getPendingTableCharacters().add(c.getData());
+                    tb.addPendingTableCharacters(c);
                 }
-            } else {// todo - don't really like the way these table character data lists are built
+            } else {
                 if (tb.getPendingTableCharacters().size() > 0) {
-                    for (String character : tb.getPendingTableCharacters()) {
-                        if (!isWhitespace(character)) {
+                    for (Token.Character c : tb.getPendingTableCharacters()) {
+                        if (!isWhitespace(c)) {
                             // InTable anything else section:
                             tb.error(this);
                             if (inSorted(tb.currentElement().normalName(), InTableFoster)) {
                                 tb.setFosterInserts(true);
-                                tb.process(new Token.Character().data(character), InBody);
+                                tb.process(c, InBody);
                                 tb.setFosterInserts(false);
                             } else {
-                                tb.process(new Token.Character().data(character), InBody);
+                                tb.process(c, InBody);
                             }
                         } else
-                            tb.insert(new Token.Character().data(character));
+                            tb.insert(c);
                     }
-                    tb.newPendingTableCharacters();
+                    tb.resetPendingTableCharacters();
                 }
                 tb.transition(tb.originalState());
                 return tb.process(t);
@@ -1757,10 +1756,6 @@ enum HtmlTreeBuilderState {
             return StringUtil.isBlank(data);
         }
         return false;
-    }
-
-    private static boolean isWhitespace(String data) {
-        return StringUtil.isBlank(data);
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {

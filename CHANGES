@@ -24,6 +24,9 @@ Release 1.16.1 [PENDING]
     again, causing errors when fetched.
     <https://github.com/jhy/jsoup/issues/1902>
 
+  * Bugfix: when tracking input source positions, text in tables that was fostered had invalid positions.
+    <https://github.com/jhy/jsoup/issues/1927>
+
   * Bugfix: If the Document.OutputSettings class was initialized, and then Entities.escape(String) called, an NPE may be
     thrown due to a class loading circular dependency.
     <https://github.com/jhy/jsoup/issues/1910>
