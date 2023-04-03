@@ -278,6 +278,10 @@ public class CharacterReaderTest {
         assertTrue(r.matchesAny(scan));
         assertEquals('\n', r.consume());
         assertFalse(r.matchesAny(scan));
+        // nothing to match
+        r.consumeToEnd();
+        assertTrue(r.isEmpty());
+        assertFalse(r.matchesAny(scan));
     }
 
     @Test public void matchesDigit() {
