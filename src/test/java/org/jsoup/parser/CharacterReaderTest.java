@@ -85,6 +85,12 @@ public class CharacterReaderTest {
         assertEquals(2, r.pos());
     }
 
+    @Test public void rewindToMark() {
+        CharacterReader r = new CharacterReader("nothing");
+        // marking should be invalid
+        assertThrows(UncheckedIOException.class, r::rewindToMark);
+    }
+
     @Test public void consumeToEnd() {
         String in = "one two three";
         CharacterReader r = new CharacterReader(in);
