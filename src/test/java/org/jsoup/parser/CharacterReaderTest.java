@@ -280,6 +280,16 @@ public class CharacterReaderTest {
         assertFalse(r.matchesAny(scan));
     }
 
+    @Test public void matchesDigit() {
+        CharacterReader r = new CharacterReader("42");
+        r.consumeToEnd();
+        assertTrue(r.isEmpty());
+        // nothing to match
+        assertFalse(r.matchesDigit());
+        r.unconsume();
+        assertTrue(r.matchesDigit());
+    }
+
     @Test public void cachesStrings() {
         CharacterReader r = new CharacterReader("Check\tCheck\tCheck\tCHOKE\tA string that is longer than 16 chars");
         String one = r.consumeTo('\t');
