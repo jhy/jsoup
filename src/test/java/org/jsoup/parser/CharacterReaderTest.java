@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,12 @@ public class CharacterReaderTest {
 
         assertEquals(CharacterReader.EOF, r.consume());
         assertTrue(r.isEmpty());
+
+        // unconsume all remaining characters
+        for (int i = 0; i < 4; i++) {
+            r.unconsume();
+        }
+        assertThrows(UncheckedIOException.class, r::unconsume);
     }
 
     @Test public void mark() {
