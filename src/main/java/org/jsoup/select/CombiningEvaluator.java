@@ -13,7 +13,7 @@ import java.util.Collection;
  */
 public abstract class CombiningEvaluator extends Evaluator {
     final ArrayList<Evaluator> evaluators;
-    int num = 0;
+    int evaluatorCount = 0;
 
     CombiningEvaluator() {
         super();
@@ -27,16 +27,16 @@ public abstract class CombiningEvaluator extends Evaluator {
     }
 
     @Nullable Evaluator rightMostEvaluator() {
-        return num > 0 ? evaluators.get(num - 1) : null;
+        return evaluatorCount > 0 ? evaluators.get(evaluatorCount - 1) : null;
     }
     
     void replaceRightMostEvaluator(Evaluator replacement) {
-        evaluators.set(num - 1, replacement);
+        evaluators.set(evaluatorCount - 1, replacement);
     }
 
     void updateNumEvaluators() {
         // used so we don't need to bash on size() for every match test
-        num = evaluators.size();
+        evaluatorCount = evaluators.size();
     }
 
     public static final class And extends CombiningEvaluator {
@@ -50,9 +50,9 @@ public abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (int i = num - 1; i >= 0; i--) { // process backwards so that :matchText is evaled earlier, to catch parent query. todo - should redo matchText to virtually expand during match, not pre-match (see SelectorTest#findBetweenSpan)
-                Evaluator s = evaluators.get(i);
-                if (!s.matches(root, node))
+            for (int i = evaluatorCount - 1; i >= 0; i--) { // process backwards so that :matchText is evaled earlier, to catch parent query. todo - should redo matchText to virtually expand during match, not pre-match (see SelectorTest#findBetweenSpan)
+                Evaluator evaluator = evaluators.get(i);
+                if (!evaluator.matches(root, node))
                     return false;
             }
             return true;
@@ -71,7 +71,7 @@ public abstract class CombiningEvaluator extends Evaluator {
          */
         Or(Collection<Evaluator> evaluators) {
             super();
-            if (num > 1)
+            if (evaluatorCount > 1)
                 this.evaluators.add(new And(evaluators));
             else // 0 or 1
                 this.evaluators.addAll(evaluators);
@@ -91,7 +91,7 @@ public abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (int i = 0; i < num; i++) {
+            for (int i = 0; i < evaluatorCount; i++) {
                 Evaluator s = evaluators.get(i);
                 if (s.matches(root, node))
                     return true;
