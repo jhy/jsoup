@@ -125,10 +125,6 @@ public class XmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node, null);
     }
 
-    protected void insertNode(Node node) {
-        currentElement().appendChild(node);
-        onNodeInserted(node, null);
-    }
 
     protected void insertNode(Node node, Token token) {
         currentElement().appendChild(node);

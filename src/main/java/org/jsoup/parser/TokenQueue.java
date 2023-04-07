@@ -9,6 +9,7 @@ import org.jsoup.helper.Validate;
  * @author Jonathan Hedley
  */
 public class TokenQueue {
+    public final static char[] combinators = {',', '>', '+', '~', ' '};
     private String queue;
     private int pos = 0;
     
@@ -271,7 +272,26 @@ public class TokenQueue {
         }
         return out;
     }
-    
+
+    public String consumeSubQuery() {
+        StringBuilder sq = StringUtil.borrowBuilder();
+        while (!isEmpty()) {
+            if (matches("("))
+                sq.append("(").append(chompBalanced('(', ')')).append(")");
+            else if (matches("["))
+                sq.append("[").append(chompBalanced('[', ']')).append("]");
+            else if (matchesAny(combinators))
+                if (sq.length() > 0)
+                    break;
+                else
+                    consume();
+            else
+                sq.append(consume());
+        }
+        return StringUtil.releaseBuilder(sq);
+    }
+
+
     /**
      * Unescape a \ escaped string.
      * @param in backslash escaped string

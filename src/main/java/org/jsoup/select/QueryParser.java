@@ -15,7 +15,6 @@ import static org.jsoup.internal.Normalizer.normalize;
  * Parses a CSS selector into an Evaluator tree.
  */
 public class QueryParser {
-    private final static char[] combinators = {',', '>', '+', '~', ' '};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
     private final TokenQueue tq;
@@ -55,7 +54,7 @@ public class QueryParser {
     Evaluator parse() {
         tq.consumeWhitespace();
 
-        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+        if (tq.matchesAny(tq.combinators)) { // if starts with a combinator, use root as elements
             evals.add(new StructuralEvaluator.Root());
             combinator(tq.consume());
         } else {
@@ -66,7 +65,7 @@ public class QueryParser {
             // hierarchy and extras
             boolean seenWhite = tq.consumeWhitespace();
 
-            if (tq.matchesAny(combinators)) {
+            if (tq.matchesAny(tq.combinators)) {
                 combinator(tq.consume());
             } else if (seenWhite) {
                 combinator(' ');
@@ -83,7 +82,7 @@ public class QueryParser {
 
     private void combinator(char combinator) {
         tq.consumeWhitespace();
-        String subQuery = consumeSubQuery(); // support multi > childs
+        String subQuery = tq.consumeSubQuery(); // support multi > childs
 
         Evaluator rootEval; // the new topmost evaluator
         Evaluator currentEval; // the evaluator the new eval will be combined to. could be root, or rightmost or.
@@ -137,24 +136,6 @@ public class QueryParser {
             ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
         else rootEval = currentEval;
         evals.add(rootEval);
-    }
-
-    private String consumeSubQuery() {
-        StringBuilder sq = StringUtil.borrowBuilder();
-        while (!tq.isEmpty()) {
-            if (tq.matches("("))
-                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
-            else if (tq.matches("["))
-                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
-            else if (tq.matchesAny(combinators))
-                if (sq.length() > 0)
-                    break;
-                else
-                    tq.consume();
-            else
-                sq.append(tq.consume());
-        }
-        return StringUtil.releaseBuilder(sq);
     }
 
     private void findElements() {
