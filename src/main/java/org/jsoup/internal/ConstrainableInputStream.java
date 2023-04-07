@@ -18,10 +18,9 @@ public final class ConstrainableInputStream extends BufferedInputStream {
 
     private final boolean capped;
     private final int maxSize;
-    private long startTime;
-    private long timeout = 0; // optional max time of request
     private int remaining;
     private boolean interrupted;
+    private TimeoutManager timeoutManager = new TimeoutManager();
 
     private ConstrainableInputStream(InputStream in, int bufferSize, int maxSize) {
         super(in, bufferSize);
@@ -29,7 +28,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         this.maxSize = maxSize;
         remaining = maxSize;
         capped = maxSize != 0;
-        startTime = System.nanoTime();
+        this.timeoutManager = timeoutManager;
     }
 
     /**
@@ -104,17 +103,12 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     }
 
     public ConstrainableInputStream timeout(long startTimeNanos, long timeoutMillis) {
-        this.startTime = startTimeNanos;
-        this.timeout = timeoutMillis * 1000000;
+        timeoutManager.start(startTimeNanos);
+        timeoutManager.set(timeoutMillis);
         return this;
     }
 
     private boolean expired() {
-        if (timeout == 0)
-            return false;
-
-        final long now = System.nanoTime();
-        final long dur = now - startTime;
-        return (dur > timeout);
+        return timeoutManager.expired();
     }
 }
