@@ -92,8 +92,8 @@ public abstract class CombiningEvaluator extends Evaluator {
         @Override
         public boolean matches(Element root, Element node) {
             for (int i = 0; i < evaluatorCount; i++) {
-                Evaluator s = evaluators.get(i);
-                if (s.matches(root, node))
+                Evaluator evaluator = evaluators.get(i);
+                if (evaluator.matches(root, node))
                     return true;
             }
             return false;
