@@ -480,7 +480,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             for (int j = i + 1; j < keys.length; j++) {
                 if (keys[j] == null)
                     continue OUTER; // keys.length doesn't shrink when removing, so re-test
-                if ((preserve && keys[i].equals(keys[j])) || (!preserve && keys[i].equalsIgnoreCase(keys[j]))) {
+                boolean isDuplicate = (preserve && keys[i].equals(keys[j])) || (!preserve && keys[i].equalsIgnoreCase(keys[j]));
+                if (isDuplicate) {
                     dupes++;
                     remove(j);
                     j--;
