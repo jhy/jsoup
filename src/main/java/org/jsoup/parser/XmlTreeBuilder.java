@@ -14,7 +14,9 @@ import org.jsoup.nodes.XmlDeclaration;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Use the {@code XmlTreeBuilder} when you want to parse XML without any of the HTML DOM rules being applied to the
@@ -24,6 +26,18 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
+    private final Map<Token.TokenType, TokenProcessor> tokenProcessors;
+
+    public XmlTreeBuilder() {
+        tokenProcessors = new HashMap<>();
+        tokenProcessors.put(Token.TokenType.StartTag, new StartTagProcessor());
+        tokenProcessors.put(Token.TokenType.EndTag, new EndTagProcessor());
+        tokenProcessors.put(Token.TokenType.Comment, new CommentProcessor());
+        tokenProcessors.put(Token.TokenType.Character, new CharacterProcessor());
+        tokenProcessors.put(Token.TokenType.Doctype, new DoctypeProcessor());
+        tokenProcessors.put(Token.TokenType.EOF, new EofProcessor());
+    }
+
     ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
     }
@@ -50,32 +64,65 @@ public class XmlTreeBuilder extends TreeBuilder {
     XmlTreeBuilder newInstance() {
         return new XmlTreeBuilder();
     }
-
+    abstract class TokenProcessor {
+        public abstract void process(Token token);
+    }
     @Override
     protected boolean process(Token token) {
-        // start tag, end tag, doctype, comment, character, eof
-        switch (token.type) {
-            case StartTag:
-                insert(token.asStartTag());
-                break;
-            case EndTag:
-                popStackToClose(token.asEndTag());
-                break;
-            case Comment:
-                insert(token.asComment());
-                break;
-            case Character:
-                insert(token.asCharacter());
-                break;
-            case Doctype:
-                insert(token.asDoctype());
-                break;
-            case EOF: // could put some normalisation here if desired
-                break;
-            default:
-                Validate.fail("Unexpected token type: " + token.type);
+        TokenProcessor processor = tokenProcessors.get(token.type);
+        if (processor != null) {
+            processor.process(token);
+        } else {
+            Validate.fail("Unexpected token type: " + token.type);
         }
         return true;
+    }
+
+    public class StartTagProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            insert(token.asStartTag());
+        }
+    }
+
+    public class EndTagProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            popStackToClose(token.asEndTag());
+        }
+    }
+
+    public class CommentProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            insert(token.asComment());
+        }
+    }
+
+    public class CharacterProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            insert(token.asCharacter());
+        }
+    }
+
+    public class DoctypeProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            insert(token.asDoctype());
+        }
+    }
+
+    public class EofProcessor extends TokenProcessor {
+        @Override
+        public void process(Token token) {
+            // no-op
+        }
+    }
+
+    protected void insertNode(Node node) {
+        currentElement().appendChild(node);
+        onNodeInserted(node, null);
     }
 
     protected void insertNode(Node node) {
