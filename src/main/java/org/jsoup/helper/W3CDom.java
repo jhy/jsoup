@@ -3,6 +3,7 @@ package org.jsoup.helper;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
@@ -348,10 +349,14 @@ public class W3CDom {
         public W3CBuilder(Document doc) {
             this.doc = doc;
             namespacesStack.push(new HashMap<>());
-            namespacesStack.peek().put("", "http://www.w3.org/1999/xhtml"); // TODO document
             dest = doc;
             contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty); // Track the context jsoup Element, so we can save the corresponding w3c element
-        }
+            final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
+            if (inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder) {
+              // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
+              namespacesStack.peek().put("", "http://www.w3.org/1999/xhtml");
+            }
+          }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
