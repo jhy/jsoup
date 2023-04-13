@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.parser.Tag;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 import org.junit.jupiter.api.Test;
 
@@ -156,6 +157,14 @@ public class NodeTest {
         assertEquals("<span>two</span> three", TextUtil.stripNewlines(p.html()));
     }
 
+    @Test void removeOnOrphanIsNoop() {
+        // https://github.com/jhy/jsoup/issues/1898
+        Element node = new Element("div");
+        assertNull(node.parentNode());
+        node.remove();
+        assertNull(node.parentNode());
+    }
+
     @Test public void testReplace() {
         Document doc = Jsoup.parse("<p>One <span>two</span> three</p>");
         Element p = doc.select("p").first();
@@ -200,6 +209,25 @@ public class NodeTest {
         assertEquals("<p>One <em>four</em><i>five</i><b>two</b> three</p>", doc.body().html());
     }
 
+    @Test void beforeShuffle() {
+        // https://github.com/jhy/jsoup/issues/1898
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three</div>");
+        Element div = doc.select("div").get(0);
+        Elements ps = doc.select("p");
+        Element p1 = ps.get(0);
+        Element p2 = ps.get(1);
+        Element p3 = ps.get(2);
+
+        p2.before(p1);
+        p3.before(p2);
+        // ^ should be no-ops, they are already before
+        assertEquals("One Two Three", div.text());
+
+        p2.before(p1);
+        p1.before(p3);
+        assertEquals("Three One Two", div.text());
+    }
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>One <b>two</b> three</p>");
         Element newNode = new Element(Tag.valueOf("em"), "");
@@ -210,6 +238,25 @@ public class NodeTest {
 
         doc.select("b").first().after("<i>five</i>");
         assertEquals("<p>One <b>two</b><i>five</i><em>four</em> three</p>", doc.body().html());
+    }
+
+    @Test void afterShuffle() {
+        // https://github.com/jhy/jsoup/issues/1898
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three</div>");
+        Element div = doc.select("div").get(0);
+        Elements ps = doc.select("p");
+        Element p1 = ps.get(0);
+        Element p2 = ps.get(1);
+        Element p3 = ps.get(2);
+
+        p1.after(p2);
+        p2.after(p3);
+        // ^ should be no-ops, they are already before
+        assertEquals("One Two Three", div.text());
+
+        p3.after(p1);
+        p1.after(p2);
+        assertEquals("Three One Two", div.text());
     }
 
     @Test public void unwrap() {
@@ -401,5 +448,18 @@ public class NodeTest {
 
         assertNull(firstEl.firstElementChild());
         assertNull(firstEl.lastElementChild());
+    }
+
+    @Test void nodeName() {
+        Element div = new Element("DIV");
+        assertEquals("DIV", div.tagName());
+        assertEquals("DIV", div.nodeName());
+        assertEquals("div", div.normalName());
+        assertTrue(div.isNode("div"));
+        assertTrue(Node.isNode(div, "div"));
+
+        TextNode text = new TextNode("Some Text");
+        assertEquals("#text", text.nodeName());
+        assertEquals("#text", text.normalName());
     }
 }

@@ -3,9 +3,12 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.NodeTraversor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -167,6 +170,25 @@ class PositionTest {
         assertNotNull(item);
         assertEquals("13,5:496-13,11:502", item.sourceRange().toString());
         assertEquals("17,5:779-17,12:786", item.endSourceRange().toString());
+    }
+
+    @Test void tracksTableMovedText() {
+        String html = "<table>foo<tr>bar<td>baz</td>qux</tr>coo</table>";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        List<TextNode> textNodes = new ArrayList<>();
+        NodeTraversor.traverse((Node node, int depth) -> {
+            if (node instanceof TextNode) {
+                textNodes.add((TextNode) node);
+            }
+        }, doc);
+
+        assertEquals(5, textNodes.size());
+        assertEquals("1,8:7-1,11:10", textNodes.get(0).sourceRange().toString());
+        assertEquals("1,15:14-1,18:17", textNodes.get(1).sourceRange().toString());
+        assertEquals("1,22:21-1,25:24", textNodes.get(2).sourceRange().toString());
+        assertEquals("1,30:29-1,33:32", textNodes.get(3).sourceRange().toString());
+        assertEquals("1,38:37-1,41:40", textNodes.get(4).sourceRange().toString());
     }
 
 }

@@ -7,7 +7,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -76,42 +75,6 @@ public class W3CDomTest {
         String furtherExpected =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(furtherExpected, TextUtil.stripNewlines(furtherOut)); // on windows, DOM will write newlines as \r\n
-    }
-
-    @Test
-    public void convertsGoogle() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
-        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
-
-        W3CDom w3c = new W3CDom();
-        Document wDoc = w3c.fromJsoup(doc);
-        Node htmlEl = wDoc.getChildNodes().item(1);
-        assertEquals("http://www.w3.org/1999/xhtml", htmlEl.getNamespaceURI());
-        assertEquals("html", htmlEl.getLocalName());
-        assertEquals("html", htmlEl.getNodeName());
-
-        DocumentType doctype = wDoc.getDoctype();
-        Node doctypeNode = wDoc.getChildNodes().item(0);
-        assertSame(doctype, doctypeNode);
-        assertEquals("html", doctype.getName());
-
-        String xml = W3CDom.asString(wDoc, W3CDom.OutputXml());
-        assertTrue(xml.contains("ipod"));
-
-        Document roundTrip = parseXml(xml, true);
-        assertEquals("Images", roundTrip.getElementsByTagName("a").item(0).getTextContent());
-    }
-
-    @Test
-    public void convertsGoogleLocation() throws IOException {
-        File in = ParseTest.getFile("/htmltests/google-ipod.html.gz");
-        org.jsoup.nodes.Document doc = Jsoup.parse(in, "UTF8");
-
-        W3CDom w3c = new W3CDom();
-        Document wDoc = w3c.fromJsoup(doc);
-
-        String out = w3c.asString(wDoc);
-        assertEquals(doc.location(), wDoc.getDocumentURI());
     }
 
     @Test

@@ -41,6 +41,20 @@ public class CommentTest {
         assertEquals("<!-- a simple comment -->", c1.outerHtml());
     }
 
+    @Test void stableIndentInBlock() {
+        String html = "<div><!-- comment --> Text</div><p><!-- comment --> Text</p>";
+        Document doc = Jsoup.parse(html);
+        String out = doc.body().html();
+        assertEquals("<div>\n" +
+            " <!-- comment --> Text\n" +
+            "</div>\n" +
+            "<p><!-- comment --> Text</p>", out);
+
+        Document doc2 = Jsoup.parse(out);
+        String out2 = doc2.body().html();
+        assertEquals(out, out2);
+    }
+
     @Test
     public void testClone() {
         Comment c1 = comment.clone();

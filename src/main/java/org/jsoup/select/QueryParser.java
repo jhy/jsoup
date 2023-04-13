@@ -15,7 +15,7 @@ import static org.jsoup.internal.Normalizer.normalize;
  * Parses a CSS selector into an Evaluator tree.
  */
 public class QueryParser {
-    private final static String[] combinators = {",", ">", "+", "~", " "};
+    private final static char[] combinators = {',', '>', '+', '~', ' '};
     private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
     private final TokenQueue tq;

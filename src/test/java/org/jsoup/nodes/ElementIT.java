@@ -1,12 +1,12 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ElementIT {
     @Test
@@ -77,5 +77,61 @@ public class ElementIT {
         assertEquals("End Content", wrapperAcutal.children().get(rows + 1).text());
 
         assertTrue(runtime <= 10000);
+    }
+
+    // These overflow tests take a couple seconds to run, so are in the slow tests
+    @Test void hasTextNoOverflow() {
+        // hasText() was recursive, so could overflow
+        Document doc = new Document("https://example.com/");
+        Element el = doc.body();
+        for (int i = 0; i <= 50000; i++) {
+            el = el.appendElement("p");
+        }
+        assertFalse(doc.hasText());
+        el.text("Hello");
+        assertTrue(doc.hasText());
+        assertEquals(el.text(), doc.text());
+    }
+
+    @Test void dataNoOverflow() {
+        // data() was recursive, so could overflow
+        Document doc = new Document("https://example.com/");
+        Element el = doc.body();
+        for (int i = 0; i <= 50000; i++) {
+            el = el.appendElement("p");
+        }
+        Element script = el.appendElement("script");
+        script.text("script"); // holds data nodes, so inserts as data, not text
+        assertFalse(script.hasText());
+        assertEquals("script", script.data());
+        assertEquals(el.data(), doc.data());
+    }
+
+    @Test void parentsNoOverflow() {
+        // parents() was recursive, so could overflow
+        Document doc = new Document("https://example.com/");
+        Element el = doc.body();
+        int num = 50000;
+        for (int i = 0; i <= num; i++) {
+            el = el.appendElement("p");
+        }
+        Elements parents = el.parents();
+        assertEquals(num+2, parents.size()); // +2 for html and body
+        assertEquals(doc, el.ownerDocument());
+    }
+
+    @Test void wrapNoOverflow() {
+        // deepChild was recursive, so could overflow if presented with a fairly insane wrap
+        Document doc = new Document("https://example.com/");
+        Element el = doc.body().appendElement("p");
+        int num = 50000;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i <= num; i++) {
+            sb.append("<div>");
+        }
+        el.wrap(sb.toString());
+        String html = doc.body().html();
+        assertTrue(html.startsWith("<div>"));
+        assertEquals(num + 3, el.parents().size());
     }
 }
