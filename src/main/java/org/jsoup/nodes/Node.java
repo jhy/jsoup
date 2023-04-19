@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.Consumer;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
@@ -16,6 +15,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -28,7 +28,7 @@ public abstract class Node implements Cloneable {
     int siblingIndex;
 
     /**
-     * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
+     * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
      */
     protected Node() {
     }
@@ -38,6 +38,16 @@ public abstract class Node implements Cloneable {
      @return node name
      */
     public abstract String nodeName();
+
+    /**
+     Get the normalized name of this node. For node types other than Element, this is the same as {@link #nodeName()}.
+     For an Element, will be the lower-cased tag name.
+     @return normalized node name
+     @since 1.15.4.
+     */
+    public String normalName() {
+        return nodeName();
+    }
 
     /**
      * Check if this Node has an actual Attributes object.
@@ -82,7 +92,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get all of the element's attributes.
+     * Get each of the element's attributes.
      * @return attributes (which implements iterable, in same order as presented in original HTML).
      */
     public abstract Attributes attributes();
@@ -141,7 +151,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Clear (remove) all of the attributes in this node.
+     * Clear (remove) each of the attributes in this node.
      * @return this, for chaining
      */
     public Node clearAttributes() {
@@ -305,11 +315,12 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
+     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed. If this node is
+     * an orphan, nothing happens.
      */
     public void remove() {
-        Validate.notNull(parentNode);
-        parentNode.removeChild(this);
+        if (parentNode != null)
+            parentNode.removeChild(this);
     }
 
     /**
@@ -332,6 +343,9 @@ public abstract class Node implements Cloneable {
     public Node before(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex, node);
         return this;
@@ -357,6 +371,9 @@ public abstract class Node implements Cloneable {
     public Node after(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex + 1, node);
         return this;
@@ -439,11 +456,10 @@ public abstract class Node implements Cloneable {
     }
 
     private Element getDeepChild(Element el) {
-        List<Element> children = el.children();
-        if (children.size() > 0)
-            return getDeepChild(children.get(0));
-        else
-            return el;
+        while (el.childrenSize() > 0) {
+            el = el.childElementsList().get(0);
+        }
+        return el;
     }
 
     void nodelistChanged() {
@@ -470,6 +486,8 @@ public abstract class Node implements Cloneable {
     protected void replaceChild(Node out, Node in) {
         Validate.isTrue(out.parentNode == this);
         Validate.notNull(in);
+        if (out == in) return; // no-op self replacement
+
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
 
@@ -667,6 +685,16 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     @deprecated Use {@link #forEachNode(Consumer)} instead.
+     */
+    @Deprecated
+    public Node forEachNode(org.jsoup.helper.Consumer<? super Node> action) {
+        Validate.notNull(action);
+        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
+        return this;
+    }
+
+    /**
      * Perform a depth-first filtering through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
@@ -725,6 +753,26 @@ public abstract class Node implements Cloneable {
         return Range.of(this, true);
     }
 
+    /** Test if this node is not null and has the supplied normal name. */
+    static boolean isNode(@Nullable Node node, String normalName) {
+        return node != null && node.normalName().equals(normalName);
+    }
+
+    /** Test if this node has the supplied normal name. */
+    final boolean isNode(String normalName) {
+        return normalName().equals(normalName);
+    }
+
+    /** Test if this node is the first child, or first following blank text. */
+    final boolean isEffectivelyFirst() {
+        if (siblingIndex == 0) return true;
+        if (siblingIndex == 1) {
+            final Node prev = previousSibling();
+            return prev instanceof TextNode && (((TextNode) prev).isBlank());
+        }
+        return false;
+    }
+
     /**
      * Gets this node's outer HTML.
      * @return outer HTML.
@@ -752,7 +800,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Provides a hashCode for this Node, based on it's object identity. Changes to the Node's content will not impact the
+     Provides a hashCode for this Node, based on its object identity. Changes to the Node's content will not impact the
      result.
      @return an object identity based hashcode for this Node
      */

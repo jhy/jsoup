@@ -255,9 +255,23 @@ public class HttpConnectionTest {
     }
 
     @Test public void encodeUrl() throws MalformedURLException {
-        URL url1 = new URL("http://test.com/?q=white space");
-        URL url2 = HttpConnection.encodeUrl(url1);
-        assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
+        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag");
+        URL url2 = new UrlBuilder(url1).build();
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag", url2.toExternalForm());
+    }
+
+    @Test void encodedUrlDoesntDoubleEncode() throws MalformedURLException {
+        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag ment");
+        URL url2 = new UrlBuilder(url1).build();
+        URL url3 = new UrlBuilder(url2).build();
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment", url2.toExternalForm());
+        assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment", url3.toExternalForm());
+    }
+
+    @Test void connectToEncodedUrl() {
+        Connection connect = Jsoup.connect("https://example.com/a%20b%20c?query+string");
+        URL url = connect.request().url();
+        assertEquals("https://example.com/a%20b%20c?query+string", url.toExternalForm());
     }
 
     @Test public void noUrlThrowsValidationError() throws IOException {
@@ -280,6 +294,18 @@ public class HttpConnectionTest {
     @Test public void supportsInternationalDomainNames() throws MalformedURLException {
         String idn = "https://www.测试.测试/foo.html?bar";
         String puny = "https://www.xn--0zwm56d.xn--0zwm56d/foo.html?bar";
+
+        Connection con = Jsoup.connect(idn);
+        assertEquals(puny, con.request().url().toExternalForm());
+
+        HttpConnection.Request req = new HttpConnection.Request();
+        req.url(new URL(idn));
+        assertEquals(puny, req.url().toExternalForm());
+    }
+
+    @Test void supportsIdnWithPort() throws MalformedURLException {
+        String idn = "https://www.测试.测试:9001/foo.html?bar";
+        String puny = "https://www.xn--0zwm56d.xn--0zwm56d:9001/foo.html?bar";
 
         Connection con = Jsoup.connect(idn);
         assertEquals(puny, con.request().url().toExternalForm());

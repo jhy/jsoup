@@ -74,12 +74,23 @@ public class Cleaner {
     }
 
     /**
-     Determines if the input document <b>body</b>is valid, against the safelist. It is considered valid if all the tags and attributes
-     in the input HTML are allowed by the safelist, and that there is no content in the <code>head</code>.
+     Determines if the input document's <b>body</b> is valid, against the safelist. It is considered valid if all the
+     tags and attributes in the input HTML are allowed by the safelist, and that there is no content in the
+     <code>head</code>.
      <p>
-     This method can be used as a validator for user input. An invalid document will still be cleaned successfully
-     using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
-     to ensure enforced attributes are set correctly, and that the output is tidied.
+     This method is intended to be used in a user interface as a validator for user input. Note that regardless of the
+     output of this method, the input document <b>must always</b> be normalized using a method such as
+     {@link #clean(Document)}, and the result of that method used to store or serialize the document before later reuse
+     such as presentation to end users. This ensures that enforced attributes are set correctly, and that any
+     differences between how a given browser and how jsoup parses the input HTML are normalized.
+     </p>
+     <p>Example:
+     <pre>{@code
+     Document inputDoc = Jsoup.parse(inputHtml);
+     Cleaner cleaner = new Cleaner(Safelist.relaxed());
+     boolean isValid = cleaner.isValid(inputDoc);
+     Document normalizedDoc = cleaner.clean(inputDoc);
+     }</pre>
      </p>
      @param dirtyDocument document to test
      @return true if no tags or attributes need to be removed; false if they do
@@ -93,6 +104,27 @@ public class Cleaner {
             && dirtyDocument.head().childNodes().isEmpty(); // because we only look at the body, but we start from a shell, make sure there's nothing in the head
     }
 
+    /**
+     Determines if the input document's <b>body HTML</b> is valid, against the safelist. It is considered valid if all
+     the tags and attributes in the input HTML are allowed by the safelist.
+     <p>
+     This method is intended to be used in a user interface as a validator for user input. Note that regardless of the
+     output of this method, the input document <b>must always</b> be normalized using a method such as
+     {@link #clean(Document)}, and the result of that method used to store or serialize the document before later reuse
+     such as presentation to end users. This ensures that enforced attributes are set correctly, and that any
+     differences between how a given browser and how jsoup parses the input HTML are normalized.
+     </p>
+     <p>Example:
+     <pre>{@code
+     Document inputDoc = Jsoup.parse(inputHtml);
+     Cleaner cleaner = new Cleaner(Safelist.relaxed());
+     boolean isValid = cleaner.isValidBodyHtml(inputHtml);
+     Document normalizedDoc = cleaner.clean(inputDoc);
+     }</pre>
+     </p>
+     @param bodyHtml HTML fragment to test
+     @return true if no tags or attributes need to be removed; false if they do
+     */
     public boolean isValidBodyHtml(String bodyHtml) {
         Document clean = Document.createShell("");
         Document dirty = Document.createShell("");

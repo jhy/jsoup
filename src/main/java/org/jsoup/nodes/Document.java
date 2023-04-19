@@ -10,6 +10,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.Selector;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
@@ -144,6 +145,34 @@ public class Document extends Element {
     }
 
     /**
+     Get each of the {@code <form>} elements contained in this document.
+     @return a List of FormElement objects, which will be empty if there are none.
+     @see Elements#forms()
+     @see FormElement#elements()
+     @since 1.15.4
+     */
+    public List<FormElement> forms() {
+        return select("form").forms();
+    }
+
+    /**
+     Selects the first {@link FormElement} in this document that matches the query. If none match, throws an
+     {@link IllegalArgumentException}.
+     @param cssQuery a {@link Selector} CSS query
+     @return the first matching {@code <form>} element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.4
+     */
+    public FormElement expectForm(String cssQuery) {
+        Elements els = select(cssQuery);
+        for (Element el : els) {
+            if (el instanceof FormElement) return (FormElement) el;
+        }
+        Validate.fail("No form elements matched the query '%s' in the document.", cssQuery);
+        return null; // (not really)
+    }
+
+    /**
      Get the string contents of the document's {@code title} element.
      @return Trimmed title, or empty string if none set.
      */
@@ -180,7 +209,10 @@ public class Document extends Element {
      Normalise the document. This happens after the parse phase so generally does not need to be called.
      Moves any text content that is not in the body element into the body.
      @return this document after normalisation
+     @deprecated as normalization occurs during the HTML parse, this method is no longer useful and will be retired
+     in the next release.
      */
+    @Deprecated
     public Document normalise() {
         Element htmlEl = htmlEl(); // these all create if not found
         Element head = head();

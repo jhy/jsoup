@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
@@ -26,7 +27,6 @@ public class Entities {
     static final int codepointRadix = 36;
     private static final char[] codeDelims = {',', ';'};
     private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
-    private static final OutputSettings DefaultOutput = new OutputSettings();
 
     public enum EscapeMode {
         /**
@@ -161,8 +161,11 @@ public class Entities {
      * @return the escaped string
      */
     public static String escape(String string) {
+        if (DefaultOutput == null)
+            DefaultOutput = new OutputSettings();
         return escape(string, DefaultOutput);
     }
+    private static @Nullable OutputSettings DefaultOutput; // lazy-init, to break circular dependency with OutputSettings
 
     // this method does a lot, but other breakups cause rescanning and stringbuilder generations
     static void escape(Appendable accum, String string, OutputSettings out,

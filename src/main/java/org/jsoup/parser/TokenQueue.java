@@ -282,12 +282,31 @@ public class TokenQueue {
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
-                if (last == ESC)
+                if (last == ESC) {
                     out.append(c);
+                    c = 0;
+                }
             }
             else 
                 out.append(c);
             last = c;
+        }
+        return StringUtil.releaseBuilder(out);
+    }
+
+    /*
+    Given a CSS identifier (such as a tag, ID, or class), escape any CSS special characters that would otherwise not be
+    valid in a selector.
+     */
+    public static String escapeCssIdentifier(String in) {
+        StringBuilder out = StringUtil.borrowBuilder();
+        TokenQueue q = new TokenQueue(in);
+        while (!q.isEmpty()) {
+            if (q.matchesCssIdentifier(ElementSelectorChars)) {
+                out.append(q.consume());
+            } else {
+                out.append(ESC).append(q.consume());
+            }
         }
         return StringUtil.releaseBuilder(out);
     }
@@ -323,12 +342,9 @@ public class TokenQueue {
      * @return tag name
      */
     public String consumeElementSelector() {
-        int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-")))
-            pos++;
-        
-        return queue.substring(start, pos);
+        return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
+    private static final String[] ElementSelectorChars = {"*|", "|", "_", "-"};
 
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
@@ -336,11 +352,31 @@ public class TokenQueue {
      @return identifier
      */
     public String consumeCssIdentifier() {
-        int start = pos;
-        while (!isEmpty() && (matchesWord() || matchesAny('-', '_')))
-            pos++;
+        return consumeEscapedCssIdentifier(CssIdentifierChars);
+    }
+    private static final String[] CssIdentifierChars = {"-", "_"};
 
-        return queue.substring(start, pos);
+
+    private String consumeEscapedCssIdentifier(String... matches) {
+        int start = pos;
+        boolean escaped = false;
+        while (!isEmpty()) {
+            if (queue.charAt(pos) == ESC && remainingLength() >1 ) {
+                escaped = true;
+                pos+=2; // skip the escape and the escaped
+            } else if (matchesCssIdentifier(matches)) {
+                pos++;
+            } else {
+                break;
+            }
+        }
+
+        String consumed = queue.substring(start, pos);
+        return escaped ? unescape(consumed) : consumed;
+    }
+
+    private boolean matchesCssIdentifier(String... matches) {
+        return matchesWord() || matchesAny(matches);
     }
 
     /**

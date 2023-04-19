@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
 import org.jsoup.internal.StringUtil;
@@ -20,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
@@ -258,7 +260,7 @@ public class ConnectTest {
     @Test
     public void postFiles() throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
-        File html = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File html = ParseTest.getFile("/htmltests/large.html");
 
         Document res = Jsoup
             .connect(EchoServlet.Url)
@@ -272,8 +274,8 @@ public class ConnectTest {
 
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
-        assertEquals("google-ipod.html.gz", ihVal("Part secondPart Filename", res));
-        assertEquals("12212", ihVal("Part secondPart Size", res));
+        assertEquals("large.html", ihVal("Part secondPart Filename", res));
+        assertEquals("280735", ihVal("Part secondPart Size", res));
 
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
@@ -533,7 +535,7 @@ public class ConnectTest {
         FormElement form = forms.get(0);
         Connection post = form.submit();
 
-        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File uploadFile = ParseTest.getFile("/htmltests/large.html");
         FileInputStream stream = new FileInputStream(uploadFile);
 
         Connection.KeyVal fileData = post.data("_file");
@@ -681,5 +683,81 @@ public class ConnectTest {
         assertEquals(200 * 1024, mediumRes.body().length());
         assertEquals(actualDocText, largeRes.body().length());
         assertEquals(actualDocText, unlimitedRes.body().length());
+    }
+
+    @Test void formLoginFlow() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+        Document loginDoc = Jsoup.connect(startUrl).get();
+        FormElement form = loginDoc.expectForm("#login");
+        assertNotNull(form);
+        form.expectFirst("[name=username]").val("admin");
+        form.expectFirst("[name=password]").val("Netscape engineers are weenies!");
+
+        // post it- should go to Cookie then bounce to Echo
+        Connection submit = form.submit();
+        assertEquals(Connection.Method.POST, submit.request().method());
+        Connection.Response postRes = submit.execute();
+        assertEquals(echoUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.GET, postRes.method());
+        Document resultDoc = postRes.parse();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", resultDoc));
+        // should be no form data sent to the echo redirect
+        assertEquals("", ihVal("Query String", resultDoc));
+
+        // new request to echo, should not have form data, but should have cookies from implicit session
+        Document newEcho = submit.newRequest().url(echoUrl).get();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
+        assertEquals("", ihVal("Query String", newEcho));
+
+        Document cookieDoc = submit.newRequest().url(cookieUrl).get();
+        assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
+
+    }
+
+    @Test void formLoginFlow2() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+
+        Connection session = Jsoup.newSession();
+        Document loginDoc = session.newRequest().url(startUrl).get();
+        FormElement form = loginDoc.expectForm("#login2");
+        assertNotNull(form);
+        String username = "admin";
+        form.expectFirst("[name=username]").val(username);
+        String password = "Netscape engineers are weenies!";
+        form.expectFirst("[name=password]").val(password);
+
+        Connection submit = form.submit();
+        assertEquals(username, submit.data("username").value());
+        assertEquals(password, submit.data("password").value());
+
+        Connection.Response postRes = submit.execute();
+        assertEquals(cookieUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.POST, postRes.method());
+        Document resultDoc = postRes.parse();
+
+        Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
+        assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
+    }
+
+    @Test void preservesUrlFragment() throws IOException {
+        // confirms https://github.com/jhy/jsoup/issues/1686
+        String url = EchoServlet.Url + "#fragment";
+        Document doc = Jsoup.connect(url).get();
+        assertEquals(url, doc.location());
+    }
+
+    @Test void fetchUnicodeUrl() throws IOException {
+        String url = EchoServlet.Url + "/✔/?鍵=値";
+        Document doc = Jsoup.connect(url).get();
+
+        assertEquals("/✔/", ihVal("Path Info", doc));
+        assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
+        assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
 }
