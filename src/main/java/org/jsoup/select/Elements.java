@@ -36,10 +36,6 @@ public class Elements extends ArrayList<Element> {
         super(elements);
     }
     
-    public Elements(List<Element> elements) {
-        super(elements);
-    }
-    
     public Elements(Element... elements) {
     	super(Arrays.asList(elements));
     }
