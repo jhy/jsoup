@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.parser.Parser;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.junit.jupiter.api.Test;
 
@@ -189,6 +190,17 @@ class PositionTest {
         assertEquals("1,22:21-1,25:24", textNodes.get(2).sourceRange().toString());
         assertEquals("1,30:29-1,33:32", textNodes.get(3).sourceRange().toString());
         assertEquals("1,38:37-1,41:40", textNodes.get(4).sourceRange().toString());
+    }
+
+    @Test void tracksClosingHtmlTagsInXml() {
+        // verifies https://github.com/jhy/jsoup/issues/1935
+        String xml = "<p>One</p><title>Two</title><data>Three</data>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().setTrackPosition(true));
+        Elements els = doc.children();
+        for (Element el : els) {
+            assertTrue(el.sourceRange().isTracked());
+            assertTrue(el.endSourceRange().isTracked());
+        }
     }
 
 }
