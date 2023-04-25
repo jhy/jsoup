@@ -116,6 +116,11 @@ public final class CharacterReader {
         return readerPos + bufPos;
     }
 
+    /** Tests if the buffer has been fully read. */
+    boolean readFully() {
+        return readFully;
+    }
+
     /**
      Enables or disables line number tracking. By default, will be <b>off</b>.Tracking line numbers improves the
      legibility of parser error messages, for example. Tracking should be enabled before any content is read to be of

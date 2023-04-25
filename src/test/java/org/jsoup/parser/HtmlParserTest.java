@@ -1732,4 +1732,20 @@ public class HtmlParserTest {
         //assertEquals("OneTwo", doc.expectFirst("body > div").text());
         System.out.println(doc.html());
     }
+
+    @Test void largeTextareaContents() {
+        // https://github.com/jhy/jsoup/issues/1929
+        StringBuilder sb = new StringBuilder();
+        int num = 2000;
+        for (int i = 0; i <= num; i++) {
+            sb.append("\n<text>foo</text>\n");
+        }
+        String textContent = sb.toString();
+        String sourceHtml = "<textarea>" + textContent + "</textarea>";
+
+        Document doc = Jsoup.parse(sourceHtml);
+        Element textArea = doc.expectFirst("textarea");
+
+        assertEquals(textContent, textArea.wholeText());
+    }
 }
