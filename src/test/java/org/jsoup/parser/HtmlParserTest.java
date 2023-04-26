@@ -1729,8 +1729,7 @@ public class HtmlParserTest {
         // https://github.com/jhy/jsoup/issues/1851
         String html = "<body><div>One</html>Two</div></body>";
         Document doc = Jsoup.parse(html);
-        //assertEquals("OneTwo", doc.expectFirst("body > div").text());
-        System.out.println(doc.html());
+        assertEquals("OneTwo", doc.expectFirst("body > div").text());
     }
 
     @Test void largeTextareaContents() {
