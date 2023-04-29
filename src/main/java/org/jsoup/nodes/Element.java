@@ -1844,7 +1844,7 @@ public class Element extends Node {
     }
 
     private boolean isFormatAsBlock(Document.OutputSettings out) {
-        return tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
+        return tag.isBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
     }
 
     private boolean isInlineable(Document.OutputSettings out) {

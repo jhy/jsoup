@@ -2701,4 +2701,28 @@ public class ElementTest {
         Document doc = Jsoup.parse(html);
         assertEquals(html, doc.body().html());
     }
+
+    @Test void nestedFormatAsInlinePrintsAsBlock() {
+        // https://github.com/jhy/jsoup/issues/1926
+        String h = "        <table>\n" +
+            "            <tr>\n" +
+            "                <td>\n" +
+            "                    <p style=\"display:inline;\">A</p>\n" +
+            "                    <p style=\"display:inline;\">B</p>\n" +
+            "                </td>\n" +
+            "            </tr>\n" +
+            "        </table>";
+        Document doc = Jsoup.parse(h);
+        String out = doc.body().html();
+        assertEquals("<table>\n" +
+            " <tbody>\n" +
+            "  <tr>\n" +
+            "   <td>\n" +
+            "    <p style=\"display:inline;\">A</p>\n" +
+            "    <p style=\"display:inline;\">B</p></td>\n" +
+            "  </tr>\n" +
+            " </tbody>\n" +
+            "</table>", out);
+        // todo - I would prefer the </td> to wrap down there - but need to reimplement pretty printer to simplify and track indented state
+    }
 }

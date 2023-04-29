@@ -720,15 +720,8 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p><b>\n" +
-            " <table>\n" +
-            "  <tbody>\n" +
-            "   <tr>\n" +
-            "    <td><p><i>Three</i></p><p><i>Four</i></p></td>\n" +
-            "   </tr>\n" +
-            "  </tbody>\n" +
-            " </table><p>Five</p></b>";
-        assertEquals(want, doc.body().html());
+        String want = "<p><b>One</b></p><b><table><tbody><tr><td><p><i>Three</i></p><p><i>Four</i></p></td></tr></tbody></table><p>Five</p></b>";
+        assertEquals(want, TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void commentBeforeHtml() {
@@ -777,7 +770,7 @@ public class HtmlParserTest {
 
         Document two = Jsoup.parse("<title>One<b>Two <p>Test</p>"); // no title, so <b> causes </title> breakout
         assertEquals("One", two.title());
-        assertEquals("<b>Two <p>Test</p></b>", two.body().html());
+        assertEquals("<b>Two \n <p>Test</p></b>", two.body().html());
     }
 
     @Test public void handlesUnclosedScriptAtEof() {
@@ -1470,7 +1463,7 @@ public class HtmlParserTest {
         assertEquals(1, nodes.size());
         Node node = nodes.get(0);
         assertEquals("h2", node.nodeName());
-        assertEquals("<p><h2>text</h2></p>", node.parent().outerHtml());
+        assertEquals("<p>\n <h2>text</h2></p>", node.parent().outerHtml());
     }
 
     @Test public void nestedPFragments() {
@@ -1479,7 +1472,7 @@ public class HtmlParserTest {
         List<Node> nodes = new Document("").parser().parseFragmentInput(bareFragment, new Element("p"), "");
         assertEquals(2, nodes.size());
         Node node = nodes.get(0);
-        assertEquals("<p><p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
+        assertEquals("<p>\n <p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
     }
 
     @Test public void nestedAnchorAdoption() {

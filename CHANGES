@@ -38,6 +38,10 @@ Release 1.16.1 [PENDING]
   * Bugfix: when pretty-printing a <pre> containing block tags, those tags were incorrectly indented.
     <https://github.com/jhy/jsoup/issues/1891>
 
+  * Bugfix: when pretty-printing nested inlineable blocks (such as a <p> in a <td>), the inner element should be
+    indented.
+    <https://github.com/jhy/jsoup/issues/1926>
+
   * Bugfix: <br> tags should be wrap-indented when in block tags (and not when in inline tags).
     <https://github.com/jhy/jsoup/issues/1911>
 
