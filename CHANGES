@@ -1,6 +1,6 @@
 jsoup changelog
 
-Release 1.16.1 [PENDING]
+Release 1.16.1 [29-Apr-2023]
   * Improvement: in Jsoup.connect(url), natively support URLs with Unicode characters in the path or query string,
     without having to be escaped by the caller.
     <https://github.com/jhy/jsoup/issues/1914>
