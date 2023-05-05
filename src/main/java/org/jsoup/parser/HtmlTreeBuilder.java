@@ -282,6 +282,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+        // cleanup duplicate attributes:
+        if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
+            int dupes = startTag.attributes.deduplicate(settings);
+            if (dupes > 0) {
+                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
+            }
+        }
+
         Tag tag = tagFor(startTag.name(), settings);
         FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         if (checkTemplateStack) {
