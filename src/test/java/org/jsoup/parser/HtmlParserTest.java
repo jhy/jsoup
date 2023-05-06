@@ -58,6 +58,18 @@ public class HtmlParserTest {
         assertEquals("Dropped duplicate attribute(s) in tag [p]", parser.getErrors().get(0).getErrorMessage());
     }
 
+    @Test public void dropsDuplicateAttributesInEmptyElement() {
+        String html = "<img One=One ONE=Two Two=two one=Three One=Four two=Five>Text>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = parser.parseInput(html, "");
+
+        Element p = doc.selectFirst("img");
+        assertEquals("<img one=\"One\" two=\"two\">", p.outerHtml()); // normalized names due to lower casing
+
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("Dropped duplicate attribute(s) in tag [img]", parser.getErrors().get(0).getErrorMessage());
+    }
+
     @Test public void dropsDuplicateAttributesInFormElement() {
         String html = "<form One=One ONE=Two Two=two one=Three One=Four two=Five></form>";
         Parser parser = Parser.htmlParser().setTrackErrors(10);
