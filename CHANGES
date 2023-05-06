@@ -1,5 +1,12 @@
 jsoup changelog
 
+Release 1.16.2 [PENDING]
+  * Improvement: when converting jsoup Documents to W3C Documents in W3CDom, HTML documents will be placed in the
+    `http://www.w3.org/1999/xhtml` namespace by default, per the HTML5 spec. This can be controlled by setting
+    `W3CDom#namespaceAware(false)`.
+    <https://github.com/jhy/jsoup/pull/1848>
+
+
 Release 1.16.1 [29-Apr-2023]
   * Improvement: in Jsoup.connect(url), natively support URLs with Unicode characters in the path or query string,
     without having to be escaped by the caller.
