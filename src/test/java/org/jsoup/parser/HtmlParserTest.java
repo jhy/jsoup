@@ -59,7 +59,7 @@ public class HtmlParserTest {
     }
 
     @Test public void dropsDuplicateAttributesInEmptyElement() {
-        String html = "<img One=One ONE=Two Two=two one=Three One=Four two=Five>Text>";
+        String html = "<img One=One ONE=Two Two=two one=Three One=Four two=Five>";
         Parser parser = Parser.htmlParser().setTrackErrors(10);
         Document doc = parser.parseInput(html, "");
 
