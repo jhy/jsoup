@@ -228,9 +228,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insert(final Token.StartTag startTag) {
-    	dedupliateTagAttributes(startTag);
+        dedupliateTagAttributes(startTag);
 
-    	// handle empty unknown tags
+        // handle empty unknown tags
         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
             Element el = insertEmpty(startTag);
@@ -262,7 +262,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
-    	dedupliateTagAttributes(startTag);
+        dedupliateTagAttributes(startTag);
 
         Tag tag = tagFor(startTag.name(), settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
@@ -279,7 +279,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
-    	dedupliateTagAttributes(startTag);
+        dedupliateTagAttributes(startTag);
 
         Tag tag = tagFor(startTag.name(), settings);
         FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
@@ -346,8 +346,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (dupes > 0) {
                 error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
             }
-        }		
-	}
+        }
+    }
 
     Element pop() {
         int size = stack.size();
