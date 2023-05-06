@@ -242,6 +242,17 @@ public class W3CDomTest {
     }
 
     @Test
+    public void xhtmlNoNamespace() throws XPathExpressionException {
+        W3CDom w3c = new W3CDom();
+        String html = "<html><body><div>hello</div></body></html>";
+        w3c.namespaceAware(false);
+        Document dom = w3c.fromJsoup(Jsoup.parse(html));
+        NodeList nodeList = xpath(dom, "//body");// no namespace
+        assertEquals(1, nodeList.getLength());
+        assertEquals("div", nodeList.item(0).getLocalName());
+    }
+
+    @Test
     void canDisableNamespaces() throws XPathExpressionException {
         W3CDom w3c = new W3CDom();
         assertTrue(w3c.namespaceAware());
@@ -296,6 +307,24 @@ public class W3CDomTest {
 
     private void assertEqualsIgnoreCase(String want, String have) {
         assertEquals(want.toLowerCase(Locale.ROOT), have.toLowerCase(Locale.ROOT));
+    }
+
+
+    @Test
+    public void canOutputHtmlWithoutNamespace() {
+        String html = "<p>One</p>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        W3CDom w3c = new W3CDom();
+        w3c.namespaceAware(false);
+
+        String asHtml = W3CDom.asString(w3c.fromJsoup(jdoc), W3CDom.OutputHtml());
+        String asXtml = W3CDom.asString(w3c.fromJsoup(jdoc), W3CDom.OutputXml());
+        assertEqualsIgnoreCase(
+            "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>",
+            asHtml);
+        assertEqualsIgnoreCase(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body><p>One</p></body></html>",
+            asXtml);
     }
 
     @Test public void convertsElementsAndMaintainsSource() {
