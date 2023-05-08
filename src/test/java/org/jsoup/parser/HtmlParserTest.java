@@ -7,13 +7,16 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.jsoup.parser.ParseSettings.preserveCase;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,40 +49,25 @@ public class HtmlParserTest {
         assertEquals("foo > bar", p.attr("class"));
     }
 
-    @Test public void dropsDuplicateAttributes() {
-        String html = "<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>";
+    @ParameterizedTest @MethodSource("dupeAttributeData")
+    public void dropsDuplicateAttributes(String html, String expected) {
         Parser parser = Parser.htmlParser().setTrackErrors(10);
         Document doc = parser.parseInput(html, "");
 
-        Element p = doc.selectFirst("p");
-        assertEquals("<p one=\"One\" two=\"two\">Text</p>", p.outerHtml()); // normalized names due to lower casing
+        Element el = doc.expectFirst("body > *");
+        assertEquals(expected, el.outerHtml()); // normalized names due to lower casing
+        String tag = el.normalName();
 
         assertEquals(1, parser.getErrors().size());
-        assertEquals("Dropped duplicate attribute(s) in tag [p]", parser.getErrors().get(0).getErrorMessage());
+        assertEquals("Dropped duplicate attribute(s) in tag [" + tag + "]", parser.getErrors().get(0).getErrorMessage());
     }
 
-    @Test public void dropsDuplicateAttributesInEmptyElement() {
-        String html = "<img One=One ONE=Two Two=two one=Three One=Four two=Five>";
-        Parser parser = Parser.htmlParser().setTrackErrors(10);
-        Document doc = parser.parseInput(html, "");
-
-        Element p = doc.selectFirst("img");
-        assertEquals("<img one=\"One\" two=\"two\">", p.outerHtml()); // normalized names due to lower casing
-
-        assertEquals(1, parser.getErrors().size());
-        assertEquals("Dropped duplicate attribute(s) in tag [img]", parser.getErrors().get(0).getErrorMessage());
-    }
-
-    @Test public void dropsDuplicateAttributesInFormElement() {
-        String html = "<form One=One ONE=Two Two=two one=Three One=Four two=Five></form>";
-        Parser parser = Parser.htmlParser().setTrackErrors(10);
-        Document doc = parser.parseInput(html, "");
-
-        Element p = doc.selectFirst("form");
-        assertEquals("<form one=\"One\" two=\"two\"></form>", p.outerHtml()); // normalized names due to lower casing
-
-        assertEquals(1, parser.getErrors().size());
-        assertEquals("Dropped duplicate attribute(s) in tag [form]", parser.getErrors().get(0).getErrorMessage());
+    private static Stream<Arguments> dupeAttributeData() {
+        return Stream.of(
+            Arguments.of("<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>", "<p one=\"One\" two=\"two\">Text</p>"),
+            Arguments.of("<img One=One ONE=Two Two=two one=Three One=Four two=Five>", "<img one=\"One\" two=\"two\">"),
+            Arguments.of("<form One=One ONE=Two Two=two one=Three One=Four two=Five></form>", "<form one=\"One\" two=\"two\"></form>")
+        );
     }
 
     @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
