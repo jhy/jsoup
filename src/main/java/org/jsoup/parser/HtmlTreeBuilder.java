@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Token.StartTag;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -227,13 +228,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insert(final Token.StartTag startTag) {
-        // cleanup duplicate attributes:
-        if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
-            int dupes = startTag.attributes.deduplicate(settings);
-            if (dupes > 0) {
-                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
-            }
-        }
+        dedupeAttributes(startTag);
 
         // handle empty unknown tags
         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
@@ -250,7 +245,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    Element insertStartTag(String startTagName) {
+	Element insertStartTag(String startTagName) {
         Element el = new Element(tagFor(startTagName, settings), null);
         insert(el);
         return el;
@@ -267,6 +262,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element insertEmpty(Token.StartTag startTag) {
+        dedupeAttributes(startTag);
+
         Tag tag = tagFor(startTag.name(), settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el, startTag);
@@ -282,6 +279,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     FormElement insertForm(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+        dedupeAttributes(startTag);
+
         Tag tag = tagFor(startTag.name(), settings);
         FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         if (checkTemplateStack) {
@@ -338,6 +337,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 formElement.addElement((Element) node);
         }
         onNodeInserted(node, token);
+    }
+
+    /** Cleanup duplicate attributes. **/
+    private void dedupeAttributes(StartTag startTag) {
+        if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
+            int dupes = startTag.attributes.deduplicate(settings);
+            if (dupes > 0) {
+                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
+            }
+        }
     }
 
     Element pop() {
