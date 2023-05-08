@@ -1812,18 +1812,6 @@ public class Element extends Node {
         return this;
     }
 
-    /**
-     @deprecated Use {@link #forEach(Consumer)} instead.
-     */
-    @Deprecated
-    public Element forEach(org.jsoup.helper.Consumer<? super Element> action) {
-        Validate.notNull(action);
-        NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof Element)
-                action.accept((Element) node);
-        }, this);
-        return this;
-    }
 
     @Override
     public Element filter(NodeFilter nodeFilter) {

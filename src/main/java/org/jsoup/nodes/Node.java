@@ -685,16 +685,6 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     @deprecated Use {@link #forEachNode(Consumer)} instead.
-     */
-    @Deprecated
-    public Node forEachNode(org.jsoup.helper.Consumer<? super Node> action) {
-        Validate.notNull(action);
-        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
-        return this;
-    }
-
-    /**
      * Perform a depth-first filtering through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
