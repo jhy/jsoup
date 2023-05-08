@@ -74,11 +74,5 @@ public class Collector {
             }
             return CONTINUE;
         }
-
-        @Override
-        public FilterResult tail(Node node, int depth) {
-            return CONTINUE;
-        }
     }
-
 }
