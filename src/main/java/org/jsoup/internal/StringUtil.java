@@ -335,12 +335,7 @@ public final class StringUtil {
         return controlChars.matcher(input).replaceAll("");
     }
 
-    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
-        @Override
-        protected Stack<StringBuilder> initialValue() {
-            return new Stack<>();
-        }
-    };
+    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = ThreadLocal.withInitial(Stack::new);
 
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
