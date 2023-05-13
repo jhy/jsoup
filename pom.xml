@@ -324,6 +324,20 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>net.sourceforge.cssparser</groupId>
+      <artifactId>cssparser</artifactId>
+      <version>0.9.30</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>net.sourceforge.cssparser</groupId>
+      <artifactId>cssparser</artifactId>
+      <version>0.9.30</version>
+    </dependency>
+
+
     <!-- junit -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
