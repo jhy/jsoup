@@ -1332,6 +1332,82 @@ public class Element extends Node {
 
         return StringUtil.releaseBuilder(accum).trim();
     }
+ 
+    /**
+     * Gets the {@code int} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> -1500000000 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't an {@code int}.
+     */
+    public int intValue() {
+        return Integer.parseInt(this.text());
+    }
+ 
+    /**
+     * Gets the {@code short} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> 10000 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't a {@code short}.
+     */
+    public short shortValue() {
+        return Short.parseShort(this.text());
+    }
+ 
+    /**
+     * Gets the {@code long} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> 1012932193999321 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't a {@code long}.
+     */
+    public long longValue() {
+        return Long.parseLong(this.text());
+    }
+ 
+    /**
+     * Gets the {@code byte} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> -125 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't a {@code byte}.
+     */
+    public byte byteValue() {
+        return Byte.parseByte(this.text());
+    }
+ 
+    /**
+     * Gets the {@code boolean} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> true </safeToConvert>}
+     * Internally calls {@link #text()}.
+     */
+    public boolean booleanValue() {
+        return Boolean.parseBoolean(this.text());
+    }
+ 
+    /**
+     * Gets the {@code float} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> -1324.2133 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't a {@code float}.
+     */
+    public float floatValue() {
+        return Float.parseFloat(this.text());
+    }
+ 
+    /**
+     * Gets the {@code double} value of this element.
+     * <br>
+     * <i>ex:</i> {@code <safeToConvert> -1324.2133 </safeToConvert>}
+     * Internally calls {@link #text()}.
+     * @throws NumberFormatException If the combined text of this element isn't a {@code double}.
+     */
+    public double doubleValue() {
+        return Double.parseDouble(this.text());
+    }
 
     /**
      Get the non-normalized, decoded text of this element and its children, including only any newlines and spaces
