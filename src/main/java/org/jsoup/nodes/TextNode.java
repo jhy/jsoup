@@ -80,33 +80,41 @@ public class TextNode extends LeafNode {
         return tailNode;
     }
 
+    @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
         final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
+        final boolean trimLikeBlock = parent != null && (parent.tag().isBlock() || parent.tag().formatAsBlock());
+        boolean trimLeading = false, trimTrailing = false;
 
-        boolean trimLeading = false;
-        boolean trimTrailing = false;
         if (normaliseWhite) {
-            trimLeading = (siblingIndex == 0 && parent != null && parent.tag().isBlock()) ||
-                parentNode instanceof Document;
-            trimTrailing = nextSibling() == null && parent != null && parent.tag().isBlock();
+            trimLeading = (trimLikeBlock && siblingIndex == 0) || parentNode instanceof Document;
+            trimTrailing = trimLikeBlock && nextSibling() == null;
 
             // if this text is just whitespace, and the next node will cause an indent, skip this text:
-            Node next = this.nextSibling();
+            Node next = nextSibling();
+            Node prev = previousSibling();
+            boolean isBlank = isBlank();
             boolean couldSkip = (next instanceof Element && ((Element) next).shouldIndent(out)) // next will indent
-                || (next instanceof TextNode && (((TextNode) next).isBlank())); // next is blank text, from re-parenting
-            if (couldSkip && isBlank()) return;
+                || (next instanceof TextNode && (((TextNode) next).isBlank())) // next is blank text, from re-parenting
+                || (prev instanceof Element && (((Element) prev).isBlock() || prev.isNode("br"))) // br is a bit special - make sure we don't get a dangling blank line, but not a block otherwise wraps in head
+                ;
+            if (couldSkip && isBlank) return;
 
-            if ((siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank()) ||
-                (out.outline() && siblingNodes().size() > 0 && !isBlank()))
+            if (
+                (siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
+                (out.outline() && siblingNodes().size() > 0 && !isBlank) ||
+                (siblingIndex > 0 && isNode(prev, "br")) // special case wrap on inline <br> - doesn't make sense as a block tag
+            )
                 indent(accum, depth, out);
         }
 
         Entities.escape(accum, coreValue(), out, false, normaliseWhite, trimLeading, trimTrailing);
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+    @Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {}
 
     @Override
     public String toString() {
@@ -120,8 +128,8 @@ public class TextNode extends LeafNode {
 
     /**
      * Create a new TextNode from HTML encoded (aka escaped) data.
-     * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
-     * @return TextNode containing unencoded data (e.g. &lt;)
+     * @param encodedText Text containing encoded HTML (e.g. {@code &lt;})
+     * @return TextNode containing unencoded data (e.g. {@code <})
      */
     public static TextNode createFromEncoded(String encodedText) {
         String text = Entities.unescape(encodedText);
@@ -140,6 +148,4 @@ public class TextNode extends LeafNode {
     static boolean lastCharIsWhitespace(StringBuilder sb) {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
-
-
 }

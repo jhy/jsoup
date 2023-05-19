@@ -7,13 +7,16 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.jsoup.parser.ParseSettings.preserveCase;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,16 +49,25 @@ public class HtmlParserTest {
         assertEquals("foo > bar", p.attr("class"));
     }
 
-    @Test public void dropsDuplicateAttributes() {
-        String html = "<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>";
+    @ParameterizedTest @MethodSource("dupeAttributeData")
+    public void dropsDuplicateAttributes(String html, String expected) {
         Parser parser = Parser.htmlParser().setTrackErrors(10);
         Document doc = parser.parseInput(html, "");
 
-        Element p = doc.selectFirst("p");
-        assertEquals("<p one=\"One\" two=\"two\">Text</p>", p.outerHtml()); // normalized names due to lower casing
+        Element el = doc.expectFirst("body > *");
+        assertEquals(expected, el.outerHtml()); // normalized names due to lower casing
+        String tag = el.normalName();
 
         assertEquals(1, parser.getErrors().size());
-        assertEquals("Dropped duplicate attribute(s) in tag [p]", parser.getErrors().get(0).getErrorMessage());
+        assertEquals("Dropped duplicate attribute(s) in tag [" + tag + "]", parser.getErrors().get(0).getErrorMessage());
+    }
+
+    private static Stream<Arguments> dupeAttributeData() {
+        return Stream.of(
+            Arguments.of("<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>", "<p one=\"One\" two=\"two\">Text</p>"),
+            Arguments.of("<img One=One ONE=Two Two=two one=Three One=Four two=Five>", "<img one=\"One\" two=\"two\">"),
+            Arguments.of("<form One=One ONE=Two Two=two one=Three One=Four two=Five></form>", "<form one=\"One\" two=\"two\"></form>")
+        );
     }
 
     @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
@@ -617,7 +629,7 @@ public class HtmlParserTest {
     @Test public void testSpanContents() {
         // like h1 tags, the spec says SPAN is phrasing only, but browsers and publisher treat span as a block tag
         Document doc = Jsoup.parse("<span>Hello <div>there</div> <span>now</span></span>");
-        assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<span>Hello <div>there</div><span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testNoImagesInNoScriptInHead() {
@@ -638,13 +650,13 @@ public class HtmlParserTest {
     @Test public void testAFlowContents() {
         // html5 has <a> as either phrasing or block
         Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
-        assertEquals("<a>Hello <div>there</div> <span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a>Hello <div>there</div><span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testFontFlowContents() {
         // html5 has no definition of <font>; often used as flow
         Document doc = Jsoup.parse("<font>Hello <div>there</div> <span>now</span></font>");
-        assertEquals("<font>Hello <div>there</div> <span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<font>Hello <div>there</div><span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesMisnestedTagsBI() {
@@ -720,15 +732,8 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p><b>\n" +
-            " <table>\n" +
-            "  <tbody>\n" +
-            "   <tr>\n" +
-            "    <td><p><i>Three</i></p><p><i>Four</i></p></td>\n" +
-            "   </tr>\n" +
-            "  </tbody>\n" +
-            " </table> <p>Five</p></b>";
-        assertEquals(want, doc.body().html());
+        String want = "<p><b>One</b></p><b><table><tbody><tr><td><p><i>Three</i></p><p><i>Four</i></p></td></tr></tbody></table><p>Five</p></b>";
+        assertEquals(want, TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void commentBeforeHtml() {
@@ -777,7 +782,7 @@ public class HtmlParserTest {
 
         Document two = Jsoup.parse("<title>One<b>Two <p>Test</p>"); // no title, so <b> causes </title> breakout
         assertEquals("One", two.title());
-        assertEquals("<b>Two <p>Test</p></b>", two.body().html());
+        assertEquals("<b>Two \n <p>Test</p></b>", two.body().html());
     }
 
     @Test public void handlesUnclosedScriptAtEof() {
@@ -1192,7 +1197,7 @@ public class HtmlParserTest {
 
         assertTrue(Jsoup.isValid(html, Safelist.basic()));
         String clean = Jsoup.clean(html, Safelist.basic());
-        assertEquals("<p>test<br>test<br></p>", clean);
+        assertEquals("<p>test<br>\n test<br></p>", clean);
     }
 
     @Test public void selfClosingOnNonvoidIsError() {
@@ -1247,7 +1252,7 @@ public class HtmlParserTest {
         File in = ParseTest.getFile("/htmltests/comments.html");
         Document doc = Jsoup.parse(in, "UTF-8");
 
-        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --> <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"><!-- now --> <head><!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
+        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --> <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"> <!-- now --> <head> <!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
             StringUtil.normaliseWhitespace(doc.html()));
 
         assertEquals("A Certain Kind of Test", doc.head().select("title").text());
@@ -1470,7 +1475,7 @@ public class HtmlParserTest {
         assertEquals(1, nodes.size());
         Node node = nodes.get(0);
         assertEquals("h2", node.nodeName());
-        assertEquals("<p><h2>text</h2></p>", node.parent().outerHtml());
+        assertEquals("<p>\n <h2>text</h2></p>", node.parent().outerHtml());
     }
 
     @Test public void nestedPFragments() {
@@ -1479,7 +1484,7 @@ public class HtmlParserTest {
         List<Node> nodes = new Document("").parser().parseFragmentInput(bareFragment, new Element("p"), "");
         assertEquals(2, nodes.size());
         Node node = nodes.get(0);
-        assertEquals("<p><p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
+        assertEquals("<p>\n <p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
     }
 
     @Test public void nestedAnchorAdoption() {
@@ -1487,7 +1492,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div></b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {
@@ -1632,5 +1637,119 @@ public class HtmlParserTest {
         assertNotNull(doc);
         assertEquals("<template><select></select><input>&lt;</template>",
             TextUtil.stripNewlines(doc.head().html()));
+    }
+
+    @Test void errorsBeforeHtml() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<!doctype html><!doctype something></div>", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        assertEquals("<1:36>: Unexpected Doctype token [<!doctype something>] when in state [BeforeHtml]", errors.get(0).toString());
+        assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
+        assertEquals("<!doctype html><html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void afterHeadReAdds() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<head></head><meta charset=UTF8><p>Hello", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("<1:33>: Unexpected StartTag token [<meta  charset=\"UTF8\">] when in state [AfterHead]", errors.get(0).toString());
+        assertEquals("<html><head><meta charset=\"UTF8\"></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        // meta gets added back into head
+    }
+
+    @Test void mergeHtmlAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html class=bar data=x><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\" data=\"x\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void mergeHtmlNoAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void supportsRuby() {
+        String html = "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rtc></ruby>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(3, errors.size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rp></rtc></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:38>: Unexpected StartTag token [<rb>] when in state [InBody]", errors.get(2).toString()); // 3 errors from rb in rtc as undefined
+    }
+
+    @Test void rubyRpRtImplicitClose() {
+        String html = "<ruby><rp>(<rt>Hello<rt>Hello<rp>)</ruby>\n";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rp>(</rp><rt>Hello</rt><rt>Hello</rt><rp>)</rp></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+    }
+
+    @Test void rubyScopeError() {
+        String html = "<ruby><div><rp>Hello";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><div><rp>Hello</rp></div></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:16>: Unexpected StartTag token [<rp>] when in state [InBody]", errors.get(0).toString());
+    }
+
+    @Test void errorOnEofIfOpen() {
+        String html = "<div>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpected EOF token [] when in state [InBody]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void NoErrorOnEofIfBodyOpen() {
+        String html = "<body>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(0, errors.size());
+    }
+
+    @Test void htmlClose() {
+        // https://github.com/jhy/jsoup/issues/1851
+        String html = "<body><div>One</html>Two</div></body>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("OneTwo", doc.expectFirst("body > div").text());
+    }
+
+    @Test void largeTextareaContents() {
+        // https://github.com/jhy/jsoup/issues/1929
+        StringBuilder sb = new StringBuilder();
+        int num = 2000;
+        for (int i = 0; i <= num; i++) {
+            sb.append("\n<text>foo</text>\n");
+        }
+        String textContent = sb.toString();
+        String sourceHtml = "<textarea>" + textContent + "</textarea>";
+
+        Document doc = Jsoup.parse(sourceHtml);
+        Element textArea = doc.expectFirst("textarea");
+
+        assertEquals(textContent, textArea.wholeText());
     }
 }

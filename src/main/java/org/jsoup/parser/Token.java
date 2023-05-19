@@ -382,7 +382,7 @@ abstract class Token {
         }
     }
 
-    static class Character extends Token {
+    static class Character extends Token implements Cloneable {
         private String data;
 
         Character() {
@@ -409,6 +409,14 @@ abstract class Token {
         @Override
         public String toString() {
             return getData();
+        }
+
+        @Override protected Token.Character clone() {
+            try {
+                return (Token.Character) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -193,7 +193,9 @@ public class ElementsTest {
         String h = "<div><font>One</font> <font><a href=\"/\">Two</a></font></div";
         Document doc = Jsoup.parse(h);
         doc.select("font").unwrap();
-        assertEquals("<div>One <a href=\"/\">Two</a></div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div>\n" +
+            " One <a href=\"/\">Two</a>\n" +
+            "</div>", doc.body().html());
     }
 
     @Test public void unwrapP() {

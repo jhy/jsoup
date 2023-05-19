@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
@@ -61,6 +62,12 @@ public class CharacterReaderTest {
 
         assertEquals(CharacterReader.EOF, r.consume());
         assertTrue(r.isEmpty());
+
+        // unconsume all remaining characters
+        for (int i = 0; i < 4; i++) {
+            r.unconsume();
+        }
+        assertThrows(UncheckedIOException.class, r::unconsume);
     }
 
     @Test public void mark() {
@@ -76,6 +83,12 @@ public class CharacterReaderTest {
         assertEquals('n', r.consume());
         assertFalse(r.isEmpty());
         assertEquals(2, r.pos());
+    }
+
+    @Test public void rewindToMark() {
+        CharacterReader r = new CharacterReader("nothing");
+        // marking should be invalid
+        assertThrows(UncheckedIOException.class, r::rewindToMark);
     }
 
     @Test public void consumeToEnd() {
@@ -265,6 +278,20 @@ public class CharacterReaderTest {
         assertTrue(r.matchesAny(scan));
         assertEquals('\n', r.consume());
         assertFalse(r.matchesAny(scan));
+        // nothing to match
+        r.consumeToEnd();
+        assertTrue(r.isEmpty());
+        assertFalse(r.matchesAny(scan));
+    }
+
+    @Test public void matchesDigit() {
+        CharacterReader r = new CharacterReader("42");
+        r.consumeToEnd();
+        assertTrue(r.isEmpty());
+        // nothing to match
+        assertFalse(r.matchesDigit());
+        r.unconsume();
+        assertTrue(r.matchesDigit());
     }
 
     @Test public void cachesStrings() {
