@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public abstract class BaseServlet extends HttpServlet {
+
     static final String TextHtml = "text/html; charset=UTF-8";
 
     // these are overridden just to get the response name to be 'res' not 'resp'

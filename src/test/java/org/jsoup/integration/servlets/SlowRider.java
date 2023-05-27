@@ -1,7 +1,6 @@
 package org.jsoup.integration.servlets;
 
 import org.jsoup.integration.TestServer;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -11,8 +10,11 @@ import java.io.PrintWriter;
  * Slowly, interminably writes output. For the purposes of testing timeouts and interrupts.
  */
 public class SlowRider extends BaseServlet {
+
     public static final String Url = TestServer.map(SlowRider.class);
+
     private static final int SleepTime = 2000;
+
     public static final String MaxTimeParam = "maxTime";
 
     @Override
@@ -21,24 +23,23 @@ public class SlowRider extends BaseServlet {
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);
         PrintWriter w = res.getWriter();
-
         int maxTime = -1;
         String maxTimeP = req.getParameter(MaxTimeParam);
         if (maxTimeP != null) {
             maxTime = Integer.parseInt(maxTimeP);
         }
-
         long startTime = System.currentTimeMillis();
         w.println("<title>Slow Rider</title>");
         while (true) {
             w.println("<p>Are you still there?");
-            boolean err = w.checkError(); // flush, and check still ok
+            // flush, and check still ok
+            boolean err = w.checkError();
             if (err) {
                 log("Remote connection lost");
                 break;
             }
-            if (pause(SleepTime)) break;
-
+            if (pause(SleepTime))
+                break;
             if (maxTime > 0 && System.currentTimeMillis() > startTime + maxTime) {
                 w.println("<h1>outatime</h1>");
                 break;

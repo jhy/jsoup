@@ -2,7 +2,6 @@ package org.jsoup.integration.servlets;
 
 import org.jsoup.integration.ParseTest;
 import org.jsoup.integration.TestServer;
-
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,8 +10,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public class FileServlet extends BaseServlet {
+
     public static final String Url = TestServer.map(FileServlet.class);
+
     public static final String ContentTypeParam = "contentType";
+
     public static final String DefaultType = "text/html";
 
     @Override
@@ -21,14 +23,12 @@ public class FileServlet extends BaseServlet {
         if (contentType == null)
             contentType = DefaultType;
         String location = req.getPathInfo();
-
         File file = ParseTest.getFile(location);
         if (file.exists()) {
             res.setContentType(contentType);
             if (file.getName().endsWith("gz"))
                 res.addHeader("Content-Encoding", "gzip");
             res.setStatus(HttpServletResponse.SC_OK);
-
             ServletOutputStream out = res.getOutputStream();
             Files.copy(file.toPath(), out);
             out.flush();

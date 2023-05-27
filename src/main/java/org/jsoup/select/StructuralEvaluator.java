@@ -7,9 +7,11 @@ import org.jsoup.nodes.Node;
  * Base structural evaluator.
  */
 abstract class StructuralEvaluator extends Evaluator {
+
     Evaluator evaluator;
 
     static class Root extends Evaluator {
+
         @Override
         public boolean matches(Element root, Element element) {
             return root == element;
@@ -17,6 +19,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Has extends StructuralEvaluator {
+
         final Collector.FirstFinder finder;
 
         public Has(Evaluator evaluator) {
@@ -45,6 +48,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Not extends StructuralEvaluator {
+
         public Not(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
@@ -61,6 +65,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Parent extends StructuralEvaluator {
+
         public Parent(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
@@ -69,7 +74,6 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
-
             Element parent = element.parent();
             while (parent != null) {
                 if (evaluator.matches(root, parent))
@@ -88,6 +92,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class ImmediateParent extends StructuralEvaluator {
+
         public ImmediateParent(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
@@ -96,7 +101,6 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
-
             Element parent = element.parent();
             return parent != null && evaluator.matches(root, parent);
         }
@@ -108,6 +112,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class PreviousSibling extends StructuralEvaluator {
+
         public PreviousSibling(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
@@ -116,13 +121,10 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
-
             Element prev = element.previousElementSibling();
-
             while (prev != null) {
                 if (evaluator.matches(root, prev))
                     return true;
-
                 prev = prev.previousElementSibling();
             }
             return false;
@@ -135,6 +137,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class ImmediatePreviousSibling extends StructuralEvaluator {
+
         public ImmediatePreviousSibling(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
@@ -143,7 +146,6 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             if (root == element)
                 return false;
-
             Element prev = element.previousElementSibling();
             return prev != null && evaluator.matches(root, prev);
         }

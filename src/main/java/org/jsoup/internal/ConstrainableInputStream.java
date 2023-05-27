@@ -1,7 +1,6 @@
 package org.jsoup.internal;
 
 import org.jsoup.helper.Validate;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,13 +13,20 @@ import java.nio.ByteBuffer;
  * namely a maximum read size, and the ability to Thread.interrupt() the read.
  */
 public final class ConstrainableInputStream extends BufferedInputStream {
+
     private static final int DefaultSize = 1024 * 32;
 
     private final boolean capped;
+
     private final int maxSize;
+
     private long startTime;
-    private long timeout = 0; // optional max time of request
+
+    // optional max time of request
+    private long timeout = 0;
+
     private int remaining;
+
     private boolean interrupted;
 
     private ConstrainableInputStream(InputStream in, int bufferSize, int maxSize) {
@@ -40,9 +46,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
      * @return a constrainable input stream
      */
     public static ConstrainableInputStream wrap(InputStream in, int bufferSize, int maxSize) {
-        return in instanceof ConstrainableInputStream
-            ? (ConstrainableInputStream) in
-            : new ConstrainableInputStream(in, bufferSize, maxSize);
+        return in instanceof ConstrainableInputStream ? (ConstrainableInputStream) in : new ConstrainableInputStream(in, bufferSize, maxSize);
     }
 
     @Override
@@ -56,10 +60,9 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         }
         if (expired())
             throw new SocketTimeoutException("Read timeout");
-
         if (capped && len > remaining)
-            len = remaining; // don't read more than desired, even if available
-
+            // don't read more than desired, even if available
+            len = remaining;
         try {
             final int read = super.read(b, off, len);
             remaining -= read;
@@ -75,17 +78,19 @@ public final class ConstrainableInputStream extends BufferedInputStream {
      */
     public ByteBuffer readToByteBuffer(int max) throws IOException {
         Validate.isTrue(max >= 0, "maxSize must be 0 (unlimited) or larger");
-        final boolean localCapped = max > 0; // still possibly capped in total stream
+        // still possibly capped in total stream
+        final boolean localCapped = max > 0;
         final int bufferSize = localCapped && max < DefaultSize ? max : DefaultSize;
         final byte[] readBuffer = new byte[bufferSize];
         final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
-
         int read;
         int remaining = max;
         while (true) {
             read = read(readBuffer, 0, localCapped ? Math.min(remaining, bufferSize) : bufferSize);
-            if (read == -1) break;
-            if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
+            if (read == -1)
+                break;
+            if (localCapped) {
+                // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
                 if (read >= remaining) {
                     outStream.write(readBuffer, 0, remaining);
                     break;
@@ -112,7 +117,6 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     private boolean expired() {
         if (timeout == 0)
             return false;
-
         final long now = System.nanoTime();
         final long dur = now - startTime;
         return (dur > timeout);

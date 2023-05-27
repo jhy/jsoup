@@ -9,12 +9,11 @@ import java.lang.annotation.RetentionPolicy;
 
 @Documented
 @Nonnull
-@TypeQualifierDefault({ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
+@TypeQualifierDefault({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD })
 @Retention(value = RetentionPolicy.CLASS)
-
-/**
- Indicates that all components (methods, returns, fields) are not nullable, unless otherwise specified by @Nullable.
- @see javax.annotation.ParametersAreNonnullByDefault
+public @interface /**
+ * Indicates that all components (methods, returns, fields) are not nullable, unless otherwise specified by @Nullable.
+ * @see javax.annotation.ParametersAreNonnullByDefault
  */
-public @interface NonnullByDefault {
+NonnullByDefault {
 }

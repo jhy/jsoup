@@ -6,10 +6,12 @@ import org.jsoup.nodes.DocumentType;
  * States and transition activations for the Tokeniser.
  */
 enum TokeniserState {
+
     Data {
+
         // in data state, gather characters until a character reference or tag is found
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
+            switch(r.current()) {
                 case '&':
                     t.advanceTransition(CharacterReferenceInData);
                     break;
@@ -17,7 +19,8 @@ enum TokeniserState {
                     t.advanceTransition(TagOpen);
                     break;
                 case nullChar:
-                    t.error(this); // NOT replacement character (oddly?)
+                    // NOT replacement character (oddly?)
+                    t.error(this);
                     t.emit(r.consume());
                     break;
                 case eof:
@@ -29,17 +32,21 @@ enum TokeniserState {
                     break;
             }
         }
-    },
+    }
+    ,
     CharacterReferenceInData {
+
         // from & in data
         void read(Tokeniser t, CharacterReader r) {
             readCharRef(t, Data);
         }
-    },
+    }
+    ,
     Rcdata {
+
         /// handles data in title, textarea etc
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
+            switch(r.current()) {
                 case '&':
                     t.advanceTransition(CharacterReferenceInRcdata);
                     break;
@@ -60,25 +67,33 @@ enum TokeniserState {
                     break;
             }
         }
-    },
+    }
+    ,
     CharacterReferenceInRcdata {
+
         void read(Tokeniser t, CharacterReader r) {
             readCharRef(t, Rcdata);
         }
-    },
+    }
+    ,
     Rawtext {
+
         void read(Tokeniser t, CharacterReader r) {
             readRawData(t, r, this, RawtextLessthanSign);
         }
-    },
+    }
+    ,
     ScriptData {
+
         void read(Tokeniser t, CharacterReader r) {
             readRawData(t, r, this, ScriptDataLessthanSign);
         }
-    },
+    }
+    ,
     PLAINTEXT {
+
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
+            switch(r.current()) {
                 case nullChar:
                     t.error(this);
                     r.advance();
@@ -93,11 +108,13 @@ enum TokeniserState {
                     break;
             }
         }
-    },
+    }
+    ,
     TagOpen {
+
         // from < in data
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.current()) {
+            switch(r.current()) {
                 case '!':
                     t.advanceTransition(MarkupDeclarationOpen);
                     break;
@@ -114,14 +131,17 @@ enum TokeniserState {
                         t.transition(TagName);
                     } else {
                         t.error(this);
-                        t.emit('<'); // char that got us here
+                        // char that got us here
+                        t.emit('<');
                         t.transition(Data);
                     }
                     break;
             }
         }
-    },
+    }
+    ,
     EndTagOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -136,20 +156,22 @@ enum TokeniserState {
             } else {
                 t.error(this);
                 t.createBogusCommentPending();
-                t.commentPending.append('/'); // push the / back on that got us here
+                // push the / back on that got us here
+                t.commentPending.append('/');
                 t.transition(BogusComment);
             }
         }
-    },
+    }
+    ,
     TagName {
+
         // from < or </ in data, will have start or end tag pending
         void read(Tokeniser t, CharacterReader r) {
             // previous TagOpen state did NOT consume, will have a letter char in current
             String tagName = r.consumeTagName();
             t.tagPending.appendTagName(tagName);
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -160,45 +182,54 @@ enum TokeniserState {
                 case '/':
                     t.transition(SelfClosingStartTag);
                     break;
-                case '<': // NOTE: out of spec, but clear author intent
+                case // NOTE: out of spec, but clear author intent
+                '<':
                     r.unconsume();
                     t.error(this);
-                    // intended fall through to next >
+                // intended fall through to next >
                 case '>':
                     t.emitTagPending();
                     t.transition(Data);
                     break;
-                case nullChar: // replacement
+                case // replacement
+                nullChar:
                     t.tagPending.appendTagName(replacementStr);
                     break;
-                case eof: // should emit pending tag?
+                case // should emit pending tag?
+                eof:
                     t.eofError(this);
                     t.transition(Data);
                     break;
-                default: // buffer underrun
+                default:
+                    // buffer underrun
                     t.tagPending.appendTagName(c);
             }
         }
-    },
+    }
+    ,
     RcdataLessthanSign {
+
         // from < in rcdata
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.createTempBuffer();
                 t.advanceTransition(RCDATAEndTagOpen);
-            } else if (r.readFully() && r.matchesAsciiAlpha() && t.appropriateEndTagName() != null &&  !r.containsIgnoreCase(t.appropriateEndTagSeq())) {
+            } else if (r.readFully() && r.matchesAsciiAlpha() && t.appropriateEndTagName() != null && !r.containsIgnoreCase(t.appropriateEndTagSeq())) {
                 // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
                 // consuming to EOF; break out here
                 t.tagPending = t.createTagPending(false).name(t.appropriateEndTagName());
                 t.emitTagPending();
-                t.transition(TagOpen); // straight into TagOpen, as we came from < and looks like we're on a start tag
+                // straight into TagOpen, as we came from < and looks like we're on a start tag
+                t.transition(TagOpen);
             } else {
                 t.emit("<");
                 t.transition(Rcdata);
             }
         }
-    },
+    }
+    ,
     RCDATAEndTagOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 t.createTagPending(false);
@@ -210,8 +241,10 @@ enum TokeniserState {
                 t.transition(Rcdata);
             }
         }
-    },
+    }
+    ,
     RCDATAEndTagName {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 String name = r.consumeLetterSequence();
@@ -219,9 +252,8 @@ enum TokeniserState {
                 t.dataBuffer.append(name);
                 return;
             }
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -242,8 +274,7 @@ enum TokeniserState {
                     if (t.isAppropriateEndTagToken()) {
                         t.emitTagPending();
                         t.transition(Data);
-                    }
-                    else
+                    } else
                         anythingElse(t, r);
                     break;
                 default:
@@ -257,8 +288,10 @@ enum TokeniserState {
             r.unconsume();
             t.transition(Rcdata);
         }
-    },
+    }
+    ,
     RawtextLessthanSign {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.createTempBuffer();
@@ -268,20 +301,26 @@ enum TokeniserState {
                 t.transition(Rawtext);
             }
         }
-    },
+    }
+    ,
     RawtextEndTagOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             readEndTag(t, r, RawtextEndTagName, Rawtext);
         }
-    },
+    }
+    ,
     RawtextEndTagName {
+
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, Rawtext);
         }
-    },
+    }
+    ,
     ScriptDataLessthanSign {
+
         void read(Tokeniser t, CharacterReader r) {
-            switch (r.consume()) {
+            switch(r.consume()) {
                 case '/':
                     t.createTempBuffer();
                     t.transition(ScriptDataEndTagOpen);
@@ -301,18 +340,24 @@ enum TokeniserState {
                     t.transition(ScriptData);
             }
         }
-    },
+    }
+    ,
     ScriptDataEndTagOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             readEndTag(t, r, ScriptDataEndTagName, ScriptData);
         }
-    },
+    }
+    ,
     ScriptDataEndTagName {
+
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, ScriptData);
         }
-    },
+    }
+    ,
     ScriptDataEscapeStart {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('-')) {
                 t.emit('-');
@@ -321,8 +366,10 @@ enum TokeniserState {
                 t.transition(ScriptData);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapeStartDash {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('-')) {
                 t.emit('-');
@@ -331,16 +378,17 @@ enum TokeniserState {
                 t.transition(ScriptData);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscaped {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
                 t.transition(Data);
                 return;
             }
-
-            switch (r.current()) {
+            switch(r.current()) {
                 case '-':
                     t.emit('-');
                     t.advanceTransition(ScriptDataEscapedDash);
@@ -358,17 +406,18 @@ enum TokeniserState {
                     t.emit(data);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapedDash {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
                 t.transition(Data);
                 return;
             }
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.emit(c);
                     t.transition(ScriptDataEscapedDashDash);
@@ -386,17 +435,18 @@ enum TokeniserState {
                     t.transition(ScriptDataEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapedDashDash {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
                 t.transition(Data);
                 return;
             }
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.emit(c);
                     break;
@@ -417,8 +467,10 @@ enum TokeniserState {
                     t.transition(ScriptDataEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapedLessthanSign {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 t.createTempBuffer();
@@ -434,8 +486,10 @@ enum TokeniserState {
                 t.transition(ScriptDataEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapedEndTagOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 t.createTagPending(false);
@@ -447,21 +501,27 @@ enum TokeniserState {
                 t.transition(ScriptDataEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataEscapedEndTagName {
+
         void read(Tokeniser t, CharacterReader r) {
             handleDataEndTag(t, r, ScriptDataEscaped);
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscapeStart {
+
         void read(Tokeniser t, CharacterReader r) {
             handleDataDoubleEscapeTag(t, r, ScriptDataDoubleEscaped, ScriptDataEscaped);
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscaped {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.current();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.emit(c);
                     t.advanceTransition(ScriptDataDoubleEscapedDash);
@@ -484,11 +544,13 @@ enum TokeniserState {
                     t.emit(data);
             }
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscapedDash {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.emit(c);
                     t.transition(ScriptDataDoubleEscapedDashDash);
@@ -511,11 +573,13 @@ enum TokeniserState {
                     t.transition(ScriptDataDoubleEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscapedDashDash {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.emit(c);
                     break;
@@ -541,8 +605,10 @@ enum TokeniserState {
                     t.transition(ScriptDataDoubleEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscapedLessthanSign {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matches('/')) {
                 t.emit('/');
@@ -552,30 +618,36 @@ enum TokeniserState {
                 t.transition(ScriptDataDoubleEscaped);
             }
         }
-    },
+    }
+    ,
     ScriptDataDoubleEscapeEnd {
+
         void read(Tokeniser t, CharacterReader r) {
-            handleDataDoubleEscapeTag(t,r, ScriptDataEscaped, ScriptDataDoubleEscaped);
+            handleDataDoubleEscapeTag(t, r, ScriptDataEscaped, ScriptDataDoubleEscaped);
         }
-    },
+    }
+    ,
     BeforeAttributeName {
+
         // from tagname <xxx
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
-                    break; // ignore whitespace
+                    // ignore whitespace
+                    break;
                 case '/':
                     t.transition(SelfClosingStartTag);
                     break;
-                case '<': // NOTE: out of spec, but clear (spec has this as a part of the attribute name)
+                case // NOTE: out of spec, but clear (spec has this as a part of the attribute name)
+                '<':
                     r.unconsume();
                     t.error(this);
-                    // intended fall through as if >
+                // intended fall through as if >
                 case '>':
                     t.emitTagPending();
                     t.transition(Data);
@@ -598,21 +670,24 @@ enum TokeniserState {
                     t.tagPending.appendAttributeName(c);
                     t.transition(AttributeName);
                     break;
-                default: // A-Z, anything else
+                default:
+                    // A-Z, anything else
                     t.tagPending.newAttribute();
                     r.unconsume();
                     t.transition(AttributeName);
             }
         }
-    },
+    }
+    ,
     AttributeName {
+
         // from before attribute name
         void read(Tokeniser t, CharacterReader r) {
-            String name = r.consumeToAnySorted(attributeNameCharsSorted); // spec deviate - consume and emit nulls in one hit vs stepping
+            // spec deviate - consume and emit nulls in one hit vs stepping
+            String name = r.consumeToAnySorted(attributeNameCharsSorted);
             t.tagPending.appendAttributeName(name);
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -640,15 +715,18 @@ enum TokeniserState {
                     t.error(this);
                     t.tagPending.appendAttributeName(c);
                     break;
-                default: // buffer underrun
+                default:
+                    // buffer underrun
                     t.tagPending.appendAttributeName(c);
             }
         }
-    },
+    }
+    ,
     AfterAttributeName {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -683,17 +761,20 @@ enum TokeniserState {
                     t.tagPending.appendAttributeName(c);
                     t.transition(AttributeName);
                     break;
-                default: // A-Z, anything else
+                default:
+                    // A-Z, anything else
                     t.tagPending.newAttribute();
                     r.unconsume();
                     t.transition(AttributeName);
             }
         }
-    },
+    }
+    ,
     BeforeAttributeValue {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -738,17 +819,18 @@ enum TokeniserState {
                     t.transition(AttributeValue_unquoted);
             }
         }
-    },
+    }
+    ,
     AttributeValue_doubleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeAttributeQuoted(false);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
                 t.tagPending.setEmptyAttributeValue();
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '"':
                     t.transition(AfterAttributeValue_quoted);
                     break;
@@ -767,21 +849,23 @@ enum TokeniserState {
                     t.eofError(this);
                     t.transition(Data);
                     break;
-                default: // hit end of buffer in first read, still in attribute
+                default:
+                    // hit end of buffer in first read, still in attribute
                     t.tagPending.appendAttributeValue(c);
             }
         }
-    },
+    }
+    ,
     AttributeValue_singleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeAttributeQuoted(true);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
             else
                 t.tagPending.setEmptyAttributeValue();
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\'':
                     t.transition(AfterAttributeValue_quoted);
                     break;
@@ -800,19 +884,21 @@ enum TokeniserState {
                     t.eofError(this);
                     t.transition(Data);
                     break;
-                default: // hit end of buffer in first read, still in attribute
+                default:
+                    // hit end of buffer in first read, still in attribute
                     t.tagPending.appendAttributeValue(c);
             }
         }
-    },
+    }
+    ,
     AttributeValue_unquoted {
+
         void read(Tokeniser t, CharacterReader r) {
             String value = r.consumeToAnySorted(attributeValueUnquoted);
             if (value.length() > 0)
                 t.tagPending.appendAttributeValue(value);
-
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -847,17 +933,19 @@ enum TokeniserState {
                     t.error(this);
                     t.tagPending.appendAttributeValue(c);
                     break;
-                default: // hit end of buffer in first read, still in attribute
+                default:
+                    // hit end of buffer in first read, still in attribute
                     t.tagPending.appendAttributeValue(c);
             }
-
         }
-    },
+    }
+    ,
     // CharacterReferenceInAttributeValue state handled inline
     AfterAttributeValue_quoted {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -881,13 +969,14 @@ enum TokeniserState {
                     t.error(this);
                     t.transition(BeforeAttributeName);
             }
-
         }
-    },
+    }
+    ,
     SelfClosingStartTag {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '>':
                     t.tagPending.selfClosing = true;
                     t.emitTagPending();
@@ -903,8 +992,10 @@ enum TokeniserState {
                     t.transition(BeforeAttributeName);
             }
         }
-    },
+    }
+    ,
     BogusComment {
+
         void read(Tokeniser t, CharacterReader r) {
             // todo: handle bogus comment starting from eof. when does that trigger?
             t.commentPending.append(r.consumeTo('>'));
@@ -916,8 +1007,10 @@ enum TokeniserState {
                 t.transition(Data);
             }
         }
-    },
+    }
+    ,
     MarkupDeclarationOpen {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchConsume("--")) {
                 t.createCommentPending();
@@ -936,11 +1029,13 @@ enum TokeniserState {
                 t.transition(BogusComment);
             }
         }
-    },
+    }
+    ,
     CommentStart {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.transition(CommentStartDash);
                     break;
@@ -964,11 +1059,13 @@ enum TokeniserState {
                     t.transition(Comment);
             }
         }
-    },
+    }
+    ,
     CommentStartDash {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.transition(CommentEnd);
                     break;
@@ -992,11 +1089,13 @@ enum TokeniserState {
                     t.transition(Comment);
             }
         }
-    },
+    }
+    ,
     Comment {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.current();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.advanceTransition(CommentEndDash);
                     break;
@@ -1014,11 +1113,13 @@ enum TokeniserState {
                     t.commentPending.append(r.consumeToAny('-', nullChar));
             }
         }
-    },
+    }
+    ,
     CommentEndDash {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.transition(CommentEnd);
                     break;
@@ -1037,11 +1138,13 @@ enum TokeniserState {
                     t.transition(Comment);
             }
         }
-    },
+    }
+    ,
     CommentEnd {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '>':
                     t.emitCommentPending();
                     t.transition(Data);
@@ -1067,11 +1170,13 @@ enum TokeniserState {
                     t.transition(Comment);
             }
         }
-    },
+    }
+    ,
     CommentEndBang {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '-':
                     t.commentPending.append("--!");
                     t.transition(CommentEndDash);
@@ -1095,11 +1200,13 @@ enum TokeniserState {
                     t.transition(Comment);
             }
         }
-    },
+    }
+    ,
     Doctype {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1109,8 +1216,9 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
-                    // note: fall through to > case
-                case '>': // catch invalid <!DOCTYPE>
+                // note: fall through to > case
+                case // catch invalid <!DOCTYPE>
+                '>':
                     t.error(this);
                     t.createDoctypePending();
                     t.doctypePending.forceQuirks = true;
@@ -1122,8 +1230,10 @@ enum TokeniserState {
                     t.transition(BeforeDoctypeName);
             }
         }
-    },
+    }
+    ,
     BeforeDoctypeName {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
                 t.createDoctypePending();
@@ -1131,13 +1241,14 @@ enum TokeniserState {
                 return;
             }
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
                 case '\f':
                 case ' ':
-                    break; // ignore whitespace
+                    // ignore whitespace
+                    break;
                 case nullChar:
                     t.error(this);
                     t.createDoctypePending();
@@ -1157,8 +1268,10 @@ enum TokeniserState {
                     t.transition(DoctypeName);
             }
         }
-    },
+    }
+    ,
     DoctypeName {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.matchesLetter()) {
                 String name = r.consumeLetterSequence();
@@ -1166,7 +1279,7 @@ enum TokeniserState {
                 return;
             }
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '>':
                     t.emitDoctypePending();
                     t.transition(Data);
@@ -1192,8 +1305,10 @@ enum TokeniserState {
                     t.doctypePending.name.append(c);
             }
         }
-    },
+    }
+    ,
     AfterDoctypeName {
+
         void read(Tokeniser t, CharacterReader r) {
             if (r.isEmpty()) {
                 t.eofError(this);
@@ -1203,7 +1318,8 @@ enum TokeniserState {
                 return;
             }
             if (r.matchesAny('\t', '\n', '\r', '\f', ' '))
-                r.advance(); // ignore whitespace
+                // ignore whitespace
+                r.advance();
             else if (r.matches('>')) {
                 t.emitDoctypePending();
                 t.advanceTransition(Data);
@@ -1218,13 +1334,14 @@ enum TokeniserState {
                 t.doctypePending.forceQuirks = true;
                 t.advanceTransition(BogusDoctype);
             }
-
         }
-    },
+    }
+    ,
     AfterDoctypePublicKeyword {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1260,11 +1377,13 @@ enum TokeniserState {
                     t.transition(BogusDoctype);
             }
         }
-    },
+    }
+    ,
     BeforeDoctypePublicIdentifier {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1297,11 +1416,13 @@ enum TokeniserState {
                     t.transition(BogusDoctype);
             }
         }
-    },
+    }
+    ,
     DoctypePublicIdentifier_doubleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '"':
                     t.transition(AfterDoctypePublicIdentifier);
                     break;
@@ -1325,11 +1446,13 @@ enum TokeniserState {
                     t.doctypePending.publicIdentifier.append(c);
             }
         }
-    },
+    }
+    ,
     DoctypePublicIdentifier_singleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\'':
                     t.transition(AfterDoctypePublicIdentifier);
                     break;
@@ -1353,11 +1476,13 @@ enum TokeniserState {
                     t.doctypePending.publicIdentifier.append(c);
             }
         }
-    },
+    }
+    ,
     AfterDoctypePublicIdentifier {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1391,11 +1516,13 @@ enum TokeniserState {
                     t.transition(BogusDoctype);
             }
         }
-    },
+    }
+    ,
     BetweenDoctypePublicAndSystemIdentifiers {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1428,11 +1555,13 @@ enum TokeniserState {
                     t.transition(BogusDoctype);
             }
         }
-    },
+    }
+    ,
     AfterDoctypeSystemKeyword {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1468,11 +1597,13 @@ enum TokeniserState {
                     t.emitDoctypePending();
             }
         }
-    },
+    }
+    ,
     BeforeDoctypeSystemIdentifier {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1505,11 +1636,13 @@ enum TokeniserState {
                     t.transition(BogusDoctype);
             }
         }
-    },
+    }
+    ,
     DoctypeSystemIdentifier_doubleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '"':
                     t.transition(AfterDoctypeSystemIdentifier);
                     break;
@@ -1533,11 +1666,13 @@ enum TokeniserState {
                     t.doctypePending.systemIdentifier.append(c);
             }
         }
-    },
+    }
+    ,
     DoctypeSystemIdentifier_singleQuoted {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\'':
                     t.transition(AfterDoctypeSystemIdentifier);
                     break;
@@ -1561,11 +1696,13 @@ enum TokeniserState {
                     t.doctypePending.systemIdentifier.append(c);
             }
         }
-    },
+    }
+    ,
     AfterDoctypeSystemIdentifier {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1585,14 +1722,15 @@ enum TokeniserState {
                 default:
                     t.error(this);
                     t.transition(BogusDoctype);
-                    // NOT force quirks
             }
         }
-    },
+    }
+    ,
     BogusDoctype {
+
         void read(Tokeniser t, CharacterReader r) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '>':
                     t.emitDoctypePending();
                     t.transition(Data);
@@ -1606,28 +1744,35 @@ enum TokeniserState {
                     break;
             }
         }
-    },
+    }
+    ,
     CdataSection {
+
         void read(Tokeniser t, CharacterReader r) {
             String data = r.consumeTo("]]>");
             t.dataBuffer.append(data);
             if (r.matchConsume("]]>") || r.isEmpty()) {
                 t.emit(new Token.CData(t.dataBuffer.toString()));
                 t.transition(Data);
-            }// otherwise, buffer underrun, stay in data section
+            }
+            // otherwise, buffer underrun, stay in data section
         }
-    };
-
+    }
+    ;
 
     abstract void read(Tokeniser t, CharacterReader r);
 
     static final char nullChar = '\u0000';
+
     // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
-    static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
-    static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
+    static final char[] attributeNameCharsSorted = new char[] { '\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>' };
+
+    static final char[] attributeValueUnquoted = new char[] { nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`' };
 
     private static final char replacementChar = Tokeniser.replacementChar;
+
     private static final String replacementStr = String.valueOf(Tokeniser.replacementChar);
+
     private static final char eof = CharacterReader.EOF;
 
     /**
@@ -1641,11 +1786,10 @@ enum TokeniserState {
             t.dataBuffer.append(name);
             return;
         }
-
         boolean needsExitTransition = false;
         if (t.isAppropriateEndTagToken() && !r.isEmpty()) {
             char c = r.consume();
-            switch (c) {
+            switch(c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -1667,7 +1811,6 @@ enum TokeniserState {
         } else {
             needsExitTransition = true;
         }
-
         if (needsExitTransition) {
             t.emit("</");
             t.emit(t.dataBuffer);
@@ -1676,7 +1819,7 @@ enum TokeniserState {
     }
 
     private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
-        switch (r.current()) {
+        switch(r.current()) {
             case '<':
                 t.advanceTransition(advance);
                 break;
@@ -1721,9 +1864,8 @@ enum TokeniserState {
             t.emit(name);
             return;
         }
-
         char c = r.consume();
-        switch (c) {
+        switch(c) {
             case '\t':
             case '\n':
             case '\r':

@@ -16,7 +16,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
-
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
-
 import static javax.xml.transform.OutputKeys.METHOD;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
 
@@ -48,19 +46,28 @@ import static org.jsoup.nodes.Document.OutputSettings.Syntax;
  * for integration with toolsets that use the W3C DOM.
  */
 public class W3CDom {
-    /** For W3C Documents created by this class, this property is set on each node to link back to the original jsoup node. */
-    public static final String SourceProperty = "jsoupSource";
-    private static final String ContextProperty = "jsoupContextSource"; // tracks the jsoup context element on w3c doc
-    private static final String ContextNodeProperty = "jsoupContextNode"; // the w3c node used as the creating context
 
     /**
-     To get support for XPath versions &gt; 1, set this property to the classname of an alternate XPathFactory
-     implementation. (For e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
+     * For W3C Documents created by this class, this property is set on each node to link back to the original jsoup node.
+     */
+    public static final String SourceProperty = "jsoupSource";
+
+    // tracks the jsoup context element on w3c doc
+    private static final String ContextProperty = "jsoupContextSource";
+
+    // the w3c node used as the creating context
+    private static final String ContextNodeProperty = "jsoupContextNode";
+
+    /**
+     *     To get support for XPath versions &gt; 1, set this property to the classname of an alternate XPathFactory
+     *     implementation. (For e.g. {@code net.sf.saxon.xpath.XPathFactoryImpl}).
      */
     public static final String XPathFactoryProperty = "javax.xml.xpath.XPathFactory:jsoup";
 
     protected DocumentBuilderFactory factory;
-    private boolean namespaceAware = true; // false when using selectXpath, for user's query convenience
+
+    // false when using selectXpath, for user's query convenience
+    private boolean namespaceAware = true;
 
     public W3CDom() {
         factory = DocumentBuilderFactory.newInstance();
@@ -68,20 +75,20 @@ public class W3CDom {
     }
 
     /**
-     Returns if this W3C DOM is namespace aware. By default, this will be {@code true}, but is disabled for simplicity
-     when using XPath selectors in {@link org.jsoup.nodes.Element#selectXpath(String)}.
-     @return the current namespace aware setting.
+     *     Returns if this W3C DOM is namespace aware. By default, this will be {@code true}, but is disabled for simplicity
+     *     when using XPath selectors in {@link org.jsoup.nodes.Element#selectXpath(String)}.
+     *     @return the current namespace aware setting.
      */
     public boolean namespaceAware() {
         return namespaceAware;
     }
 
     /**
-     Update the namespace aware setting. This impacts the factory that is used to create W3C nodes from jsoup nodes.
-     <p>For HTML documents, controls if the document will be in the default {@code http://www.w3.org/1999/xhtml}
-     namespace if otherwise unset.</p>.
-     @param namespaceAware the updated setting
-     @return this W3CDom, for chaining.
+     *     Update the namespace aware setting. This impacts the factory that is used to create W3C nodes from jsoup nodes.
+     *     <p>For HTML documents, controls if the document will be in the default {@code http://www.w3.org/1999/xhtml}
+     *     namespace if otherwise unset.</p>.
+     *     @param namespaceAware the updated setting
+     *     @return this W3CDom, for chaining.
      */
     public W3CDom namespaceAware(boolean namespaceAware) {
         this.namespaceAware = namespaceAware;
@@ -128,23 +135,18 @@ public class W3CDom {
             Transformer transformer = tf.newTransformer();
             if (properties != null)
                 transformer.setOutputProperties(propertiesFromMap(properties));
-
             if (doc.getDoctype() != null) {
                 DocumentType doctype = doc.getDoctype();
                 if (!StringUtil.isBlank(doctype.getPublicId()))
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
                 if (!StringUtil.isBlank(doctype.getSystemId()))
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-                    // handle <!doctype html> for legacy dom. TODO: nicer if <!doctype html>
-                else if (doctype.getName().equalsIgnoreCase("html")
-                    && StringUtil.isBlank(doctype.getPublicId())
-                    && StringUtil.isBlank(doctype.getSystemId()))
+                else // handle <!doctype html> for legacy dom. TODO: nicer if <!doctype html>
+                if (doctype.getName().equalsIgnoreCase("html") && StringUtil.isBlank(doctype.getPublicId()) && StringUtil.isBlank(doctype.getSystemId()))
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
             }
-
             transformer.transform(domSource, result);
             return writer.toString();
-
         } catch (TransformerException e) {
             throw new IllegalStateException(e);
         }
@@ -156,12 +158,16 @@ public class W3CDom {
         return props;
     }
 
-    /** Canned default for HTML output. */
+    /**
+     * Canned default for HTML output.
+     */
     public static HashMap<String, String> OutputHtml() {
         return methodMap("html");
     }
 
-    /** Canned default for XML output. */
+    /**
+     * Canned default for XML output.
+     */
     public static HashMap<String, String> OutputXml() {
         return methodMap("xml");
     }
@@ -251,40 +257,38 @@ public class W3CDom {
             }
             builder.syntax = inDoc.outputSettings().syntax();
         }
-        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
+        // skip the #root node if a Document
+        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in;
         NodeTraversor.traverse(builder, rootEl);
     }
 
     /**
-     Evaluate an XPath query against the supplied document, and return the results.
-     @param xpath an XPath query
-     @param doc the document to evaluate against
-     @return the matches nodes
+     *     Evaluate an XPath query against the supplied document, and return the results.
+     *     @param xpath an XPath query
+     *     @param doc the document to evaluate against
+     *     @return the matches nodes
      */
     public NodeList selectXpath(String xpath, Document doc) {
         return selectXpath(xpath, (Node) doc);
     }
 
     /**
-     Evaluate an XPath query against the supplied context node, and return the results.
-     @param xpath an XPath query
-     @param contextNode the context node to evaluate against
-     @return the matches nodes
+     *     Evaluate an XPath query against the supplied context node, and return the results.
+     *     @param xpath an XPath query
+     *     @param contextNode the context node to evaluate against
+     *     @return the matches nodes
      */
     public NodeList selectXpath(String xpath, Node contextNode) {
         Validate.notEmptyParam(xpath, "xpath");
         Validate.notNullParam(contextNode, "contextNode");
-
         NodeList nodeList;
         try {
             // if there is a configured XPath factory, use that instead of the Java base impl:
             String property = System.getProperty(XPathFactoryProperty);
-            final XPathFactory xPathFactory = property != null ?
-                XPathFactory.newInstance("jsoup") :
-                XPathFactory.newInstance();
-
+            final XPathFactory xPathFactory = property != null ? XPathFactory.newInstance("jsoup") : XPathFactory.newInstance();
             XPathExpression expression = xPathFactory.newXPath().compile(xpath);
-            nodeList = (NodeList) expression.evaluate(contextNode, XPathConstants.NODESET); // love the strong typing here /s
+            // love the strong typing here /s
+            nodeList = (NodeList) expression.evaluate(contextNode, XPathConstants.NODESET);
             Validate.notNull(nodeList);
         } catch (XPathExpressionException | XPathFactoryConfigurationException e) {
             throw new Selector.SelectorParseException("Could not evaluate XPath query [%s]: %s", xpath, e.getMessage());
@@ -293,31 +297,29 @@ public class W3CDom {
     }
 
     /**
-     Retrieves the original jsoup DOM nodes from a nodelist created by this convertor.
-     @param nodeList the W3C nodes to get the original jsoup nodes from
-     @param nodeType the jsoup node type to retrieve (e.g. Element, DataNode, etc)
-     @param <T> node type
-     @return a list of the original nodes
+     *     Retrieves the original jsoup DOM nodes from a nodelist created by this convertor.
+     *     @param nodeList the W3C nodes to get the original jsoup nodes from
+     *     @param nodeType the jsoup node type to retrieve (e.g. Element, DataNode, etc)
+     *     @param <T> node type
+     *     @return a list of the original nodes
      */
     public <T extends org.jsoup.nodes.Node> List<T> sourceNodes(NodeList nodeList, Class<T> nodeType) {
         Validate.notNull(nodeList);
         Validate.notNull(nodeType);
         List<T> nodes = new ArrayList<>(nodeList.getLength());
-
         for (int i = 0; i < nodeList.getLength(); i++) {
             org.w3c.dom.Node node = nodeList.item(i);
             Object source = node.getUserData(W3CDom.SourceProperty);
             if (nodeType.isInstance(source))
                 nodes.add(nodeType.cast(source));
         }
-
         return nodes;
     }
 
     /**
-     For a Document created by {@link #fromJsoup(org.jsoup.nodes.Element)}, retrieves the W3C context node.
-     @param wDoc Document created by this class
-     @return the corresponding W3C Node to the jsoup Element that was used as the creating context.
+     *     For a Document created by {@link #fromJsoup(org.jsoup.nodes.Element)}, retrieves the W3C context node.
+     *     @param wDoc Document created by this class
+     *     @return the corresponding W3C Node to the jsoup Element that was used as the creating context.
      */
     public Node contextNode(Document wDoc) {
         return (Node) wDoc.getUserData(ContextNodeProperty);
@@ -338,38 +340,49 @@ public class W3CDom {
      * Implements the conversion by walking the input.
      */
     protected static class W3CBuilder implements NodeVisitor {
+
         private static final String xmlnsKey = "xmlns";
+
         private static final String xmlnsPrefix = "xmlns:";
+
         private static final String xhtmlNs = "http://www.w3.org/1999/xhtml";
 
         private final Document doc;
+
         private boolean namespaceAware = true;
-        private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
+
+        // stack of namespaces, prefix => urn
+        private final Stack<HashMap<String, String>> namespacesStack = new Stack<>();
+
         private Node dest;
-        private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
-        @Nullable private final org.jsoup.nodes.Element contextElement;
+
+        // the syntax (to coerce attributes to). From the input doc if available.
+        private Syntax syntax = Syntax.xml;
+
+        @Nullable
+        private final org.jsoup.nodes.Element contextElement;
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
             namespacesStack.push(new HashMap<>());
             dest = doc;
-            contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty); // Track the context jsoup Element, so we can save the corresponding w3c element
+            // Track the context jsoup Element, so we can save the corresponding w3c element
+            contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty);
             final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
             if (namespaceAware && inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder) {
-              // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
-              namespacesStack.peek().put("", xhtmlNs);
+                // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
+                namespacesStack.peek().put("", xhtmlNs);
             }
-          }
+        }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
-            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
+            // inherit from above on the stack
+            namespacesStack.push(new HashMap<>(namespacesStack.peek()));
             if (source instanceof org.jsoup.nodes.Element) {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
-
                 String prefix = updateNamespaces(sourceEl);
                 String namespace = namespaceAware ? namespacesStack.peek().get(prefix) : null;
                 String tagName = sourceEl.tagName();
-
                 /* Tag names in XML are quite permissive, but less permissive than HTML. Rather than reimplement the validation,
                 we just try to use it as-is. If it fails, insert as a text node instead. We don't try to normalize the
                 tagname to something safe, because that isn't going to be meaningful downstream. This seems(?) to be
@@ -382,7 +395,8 @@ public class W3CDom {
                     append(el, sourceEl);
                     if (sourceEl == contextElement)
                         doc.setUserData(ContextNodeProperty, el, null);
-                    dest = el; // descend
+                    // descend
+                    dest = el;
                 } catch (DOMException e) {
                     append(doc.createTextNode("<" + tagName + ">"), sourceEl);
                 }
@@ -410,7 +424,8 @@ public class W3CDom {
 
         public void tail(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
-                dest = dest.getParentNode(); // undescend
+                // undescend
+                dest = dest.getParentNode();
             }
             namespacesStack.pop();
         }
@@ -418,7 +433,8 @@ public class W3CDom {
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
                 String key = Attribute.getValidKey(attribute.getKey(), syntax);
-                if (key != null) { // null if couldn't be coerced to validity
+                if (key != null) {
+                    // null if couldn't be coerced to validity
                     el.setAttribute(key, attribute.getValue());
                 }
             }
@@ -443,11 +459,9 @@ public class W3CDom {
                 }
                 namespacesStack.peek().put(prefix, attr.getValue());
             }
-
             // get the element prefix if any
             int pos = el.tagName().indexOf(':');
             return pos > 0 ? el.tagName().substring(0, pos) : "";
         }
-
     }
 }

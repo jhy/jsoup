@@ -9,14 +9,17 @@ import org.jsoup.helper.Validate;
  * @author Jonathan Hedley
  */
 public class TokenQueue {
+
     private String queue;
+
     private int pos = 0;
-    
-    private static final char ESC = '\\'; // escape char for chomp balanced.
+
+    // escape char for chomp balanced.
+    private static final char ESC = '\\';
 
     /**
-     Create a new TokenQueue.
-     @param data string of data to back queue.
+     *     Create a new TokenQueue.
+     *     @param data string of data to back queue.
      */
     public TokenQueue(String data) {
         Validate.notNull(data);
@@ -30,14 +33,14 @@ public class TokenQueue {
     public boolean isEmpty() {
         return remainingLength() == 0;
     }
-    
+
     private int remainingLength() {
         return queue.length() - pos;
     }
 
     /**
-     Add a string to the start of the queue.
-     @param seq string to add.
+     *     Add a string to the start of the queue.
+     *     @param seq string to add.
      */
     public void addFirst(String seq) {
         // not very performant, but an edge case
@@ -55,9 +58,9 @@ public class TokenQueue {
     }
 
     /**
-     Tests if the next characters match any of the sequences. Case insensitive.
-     @param seq list of strings to case insensitively check for
-     @return true of any matched, false if none did
+     *     Tests if the next characters match any of the sequences. Case insensitive.
+     *     @param seq list of strings to case insensitively check for
+     *     @return true of any matched, false if none did
      */
     public boolean matchesAny(String... seq) {
         for (String s : seq) {
@@ -70,8 +73,7 @@ public class TokenQueue {
     public boolean matchesAny(char... seq) {
         if (isEmpty())
             return false;
-
-        for (char c: seq) {
+        for (char c : seq) {
             if (queue.charAt(pos) == c)
                 return true;
         }
@@ -94,16 +96,16 @@ public class TokenQueue {
     }
 
     /**
-     Tests if queue starts with a whitespace character.
-     @return if starts with whitespace
+     *     Tests if queue starts with a whitespace character.
+     *     @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
         return !isEmpty() && StringUtil.isWhitespace(queue.charAt(pos));
     }
 
     /**
-     Test if the queue matches a word character (letter or digit).
-     @return if matches a word character
+     *     Test if the queue matches a word character (letter or digit).
+     *     @return if matches a word character
      */
     public boolean matchesWord() {
         return !isEmpty() && Character.isLetterOrDigit(queue.charAt(pos));
@@ -113,7 +115,8 @@ public class TokenQueue {
      * Drops the next character off the queue.
      */
     public void advance() {
-        if (!isEmpty()) pos++;
+        if (!isEmpty())
+            pos++;
     }
 
     /**
@@ -127,8 +130,8 @@ public class TokenQueue {
     /**
      * Consumes the supplied sequence of the queue. If the queue does not start with the supplied sequence, will
      * throw an illegal state exception -- but you should be running match() against that condition.
-     <p>
-     Case insensitive.
+     *     <p>
+     *     Case insensitive.
      * @param seq sequence to remove from head of queue.
      */
     public void consume(String seq) {
@@ -137,7 +140,6 @@ public class TokenQueue {
         int len = seq.length();
         if (len > remainingLength())
             throw new IllegalStateException("Queue not long enough to consume sequence");
-        
         pos += len;
     }
 
@@ -156,35 +158,35 @@ public class TokenQueue {
             return remainder();
         }
     }
-    
+
     public String consumeToIgnoreCase(String seq) {
         int start = pos;
         String first = seq.substring(0, 1);
-        boolean canScan = first.toLowerCase().equals(first.toUpperCase()); // if first is not cased, use index of
+        // if first is not cased, use index of
+        boolean canScan = first.toLowerCase().equals(first.toUpperCase());
         while (!isEmpty()) {
             if (matches(seq))
                 break;
-            
             if (canScan) {
                 int skip = queue.indexOf(first, pos) - pos;
-                if (skip == 0) // this char is the skip char, but not match, so force advance of pos
+                if (// this char is the skip char, but not match, so force advance of pos
+                skip == 0)
                     pos++;
-                else if (skip < 0) // no chance of finding, grab to end
+                else if (// no chance of finding, grab to end
+                skip < 0)
                     pos = queue.length();
                 else
                     pos += skip;
-            }
-            else
+            } else
                 pos++;
         }
-
         return queue.substring(start, pos);
     }
 
     /**
-     Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
-     @param seq any number of terminators to consume to. <b>Case insensitive.</b>
-     @return consumed string   
+     *     Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
+     *     @param seq any number of terminators to consume to. <b>Case insensitive.</b>
+     *     @return consumed string
      */
     // todo: method name. not good that consumeTo cares for case, and consume to any doesn't. And the only use for this
     // is a case sensitive time...
@@ -193,7 +195,6 @@ public class TokenQueue {
         while (!isEmpty() && !matchesAny(seq)) {
             pos++;
         }
-
         return queue.substring(start, pos);
     }
 
@@ -210,9 +211,10 @@ public class TokenQueue {
         matchChomp(seq);
         return data;
     }
-    
+
     public String chompToIgnoreCase(String seq) {
-        String data = consumeToIgnoreCase(seq); // case insensitive scan
+        // case insensitive scan
+        String data = consumeToIgnoreCase(seq);
         matchChomp(seq);
         return data;
     }
@@ -233,45 +235,45 @@ public class TokenQueue {
         char last = 0;
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
-        boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
-
+        // regex \Q .. \E escapes from Pattern.quote()
+        boolean inRegexQE = false;
         do {
-            if (isEmpty()) break;
+            if (isEmpty())
+                break;
             char c = consume();
             if (last != ESC) {
                 if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
-                if (inSingleQuote || inDoubleQuote || inRegexQE){
+                if (inSingleQuote || inDoubleQuote || inRegexQE) {
                     last = c;
                     continue;
                 }
-
                 if (c == open) {
                     depth++;
                     if (start == -1)
                         start = pos;
-                }
-                else if (c == close)
+                } else if (c == close)
                     depth--;
             } else if (c == 'Q') {
                 inRegexQE = true;
             } else if (c == 'E') {
                 inRegexQE = false;
             }
-
             if (depth > 0 && last != 0)
-                end = pos; // don't include the outer match pair in the return
+                // don't include the outer match pair in the return
+                end = pos;
             last = c;
         } while (depth > 0);
         final String out = (end >= 0) ? queue.substring(start, end) : "";
-        if (depth > 0) {// ran out of queue before seeing enough )
+        if (depth > 0) {
+            // ran out of queue before seeing enough )
             Validate.fail("Did not find balanced marker at '" + out + "'");
         }
         return out;
     }
-    
+
     /**
      * Unescape a \ escaped string.
      * @param in backslash escaped string
@@ -286,8 +288,7 @@ public class TokenQueue {
                     out.append(c);
                     c = 0;
                 }
-            }
-            else 
+            } else
                 out.append(c);
             last = c;
         }
@@ -330,47 +331,46 @@ public class TokenQueue {
      */
     public String consumeWord() {
         int start = pos;
-        while (matchesWord())
-            pos++;
+        while (matchesWord()) pos++;
         return queue.substring(start, pos);
     }
 
-    
     /**
      * Consume a CSS element selector (tag name, but | instead of : for namespaces (or *| for wildcard namespace), to not conflict with :pseudo selects).
-     * 
+     *
      * @return tag name
      */
     public String consumeElementSelector() {
         return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
-    private static final String[] ElementSelectorChars = {"*|", "|", "_", "-"};
+
+    private static final String[] ElementSelectorChars = { "*|", "|", "_", "-" };
 
     /**
-     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
-     http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
-     @return identifier
+     *     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
+     *     http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
+     *     @return identifier
      */
     public String consumeCssIdentifier() {
         return consumeEscapedCssIdentifier(CssIdentifierChars);
     }
-    private static final String[] CssIdentifierChars = {"-", "_"};
 
+    private static final String[] CssIdentifierChars = { "-", "_" };
 
     private String consumeEscapedCssIdentifier(String... matches) {
         int start = pos;
         boolean escaped = false;
         while (!isEmpty()) {
-            if (queue.charAt(pos) == ESC && remainingLength() >1 ) {
+            if (queue.charAt(pos) == ESC && remainingLength() > 1) {
                 escaped = true;
-                pos+=2; // skip the escape and the escaped
+                // skip the escape and the escaped
+                pos += 2;
             } else if (matchesCssIdentifier(matches)) {
                 pos++;
             } else {
                 break;
             }
         }
-
         String consumed = queue.substring(start, pos);
         return escaped ? unescape(consumed) : consumed;
     }
@@ -380,15 +380,15 @@ public class TokenQueue {
     }
 
     /**
-     Consume and return whatever is left on the queue.
-     @return remained of queue.
+     *     Consume and return whatever is left on the queue.
+     *     @return remained of queue.
      */
     public String remainder() {
         final String remainder = queue.substring(pos);
         pos = queue.length();
         return remainder;
     }
-    
+
     @Override
     public String toString() {
         return queue.substring(pos);

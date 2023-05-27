@@ -2,20 +2,23 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
-
 import javax.annotation.Nullable;
 
 /**
  * Parse tokens for the Tokeniser.
  */
 abstract class Token {
+
     TokenType type;
+
     static final int Unset = -1;
-    private int startPos, endPos = Unset; // position in CharacterReader this token was read from
+
+    // position in CharacterReader this token was read from
+    private int startPos, endPos = Unset;
 
     private Token() {
     }
-    
+
     String tokenType() {
         return this.getClass().getSimpleName();
     }
@@ -53,10 +56,15 @@ abstract class Token {
     }
 
     static final class Doctype extends Token {
+
         final StringBuilder name = new StringBuilder();
+
         String pubSysKey = null;
+
         final StringBuilder publicIdentifier = new StringBuilder();
+
         final StringBuilder systemIdentifier = new StringBuilder();
+
         boolean forceQuirks = false;
 
         Doctype() {
@@ -101,20 +109,37 @@ abstract class Token {
     }
 
     static abstract class Tag extends Token {
-        @Nullable protected String tagName;
-        @Nullable protected String normalName; // lc version of tag name, for case insensitive tree build
 
-        private final StringBuilder attrName = new StringBuilder(); // try to get attr names and vals in one shot, vs Builder
-        @Nullable private String attrNameS;
+        @Nullable
+        protected String tagName;
+
+        // lc version of tag name, for case insensitive tree build
+        @Nullable
+        protected String normalName;
+
+        // try to get attr names and vals in one shot, vs Builder
+        private final StringBuilder attrName = new StringBuilder();
+
+        @Nullable
+        private String attrNameS;
+
         private boolean hasAttrName = false;
 
         private final StringBuilder attrValue = new StringBuilder();
-        @Nullable private String attrValueS;
+
+        @Nullable
+        private String attrValueS;
+
         private boolean hasAttrValue = false;
-        private boolean hasEmptyAttrValue = false; // distinguish boolean attribute from empty string value
+
+        // distinguish boolean attribute from empty string value
+        private boolean hasEmptyAttrValue = false;
 
         boolean selfClosing = false;
-        @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+
+        // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+        @Nullable
+        Attributes attributes;
 
         @Override
         Tag reset() {
@@ -141,7 +166,6 @@ abstract class Token {
         final void newAttribute() {
             if (attributes == null)
                 attributes = new Attributes();
-
             if (hasAttrName && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
                 String name = attrName.length() > 0 ? attrName.toString() : attrNameS;
@@ -161,7 +185,6 @@ abstract class Token {
             reset(attrName);
             attrNameS = null;
             hasAttrName = false;
-
             reset(attrValue);
             attrValueS = null;
             hasAttrValue = false;
@@ -183,14 +206,20 @@ abstract class Token {
             }
         }
 
-        /** Preserves case */
-        final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
+        /**
+         * Preserves case
+         */
+        final String name() {
+            // preserves case, for input into Tag.valueOf (which may drop case)
             Validate.isFalse(tagName == null || tagName.length() == 0);
             return tagName;
         }
 
-        /** Lower case */
-        final String normalName() { // lower case, used in tree building for working out where in tree it should go
+        /**
+         * Lower case
+         */
+        final String normalName() {
+            // lower case, used in tree building for working out where in tree it should go
             return normalName;
         }
 
@@ -223,7 +252,6 @@ abstract class Token {
         final void appendAttributeName(String append) {
             // might have null chars because we eat in one pass - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
-
             ensureAttrName();
             if (attrName.length() == 0) {
                 attrNameS = append;
@@ -262,7 +290,7 @@ abstract class Token {
                 attrValue.appendCodePoint(codepoint);
             }
         }
-        
+
         final void setEmptyAttributeValue() {
             hasEmptyAttrValue = true;
         }
@@ -290,6 +318,7 @@ abstract class Token {
     }
 
     final static class StartTag extends Tag {
+
         StartTag() {
             super();
             type = TokenType.StartTag;
@@ -318,7 +347,8 @@ abstract class Token {
         }
     }
 
-    final static class EndTag extends Tag{
+    final static class EndTag extends Tag {
+
         EndTag() {
             super();
             type = TokenType.EndTag;
@@ -331,8 +361,12 @@ abstract class Token {
     }
 
     final static class Comment extends Token {
+
         private final StringBuilder data = new StringBuilder();
-        private String dataS; // try to get in one shot
+
+        // try to get in one shot
+        private String dataS;
+
         boolean bogus = false;
 
         @Override
@@ -383,6 +417,7 @@ abstract class Token {
     }
 
     static class Character extends Token implements Cloneable {
+
         private String data;
 
         Character() {
@@ -411,7 +446,8 @@ abstract class Token {
             return getData();
         }
 
-        @Override protected Token.Character clone() {
+        @Override
+        protected Token.Character clone() {
             try {
                 return (Token.Character) super.clone();
             } catch (CloneNotSupportedException e) {
@@ -421,6 +457,7 @@ abstract class Token {
     }
 
     final static class CData extends Character {
+
         CData(String data) {
             super();
             this.data(data);
@@ -430,10 +467,10 @@ abstract class Token {
         public String toString() {
             return "<![CDATA[" + getData() + "]]>";
         }
-
     }
 
     final static class EOF extends Token {
+
         EOF() {
             type = Token.TokenType.EOF;
         }
@@ -499,11 +536,13 @@ abstract class Token {
     }
 
     public enum TokenType {
+
         Doctype,
         StartTag,
         EndTag,
         Comment,
-        Character, // note no CData - treated in builder as an extension of Character
+        // note no CData - treated in builder as an extension of Character
+        Character,
         EOF
     }
 }

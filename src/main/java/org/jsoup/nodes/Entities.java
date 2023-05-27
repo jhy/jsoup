@@ -6,13 +6,11 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
-
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
-
 import static org.jsoup.nodes.Document.OutputSettings.*;
 import static org.jsoup.nodes.Entities.EscapeMode.base;
 import static org.jsoup.nodes.Entities.EscapeMode.extended;
@@ -22,13 +20,20 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
  * HTML named character references</a>.
  */
 public class Entities {
+
     private static final int empty = -1;
+
     private static final String emptyName = "";
+
     static final int codepointRadix = 36;
-    private static final char[] codeDelims = {',', ';'};
-    private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
+
+    private static final char[] codeDelims = { ',', ';' };
+
+    // name -> multiple character references
+    private static final HashMap<String, String> multipoints = new HashMap<>();
 
     public enum EscapeMode {
+
         /**
          * Restricted entities suitable for XHTML output: lt, gt, amp, and quot only.
          */
@@ -44,10 +49,14 @@ public class Entities {
 
         // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
         private String[] nameKeys;
-        private int[] codeVals; // limitation is the few references with multiple characters; those go into multipoints.
+
+        // limitation is the few references with multiple characters; those go into multipoints.
+        private int[] codeVals;
 
         // table of codepoints to named entities.
-        private int[] codeKeys; // we don't support multicodepoints to single named value currently
+        // we don't support multicodepoints to single named value currently
+        private int[] codeKeys;
+
         private String[] nameVals;
 
         EscapeMode(String file, int size) {
@@ -64,8 +73,7 @@ public class Entities {
             if (index >= 0) {
                 // the results are ordered so lower case versions of same codepoint come after uppercase, and we prefer to emit lower
                 // (and binary search for same item with multi results is undefined
-                return (index < nameVals.length - 1 && codeKeys[index + 1] == codepoint) ?
-                    nameVals[index + 1] : nameVals[index];
+                return (index < nameVals.length - 1 && codeKeys[index + 1] == codepoint) ? nameVals[index + 1] : nameVals[index];
             }
             return emptyName;
         }
@@ -111,7 +119,7 @@ public class Entities {
             return val;
         int codepoint = extended.codepointForName(name);
         if (codepoint != empty)
-            return new String(new int[]{codepoint}, 0, 1);
+            return new String(new int[] { codepoint }, 0, 1);
         return emptyName;
     }
 
@@ -144,7 +152,8 @@ public class Entities {
         try {
             escape(accum, string, out, false, false, false, false);
         } catch (IOException e) {
-            throw new SerializationException(e); // doesn't happen
+            // doesn't happen
+            throw new SerializationException(e);
         }
         return StringUtil.releaseBuilder(accum);
     }
@@ -161,28 +170,30 @@ public class Entities {
             DefaultOutput = new OutputSettings();
         return escape(string, DefaultOutput);
     }
-    private static @Nullable OutputSettings DefaultOutput; // lazy-init, to break circular dependency with OutputSettings
+
+    // lazy-init, to break circular dependency with OutputSettings
+    @Nullable
+    private static OutputSettings DefaultOutput;
 
     // this method does a lot, but other breakups cause rescanning and stringbuilder generations
-    static void escape(Appendable accum, String string, OutputSettings out,
-                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
-
+    static void escape(Appendable accum, String string, OutputSettings out, boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
         final CharsetEncoder encoder = out.encoder();
-        final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
+        // init in out.prepareEncoder()
+        final CoreCharset coreCharset = out.coreCharset;
         final int length = string.length();
-
         int codePoint;
         boolean skipped = false;
         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
-
             if (normaliseWhite) {
                 if (StringUtil.isWhitespace(codePoint)) {
-                    if (stripLeadingWhite && !reachedNonWhite) continue;
-                    if (lastWasWhite) continue;
+                    if (stripLeadingWhite && !reachedNonWhite)
+                        continue;
+                    if (lastWasWhite)
+                        continue;
                     if (trimTrailing) {
                         skipped = true;
                         continue;
@@ -194,7 +205,8 @@ public class Entities {
                     lastWasWhite = false;
                     reachedNonWhite = true;
                     if (skipped) {
-                        accum.append(' '); // wasn't the end, so need to place a normalized space
+                        // wasn't the end, so need to place a normalized space
+                        accum.append(' ');
                         skipped = false;
                     }
                 }
@@ -203,7 +215,7 @@ public class Entities {
             if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
                 final char c = (char) codePoint;
                 // html specific and required escapes:
-                switch (c) {
+                switch(c) {
                     case '&':
                         accum.append("&amp;");
                         break;
@@ -246,7 +258,8 @@ public class Entities {
                 }
             } else {
                 final String c = new String(Character.toChars(codePoint));
-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                if (// uses fallback encoder for simplicity
+                encoder.canEncode(c))
                     accum.append(c);
                 else
                     appendEncoded(accum, escapeMode, codePoint);
@@ -256,7 +269,8 @@ public class Entities {
 
     private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
         final String name = escapeMode.nameForCodepoint(codePoint);
-        if (!emptyName.equals(name)) // ok for identity check
+        if (// ok for identity check
+        !emptyName.equals(name))
             accum.append('&').append(name).append(';');
         else
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';');
@@ -298,23 +312,26 @@ public class Entities {
      */
     private static boolean canEncode(final CoreCharset charset, final char c, final CharsetEncoder fallback) {
         // todo add more charset tests if impacted by Android's bad perf in canEncode
-        switch (charset) {
+        switch(charset) {
             case ascii:
                 return c < 0x80;
             case utf:
-                return true; // real is:!(Character.isLowSurrogate(c) || Character.isHighSurrogate(c)); - but already check above
+                // real is:!(Character.isLowSurrogate(c) || Character.isHighSurrogate(c)); - but already check above
+                return true;
             default:
                 return fallback.canEncode(c);
         }
     }
 
     enum CoreCharset {
+
         ascii, utf, fallback;
 
         static CoreCharset byName(final String name) {
             if (name.equals("US-ASCII"))
                 return ascii;
-            if (name.startsWith("UTF-")) // covers UTF-8, UTF-16, et al
+            if (// covers UTF-8, UTF-16, et al
+            name.startsWith("UTF-"))
                 return utf;
             return fallback;
         }
@@ -325,13 +342,11 @@ public class Entities {
         e.codeVals = new int[size];
         e.codeKeys = new int[size];
         e.nameVals = new String[size];
-
         int i = 0;
         CharacterReader reader = new CharacterReader(pointsData);
         try {
             while (!reader.isEmpty()) {
                 // NotNestedLessLess=10913,824;1887&
-
                 final String name = reader.consumeTo('=');
                 reader.advance();
                 final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
@@ -347,18 +362,15 @@ public class Entities {
                 final String indexS = reader.consumeTo('&');
                 final int index = Integer.parseInt(indexS, codepointRadix);
                 reader.advance();
-
                 e.nameKeys[i] = name;
                 e.codeVals[i] = cp1;
                 e.codeKeys[index] = cp1;
                 e.nameVals[index] = name;
-
                 if (cp2 != empty) {
-                    multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                    multipoints.put(name, new String(new int[] { cp1, cp2 }, 0, 2));
                 }
                 i++;
             }
-
             Validate.isTrue(i == size, "Unexpected count of entities loaded");
         } finally {
             reader.close();

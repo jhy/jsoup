@@ -4,11 +4,12 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.jsoup.integration.servlets.BaseServlet;
-
 import java.net.InetSocketAddress;
 
 public class TestServer {
+
     private static final Server jetty = new Server(new InetSocketAddress("localhost", 0));
+
     private static final ServletHandler handler = new ServletHandler();
 
     static {
@@ -21,7 +22,8 @@ public class TestServer {
     public static void start() {
         synchronized (jetty) {
             try {
-                jetty.start(); // jetty will safely no-op a start on an already running instance
+                // jetty will safely no-op a start on an already running instance
+                jetty.start();
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
@@ -31,8 +33,8 @@ public class TestServer {
     public static String map(Class<? extends BaseServlet> servletClass) {
         synchronized (jetty) {
             if (!jetty.isStarted())
-                start(); // if running out of the test cases
-
+                // if running out of the test cases
+                start();
             String path = "/" + servletClass.getSimpleName();
             handler.addServletWithMapping(servletClass, path + "/*");
             int port = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();

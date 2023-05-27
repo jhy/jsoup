@@ -15,7 +15,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,7 +23,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
-
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
@@ -34,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests Jsoup.connect against a local server.
  */
 public class ConnectTest {
+
     private static String echoUrl;
 
     @BeforeAll
@@ -86,7 +85,6 @@ public class ConnectTest {
     public void throwsExceptionOn404() {
         String url = EchoServlet.Url;
         Connection con = Jsoup.connect(url).header(EchoServlet.CodeParam, "404");
-
         boolean threw = false;
         try {
             Document doc = con.get();
@@ -103,9 +101,7 @@ public class ConnectTest {
     @Test
     public void ignoresExceptionIfSoConfigured() throws IOException {
         String url = EchoServlet.Url;
-        Connection con = Jsoup.connect(url)
-            .header(EchoServlet.CodeParam, "404")
-            .ignoreHttpErrors(true);
+        Connection con = Jsoup.connect(url).header(EchoServlet.CodeParam, "404").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
@@ -114,11 +110,7 @@ public class ConnectTest {
 
     @Test
     public void doesPost() throws IOException {
-        Document doc = Jsoup.connect(echoUrl)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .cookie("auth", "token")
-            .post();
-
+        Document doc = Jsoup.connect(echoUrl).data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下").cookie("auth", "token").post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("gzip", ihVal("Accept-Encoding", doc));
         assertEquals("auth=token", ihVal("Cookie", doc));
@@ -129,15 +121,10 @@ public class ConnectTest {
 
     @Test
     public void doesPostMultipartWithoutInputstream() throws IOException {
-        Document doc = Jsoup.connect(echoUrl)
-                .header(CONTENT_TYPE, MULTIPART_FORM_DATA)
-                .userAgent(browserUa)
-                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-                .post();
-
+        Document doc = Jsoup.connect(echoUrl).header(CONTENT_TYPE, MULTIPART_FORM_DATA).userAgent(browserUa).data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下").post();
         assertTrue(ihVal("Content-Type", doc).contains(MULTIPART_FORM_DATA));
-
-        assertTrue(ihVal("Content-Type", doc).contains("boundary")); // should be automatically set
+        // should be automatically set
+        assertTrue(ihVal("Content-Type", doc).contains("boundary"));
         assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
         assertEquals("度一下", ihVal("百", doc));
     }
@@ -145,12 +132,7 @@ public class ConnectTest {
     @Test
     public void canSendSecFetchHeaders() throws IOException {
         // https://github.com/jhy/jsoup/issues/1461
-        Document doc = Jsoup.connect(echoUrl)
-            .header("Random-Header-name", "hello")
-            .header("Sec-Fetch-Site", "cross-site")
-            .header("Sec-Fetch-Mode", "cors")
-            .get();
-
+        Document doc = Jsoup.connect(echoUrl).header("Random-Header-name", "hello").header("Sec-Fetch-Site", "cross-site").header("Sec-Fetch-Mode", "cors").get();
         assertEquals("hello", ihVal("Random-Header-name", doc));
         assertEquals("cross-site", ihVal("Sec-Fetch-Site", doc));
         assertEquals("cors", ihVal("Sec-Fetch-Mode", doc));
@@ -158,14 +140,7 @@ public class ConnectTest {
 
     @Test
     public void secFetchHeadersSurviveRedirect() throws IOException {
-        Document doc = Jsoup
-            .connect(RedirectServlet.Url)
-            .data(RedirectServlet.LocationParam, echoUrl)
-            .header("Random-Header-name", "hello")
-            .header("Sec-Fetch-Site", "cross-site")
-            .header("Sec-Fetch-Mode", "cors")
-            .get();
-
+        Document doc = Jsoup.connect(RedirectServlet.Url).data(RedirectServlet.LocationParam, echoUrl).header("Random-Header-name", "hello").header("Sec-Fetch-Site", "cross-site").header("Sec-Fetch-Mode", "cors").get();
         assertEquals("hello", ihVal("Random-Header-name", doc));
         assertEquals("cross-site", ihVal("Sec-Fetch-Site", doc));
         assertEquals("cors", ihVal("Sec-Fetch-Mode", doc));
@@ -174,12 +149,7 @@ public class ConnectTest {
     @Test
     public void sendsRequestBodyJsonWithData() throws IOException {
         final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoUrl)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .data("foo", "true")
-            .post();
+        Document doc = Jsoup.connect(echoUrl).requestBody(body).header("Content-Type", "application/json").userAgent(browserUa).data("foo", "true").post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("application/json", ihVal("Content-Type", doc));
         assertEquals("foo=true", ihVal("Query String", doc));
@@ -189,11 +159,7 @@ public class ConnectTest {
     @Test
     public void sendsRequestBodyJsonWithoutData() throws IOException {
         final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoUrl)
-            .requestBody(body)
-            .header("Content-Type", "application/json")
-            .userAgent(browserUa)
-            .post();
+        Document doc = Jsoup.connect(echoUrl).requestBody(body).header("Content-Type", "application/json").userAgent(browserUa).post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("application/json", ihVal("Content-Type", doc));
         assertEquals(body, ihVal("Post Data", doc));
@@ -202,11 +168,7 @@ public class ConnectTest {
     @Test
     public void sendsRequestBody() throws IOException {
         final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoUrl)
-            .requestBody(body)
-            .header("Content-Type", "text/plain")
-            .userAgent(browserUa)
-            .post();
+        Document doc = Jsoup.connect(echoUrl).requestBody(body).header("Content-Type", "text/plain").userAgent(browserUa).post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("text/plain", ihVal("Content-Type", doc));
         assertEquals(body, ihVal("Post Data", doc));
@@ -215,12 +177,8 @@ public class ConnectTest {
     @Test
     public void sendsRequestBodyWithUrlParams() throws IOException {
         final String body = "{key:value}";
-        Document doc = Jsoup.connect(echoUrl)
-            .requestBody(body)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .header("Content-Type", "text/plain") // todo - if user sets content-type, we should append postcharset
-            .userAgent(browserUa)
-            .post();
+        Document doc = Jsoup.connect(echoUrl).requestBody(body).data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下").header("Content-Type", // todo - if user sets content-type, we should append postcharset
+        "text/plain").userAgent(browserUa).post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("uname=Jsoup&uname=Jonathan&%E7%99%BE=%E5%BA%A6%E4%B8%80%E4%B8%8B", ihVal("Query String", doc));
         assertEquals(body, ihVal("Post Data", doc));
@@ -228,11 +186,7 @@ public class ConnectTest {
 
     @Test
     public void doesGet() throws IOException {
-        Connection con = Jsoup.connect(echoUrl + "?what=the")
-            .userAgent("Mozilla")
-            .referrer("http://example.com")
-            .data("what", "about & me?");
-
+        Connection con = Jsoup.connect(echoUrl + "?what=the").userAgent("Mozilla").referrer("http://example.com").data("what", "about & me?");
         Document doc = con.get();
         assertEquals("what=the&what=about+%26+me%3F", ihVal("Query String", doc));
         assertEquals("the, about & me?", ihVal("what", doc));
@@ -242,12 +196,7 @@ public class ConnectTest {
 
     @Test
     public void doesPut() throws IOException {
-        Connection.Response res = Jsoup.connect(echoUrl)
-            .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
-            .cookie("auth", "token")
-            .method(Connection.Method.PUT)
-            .execute();
-
+        Connection.Response res = Jsoup.connect(echoUrl).data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下").cookie("auth", "token").method(Connection.Method.PUT).execute();
         Document doc = res.parse();
         assertEquals("PUT", ihVal("Method", doc));
         assertEquals("gzip", ihVal("Accept-Encoding", doc));
@@ -261,30 +210,19 @@ public class ConnectTest {
     public void postFiles() throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
         File html = ParseTest.getFile("/htmltests/large.html");
-
-        Document res = Jsoup
-            .connect(EchoServlet.Url)
-            .data("firstname", "Jay")
-            .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
-            .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
-            .data("surname", "Soup")
-            .post();
-
+        Document res = Jsoup.connect(EchoServlet.Url).data("firstname", "Jay").data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg").data("secondPart", html.getName(), // defaults to "application-octetstream";
+        new FileInputStream(html)).data("surname", "Soup").post();
         assertEquals("4", ihVal("Parts", res));
-
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
         assertEquals("large.html", ihVal("Part secondPart Filename", res));
         assertEquals("280735", ihVal("Part secondPart Size", res));
-
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
         assertEquals("thumb.jpg", ihVal("Part firstPart Filename", res));
         assertEquals("1052", ihVal("Part firstPart Size", res));
-
         assertEquals("Jay", ihVal("firstname", res));
         assertEquals("Soup", ihVal("surname", res));
-
         /*
         <tr><th>Part secondPart ContentType</th><td>application/octet-stream</td></tr>
         <tr><th>Part secondPart Name</th><td>secondPart</td></tr>
@@ -300,10 +238,8 @@ public class ConnectTest {
     @Test
     public void multipleParsesOkAfterBufferUp() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
-
         Document doc = res.parse();
         assertTrue(doc.title().contains("Environment"));
-
         Document doc2 = res.parse();
         assertTrue(doc2.title().contains("Environment"));
     }
@@ -324,7 +260,6 @@ public class ConnectTest {
         assertTrue(body.contains("Environment"));
         byte[] bytes = res.bodyAsBytes();
         assertTrue(bytes.length > 100);
-
         Document doc = res.parse();
         assertTrue(doc.title().contains("Environment"));
     }
@@ -335,40 +270,32 @@ public class ConnectTest {
             Connection.Response res = Jsoup.connect(echoUrl).execute();
             Document doc = res.parse();
             assertTrue(doc.title().contains("Environment"));
-            Document doc2 = res.parse(); // should blow up because the response input stream has been drained
+            // should blow up because the response input stream has been drained
+            Document doc2 = res.parse();
         });
     }
 
-
     @Test
     public void multiCookieSet() throws IOException {
-        Connection con = Jsoup
-                .connect(RedirectServlet.Url)
-                .data(RedirectServlet.CodeParam, "302")
-                .data(RedirectServlet.SetCookiesParam, "true")
-                .data(RedirectServlet.LocationParam, echoUrl);
+        Connection con = Jsoup.connect(RedirectServlet.Url).data(RedirectServlet.CodeParam, "302").data(RedirectServlet.SetCookiesParam, "true").data(RedirectServlet.LocationParam, echoUrl);
         Connection.Response res = con.execute();
-
         // test cookies set by redirect:
         Map<String, String> cookies = res.cookies();
         assertEquals("asdfg123", cookies.get("token"));
         assertEquals("jhy", cookies.get("uid"));
-
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();
         assertEquals("token=asdfg123; uid=jhy", ihVal("Cookie", doc));
     }
 
-    @Test public void requestCookiesSurviveRedirect() throws IOException {
+    @Test
+    public void requestCookiesSurviveRedirect() throws IOException {
         // this test makes sure that Request keyval cookies (not in the cookie store) are sent on subsequent redirections,
         // when not using the session method
-        Connection con = Jsoup.connect(RedirectServlet.Url)
-            .data(RedirectServlet.LocationParam, echoUrl)
-            .cookie("LetMeIn", "True")
-            .cookie("DoesItWork", "Yes");
-
+        Connection con = Jsoup.connect(RedirectServlet.Url).data(RedirectServlet.LocationParam, echoUrl).cookie("LetMeIn", "True").cookie("DoesItWork", "Yes");
         Connection.Response res = con.execute();
-        assertEquals(0, res.cookies().size()); // were not set by Redir or Echo servlet
+        // were not set by Redir or Echo servlet
+        assertEquals(0, res.cookies().size());
         Document doc = res.parse();
         assertEquals(echoUrl, doc.location());
         assertEquals("True", ihVal("Cookie: LetMeIn", doc));
@@ -379,7 +306,6 @@ public class ConnectTest {
     public void supportsDeflate() throws IOException {
         Connection.Response res = Jsoup.connect(Deflateservlet.Url).execute();
         assertEquals("deflate", res.header("Content-Encoding"));
-
         Document doc = res.parse();
         assertEquals("Hello, World!", doc.selectFirst("p").text());
     }
@@ -387,12 +313,7 @@ public class ConnectTest {
     @Test
     public void handlesLargerContentLengthParseRead() throws IOException {
         // this handles situations where the remote server sets a content length greater than it actually writes
-
-        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
-            .data(InterruptedServlet.Magnitude, InterruptedServlet.Larger)
-            .timeout(400)
-            .execute();
-
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url).data(InterruptedServlet.Magnitude, InterruptedServlet.Larger).timeout(400).execute();
         Document document = res.parse();
         assertEquals("Something", document.title());
         assertEquals(0, document.select("p").size());
@@ -402,33 +323,27 @@ public class ConnectTest {
 
     @Test
     public void handlesWrongContentLengthDuringBufferedRead() throws IOException {
-        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
-                .timeout(400)
-                .execute();
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url).timeout(400).execute();
         // this servlet writes max_buffer data, but sets content length to max_buffer/2. So will read up to that.
         // previous versions of jetty would allow to write less, and would throw except here
-
         res.bufferUp();
         Document doc = res.parse();
         assertEquals(0, doc.select("p").size());
     }
 
-    @Test public void handlesRedirect() throws IOException {
-        Document doc = Jsoup.connect(RedirectServlet.Url)
-            .data(RedirectServlet.LocationParam, HelloServlet.Url)
-            .get();
-
+    @Test
+    public void handlesRedirect() throws IOException {
+        Document doc = Jsoup.connect(RedirectServlet.Url).data(RedirectServlet.LocationParam, HelloServlet.Url).get();
         Element p = doc.selectFirst("p");
         assertEquals("Hello, World!", p.text());
-
         assertEquals(HelloServlet.Url, doc.location());
     }
 
-    @Test public void handlesEmptyRedirect() {
+    @Test
+    public void handlesEmptyRedirect() {
         boolean threw = false;
         try {
-            Connection.Response res = Jsoup.connect(RedirectServlet.Url)
-                .execute();
+            Connection.Response res = Jsoup.connect(RedirectServlet.Url).execute();
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("Too many redirects"));
             threw = true;
@@ -436,33 +351,27 @@ public class ConnectTest {
         assertTrue(threw);
     }
 
-    @Test public void doesNotPostFor302() throws IOException {
-        final Document doc = Jsoup.connect(RedirectServlet.Url)
-            .data("Hello", "there")
-            .data(RedirectServlet.LocationParam, EchoServlet.Url)
-            .post();
-
+    @Test
+    public void doesNotPostFor302() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url).data("Hello", "there").data(RedirectServlet.LocationParam, EchoServlet.Url).post();
         assertEquals(EchoServlet.Url, doc.location());
         assertEquals("GET", ihVal("Method", doc));
-        assertNull(ihVal("Hello", doc)); // data not sent
+        // data not sent
+        assertNull(ihVal("Hello", doc));
     }
 
-    @Test public void doesPostFor307() throws IOException {
-        final Document doc = Jsoup.connect(RedirectServlet.Url)
-            .data("Hello", "there")
-            .data(RedirectServlet.LocationParam, EchoServlet.Url)
-            .data(RedirectServlet.CodeParam, "307")
-            .post();
-
+    @Test
+    public void doesPostFor307() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url).data("Hello", "there").data(RedirectServlet.LocationParam, EchoServlet.Url).data(RedirectServlet.CodeParam, "307").post();
         assertEquals(EchoServlet.Url, doc.location());
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("there", ihVal("Hello", doc));
     }
 
-    @Test public void getUtf8Bom() throws IOException {
+    @Test
+    public void getUtf8Bom() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
         Document doc = con.get();
-
         assertEquals("UTF-8", con.response().charset());
         assertEquals("OK", doc.title());
     }
@@ -471,7 +380,6 @@ public class ConnectTest {
     public void testBinaryContentTypeThrowsException() {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
-
         boolean threw = false;
         try {
             con.execute();
@@ -483,7 +391,8 @@ public class ConnectTest {
         assertTrue(threw);
     }
 
-    @Test public void testParseRss() throws IOException {
+    @Test
+    public void testParseRss() throws IOException {
         // test that we switch automatically to xml, and we support application/rss+xml
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/test-rss.xml"));
         con.data(FileServlet.ContentTypeParam, "application/rss+xml");
@@ -492,7 +401,8 @@ public class ConnectTest {
         assertNotNull(title);
         assertEquals("jsoup RSS news", title.text());
         assertEquals("channel", title.parent().nodeName());
-        assertEquals("", doc.title()); // the document title is unset, this tag is channel>title, not html>head>title
+        // the document title is unset, this tag is channel>title, not html>head>title
+        assertEquals("", doc.title());
         assertEquals(3, doc.select("link").size());
         assertEquals("application/rss+xml", con.response().contentType());
         assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
@@ -501,11 +411,7 @@ public class ConnectTest {
 
     @Test
     public void canFetchBinaryAsBytes() throws IOException {
-        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"))
-            .data(FileServlet.ContentTypeParam, "image/jpeg")
-            .ignoreContentType(true)
-            .execute();
-
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg")).data(FileServlet.ContentTypeParam, "image/jpeg").ignoreContentType(true).execute();
         byte[] bytes = res.bodyAsBytes();
         assertEquals(1052, bytes.length);
     }
@@ -514,10 +420,8 @@ public class ConnectTest {
     public void handlesUnknownEscapesAcrossBuffer() throws IOException {
         String localPath = "/htmltests/escapes-across-buffer.html";
         String localUrl = FileServlet.urlTo(localPath);
-
         Document docFromLocalServer = Jsoup.connect(localUrl).get();
         Document docFromFileRead = Jsoup.parse(ParseTest.getFile(localPath), "UTF-8");
-
         String text = docFromLocalServer.body().text();
         assertEquals(14766, text.length());
         assertEquals(text, docFromLocalServer.body().text());
@@ -534,24 +438,21 @@ public class ConnectTest {
         assertEquals(1, forms.size());
         FormElement form = forms.get(0);
         Connection post = form.submit();
-
         File uploadFile = ParseTest.getFile("/htmltests/large.html");
         FileInputStream stream = new FileInputStream(uploadFile);
-
         Connection.KeyVal fileData = post.data("_file");
         assertNotNull(fileData);
         fileData.value("check.html");
         fileData.inputStream(stream);
-
         Connection.Response res;
         try {
             res = post.execute();
         } finally {
             stream.close();
         }
-
         Document doc = res.parse();
-        assertEquals(ihVal("Method", doc), "POST"); // from form action
+        // from form action
+        assertEquals(ihVal("Method", doc), "POST");
         assertEquals(ihVal("Part _file Filename", doc), "check.html");
         assertEquals(ihVal("Part _file Name", doc), "_file");
         assertEquals(ihVal("_function", doc), "tidy");
@@ -559,7 +460,7 @@ public class ConnectTest {
 
     @Test
     public void fetchHandlesXml() throws IOException {
-        String[] types = {"text/xml", "application/xml", "application/rss+xml", "application/xhtml+xml"};
+        String[] types = { "text/xml", "application/xml", "application/rss+xml", "application/xhtml+xml" };
         for (String type : types) {
             fetchHandlesXml(type);
         }
@@ -594,11 +495,9 @@ public class ConnectTest {
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
         Connection con = Jsoup.connect(echoUrl);
         con.get();
-
         Connection.Response res = con.response();
         assertEquals("text/html;charset=utf-8", res.header("Content-Type"));
         assertEquals("no-cache, no-store", res.header("Cache-Control"));
-
         List<String> header = res.headers("Cache-Control");
         assertEquals(2, header.size());
         assertEquals("no-cache", header.get(0));
@@ -608,12 +507,11 @@ public class ConnectTest {
     @Test
     public void sendHeadRequest() throws IOException {
         String url = FileServlet.urlTo("/htmltests/xml-test.xml");
-        Connection con = Jsoup.connect(url)
-            .method(Connection.Method.HEAD)
-            .data(FileServlet.ContentTypeParam, "text/xml");
+        Connection con = Jsoup.connect(url).method(Connection.Method.HEAD).data(FileServlet.ContentTypeParam, "text/xml");
         final Connection.Response response = con.execute();
         assertEquals("text/xml", response.header("Content-Type"));
-        assertEquals("", response.body()); // head ought to have no body
+        // head ought to have no body
+        assertEquals("", response.body());
         Document doc = response.parse();
         assertEquals("", doc.text());
     }
@@ -622,7 +520,6 @@ public class ConnectTest {
     public void fetchToW3c() throws IOException {
         String url = FileServlet.urlTo("/htmltests/upload-form.html");
         Document doc = Jsoup.connect(url).get();
-
         W3CDom dom = new W3CDom();
         org.w3c.dom.Document wDoc = dom.fromJsoup(doc);
         assertEquals(url, wDoc.getDocumentURI());
@@ -640,14 +537,16 @@ public class ConnectTest {
 
     @Test
     public void maxBodySize() throws IOException {
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
-
+        // 280 K
+        String url = FileServlet.urlTo("/htmltests/large.html");
         Connection.Response defaultRes = Jsoup.connect(url).execute();
-        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
-        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
-        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
+        // crops
+        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute();
+        // crops
+        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute();
+        // does not crop
+        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute();
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
-
         int actualDocText = 269535;
         assertEquals(actualDocText, defaultRes.parse().text().length());
         assertEquals(49165, smallRes.parse().text().length());
@@ -656,8 +555,10 @@ public class ConnectTest {
         assertEquals(actualDocText, unlimitedRes.parse().text().length());
     }
 
-    @Test public void repeatable() throws IOException {
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+    @Test
+    public void repeatable() throws IOException {
+        // 280 K
+        String url = FileServlet.urlTo("/htmltests/large.html");
         Connection con = Jsoup.connect(url).parser(Parser.xmlParser());
         Document doc1 = con.get();
         Document doc2 = con.get();
@@ -669,14 +570,16 @@ public class ConnectTest {
     public void maxBodySizeInReadToByteBuffer() throws IOException {
         // https://github.com/jhy/jsoup/issues/1774
         // when calling readToByteBuffer, contents were not buffered up
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
-
+        // 280 K
+        String url = FileServlet.urlTo("/htmltests/large.html");
         Connection.Response defaultRes = Jsoup.connect(url).execute();
-        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
-        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
-        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
+        // crops
+        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute();
+        // crops
+        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute();
+        // does not crop
+        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute();
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
-
         int actualDocText = 280735;
         assertEquals(actualDocText, defaultRes.body().length());
         assertEquals(50 * 1024, smallRes.body().length());
@@ -685,17 +588,16 @@ public class ConnectTest {
         assertEquals(actualDocText, unlimitedRes.body().length());
     }
 
-    @Test void formLoginFlow() throws IOException {
+    @Test
+    void formLoginFlow() throws IOException {
         String echoUrl = EchoServlet.Url;
         String cookieUrl = CookieServlet.Url;
-
         String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
         Document loginDoc = Jsoup.connect(startUrl).get();
         FormElement form = loginDoc.expectForm("#login");
         assertNotNull(form);
         form.expectFirst("[name=username]").val("admin");
         form.expectFirst("[name=password]").val("Netscape engineers are weenies!");
-
         // post it- should go to Cookie then bounce to Echo
         Connection submit = form.submit();
         assertEquals(Connection.Method.POST, submit.request().method());
@@ -706,22 +608,20 @@ public class ConnectTest {
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", resultDoc));
         // should be no form data sent to the echo redirect
         assertEquals("", ihVal("Query String", resultDoc));
-
         // new request to echo, should not have form data, but should have cookies from implicit session
         Document newEcho = submit.newRequest().url(echoUrl).get();
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
         assertEquals("", ihVal("Query String", newEcho));
-
         Document cookieDoc = submit.newRequest().url(cookieUrl).get();
-        assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
-
+        // different cookie path
+        assertEquals("CookieServlet", ihVal("One", cookieDoc));
     }
 
-    @Test void formLoginFlow2() throws IOException {
+    @Test
+    void formLoginFlow2() throws IOException {
         String echoUrl = EchoServlet.Url;
         String cookieUrl = CookieServlet.Url;
         String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
-
         Connection session = Jsoup.newSession();
         Document loginDoc = session.newRequest().url(startUrl).get();
         FormElement form = loginDoc.expectForm("#login2");
@@ -730,32 +630,31 @@ public class ConnectTest {
         form.expectFirst("[name=username]").val(username);
         String password = "Netscape engineers are weenies!";
         form.expectFirst("[name=password]").val(password);
-
         Connection submit = form.submit();
         assertEquals(username, submit.data("username").value());
         assertEquals(password, submit.data("password").value());
-
         Connection.Response postRes = submit.execute();
         assertEquals(cookieUrl, postRes.url().toExternalForm());
         assertEquals(Connection.Method.POST, postRes.method());
         Document resultDoc = postRes.parse();
-
         Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
-        assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
+        // should not re-send the data
+        assertEquals("", ihVal("Query String", echo2));
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
     }
 
-    @Test void preservesUrlFragment() throws IOException {
+    @Test
+    void preservesUrlFragment() throws IOException {
         // confirms https://github.com/jhy/jsoup/issues/1686
         String url = EchoServlet.Url + "#fragment";
         Document doc = Jsoup.connect(url).get();
         assertEquals(url, doc.location());
     }
 
-    @Test void fetchUnicodeUrl() throws IOException {
+    @Test
+    void fetchUnicodeUrl() throws IOException {
         String url = EchoServlet.Url + "/✔/?鍵=値";
         Document doc = Jsoup.connect(url).get();
-
         assertEquals("/✔/", ihVal("Path Info", doc));
         assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
         assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));

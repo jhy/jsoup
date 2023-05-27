@@ -10,7 +10,6 @@ import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.io.StringReader;
@@ -24,18 +23,19 @@ import java.util.List;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
+
     ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
     }
 
-    @Override @ParametersAreNonnullByDefault
+    @Override
+    @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
-        stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
-        doc.outputSettings()
-            .syntax(Document.OutputSettings.Syntax.xml)
-            .escapeMode(Entities.EscapeMode.xhtml)
-            .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
+        // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)
+        stack.add(doc);
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml).escapeMode(Entities.EscapeMode.xhtml).prettyPrint(// as XML, we don't understand what whitespace is significant or not
+        false);
     }
 
     Document parse(Reader input, String baseUri) {
@@ -54,7 +54,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     protected boolean process(Token token) {
         // start tag, end tag, doctype, comment, character, eof
-        switch (token.type) {
+        switch(token.type) {
             case StartTag:
                 insert(token.asStartTag());
                 break;
@@ -70,7 +70,8 @@ public class XmlTreeBuilder extends TreeBuilder {
             case Doctype:
                 insert(token.asDoctype());
                 break;
-            case EOF: // could put some normalisation here if desired
+            case // could put some normalisation here if desired
+            EOF:
                 break;
             default:
                 Validate.fail("Unexpected token type: " + token.type);
@@ -93,11 +94,11 @@ public class XmlTreeBuilder extends TreeBuilder {
         // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         if (startTag.hasAttributes())
             startTag.attributes.deduplicate(settings);
-
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el, startTag);
         if (startTag.isSelfClosing()) {
-            if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output. see above.
+            if (// unknown tag, remember this is self closing for output. see above.
+            !tag.isKnownTag())
                 tag.setSelfClosing();
         } else {
             stack.add(el);
@@ -111,7 +112,8 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (commentToken.bogus && comment.isXmlDeclaration()) {
             // xml declarations are emitted as bogus comments (which is right for html, but not xml)
             // so we do a bit of a hack and parse the data as an element to pull the attributes out
-            XmlDeclaration decl = comment.asXmlDeclaration(); // else, we couldn't parse it as a decl, so leave as a comment
+            // else, we couldn't parse it as a decl, so leave as a comment
+            XmlDeclaration decl = comment.asXmlDeclaration();
             if (decl != null)
                 insert = decl;
         }
@@ -139,11 +141,9 @@ public class XmlTreeBuilder extends TreeBuilder {
         // like in HtmlTreeBuilder - don't scan up forever for very (artificially) deeply nested stacks
         String elName = settings.normalizeTag(endTag.tagName);
         Element firstFound = null;
-
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
-
-        for (int pos = stack.size() -1; pos >= upper; pos--) {
+        for (int pos = stack.size() - 1; pos >= upper; pos--) {
             Element next = stack.get(pos);
             if (next.nodeName().equals(elName)) {
                 firstFound = next;
@@ -151,9 +151,9 @@ public class XmlTreeBuilder extends TreeBuilder {
             }
         }
         if (firstFound == null)
-            return; // not found, skip
-
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
+            // not found, skip
+            return;
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             stack.remove(pos);
             if (next == firstFound) {
@@ -162,9 +162,9 @@ public class XmlTreeBuilder extends TreeBuilder {
             }
         }
     }
-    private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
 
-
+    // an arbitrary tension point between real XML and crafted pain
+    private static final int maxQueueDepth = 256;
 
     List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);

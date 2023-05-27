@@ -24,19 +24,31 @@ import org.jsoup.nodes.Node;
  * </p>
  */
 public interface NodeFilter {
+
     /**
      * Filter decision.
      */
     enum FilterResult {
-        /** Continue processing the tree */
+
+        /**
+         * Continue processing the tree
+         */
         CONTINUE,
-        /** Skip the child nodes, but do call {@link NodeFilter#tail(Node, int)} next. */
+        /**
+         * Skip the child nodes, but do call {@link NodeFilter#tail(Node, int)} next.
+         */
         SKIP_CHILDREN,
-        /** Skip the subtree, and do not call {@link NodeFilter#tail(Node, int)}. */
+        /**
+         * Skip the subtree, and do not call {@link NodeFilter#tail(Node, int)}.
+         */
         SKIP_ENTIRELY,
-        /** Remove the node and its children */
+        /**
+         * Remove the node and its children
+         */
         REMOVE,
-        /** Stop processing */
+        /**
+         * Stop processing
+         */
         STOP
     }
 

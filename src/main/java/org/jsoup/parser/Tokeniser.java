@@ -3,7 +3,6 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 
@@ -11,46 +10,76 @@ import java.util.Arrays;
  * Readers the input stream into tokens.
  */
 final class Tokeniser {
-    static final char replacementChar = '\uFFFD'; // replaces null character
-    private static final char[] notCharRefCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '<', '&'};
+
+    // replaces null character
+    static final char replacementChar = '\uFFFD';
+
+    private static final char[] notCharRefCharsSorted = new char[] { '\t', '\n', '\r', '\f', ' ', '<', '&' };
 
     // Some illegal character escapes are parsed by browsers as windows-1252 instead. See issue #1034
     // https://html.spec.whatwg.org/multipage/parsing.html#numeric-character-reference-end-state
     static final int win1252ExtensionsStart = 0x80;
-    static final int[] win1252Extensions = new int[] {
-            // we could build this manually, but Windows-1252 is not a standard java charset so that could break on
-            // some platforms - this table is verified with a test
-            0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
-            0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0x008D, 0x017D, 0x008F,
-            0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
-            0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x009D, 0x017E, 0x0178,
-    };
+
+    static final int[] win1252Extensions = new int[] { // we could build this manually, but Windows-1252 is not a standard java charset so that could break on
+    // some platforms - this table is verified with a test
+    0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0x008D, 0x017D, 0x008F, 0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x009D, 0x017E, 0x0178 };
 
     static {
         Arrays.sort(notCharRefCharsSorted);
     }
 
-    private final CharacterReader reader; // html input
-    private final ParseErrorList errors; // errors found while tokenising
+    // html input
+    private final CharacterReader reader;
 
-    private TokeniserState state = TokeniserState.Data; // current tokenisation state
-    @Nullable private Token emitPending = null; // the token we are about to emit on next read
+    // errors found while tokenising
+    private final ParseErrorList errors;
+
+    // current tokenisation state
+    private TokeniserState state = TokeniserState.Data;
+
+    // the token we are about to emit on next read
+    @Nullable
+    private Token emitPending = null;
+
     private boolean isEmitPending = false;
-    @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
-    private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
-    StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
+
+    // characters pending an emit. Will fall to charsBuilder if more than one
+    @Nullable
+    private String charsString = null;
+
+    // buffers characters to output as one token, if more than one emit per read
+    private final StringBuilder charsBuilder = new StringBuilder(1024);
+
+    // buffers data looking for </script>
+    StringBuilder dataBuffer = new StringBuilder(1024);
 
     Token.StartTag startPending = new Token.StartTag();
+
     Token.EndTag endPending = new Token.EndTag();
-    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
+
+    // tag we are building up: start or end pending
+    Token.Tag tagPending = startPending;
+
     Token.Character charPending = new Token.Character();
-    Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
-    Token.Comment commentPending = new Token.Comment(); // comment building up
-    @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
-    @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
+
+    // doctype building up
+    Token.Doctype doctypePending = new Token.Doctype();
+
+    // comment building up
+    Token.Comment commentPending = new Token.Comment();
+
+    // the last start tag emitted, to test appropriate end tag
+    @Nullable
+    private String lastStartTag;
+
+    // "</" + lastStartTag, so we can quickly check for that in RCData
+    @Nullable
+    private String lastStartCloseSeq;
 
     private static final int Unset = -1;
-    private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
+
+    // reader pos at the start of markup / characters. updated on state transition
+    private int markupStartPos, charStartPos = Unset;
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
@@ -61,7 +90,6 @@ final class Tokeniser {
         while (!isEmitPending) {
             state.read(this, reader);
         }
-
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
         final StringBuilder cb = this.charsBuilder;
         if (cb.length() != 0) {
@@ -83,17 +111,16 @@ final class Tokeniser {
 
     void emit(Token token) {
         Validate.isFalse(isEmitPending);
-
         emitPending = token;
         isEmitPending = true;
         token.startPos(markupStartPos);
         token.endPos(reader.pos());
         charStartPos = Unset;
-
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
             lastStartTag = startTag.tagName;
-            lastStartCloseSeq = null; // only lazy inits
+            // only lazy inits
+            lastStartCloseSeq = null;
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
             if (endTag.hasAttributes())
@@ -107,7 +134,8 @@ final class Tokeniser {
         if (charsString == null) {
             charsString = str;
         } else {
-            if (charsBuilder.length() == 0) { // switching to string builder as more than one emit before read
+            if (charsBuilder.length() == 0) {
+                // switching to string builder as more than one emit before read
                 charsBuilder.append(charsString);
             }
             charsBuilder.append(str);
@@ -157,15 +185,15 @@ final class Tokeniser {
 
     void transition(TokeniserState newState) {
         // track markup / data position on state transitions
-        switch (newState) {
+        switch(newState) {
             case TagOpen:
                 markupStartPos = reader.pos();
                 break;
             case Data:
-                if (charStartPos == Unset) // don't reset when we are jumping between e.g data -> char ref -> data
+                if (// don't reset when we are jumping between e.g data -> char ref -> data
+                charStartPos == Unset)
                     charStartPos = reader.pos();
         }
-
         this.state = newState;
     }
 
@@ -174,36 +202,42 @@ final class Tokeniser {
         reader.advance();
     }
 
-    final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
+    // holder to not have to keep creating arrays
+    final private int[] codepointHolder = new int[1];
+
     final private int[] multipointHolder = new int[2];
-    @Nullable int[] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
+
+    @Nullable
+    int[] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
             return null;
         if (reader.matchesAnySorted(notCharRefCharsSorted))
             return null;
-
         final int[] codeRef = codepointHolder;
         reader.mark();
-        if (reader.matchConsume("#")) { // numbered
+        if (reader.matchConsume("#")) {
+            // numbered
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
             String numRef = isHexMode ? reader.consumeHexSequence() : reader.consumeDigitSequence();
-            if (numRef.length() == 0) { // didn't match anything
+            if (numRef.length() == 0) {
+                // didn't match anything
                 characterReferenceError("numeric reference with no numerals");
                 reader.rewindToMark();
                 return null;
             }
-
             reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon on [&#%s]", numRef); // missing semi
+                // missing semi
+                characterReferenceError("missing semicolon on [&#%s]", numRef);
             int charval = -1;
             try {
                 int base = isHexMode ? 16 : 10;
                 charval = Integer.valueOf(numRef, base);
             } catch (NumberFormatException ignored) {
-            } // skip
+            }
+            // skip
             if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
                 characterReferenceError("character [%s] outside of valid range", charval);
                 codeRef[0] = replacementChar;
@@ -213,22 +247,22 @@ final class Tokeniser {
                     characterReferenceError("character [%s] is not a valid unicode code point", charval);
                     charval = win1252Extensions[charval - win1252ExtensionsStart];
                 }
-
                 // todo: implement number replacement table
                 // todo: check for extra illegal unicode points as parse errors
                 codeRef[0] = charval;
             }
             return codeRef;
-        } else { // named
+        } else {
+            // named
             // get as many letters as possible, and look for matching entities.
             String nameRef = reader.consumeLetterThenDigitSequence();
             boolean looksLegit = reader.matches(';');
             // found if a base named entity without a ;, or an extended entity with the ;.
             boolean found = (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
-
             if (!found) {
                 reader.rewindToMark();
-                if (looksLegit) // named with semicolon
+                if (// named with semicolon
+                looksLegit)
                     characterReferenceError("invalid named reference [%s]", nameRef);
                 return null;
             }
@@ -237,15 +271,15 @@ final class Tokeniser {
                 reader.rewindToMark();
                 return null;
             }
-
             reader.unmark();
             if (!reader.matchConsume(";"))
-                characterReferenceError("missing semicolon on [&%s]", nameRef); // missing semi
+                // missing semi
+                characterReferenceError("missing semicolon on [&%s]", nameRef);
             int numChars = Entities.codepointsForName(nameRef, multipointHolder);
             if (numChars == 1) {
                 codeRef[0] = multipointHolder[0];
                 return codeRef;
-            } else if (numChars ==2) {
+            } else if (numChars == 2) {
                 return multipointHolder;
             } else {
                 Validate.fail("Unexpected characters returned for " + nameRef);
@@ -293,13 +327,18 @@ final class Tokeniser {
         return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
-    @Nullable String appropriateEndTagName() {
-        return lastStartTag; // could be null
+    @Nullable
+    String appropriateEndTagName() {
+        // could be null
+        return lastStartTag;
     }
 
-    /** Returns the closer sequence {@code </lastStart} */
+    /**
+     * Returns the closer sequence {@code </lastStart}
+     */
     String appropriateEndTagSeq() {
-        if (lastStartCloseSeq == null) // reset on start tag emit
+        if (// reset on start tag emit
+        lastStartCloseSeq == null)
             lastStartCloseSeq = "</" + lastStartTag;
         return lastStartCloseSeq;
     }
@@ -348,14 +387,13 @@ final class Tokeniser {
             if (reader.matches('&')) {
                 reader.consume();
                 int[] c = consumeCharacterReference(null, inAttribute);
-                if (c == null || c.length==0)
+                if (c == null || c.length == 0)
                     builder.append('&');
                 else {
                     builder.appendCodePoint(c[0]);
                     if (c.length == 2)
                         builder.appendCodePoint(c[1]);
                 }
-
             }
         }
         return StringUtil.releaseBuilder(builder);

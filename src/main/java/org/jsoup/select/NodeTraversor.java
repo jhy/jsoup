@@ -12,6 +12,7 @@ import org.jsoup.select.NodeFilter.FilterResult;
  * </p>
  */
 public class NodeTraversor {
+
     /**
      * Start a depth-first traverse of the root and all of its descendants.
      * @param visitor Node visitor.
@@ -22,34 +23,43 @@ public class NodeTraversor {
         Validate.notNull(root);
         Node node = root;
         int depth = 0;
-        
         while (node != null) {
-            Node parent = node.parentNode(); // remember parent to find nodes that get replaced in .head
+            // remember parent to find nodes that get replaced in .head
+            Node parent = node.parentNode();
             int origSize = parent != null ? parent.childNodeSize() : 0;
             Node next = node.nextSibling();
-
-            visitor.head(node, depth); // visit current node
-            if (parent != null && !node.hasParent()) { // removed or replaced
-                if (origSize == parent.childNodeSize()) { // replaced
-                    node = parent.childNode(node.siblingIndex()); // replace ditches parent but keeps sibling index
-                } else { // removed
+            // visit current node
+            visitor.head(node, depth);
+            if (parent != null && !node.hasParent()) {
+                // removed or replaced
+                if (origSize == parent.childNodeSize()) {
+                    // replaced
+                    // replace ditches parent but keeps sibling index
+                    node = parent.childNode(node.siblingIndex());
+                } else {
+                    // removed
                     node = next;
-                    if (node == null) { // last one, go up
+                    if (node == null) {
+                        // last one, go up
                         node = parent;
                         depth--;
                     }
-                    continue; // don't tail removed
+                    // don't tail removed
+                    continue;
                 }
             }
-
-            if (node.childNodeSize() > 0) { // descend
+            if (node.childNodeSize() > 0) {
+                // descend
                 node = node.childNode(0);
                 depth++;
             } else {
                 while (true) {
-                    assert node != null; // as depth > 0, will have parent
-                    if (!(node.nextSibling() == null && depth > 0)) break;
-                    visitor.tail(node, depth); // when no more siblings, ascend
+                    // as depth > 0, will have parent
+                    assert node != null;
+                    if (!(node.nextSibling() == null && depth > 0))
+                        break;
+                    // when no more siblings, ascend
+                    visitor.tail(node, depth);
                     node = node.parentNode();
                     depth--;
                 }
@@ -69,8 +79,7 @@ public class NodeTraversor {
     public static void traverse(NodeVisitor visitor, Elements elements) {
         Validate.notNull(visitor);
         Validate.notNull(elements);
-        for (Element el : elements)
-            traverse(visitor, el);
+        for (Element el : elements) traverse(visitor, el);
     }
 
     /**
@@ -82,7 +91,6 @@ public class NodeTraversor {
     public static FilterResult filter(NodeFilter filter, Node root) {
         Node node = root;
         int depth = 0;
-
         while (node != null) {
             FilterResult result = filter.head(node, depth);
             if (result == FilterResult.STOP)
@@ -95,20 +103,25 @@ public class NodeTraversor {
             }
             // No siblings, move upwards:
             while (true) {
-                assert node != null; // depth > 0, so has parent
-                if (!(node.nextSibling() == null && depth > 0)) break;
+                // depth > 0, so has parent
+                assert node != null;
+                if (!(node.nextSibling() == null && depth > 0))
+                    break;
                 // 'tail' current node:
                 if (result == FilterResult.CONTINUE || result == FilterResult.SKIP_CHILDREN) {
                     result = filter.tail(node, depth);
                     if (result == FilterResult.STOP)
                         return result;
                 }
-                Node prev = node; // In case we need to remove it below.
+                // In case we need to remove it below.
+                Node prev = node;
                 node = node.parentNode();
                 depth--;
                 if (result == FilterResult.REMOVE)
-                    prev.remove(); // Remove AFTER finding parent.
-                result = FilterResult.CONTINUE; // Parent was not pruned.
+                    // Remove AFTER finding parent.
+                    prev.remove();
+                // Parent was not pruned.
+                result = FilterResult.CONTINUE;
             }
             // 'tail' current node, then proceed with siblings:
             if (result == FilterResult.CONTINUE || result == FilterResult.SKIP_CHILDREN) {
@@ -118,10 +131,12 @@ public class NodeTraversor {
             }
             if (node == root)
                 return result;
-            Node prev = node; // In case we need to remove it below.
+            // In case we need to remove it below.
+            Node prev = node;
             node = node.nextSibling();
             if (result == FilterResult.REMOVE)
-                prev.remove(); // Remove AFTER finding sibling.
+                // Remove AFTER finding sibling.
+                prev.remove();
         }
         // root == null?
         return FilterResult.CONTINUE;
@@ -135,8 +150,7 @@ public class NodeTraversor {
     public static void filter(NodeFilter filter, Elements elements) {
         Validate.notNull(filter);
         Validate.notNull(elements);
-        for (Element el : elements)
-            if (filter(filter, el) == FilterResult.STOP)
-                break;
+        for (Element el : elements) if (filter(filter, el) == FilterResult.STOP)
+            break;
     }
 }

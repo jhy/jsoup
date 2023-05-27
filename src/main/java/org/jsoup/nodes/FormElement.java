@@ -6,7 +6,6 @@ import org.jsoup.helper.HttpConnection;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +14,7 @@ import java.util.List;
  * form to easily be submitted.
  */
 public class FormElement extends Element {
+
     private final Elements elements = new Elements();
 
     /**
@@ -53,26 +53,22 @@ public class FormElement extends Element {
     }
 
     /**
-     Prepare to submit this form. A Connection object is created with the request set up from the form values. This
-     Connection will inherit the settings and the cookies (etc) of the connection/session used to request this Document
-     (if any), as available in {@link Document#connection()}
-     <p>You can then set up other options (like user-agent, timeout, cookies), then execute it.</p>
-
-     @return a connection prepared from the values of this form, in the same session as the one used to request it
-     @throws IllegalArgumentException if the form's absolute action URL cannot be determined. Make sure you pass the
-     document's base URI when parsing.
+     *     Prepare to submit this form. A Connection object is created with the request set up from the form values. This
+     *     Connection will inherit the settings and the cookies (etc) of the connection/session used to request this Document
+     *     (if any), as available in {@link Document#connection()}
+     *     <p>You can then set up other options (like user-agent, timeout, cookies), then execute it.</p>
+     *
+     *     @return a connection prepared from the values of this form, in the same session as the one used to request it
+     *     @throws IllegalArgumentException if the form's absolute action URL cannot be determined. Make sure you pass the
+     *     document's base URI when parsing.
      */
     public Connection submit() {
         String action = hasAttr("action") ? absUrl("action") : baseUri();
         Validate.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.");
-        Connection.Method method = attr("method").equalsIgnoreCase("POST") ?
-                Connection.Method.POST : Connection.Method.GET;
-
+        Connection.Method method = attr("method").equalsIgnoreCase("POST") ? Connection.Method.POST : Connection.Method.GET;
         Document owner = ownerDocument();
-        Connection connection = owner != null? owner.connection().newRequest() : Jsoup.newSession();
-        return connection.url(action)
-                .data(formData())
-                .method(method);
+        Connection connection = owner != null ? owner.connection().newRequest() : Jsoup.newSession();
+        return connection.url(action).data(formData()).method(method);
     }
 
     /**
@@ -82,21 +78,25 @@ public class FormElement extends Element {
      */
     public List<Connection.KeyVal> formData() {
         ArrayList<Connection.KeyVal> data = new ArrayList<>();
-
         // iterate the form control elements and accumulate their values
-        for (Element el: elements) {
-            if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
-            if (el.hasAttr("disabled")) continue; // skip disabled form inputs
+        for (Element el : elements) {
+            // contents are form listable, superset of submitable
+            if (!el.tag().isFormSubmittable())
+                continue;
+            // skip disabled form inputs
+            if (el.hasAttr("disabled"))
+                continue;
             String name = el.attr("name");
-            if (name.length() == 0) continue;
+            if (name.length() == 0)
+                continue;
             String type = el.attr("type");
-
-            if (type.equalsIgnoreCase("button")) continue; // browsers don't submit these
-
+            // browsers don't submit these
+            if (type.equalsIgnoreCase("button"))
+                continue;
             if ("select".equals(el.normalName())) {
                 Elements options = el.select("option[selected]");
                 boolean set = false;
-                for (Element option: options) {
+                for (Element option : options) {
                     data.add(HttpConnection.KeyVal.create(name, option.val()));
                     set = true;
                 }
@@ -108,7 +108,7 @@ public class FormElement extends Element {
             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
                 // only add checkbox or radio if they have the checked attribute
                 if (el.hasAttr("checked")) {
-                    final String val = el.val().length() >  0 ? el.val() : "on";
+                    final String val = el.val().length() > 0 ? el.val() : "on";
                     data.add(HttpConnection.KeyVal.create(name, val));
                 }
             } else {

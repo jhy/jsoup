@@ -2,7 +2,6 @@ package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,8 +81,10 @@ import java.util.IdentityHashMap;
  * @see Element#select(String)
  */
 public class Selector {
+
     // not instantiable
-    private Selector() {}
+    private Selector() {
+    }
 
     /**
      * Find elements matching selector.
@@ -125,7 +126,6 @@ public class Selector {
         Elements elements = new Elements();
         IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<>();
         // dedupe elements by identity, not equality
-
         for (Element root : roots) {
             final Elements found = select(evaluator, root);
             for (Element el : found) {
@@ -160,12 +160,14 @@ public class Selector {
      * @param root root element to descend into
      * @return the matching element, or <b>null</b> if none.
      */
-    public static @Nullable Element selectFirst(String cssQuery, Element root) {
+    @Nullable
+    public static Element selectFirst(String cssQuery, Element root) {
         Validate.notEmpty(cssQuery);
         return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
     public static class SelectorParseException extends IllegalStateException {
+
         public SelectorParseException(String msg) {
             super(msg);
         }

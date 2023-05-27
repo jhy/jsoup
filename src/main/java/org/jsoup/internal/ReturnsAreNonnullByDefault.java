@@ -11,10 +11,9 @@ import java.lang.annotation.RetentionPolicy;
 @Nonnull
 @TypeQualifierDefault(ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
-
-/**
- Indicates return types are not nullable, unless otherwise specified by @Nullable.
- @see javax.annotation.ParametersAreNonnullByDefault
+public @interface /**
+ * Indicates return types are not nullable, unless otherwise specified by @Nullable.
+ * @see javax.annotation.ParametersAreNonnullByDefault
  */
-public @interface ReturnsAreNonnullByDefault {
+ReturnsAreNonnullByDefault {
 }

@@ -1,4 +1,5 @@
 /**
- Contains the jsoup HTML cleaner, and safelist definitions.
+ * Contains the jsoup HTML cleaner, and safelist definitions.
  */
 package org.jsoup.safety;
+

@@ -2,10 +2,10 @@ package org.jsoup.helper;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ValidateTest {
+
     @Test
     public void testNotNull() {
         Validate.notNull("foo");
@@ -18,7 +18,8 @@ public class ValidateTest {
         Assertions.assertTrue(threw);
     }
 
-    @Test void stacktraceFiltersOutValidateClass() {
+    @Test
+    void stacktraceFiltersOutValidateClass() {
         boolean threw = false;
         try {
             Validate.notNull(null);
@@ -34,7 +35,8 @@ public class ValidateTest {
         Assertions.assertTrue(threw);
     }
 
-    @Test void nonnullParam() {
+    @Test
+    void nonnullParam() {
         boolean threw = true;
         try {
             Validate.notNullParam(null, "foo");

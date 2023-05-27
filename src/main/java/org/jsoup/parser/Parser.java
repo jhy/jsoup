@@ -3,20 +3,24 @@ package org.jsoup.parser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
 /**
- Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
- {@link org.jsoup.Jsoup}.
- <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
- environment, use {@link #newInstance()} to make copies. */
+ * Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
+ * {@link org.jsoup.Jsoup}.
+ * <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
+ * environment, use {@link #newInstance()} to make copies.
+ */
 public class Parser {
+
     private TreeBuilder treeBuilder;
+
     private ParseErrorList errors;
+
     private ParseSettings settings;
+
     private boolean trackPosition = false;
 
     /**
@@ -30,20 +34,22 @@ public class Parser {
     }
 
     /**
-     Creates a new Parser as a deep copy of this; including initializing a new TreeBuilder. Allows independent (multi-threaded) use.
-     @return a copied parser
+     *     Creates a new Parser as a deep copy of this; including initializing a new TreeBuilder. Allows independent (multi-threaded) use.
+     *     @return a copied parser
      */
     public Parser newInstance() {
         return new Parser(this);
     }
 
     private Parser(Parser copy) {
-        treeBuilder = copy.treeBuilder.newInstance(); // because extended
-        errors = new ParseErrorList(copy.errors); // only copies size, not contents
+        // because extended
+        treeBuilder = copy.treeBuilder.newInstance();
+        // only copies size, not contents
+        errors = new ParseErrorList(copy.errors);
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
     }
-    
+
     public Document parseInput(String html, String baseUri) {
         return treeBuilder.parse(new StringReader(html), baseUri, this);
     }
@@ -55,6 +61,7 @@ public class Parser {
     public List<Node> parseFragmentInput(String fragment, Element context, String baseUri) {
         return treeBuilder.parseFragment(fragment, context, baseUri, this);
     }
+
     // gets & sets
     /**
      * Get the TreeBuilder currently in use.
@@ -103,8 +110,8 @@ public class Parser {
     }
 
     /**
-     Test if position tracking is enabled. If it is, Nodes will have a Position to track where in the original input
-     source they were created from. By default, tracking is not enabled.
+     *     Test if position tracking is enabled. If it is, Nodes will have a Position to track where in the original input
+     *     source they were created from. By default, tracking is not enabled.
      * @return current track position setting
      */
     public boolean isTrackPosition() {
@@ -112,10 +119,10 @@ public class Parser {
     }
 
     /**
-     Enable or disable source position tracking. If enabled, Nodes will have a Position to track where in the original
-     input source they were created from.
-     @param trackPosition position tracking setting; {@code true} to enable
-     @return this Parser, for chaining
+     *     Enable or disable source position tracking. If enabled, Nodes will have a Position to track where in the original
+     *     input source they were created from.
+     *     @param trackPosition position tracking setting; {@code true} to enable
+     *     @return this Parser, for chaining
      */
     public Parser setTrackPosition(boolean trackPosition) {
         this.trackPosition = trackPosition;
@@ -123,7 +130,7 @@ public class Parser {
     }
 
     /**
-     Update the ParseSettings of this Parser, to control the case sensitivity of tags and attributes.
+     *     Update the ParseSettings of this Parser, to control the case sensitivity of tags and attributes.
      * @param settings the new settings
      * @return this Parser
      */
@@ -133,7 +140,7 @@ public class Parser {
     }
 
     /**
-     Gets the current ParseSettings for this Parser
+     *     Gets the current ParseSettings for this Parser
      * @return current ParseSettings
      */
     public ParseSettings settings() {
@@ -141,8 +148,8 @@ public class Parser {
     }
 
     /**
-     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
-     Data Nodes).
+     *     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
+     *     Data Nodes).
      */
     public boolean isContentForTagData(String normalName) {
         return getTreeBuilder().isContentForTagData(normalName);
@@ -219,7 +226,8 @@ public class Parser {
         Document doc = Document.createShell(baseUri);
         Element body = doc.body();
         List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
-        Node[] nodes = nodeList.toArray(new Node[0]); // the node list gets modified when re-parented
+        // the node list gets modified when re-parented
+        Node[] nodes = nodeList.toArray(new Node[0]);
         for (int i = nodes.length - 1; i > 0; i--) {
             nodes[i].remove();
         }
@@ -241,7 +249,6 @@ public class Parser {
     }
 
     // builders
-
     /**
      * Create a new HTML parser. This parser treats input as HTML5, and enforces the creation of a normalised document,
      * based on a knowledge of the semantics of the incoming tags.

@@ -3,14 +3,20 @@ package org.jsoup;
 import java.util.regex.Pattern;
 
 /**
- Text utils to ease testing
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * Text utils to ease testing
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class TextUtil {
+
     static Pattern stripper = Pattern.compile("\\r?\\n\\s*");
+
     static Pattern stripLines = Pattern.compile("\\r?\\n?");
+
     static Pattern spaceCollapse = Pattern.compile("\\s{2,}");
+
     static Pattern tagSpaceCollapse = Pattern.compile(">\\s+<");
+
     static Pattern stripCRs = Pattern.compile("\\r*");
 
     public static String stripNewlines(String text) {

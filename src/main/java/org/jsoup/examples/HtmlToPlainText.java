@@ -10,7 +10,6 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
-
 import java.io.IOException;
 
 /**
@@ -24,30 +23,32 @@ import java.io.IOException;
  * To invoke from the command line, assuming you've downloaded the jsoup jar to your current directory:</p>
  * <p><code>java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]</code></p>
  * where <i>url</i> is the URL to fetch, and <i>selector</i> is an optional CSS selector.
- * 
+ *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class HtmlToPlainText {
+
     private static final String userAgent = "Mozilla/5.0 (jsoup)";
+
     private static final int timeout = 5 * 1000;
 
     public static void main(String... args) throws IOException {
         Validate.isTrue(args.length == 1 || args.length == 2, "usage: java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]");
         final String url = args[0];
         final String selector = args.length == 2 ? args[1] : null;
-
         // fetch the specified URL and parse to a HTML DOM
         Document doc = Jsoup.connect(url).userAgent(userAgent).timeout(timeout).get();
-
         HtmlToPlainText formatter = new HtmlToPlainText();
-
         if (selector != null) {
-            Elements elements = doc.select(selector); // get each element that matches the CSS selector
+            // get each element that matches the CSS selector
+            Elements elements = doc.select(selector);
             for (Element element : elements) {
-                String plainText = formatter.getPlainText(element); // format that element to plain text
+                // format that element to plain text
+                String plainText = formatter.getPlainText(element);
                 System.out.println(plainText);
             }
-        } else { // format the whole doc
+        } else {
+            // format the whole doc
             String plainText = formatter.getPlainText(doc);
             System.out.println(plainText);
         }
@@ -60,22 +61,27 @@ public class HtmlToPlainText {
      */
     public String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
-        NodeTraversor.traverse(formatter, element); // walk the DOM, and call .head() and .tail() for each node
-
+        // walk the DOM, and call .head() and .tail() for each node
+        NodeTraversor.traverse(formatter, element);
         return formatter.toString();
     }
 
     // the formatting rules, implemented in a breadth-first DOM traverse
     private static class FormattingVisitor implements NodeVisitor {
+
         private static final int maxWidth = 80;
+
         private int width = 0;
-        private StringBuilder accum = new StringBuilder(); // holds the accumulated text
+
+        // holds the accumulated text
+        private StringBuilder accum = new StringBuilder();
 
         // hit when the node is first seen
         public void head(Node node, int depth) {
             String name = node.nodeName();
             if (node instanceof TextNode)
-                append(((TextNode) node).text()); // TextNodes carry all user-readable text in the DOM.
+                // TextNodes carry all user-readable text in the DOM.
+                append(((TextNode) node).text());
             else if (name.equals("li"))
                 append("\n * ");
             else if (name.equals("dt"))
@@ -96,19 +102,22 @@ public class HtmlToPlainText {
         // appends text to the string builder with a simple word wrap method
         private void append(String text) {
             if (text.startsWith("\n"))
-                width = 0; // reset counter if starts with a newline. only from formats above, not in natural text
-            if (text.equals(" ") &&
-                    (accum.length() == 0 || StringUtil.in(accum.substring(accum.length() - 1), " ", "\n")))
-                return; // don't accumulate long runs of empty spaces
-
-            if (text.length() + width > maxWidth) { // won't fit, needs to wrap
+                // reset counter if starts with a newline. only from formats above, not in natural text
+                width = 0;
+            if (text.equals(" ") && (accum.length() == 0 || StringUtil.in(accum.substring(accum.length() - 1), " ", "\n")))
+                // don't accumulate long runs of empty spaces
+                return;
+            if (text.length() + width > maxWidth) {
+                // won't fit, needs to wrap
                 String[] words = text.split("\\s+");
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
                     boolean last = i == words.length - 1;
-                    if (!last) // insert a space if not the last word
+                    if (// insert a space if not the last word
+                    !last)
                         word = word + " ";
-                    if (word.length() + width > maxWidth) { // wrap and reset counter
+                    if (word.length() + width > maxWidth) {
+                        // wrap and reset counter
                         accum.append("\n").append(word);
                         width = word.length();
                     } else {
@@ -116,7 +125,8 @@ public class HtmlToPlainText {
                         width += word.length();
                     }
                 }
-            } else { // fits as is, without need to wrap text
+            } else {
+                // fits as is, without need to wrap text
                 accum.append(text);
                 width += text.length();
             }

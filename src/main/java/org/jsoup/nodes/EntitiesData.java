@@ -4,8 +4,11 @@ package org.jsoup.nodes;
  * Holds packed data that represents Entity name=value pairs. Parsed by Entities, created by BuildEntities.
  */
 class EntitiesData {
+
     static final String xmlPoints;
+
     static final String basePoints;
+
     static final String fullPoints;
 
     // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6447475

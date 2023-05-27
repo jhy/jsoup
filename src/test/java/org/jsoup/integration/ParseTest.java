@@ -8,7 +8,6 @@ import org.jsoup.parser.ParseErrorList;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.zip.GZIPInputStream;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -25,33 +23,33 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class ParseTest {
+
     @Test
     public void testHtml5Charset() throws IOException {
         // test that <meta charset="gb2312"> works
         File in = getFile("/htmltests/meta-charset-1.html");
-        Document doc = Jsoup.parse(in, null, "http://example.com/"); //gb2312, has html5 <meta charset>
+        //gb2312, has html5 <meta charset>
+        Document doc = Jsoup.parse(in, null, "http://example.com/");
         assertEquals("新", doc.text());
         assertEquals("GB2312", doc.outputSettings().charset().displayName());
-
         // double check, no charset, falls back to utf8 which is incorrect
-        in = getFile("/htmltests/meta-charset-2.html"); //
-        doc = Jsoup.parse(in, null, "http://example.com"); // gb2312, no charset
+        //
+        in = getFile("/htmltests/meta-charset-2.html");
+        // gb2312, no charset
+        doc = Jsoup.parse(in, null, "http://example.com");
         assertEquals("UTF-8", doc.outputSettings().charset().displayName());
         assertNotEquals("新", doc.text());
-
         // confirm fallback to utf8
         in = getFile("/htmltests/meta-charset-3.html");
-        doc = Jsoup.parse(in, null, "http://example.com/"); // utf8, no charset
+        // utf8, no charset
+        doc = Jsoup.parse(in, null, "http://example.com/");
         assertEquals("UTF-8", doc.outputSettings().charset().displayName());
         assertEquals("新", doc.text());
     }
 
     @Test
     public void testBrokenHtml5CharsetWithASingleDoubleQuote() throws IOException {
-        InputStream in = inputStreamFrom("<html>\n" +
-                "<head><meta charset=UTF-8\"></head>\n" +
-                "<body></body>\n" +
-                "</html>");
+        InputStream in = inputStreamFrom("<html>\n" + "<head><meta charset=UTF-8\"></head>\n" + "<body></body>\n" + "</html>");
         Document doc = Jsoup.parse(in, null, "http://example.com/");
         assertEquals("UTF-8", doc.outputSettings().charset().displayName());
     }
@@ -60,7 +58,6 @@ public class ParseTest {
     public void testLowercaseUtf8Charset() throws IOException {
         File in = getFile("/htmltests/lowercase-charset-test.html");
         Document doc = Jsoup.parse(in, null);
-
         Element form = doc.select("#form").first();
         assertEquals(2, form.children().size());
         assertEquals("UTF-8", doc.outputSettings().charset().name());
@@ -73,7 +70,6 @@ public class ParseTest {
         File in = getFile("/htmltests/xwiki-1324.html.gz");
         Document doc = Jsoup.parse(in, null, "https://localhost/");
         assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
-
         // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
         // updated to preserve the mark.
         String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;section=userdirectory\" title=\"Customize the user directory live table.\">User Directory</a>";
@@ -89,17 +85,17 @@ public class ParseTest {
         Parser parser = Parser.htmlParser();
         Document doc = Jsoup.parse(new GZIPInputStream(new FileInputStream(in)), "UTF-8", "https://localhost/", parser.setTrackErrors(100));
         ParseErrorList errors = parser.getErrors();
-
         assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
-        assertEquals(0, errors.size()); // not an invalid reference because did not look legit
-
+        // not an invalid reference because did not look legit
+        assertEquals(0, errors.size());
         // was getting busted at =userdirectory, because it hit the bufferup point but the mark was then lost. so
         // updated to preserve the mark.
         String wantHtml = "<a class=\"list-group-item\" data-id=\"userdirectory\" href=\"/xwiki/bin/admin/XWiki/XWikiPreferences?editor=globaladmin&amp;RIGHTHERERIGHTHERERIGHTHERERIGHTHERE";
         assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
     }
 
-    @Test public void testWikiExpandedFromString() throws IOException {
+    @Test
+    public void testWikiExpandedFromString() throws IOException {
         File in = getFile("/htmltests/xwiki-edit.html.gz");
         String html = getFileAsString(in);
         Document doc = Jsoup.parse(html);
@@ -108,7 +104,8 @@ public class ParseTest {
         assertTrue(doc.select("[data-id=userdirectory]").outerHtml().startsWith(wantHtml));
     }
 
-    @Test public void testWikiFromString() throws IOException {
+    @Test
+    public void testWikiFromString() throws IOException {
         File in = getFile("/htmltests/xwiki-1324.html.gz");
         String html = getFileAsString(in);
         Document doc = Jsoup.parse(html);
@@ -117,12 +114,12 @@ public class ParseTest {
         assertEquals(wantHtml, doc.select("[data-id=userdirectory]").outerHtml());
     }
 
-    @Test public void testFileParseNoCharsetMethod() throws IOException {
+    @Test
+    public void testFileParseNoCharsetMethod() throws IOException {
         File in = getFile("/htmltests/xwiki-1324.html.gz");
         Document doc = Jsoup.parse(in);
         assertEquals("XWiki Jetty HSQLDB 12.1-SNAPSHOT", doc.select("#xwikiplatformversion").text());
     }
-
 
     public static File getFile(String resourceName) {
         try {
@@ -148,5 +145,4 @@ public class ParseTest {
         }
         return new String(bytes);
     }
-
 }

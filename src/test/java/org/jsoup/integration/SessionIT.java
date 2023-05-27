@@ -8,14 +8,15 @@ import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Integration tests to test longer running Connection */
+/**
+ * Integration tests to test longer running Connection
+ */
 public class SessionIT {
+
     @BeforeAll
     public static void setUp() {
         TestServer.start();
@@ -25,22 +26,10 @@ public class SessionIT {
     public void multiThread() throws InterruptedException {
         int numThreads = 20;
         int numThreadLoops = 5;
-        String[] urls = {
-            FileServlet.urlTo("/htmltests/medium.html"),
-            FileServlet.urlTo("/htmltests/upload-form.html"),
-            FileServlet.urlTo("/htmltests/comments.html"),
-            FileServlet.urlTo("/htmltests/large.html"),
-        };
-        String[] titles = {
-            "Medium HTML",
-            "Upload Form Test",
-            "A Certain Kind of Test",
-            "Large HTML"
-        };
+        String[] urls = { FileServlet.urlTo("/htmltests/medium.html"), FileServlet.urlTo("/htmltests/upload-form.html"), FileServlet.urlTo("/htmltests/comments.html"), FileServlet.urlTo("/htmltests/large.html") };
+        String[] titles = { "Medium HTML", "Upload Form Test", "A Certain Kind of Test", "Large HTML" };
         ThreadCatcher catcher = new ThreadCatcher();
-
         Connection session = Jsoup.newSession();
-
         Thread[] threads = new Thread[numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             Thread thread = new Thread(() -> {
@@ -60,12 +49,10 @@ public class SessionIT {
             thread.setUncaughtExceptionHandler(catcher);
             threads[threadNum] = thread;
         }
-
         // now join them all
         for (Thread thread : threads) {
             thread.join();
         }
-
         assertEquals(0, catcher.exceptionCount.get());
     }
 
@@ -73,12 +60,11 @@ public class SessionIT {
     @Test
     public void multiThreadWithoutNewRequestBlowsUp() throws InterruptedException {
         int numThreads = 20;
-        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=10000"; // this makes sure that the first req is still executing whilst the others run
+        // this makes sure that the first req is still executing whilst the others run
+        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=10000";
         String title = "Slow Rider";
-
         ThreadCatcher catcher = new ThreadCatcher();
         Connection session = Jsoup.newSession();
-
         Thread[] threads = new Thread[numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             Thread thread = new Thread(() -> {
@@ -94,20 +80,19 @@ public class SessionIT {
             thread.setUncaughtExceptionHandler(catcher);
             threads[threadNum] = thread;
         }
-
         // now join them all
         for (Thread thread : threads) {
             thread.join();
         }
-
         // only one should have passed, rest should have blown up (assuming the started whilst other was running)
         assertEquals(numThreads - 1, catcher.multiThreadExceptions.get());
         assertEquals(numThreads - 1, catcher.exceptionCount.get());
     }
 
-
     static class ThreadCatcher implements Thread.UncaughtExceptionHandler {
+
         AtomicInteger exceptionCount = new AtomicInteger();
+
         AtomicInteger multiThreadExceptions = new AtomicInteger();
 
         @Override
@@ -119,5 +104,4 @@ public class SessionIT {
             exceptionCount.incrementAndGet();
         }
     }
-
 }

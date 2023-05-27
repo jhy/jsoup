@@ -3,15 +3,16 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
-
 import java.io.IOException;
 
 /**
  * An XML Declaration.
  */
 public class XmlDeclaration extends LeafNode {
+
     // todo this impl isn't really right, the data shouldn't be attributes, just a run of text after the name
-    private final boolean isProcessingInstruction; // <! if true, <? if false, declaration (and last data char should be ?)
+    // <! if true, <? if false, declaration (and last data char should be ?)
+    private final boolean isProcessingInstruction;
 
     /**
      * Create a new XML declaration
@@ -54,7 +55,8 @@ public class XmlDeclaration extends LeafNode {
         for (Attribute attribute : attributes()) {
             String key = attribute.getKey();
             String val = attribute.getValue();
-            if (!key.equals(nodeName())) { // skips coreValue (name)
+            if (!key.equals(nodeName())) {
+                // skips coreValue (name)
                 accum.append(' ');
                 // basically like Attribute, but skip empty vals in XML
                 accum.append(key);
@@ -69,14 +71,9 @@ public class XmlDeclaration extends LeafNode {
 
     @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        accum
-            .append("<")
-            .append(isProcessingInstruction ? "!" : "?")
-            .append(coreValue());
+        accum.append("<").append(isProcessingInstruction ? "!" : "?").append(coreValue());
         getWholeDeclaration(accum, out);
-        accum
-            .append(isProcessingInstruction ? "!" : "?")
-            .append(">");
+        accum.append(isProcessingInstruction ? "!" : "?").append(">");
     }
 
     @Override

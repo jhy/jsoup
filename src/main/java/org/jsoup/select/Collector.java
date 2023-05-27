@@ -2,9 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-
 import javax.annotation.Nullable;
-
 import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
 import static org.jsoup.select.NodeFilter.FilterResult.STOP;
 
@@ -15,15 +13,16 @@ import static org.jsoup.select.NodeFilter.FilterResult.STOP;
  */
 public class Collector {
 
-    private Collector() {}
+    private Collector() {
+    }
 
     /**
-     Build a list of elements, by visiting root and every descendant of root, and testing it against the evaluator.
-     @param eval Evaluator to test elements against
-     @param root root of tree to descend
-     @return list of matches; empty if none
+     *     Build a list of elements, by visiting root and every descendant of root, and testing it against the evaluator.
+     *     @param eval Evaluator to test elements against
+     *     @param root root of tree to descend
+     *     @return list of matches; empty if none
      */
-    public static Elements collect (Evaluator eval, Element root) {
+    public static Elements collect(Evaluator eval, Element root) {
         Elements elements = new Elements();
         NodeTraversor.traverse((node, depth) -> {
             if (node instanceof Element) {
@@ -36,27 +35,34 @@ public class Collector {
     }
 
     /**
-     Finds the first Element that matches the Evaluator that descends from the root, and stops the query once that first
-     match is found.
-     @param eval Evaluator to test elements against
-     @param root root of tree to descend
-     @return the first match; {@code null} if none
+     *     Finds the first Element that matches the Evaluator that descends from the root, and stops the query once that first
+     *     match is found.
+     *     @param eval Evaluator to test elements against
+     *     @param root root of tree to descend
+     *     @return the first match; {@code null} if none
      */
-    public static @Nullable Element findFirst(Evaluator eval, Element root) {
+    @Nullable
+    public static Element findFirst(Evaluator eval, Element root) {
         FirstFinder finder = new FirstFinder(eval);
         return finder.find(root, root);
     }
 
     static class FirstFinder implements NodeFilter {
-        private @Nullable Element evalRoot = null;
-        private @Nullable Element match = null;
+
+        @Nullable
+        private Element evalRoot = null;
+
+        @Nullable
+        private Element match = null;
+
         private final Evaluator eval;
 
         FirstFinder(Evaluator eval) {
             this.eval = eval;
         }
 
-        @Nullable Element find(Element root, Element start) {
+        @Nullable
+        Element find(Element root, Element start) {
             evalRoot = root;
             match = null;
             NodeTraversor.filter(this, start);

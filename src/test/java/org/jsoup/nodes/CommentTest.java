@@ -2,11 +2,12 @@ package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CommentTest {
+
     private Comment comment = new Comment(" This is one heck of a comment! ");
+
     private Comment decl = new Comment("?xml encoding='ISO-8859-1'?");
 
     @Test
@@ -22,10 +23,8 @@ public class CommentTest {
     @Test
     public void testToString() {
         assertEquals("<!-- This is one heck of a comment! -->", comment.toString());
-
         Document doc = Jsoup.parse("<div><!-- comment--></div>");
         assertEquals("<div>\n <!-- comment-->\n</div>", doc.body().html());
-
         doc = Jsoup.parse("<p>One<!-- comment -->Two</p>");
         assertEquals("<p>One<!-- comment -->Two</p>", doc.body().html());
         assertEquals("OneTwo", doc.text());
@@ -41,15 +40,12 @@ public class CommentTest {
         assertEquals("<!-- a simple comment -->", c1.outerHtml());
     }
 
-    @Test void stableIndentInBlock() {
+    @Test
+    void stableIndentInBlock() {
         String html = "<div><!-- comment --> Text</div><p><!-- comment --> Text</p>";
         Document doc = Jsoup.parse(html);
         String out = doc.body().html();
-        assertEquals("<div>\n" +
-            " <!-- comment --> Text\n" +
-            "</div>\n" +
-            "<p><!-- comment --> Text</p>", out);
-
+        assertEquals("<div>\n" + " <!-- comment --> Text\n" + "</div>\n" + "<p><!-- comment --> Text</p>", out);
         Document doc2 = Jsoup.parse(out);
         String out2 = doc2.body().html();
         assertEquals(out, out2);

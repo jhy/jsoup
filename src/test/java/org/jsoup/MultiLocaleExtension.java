@@ -7,12 +7,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-
 import java.lang.annotation.*;
 import java.util.Locale;
 import java.util.stream.Stream;
 
 public class MultiLocaleExtension implements AfterEachCallback, ArgumentsProvider {
+
     private final Locale defaultLocale = Locale.getDefault();
 
     @Override
@@ -25,7 +25,6 @@ public class MultiLocaleExtension implements AfterEachCallback, ArgumentsProvide
         return Stream.of(Arguments.of(Locale.ENGLISH), Arguments.arguments(new Locale("tr")));
     }
 
-
     @Documented
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
@@ -34,5 +33,4 @@ public class MultiLocaleExtension implements AfterEachCallback, ArgumentsProvide
     @ParameterizedTest
     public @interface MultiLocaleTest {
     }
-
 }

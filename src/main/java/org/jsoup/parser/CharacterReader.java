@@ -2,7 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.Validate;
-
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Reader;
@@ -13,27 +12,48 @@ import java.util.Collections;
 import java.util.Locale;
 
 /**
- CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
+ * CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
 public final class CharacterReader {
+
     static final char EOF = (char) -1;
+
     private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 32; // visible for testing
-    static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
-    private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
+
+    // visible for testing
+    static final int maxBufferLen = 1024 * 32;
+
+    // visible for testing
+    static final int readAheadLimit = (int) (maxBufferLen * 0.75);
+
+    // the minimum mark length supported. No HTML entities can be larger than this.
+    private static final int minReadAheadLen = 1024;
 
     private char[] charBuf;
-    private Reader reader;
-    private int bufLength;
-    private int bufSplitPoint;
-    private int bufPos;
-    private int readerPos;
-    private int bufMark = -1;
-    private static final int stringCacheSize = 512;
-    private String[] stringCache = new String[stringCacheSize]; // holds reused strings in this doc, to lessen garbage
 
-    @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
-    private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
+    private Reader reader;
+
+    private int bufLength;
+
+    private int bufSplitPoint;
+
+    private int bufPos;
+
+    private int readerPos;
+
+    private int bufMark = -1;
+
+    private static final int stringCacheSize = 512;
+
+    // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache = new String[stringCacheSize];
+
+    // optionally track the pos() position of newlines - scans during bufferUp()
+    @Nullable
+    private ArrayList<Integer> newlinePositions = null;
+
+    // line numbers start at 1; += newlinePosition[indexof(pos)]
+    private int lineNumberOffset = 1;
 
     public CharacterReader(Reader input, int sz) {
         Validate.notNull(input);
@@ -64,11 +84,12 @@ public final class CharacterReader {
         }
     }
 
-    private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
+    // if the underlying stream has been completely read, no value in further buffering
+    private boolean readFully;
+
     private void bufferUp() {
         if (readFully || bufPos < bufSplitPoint)
             return;
-
         final int pos;
         final int offset;
         if (bufMark != -1) {
@@ -78,7 +99,6 @@ public final class CharacterReader {
             pos = bufPos;
             offset = 0;
         }
-
         try {
             final long skipped = reader.skip(pos);
             reader.mark(maxBufferLen);
@@ -93,7 +113,8 @@ public final class CharacterReader {
             }
             reader.reset();
             if (read > 0) {
-                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
+                // Previously asserted that there is room in buf to skip, so this will be a WTF
+                Validate.isTrue(skipped == pos);
                 bufLength = read;
                 readerPos += pos;
                 bufPos = offset;
@@ -104,8 +125,10 @@ public final class CharacterReader {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        scanBufferForNewlines(); // if enabled, we index newline positions for line number tracking
-        lastIcSeq = null; // cache for last containsIgnoreCase(seq)
+        // if enabled, we index newline positions for line number tracking
+        scanBufferForNewlines();
+        // cache for last containsIgnoreCase(seq)
+        lastIcSeq = null;
     }
 
     /**
@@ -116,42 +139,45 @@ public final class CharacterReader {
         return readerPos + bufPos;
     }
 
-    /** Tests if the buffer has been fully read. */
+    /**
+     * Tests if the buffer has been fully read.
+     */
     boolean readFully() {
         return readFully;
     }
 
     /**
-     Enables or disables line number tracking. By default, will be <b>off</b>.Tracking line numbers improves the
-     legibility of parser error messages, for example. Tracking should be enabled before any content is read to be of
-     use.
-
-     @param track set tracking on|off
-     @since 1.14.3
+     *     Enables or disables line number tracking. By default, will be <b>off</b>.Tracking line numbers improves the
+     *     legibility of parser error messages, for example. Tracking should be enabled before any content is read to be of
+     *     use.
+     *
+     *     @param track set tracking on|off
+     *     @since 1.14.3
      */
     public void trackNewlines(boolean track) {
         if (track && newlinePositions == null) {
-            newlinePositions = new ArrayList<>(maxBufferLen / 80); // rough guess of likely count
-            scanBufferForNewlines(); // first pass when enabled; subsequently called during bufferUp
-        }
-        else if (!track)
+            // rough guess of likely count
+            newlinePositions = new ArrayList<>(maxBufferLen / 80);
+            // first pass when enabled; subsequently called during bufferUp
+            scanBufferForNewlines();
+        } else if (!track)
             newlinePositions = null;
     }
 
     /**
-     Check if the tracking of newlines is enabled.
-     @return the current newline tracking state
-     @since 1.14.3
+     *     Check if the tracking of newlines is enabled.
+     *     @return the current newline tracking state
+     *     @since 1.14.3
      */
     public boolean isTrackNewlines() {
         return newlinePositions != null;
     }
 
     /**
-     Get the current line number (that the reader has consumed to). Starts at line #1.
-     @return the current line number, or 1 if line tracking is not enabled.
-     @since 1.14.3
-     @see #trackNewlines(boolean)
+     *     Get the current line number (that the reader has consumed to). Starts at line #1.
+     *     @return the current line number, or 1 if line tracking is not enabled.
+     *     @since 1.14.3
+     *     @see #trackNewlines(boolean)
      */
     public int lineNumber() {
         return lineNumber(pos());
@@ -162,18 +188,18 @@ public final class CharacterReader {
         // causes issues, can remove the reset of newlinepositions during buffer, at the cost of a larger tracking array
         if (!isTrackNewlines())
             return 1;
-
         int i = lineNumIndex(pos);
         if (i == -1)
-            return lineNumberOffset; // first line
+            // first line
+            return lineNumberOffset;
         return i + lineNumberOffset + 1;
     }
 
     /**
-     Get the current column number (that the reader has consumed to). Starts at column #1.
-     @return the current column number
-     @since 1.14.3
-     @see #trackNewlines(boolean)
+     *     Get the current column number (that the reader has consumed to). Starts at column #1.
+     *     @return the current column number
+     *     @since 1.14.3
+     *     @see #trackNewlines(boolean)
      */
     public int columnNumber() {
         return columnNumber(pos());
@@ -182,48 +208,51 @@ public final class CharacterReader {
     int columnNumber(int pos) {
         if (!isTrackNewlines())
             return pos + 1;
-
         int i = lineNumIndex(pos);
         if (i == -1)
-          return pos + 1;
+            return pos + 1;
         return pos - newlinePositions.get(i) + 1;
     }
 
     /**
-     Get a formatted string representing the current line and cursor positions. E.g. <code>5:10</code> indicating line
-     number 5 and column number 10.
-     @return line:col position
-     @since 1.14.3
-     @see #trackNewlines(boolean)
+     *     Get a formatted string representing the current line and cursor positions. E.g. <code>5:10</code> indicating line
+     *     number 5 and column number 10.
+     *     @return line:col position
+     *     @since 1.14.3
+     *     @see #trackNewlines(boolean)
      */
     String cursorPos() {
         return lineNumber() + ":" + columnNumber();
     }
 
     private int lineNumIndex(int pos) {
-        if (!isTrackNewlines()) return 0;
+        if (!isTrackNewlines())
+            return 0;
         int i = Collections.binarySearch(newlinePositions, pos);
-        if (i < -1) i = Math.abs(i) - 2;
+        if (i < -1)
+            i = Math.abs(i) - 2;
         return i;
     }
 
     /**
-     Scans the buffer for newline position, and tracks their location in newlinePositions.
+     *     Scans the buffer for newline position, and tracks their location in newlinePositions.
      */
     private void scanBufferForNewlines() {
         if (!isTrackNewlines())
             return;
-
         if (newlinePositions.size() > 0) {
             // work out the line number that we have read up to (as we have likely scanned past this point)
             int index = lineNumIndex(readerPos);
-            if (index == -1) index = 0; // first line
+            // first line
+            if (index == -1)
+                index = 0;
             int linePos = newlinePositions.get(index);
-            lineNumberOffset += index; // the num lines we've read up to
+            // the num lines we've read up to
+            lineNumberOffset += index;
             newlinePositions.clear();
-            newlinePositions.add(linePos); // roll the last read pos to first, for cursor num after buffer
+            // roll the last read pos to first, for cursor num after buffer
+            newlinePositions.add(linePos);
         }
-
         for (int i = bufPos; i < bufLength; i++) {
             if (charBuf[i] == '\n')
                 newlinePositions.add(1 + readerPos + i);
@@ -260,12 +289,12 @@ public final class CharacterReader {
     }
 
     /**
-     Unconsume one character (bufPos--). MUST only be called directly after a consume(), and no chance of a bufferUp.
+     *     Unconsume one character (bufPos--). MUST only be called directly after a consume(), and no chance of a bufferUp.
      */
     void unconsume() {
         if (bufPos < 1)
-            throw new UncheckedIOException(new IOException("WTF: No buffer left to unconsume.")); // a bug if this fires, need to trace it.
-
+            // a bug if this fires, need to trace it.
+            throw new UncheckedIOException(new IOException("WTF: No buffer left to unconsume."));
         bufPos--;
     }
 
@@ -280,7 +309,6 @@ public final class CharacterReader {
         // make sure there is enough look ahead capacity
         if (bufLength - bufPos < minReadAheadLen)
             bufSplitPoint = 0;
-
         bufferUp();
         bufMark = bufPos;
     }
@@ -292,7 +320,6 @@ public final class CharacterReader {
     void rewindToMark() {
         if (bufMark == -1)
             throw new UncheckedIOException(new IOException("Mark invalid"));
-
         bufPos = bufMark;
         unmark();
     }
@@ -325,12 +352,17 @@ public final class CharacterReader {
         for (int offset = bufPos; offset < bufLength; offset++) {
             // scan to first instance of startchar:
             if (startChar != charBuf[offset])
-                while(++offset < bufLength && startChar != charBuf[offset]) { /* empty */ }
+                while (++offset < bufLength && startChar != charBuf[offset]) {
+                    /* empty */
+                }
             int i = offset + 1;
-            int last = i + seq.length()-1;
+            int last = i + seq.length() - 1;
             if (offset < bufLength && last <= bufLength) {
-                for (int j = 1; i < last && seq.charAt(j) == charBuf[i]; i++, j++) { /* empty */ }
-                if (i == last) // found full sequence
+                for (int j = 1; i < last && seq.charAt(j) == charBuf[i]; i++, j++) {
+                    /* empty */
+                }
+                if (// found full sequence
+                i == last)
                     return offset - bufPos;
             }
         }
@@ -385,7 +417,6 @@ public final class CharacterReader {
         final char[] val = charBuf;
         final int charLen = chars.length;
         int i;
-
         OUTER: while (pos < remaining) {
             for (i = 0; i < charLen; i++) {
                 if (val[pos] == chars[i])
@@ -393,9 +424,8 @@ public final class CharacterReader {
             }
             pos++;
         }
-
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeToAnySorted(final char... chars) {
@@ -404,14 +434,13 @@ public final class CharacterReader {
         final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-
         while (pos < remaining) {
             if (Arrays.binarySearch(chars, val[pos]) >= 0)
                 break;
             pos++;
         }
         bufPos = pos;
-        return bufPos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return bufPos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeData() {
@@ -421,9 +450,8 @@ public final class CharacterReader {
         final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-
         OUTER: while (pos < remaining) {
-            switch (val[pos]) {
+            switch(val[pos]) {
                 case '&':
                 case '<':
                 case TokeniserState.nullChar:
@@ -433,7 +461,7 @@ public final class CharacterReader {
             }
         }
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeAttributeQuoted(final boolean single) {
@@ -443,24 +471,24 @@ public final class CharacterReader {
         final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-
         OUTER: while (pos < remaining) {
-            switch (val[pos]) {
+            switch(val[pos]) {
                 case '&':
                 case TokeniserState.nullChar:
                     break OUTER;
                 case '\'':
-                    if (single) break OUTER;
+                    if (single)
+                        break OUTER;
                 case '"':
-                    if (!single) break OUTER;
+                    if (!single)
+                        break OUTER;
                 default:
                     pos++;
             }
         }
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
-
 
     String consumeRawData() {
         // <, null
@@ -469,9 +497,8 @@ public final class CharacterReader {
         final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-
         OUTER: while (pos < remaining) {
-            switch (val[pos]) {
+            switch(val[pos]) {
                 case '<':
                 case TokeniserState.nullChar:
                     break OUTER;
@@ -480,7 +507,7 @@ public final class CharacterReader {
             }
         }
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeTagName() {
@@ -491,9 +518,8 @@ public final class CharacterReader {
         final int start = pos;
         final int remaining = bufLength;
         final char[] val = charBuf;
-
         OUTER: while (pos < remaining) {
-            switch (val[pos]) {
+            switch(val[pos]) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -506,9 +532,8 @@ public final class CharacterReader {
             }
             pos++;
         }
-
         bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     String consumeToEnd() {
@@ -528,7 +553,6 @@ public final class CharacterReader {
             else
                 break;
         }
-
         return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
@@ -549,7 +573,6 @@ public final class CharacterReader {
             else
                 break;
         }
-
         return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
@@ -581,7 +604,6 @@ public final class CharacterReader {
 
     boolean matches(char c) {
         return !isEmpty() && charBuf[bufPos] == c;
-
     }
 
     boolean matches(String seq) {
@@ -589,10 +611,8 @@ public final class CharacterReader {
         int scanLength = seq.length();
         if (scanLength > bufLength - bufPos)
             return false;
-
-        for (int offset = 0; offset < scanLength; offset++)
-            if (seq.charAt(offset) != charBuf[bufPos +offset])
-                return false;
+        for (int offset = 0; offset < scanLength; offset++) if (seq.charAt(offset) != charBuf[bufPos + offset])
+            return false;
         return true;
     }
 
@@ -601,7 +621,6 @@ public final class CharacterReader {
         int scanLength = seq.length();
         if (scanLength > bufLength - bufPos)
             return false;
-
         for (int offset = 0; offset < scanLength; offset++) {
             char upScan = Character.toUpperCase(seq.charAt(offset));
             char upTarget = Character.toUpperCase(charBuf[bufPos + offset]);
@@ -614,7 +633,6 @@ public final class CharacterReader {
     boolean matchesAny(char... seq) {
         if (isEmpty())
             return false;
-
         bufferUp();
         char c = charBuf[bufPos];
         for (char seek : seq) {
@@ -637,8 +655,8 @@ public final class CharacterReader {
     }
 
     /**
-     Checks if the current pos matches an ascii alpha (A-Z a-z) per https://infra.spec.whatwg.org/#ascii-alpha
-     @return if it matches or not
+     *     Checks if the current pos matches an ascii alpha (A-Z a-z) per https://infra.spec.whatwg.org/#ascii-alpha
+     *     @return if it matches or not
      */
     boolean matchesAsciiAlpha() {
         if (isEmpty())
@@ -676,27 +694,35 @@ public final class CharacterReader {
     // we maintain a cache of the previously scanned sequence, and return that if applicable on repeated scans.
     // that improves the situation where there is a sequence of <p<p<p<p<p<p<p...</title> and we're bashing on the <p
     // looking for the </title>. Resets in bufferUp()
-    @Nullable private String lastIcSeq; // scan cache
-    private int lastIcIndex; // nearest found indexOf
+    // scan cache
+    @Nullable
+    private String lastIcSeq;
 
-    /** Used to check presence of </title>, </style> when we're in RCData and see a <xxx. Only finds consistent case. */
+    // nearest found indexOf
+    private int lastIcIndex;
+
+    /**
+     * Used to check presence of </title>, </style> when we're in RCData and see a <xxx. Only finds consistent case.
+     */
     boolean containsIgnoreCase(String seq) {
         if (seq.equals(lastIcSeq)) {
-            if (lastIcIndex == -1) return false;
-            if (lastIcIndex >= bufPos) return true;
+            if (lastIcIndex == -1)
+                return false;
+            if (lastIcIndex >= bufPos)
+                return true;
         }
         lastIcSeq = seq;
-
         String loScan = seq.toLowerCase(Locale.ENGLISH);
         int lo = nextIndexOf(loScan);
         if (lo > -1) {
-            lastIcIndex = bufPos + lo; return true;
+            lastIcIndex = bufPos + lo;
+            return true;
         }
-
         String hiScan = seq.toUpperCase(Locale.ENGLISH);
         int hi = nextIndexOf(hiScan);
         boolean found = hi > -1;
-        lastIcIndex = found ? bufPos + hi : -1; // we don't care about finding the nearest, just that buf contains
+        // we don't care about finding the nearest, just that buf contains
+        lastIcIndex = found ? bufPos + hi : -1;
         return found;
     }
 
@@ -720,24 +746,22 @@ public final class CharacterReader {
             return new String(charBuf, start, count);
         if (count < 1)
             return "";
-
         // calculate hash:
         int hash = 0;
         for (int i = 0; i < count; i++) {
             hash = 31 * hash + charBuf[start + i];
         }
-
         // get from cache
         final int index = hash & stringCacheSize - 1;
         String cached = stringCache[index];
-
-        if (cached != null && rangeEquals(charBuf, start, count, cached)) // positive hit
+        if (// positive hit
+        cached != null && rangeEquals(charBuf, start, count, cached))
             return cached;
         else {
             cached = new String(charBuf, start, count);
-            stringCache[index] = cached; // add or replace, assuming most recently used are most likely to recur next
+            // add or replace, assuming most recently used are most likely to recur next
+            stringCache[index] = cached;
         }
-
         return cached;
     }
 

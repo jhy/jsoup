@@ -11,7 +11,6 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
-
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -19,43 +18,52 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- A HTML Document.
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * A HTML Document.
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class Document extends Element {
-    private @Nullable Connection connection; // the connection this doc was fetched from, if any
+
+    // the connection this doc was fetched from, if any
+    @Nullable
+    private Connection connection;
+
     private OutputSettings outputSettings = new OutputSettings();
-    private Parser parser; // the parser used to parse this document
+
+    // the parser used to parse this document
+    private Parser parser;
+
     private QuirksMode quirksMode = QuirksMode.noQuirks;
+
     private final String location;
+
     private boolean updateMetaCharset = false;
 
     /**
-     Create a new, empty Document.
-     @param baseUri base URI of document
-     @see org.jsoup.Jsoup#parse
-     @see #createShell
+     *     Create a new, empty Document.
+     *     @param baseUri base URI of document
+     *     @see org.jsoup.Jsoup#parse
+     *     @see #createShell
      */
     public Document(String baseUri) {
         super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
         this.location = baseUri;
-        this.parser = Parser.htmlParser(); // default, but overridable
+        // default, but overridable
+        this.parser = Parser.htmlParser();
     }
 
     /**
-     Create a valid, empty shell of a document, suitable for adding more elements to.
-     @param baseUri baseUri of document
-     @return document with html, head, and body elements.
+     *     Create a valid, empty shell of a document, suitable for adding more elements to.
+     *     @param baseUri baseUri of document
+     *     @return document with html, head, and body elements.
      */
     public static Document createShell(String baseUri) {
         Validate.notNull(baseUri);
-
         Document doc = new Document(baseUri);
         doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
-
         return doc;
     }
 
@@ -70,10 +78,10 @@ public class Document extends Element {
     }
 
     /**
-     Returns the Connection (Request/Response) object that was used to fetch this document, if any; otherwise, a new
-     default Connection object. This can be used to continue a session, preserving settings and cookies, etc.
-     @return the Connection (session) associated with this Document, or an empty one otherwise.
-     @see Connection#newRequest()
+     *     Returns the Connection (Request/Response) object that was used to fetch this document, if any; otherwise, a new
+     *     default Connection object. This can be used to continue a session, preserving settings and cookies, etc.
+     *     @return the Connection (session) associated with this Document, or an empty one otherwise.
+     *     @see Connection#newRequest()
      */
     public Connection connection() {
         if (connection == null)
@@ -86,11 +94,13 @@ public class Document extends Element {
      * Returns this Document's doctype.
      * @return document type, or null if not set
      */
-    public @Nullable DocumentType documentType() {
+    @Nullable
+    public DocumentType documentType() {
         for (Node node : childNodes) {
             if (node instanceof DocumentType)
                 return (DocumentType) node;
-            else if (!(node instanceof LeafNode)) // scans forward across comments, text, processing instructions etc
+            else if (// scans forward across comments, text, processing instructions etc
+            !(node instanceof LeafNode))
                 break;
         }
         return null;
@@ -98,11 +108,11 @@ public class Document extends Element {
     }
 
     /**
-     Find the root HTML element, or create it if it doesn't exist.
-     @return the root HTML element.
+     *     Find the root HTML element, or create it if it doesn't exist.
+     *     @return the root HTML element.
      */
     private Element htmlEl() {
-        for (Element el: childElementsList()) {
+        for (Element el : childElementsList()) {
             if (el.normalName().equals("html"))
                 return el;
         }
@@ -110,16 +120,16 @@ public class Document extends Element {
     }
 
     /**
-     Get this document's {@code head} element.
-     <p>
-     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
-     that, use {@code #selectFirst("head")} instead.
-
-     @return {@code head} element.
+     *     Get this document's {@code head} element.
+     *     <p>
+     *     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
+     *     that, use {@code #selectFirst("head")} instead.
+     *
+     *     @return {@code head} element.
      */
     public Element head() {
         Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        for (Element el : html.childElementsList()) {
             if (el.normalName().equals("head"))
                 return el;
         }
@@ -127,17 +137,17 @@ public class Document extends Element {
     }
 
     /**
-     Get this document's {@code <body>} or {@code <frameset>} element.
-     <p>
-     As a <b>side-effect</b>, if this Document does not already have a HTML structure, it will be created with a {@code
-    <body>} element. If you do not want that, use {@code #selectFirst("body")} instead.
-
-     @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} element if the document
-     had no contents, or the outermost {@code <frameset> element} for frameset documents.
+     *     Get this document's {@code <body>} or {@code <frameset>} element.
+     *     <p>
+     *     As a <b>side-effect</b>, if this Document does not already have a HTML structure, it will be created with a {@code
+     *    <body>} element. If you do not want that, use {@code #selectFirst("body")} instead.
+     *
+     *     @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} element if the document
+     *     had no contents, or the outermost {@code <frameset> element} for frameset documents.
      */
     public Element body() {
         Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        for (Element el : html.childElementsList()) {
             if ("body".equals(el.normalName()) || "frameset".equals(el.normalName()))
                 return el;
         }
@@ -145,61 +155,65 @@ public class Document extends Element {
     }
 
     /**
-     Get each of the {@code <form>} elements contained in this document.
-     @return a List of FormElement objects, which will be empty if there are none.
-     @see Elements#forms()
-     @see FormElement#elements()
-     @since 1.15.4
+     *     Get each of the {@code <form>} elements contained in this document.
+     *     @return a List of FormElement objects, which will be empty if there are none.
+     *     @see Elements#forms()
+     *     @see FormElement#elements()
+     *     @since 1.15.4
      */
     public List<FormElement> forms() {
         return select("form").forms();
     }
 
     /**
-     Selects the first {@link FormElement} in this document that matches the query. If none match, throws an
-     {@link IllegalArgumentException}.
-     @param cssQuery a {@link Selector} CSS query
-     @return the first matching {@code <form>} element
-     @throws IllegalArgumentException if no match is found
-     @since 1.15.4
+     *     Selects the first {@link FormElement} in this document that matches the query. If none match, throws an
+     *     {@link IllegalArgumentException}.
+     *     @param cssQuery a {@link Selector} CSS query
+     *     @return the first matching {@code <form>} element
+     *     @throws IllegalArgumentException if no match is found
+     *     @since 1.15.4
      */
     public FormElement expectForm(String cssQuery) {
         Elements els = select(cssQuery);
         for (Element el : els) {
-            if (el instanceof FormElement) return (FormElement) el;
+            if (el instanceof FormElement)
+                return (FormElement) el;
         }
         Validate.fail("No form elements matched the query '%s' in the document.", cssQuery);
-        return null; // (not really)
+        // (not really)
+        return null;
     }
 
     /**
-     Get the string contents of the document's {@code title} element.
-     @return Trimmed title, or empty string if none set.
+     *     Get the string contents of the document's {@code title} element.
+     *     @return Trimmed title, or empty string if none set.
      */
     public String title() {
         // title is a preserve whitespace tag (for document output), but normalised here
         Element titleEl = head().selectFirst(titleEval);
         return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
     }
+
     private static final Evaluator titleEval = new Evaluator.Tag("title");
 
     /**
-     Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
-     not present
-     @param title string to set as title
+     *     Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
+     *     not present
+     *     @param title string to set as title
      */
     public void title(String title) {
         Validate.notNull(title);
         Element titleEl = head().selectFirst(titleEval);
-        if (titleEl == null) // add to head
+        if (// add to head
+        titleEl == null)
             titleEl = head().appendElement("title");
         titleEl.text(title);
     }
 
     /**
-     Create a new Element, with this document's base uri. Does not make the new element a child of this document.
-     @param tagName element tag name (e.g. {@code a})
-     @return new element
+     *     Create a new Element, with this document's base uri. Does not make the new element a child of this document.
+     *     @param tagName element tag name (e.g. {@code a})
+     *     @return new element
      */
     public Element createElement(String tagName) {
         return new Element(Tag.valueOf(tagName, ParseSettings.preserveCase), this.baseUri());
@@ -207,17 +221,19 @@ public class Document extends Element {
 
     @Override
     public String outerHtml() {
-        return super.html(); // no outer wrapper tag
+        // no outer wrapper tag
+        return super.html();
     }
 
     /**
-     Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
-     @param text unencoded text
-     @return this document
+     *     Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
+     *     @param text unencoded text
+     *     @return this document
      */
     @Override
     public Element text(String text) {
-        body().text(text); // overridden to not nuke doc structure
+        // overridden to not nuke doc structure
+        body().text(text);
         return this;
     }
 
@@ -225,71 +241,71 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
-    
+
     /**
      * Sets the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset(java.nio.charset.Charset)
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
-     * 
+     *
      * <p>This enables
      * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
-     * 
+     *
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
      * </ul>
-     * 
+     *
      * @param charset Charset
-     * 
-     * @see #updateMetaCharsetElement(boolean) 
-     * @see OutputSettings#charset(java.nio.charset.Charset) 
+     *
+     * @see #updateMetaCharsetElement(boolean)
+     * @see OutputSettings#charset(java.nio.charset.Charset)
      */
     public void charset(Charset charset) {
         updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
-    
+
     /**
      * Returns the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset()}.
-     * 
+     *
      * @return Current Charset
-     * 
-     * @see OutputSettings#charset() 
+     *
+     * @see OutputSettings#charset()
      */
     public Charset charset() {
         return outputSettings.charset();
     }
-    
+
     /**
      * Sets whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
      * modified.</p>
-     * 
+     *
      * @param update If <tt>true</tt> the element updated on charset
      * changes, <tt>false</tt> if not
-     * 
-     * @see #charset(java.nio.charset.Charset) 
+     *
+     * @see #charset(java.nio.charset.Charset)
      */
     public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = update;
     }
-    
+
     /**
      * Returns whether the element with charset information in this document is
      * updated on changes through {@link #charset(java.nio.charset.Charset)
      * Document.charset(Charset)} or not.
-     * 
+     *
      * @return Returns <tt>true</tt> if the element is updated on charset
      * changes, <tt>false</tt> if not
      */
@@ -312,21 +328,21 @@ public class Document extends Element {
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
-    
+
     /**
      * Ensures a meta charset (html) or xml declaration (xml) with the current
      * encoding used. This only applies with
      * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
      * <tt>true</tt>, otherwise this method does nothing.
-     * 
+     *
      * <ul>
      * <li>An existing element gets updated with the current charset</li>
      * <li>If there's no element yet it will be inserted</li>
      * <li>Obsolete elements are removed</li>
      * </ul>
-     * 
+     *
      * <p><b>Elements used:</b></p>
-     * 
+     *
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
@@ -335,7 +351,6 @@ public class Document extends Element {
     private void ensureMetaCharsetElement() {
         if (updateMetaCharset) {
             OutputSettings.Syntax syntax = outputSettings().syntax();
-
             if (syntax == OutputSettings.Syntax.html) {
                 Element metaCharset = selectFirst("meta[charset]");
                 if (metaCharset != null) {
@@ -343,7 +358,8 @@ public class Document extends Element {
                 } else {
                     head().appendElement("meta").attr("charset", charset().displayName());
                 }
-                select("meta[name=charset]").remove(); // Remove obsolete elements
+                // Remove obsolete elements
+                select("meta[name=charset]").remove();
             } else if (syntax == OutputSettings.Syntax.xml) {
                 Node node = ensureChildNodes().get(0);
                 if (node instanceof XmlDeclaration) {
@@ -367,30 +383,44 @@ public class Document extends Element {
             }
         }
     }
-    
 
     /**
      * A Document's output settings control the form of the text() and html() methods.
      */
     public static class OutputSettings implements Cloneable {
+
         /**
          * The output serialization syntax.
          */
-        public enum Syntax {html, xml}
+        public enum Syntax {
+
+            html, xml
+        }
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
+
         private Charset charset = DataUtil.UTF_8;
-        private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
-        @Nullable Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
+
+        // initialized by start of OuterHtmlVisitor
+        private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>();
+
+        // fast encoders for ascii and utf8
+        @Nullable
+        Entities.CoreCharset coreCharset;
 
         private boolean prettyPrint = true;
+
         private boolean outline = false;
+
         private int indentAmount = 1;
+
         private int maxPaddingWidth = 30;
+
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
-        
+        public OutputSettings() {
+        }
+
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
          * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
@@ -496,7 +526,7 @@ public class Document extends Element {
             prettyPrint = pretty;
             return this;
         }
-        
+
         /**
          * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
          * all tags as block.
@@ -505,7 +535,7 @@ public class Document extends Element {
         public boolean outline() {
             return outline;
         }
-        
+
         /**
          * Enable or disable HTML outline mode.
          * @param outlineMode new outline setting
@@ -564,7 +594,8 @@ public class Document extends Element {
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
             }
-            clone.charset(charset.name()); // new charset and charset encoder
+            // new charset and charset encoder
+            clone.charset(charset.name());
             clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;
@@ -591,6 +622,7 @@ public class Document extends Element {
     }
 
     public enum QuirksMode {
+
         noQuirks, quirks, limitedQuirks
     }
 
@@ -623,13 +655,13 @@ public class Document extends Element {
     }
 
     /**
-     Set the Connection used to fetch this document. This Connection is used as a session object when further requests are
-     made (e.g. when a form is submitted).
-
-     @param connection to set
-     @return this document, for chaining
-     @see Connection#newRequest()
-     @since 1.14.1
+     *     Set the Connection used to fetch this document. This Connection is used as a session object when further requests are
+     *     made (e.g. when a form is submitted).
+     *
+     *     @param connection to set
+     *     @return this document, for chaining
+     *     @see Connection#newRequest()
+     *     @since 1.14.1
      */
     public Document connection(Connection connection) {
         Validate.notNull(connection);

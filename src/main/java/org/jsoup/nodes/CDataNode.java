@@ -6,6 +6,7 @@ import java.io.IOException;
  * A Character Data node, to support CDATA sections.
  */
 public class CDataNode extends TextNode {
+
     public CDataNode(String text) {
         super(text);
     }
@@ -26,9 +27,7 @@ public class CDataNode extends TextNode {
 
     @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        accum
-            .append("<![CDATA[")
-            .append(getWholeText());
+        accum.append("<![CDATA[").append(getWholeText());
     }
 
     @Override

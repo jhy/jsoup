@@ -8,7 +8,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,13 +17,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- A list of {@link Element}s, with methods that act on every element in the list.
- <p>
- To get an {@code Elements} object, use the {@link Element#select(String)} method.
- </p>
-
- @author Jonathan Hedley, jonathan@hedley.net */
+ * A list of {@link Element}s, with methods that act on every element in the list.
+ * <p>
+ * To get an {@code Elements} object, use the {@link Element#select(String)} method.
+ * </p>
+ *
+ * @author Jonathan Hedley, jonathan@hedley.net
+ */
 public class Elements extends ArrayList<Element> {
+
     public Elements() {
     }
 
@@ -35,13 +36,13 @@ public class Elements extends ArrayList<Element> {
     public Elements(Collection<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(List<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(Element... elements) {
-    	super(Arrays.asList(elements));
+        super(Arrays.asList(elements));
     }
 
     /**
@@ -49,22 +50,19 @@ public class Elements extends ArrayList<Element> {
      * @return a deep copy
      */
     @Override
-	public Elements clone() {
+    public Elements clone() {
         Elements clone = new Elements(size());
+        for (Element e : this) clone.add(e.clone());
+        return clone;
+    }
 
-        for(Element e : this)
-    		clone.add(e.clone());
-    	
-    	return clone;
-	}
-
-	// attribute methods
+    // attribute methods
     /**
-     Get an attribute value from the first matched element that has the attribute.
-     @param attributeKey The attribute key.
-     @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
-     or if the no elements have the attribute, returns empty string.
-     @see #hasAttr(String)
+     *     Get an attribute value from the first matched element that has the attribute.
+     *     @param attributeKey The attribute key.
+     *     @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
+     *     or if the no elements have the attribute, returns empty string.
+     *     @see #hasAttr(String)
      */
     public String attr(String attributeKey) {
         for (Element element : this) {
@@ -75,9 +73,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Checks if any of the matched elements have this attribute defined.
-     @param attributeKey attribute key
-     @return true if any of the elements have the attribute; false if none do.
+     *     Checks if any of the matched elements have this attribute defined.
+     *     @param attributeKey attribute key
+     *     @return true if any of the elements have the attribute; false if none do.
      */
     public boolean hasAttr(String attributeKey) {
         for (Element element : this) {
@@ -129,9 +127,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Add the class name to every matched element's {@code class} attribute.
-     @param className class name to add
-     @return this
+     *     Add the class name to every matched element's {@code class} attribute.
+     *     @param className class name to add
+     *     @return this
      */
     public Elements addClass(String className) {
         for (Element element : this) {
@@ -141,9 +139,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Remove the class name from every matched element's {@code class} attribute, if present.
-     @param className class name to remove
-     @return this
+     *     Remove the class name from every matched element's {@code class} attribute, if present.
+     *     @param className class name to remove
+     *     @return this
      */
     public Elements removeClass(String className) {
         for (Element element : this) {
@@ -153,9 +151,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Toggle the class name on every matched element's {@code class} attribute.
-     @param className class name to add if missing, or remove if present, from every element.
-     @return this
+     *     Toggle the class name on every matched element's {@code class} attribute.
+     *     @param className class name to add if missing, or remove if present, from every element.
+     *     @return this
      */
     public Elements toggleClass(String className) {
         for (Element element : this) {
@@ -165,9 +163,9 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Determine if any of the matched elements have this class name set in their {@code class} attribute.
-     @param className class name to check for
-     @return true if any do, false if none do
+     *     Determine if any of the matched elements have this class name set in their {@code class} attribute.
+     *     @param className class name to check for
+     *     @return true if any do, false if none do
      */
     public boolean hasClass(String className) {
         for (Element element : this) {
@@ -176,7 +174,7 @@ public class Elements extends ArrayList<Element> {
         }
         return false;
     }
-    
+
     /**
      * Get the form element's value of the first matched element.
      * @return The form element's value, or empty if not set.
@@ -185,22 +183,22 @@ public class Elements extends ArrayList<Element> {
     public String val() {
         if (size() > 0)
             //noinspection ConstantConditions
-            return first().val(); // first() != null as size() > 0
+            // first() != null as size() > 0
+            return first().val();
         else
             return "";
     }
-    
+
     /**
      * Set the form element's value in each of the matched elements.
      * @param value The value to set into each matched element
      * @return this (for chaining)
      */
     public Elements val(String value) {
-        for (Element element : this)
-            element.val(value);
+        for (Element element : this) element.val(value);
         return this;
     }
-    
+
     /**
      * Get the combined text of all the matched elements.
      * <p>
@@ -221,12 +219,12 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Test if any matched Element has any text content, that is not just whitespace.
-     @return true if any element has non-blank text content.
-     @see Element#hasText()
+     *     Test if any matched Element has any text content, that is not just whitespace.
+     *     @return true if any element has non-blank text content.
+     *     @see Element#hasText()
      */
     public boolean hasText() {
-        for (Element element: this) {
+        for (Element element : this) {
             if (element.hasText())
                 return true;
         }
@@ -243,13 +241,13 @@ public class Elements extends ArrayList<Element> {
      */
     public List<String> eachText() {
         ArrayList<String> texts = new ArrayList<>(size());
-        for (Element el: this) {
+        for (Element el : this) {
             if (el.hasText())
                 texts.add(el.text());
         }
         return texts;
     }
-    
+
     /**
      * Get the combined inner HTML of all matched elements.
      * @return string of all element's inner HTML.
@@ -265,7 +263,7 @@ public class Elements extends ArrayList<Element> {
         }
         return StringUtil.releaseBuilder(sb);
     }
-    
+
     /**
      * Get the combined outer HTML of all matched elements.
      * @return string of all element's outer HTML.
@@ -307,7 +305,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Set the inner HTML of each matched element.
      * @param html HTML to parse and set into each matched element.
@@ -320,7 +318,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Add the supplied HTML to the start of each matched element's inner HTML.
      * @param html HTML to add inside each element, before the existing HTML
@@ -333,7 +331,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Add the supplied HTML to the end of each matched element's inner HTML.
      * @param html HTML to add inside each element, after the existing HTML
@@ -346,7 +344,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Insert the supplied HTML before each matched element's outer HTML.
      * @param html HTML to insert before each element
@@ -359,7 +357,7 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
      * Insert the supplied HTML after each matched element's outer HTML.
      * @param html HTML to insert after each element
@@ -374,13 +372,13 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Wrap the supplied HTML around each matched elements. For example, with HTML
-     {@code <p><b>This</b> is <b>Jsoup</b></p>},
-     <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
-     becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
-     @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
-     @return this (for chaining)
-     @see Element#wrap
+     *     Wrap the supplied HTML around each matched elements. For example, with HTML
+     *     {@code <p><b>This</b> is <b>Jsoup</b></p>},
+     *     <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
+     *     becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
+     *     @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+     *     @return this (for chaining)
+     *     @see Element#wrap
      */
     public Elements wrap(String html) {
         Validate.notEmpty(html);
@@ -396,7 +394,7 @@ public class Elements extends ArrayList<Element> {
      * <p>
      * This is useful for e.g removing unwanted formatting elements but keeping their contents.
      * </p>
-     * 
+     *
      * E.g. with HTML: <p>{@code <div><font>One</font> <font><a href="/">Two</a></font></div>}</p>
      * <p>{@code doc.select("font").unwrap();}</p>
      * <p>HTML = {@code <div>One <a href="/">Two</a></div>}</p>
@@ -447,9 +445,8 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     // filters
-    
     /**
      * Find matching elements within this element list.
      * @param query A {@link Selector} query
@@ -473,7 +470,7 @@ public class Elements extends ArrayList<Element> {
         Elements out = Selector.select(query, this);
         return Selector.filterOut(this, out);
     }
-    
+
     /**
      * Get the <i>nth</i> matched element as an Elements object.
      * <p>
@@ -484,7 +481,7 @@ public class Elements extends ArrayList<Element> {
     public Elements eq(int index) {
         return size() > index ? new Elements(get(index)) : new Elements();
     }
-    
+
     /**
      * Test if any of the matched elements match the supplied query.
      * @param query A selector
@@ -569,11 +566,12 @@ public class Elements extends ArrayList<Element> {
 
     private Elements siblings(@Nullable String query, boolean next, boolean all) {
         Elements els = new Elements();
-        Evaluator eval = query != null? QueryParser.parse(query) : null;
+        Evaluator eval = query != null ? QueryParser.parse(query) : null;
         for (Element e : this) {
             do {
                 Element sib = next ? e.nextElementSibling() : e.previousElementSibling();
-                if (sib == null) break;
+                if (sib == null)
+                    break;
                 if (eval == null)
                     els.add(sib);
                 else if (sib.is(eval))
@@ -590,7 +588,7 @@ public class Elements extends ArrayList<Element> {
      */
     public Elements parents() {
         HashSet<Element> combo = new LinkedHashSet<>();
-        for (Element e: this) {
+        for (Element e : this) {
             combo.addAll(e.parents());
         }
         return new Elements(combo);
@@ -598,18 +596,20 @@ public class Elements extends ArrayList<Element> {
 
     // list-like methods
     /**
-     Get the first matched element.
-     @return The first matched element, or <code>null</code> if contents is empty.
+     *     Get the first matched element.
+     *     @return The first matched element, or <code>null</code> if contents is empty.
      */
-    public @Nullable Element first() {
+    @Nullable
+    public Element first() {
         return isEmpty() ? null : get(0);
     }
 
     /**
-     Get the last matched element.
-     @return The last matched element, or <code>null</code> if contents is empty.
+     *     Get the last matched element.
+     *     @return The last matched element, or <code>null</code> if contents is empty.
      */
-    public @Nullable Element last() {
+    @Nullable
+    public Element last() {
         return isEmpty() ? null : get(size() - 1);
     }
 
@@ -640,9 +640,8 @@ public class Elements extends ArrayList<Element> {
      */
     public List<FormElement> forms() {
         ArrayList<FormElement> forms = new ArrayList<>();
-        for (Element el: this)
-            if (el instanceof FormElement)
-                forms.add((FormElement) el);
+        for (Element el : this) if (el instanceof FormElement)
+            forms.add((FormElement) el);
         return forms;
     }
 
@@ -673,7 +672,7 @@ public class Elements extends ArrayList<Element> {
 
     private <T extends Node> List<T> childNodesOfType(Class<T> tClass) {
         ArrayList<T> nodes = new ArrayList<>();
-        for (Element el: this) {
+        for (Element el : this) {
             for (int i = 0; i < el.childNodeSize(); i++) {
                 Node node = el.childNode(i);
                 if (tClass.isInstance(node))
@@ -682,5 +681,4 @@ public class Elements extends ArrayList<Element> {
         }
         return nodes;
     }
-
 }

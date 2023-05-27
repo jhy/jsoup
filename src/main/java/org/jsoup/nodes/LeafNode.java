@@ -3,7 +3,9 @@ package org.jsoup.nodes;
 import java.util.List;
 
 abstract class LeafNode extends Node {
-    Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
+
+    // either a string value, or an attribute map (in the rare case multiple attributes are set)
+    Object value;
 
     protected final boolean hasAttributes() {
         return value instanceof Attributes;
@@ -98,11 +100,9 @@ abstract class LeafNode extends Node {
     @Override
     protected LeafNode doClone(Node parent) {
         LeafNode clone = (LeafNode) super.doClone(parent);
-
         // Object value could be plain string or attributes - need to clone
         if (hasAttributes())
             clone.value = ((Attributes) value).clone();
-
         return clone;
     }
 }

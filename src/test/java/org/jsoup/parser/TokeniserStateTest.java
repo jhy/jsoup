@@ -8,24 +8,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TokeniserStateTest {
 
     final char[] whiteSpace = { '\t', '\n', '\r', '\f', ' ' };
+
     final char[] quote = { '\'', '"' };
 
     @Test
     public void ensureSearchArraysAreSorted() {
-        char[][] arrays = {
-            TokeniserState.attributeNameCharsSorted,
-            TokeniserState.attributeValueUnquoted
-        };
-
+        char[][] arrays = { TokeniserState.attributeNameCharsSorted, TokeniserState.attributeValueUnquoted };
         for (char[] array : arrays) {
             char[] copy = Arrays.copyOf(array, array.length);
             Arrays.sort(array);
@@ -56,22 +51,18 @@ public class TokeniserStateTest {
         String body;
         Document doc;
         Elements els;
-
         body = "<div>hello world</";
         doc = Jsoup.parse(body);
         els = doc.select("div");
         assertEquals("hello world</", els.text());
-
         body = "<div>hello world</div>";
         doc = Jsoup.parse(body);
         els = doc.select("div");
         assertEquals("hello world", els.text());
-
         body = "<div>fake</></div>";
         doc = Jsoup.parse(body);
         els = doc.select("div");
         assertEquals("fake", els.text());
-
         body = "<div>fake</?</div>";
         doc = Jsoup.parse(body);
         els = doc.select("div");
@@ -83,17 +74,14 @@ public class TokeniserStateTest {
         String body;
         Document doc;
         Elements els;
-
         body = "<textarea><fake></textarea>";
         doc = Jsoup.parse(body);
         els = doc.select("textarea");
         assertEquals("<fake>", els.text());
-
         body = "<textarea><open";
         doc = Jsoup.parse(body);
         els = doc.select("textarea");
         assertEquals("", els.text());
-
         body = "<textarea>hello world</?fake</textarea>";
         doc = Jsoup.parse(body);
         els = doc.select("textarea");
@@ -114,7 +102,6 @@ public class TokeniserStateTest {
     public void testCommentEndCoverage() {
         String html = "<html><head></head><body><img src=foo><!-- <table><tr><td></table> --! --- --><p>Hello</p></body></html>";
         Document doc = Jsoup.parse(html);
-
         Element body = doc.body();
         Comment comment = (Comment) body.childNode(1);
         assertEquals(" <table><tr><td></table> --! --- ", comment.getData());
@@ -127,7 +114,6 @@ public class TokeniserStateTest {
     public void testCommentEndBangCoverage() {
         String html = "<html><head></head><body><img src=foo><!-- <table><tr><td></table> --!---!>--><p>Hello</p></body></html>";
         Document doc = Jsoup.parse(html);
-
         Element body = doc.body();
         Comment comment = (Comment) body.childNode(1);
         assertEquals(" <table><tr><td></table> --!-", comment.getData());
@@ -141,14 +127,7 @@ public class TokeniserStateTest {
         String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
-                String[] htmls = {
-                        String.format("<!DOCTYPE html%cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
-                        String.format("<!DOCTYPE html %cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
-                        String.format("<!DOCTYPE html PUBLIC%c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
-                        String.format("<!DOCTYPE html PUBLIC %c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q),
-                        String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws),
-                        String.format("<!DOCTYPE html PUBLIC%c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws)
-                    };
+                String[] htmls = { String.format("<!DOCTYPE html%cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q), String.format("<!DOCTYPE html %cPUBLIC %c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q), String.format("<!DOCTYPE html PUBLIC%c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q), String.format("<!DOCTYPE html PUBLIC %c%c-//W3C//DTD HTML 4.0//EN%c>", ws, q, q), String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws), String.format("<!DOCTYPE html PUBLIC%c-//W3C//DTD HTML 4.0//EN%c%c>", q, q, ws) };
                 for (String html : htmls) {
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
@@ -162,14 +141,7 @@ public class TokeniserStateTest {
         String expectedOutput = "<!DOCTYPE html SYSTEM \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
         for (char q : quote) {
             for (char ws : whiteSpace) {
-                String[] htmls = {
-                        String.format("<!DOCTYPE html%cSYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q),
-                        String.format("<!DOCTYPE html %cSYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q),
-                        String.format("<!DOCTYPE html SYSTEM%c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q),
-                        String.format("<!DOCTYPE html SYSTEM %c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q),
-                        String.format("<!DOCTYPE html SYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws),
-                        String.format("<!DOCTYPE html SYSTEM%chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws)
-                    };
+                String[] htmls = { String.format("<!DOCTYPE html%cSYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q), String.format("<!DOCTYPE html %cSYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q), String.format("<!DOCTYPE html SYSTEM%c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q), String.format("<!DOCTYPE html SYSTEM %c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", ws, q, q), String.format("<!DOCTYPE html SYSTEM %chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws), String.format("<!DOCTYPE html SYSTEM%chttp://www.w3.org/TR/REC-html40/strict.dtd%c%c>", q, q, ws) };
                 for (String html : htmls) {
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
@@ -180,16 +152,10 @@ public class TokeniserStateTest {
 
     @Test
     public void testPublicAndSystemIdentifiersWithWhitespace() {
-        String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\""
-                + " \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
-    	for (char q : quote) {
+        String expectedOutput = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0//EN\"" + " \"http://www.w3.org/TR/REC-html40/strict.dtd\">";
+        for (char q : quote) {
             for (char ws : whiteSpace) {
-                String[] htmls = {
-                        String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c"
-                                + "%c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", q, q, ws, q, q),
-                        String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c"
-                                + "%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", q, q, q, q)
-                    };
+                String[] htmls = { String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c" + "%c%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", q, q, ws, q, q), String.format("<!DOCTYPE html PUBLIC %c-//W3C//DTD HTML 4.0//EN%c" + "%chttp://www.w3.org/TR/REC-html40/strict.dtd%c>", q, q, q, q) };
                 for (String html : htmls) {
                     Document doc = Jsoup.parse(html);
                     assertEquals(expectedOutput, doc.childNode(0).outerHtml());
@@ -198,7 +164,8 @@ public class TokeniserStateTest {
         }
     }
 
-    @Test public void handlesLessInTagThanAsNewTag() {
+    @Test
+    public void handlesLessInTagThanAsNewTag() {
         // out of spec, but clear author intent
         String html = "<p\n<p<div id=one <span>Two";
         Document doc = Jsoup.parse(html);
@@ -208,13 +175,12 @@ public class TokeniserStateTest {
     @Test
     public void testUnconsumeAtBufferBoundary() {
         String triggeringSnippet = "<a href=\"\"foo";
-        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
+        // The "foo" part must be just at the limit.
+        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2];
         Arrays.fill(padding, ' ');
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
-
         Parser.parseFragment(paddedSnippet, null, "", errorList);
-
         assertEquals(CharacterReader.readAheadLimit - 1, errorList.get(0).getPosition());
     }
 
@@ -222,7 +188,8 @@ public class TokeniserStateTest {
     public void testUnconsumeAfterBufferUp() {
         // test for after consume() a bufferUp occurs (look-forward) but then attempts to unconsume. Would throw a "No buffer left to unconsume"
         String triggeringSnippet = "<title>One <span>Two";
-        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 8]; // The "<span" part must be just at the limit. The "containsIgnoreCase" scan does a bufferUp, losing the unconsume
+        // The "<span" part must be just at the limit. The "containsIgnoreCase" scan does a bufferUp, losing the unconsume
+        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 8];
         Arrays.fill(padding, ' ');
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
@@ -234,9 +201,7 @@ public class TokeniserStateTest {
     public void testOpeningAngleBracketInsteadOfAttribute() {
         String triggeringSnippet = "<html <";
         ParseErrorList errorList = ParseErrorList.tracking(1);
-
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
-
         assertEquals(6, errorList.get(0).getPosition());
     }
 
@@ -244,9 +209,7 @@ public class TokeniserStateTest {
     public void testMalformedSelfClosingTag() {
         String triggeringSnippet = "<html /ouch";
         ParseErrorList errorList = ParseErrorList.tracking(1);
-
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
-
         assertEquals(7, errorList.get(0).getPosition());
     }
 
@@ -254,9 +217,7 @@ public class TokeniserStateTest {
     public void testOpeningAngleBracketInTagName() {
         String triggeringSnippet = "<html<";
         ParseErrorList errorList = ParseErrorList.tracking(1);
-
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
-
         assertEquals(5, errorList.get(0).getPosition());
     }
 
@@ -283,7 +244,6 @@ public class TokeniserStateTest {
         Document doc = Jsoup.parse("<p name=foo&lt;bar>");
         Element p = doc.selectFirst("p");
         assertEquals("foo<bar", p.attr("name"));
-
         doc = Jsoup.parse("<p foo=");
         assertEquals("<p foo></p>", doc.body().html());
     }

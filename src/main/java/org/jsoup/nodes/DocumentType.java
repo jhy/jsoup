@@ -3,22 +3,28 @@ package org.jsoup.nodes;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
-
 import java.io.IOException;
 
 /**
  * A {@code <!DOCTYPE>} node.
  */
 public class DocumentType extends LeafNode {
+
     // todo needs a bit of a chunky cleanup. this level of detail isn't needed
     public static final String PUBLIC_KEY = "PUBLIC";
-    public static final String SYSTEM_KEY = "SYSTEM";
-    private static final String NAME = "name";
-    private static final String PUB_SYS_KEY = "pubSysKey"; // PUBLIC or SYSTEM
-    private static final String PUBLIC_ID = "publicId";
-    private static final String SYSTEM_ID = "systemId";
-    // todo: quirk mode from publicId and systemId
 
+    public static final String SYSTEM_KEY = "SYSTEM";
+
+    private static final String NAME = "name";
+
+    // PUBLIC or SYSTEM
+    private static final String PUB_SYS_KEY = "pubSysKey";
+
+    private static final String PUBLIC_ID = "publicId";
+
+    private static final String SYSTEM_ID = "systemId";
+
+    // todo: quirk mode from publicId and systemId
     /**
      * Create a new doctype element.
      * @param name the doctype's name
@@ -81,7 +87,6 @@ public class DocumentType extends LeafNode {
         // add a newline if the doctype has a preceding node (which must be a comment)
         if (siblingIndex > 0 && out.prettyPrint())
             accum.append('\n');
-
         if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");

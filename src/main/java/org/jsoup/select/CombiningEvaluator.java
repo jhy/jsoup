@@ -2,7 +2,6 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +11,9 @@ import java.util.Collection;
  * Base combining (and, or) evaluator.
  */
 public abstract class CombiningEvaluator extends Evaluator {
+
     final ArrayList<Evaluator> evaluators;
+
     int num = 0;
 
     CombiningEvaluator() {
@@ -26,10 +27,11 @@ public abstract class CombiningEvaluator extends Evaluator {
         updateNumEvaluators();
     }
 
-    @Nullable Evaluator rightMostEvaluator() {
+    @Nullable
+    Evaluator rightMostEvaluator() {
         return num > 0 ? evaluators.get(num - 1) : null;
     }
-    
+
     void replaceRightMostEvaluator(Evaluator replacement) {
         evaluators.set(num - 1, replacement);
     }
@@ -40,6 +42,7 @@ public abstract class CombiningEvaluator extends Evaluator {
     }
 
     public static final class And extends CombiningEvaluator {
+
         And(Collection<Evaluator> evaluators) {
             super(evaluators);
         }
@@ -50,7 +53,8 @@ public abstract class CombiningEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element node) {
-            for (int i = num - 1; i >= 0; i--) { // process backwards so that :matchText is evaled earlier, to catch parent query. todo - should redo matchText to virtually expand during match, not pre-match (see SelectorTest#findBetweenSpan)
+            for (int i = num - 1; i >= 0; i--) {
+                // process backwards so that :matchText is evaled earlier, to catch parent query. todo - should redo matchText to virtually expand during match, not pre-match (see SelectorTest#findBetweenSpan)
                 Evaluator s = evaluators.get(i);
                 if (!s.matches(root, node))
                     return false;
@@ -65,6 +69,7 @@ public abstract class CombiningEvaluator extends Evaluator {
     }
 
     public static final class Or extends CombiningEvaluator {
+
         /**
          * Create a new Or evaluator. The initial evaluators are ANDed together and used as the first clause of the OR.
          * @param evaluators initial OR clause (these are wrapped into an AND evaluator).
@@ -73,12 +78,15 @@ public abstract class CombiningEvaluator extends Evaluator {
             super();
             if (num > 1)
                 this.evaluators.add(new And(evaluators));
-            else // 0 or 1
+            else
+                // 0 or 1
                 this.evaluators.addAll(evaluators);
             updateNumEvaluators();
         }
 
-        Or(Evaluator... evaluators) { this(Arrays.asList(evaluators)); }
+        Or(Evaluator... evaluators) {
+            this(Arrays.asList(evaluators));
+        }
 
         Or() {
             super();
