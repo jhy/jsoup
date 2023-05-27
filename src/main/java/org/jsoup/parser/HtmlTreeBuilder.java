@@ -356,10 +356,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         else
             currentElement().appendChild(node);
         // connect form controls to their form element
-        if (node instanceof Element && ((Element) node).tag().isFormListed()) {
-            if (formElement != null)
-                formElement.addElement((Element) node);
-        }
+        if (node instanceof Element && ((Element) node).tag().isFormListed() && formElement != null)
+            formElement.addElement((Element) node);
         onNodeInserted(node, token);
     }
 

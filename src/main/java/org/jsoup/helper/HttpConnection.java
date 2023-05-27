@@ -973,10 +973,8 @@ public class HttpConnection implements Connection {
                 if (contentType != null && !req.ignoreContentType() && !contentType.startsWith("text/") && !xmlContentTypeRxp.matcher(contentType).matches())
                     throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml", contentType, req.url().toString());
                 // switch to the XML parser if content type is xml and not parser not explicitly set
-                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
-                    if (!req.parserDefined)
-                        req.parser(Parser.xmlParser());
-                }
+                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches() && !req.parserDefined)
+                    req.parser(Parser.xmlParser());
                 // may be null, readInputStream deals with it
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType);
                 if (conn.getContentLength() != 0 && req.method() != HEAD) {

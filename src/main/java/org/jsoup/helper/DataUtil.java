@@ -194,10 +194,8 @@ public final class DataUtil {
                         if (comment.isXmlDeclaration())
                             decl = comment.asXmlDeclaration();
                     }
-                    if (decl != null) {
-                        if (decl.name().equalsIgnoreCase("xml"))
-                            foundCharset = decl.attr("encoding");
-                    }
+                    if (decl != null && decl.name().equalsIgnoreCase("xml"))
+                        foundCharset = decl.attr("encoding");
                 }
                 foundCharset = validateCharset(foundCharset);
                 if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) {
