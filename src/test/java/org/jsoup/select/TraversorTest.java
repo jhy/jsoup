@@ -22,14 +22,12 @@ public class TraversorTest {
 
             @Override
             public FilterResult head(Node node, int depth) {
-                accum.append("<").append(node.nodeName()).append(">");
-                return FilterResult.CONTINUE;
+                return nodeNameToTagConverter(node, depth);
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</").append(node.nodeName()).append(">");
-                return FilterResult.CONTINUE;
+                return appendAndReturnContinue(node, depth);
             }
         }, doc.select("div"));
         assertEquals("<div><p><#text></#text></p></div><div><#text></#text></div>", accum.toString());
@@ -50,8 +48,7 @@ public class TraversorTest {
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</").append(node.nodeName()).append(">");
-                return FilterResult.CONTINUE;
+                return appendAndReturnContinue(node, depth);
             }
         }, doc.select("div"));
         assertEquals("<div><p></p></div><div><#text></#text></div>", accum.toString());
@@ -74,8 +71,7 @@ public class TraversorTest {
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                accum.append("</").append(node.nodeName()).append(">");
-                return FilterResult.CONTINUE;
+                return appendAndReturnContinue(node, depth);
             }
         }, doc.select("div"));
         assertEquals("<div></div><div><#text></#text></div>", accum.toString());
@@ -109,8 +105,7 @@ public class TraversorTest {
 
             @Override
             public FilterResult head(Node node, int depth) {
-                accum.append("<").append(node.nodeName()).append(">");
-                return FilterResult.CONTINUE;
+                return nodeNameToTagConverter(node, depth);
             }
 
             @Override
@@ -160,18 +155,12 @@ public class TraversorTest {
 
             @Override
             public void head(Node node, int depth) {
-                if (node.nodeName().equals("p")) {
-                    Element p = (Element) node;
-                    p.append("<span>" + i++ + "</span>");
-                }
+                updateParagraphWithNumber(node, depth);
             }
 
             @Override
             public void tail(Node node, int depth) {
-                if (node.nodeName().equals("p")) {
-                    Element p = (Element) node;
-                    p.append("<span>" + i++ + "</span>");
-                }
+                updateParagraphWithNumber(node, depth);
             }
         }, doc);
         assertEquals("<div>\n" + " <p><span>0</span><span>1</span></p>\n" + " <p><span>2</span><span>3</span></p>\n" + "</div>", doc.body().html());
@@ -196,5 +185,22 @@ public class TraversorTest {
                 node.remove();
         }, doc);
         assertEquals("<div><p id=\"2\">Two</p><p></p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    public FilterResult nodeNameToTagConverter(Node node, int depth) {
+        accum.append("<").append(node.nodeName()).append(">");
+        return FilterResult.CONTINUE;
+    }
+
+    public FilterResult appendAndReturnContinue(Node node, int depth) {
+        accum.append("</").append(node.nodeName()).append(">");
+        return FilterResult.CONTINUE;
+    }
+
+    public void updateParagraphWithNumber(Node node, int depth) {
+        if (node.nodeName().equals("p")) {
+            Element p = (Element) node;
+            p.append("<span>" + i++ + "</span>");
+        }
     }
 }

@@ -150,7 +150,7 @@ public class Element extends Node {
 
     @Override
     public String nodeName() {
-        return tag.getName();
+        return getNameFromTag();
     }
 
     /**
@@ -160,7 +160,7 @@ public class Element extends Node {
      * @return the tag name
      */
     public String tagName() {
-        return tag.getName();
+        return getNameFromTag();
     }
 
     /**
@@ -1827,5 +1827,9 @@ public class Element extends Node {
         if (!tag.isInline())
             return false;
         return (parent() == null || parent().isBlock()) && !isEffectivelyFirst() && !out.outline() && !isNode("br");
+    }
+
+    public String getNameFromTag() {
+        return tag.getName();
     }
 }

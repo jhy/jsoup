@@ -52,7 +52,7 @@ public class Tag implements Cloneable {
      * @return the tag's name
      */
     public String getName() {
-        return tagName;
+        return getTagName();
     }
 
     /**
@@ -242,7 +242,7 @@ public class Tag implements Cloneable {
 
     @Override
     public String toString() {
-        return tagName;
+        return getTagName();
     }
 
     @Override
@@ -320,5 +320,14 @@ public class Tag implements Cloneable {
 
     private static void register(Tag tag) {
         tags.put(tag.tagName, tag);
+    }
+
+    /**
+     * Get this tag's name.
+     *
+     * @return the tag's name
+     */
+    public String getTagName() {
+        return tagName;
     }
 }

@@ -1325,7 +1325,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            return tb.process(t, InTable);
+            return processTableIn(t, tb);
         }
     }
     ,
@@ -1382,7 +1382,7 @@ enum HtmlTreeBuilderState {
         }
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
-            return tb.process(t, InTable);
+            return processTableIn(t, tb);
         }
 
         private boolean handleMissingTr(Token t, TreeBuilder tb) {
@@ -1915,5 +1915,9 @@ enum HtmlTreeBuilderState {
         static final String[] InTemplateToHead = new String[] { "base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title" };
 
         static final String[] InTemplateToTable = new String[] { "caption", "colgroup", "tbody", "tfoot", "thead" };
+    }
+
+    private boolean processTableIn(Token t, HtmlTreeBuilder tb) {
+        return tb.process(t, InTable);
     }
 }

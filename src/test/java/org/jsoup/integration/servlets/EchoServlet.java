@@ -28,17 +28,17 @@ public class EchoServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestResponse(req, res);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestResponse(req, res);
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestResponse(req, res);
     }
 
     private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -120,5 +120,9 @@ public class EchoServlet extends BaseServlet {
             req.setAttribute(Request.MULTIPART_CONFIG_ELEMENT, new MultipartConfigElement(System.getProperty("java.io.tmpdir")));
         }
         return isMulti;
+    }
+
+    protected void executeRequestResponse(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        doIt(req, res);
     }
 }

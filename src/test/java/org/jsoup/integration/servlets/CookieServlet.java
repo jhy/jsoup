@@ -18,17 +18,17 @@ public class CookieServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestHandler(req, res);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestHandler(req, res);
     }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
+        executeRequestHandler(req, res);
     }
 
     private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -67,5 +67,9 @@ public class CookieServlet extends BaseServlet {
         Cookie three = new Cookie("One", "EchoServlet");
         three.setPath("/EchoServlet");
         res.addCookie(three);
+    }
+
+    protected void executeRequestHandler(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        doIt(req, res);
     }
 }

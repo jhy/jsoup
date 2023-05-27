@@ -1711,12 +1711,12 @@ public class ElementTest {
 
             @Override
             public FilterResult head(Node node, int depth) {
-                return FilterResult.CONTINUE;
+                return continueFilterResult(node, depth);
             }
 
             @Override
             public FilterResult tail(Node node, int depth) {
-                return FilterResult.CONTINUE;
+                return continueFilterResult(node, depth);
             }
         });
         assertSame(div, div2);
@@ -2456,5 +2456,9 @@ public class ElementTest {
         String out = doc.body().html();
         assertEquals("<table>\n" + " <tbody>\n" + "  <tr>\n" + "   <td>\n" + "    <p style=\"display:inline;\">A</p>\n" + "    <p style=\"display:inline;\">B</p></td>\n" + "  </tr>\n" + " </tbody>\n" + "</table>", out);
         // todo - I would prefer the </td> to wrap down there - but need to reimplement pretty printer to simplify and track indented state
+    }
+
+    public FilterResult continueFilterResult(Node node, int depth) {
+        return FilterResult.CONTINUE;
     }
 }

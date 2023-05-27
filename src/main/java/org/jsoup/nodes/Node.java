@@ -288,7 +288,7 @@ public abstract class Node implements Cloneable {
      */
     @Nullable
     public Node parent() {
-        return parentNode;
+        return get();
     }
 
     /**
@@ -297,7 +297,7 @@ public abstract class Node implements Cloneable {
      */
     @Nullable
     public final Node parentNode() {
-        return parentNode;
+        return get();
     }
 
     /**
@@ -920,5 +920,14 @@ public abstract class Node implements Cloneable {
                 }
             }
         }
+    }
+
+    /**
+     *     Gets this node's parent node.
+     *     @return parent node; or null if no parent.
+     *     @see #hasParent()
+     */
+    public Node get() {
+        return parentNode;
     }
 }

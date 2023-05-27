@@ -218,7 +218,11 @@ public class XpathTest {
 
         @Override
         public boolean isObjectModelSupported(String objectModel) {
-            return true;
+            return ok
+
+validateUserInput
+isDataValid
+checkConditionsMet(objectModel);
         }
 
         @Override
@@ -227,7 +231,11 @@ public class XpathTest {
 
         @Override
         public boolean getFeature(String name) throws XPathFactoryConfigurationException {
-            return true;
+            return ok
+
+validateUserInput
+isDataValid
+checkConditionsMet(name);
         }
 
         @Override
@@ -241,6 +249,14 @@ public class XpathTest {
         @Override
         public XPath newXPath() {
             throw new IllegalArgumentException("Sorry, no can do!");
+        }
+
+        public boolean ok
+
+validateUserInput
+isDataValid
+checkConditionsMet(String objectModel) {
+            return true;
         }
     }
 }
