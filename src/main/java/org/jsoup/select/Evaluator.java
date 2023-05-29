@@ -407,7 +407,7 @@ public abstract class Evaluator {
 		@Override
 		public boolean matches(Element root, Element element) {
 			final Element p = element.parent();
-			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
+			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.childrenSize()-1;
 		}
 
 		@Override
@@ -508,7 +508,7 @@ public abstract class Evaluator {
         protected int calculatePosition(Element root, Element element) {
     	    if (element.parent() == null)
     	        return 0;
-        	return element.parent().children().size() - element.elementSiblingIndex();
+        	return element.parent().childrenSize()- element.elementSiblingIndex();
         }
 
 		@Override
@@ -522,50 +522,55 @@ public abstract class Evaluator {
      *
      */
     public static class IsNthOfType extends CssNthEvaluator {
-    	public IsNthOfType(int a, int b) {
-    		super(a,b);
-    	}
+        public IsNthOfType(int a, int b) {
+            super(a, b);
+        }
 
-		protected int calculatePosition(Element root, Element element) {
-			int pos = 0;
-            if (element.parent() == null)
+        protected int calculatePosition(Element root, Element element) {
+            Element parent = element.parent();
+            if (parent == null)
                 return 0;
-        	Elements family = element.parent().children();
-            for (Element el : family) {
-                if (el.tag().equals(element.tag())) pos++;
-                if (el == element) break;
-            }
-			return pos;
-		}
 
-		@Override
-		protected String getPseudoClass() {
-			return "nth-of-type";
-		}
+            int pos = 0;
+            final int size = parent.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                Node node = parent.childNode(i);
+                if (node.normalName().equals(element.normalName())) pos++;
+                if (node == element) break;
+            }
+            return pos;
+        }
+
+        @Override
+        protected String getPseudoClass() {
+            return "nth-of-type";
+        }
     }
 
     public static class IsNthLastOfType extends CssNthEvaluator {
 
-		public IsNthLastOfType(int a, int b) {
-			super(a, b);
-		}
+        public IsNthLastOfType(int a, int b) {
+            super(a, b);
+        }
 
-		@Override
-		protected int calculatePosition(Element root, Element element) {
-			int pos = 0;
-            if (element.parent() == null)
+        @Override
+        protected int calculatePosition(Element root, Element element) {
+            Element parent = element.parent();
+            if (parent == null)
                 return 0;
-        	Elements family = element.parent().children();
-        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
-        		if (family.get(i).tag().equals(element.tag())) pos++;
-        	}
-			return pos;
-		}
 
-		@Override
-		protected String getPseudoClass() {
-			return "nth-last-of-type";
-		}
+            int pos = 0;
+            int size = parent.childrenSize();
+            for (int i = element.elementSiblingIndex(); i < size; i++) {
+                if (parent.child(i).normalName().equals(element.normalName())) pos++;
+            }
+            return pos;
+        }
+
+        @Override
+        protected String getPseudoClass() {
+            return "nth-last-of-type";
+        }
     }
 
     /**
@@ -620,9 +625,12 @@ public abstract class Evaluator {
 			if (p==null || p instanceof Document) return false;
 
 			int pos = 0;
-        	Elements family = p.children();
-            for (Element el : family) {
-                if (el.tag().equals(element.tag())) pos++;
+            int size = p.childrenSize();
+            for (int i = 0; i < size; i++) {
+                if (p.child(i).normalName().equals(element.normalName()))
+                    pos++;
+                if (pos > 1)
+                    break;
             }
         	return pos == 1;
 		}

@@ -6,6 +6,9 @@ Release 1.16.2 [PENDING]
     `W3CDom#namespaceAware(false)`.
     <https://github.com/jhy/jsoup/pull/1848>
 
+  * Improvement: speed optimized the `~` (any preceeding sibling) and `:nth-of-type` selectors.
+    <https://github.com/jhy/jsoup/issues/1956>
+
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 

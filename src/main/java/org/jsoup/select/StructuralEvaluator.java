@@ -3,6 +3,8 @@ package org.jsoup.select;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.util.IdentityHashMap;
+
 /**
  * Base structural evaluator.
  */
@@ -108,22 +110,28 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class PreviousSibling extends StructuralEvaluator {
+        private final IdentityHashMap<Element, Boolean> memo = new IdentityHashMap<>(); // memoize results
+
         public PreviousSibling(Evaluator evaluator) {
             this.evaluator = evaluator;
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            if (root == element)
+            final Element parent = element.parent();
+            if (root == element || parent == null)
                 return false;
 
-            Element prev = element.previousElementSibling();
-
-            while (prev != null) {
-                if (evaluator.matches(root, prev))
+            final int size = element.elementSiblingIndex();
+            for (int i = 0; i < size; i++) {
+                final Element el = parent.child(i);
+                Boolean matches = memo.get(el);
+                if (matches == null) {
+                    matches = evaluator.matches(root, el);
+                    memo.put(el, matches);
+                }
+                if (matches)
                     return true;
-
-                prev = prev.previousElementSibling();
             }
             return false;
         }
