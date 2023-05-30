@@ -889,13 +889,11 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public @Nullable Element nextElementSibling() {
-        if (parentNode == null) return null;
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        if (siblings.size() > index+1)
-            return siblings.get(index+1);
-        else
-            return null;
+        Node next = this;
+        while ((next = next.nextSibling()) != null) {
+            if (next instanceof Element) return (Element) next;
+        }
+        return null;
     }
 
     /**
@@ -913,13 +911,11 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public @Nullable Element previousElementSibling() {
-        if (parentNode == null) return null;
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        if (index > 0)
-            return siblings.get(index-1);
-        else
-            return null;
+        Node prev = this;
+        while ((prev = prev.previousSibling()) != null) {
+            if (prev instanceof Element) return (Element) prev;
+        }
+        return null;
     }
 
     /**
@@ -945,8 +941,8 @@ public class Element extends Node {
      */
     public Element firstElementSibling() {
         if (parent() != null) {
-            List<Element> siblings = parent().childElementsList();
-            return siblings.size() > 1 ? siblings.get(0) : this;
+            //noinspection DataFlowIssue (not nullable, would be this is no other sibs)
+            return parent().firstElementChild();
         } else
             return this; // orphan is its own first sibling
     }
@@ -967,8 +963,8 @@ public class Element extends Node {
      */
     public Element lastElementSibling() {
         if (parent() != null) {
-            List<Element> siblings = parent().childElementsList();
-            return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : this;
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parent().lastElementChild();
         } else
             return this;
     }
@@ -990,12 +986,10 @@ public class Element extends Node {
      @since 1.15.2
      */
     public @Nullable Element firstElementChild() {
-        final int size = childNodeSize();
-        if (size == 0) return null;
-        List<Node> children = ensureChildNodes();
-        for (int i = 0; i < size; i++) {
-            Node node = children.get(i);
-            if (node instanceof Element) return (Element) node;
+        Node child = firstChild();
+        while (child != null) {
+            if (child instanceof Element) return (Element) child;
+            child = child.nextSibling();
         }
         return null;
     }
@@ -1008,12 +1002,10 @@ public class Element extends Node {
      @since 1.15.2
      */
     public @Nullable Element lastElementChild() {
-        final int size = childNodeSize();
-        if (size == 0) return null;
-        List<Node> children = ensureChildNodes();
-        for (int i = size -1; i >= 0; i--) {
-            Node node = children.get(i);
-            if (node instanceof Element) return (Element) node;
+        Node child = lastChild();
+        while (child != null) {
+            if (child instanceof Element) return (Element) child;
+            child = child.previousSibling();
         }
         return null;
     }

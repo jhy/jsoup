@@ -217,6 +217,28 @@ public class ElementTest {
         assertEquals("this", p.nextElementSibling().text());
         assertEquals("Hello", p.firstElementSibling().text());
         assertEquals("element", p.lastElementSibling().text());
+        assertNull(p.lastElementSibling().nextElementSibling());
+        assertNull(p.firstElementSibling().previousElementSibling());
+    }
+
+    @Test public void nextElementSibling() {
+        Document doc = Jsoup.parse("<p>One</p>Two<p>Three</p>");
+        Element el = doc.expectFirst("p");
+        assertNull(el.previousElementSibling());
+        Element next = el.nextElementSibling();
+        assertNotNull(next);
+        assertEquals("Three", next.text());
+        assertNull(next.nextElementSibling());
+    }
+
+    @Test public void prevElementSibling() {
+        Document doc = Jsoup.parse("<p>One</p>Two<p>Three</p>");
+        Element el = doc.expectFirst("p:contains(Three)");
+        assertNull(el.nextElementSibling());
+        Element prev = el.previousElementSibling();
+        assertNotNull(prev);
+        assertEquals("One", prev.text());
+        assertNull(prev.previousElementSibling());
     }
 
     @Test
@@ -242,7 +264,7 @@ public class ElementTest {
     @Test
     public void testFirstAndLastSiblings() {
         Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three");
-        Element div = doc.selectFirst("div");
+        Element div = doc.expectFirst("div");
         Element one = div.child(0);
         Element two = div.child(1);
         Element three = div.child(2);
@@ -251,6 +273,8 @@ public class ElementTest {
         assertSame(one, two.firstElementSibling());
         assertSame(three, three.lastElementSibling());
         assertSame(three, two.lastElementSibling());
+        assertNull(one.previousElementSibling());
+        assertNull(three.nextElementSibling());
     }
 
     @Test
