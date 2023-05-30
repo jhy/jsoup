@@ -26,6 +26,13 @@ public abstract class CombiningEvaluator extends Evaluator {
         updateNumEvaluators();
     }
 
+    @Override protected void reset() {
+        for (Evaluator evaluator : evaluators) {
+            evaluator.reset();
+        }
+        super.reset();
+    }
+
     @Nullable Evaluator rightMostEvaluator() {
         return num > 0 ? evaluators.get(num - 1) : null;
     }

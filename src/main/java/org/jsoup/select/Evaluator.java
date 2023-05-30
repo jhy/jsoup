@@ -38,6 +38,12 @@ public abstract class Evaluator {
     public abstract boolean matches(Element root, Element element);
 
     /**
+     Reset any internal state in this Evaluator before executing a new Collector evaluation.
+     */
+    protected void reset() {
+    }
+
+    /**
      * Evaluator for tag name
      */
     public static final class Tag extends Evaluator {
