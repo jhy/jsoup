@@ -46,6 +46,14 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             return root == element;
         }
+
+        @Override protected int cost() {
+            return 1;
+        }
+
+        @Override public String toString() {
+            return "";
+        }
     }
 
     static class Has extends StructuralEvaluator {
@@ -70,6 +78,10 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override protected int cost() {
+            return 10 * evaluator.cost();
+        }
+
         @Override
         public String toString() {
             return String.format(":has(%s)", evaluator);
@@ -84,6 +96,10 @@ abstract class StructuralEvaluator extends Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return !memoMatches(root, element);
+        }
+
+        @Override protected int cost() {
+            return 2 + evaluator.cost();
         }
 
         @Override
@@ -113,6 +129,10 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override protected int cost() {
+            return 2 * evaluator.cost();
+        }
+
         @Override
         public String toString() {
             return String.format("%s ", evaluator);
@@ -131,6 +151,10 @@ abstract class StructuralEvaluator extends Evaluator {
 
             Element parent = element.parent();
             return parent != null && memoMatches(root, parent);
+        }
+
+        @Override protected int cost() {
+            return 1 + evaluator.cost();
         }
 
         @Override
@@ -158,6 +182,10 @@ abstract class StructuralEvaluator extends Evaluator {
             return false;
         }
 
+        @Override protected int cost() {
+            return 3 * evaluator.cost();
+        }
+
         @Override
         public String toString() {
             return String.format("%s ~ ", evaluator);
@@ -176,6 +204,10 @@ abstract class StructuralEvaluator extends Evaluator {
 
             Element prev = element.previousElementSibling();
             return prev != null && memoMatches(root, prev);
+        }
+
+        @Override protected int cost() {
+            return 2 + evaluator.cost();
         }
 
         @Override

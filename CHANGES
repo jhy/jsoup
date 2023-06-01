@@ -1,12 +1,18 @@
 jsoup changelog
 
 Release 1.16.2 [PENDING]
+  * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
+    are sorted by their relative execution cost, and executed in order of lower to higher cost. This speeds the
+    matching process by ensuring that simpler evaluations (such as a tag name match) are conducted prior to more
+    complex evaluations (such as an attribute regex, or a deep child scan with a :has).
+
   * Improvement: when converting jsoup Documents to W3C Documents in W3CDom, HTML documents will be placed in the
     `http://www.w3.org/1999/xhtml` namespace by default, per the HTML5 spec. This can be controlled by setting
     `W3CDom#namespaceAware(false)`.
     <https://github.com/jhy/jsoup/pull/1848>
 
-  * Improvement: speed optimized the `~` (any preceeding sibling) and `:nth-of-type` selectors.
+  * Improvement: speed optimized the Structural Evaluators by memoizing previous evaluations. Particularly the `~`
+    (any preceeding sibling) and `:nth-of-type` selectors are improved.
     <https://github.com/jhy/jsoup/issues/1956>
 
   * Improvement: tweaked the performance of the Element nextElementSibling, previousElementSibling, firstElementSibling,
