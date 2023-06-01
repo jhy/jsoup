@@ -44,6 +44,14 @@ public abstract class Evaluator {
     }
 
     /**
+     A relative evaluator cost function. During evaluation, Evaluators are sorted by ascending cost as an optimization.
+     * @return the relative cost of this Evaluator
+     */
+    protected int cost() {
+        return 5; // a nominal default cost
+    }
+
+    /**
      * Evaluator for tag name
      */
     public static final class Tag extends Evaluator {
@@ -56,6 +64,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return (element.normalName().equals(tagName));
+        }
+
+        @Override protected int cost() {
+            return 1;
         }
 
         @Override
@@ -101,11 +113,13 @@ public abstract class Evaluator {
             return (id.equals(element.id()));
         }
 
+        @Override protected int cost() {
+            return 2;
+        }
         @Override
         public String toString() {
             return String.format("#%s", id);
         }
-
     }
 
     /**
@@ -121,6 +135,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return (element.hasClass(className));
+        }
+
+        @Override protected int cost() {
+            return 6; // does whitespace scanning
         }
 
         @Override
@@ -145,11 +163,14 @@ public abstract class Evaluator {
             return element.hasAttr(key);
         }
 
+        @Override protected int cost() {
+            return 2;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s]", key);
         }
-
     }
 
     /**
@@ -173,6 +194,10 @@ public abstract class Evaluator {
             return false;
         }
 
+        @Override protected int cost() {
+            return 6;
+        }
+
         @Override
         public String toString() {
             return String.format("[^%s]", keyPrefix);
@@ -191,6 +216,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim());
+        }
+
+        @Override protected int cost() {
+            return 3;
         }
 
         @Override
@@ -213,6 +242,10 @@ public abstract class Evaluator {
             return !value.equalsIgnoreCase(element.attr(key));
         }
 
+        @Override protected int cost() {
+            return 3;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s!=%s]", key, value);
@@ -233,11 +266,14 @@ public abstract class Evaluator {
             return element.hasAttr(key) && lowerCase(element.attr(key)).startsWith(value); // value is lower case already
         }
 
+        @Override protected int cost() {
+            return 4;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s^=%s]", key, value);
         }
-
     }
 
     /**
@@ -253,11 +289,14 @@ public abstract class Evaluator {
             return element.hasAttr(key) && lowerCase(element.attr(key)).endsWith(value); // value is lower case
         }
 
+        @Override protected int cost() {
+            return 4;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s$=%s]", key, value);
         }
-
     }
 
     /**
@@ -271,6 +310,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && lowerCase(element.attr(key)).contains(value); // value is lower case
+        }
+
+        @Override protected int cost() {
+            return 6;
         }
 
         @Override
@@ -295,6 +338,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
+        }
+
+        @Override protected int cost() {
+            return 8;
         }
 
         @Override
@@ -338,6 +385,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return true;
+        }
+
+        @Override protected int cost() {
+            return 10;
         }
 
         @Override
@@ -606,6 +657,11 @@ public abstract class Evaluator {
     		final Element r = root instanceof Document?root.child(0):root;
     		return element == r;
     	}
+
+        @Override protected int cost() {
+            return 1;
+        }
+
     	@Override
     	public String toString() {
     		return ":root";
@@ -689,6 +745,10 @@ public abstract class Evaluator {
             return lowerCase(element.text()).contains(searchText);
         }
 
+        @Override protected int cost() {
+            return 10;
+        }
+
         @Override
         public String toString() {
             return String.format(":contains(%s)", searchText);
@@ -710,6 +770,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.wholeText().contains(searchText);
+        }
+
+        @Override protected int cost() {
+            return 10;
         }
 
         @Override
@@ -799,6 +863,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 8;
+        }
+
         @Override
         public String toString() {
             return String.format(":matches(%s)", pattern);
@@ -819,6 +887,10 @@ public abstract class Evaluator {
         public boolean matches(Element root, Element element) {
             Matcher m = pattern.matcher(element.ownText());
             return m.find();
+        }
+
+        @Override protected int cost() {
+            return 7;
         }
 
         @Override
@@ -844,6 +916,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 8;
+        }
+
         @Override
         public String toString() {
             return String.format(":matchesWholeText(%s)", pattern);
@@ -867,6 +943,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 7;
+        }
+
         @Override
         public String toString() {
             return String.format(":matchesWholeOwnText(%s)", pattern);
@@ -888,6 +968,10 @@ public abstract class Evaluator {
                 pel.appendChild(textNode);
             }
             return false;
+        }
+
+        @Override protected int cost() {
+            return -1; // forces first evaluation, which prepares the DOM for later evaluator matches
         }
 
         @Override
