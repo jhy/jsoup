@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import java.util.IdentityHashMap;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1142,5 +1143,25 @@ public class SelectorTest {
     @Test public void selectorExceptionNotStringFormatException() {
         Selector.SelectorParseException ex = new Selector.SelectorParseException("%&");
         assertEquals("%&", ex.getMessage());
+    }
+
+    @Test public void evaluatorMemosAreReset() {
+        Evaluator eval = QueryParser.parse("p ~ p");
+        CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
+        StructuralEvaluator.PreviousSibling prevEval = (StructuralEvaluator.PreviousSibling) andEval.evaluators.get(0);
+        IdentityHashMap<Element, IdentityHashMap<Element, Boolean>> map = prevEval.threadMemo.get();
+        assertEquals(0, map.size()); // no memo yet
+
+        Document doc1 = Jsoup.parse("<p>One<p>Two<p>Three");
+        Document doc2 = Jsoup.parse("<p>One2<p>Two2<p>Three2");
+
+        Elements s1 = doc1.select(eval);
+        assertEquals(2, s1.size());
+        assertEquals("Two", s1.first().text());
+        Elements s2 = doc2.select(eval);
+        assertEquals(2, s2.size());
+        assertEquals("Two2", s2.first().text());
+
+        assertEquals(1, map.size()); // root of doc 2
     }
 }

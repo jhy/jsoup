@@ -6,6 +6,13 @@ Release 1.16.2 [PENDING]
     `W3CDom#namespaceAware(false)`.
     <https://github.com/jhy/jsoup/pull/1848>
 
+  * Improvement: speed optimized the `~` (any preceeding sibling) and `:nth-of-type` selectors.
+    <https://github.com/jhy/jsoup/issues/1956>
+
+  * Improvement: tweaked the performance of the Element nextElementSibling, previousElementSibling, firstElementSibling,
+    lastElementSibling, firstElementChild, and lastElementChild. They now inplace filter/skip in the child-node list, vs
+    having to allocate and scan a complete Element filtered list.
+
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 

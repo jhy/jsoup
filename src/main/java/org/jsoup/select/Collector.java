@@ -24,6 +24,7 @@ public class Collector {
      @return list of matches; empty if none
      */
     public static Elements collect (Evaluator eval, Element root) {
+        eval.reset();
         Elements elements = new Elements();
         NodeTraversor.traverse((node, depth) -> {
             if (node instanceof Element) {
@@ -43,6 +44,7 @@ public class Collector {
      @return the first match; {@code null} if none
      */
     public static @Nullable Element findFirst(Evaluator eval, Element root) {
+        eval.reset();
         FirstFinder finder = new FirstFinder(eval);
         return finder.find(root, root);
     }
