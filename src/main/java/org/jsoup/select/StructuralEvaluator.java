@@ -146,17 +146,15 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            final Element parent = element.parent();
-            if (root == element || parent == null)
-                return false;
+            if (root == element) return false;
 
-            final int size = element.elementSiblingIndex();
-            for (int i = 0; i < size; i++) {
-                final Element el = parent.child(i);
-                boolean matches = memoMatches(root, el);
-                if (matches)
-                    return true;
+            Element sibling = element.firstElementSibling();
+            while (sibling != null) {
+                if (sibling == element) break;
+                if (memoMatches(root, sibling)) return true;
+                sibling = sibling.nextElementSibling();
             }
+
             return false;
         }
 
