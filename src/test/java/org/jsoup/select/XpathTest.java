@@ -69,6 +69,11 @@ public class XpathTest {
             // checks exception message within jsoup's control, rest may be JDK impl specific
             // was - Could not evaluate XPath query [//???]: javax.xml.transform.TransformerException: A location step was expected following the '/' or '//' token.
             assertTrue(e.getMessage().startsWith("Could not evaluate XPath query [//???]:"));
+
+            // check we have a root cause
+            Throwable cause = e.getCause();
+            assertNotNull(cause);
+            assertNotSame(cause, e);
         }
         assertTrue(threw);
     }

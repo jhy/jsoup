@@ -170,8 +170,12 @@ public class Selector {
             super(msg);
         }
 
-        public SelectorParseException(String msg, Object... params) {
-            super(String.format(msg, params));
+        public SelectorParseException(String msg, Object... msgArgs) {
+            super(String.format(msg, msgArgs));
+        }
+
+        public SelectorParseException(Throwable cause, String msg, Object... msgArgs) {
+            super(String.format(msg, msgArgs), cause);
         }
     }
 }

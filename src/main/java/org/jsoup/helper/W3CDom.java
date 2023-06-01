@@ -287,7 +287,8 @@ public class W3CDom {
             nodeList = (NodeList) expression.evaluate(contextNode, XPathConstants.NODESET); // love the strong typing here /s
             Validate.notNull(nodeList);
         } catch (XPathExpressionException | XPathFactoryConfigurationException e) {
-            throw new Selector.SelectorParseException("Could not evaluate XPath query [%s]: %s", xpath, e.getMessage());
+            throw new Selector.SelectorParseException(
+                e, "Could not evaluate XPath query [%s]: %s", xpath, e.getMessage());
         }
         return nodeList;
     }
