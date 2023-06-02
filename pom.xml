@@ -81,6 +81,7 @@
                 <ignore>java.util.function.Consumer</ignore>
                 <ignore>java.util.function.Supplier</ignore>
                 <ignore>java.lang.ThreadLocal</ignore>
+                <ignore>java.io.UncheckedIOException</ignore>
               </ignores>
               <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring
                Possibly OK to remove androidscents; keep for now to validate other additions are supported. -->

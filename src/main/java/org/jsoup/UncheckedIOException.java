@@ -2,6 +2,10 @@ package org.jsoup;
 
 import java.io.IOException;
 
+/**
+ * @deprecated Use {@link java.io.UncheckedIOException} instead.
+ */
+@Deprecated
 public class UncheckedIOException extends RuntimeException {
     public UncheckedIOException(IOException cause) {
         super(cause);

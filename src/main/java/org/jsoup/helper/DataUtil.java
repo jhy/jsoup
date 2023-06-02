@@ -1,6 +1,5 @@
 package org.jsoup.helper;
 
-import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -163,7 +163,7 @@ public final class DataUtil {
                     else
                         doc = parser.parseInput(defaultDecoded.toString(), baseUri);
                 } catch (UncheckedIOException e) {
-                    throw e.ioException();
+                    throw e.getCause();
                 }
 
                 // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
@@ -218,7 +218,7 @@ public final class DataUtil {
                         doc = parser.parseInput(reader, baseUri);
                     } catch (UncheckedIOException e) {
                         // io exception when parsing (not seen before because reading the stream as we go)
-                        throw e.ioException();
+                        throw e.getCause();
                     }
                     Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
                     doc.outputSettings().charset(charset);
