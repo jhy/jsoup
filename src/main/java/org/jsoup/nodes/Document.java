@@ -565,6 +565,7 @@ public class Document extends Element {
                 throw new RuntimeException(e);
             }
             clone.charset(charset.name()); // new charset and charset encoder
+            clone.coreCharset = Entities.CoreCharset.byName(charset.name());
             clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;
