@@ -162,6 +162,8 @@ public class QueryParser {
             byId();
         else if (tq.matchChomp("."))
             byClass();
+        else if (tq.toString().endsWith("|*"))
+            byNamespace();
         else if (tq.matchesWord() || tq.matches("*|"))
             byTag();
         else if (tq.matches("["))
@@ -262,6 +264,12 @@ public class QueryParser {
         }
     }
 
+    private void byNamespace() {
+        String nameSpace = normalize(tq.consumeElementSelector());
+        Validate.notEmpty(nameSpace);
+        evals.add(new Evaluator.Namespace(nameSpace.replace("|", ":")));
+    }
+
     private void byAttribute() {
         TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
@@ -312,7 +320,7 @@ public class QueryParser {
     private void indexEquals() {
         evals.add(new Evaluator.IndexEquals(consumeIndex()));
     }
-    
+
     //pseudo selectors :first-child, :last-child, :nth-child, ...
     private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
     private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");

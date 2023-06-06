@@ -99,6 +99,27 @@ public abstract class Evaluator {
     }
 
     /**
+     * Evaluator for element namespace
+     */
+    public static final class Namespace extends Evaluator {
+        private final String nameSpace;
+
+        public Namespace(String nameSpace) {
+            this.nameSpace = nameSpace;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.normalName().startsWith(nameSpace));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", nameSpace);
+        }
+    }
+
+    /**
      * Evaluator for element id
      */
     public static final class Id extends Evaluator {
