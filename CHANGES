@@ -19,6 +19,9 @@ Release 1.16.2 [PENDING]
     lastElementSibling, firstElementChild, and lastElementChild. They now inplace filter/skip in the child-node list, vs
     having to allocate and scan a complete Element filtered list.
 
+  * Improvement: optimized internal methods that previously called Element.children() to use filter/skip child-node list
+    accessors instead, reducing new Element List allocations.
+
   * Improvement: tweaked the performance of parsing :pseudo selectors.
 
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.

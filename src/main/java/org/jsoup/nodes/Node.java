@@ -456,8 +456,10 @@ public abstract class Node implements Cloneable {
     }
 
     private Element getDeepChild(Element el) {
-        while (el.childrenSize() > 0) {
-            el = el.childElementsList().get(0);
+        Element child = el.firstElementChild();
+        while (child != null) {
+            el = child;
+            child = child.firstElementChild();
         }
         return el;
     }
