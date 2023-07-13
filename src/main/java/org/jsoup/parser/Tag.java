@@ -79,6 +79,26 @@ public class Tag implements Cloneable {
     }
 
     /**
+     * Create a new tag with a new name, copying the same characteristics as the old one.
+     *
+     * @param tagName Name of tag, e.g. "p". Case insensitive.
+     * @return The tag, either defined or new generic.
+     */
+    public static Tag convertTag(Tag oldTag, String tagName) {
+        Validate.notNull(tagName);
+        Tag tag = new Tag(tagName);
+        tag.empty = oldTag.empty;
+        tag.formList = oldTag.formList;
+        tag.formSubmit = oldTag.formSubmit;
+        tag.formatAsBlock = oldTag.formatAsBlock;
+        tag.isBlock = oldTag.isBlock;
+        tag.preserveWhitespace = oldTag.preserveWhitespace;
+        tag.selfClosing = oldTag.selfClosing;
+
+        return tag;
+    }
+
+    /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
      * <p>
      * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().

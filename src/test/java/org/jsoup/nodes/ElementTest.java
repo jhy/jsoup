@@ -1017,6 +1017,39 @@ public class ElementTest {
     }
 
     @Test
+    public void tagNameChangeResetsProperties() {
+        Document doc = Jsoup.parse("<img src='foo.png'>");
+        Element img = doc.select("img").first();
+
+        assertTrue(img.tag().isInline());
+        assertTrue(img.tag().isSelfClosing());
+        assertFalse(img.isBlock());
+
+        // When we rename a tag to a new, unregistered name, confirm that its properties are reset, just as if
+        // we had created one from scratch.
+
+        Tag testTag = Tag.valueOf("jspControl:image", NodeUtils.parser(doc).settings());
+        img.tagName("jspControl:image");
+        assertEquals(testTag, img.tag());
+    }
+
+    @Test
+    public void testRenameTagPreserveProperties() {
+        Document doc = Jsoup.parse("<img src='foo.png'>");
+        Element img = doc.select("img").first();
+        assertTrue(img.tag().isInline());
+        assertTrue(img.tag().isSelfClosing());
+        assertFalse(img.isBlock());
+
+        // When we rename to an unrecognized tag, but tell the element to keep its tag properties, the previous
+        // assertions should still hold true.
+        img.renameTagPreserveProperties("jspControl:image");
+        assertTrue(img.tag().isInline());
+        assertTrue(img.tag().isSelfClosing());
+        assertFalse(img.isBlock());
+    }
+
+    @Test
     public void testHtmlContainsOuter() {
         Document doc = Jsoup.parse("<title>Check</title> <div>Hello there</div>");
         doc.outputSettings().indentAmount(0);

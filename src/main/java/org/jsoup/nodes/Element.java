@@ -178,6 +178,20 @@ public class Element extends Node {
     }
 
     /**
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @return this element, for chaining
+     * @see Elements#tagName(String)
+     */
+    public Element renameTagPreserveProperties(String tagName) {
+        Validate.notEmptyParam(tagName, "tagName");
+        tag = Tag.convertTag(tag, tagName); // maintains the case option of the original parse
+        return this;
+    }
+
+    /**
      * Get the Tag for this element.
      *
      * @return the tag object
