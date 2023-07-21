@@ -8,3 +8,8 @@ target/
 .settings/
 *Thrash*
 bin/
+
+.cifuzz-build/*
+.cifuzz-corpus/*
+.cifuzz-findings/*
+src/test/resources/org/jsoup/fuzzing/parser/*
