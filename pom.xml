@@ -88,6 +88,9 @@
                 <version>2.3.3_r2</version>
               </signature>
               <ignores>
+                <ignore>java.io.File</ignore> <!-- File#toPath() -->
+                <ignore>java.nio.file.*</ignore>
+                <ignore>java.nio.channels.SeekableByteChannel</ignore>
                 <ignore>java.util.function.*</ignore>
                 <ignore>java.util.stream.*</ignore>
                 <ignore>java.lang.ThreadLocal</ignore>
