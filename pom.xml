@@ -88,12 +88,10 @@
                 <version>2.3.3_r2</version>
               </signature>
               <ignores>
-                <ignore>java.util.function.Consumer</ignore>
-                <ignore>java.util.function.Supplier</ignore>
+                <ignore>java.util.Set</ignore> <!-- Set#stream() -->
+                <ignore>java.util.function.*</ignore>
                 <ignore>java.lang.ThreadLocal</ignore>
                 <ignore>java.io.UncheckedIOException</ignore>
-                <ignore>java.util.function.Predicate</ignore>
-                <ignore>java.util.function.UnaryOperator</ignore>
                 <ignore>java.util.stream.Stream</ignore>
                 <ignore>java.util.stream.StreamSupport</ignore>
                 <ignore>java.util.Spliterator</ignore>
