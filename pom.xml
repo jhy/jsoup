@@ -96,6 +96,7 @@
                 <ignore>java.lang.Throwable</ignore> <!-- Throwable#addSuppressed(Throwable) -->
                 <ignore>java.lang.ThreadLocal</ignore>
                 <ignore>java.io.UncheckedIOException</ignore>
+                <ignore>java.util.Comparator</ignore> <!-- Comparator.comparingInt() -->
                 <ignore>java.util.List</ignore> <!-- List#stream() -->
                 <ignore>java.util.Objects</ignore>
                 <ignore>java.util.Optional</ignore>

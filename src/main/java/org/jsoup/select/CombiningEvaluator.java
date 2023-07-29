@@ -7,15 +7,15 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Base combining (and, or) evaluator.
  */
 public abstract class CombiningEvaluator extends Evaluator {
     final ArrayList<Evaluator> evaluators; // maintain original order so that #toString() is sensible
-    final ArrayList<Evaluator> sortedEvaluators; // cost ascending order
+    final List<Evaluator> sortedEvaluators; // cost ascending order
     int num = 0;
     int cost = 0;
 
@@ -62,11 +62,8 @@ public abstract class CombiningEvaluator extends Evaluator {
         }
         sortedEvaluators.clear();
         sortedEvaluators.addAll(evaluators);
-        Collections.sort(sortedEvaluators, costComparator);
+        sortedEvaluators.sort(Comparator.comparingInt(Evaluator::cost));
     }
-
-    private static final Comparator<Evaluator> costComparator = (o1, o2) -> o1.cost() - o2.cost();
-    // ^ comparingInt, sortedEvaluators.sort not available in targeted version
 
     public static final class And extends CombiningEvaluator {
         And(Collection<Evaluator> evaluators) {
