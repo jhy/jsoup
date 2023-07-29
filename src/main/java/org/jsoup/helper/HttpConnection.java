@@ -5,6 +5,7 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ControllableInputStream;
+import org.jsoup.internal.Functions;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -1109,13 +1111,8 @@ public class HttpConnection implements Connection {
                 if (key == null || val == null)
                     continue; // skip http1.1 line
 
-                if (headers.containsKey(key))
-                    headers.get(key).add(val);
-                else {
-                    final ArrayList<String> vals = new ArrayList<>();
-                    vals.add(val);
-                    headers.put(key, vals);
-                }
+                final List<String> vals = headers.computeIfAbsent(key, Functions.listFunction());
+                vals.add(val);
             }
             return headers;
         }

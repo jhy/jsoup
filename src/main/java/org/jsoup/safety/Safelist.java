@@ -6,6 +6,7 @@ package org.jsoup.safety;
  */
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Functions;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -304,12 +305,8 @@ public class Safelist {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
         }
-        if (this.attributes.containsKey(tagName)) {
-            Set<AttributeKey> currentSet = this.attributes.get(tagName);
-            currentSet.addAll(attributeSet);
-        } else {
-            this.attributes.put(tagName, attributeSet);
-        }
+        Set<AttributeKey> currentSet = this.attributes.computeIfAbsent(tagName, Functions.setFunction());
+        currentSet.addAll(attributeSet);
         return this;
     }
 
@@ -382,13 +379,8 @@ public class Safelist {
         AttributeKey attrKey = AttributeKey.valueOf(attribute);
         AttributeValue attrVal = AttributeValue.valueOf(value);
 
-        if (enforcedAttributes.containsKey(tagName)) {
-            enforcedAttributes.get(tagName).put(attrKey, attrVal);
-        } else {
-            Map<AttributeKey, AttributeValue> attrMap = new HashMap<>();
-            attrMap.put(attrKey, attrVal);
-            enforcedAttributes.put(tagName, attrMap);
-        }
+        Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.computeIfAbsent(tagName, Functions.mapFunction());
+        attrMap.put(attrKey, attrVal);
         return this;
     }
 
@@ -458,21 +450,9 @@ public class Safelist {
 
         TagName tagName = TagName.valueOf(tag);
         AttributeKey attrKey = AttributeKey.valueOf(attribute);
-        Map<AttributeKey, Set<Protocol>> attrMap;
-        Set<Protocol> protSet;
+        Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.computeIfAbsent(tagName, Functions.mapFunction());
+        Set<Protocol> protSet = attrMap.computeIfAbsent(attrKey, Functions.setFunction());
 
-        if (this.protocols.containsKey(tagName)) {
-            attrMap = this.protocols.get(tagName);
-        } else {
-            attrMap = new HashMap<>();
-            this.protocols.put(tagName, attrMap);
-        }
-        if (attrMap.containsKey(attrKey)) {
-            protSet = attrMap.get(attrKey);
-        } else {
-            protSet = new HashSet<>();
-            attrMap.put(attrKey, protSet);
-        }
         for (String protocol : protocols) {
             Validate.notEmpty(protocol);
             Protocol prot = Protocol.valueOf(protocol);
