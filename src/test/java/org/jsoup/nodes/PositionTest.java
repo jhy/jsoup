@@ -203,4 +203,20 @@ class PositionTest {
         }
     }
 
+    @Test void tracksClosingHeadingTags() {
+        // https://github.com/jhy/jsoup/issues/1987
+        String html = "<h1>One</h1><h2>Two</h2><h10>Ten</h10>";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        Elements els = doc.body().children();
+        for (Element el : els) {
+            assertTrue(el.sourceRange().isTracked());
+            assertTrue(el.endSourceRange().isTracked());
+        }
+
+        Element h2 = doc.expectFirst("h2");
+        assertEquals("1,13:12-1,17:16", h2.sourceRange().toString());
+        assertEquals("1,20:19-1,25:24", h2.endSourceRange().toString());
+    }
+
 }

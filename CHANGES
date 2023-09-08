@@ -37,6 +37,9 @@ Release 1.16.2 [PENDING]
     thread after interrupting it.
     <https://github.com/jhy/jsoup/issues/1991>
 
+  * Bugfix: when tracking HTML source positions, the closing tags for H1...H6 elements were not tracked correctly.
+    <https://github.com/jhy/jsoup/issues/1987>
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.
