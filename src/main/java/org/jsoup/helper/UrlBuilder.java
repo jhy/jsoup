@@ -38,24 +38,20 @@ final class UrlBuilder {
                 u.getUserInfo(),
                 IDN.toASCII(decodePart(u.getHost())), // puny-code
                 u.getPort(),
-                decodePart(u.getPath()),
-                null, null // query and fragment appended later so as not to encode
+                null, null, null // path, query and fragment appended later so as not to encode
             );
 
-            String normUrl = uri.toASCIIString();
-            if (q != null || u.getRef() != null) {
-                StringBuilder sb = StringUtil.borrowBuilder().append(normUrl);
-                if (q != null) {
-                    sb.append('?');
-                    appendToAscii(StringUtil.releaseBuilder(q), true, sb);
-                }
-                if (u.getRef() != null) {
-                    sb.append('#');
-                    appendToAscii(u.getRef(), false, sb);
-                }
-                normUrl = StringUtil.releaseBuilder(sb);
+            StringBuilder normUrl = StringUtil.borrowBuilder().append(uri.toASCIIString());
+            appendToAscii(u.getPath(), false, normUrl);
+            if (q != null) {
+                normUrl.append('?');
+                appendToAscii(StringUtil.releaseBuilder(q), true, normUrl);
             }
-            u =  new URL(normUrl);
+            if (u.getRef() != null) {
+                normUrl.append('#');
+                appendToAscii(u.getRef(), false, normUrl);
+            }
+            u = new URL(StringUtil.releaseBuilder(normUrl));
             return u;
         } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             // we assert here so that any incomplete normalization issues can be caught in devel. but in practise,
