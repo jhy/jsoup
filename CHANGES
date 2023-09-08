@@ -24,6 +24,10 @@ Release 1.16.2 [PENDING]
 
   * Improvement: tweaked the performance of parsing :pseudo selectors.
 
+  * Improvement: when using the `:empty` pseudo-selector, blank textnodes are now considered empty. Previously,
+    an element containing any whitespace was not considered empty.
+    <https://github.com/jhy/jsoup/issues/1976>
+
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 

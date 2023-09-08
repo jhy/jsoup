@@ -710,7 +710,10 @@ public abstract class Evaluator {
 		public boolean matches(Element root, Element element) {
         	List<Node> family = element.childNodes();
             for (Node n : family) {
-                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType)) return false;
+                if (n instanceof TextNode)
+                    return ((TextNode)n).isBlank();
+                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
+                    return false;
             }
         	return true;
 		}

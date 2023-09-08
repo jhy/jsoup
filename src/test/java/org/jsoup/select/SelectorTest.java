@@ -1164,4 +1164,21 @@ public class SelectorTest {
 
         assertEquals(1, map.size()); // root of doc 2
     }
+
+    @Test public void blankTextNodesAreConsideredEmpty() {
+        // https://github.com/jhy/jsoup/issues/1976
+        String html = "<li id=1>\n </li><li id=2></li><li id=3> </li><li id=4>One</li><li id=5><span></li>";
+        Document doc = Jsoup.parse(html);
+        Elements empty = doc.select("li:empty");
+        Elements notEmpty = doc.select("li:not(:empty)");
+
+        assertEquals(3, empty.size());
+        assertEquals(2, notEmpty.size());
+
+        assertEquals("1", empty.get(0).id());
+        assertEquals("2", empty.get(1).id());
+        assertEquals("3", empty.get(2).id());
+        assertEquals("4", notEmpty.get(0).id());
+        assertEquals("5", notEmpty.get(1).id());
+    }
 }
