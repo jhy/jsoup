@@ -3,6 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.Connection.Method;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
@@ -252,6 +253,31 @@ public class ConnectTest {
         assertEquals("PUT", ihVal("Method", doc));
         assertEquals("gzip", ihVal("Accept-Encoding", doc));
         assertEquals("auth=token", ihVal("Cookie", doc));
+    }
+
+    @Test
+    public void doesDeleteWithBody() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1972
+        String body = "some body";
+        Connection.Response res = Jsoup.connect(echoUrl)
+            .requestBody(body)
+            .method(Method.DELETE)
+            .execute();
+
+        Document doc = res.parse();
+        assertEquals("DELETE", ihVal("Method", doc));
+        assertEquals(body, ihVal("Post Data", doc));
+    }
+
+    @Test
+    public void doesDeleteWithoutBody() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl)
+            .method(Method.DELETE)
+            .execute();
+
+        Document doc = res.parse();
+        assertEquals("DELETE", ihVal("Method", doc));
+        assertEquals(null, ihVal("Post Data", doc));
     }
 
     /**

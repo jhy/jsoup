@@ -24,4 +24,9 @@ public abstract class BaseServlet extends HttpServlet {
     protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         super.doPut(req, res);
     }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        super.doPut(req, res);
+    }
 }

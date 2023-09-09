@@ -44,6 +44,9 @@ Release 1.16.2 [PENDING]
   * Bugfix: when tracking HTML source positions, the closing tags for H1...H6 elements were not tracked correctly.
     <https://github.com/jhy/jsoup/issues/1987>
 
+  * Bugfix: in Jsoup.connect(), a DELETE method request did not support a request body.
+    <https://github.com/jhy/jsoup/issues/1972>
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.
