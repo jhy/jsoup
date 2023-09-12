@@ -22,6 +22,9 @@ Release 1.16.2 [PENDING]
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 
+  * Bugfix: if Document.OutputSettings was cloned from a clone, an NPE would be thrown when used.
+    <https://github.com/jhy/jsoup/pull/1964>
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.
