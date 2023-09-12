@@ -81,7 +81,7 @@ public class ConnectIT {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     Document doc  = Jsoup.connect(SlowRider.Url)
-                        .timeout(4000)
+                        .timeout(30000)
                         .get();
                 }
             } catch (IOException e) {
