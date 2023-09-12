@@ -424,20 +424,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
     // elnames is sorted, comes from Constants
     void popStackToClose(String... elNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element next = stack.get(pos);
+            Element el = stack.get(pos);
             stack.remove(pos);
-            if (inSorted(next.normalName(), elNames))
+            if (inSorted(el.normalName(), elNames)) {
+                if (currentToken instanceof Token.EndTag)
+                    onNodeClosed(el, currentToken);
                 break;
-        }
-    }
-
-    void popStackToBefore(String elName) {
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element next = stack.get(pos);
-            if (next.normalName().equals(elName)) {
-                break;
-            } else {
-                stack.remove(pos);
             }
         }
     }

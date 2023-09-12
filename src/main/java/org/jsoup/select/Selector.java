@@ -4,7 +4,6 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 
@@ -17,8 +16,8 @@ import java.util.IdentityHashMap;
  * elements, attributes, and attribute values).
  * </p>
  * <p>
- * The universal selector (*) is implicit when no element selector is supplied (i.e. {@code *.header} and {@code .header}
- * is equivalent).
+ * The universal selector {@code *} is implicit when no element selector is supplied (i.e. {@code .header} and {@code *.header}
+ * are equivalent).
  * </p>
  * <style>table.syntax tr td {vertical-align: top; padding-right: 2em; padding-top:0.5em; padding-bottom:0.5em; } table.syntax tr:hover{background-color: #eee;} table.syntax {border-spacing: 0px 0px;}</style>
  * <table summary="" class="syntax"><colgroup><col span="1" style="width: 20%;"><col span="1" style="width: 40%;"><col span="1" style="width: 40%;"></colgroup>

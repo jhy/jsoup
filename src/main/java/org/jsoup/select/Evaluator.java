@@ -464,7 +464,7 @@ public abstract class Evaluator {
 		@Override
 		public boolean matches(Element root, Element element) {
 			final Element p = element.parent();
-			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.childrenSize()-1;
+			return p != null && !(p instanceof Document) && element == p.lastElementChild();
 		}
 
 		@Override
@@ -617,9 +617,11 @@ public abstract class Evaluator {
                 return 0;
 
             int pos = 0;
-            int size = parent.childrenSize();
-            for (int i = element.elementSiblingIndex(); i < size; i++) {
-                if (parent.child(i).normalName().equals(element.normalName())) pos++;
+            Element next = element;
+            while (next != null) {
+                if (next.normalName().equals(element.normalName()))
+                    pos++;
+                next = next.nextElementSibling();
             }
             return pos;
         }
@@ -637,7 +639,7 @@ public abstract class Evaluator {
     	@Override
     	public boolean matches(Element root, Element element) {
     		final Element p = element.parent();
-    		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
+    		return p != null && !(p instanceof Document) && element == p.firstElementChild();
     	}
 
     	@Override
@@ -654,7 +656,7 @@ public abstract class Evaluator {
     public static final class IsRoot extends Evaluator {
     	@Override
     	public boolean matches(Element root, Element element) {
-    		final Element r = root instanceof Document?root.child(0):root;
+    		final Element r = root instanceof Document ? root.firstElementChild() : root;
     		return element == r;
     	}
 
@@ -687,12 +689,13 @@ public abstract class Evaluator {
 			if (p==null || p instanceof Document) return false;
 
 			int pos = 0;
-            int size = p.childrenSize();
-            for (int i = 0; i < size; i++) {
-                if (p.child(i).normalName().equals(element.normalName()))
+            Element next = p.firstElementChild();
+            while (next != null) {
+                if (next.normalName().equals(element.normalName()))
                     pos++;
                 if (pos > 1)
                     break;
+                next = next.nextElementSibling();
             }
         	return pos == 1;
 		}
@@ -707,7 +710,10 @@ public abstract class Evaluator {
 		public boolean matches(Element root, Element element) {
         	List<Node> family = element.childNodes();
             for (Node n : family) {
-                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType)) return false;
+                if (n instanceof TextNode)
+                    return ((TextNode)n).isBlank();
+                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
+                    return false;
             }
         	return true;
 		}

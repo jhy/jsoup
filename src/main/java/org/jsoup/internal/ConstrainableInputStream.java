@@ -49,8 +49,8 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         if (interrupted || capped && remaining <= 0)
             return -1;
-        if (Thread.interrupted()) {
-            // interrupted latches, because parse() may call twice (and we still want the thread interupt to clear)
+        if (Thread.currentThread().isInterrupted()) {
+            // interrupted latches, because parse() may call twice
             interrupted = true;
             return -1;
         }

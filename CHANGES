@@ -19,11 +19,36 @@ Release 1.16.2 [PENDING]
     lastElementSibling, firstElementChild, and lastElementChild. They now inplace filter/skip in the child-node list, vs
     having to allocate and scan a complete Element filtered list.
 
+  * Improvement: optimized internal methods that previously called Element.children() to use filter/skip child-node list
+    accessors instead, reducing new Element List allocations.
+
+  * Improvement: tweaked the performance of parsing :pseudo selectors.
+
+  * Improvement: when using the `:empty` pseudo-selector, blank textnodes are now considered empty. Previously,
+    an element containing any whitespace was not considered empty.
+    <https://github.com/jhy/jsoup/issues/1976>
+
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 
   * Bugfix: if Document.OutputSettings was cloned from a clone, an NPE would be thrown when used.
     <https://github.com/jhy/jsoup/pull/1964>
+
+  * Bugfix: in Jsoup.connect(url), URL paths containing a %2B were incorrectly recoded to a '+', or a '+' was recoded
+    to a ' '. Fixed by reverting to the previous behavior of not encoding supplied paths, other than normalizing to
+    ASCII.
+    <https://github.com/jhy/jsoup/issues/1952>
+
+  * Bugfix: in Jsoup.connect(url), the ConstrainableInputStream would clear Thread interrupts when reading the body.
+    This precluded callers from spawning a thread, running a number of requests for a length of time, then joining that
+    thread after interrupting it.
+    <https://github.com/jhy/jsoup/issues/1991>
+
+  * Bugfix: when tracking HTML source positions, the closing tags for H1...H6 elements were not tracked correctly.
+    <https://github.com/jhy/jsoup/issues/1987>
+
+  * Bugfix: in Jsoup.connect(), a DELETE method request did not support a request body.
+    <https://github.com/jhy/jsoup/issues/1972>
 
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a

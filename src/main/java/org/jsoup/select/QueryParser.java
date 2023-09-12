@@ -15,8 +15,8 @@ import static org.jsoup.internal.Normalizer.normalize;
  * Parses a CSS selector into an Evaluator tree.
  */
 public class QueryParser {
-    private final static char[] combinators = {',', '>', '+', '~', ' '};
-    private static final String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
+    private final static char[] Combinators = {',', '>', '+', '~', ' '};
+    private final static String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
     private final TokenQueue tq;
     private final String query;
@@ -55,23 +55,23 @@ public class QueryParser {
     Evaluator parse() {
         tq.consumeWhitespace();
 
-        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+        if (tq.matchesAny(Combinators)) { // if starts with a combinator, use root as elements
             evals.add(new StructuralEvaluator.Root());
             combinator(tq.consume());
         } else {
-            findElements();
+            evals.add(consumeEvaluator());
         }
 
         while (!tq.isEmpty()) {
             // hierarchy and extras
             boolean seenWhite = tq.consumeWhitespace();
 
-            if (tq.matchesAny(combinators)) {
+            if (tq.matchesAny(Combinators)) {
                 combinator(tq.consume());
             } else if (seenWhite) {
                 combinator(' ');
             } else { // E.class, E#id, E[attr] etc. AND
-                findElements(); // take next el, #. etc off queue
+                evals.add(consumeEvaluator()); // take next el, #. etc off queue
             }
         }
 
@@ -146,7 +146,7 @@ public class QueryParser {
                 sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
             else if (tq.matches("["))
                 sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
-            else if (tq.matchesAny(combinators))
+            else if (tq.matchesAny(Combinators))
                 if (sq.length() > 0)
                     break;
                 else
@@ -157,175 +157,166 @@ public class QueryParser {
         return StringUtil.releaseBuilder(sq);
     }
 
-    private void findElements() {
+    private Evaluator consumeEvaluator() {
         if (tq.matchChomp("#"))
-            byId();
+            return byId();
         else if (tq.matchChomp("."))
-            byClass();
+            return byClass();
         else if (tq.matchesWord() || tq.matches("*|"))
-            byTag();
+            return byTag();
         else if (tq.matches("["))
-            byAttribute();
+            return byAttribute();
         else if (tq.matchChomp("*"))
-            allElements();
-        else if (tq.matchChomp(":lt("))
-            indexLessThan();
-        else if (tq.matchChomp(":gt("))
-            indexGreaterThan();
-        else if (tq.matchChomp(":eq("))
-            indexEquals();
-        else if (tq.matches(":has("))
-            has();
-        else if (tq.matches(":contains("))
-            contains(false);
-        else if (tq.matches(":containsOwn("))
-            contains(true);
-        else if (tq.matches(":containsWholeText("))
-            containsWholeText(false);
-        else if (tq.matches(":containsWholeOwnText("))
-            containsWholeText(true);
-        else if (tq.matches(":containsData("))
-            containsData();
-        else if (tq.matches(":matches("))
-            matches(false);
-        else if (tq.matches(":matchesOwn("))
-            matches(true);
-        else if (tq.matches(":matchesWholeText("))
-            matchesWholeText(false);
-        else if (tq.matches(":matchesWholeOwnText("))
-            matchesWholeText(true);
-        else if (tq.matches(":not("))
-            not();
-		else if (tq.matchChomp(":nth-child("))
-        	cssNthChild(false, false);
-        else if (tq.matchChomp(":nth-last-child("))
-        	cssNthChild(true, false);
-        else if (tq.matchChomp(":nth-of-type("))
-        	cssNthChild(false, true);
-        else if (tq.matchChomp(":nth-last-of-type("))
-        	cssNthChild(true, true);
-        else if (tq.matchChomp(":first-child"))
-        	evals.add(new Evaluator.IsFirstChild());
-        else if (tq.matchChomp(":last-child"))
-        	evals.add(new Evaluator.IsLastChild());
-        else if (tq.matchChomp(":first-of-type"))
-        	evals.add(new Evaluator.IsFirstOfType());
-        else if (tq.matchChomp(":last-of-type"))
-        	evals.add(new Evaluator.IsLastOfType());
-        else if (tq.matchChomp(":only-child"))
-        	evals.add(new Evaluator.IsOnlyChild());
-        else if (tq.matchChomp(":only-of-type"))
-        	evals.add(new Evaluator.IsOnlyOfType());
-        else if (tq.matchChomp(":empty"))
-        	evals.add(new Evaluator.IsEmpty());
-        else if (tq.matchChomp(":root"))
-        	evals.add(new Evaluator.IsRoot());
-        else if (tq.matchChomp(":matchText"))
-            evals.add(new Evaluator.MatchText());
+            return new Evaluator.AllElements();
+        else if (tq.matchChomp(":"))
+            return parsePseudoSelector();
 		else // unhandled
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
-
     }
 
-    private void byId() {
+    private Evaluator parsePseudoSelector() {
+        final String pseudo = tq.consumeCssIdentifier();
+        switch (pseudo) {
+            case "lt":
+                return new Evaluator.IndexLessThan(consumeIndex());
+            case "gt":
+                return new Evaluator.IndexGreaterThan(consumeIndex());
+            case "eq":
+                return new Evaluator.IndexEquals(consumeIndex());
+            case "has":
+                return has();
+            case "contains":
+                return contains(false);
+            case "containsOwn":
+                return contains(true);
+            case "containsWholeText":
+                return containsWholeText(false);
+            case "containsWholeOwnText":
+                return containsWholeText(true);
+            case "containsData":
+                return containsData();
+            case "matches":
+                return matches(false);
+            case "matchesOwn":
+                return matches(true);
+            case "matchesWholeText":
+                return matchesWholeText(false);
+            case "matchesWholeOwnText":
+                return matchesWholeText(true);
+            case "not":
+                return not();
+            case "nth-child":
+                return cssNthChild(false, false);
+            case "nth-last-child":
+                return cssNthChild(true, false);
+            case "nth-of-type":
+                return cssNthChild(false, true);
+            case "nth-last-of-type":
+                return cssNthChild(true, true);
+            case "first-child":
+                return new Evaluator.IsFirstChild();
+            case "last-child":
+                return new Evaluator.IsLastChild();
+            case "first-of-type":
+                return new Evaluator.IsFirstOfType();
+            case "last-of-type":
+                return new Evaluator.IsLastOfType();
+            case "only-child":
+                return new Evaluator.IsOnlyChild();
+            case "only-of-type":
+                return new Evaluator.IsOnlyOfType();
+            case "empty":
+                return new Evaluator.IsEmpty();
+            case "root":
+                return new Evaluator.IsRoot();
+            case "matchText":
+                return new Evaluator.MatchText();
+            default:
+                throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+        }
+    }
+
+    private Evaluator byId() {
         String id = tq.consumeCssIdentifier();
         Validate.notEmpty(id);
-        evals.add(new Evaluator.Id(id));
+        return new Evaluator.Id(id);
     }
 
-    private void byClass() {
+    private Evaluator byClass() {
         String className = tq.consumeCssIdentifier();
         Validate.notEmpty(className);
-        evals.add(new Evaluator.Class(className.trim()));
+        return new Evaluator.Class(className.trim());
     }
 
-    private void byTag() {
+    private Evaluator byTag() {
         // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
         // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
         // consistency - both the selector and the element tag
         String tagName = normalize(tq.consumeElementSelector());
         Validate.notEmpty(tagName);
+        final Evaluator eval;
 
         // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
         if (tagName.startsWith("*|")) {
             String plainTag = tagName.substring(2); // strip *|
-            evals.add(new CombiningEvaluator.Or(
+            eval = new CombiningEvaluator.Or(
                 new Evaluator.Tag(plainTag),
-                new Evaluator.TagEndsWith(tagName.replace("*|", ":")))
+                new Evaluator.TagEndsWith(tagName.replace("*|", ":"))
             );
         } else {
             // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
             if (tagName.contains("|"))
                 tagName = tagName.replace("|", ":");
 
-            evals.add(new Evaluator.Tag(tagName));
+            eval = new Evaluator.Tag(tagName);
         }
+        return eval;
     }
 
-    private void byAttribute() {
+    private Evaluator byAttribute() {
         TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key);
         cq.consumeWhitespace();
+        final Evaluator eval;
 
         if (cq.isEmpty()) {
             if (key.startsWith("^"))
-                evals.add(new Evaluator.AttributeStarting(key.substring(1)));
+                eval = new Evaluator.AttributeStarting(key.substring(1));
             else
-                evals.add(new Evaluator.Attribute(key));
+                eval = new Evaluator.Attribute(key);
         } else {
             if (cq.matchChomp("="))
-                evals.add(new Evaluator.AttributeWithValue(key, cq.remainder()));
-
+                eval = new Evaluator.AttributeWithValue(key, cq.remainder());
             else if (cq.matchChomp("!="))
-                evals.add(new Evaluator.AttributeWithValueNot(key, cq.remainder()));
-
+                eval = new Evaluator.AttributeWithValueNot(key, cq.remainder());
             else if (cq.matchChomp("^="))
-                evals.add(new Evaluator.AttributeWithValueStarting(key, cq.remainder()));
-
+                eval = new Evaluator.AttributeWithValueStarting(key, cq.remainder());
             else if (cq.matchChomp("$="))
-                evals.add(new Evaluator.AttributeWithValueEnding(key, cq.remainder()));
-
+                eval = new Evaluator.AttributeWithValueEnding(key, cq.remainder());
             else if (cq.matchChomp("*="))
-                evals.add(new Evaluator.AttributeWithValueContaining(key, cq.remainder()));
-
+                eval = new Evaluator.AttributeWithValueContaining(key, cq.remainder());
             else if (cq.matchChomp("~="))
-                evals.add(new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())));
+                eval = new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder()));
             else
                 throw new Selector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
+        return eval;
     }
 
-    private void allElements() {
-        evals.add(new Evaluator.AllElements());
-    }
-
-    // pseudo selectors :lt, :gt, :eq
-    private void indexLessThan() {
-        evals.add(new Evaluator.IndexLessThan(consumeIndex()));
-    }
-
-    private void indexGreaterThan() {
-        evals.add(new Evaluator.IndexGreaterThan(consumeIndex()));
-    }
-
-    private void indexEquals() {
-        evals.add(new Evaluator.IndexEquals(consumeIndex()));
-    }
-    
     //pseudo selectors :first-child, :last-child, :nth-child, ...
     private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
     private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
 
-	private void cssNthChild(boolean backwards, boolean ofType) {
-		String argS = normalize(tq.chompTo(")"));
-		Matcher mAB = NTH_AB.matcher(argS);
-		Matcher mB = NTH_B.matcher(argS);
+	private Evaluator cssNthChild(boolean backwards, boolean ofType) {
+		String arg = normalize(consumeParens());
+		Matcher mAB = NTH_AB.matcher(arg);
+		Matcher mB = NTH_B.matcher(arg);
 		final int a, b;
-		if ("odd".equals(argS)) {
+		if ("odd".equals(arg)) {
 			a = 2;
 			b = 1;
-		} else if ("even".equals(argS)) {
+		} else if ("even".equals(arg)) {
 			a = 2;
 			b = 0;
 		} else if (mAB.matches()) {
@@ -335,101 +326,99 @@ public class QueryParser {
 			a = 0;
 			b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
 		} else {
-			throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS);
+			throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", arg);
 		}
+
+        final Evaluator eval;
 		if (ofType)
 			if (backwards)
-				evals.add(new Evaluator.IsNthLastOfType(a, b));
+				eval = new Evaluator.IsNthLastOfType(a, b);
 			else
-				evals.add(new Evaluator.IsNthOfType(a, b));
+				eval = new Evaluator.IsNthOfType(a, b);
 		else {
 			if (backwards)
-				evals.add(new Evaluator.IsNthLastChild(a, b));
+				eval = (new Evaluator.IsNthLastChild(a, b));
 			else
-				evals.add(new Evaluator.IsNthChild(a, b));
+				eval = new Evaluator.IsNthChild(a, b);
 		}
+        return eval;
 	}
 
+    private String consumeParens() {
+        return tq.chompBalanced('(', ')');
+    }
+
     private int consumeIndex() {
-        String indexS = tq.chompTo(")").trim();
-        Validate.isTrue(StringUtil.isNumeric(indexS), "Index must be numeric");
-        return Integer.parseInt(indexS);
+        String index = consumeParens().trim();
+        Validate.isTrue(StringUtil.isNumeric(index), "Index must be numeric");
+        return Integer.parseInt(index);
     }
 
     // pseudo selector :has(el)
-    private void has() {
-        tq.consume(":has");
-        String subQuery = tq.chompBalanced('(', ')');
+    private Evaluator has() {
+        String subQuery = consumeParens();
         Validate.notEmpty(subQuery, ":has(selector) sub-select must not be empty");
-        evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+        return new StructuralEvaluator.Has(parse(subQuery));
     }
 
     // pseudo selector :contains(text), containsOwn(text)
-    private void contains(boolean own) {
+    private Evaluator contains(boolean own) {
         String query = own ? ":containsOwn" : ":contains";
-        tq.consume(query);
-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+        String searchText = TokenQueue.unescape(consumeParens());
         Validate.notEmpty(searchText, query + "(text) query must not be empty");
-        evals.add(own
+        return own
             ? new Evaluator.ContainsOwnText(searchText)
-            : new Evaluator.ContainsText(searchText));
+            : new Evaluator.ContainsText(searchText);
     }
 
-    private void containsWholeText(boolean own) {
+    private Evaluator containsWholeText(boolean own) {
         String query = own ? ":containsWholeOwnText" : ":containsWholeText";
-        tq.consume(query);
-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+        String searchText = TokenQueue.unescape(consumeParens());
         Validate.notEmpty(searchText, query + "(text) query must not be empty");
-        evals.add(own
+        return own
             ? new Evaluator.ContainsWholeOwnText(searchText)
-            : new Evaluator.ContainsWholeText(searchText));
+            : new Evaluator.ContainsWholeText(searchText);
     }
 
     // pseudo selector :containsData(data)
-    private void containsData() {
-        tq.consume(":containsData");
-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+    private Evaluator containsData() {
+        String searchText = TokenQueue.unescape(consumeParens());
         Validate.notEmpty(searchText, ":containsData(text) query must not be empty");
-        evals.add(new Evaluator.ContainsData(searchText));
+        return new Evaluator.ContainsData(searchText);
     }
 
     // :matches(regex), matchesOwn(regex)
-    private void matches(boolean own) {
+    private Evaluator matches(boolean own) {
         String query = own ? ":matchesOwn" : ":matches";
-        tq.consume(query);
-        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        String regex = consumeParens(); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, query + "(regex) query must not be empty");
 
-        evals.add(own
+        return own
             ? new Evaluator.MatchesOwn(Pattern.compile(regex))
-            : new Evaluator.Matches(Pattern.compile(regex)));
+            : new Evaluator.Matches(Pattern.compile(regex));
     }
 
     // :matches(regex), matchesOwn(regex)
-    private void matchesWholeText(boolean own) {
+    private Evaluator matchesWholeText(boolean own) {
         String query = own ? ":matchesWholeOwnText" : ":matchesWholeText";
-        tq.consume(query);
-        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        String regex = consumeParens(); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, query + "(regex) query must not be empty");
 
-        evals.add(own
+        return own
             ? new Evaluator.MatchesWholeOwnText(Pattern.compile(regex))
-            : new Evaluator.MatchesWholeText(Pattern.compile(regex)));
+            : new Evaluator.MatchesWholeText(Pattern.compile(regex));
     }
 
     // :not(selector)
-    private void not() {
-        tq.consume(":not");
-        String subQuery = tq.chompBalanced('(', ')');
+    private Evaluator not() {
+        String subQuery = consumeParens();
         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
 
-        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+        return new StructuralEvaluator.Not(parse(subQuery));
     }
 
     @Override
     public String toString() {
         return query;
     }
-
-
 }

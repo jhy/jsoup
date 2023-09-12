@@ -255,23 +255,45 @@ public class HttpConnectionTest {
     }
 
     @Test public void encodeUrl() throws MalformedURLException {
-        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag");
+        URL url1 = new URL("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag");
         URL url2 = new UrlBuilder(url1).build();
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag", url2.toExternalForm());
     }
 
     @Test void encodedUrlDoesntDoubleEncode() throws MalformedURLException {
-        URL url1 = new URL("https://test.com/foo bar/[One]?q=white space#frag ment");
+        URL url1 = new URL("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment");
         URL url2 = new UrlBuilder(url1).build();
         URL url3 = new UrlBuilder(url2).build();
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment", url2.toExternalForm());
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment", url3.toExternalForm());
     }
 
+    @Test void urlPathIsPreservedDoesntDoubleEncode() throws MalformedURLException {
+        URL url1 = new URL("https://test.com/[foo] bar+/%5BOne%5D?q=white space#frag ment");
+        URL url2 = new UrlBuilder(url1).build();
+        URL url3 = new UrlBuilder(url2).build();
+        assertEquals("https://test.com/[foo]%20bar+/%5BOne%5D?q=white+space#frag%20ment", url2.toExternalForm());
+        assertEquals("https://test.com/[foo]%20bar+/%5BOne%5D?q=white+space#frag%20ment", url3.toExternalForm());
+    }
+
     @Test void connectToEncodedUrl() {
         Connection connect = Jsoup.connect("https://example.com/a%20b%20c?query+string");
         URL url = connect.request().url();
         assertEquals("https://example.com/a%20b%20c?query+string", url.toExternalForm());
+    }
+
+    @Test void encodedUrlPathIsPreserved() {
+        // https://github.com/jhy/jsoup/issues/1952
+        Connection connect = Jsoup.connect("https://example.com/%2B32");
+        URL url = connect.request().url();
+        assertEquals("https://example.com/%2B32", url.toExternalForm());
+    }
+
+    @Test void urlPathPlusIsPreserved() {
+        // https://github.com/jhy/jsoup/issues/1952
+        Connection connect = Jsoup.connect("https://example.com/123+456");
+        URL url = connect.request().url();
+        assertEquals("https://example.com/123+456", url.toExternalForm());
     }
 
     @Test public void noUrlThrowsValidationError() throws IOException {

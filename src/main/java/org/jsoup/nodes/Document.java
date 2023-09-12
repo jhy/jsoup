@@ -102,9 +102,11 @@ public class Document extends Element {
      @return the root HTML element.
      */
     private Element htmlEl() {
-        for (Element el: childElementsList()) {
+        Element el = firstElementChild();
+        while (el != null) {
             if (el.normalName().equals("html"))
                 return el;
+            el = el.nextElementSibling();
         }
         return appendElement("html");
     }
@@ -118,10 +120,12 @@ public class Document extends Element {
      @return {@code head} element.
      */
     public Element head() {
-        Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
+        while (el != null) {
             if (el.normalName().equals("head"))
                 return el;
+            el = el.nextElementSibling();
         }
         return html.prependElement("head");
     }
@@ -136,10 +140,12 @@ public class Document extends Element {
      had no contents, or the outermost {@code <frameset> element} for frameset documents.
      */
     public Element body() {
-        Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
+        while (el != null) {
             if ("body".equals(el.normalName()) || "frameset".equals(el.normalName()))
                 return el;
+            el = el.nextElementSibling();
         }
         return html.appendElement("body");
     }

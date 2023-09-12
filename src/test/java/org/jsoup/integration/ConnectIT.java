@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -70,7 +71,29 @@ public class ConnectIT {
         assertTrue(runner.isInterrupted());
         runner.join();
 
-        assertEquals(0, body[0].length()); // doesn't ready a failed doc
+        assertEquals(0, body[0].length()); // doesn't read a failed doc
+    }
+
+    @Test public void canInterruptThenJoinASpawnedThread() throws InterruptedException {
+        // https://github.com/jhy/jsoup/issues/1991
+        AtomicBoolean ioException = new AtomicBoolean();
+        Thread runner = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    Document doc  = Jsoup.connect(SlowRider.Url)
+                        .timeout(4000)
+                        .get();
+                }
+            } catch (IOException e) {
+                ioException.set(true); // don't expect to catch, because the outer sleep will complete before this timeout
+            }
+        });
+
+        runner.start();
+        Thread.sleep(2 * 1000);
+        runner.interrupt();
+        runner.join();
+        assertFalse(ioException.get());
     }
 
     @Test

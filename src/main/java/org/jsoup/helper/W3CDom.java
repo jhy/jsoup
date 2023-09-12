@@ -211,7 +211,7 @@ public class W3CDom {
             }
             out.setXmlStandalone(true);
             // if in is Document, use the root element, not the wrapping document, as the context:
-            org.jsoup.nodes.Element context = (in instanceof org.jsoup.nodes.Document) ? in.child(0) : in;
+            org.jsoup.nodes.Element context = (in instanceof org.jsoup.nodes.Document) ? in.firstElementChild() : in;
             out.setUserData(ContextProperty, context, null);
             convert(inDoc != null ? inDoc : in, out);
             return out;
@@ -251,7 +251,7 @@ public class W3CDom {
             }
             builder.syntax = inDoc.outputSettings().syntax();
         }
-        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.child(0) : in; // skip the #root node if a Document
+        org.jsoup.nodes.Element rootEl = in instanceof org.jsoup.nodes.Document ? in.firstElementChild() : in; // skip the #root node if a Document
         NodeTraversor.traverse(builder, rootEl);
     }
 
