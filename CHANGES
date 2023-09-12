@@ -31,6 +31,9 @@ Release 1.16.2 [PENDING]
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 
+  * Bugfix: if Document.OutputSettings was cloned from a clone, an NPE would be thrown when used.
+    <https://github.com/jhy/jsoup/pull/1964>
+
   * Bugfix: in Jsoup.connect(url), URL paths containing a %2B were incorrectly recoded to a '+', or a '+' was recoded
     to a ' '. Fixed by reverting to the previous behavior of not encoding supplied paths, other than normalizing to
     ASCII.

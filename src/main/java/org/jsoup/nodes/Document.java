@@ -385,9 +385,9 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset = DataUtil.UTF_8;
+        private Charset charset;
+        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
         private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
-        @Nullable Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
         private boolean outline = false;
@@ -395,7 +395,9 @@ public class Document extends Element {
         private int maxPaddingWidth = 30;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            charset(DataUtil.UTF_8);
+        }
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -439,6 +441,7 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
+            coreCharset = Entities.CoreCharset.byName(charset.name());
             return this;
         }
 
@@ -456,7 +459,6 @@ public class Document extends Element {
             // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
             CharsetEncoder encoder = charset.newEncoder();
             encoderThreadLocal.set(encoder);
-            coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
             return encoder;
         }
 
@@ -570,7 +572,7 @@ public class Document extends Element {
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
             }
-            clone.charset(charset.name()); // new charset and charset encoder
+            clone.charset(charset.name()); // new charset, coreCharset, and charset encoder
             clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;
