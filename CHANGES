@@ -54,6 +54,10 @@ Release 1.16.2 [PENDING]
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.
 
+  * Change: the previous compatibility shim org.jsoup.UncheckedIOException is deprecated in favor of the now supported
+    java.io.UncheckedIOException. If you are catching the former, modify your code to catch the latter instead.
+    <https://github.com/jhy/jsoup/pull/1989>
+
 Release 1.16.1 [29-Apr-2023]
   * Improvement: in Jsoup.connect(url), natively support URLs with Unicode characters in the path or query string,
     without having to be escaped by the caller.
