@@ -8,6 +8,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.URL;

@@ -2,7 +2,6 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.UncheckedIOException;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

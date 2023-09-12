@@ -39,7 +39,7 @@ jsoup is an open source project distributed under the liberal [MIT license](http
 3. Enjoy!
 
 ### Android support
-When used in Android projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) should be enabled to support Java 8+ features.
+When used in Android projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with the [NIO specification](https://developer.android.com/studio/write/java11-nio-support-table) should be enabled to support Java 8+ features.
 
 ## Development and support
 If you have any questions on how to use jsoup, or have ideas for future development, please get in touch via the [mailing list](https://jsoup.org/discussion).
