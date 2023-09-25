@@ -84,7 +84,7 @@ public class JsoupConverter {
 			if (ja != null) {
 				// If the selector is blank, we use attributes from 
 				// the root element.
-				final Element child = ja.selector().isBlank() 
+				final Element child = ja.selector().isEmpty() 
 						? elem
 						: elem.selectFirst(ja.selector());
 				
@@ -182,7 +182,7 @@ public class JsoupConverter {
 			if (jselector == null)
 				throw new IllegalArgumentException("Field '" + field.getName() + "' is a collection, and can't be assigned by a @JAttribute");
 			
-			final String selector = jselector.value().isBlank()
+			final String selector = jselector.value().isEmpty()
 					? field.getName()
 					: jselector.value();
 
@@ -198,7 +198,7 @@ public class JsoupConverter {
 			if (jselector == null)
 				throw new IllegalArgumentException("Field '" + field.getName() + "' is not a primitive, and can't be assigned by a @JAttribute");
 			
-			final String selector = jselector.value().isBlank()
+			final String selector = jselector.value().isEmpty()
 					? field.getName()
 					: jselector.value();
 			
