@@ -2566,6 +2566,30 @@ public class ElementTest {
         assertEquals("div", el.cssSelector());
     }
 
+    @Test void cssSelectorDoesntStackOverflow() {
+        // https://github.com/jhy/jsoup/issues/2001
+        Element element = new Element("element");
+        Element root = element;
+
+        // Create a long chain of elements
+        for (int i = 0; i < 5000; i++) {
+            Element elem2 = new Element("element" + i);
+            element.appendChild(elem2);
+            element = elem2;
+        }
+
+        String selector = element.cssSelector(); // would overflow in cssSelector parent() recurse
+        Evaluator eval = QueryParser.parse(selector);
+
+        assertEquals(eval.toString(), selector);
+        assertTrue(selector.startsWith("element > element0 >"));
+        assertTrue(selector.endsWith("8 > element4999"));
+
+        Elements elements = root.select(selector); // would overflow in nested And ImmediateParent chain eval
+        assertEquals(1, elements.size());
+        assertEquals(element, elements.first());
+    }
+
     @Test void orphanSiblings() {
         Element el = new Element("div");
         assertEquals(0, el.siblingElements().size());

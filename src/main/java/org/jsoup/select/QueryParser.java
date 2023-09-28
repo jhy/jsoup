@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.jsoup.select.StructuralEvaluator.ImmediateParentRun;
 import static org.jsoup.internal.Normalizer.normalize;
 
 /**
@@ -107,7 +108,10 @@ public class QueryParser {
         // for most combinators: change the current eval into an AND of the current eval and the new eval
         switch (combinator) {
             case '>':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediateParent(currentEval), newEval);
+                ImmediateParentRun run = currentEval instanceof ImmediateParentRun ?
+                        (ImmediateParentRun) currentEval : new ImmediateParentRun(currentEval);
+                run.add(newEval);
+                currentEval = run;
                 break;
             case ' ':
                 currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);

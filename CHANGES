@@ -50,6 +50,10 @@ Release 1.16.2 [PENDING]
   * Bugfix: in Jsoup.connect(), a DELETE method request did not support a request body.
     <https://github.com/jhy/jsoup/issues/1972>
 
+  * Bugfix: when calling Element.cssSelector() on an extremely deeply nested element, a StackOverflowError could occur.
+    Further, a StackOverflowError may occur when running the query.
+    <https://github.com/jhy/jsoup/issues/2001>
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.

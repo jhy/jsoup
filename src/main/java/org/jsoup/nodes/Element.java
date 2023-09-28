@@ -840,6 +840,16 @@ public class Element extends Node {
             }
         }
 
+        StringBuilder selector = StringUtil.borrowBuilder();
+        Element el = this;
+        while (el != null && !(el instanceof Document)) {
+            selector.insert(0, el.cssSelectorComponent());
+            el = el.parent();
+        }
+        return StringUtil.releaseBuilder(selector);
+    }
+
+    private String cssSelectorComponent() {
         // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
         String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
         StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
@@ -859,7 +869,7 @@ public class Element extends Node {
             selector.append(String.format(
                 ":nth-child(%d)", elementSiblingIndex() + 1));
 
-        return parent().cssSelector() + StringUtil.releaseBuilder(selector);
+        return StringUtil.releaseBuilder(selector);
     }
 
     /**

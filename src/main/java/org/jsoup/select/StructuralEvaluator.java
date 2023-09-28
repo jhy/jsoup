@@ -1,8 +1,10 @@
 package org.jsoup.select;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 
 /**
@@ -139,6 +141,10 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
+    /**
+     @deprecated replaced by {@link  ImmediateParentRun}
+     */
+    @Deprecated
     static class ImmediateParent extends StructuralEvaluator {
         public ImmediateParent(Evaluator evaluator) {
             super(evaluator);
@@ -160,6 +166,48 @@ abstract class StructuralEvaluator extends Evaluator {
         @Override
         public String toString() {
             return String.format("%s > ", evaluator);
+        }
+    }
+
+    /**
+     Holds a list of evaluators for one > two > three immediate parent matches, and the final direct evaluator under
+     test. To match, these are effectively ANDed together, starting from the last, matching up to the first.
+     */
+    static class ImmediateParentRun extends Evaluator {
+        final ArrayList<Evaluator> evaluators = new ArrayList<>();
+        int cost = 2;
+
+        public ImmediateParentRun(Evaluator evaluator) {
+            evaluators.add(evaluator);
+            cost += evaluator.cost();
+        }
+
+        void add(Evaluator evaluator) {
+            evaluators.add(evaluator);
+            cost += evaluator.cost();
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            // evaluate from last to first
+            for (int i = evaluators.size() -1; i >= 0; --i) {
+                if (element == null)
+                    return false;
+                Evaluator eval = evaluators.get(i);
+                if (!eval.matches(root, element))
+                    return false;
+                element = element.parent();
+            }
+            return true;
+        }
+
+        @Override protected int cost() {
+            return cost;
+        }
+
+        @Override
+        public String toString() {
+            return StringUtil.join(evaluators, " > ");
         }
     }
 
