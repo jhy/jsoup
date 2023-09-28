@@ -1,5 +1,7 @@
 package org.jsoup.experimental;
 
+import static java.util.Map.entry;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -13,10 +15,12 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jsoup.nodes.Element;
@@ -28,6 +32,17 @@ import org.jsoup.select.Elements;
  *
  */
 public class JsoupConverter {
+	private static final Map<Type, Type> PRIMITIVES = Map.ofEntries(
+				entry(boolean.class, Boolean.class),
+				entry(byte.class, Byte.class),
+				entry(short.class, Short.class),
+				entry(int.class, Integer.class),
+				entry(long.class, Long.class),
+				entry(double.class, Double.class),
+				entry(float.class, Float.class),
+				entry(char.class, Character.class)
+			);
+	
 	public <T> List<T> getObjectsFromElements(Collection<? extends Element> elems, Class<T> type) {
 		return (List<T>) getObjectsFromElements(elems, type, false);
 	}
@@ -63,7 +78,7 @@ public class JsoupConverter {
 			return null;
 		}
 		
-		for (Field field : type.getDeclaredFields()) {
+		for (Field field : getAllFields(type)) {
 			// Always takes priority over JAttribute (arbitrarily)
 			final JSelector js = field.getDeclaredAnnotation(JSelector.class);
 			
@@ -84,7 +99,7 @@ public class JsoupConverter {
 			if (ja != null) {
 				// If the selector is blank, we use attributes from 
 				// the root element.
-				final Element child = ja.selector().isBlank() 
+				final Element child = ja.selector().isEmpty() 
 						? elem
 						: elem.selectFirst(ja.selector());
 				
@@ -102,41 +117,69 @@ public class JsoupConverter {
 		return created;
 	}
 	
+	/**
+	 * Get every declared field in a class, including superclass fields.
+	 * @return
+	 */
+	public static List<Field> getAllFields(Class<?> type) {
+		final List<Field> allFields = new ArrayList<>();
+		
+		while (type != Object.class) {
+			for (Field field : type.getDeclaredFields())
+				allFields.add(field);
+			
+			type = type.getSuperclass();
+		}
+		
+		return allFields;
+	}
+	
 	private <T> void setField(Field field, T object, String rawValue, Element root) throws IllegalArgumentException, IllegalAccessException, ParseException, InvocationTargetException, InstantiationException, NoSuchMethodException, SecurityException {
 		final Class<?> fieldType = field.getType();
 		final JDateFormat dateFormat = field.getDeclaredAnnotation(JDateFormat.class);
+		final JConvert converter = field.getDeclaredAnnotation(JConvert.class);
 		final JEnumConvert enumConverter = field.getDeclaredAnnotation(JEnumConvert.class);
 		final JSelector jselector = field.getDeclaredAnnotation(JSelector.class);
 		
 		field.setAccessible(true);
 		
-		if (fieldType == String.class)
+		// Priority 1: Get out immediately if our XML value is null.
+		if (rawValue == null)
+			return;
+		
+		// Priority 2: A user specified converter always takes priority
+		// above default conversion, as well as Enum conversion.
+		else if (converter != null) {
+			final Class<? extends JConverter<?>> converterClass = converter.value();
+			
+			if (!typesMatch(getJConverterTypeArg(converterClass), field.getGenericType()))
+				throw new IllegalArgumentException("The field's JConverter took a different argument than it's type (" + field.getGenericType() + ")");
+				
+			setField(field, object, rawValue, converterClass);
+		}
+		
+		// Priority 3: Check + set if it's a String
+		else if (fieldType == String.class)
 			field.set(object, rawValue);
 		
-		// If the field type isn't a String and is empty / null,
-		// ignore it.
-		else if (rawValue == null || rawValue.isEmpty())
+		// Priority 4: The field type isn't a String, so make sure it isn't empty.
+		else if (rawValue.isEmpty())
 			return;
 		
 		// Enum
 		else if (Enum.class.isAssignableFrom(fieldType)) {
 			// Ignore this Enum if no converter annotation was specified.
-			// ...may want to remove and go w/ default?
+			// ...may want to remove and go w/ default (valueOf())?
 			if (enumConverter == null)
 				return;
 			
-			final Class<? extends JEnumConverter<?>>[] converterArray = enumConverter.value();
-			final Method converter = converterArray.length == 0
-					? fieldType.getMethod("valueOf", String.class)
-					: converterArray[0].getMethod("getEnum", String.class);
+			final Class<? extends JConverter<?>> converterClass = enumConverter.value().length == 0 
+					? null : enumConverter.value()[0];
 			
-			// If there's no converter, we use valueOf, which is static; thus the target
-			// is null.
-			final Object target = converterArray.length == 0
-					? null
-					: converterArray[0].getConstructor().newInstance();
+			if (!typesMatch(getJConverterTypeArg(converterClass), field.getGenericType()))
+				throw new IllegalArgumentException("The field's JConverter took a different argument than it's type (" + field.getGenericType() + ")");
 			
-			field.set(object, converter.invoke(target, rawValue));
+			setField(field, object, rawValue, converterClass);
 		}
 		
 		// - Dates
@@ -154,7 +197,11 @@ public class JsoupConverter {
 			setFieldDate(field, object, rawValue, dateFormat);
 		
 		else if (fieldType == Boolean.class || fieldType == boolean.class)
+			// XXX parseBoolean is stupid, and converts anything not equal to "true" to false
 			field.set(object, Boolean.parseBoolean(rawValue));
+		
+		else if (fieldType == Character.class || fieldType == char.class)
+			field.set(object, rawValue.charAt(0));
 		
 		// - Fixed
 		else if (fieldType == Byte.class || fieldType == byte.class)
@@ -182,7 +229,7 @@ public class JsoupConverter {
 			if (jselector == null)
 				throw new IllegalArgumentException("Field '" + field.getName() + "' is a collection, and can't be assigned by a @JAttribute");
 			
-			final String selector = jselector.value().isBlank()
+			final String selector = jselector.value().isEmpty()
 					? field.getName()
 					: jselector.value();
 
@@ -198,12 +245,47 @@ public class JsoupConverter {
 			if (jselector == null)
 				throw new IllegalArgumentException("Field '" + field.getName() + "' is not a primitive, and can't be assigned by a @JAttribute");
 			
-			final String selector = jselector.value().isBlank()
+			final String selector = jselector.value().isEmpty()
 					? field.getName()
 					: jselector.value();
 			
 			// Recursively call on child object
 			field.set(object, getObjectFromElement(root.selectFirst(selector), fieldType));
+		}
+	}
+	
+	private boolean typesMatch(Type type1, Type type2) {
+		if (type1.equals(type2)) return true;
+		
+		final Type type2Check = PRIMITIVES.get(type1);
+		final Type type1Check = PRIMITIVES.get(type2);
+		
+		return type1.equals(type1Check) 
+				|| type2.equals(type2Check);
+	}
+
+	private <T> void setField(Field field, T object, String rawValue, Class<? extends JConverter<?>> converter) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		final Class<?> fieldType = field.getType();
+		final Method converterMethod = converter == null
+				? fieldType.getMethod("valueOf", String.class)
+				: converter.getMethod("getConvertedValue", String.class);
+		
+		// If there's no converter, we use valueOf, which is static; thus the target
+		// is null.
+		final Object target = converter == null
+				? null
+				: converter.getConstructor().newInstance();
+		
+		try {
+			field.set(object, converterMethod.invoke(target, rawValue));
+		} catch (InvocationTargetException e) {
+			// This becomes problematic when the converter returns a wrapper,
+			// such as Integer, with a null value - invoke automatically tries to
+			// convert to primitive (very hacky workaround).
+			if (e.getCause() instanceof NullPointerException)
+				return;
+			
+			throw e;
 		}
 	}
 	
@@ -236,5 +318,60 @@ public class JsoupConverter {
 		} catch (NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Get every parent Type of this child (superclasses, interfaces, their superclasses & interfaces, etc.)
+	 * @param child
+	 * @return All parent types, or empty set if there are none (Object)
+	 */
+	private Set<Type> getAllParentTypes(Class<?> child) {
+		// Base case
+		if (child == Object.class)
+			return Set.of();
+		
+		final Set<Type> types = new HashSet<>();
+		final Class<?> superClass = child.getSuperclass();
+		final Type[] interfaces = child.getGenericInterfaces();
+		
+		types.addAll(Arrays.asList(interfaces));
+		if (superClass != null) {
+			types.add(superClass);
+			types.addAll(getAllParentTypes(superClass));
+		}
+		
+		// No null check; interfaces returns empty array if no interfaces.
+		for (Type type : interfaces)
+			types.addAll(getAllParentTypes(getRawType(type)));
+		
+		return types;
+	}
+	
+	private Type getJConverterTypeArg(Class<? extends JConverter<?>> impl) {
+		// Check the interface tree, then check the superclass tree...
+		final Set<Type> types = getAllParentTypes(impl);
+		
+		for (Type type : types)
+			if (getRawType(type) == JConverter.class) {
+				// No class param specified? The param is an object.
+				if (!(type instanceof ParameterizedType))
+					return Object.class;
+				
+				return ((ParameterizedType) type).getActualTypeArguments()[0];
+			}
+		
+		return null;
+	}
+	
+	private Class<?> getRawType(Type type) {
+		if (type instanceof ParameterizedType)
+			// ParameterizedTypeImpl's rawType field is a Class<?>
+			// https://stackoverflow.com/questions/5767122/parameterizedtype-getrawtype-returns-j-l-r-type-not-class
+			return (Class<?>) ((ParameterizedType) type).getRawType();
+		
+		else if (type instanceof Class<?>)
+			return (Class<?>) type;
+		
+		throw new IllegalArgumentException("Couldn't handle type: " + type.getClass() + " (" + type + ")");
 	}
 }

@@ -8,6 +8,9 @@ import java.lang.annotation.Target;
 /**
  * Signals that an Enum field should be convertible from some String
  * value (pulled from XML).
+ * 
+ * Essentially the same as {@link JConverter}, but with a default way of
+ * converting.
  * @author Sam Hieken
  *
  */
@@ -21,5 +24,5 @@ public @interface JEnumConvert {
 	 * If an empty array is passed (the same as passing nothing), the field type,
 //	 * which is assumed to be an Enum, will have its {@code valueOf(String)} method called.
 	 */
-	Class<? extends JEnumConverter<?>>[] value() default {};
+	Class<? extends JConverter<?>>[] value() default {};
 }

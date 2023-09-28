@@ -1,0 +1,26 @@
+<data>
+	<person id="23459432">
+		<name full="John Smith">
+			<first>John</first>
+			<nick>JoJo</nick>
+			<last>Smith</last>
+		</name>
+		<isFelon>yes</isFelon>
+		<age>27</age>
+		<isMarried>true</isMarried>
+		<gender>male</gender>
+		<ignoreMe>
+			some data
+		</ignoreMe>
+		<jobs>
+			<item>
+				<employer>GitHub</employer>
+				<hourly>25.50</hourly>
+			</item>
+			<item>
+				<employer>Microsoft</employer>
+				<salary>100000</salary>
+			</item>
+		</jobs>
+	</person>
+</data>

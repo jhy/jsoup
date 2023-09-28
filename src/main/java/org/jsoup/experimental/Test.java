@@ -8,8 +8,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import lombok.ToString;
+
 public class Test {
-//	@ToString
+	@ToString
 	public static class Person {
 		// No selector specified = The element passed when calling
 		// getObjectFromElement() is where the attribute will be pulled from.
@@ -18,6 +20,9 @@ public class Test {
 		
 		@JAttribute(value = "full", selector = "name")
 		private String fullName;
+		
+		@JSelector("name > nick")
+		private String nickName;
 		
 		@JSelector("name")
 		private Names names;
@@ -28,7 +33,11 @@ public class Test {
 		@JSelector("isMarried")
 		private boolean married;
 		
-		@JSelector("gender")
+		@JSelector
+		@JConvert(YesNo.class)
+		private boolean isFelon;
+		
+		@JSelector
 		// Though we specified a converter class, we can just leave the argument
 		// blank to use the enum's valueOf() method.
 		@JEnumConvert(GenderConverter.class)
@@ -46,7 +55,7 @@ public class Test {
 		private String ignoreMeAlso;
 	}
 	
-//	@ToString
+	@ToString
 	public static class Names {
 		@JSelector("first")
 		private String firstName;
@@ -54,7 +63,7 @@ public class Test {
 		private String last;
 	}
 	
-//	@ToString
+	@ToString
 	public static class Job {
 		@JSelector
 		private String employer;
@@ -64,14 +73,25 @@ public class Test {
 		private Long salary;
 	}
 	
-//	@ToString
+	@ToString
 	public static enum Gender {
 		MALE, FEMALE, OTHER
 	}
 	
-	public static class GenderConverter implements JEnumConverter<Gender> {
+	public static class YesNo implements JConverter<Boolean> {
+
 		@Override
-		public Gender getEnum(String raw) {
+		public Boolean getConvertedValue(String raw) {
+			// TODO Auto-generated method stub
+			return raw.equalsIgnoreCase("yes") 
+					? true : raw.equalsIgnoreCase("no") ? false : null;
+		}
+		
+	}
+		
+	public static class GenderConverter implements JConverter<Gender> {
+		@Override
+		public Gender getConvertedValue(String raw) {
 			System.out.println("Gender converter called!");
 			return Gender.valueOf(raw.toUpperCase());
 		}
