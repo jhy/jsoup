@@ -65,8 +65,11 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Safelist {
     private static final String All = ":all";
+    private static final String WILD_CARD = "-*";
+    private static final String EMPTY_STRING = "";
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
+    private final Map<TagName, Set<AttributeKey>> wildcardAttributes; // tag -> attribute[]. allowed wildcard attributes [data-*] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
@@ -209,6 +212,7 @@ public class Safelist {
     public Safelist() {
         tagNames = new HashSet<>();
         attributes = new HashMap<>();
+        wildcardAttributes = new HashMap<>();
         enforcedAttributes = new HashMap<>();
         protocols = new HashMap<>();
         preserveRelativeLinks = false;
@@ -298,15 +302,26 @@ public class Safelist {
         TagName tagName = TagName.valueOf(tag);
         tagNames.add(tagName);
         Set<AttributeKey> attributeSet = new HashSet<>();
+        Set<AttributeKey> wildcardAttributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
-            attributeSet.add(AttributeKey.valueOf(key));
+            if (!key.equals(WILD_CARD) && key.endsWith(WILD_CARD)) {
+                wildcardAttributeSet.add(AttributeKey.valueOf(key.replace(WILD_CARD, EMPTY_STRING)));
+            } else {
+                attributeSet.add(AttributeKey.valueOf(key));
+            }
         }
         if (this.attributes.containsKey(tagName)) {
             Set<AttributeKey> currentSet = this.attributes.get(tagName);
             currentSet.addAll(attributeSet);
         } else {
             this.attributes.put(tagName, attributeSet);
+        }
+        if (this.wildcardAttributes.containsKey(tagName)) {
+            Set<AttributeKey> currentWildcardSet = this.wildcardAttributes.get(tagName);
+            currentWildcardSet.addAll(wildcardAttributeSet);
+        } else {
+            this.wildcardAttributes.put(tagName, wildcardAttributeSet);
         }
         return this;
     }
@@ -537,10 +552,11 @@ public class Safelist {
      */
     protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
         TagName tag = TagName.valueOf(tagName);
-        AttributeKey key = AttributeKey.valueOf(attr.getKey());
+        String attrKey = attr.getKey();
+        AttributeKey key = AttributeKey.valueOf(attrKey);
 
         Set<AttributeKey> okSet = attributes.get(tag);
-        if (okSet != null && okSet.contains(key)) {
+        if (okSet != null && okSet.contains(key) || isSafeWildcardAttribute(tagName, key)) {
             if (protocols.containsKey(tag)) {
                 Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
                 // ok if not defined protocol; otherwise test
@@ -553,13 +569,25 @@ public class Safelist {
         Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
         if (enforcedSet != null) {
             Attributes expect = getEnforcedAttributes(tagName);
-            String attrKey = attr.getKey();
             if (expect.hasKeyIgnoreCase(attrKey)) {
                 return expect.getIgnoreCase(attrKey).equals(attr.getValue());
             }
         }
         // no attributes defined for tag, try :all tag
         return !tagName.equals(All) && isSafeAttribute(All, el, attr);
+    }
+
+    private boolean isSafeWildcardAttribute(String tagName, AttributeKey key) {
+        Set<AttributeKey> okSet = wildcardAttributes.get(TagName.valueOf(tagName));
+        if (this.wildcardAttributes.isEmpty() || okSet == null) {
+            return false;
+        }
+        for (AttributeKey okKey : okSet) {
+            if (key.toString().startsWith(okKey.toString())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
