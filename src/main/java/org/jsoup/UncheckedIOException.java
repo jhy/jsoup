@@ -17,6 +17,6 @@ public class UncheckedIOException extends java.io.UncheckedIOException {
     }
 
     public IOException ioException() {
-        return (IOException) getCause();
+        return getCause();
     }
 }

@@ -4,14 +4,13 @@ import org.jsoup.helper.Validate;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 
 import java.util.List;
 
 /**
  * Internal helpers for Nodes, to keep the actual node APIs relatively clean. A jsoup internal class, so don't use it as
- * there is no contract API).
+ * there is no contract API.
  */
 final class NodeUtils {
     /**

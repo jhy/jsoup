@@ -15,7 +15,6 @@ import org.jsoup.select.Selector;
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

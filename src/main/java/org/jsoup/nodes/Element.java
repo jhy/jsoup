@@ -1306,33 +1306,40 @@ public class Element extends Node {
      */
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
-        NodeTraversor.traverse(new NodeVisitor() {
-            public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    TextNode textNode = (TextNode) node;
-                    appendNormalisedText(accum, textNode);
-                } else if (node instanceof Element) {
-                    Element element = (Element) node;
-                    if (accum.length() > 0 &&
-                        (element.isBlock() || element.isNode("br")) &&
-                        !lastCharIsWhitespace(accum))
-                        accum.append(' ');
-                }
-            }
-
-            public void tail(Node node, int depth) {
-                // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
-                if (node instanceof Element) {
-                    Element element = (Element) node;
-                    Node next = node.nextSibling();
-                    if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
-                        accum.append(' ');
-                }
-
-            }
-        }, this);
-
+        NodeTraversor.traverse(new TextAccumulator(accum), this);
         return StringUtil.releaseBuilder(accum).trim();
+    }
+
+    private static class TextAccumulator implements NodeVisitor {
+        private final StringBuilder accum;
+
+        public TextAccumulator(StringBuilder accum) {
+            this.accum = accum;
+        }
+
+        public void head(Node node, int depth) {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                appendNormalisedText(accum, textNode);
+            } else if (node instanceof Element) {
+                Element element = (Element) node;
+                if (accum.length() > 0 &&
+                    (element.isBlock() || element.isNode("br")) &&
+                    !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+        }
+
+        public void tail(Node node, int depth) {
+            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                Node next = node.nextSibling();
+                if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+
+        }
     }
 
     /**
