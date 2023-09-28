@@ -12,6 +12,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -320,10 +321,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     public Iterator<Attribute> iterator() {
         return new Iterator<Attribute>() {
+            int expectedSize = size;
             int i = 0;
 
             @Override
             public boolean hasNext() {
+                checkModified();
                 while (i < size) {
                     if (isInternalKey(keys[i])) // skip over internal keys
                         i++;
@@ -336,14 +339,20 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
             @Override
             public Attribute next() {
+                checkModified();
                 final Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
                 i++;
                 return attr;
             }
 
+            private void checkModified() {
+                if (size != expectedSize) throw new ConcurrentModificationException("Use Iterator#remove() instead to remove attributes while iterating.");
+            }
+
             @Override
             public void remove() {
                 Attributes.this.remove(--i); // next() advanced, so rewind
+                expectedSize--;
             }
         };
     }

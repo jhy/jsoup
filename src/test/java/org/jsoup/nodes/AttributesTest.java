@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -172,6 +173,49 @@ public class AttributesTest {
 
         Iterator<Attribute> iterator = a.iterator();
         assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testIteratorRemove() {
+        String html = "<div 1=1 2=2 3=3 4=4>";
+        Document doc = Jsoup.parse(html);
+        Element el = doc.expectFirst("div");
+        Attributes attrs = el.attributes();
+
+        Iterator<Attribute> iter = attrs.iterator();
+        int seen = 0;
+        while (iter.hasNext()) {
+            seen++;
+            Attribute attr = iter.next();
+            iter.remove();
+        }
+        assertEquals(4, seen);
+        assertEquals(0, attrs.size());
+        assertEquals(0, el.attributesSize());
+    }
+
+    @Test
+    public void testIteratorRemoveConcurrentException() {
+        String html = "<div 1=1 2=2 3=3 4=4>";
+        Document doc = Jsoup.parse(html);
+        Element el = doc.expectFirst("div");
+        Attributes attrs = el.attributes();
+
+        Iterator<Attribute> iter = attrs.iterator();
+        int seen = 0;
+        boolean threw = false;
+        try {
+            while (iter.hasNext()) {
+                seen++;
+                Attribute next = iter.next();
+                el.removeAttr(next.getKey());
+            }
+        } catch (ConcurrentModificationException e) {
+            threw = true;
+        }
+
+        assertEquals(1, seen);
+        assertTrue(threw);
     }
 
     @Test
