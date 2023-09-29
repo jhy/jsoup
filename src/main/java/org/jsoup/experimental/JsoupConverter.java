@@ -32,7 +32,7 @@ import org.jsoup.select.Elements;
  *
  */
 public class JsoupConverter {
-	private static final Map<Type, Type> PRIMITIVES = Map.ofEntries(
+	private static final Map<Class<?>, Class<?>> PRIMITIVES = Map.ofEntries(
 				entry(boolean.class, Boolean.class),
 				entry(byte.class, Byte.class),
 				entry(short.class, Short.class),
@@ -59,12 +59,65 @@ public class JsoupConverter {
 	}
 	
 	public <T> T getObjectFromElement(Element elem, Class<T> type) {
+		final T primitive = getPrimitiveFromElement(elem, type);
+		
+		if (primitive != null) return primitive;
+		// We don't consider String a primitive, and thus must double check here
+		else if (type == String.class) return type.cast(elem.text());
+		
+		// TODO: Handle primitive types (for when called by recursion)
 		try {
 			return getObjectFromElement0(elem, type);
 		} catch (IllegalArgumentException | IllegalAccessException | ParseException | InvocationTargetException | InstantiationException | NoSuchMethodException | SecurityException e) {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	private <T> T getPrimitiveFromElement(Element elem, Class<T> type) {
+		return getPrimitiveFromElement(elem.text(), type);
+	}
+	
+	/**
+	 * Converts an {@link Element} to the specified primitive type.
+	 * If the type passed isn't primitive, null is returned.
+	 * @param <T>
+	 * @param toParse
+	 * @param type
+	 * @return The parsed object, or {@code null} if the type isn't primitive or element can't be converted.
+	 */
+	private <T> T getPrimitiveFromElement(String toParse, Class<T> type) {
+		if (toParse == null || toParse.isEmpty()) 
+			return null;
+		
+		if (type == Boolean.class)
+			return type.cast(parseBoolean(toParse));
+		
+		else if (type == Character.class)
+			return type.cast(toParse.charAt(0));
+		
+		// - Fixed
+		else if (type == Byte.class)
+			return type.cast(Byte.parseByte(toParse));
+
+		else if (type == Short.class)
+			return type.cast(Short.parseShort(toParse));
+		
+		else if (type == Integer.class)
+			return type.cast(Integer.parseInt(toParse));
+		
+		else if (type == Long.class)
+			return type.cast(Long.parseLong(toParse));
+		
+		// - Floating
+		else if (type == Float.class || type == float.class)
+			return type.cast(Float.parseFloat(toParse));
+		
+		else if (type == Double.class || type == double.class)
+			return type.cast(Double.parseDouble(toParse));
+		
+		// Not primitive
+		return null;
 	}
 
 	private <T> T getObjectFromElement0(Element elem, Class<T> type) throws IllegalArgumentException, IllegalAccessException, ParseException, InvocationTargetException, InstantiationException, NoSuchMethodException, SecurityException {
@@ -156,15 +209,28 @@ public class JsoupConverter {
 				throw new IllegalArgumentException("The field's JConverter took a different argument than it's type (" + field.getGenericType() + ")");
 				
 			setField(field, object, rawValue, converterClass);
+			return;
 		}
 		
 		// Priority 3: Check + set if it's a String
-		else if (fieldType == String.class)
+		else if (fieldType == String.class) {
 			field.set(object, rawValue);
+			return;
+		}
 		
 		// Priority 4: The field type isn't a String, so make sure it isn't empty.
 		else if (rawValue.isEmpty())
 			return;
+		
+		// Priority 5: Check if the type is a primitive
+		final Class<?> convertedWrapper = PRIMITIVES.get(fieldType);
+		final Object primitive;
+		
+		if (convertedWrapper == null) primitive = getPrimitiveFromElement(rawValue, fieldType);
+		else primitive = getPrimitiveFromElement(rawValue, convertedWrapper);
+		
+		if (primitive != null)
+			field.set(object, primitive);
 		
 		// Enum
 		else if (Enum.class.isAssignableFrom(fieldType)) {
@@ -196,39 +262,12 @@ public class JsoupConverter {
 				|| fieldType == LocalDateTime.class)
 			setFieldDate(field, object, rawValue, dateFormat);
 		
-		else if (fieldType == Boolean.class || fieldType == boolean.class)
-			// XXX parseBoolean is stupid, and converts anything not equal to "true" to false
-			field.set(object, Boolean.parseBoolean(rawValue));
-		
-		else if (fieldType == Character.class || fieldType == char.class)
-			field.set(object, rawValue.charAt(0));
-		
-		// - Fixed
-		else if (fieldType == Byte.class || fieldType == byte.class)
-			field.set(object, Byte.parseByte(rawValue));
-
-		else if (fieldType == Short.class || fieldType == short.class)
-			field.set(object, Short.parseShort(rawValue));
-		
-		else if (fieldType == Integer.class || fieldType == int.class)
-			field.set(object, Integer.parseInt(rawValue));
-		
-		else if (fieldType == Long.class || fieldType == long.class)
-			field.set(object, Long.parseLong(rawValue));
-		
-		// - Floating
-		else if (fieldType == Float.class || fieldType == float.class)
-			field.set(object, Float.parseFloat(rawValue));
-		
-		else if (fieldType == Double.class || fieldType == double.class)
-			field.set(object, Double.parseDouble(rawValue));
-		
 		// Is this field a Collection?
 		// We only check for Lists and Sets since they have Collectors methods.
 		else if (fieldType == List.class || fieldType == Set.class) {
 			if (jselector == null)
 				throw new IllegalArgumentException("Field '" + field.getName() + "' is a collection, and can't be assigned by a @JAttribute");
-			
+
 			final String selector = jselector.value().isEmpty()
 					? field.getName()
 					: jselector.value();
@@ -373,5 +412,13 @@ public class JsoupConverter {
 			return (Class<?>) type;
 		
 		throw new IllegalArgumentException("Couldn't handle type: " + type.getClass() + " (" + type + ")");
+	}
+	
+	private boolean parseBoolean(String bool) {
+		if (!(bool.equalsIgnoreCase("true") || bool.equalsIgnoreCase("false")))
+			throw new NumberFormatException("Invalid boolean: '" + bool + "'");
+			
+		
+		return bool.equalsIgnoreCase("true");
 	}
 }
