@@ -5,6 +5,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -51,11 +52,21 @@ public class Element extends Node {
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
     /**
-     * Create a new, standalone element.
+     * Create a new, standalone element, in the specified namespace.
      * @param tag tag name
+     * @param namespace namespace for this element
+     */
+    public Element(String tag, String namespace) {
+        this(Tag.valueOf(tag, namespace, ParseSettings.preserveCase), null);
+    }
+
+    /**
+     * Create a new, standalone element, in the HTML namespace.
+     * @param tag tag name
+     * @see #Element(String tag, String namespace)
      */
     public Element(String tag) {
-        this(Tag.valueOf(tag), "", null);
+        this(Tag.valueOf(tag, Parser.NamespaceHtml, ParseSettings.preserveCase), "", null);
     }
 
     /**
@@ -172,8 +183,22 @@ public class Element extends Node {
      * @see Elements#tagName(String)
      */
     public Element tagName(String tagName) {
+        return tagName(tagName, tag.namespace());
+    }
+
+    /**
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @param namespace the new namespace for this element
+     * @return this element, for chaining
+     * @see Elements#tagName(String)
+     */
+    public Element tagName(String tagName, String namespace) {
         Validate.notEmptyParam(tagName, "tagName");
-        tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
+        Validate.notEmptyParam(namespace, "namespace");
+        tag = Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -679,7 +704,11 @@ public class Element extends Node {
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
+        return appendElement(tagName, tag.namespace());
+    }
+
+    public Element appendElement(String tagName, String namespace) {
+        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -692,7 +721,11 @@ public class Element extends Node {
      *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element prependElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
+        return prependElement(tagName, tag.namespace());
+    }
+
+    public Element prependElement(String tagName, String namespace) {
+        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         prependChild(child);
         return child;
     }

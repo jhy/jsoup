@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InTableFoster;
+import static org.jsoup.parser.HtmlTreeBuilderState.ForeignContent;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -42,6 +44,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
         "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
         "title", "tr", "ul", "wbr", "xmp"};
+    static final String[] TagMathMlTextIntegration = new String[]{"mi", "mn", "mo", "ms", "mtext"};
+    static final String[] TagSvgHtmlIntegration = new String[]{"desc", "foreignObject", "title"};
 
     public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
 
@@ -165,7 +169,86 @@ public class HtmlTreeBuilder extends TreeBuilder {
     @Override
     protected boolean process(Token token) {
         currentToken = token;
-        return this.state.process(token, this);
+
+    if (shouldDispatchToCurrentInsertionMode(token)) {
+            return this.state.process(token, this);
+        } else {
+            return ForeignContent.process(token, this);
+        }
+    }
+
+    boolean shouldDispatchToCurrentInsertionMode(Token token) {
+        // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction
+        // If the stack of open elements is empty
+        if (stack.isEmpty())
+            return true;
+        final Element el = currentElement();
+        final String ns = el.tag().namespace();
+
+        // If the adjusted current node is an element in the HTML namespace
+        if (Parser.NamespaceHtml.equals(ns))
+            return true;
+
+        // If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
+        // If the adjusted current node is a MathML text integration point and the token is a character token
+        // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
+        if (isMathmlTextIntegration(el)) {
+            if (token.isStartTag()
+                    && !"mglyph".equals(token.asStartTag().normalName)
+                    && !"malignmark".equals(token.asStartTag().normalName))
+                    return true;
+            if (token.isCharacter())
+                    return true;
+        }
+        if (Parser.NamespaceMathml.equals(ns)
+            && el.normalName().equals("annotation-xml")
+            && token.isStartTag()
+            && "svg".equals(token.asStartTag().normalName))
+            return true;
+
+        // If the adjusted current node is an HTML integration point and the token is a start tag
+        // If the adjusted current node is an HTML integration point and the token is a character token
+        if (isHtmlIntegration(el)
+            && (token.isStartTag() || token.isCharacter()))
+            return true;
+
+        // If the token is an end-of-file token
+        return token.isEOF();
+    }
+
+    boolean isMathmlTextIntegration(Element el) {
+        /*
+        A node is a MathML text integration point if it is one of the following elements:
+        A MathML mi element
+        A MathML mo element
+        A MathML mn element
+        A MathML ms element
+        A MathML mtext element
+         */
+        return (Parser.NamespaceMathml.equals(el.tag().namespace())
+            && StringUtil.inSorted(el.normalName(), TagMathMlTextIntegration));
+    }
+
+    boolean isHtmlIntegration(Element el) {
+        /*
+        A node is an HTML integration point if it is one of the following elements:
+        A MathML annotation-xml element whose start tag token had an attribute with the name "encoding" whose value was an ASCII case-insensitive match for the string "text/html"
+        A MathML annotation-xml element whose start tag token had an attribute with the name "encoding" whose value was an ASCII case-insensitive match for the string "application/xhtml+xml"
+        An SVG foreignObject element
+        An SVG desc element
+        An SVG title element
+         */
+        if (Parser.NamespaceMathml.equals(el.tag().namespace())
+            && el.normalName().equals("annotation-xml")) {
+            String encoding = Normalizer.normalize(el.attr("encoding"));
+            if (encoding.equals("text/html") || encoding.equals("application/xhtml+xml"))
+                return true;
+        }
+        if (Parser.NamespaceSvg.equals(el.tag().namespace())
+            && StringUtil.in(el.tagName(), TagSvgHtmlIntegration)) // note using .tagName for case-sensitive hit here of foreignObject
+            return true;
+
+        return false;
     }
 
     boolean process(Token token, HtmlTreeBuilderState state) {
@@ -245,6 +328,23 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
+    /**
+     Inserts a foreign element. Preserves the case of the tag name and of the attributes.
+     */
+    Element insertForeign(final Token.StartTag startTag, String namespace) {
+        dedupeAttributes(startTag);
+        Tag tag = tagFor(startTag.name(), namespace, ParseSettings.preserveCase);
+        Element el = new Element(tag, null, ParseSettings.preserveCase.normalizeAttributes(startTag.attributes));
+        insert(el, startTag);
+
+        if (startTag.isSelfClosing()) {
+            tag.setSelfClosing(); // remember this is self-closing for output
+            pop();
+        }
+
+        return el;
+    }
+
 	Element insertStartTag(String startTagName) {
         Element el = new Element(tagFor(startTagName, settings), null);
         insert(el);
@@ -272,7 +372,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 if (!tag.isEmpty())
                     tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
             }
-            else // unknown tag, remember this is self closing for output
+            else // unknown tag, remember this is self-closing for output
                 tag.setSelfClosing();
         }
         return el;

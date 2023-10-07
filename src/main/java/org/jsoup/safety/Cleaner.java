@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
@@ -179,7 +180,7 @@ public class Cleaner {
     private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
-        Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
+        Element dest = new Element(Tag.valueOf(sourceTag, sourceEl.tag().namespace(), ParseSettings.preserveCase), sourceEl.baseUri(), destAttrs);
         int numDiscarded = 0;
 
         Attributes sourceAttrs = sourceEl.attributes();
