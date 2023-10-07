@@ -1805,6 +1805,11 @@ enum HtmlTreeBuilderState {
                             return processAsHtml(t, tb);
                         }
                     }
+                    break;
+
+                case EOF:
+                    // won't come through here, but for completion:
+                    break;
             }
             return true;
         }
