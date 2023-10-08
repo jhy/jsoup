@@ -406,6 +406,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         insert(characterToken, el);
     }
 
+    /** Inserts the provided character token into the provided element. */
     void insert(Token.Character characterToken, Element el) {
         final Node node;
         final String tagName = el.normalName();
@@ -421,7 +422,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node, characterToken);
     }
 
-    /** Inserts the provided character token into the provided element. Use when not going onto stack element */
+    /** Inserts the provided Node into the current element. */
     private void insertNode(Node node, @Nullable Token token) {
         // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
         if (stack.isEmpty())
@@ -431,10 +432,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         else
             currentElement().appendChild(node);
 
-        // connect form controls to their form element
-        if (node instanceof Element && ((Element) node).tag().isFormListed()) {
-            if (formElement != null)
-                formElement.addElement((Element) node);
+        if (node instanceof Element) {
+            Element el = (Element) node;
+            if (el.tag().isFormListed() && formElement != null)
+                formElement.addElement(el); // connect form controls to their form element
+
+            // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
+            if (el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
+                error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
         }
         onNodeInserted(node, token);
     }

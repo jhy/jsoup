@@ -1826,4 +1826,16 @@ public class HtmlParserTest {
         assertMathNamespace(doc.expectFirst("svg"));
         assertMathNamespace(doc.expectFirst("math"));
     }
+
+    @Test void xmlnsAttributeError() {
+        String html = "<p><svg></svg></body>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+
+        String html2 = "<html xmlns='http://www.w3.org/1999/xhtml'><p xmlns='http://www.w3.org/1999/xhtml'><i xmlns='xhtml'></i></body>";
+        Document doc2 = Jsoup.parse(html2, parser);
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("Invalid xmlns attribute [xhtml] on tag [i]", parser.getErrors().get(0).getErrorMessage());
+    }
 }
