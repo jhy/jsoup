@@ -16,6 +16,7 @@ public class Tag implements Cloneable {
 
     private String tagName;
     private String normalName; // always the lower case version of this tag, regardless of case preservation mode
+    private String unicodeName; // always the converted version of this tag with symbols in Uni-16 and original letters, regardless of case preservation mode
     private boolean isBlock = true; // block
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean empty = false; // can hold nothing; e.g. img
@@ -27,6 +28,7 @@ public class Tag implements Cloneable {
     private Tag(String tagName) {
         this.tagName = tagName;
         normalName = Normalizer.lowerCase(tagName);
+        unicodeName = convertSymbol(tagName);
     }
 
     /**
@@ -45,6 +47,56 @@ public class Tag implements Cloneable {
     public String normalName() {
         return normalName;
     }
+
+    /**
+     * Get this tag's name whose symbols are converted to Unicode.
+     * @return the tag's converted name.
+     */
+    public String unicodeName() {
+        return unicodeName;
+    }
+
+    /**
+     * Get the tag name whose symbols are converted to Unicode 16 following
+     * HTML Living Standard https://html.spec.whatwg.org/#coercing-an-html-dom-into-an-infoset.
+     *
+     * @param tagName Name of tag, e.g. "p", case is preserved.
+     * @return the tag's converted name.
+     */
+    public String convertSymbol(String tagName) {
+        String convertName = "";
+        for(int i = 0; i < tagName.length(); i++){
+            char c = tagName.charAt(i);
+
+            boolean isDigit = Character.isDigit(c);
+            boolean isLowerLetter = Character.isLowerCase(c);
+            boolean isUpperLetter = Character.isUpperCase(c);
+
+            // check whether the char is a digit or letter
+            if(!(isDigit | isLowerLetter | isUpperLetter)){
+                // convert the symbol to Unicode `U` + unicode with 6 hex chars
+                int uni16 = (int) c;
+                String hexString = Integer.toHexString(uni16);
+
+                // Reference: https://stackoverflow.com/questions/8689526/integer-to-two-digits-hex-in-java
+                convertName += "U";
+
+                if(hexString.length() < 6){
+                    for(int idx = 0; idx < (6 - hexString.length()); idx++){
+                        convertName += "0";
+                    }
+                }
+
+                convertName += hexString.toUpperCase();
+
+            }else{
+                convertName += c;
+            }
+        }
+
+        return convertName;
+    }
+
 
     /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
