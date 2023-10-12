@@ -23,6 +23,7 @@ import java.util.List;
 import static org.jsoup.internal.StringUtil.inSorted;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InTableFoster;
 import static org.jsoup.parser.HtmlTreeBuilderState.ForeignContent;
+import static org.jsoup.parser.Parser.NamespaceHtml;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -186,7 +187,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final String ns = el.tag().namespace();
 
         // If the adjusted current node is an element in the HTML namespace
-        if (Parser.NamespaceHtml.equals(ns))
+        if (NamespaceHtml.equals(ns))
             return true;
 
         // If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
@@ -471,6 +472,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return onStack(stack, el);
     }
 
+    /** Checks if there is an HTML element with the given name on the stack. */
     boolean onStack(String elName) {
         return getFromStack(elName) != null;
     }
@@ -488,13 +490,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
+    /** Gets the nearest (lowest) HTML element with the given name from the stack. */
     @Nullable
     Element getFromStack(String elName) {
         final int bottom = stack.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
         for (int pos = bottom; pos >= upper; pos--) {
             Element next = stack.get(pos);
-            if (next.normalName().equals(elName)) {
+            if (next.normalName().equals(elName) && NamespaceHtml.equals(next.tag().namespace())) {
                 return next;
             }
         }
@@ -512,8 +515,24 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
+    /** Pops the stack until the given HTML element is removed. */
     @Nullable
     Element popStackToClose(String elName) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
+            Element el = stack.get(pos);
+            stack.remove(pos);
+            if (el.normalName().equals(elName) && NamespaceHtml.equals(el.tag().namespace())) {
+                if (currentToken instanceof Token.EndTag)
+                    onNodeClosed(el, currentToken);
+                return el;
+            }
+        }
+        return null;
+    }
+
+    /** Pops the stack until an element with the supplied name is removed, irrespective of namespace. */
+    @Nullable
+    Element popStackToCloseAnyNamespace(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             stack.remove(pos);
@@ -526,12 +545,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return null;
     }
 
-    // elnames is sorted, comes from Constants
-    void popStackToClose(String... elNames) {
+    /** Pops the stack until one of the given HTML elements is removed. */
+    void popStackToClose(String... elNames) { // elnames is sorted, comes from Constants
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             stack.remove(pos);
-            if (inSorted(el.normalName(), elNames)) {
+            if (inSorted(el.normalName(), elNames) && NamespaceHtml.equals(el.tag().namespace())) {
                 if (currentToken instanceof Token.EndTag)
                     onNodeClosed(el, currentToken);
                 break;
@@ -551,10 +570,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         clearStackToContext("tr", "template");
     }
 
+    /** Removes elements from the stack until one of the supplied HTML elements is removed. */
     private void clearStackToContext(String... nodeNames) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
-            if (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html"))
+            if (NamespaceHtml.equals(next.tag().namespace()) &&
+                (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html")))
                 break;
             else
                 stack.remove(pos);
@@ -612,6 +633,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     node = contextElement;
             }
             String name = node != null ? node.normalName() : "";
+            if (!NamespaceHtml.equals(node.tag().namespace()))
+                continue; // only looking for HTML elements here
+
             switch (name) {
                 case "select":
                     transition(HtmlTreeBuilderState.InSelect);
@@ -820,12 +844,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     /**
-     Pops elements off the stack according to the implied end tag rules
+     Pops HTML elements off the stack according to the implied end tag rules
      @param thorough if we are thorough (includes table elements etc) or not
      */
     void generateImpliedEndTags(boolean thorough) {
         final String[] search = thorough ? TagThoroughSearchEndTags : TagSearchEndTags;
-        while (inSorted(currentElement().normalName(), search)) {
+        while (NamespaceHtml.equals(currentElement().tag().namespace())
+            && inSorted(currentElement().normalName(), search)) {
             pop();
         }
     }

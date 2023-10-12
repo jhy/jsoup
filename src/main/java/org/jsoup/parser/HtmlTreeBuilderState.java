@@ -166,7 +166,7 @@ enum HtmlTreeBuilderState {
                             tb.error(this);
                         } else {
                             tb.generateImpliedEndTags(true);
-                            if (!name.equals(tb.currentElement().normalName())) tb.error(this);
+                            if (!tb.currentElementIs(name)) tb.error(this);
                             tb.popStackToClose(name);
                             tb.clearFormattingElementsToLastMarker();
                             tb.popTemplateMode();
@@ -1796,7 +1796,7 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                     while (i != 0) {
                         if (el.normalName().equals(end.normalName)) {
-                            tb.popStackToClose(el.normalName());
+                            tb.popStackToCloseAnyNamespace(el.normalName());
                             return true;
                         }
                         i--;
