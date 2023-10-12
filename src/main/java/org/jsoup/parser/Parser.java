@@ -14,6 +14,11 @@ import java.util.List;
  <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
  environment, use {@link #newInstance()} to make copies. */
 public class Parser {
+    public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
+    public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
+    public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
+    public static final String NamespaceSvg = "http://www.w3.org/2000/svg";
+
     private TreeBuilder treeBuilder;
     private ParseErrorList errors;
     private ParseSettings settings;
@@ -146,6 +151,10 @@ public class Parser {
      */
     public boolean isContentForTagData(String normalName) {
         return getTreeBuilder().isContentForTagData(normalName);
+    }
+
+    public String defaultNamespace() {
+        return getTreeBuilder().defaultNamespace();
     }
 
     // static parse functions below

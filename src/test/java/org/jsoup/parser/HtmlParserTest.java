@@ -1752,4 +1752,126 @@ public class HtmlParserTest {
 
         assertEquals(textContent, textArea.wholeText());
     }
+
+    @Test void svgParseTest() {
+        String html = "<div><svg viewBox=2><foreignObject><p>One</p></foreignObject></svg></div>";
+        Document doc = Jsoup.parse(html);
+
+        assertHtmlNamespace(doc);
+        Element div = doc.expectFirst("div");
+        assertHtmlNamespace(div);
+
+        Element svg = doc.expectFirst("svg");
+        assertTrue(svg.attributes().hasKey("viewBox"));
+        assertSvgNamespace(svg);
+        assertSvgNamespace(doc.expectFirst("foreignObject"));
+        assertHtmlNamespace(doc.expectFirst("p"));
+
+        String serialized = div.html();
+        assertEquals("<svg viewBox=\"2\">\n" +
+            " <foreignObject>\n" +
+            "  <p>One</p>\n" +
+            " </foreignObject>\n" +
+            "</svg>", serialized);
+    }
+
+    @Test void mathParseText() {
+        String html = "<div><math><mi><p>One</p><svg><text>Blah</text></svg></mi><ms></ms></div>";
+        Document doc = Jsoup.parse(html);
+
+        assertHtmlNamespace(doc.expectFirst("div"));
+        assertMathNamespace(doc.expectFirst("math"));
+        assertMathNamespace(doc.expectFirst("mi"));
+        assertHtmlNamespace(doc.expectFirst("p"));
+        assertSvgNamespace(doc.expectFirst("svg"));
+        assertSvgNamespace(doc.expectFirst("text"));
+        assertMathNamespace(doc.expectFirst("ms"));
+
+        String serialized = doc.expectFirst("div").html();
+        assertEquals("<math>\n" +
+            " <mi>\n" +
+            "  <p>One</p>\n" +
+            "  <svg>\n" +
+            "   <text>Blah</text>\n" +
+            "  </svg></mi><ms></ms>\n" +
+            "</math>", serialized);
+    }
+
+    private static void assertHtmlNamespace(Element el) {
+        assertEquals(Parser.NamespaceHtml, el.tag().namespace());
+    }
+
+    private static void assertSvgNamespace(Element el) {
+        assertEquals(Parser.NamespaceSvg, el.tag().namespace());
+    }
+
+    private static void assertMathNamespace(Element el) {
+        assertEquals(Parser.NamespaceMathml, el.tag().namespace());
+    }
+
+    @Test void mathSvgStyleTest() {
+        String html = "<style><img></style><math><svg><style><img></img></style></svg></math>";
+        Document doc = Jsoup.parse(html);
+
+        Element htmlStyle = doc.expectFirst("style");
+        assertHtmlNamespace(htmlStyle);
+        assertEquals("<img>", htmlStyle.data()); // that's not an element, it's data (textish)
+
+        Element svgStyle = doc.expectFirst("svg style");
+        assertMathNamespace(svgStyle); // in inherited math namespace as not an HTML integration point
+        Element styleImg = svgStyle.expectFirst("img");
+        assertHtmlNamespace(styleImg); // this one is an img tag - in foreign to html elements
+
+        assertMathNamespace(doc.expectFirst("svg"));
+        assertMathNamespace(doc.expectFirst("math"));
+    }
+
+    @Test void xmlnsAttributeError() {
+        String html = "<p><svg></svg></body>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, doc.parser().getErrors().size());
+
+        String html2 = "<html xmlns='http://www.w3.org/1999/xhtml'><p xmlns='http://www.w3.org/1999/xhtml'><i xmlns='xhtml'></i></body>";
+        Document doc2 = Jsoup.parse(html2, parser);
+        assertEquals(1, doc2.parser().getErrors().size());
+        assertEquals("Invalid xmlns attribute [xhtml] on tag [i]", parser.getErrors().get(0).getErrorMessage());
+    }
+
+    @Test void mathAnnotationSvg() {
+        String html = "<math><svg>"; // not in annotation, svg will be in math ns
+        Document doc = Jsoup.parse(html);
+        assertMathNamespace(doc.expectFirst("math"));
+        assertMathNamespace(doc.expectFirst("svg"));
+
+        String html2 = "<math><annotation-xml><svg>"; // svg will be in svg ns
+        Document doc2 = Jsoup.parse(html2);
+        assertMathNamespace(doc2.expectFirst("math"));
+        assertMathNamespace(doc2.expectFirst("annotation-xml"));
+        assertSvgNamespace(doc2.expectFirst("svg"));
+    }
+
+    @Test void mathHtmlIntegrationPoint() {
+        String html = "<math><div>Hello";
+        Document doc = Jsoup.parse(html);
+        assertMathNamespace(doc.expectFirst("math"));
+        assertHtmlNamespace(doc.expectFirst("div"));
+
+        String html2 = "<math><divv>Hello";
+        Document doc2 = Jsoup.parse(html2);
+        assertMathNamespace(doc2.expectFirst("math"));
+        assertMathNamespace(doc2.expectFirst("divv"));
+
+        String html3 = "<math><annotation-xml><divv>Hello";
+        Document doc3 = Jsoup.parse(html3);
+        assertMathNamespace(doc3.expectFirst("math"));
+        assertMathNamespace(doc3.expectFirst("annotation-xml"));
+        assertMathNamespace(doc3.expectFirst("divv"));
+
+        String html4 = "<math><annotation-xml encoding=text/html><divv>Hello";
+        Document doc4 = Jsoup.parse(html4);
+        assertMathNamespace(doc4.expectFirst("math"));
+        assertMathNamespace(doc4.expectFirst("annotation-xml"));
+        assertHtmlNamespace(doc4.expectFirst("divv"));
+    }
 }

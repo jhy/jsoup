@@ -45,7 +45,7 @@ public class HtmlTreeBuilderStateTest {
     public void ensureArraysAreSorted() {
         List<Object[]> constants = findConstantArrays(Constants.class);
         ensureSorted(constants);
-        assertEquals(39, constants.size());
+        assertEquals(40, constants.size());
     }
 
     @Test public void ensureTagSearchesAreKnownTags() {

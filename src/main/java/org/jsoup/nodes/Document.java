@@ -30,15 +30,26 @@ public class Document extends Element {
     private boolean updateMetaCharset = false;
 
     /**
-     Create a new, empty Document.
+     Create a new, empty Document, in the specified namespace.
+     @param namespace the namespace of this Document's root node.
      @param baseUri base URI of document
      @see org.jsoup.Jsoup#parse
      @see #createShell
      */
-    public Document(String baseUri) {
-        super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
+    public Document(String namespace, String baseUri) {
+        super(Tag.valueOf("#root", namespace, ParseSettings.htmlDefault), baseUri);
         this.location = baseUri;
         this.parser = Parser.htmlParser(); // default, but overridable
+    }
+
+    /**
+     Create a new, empty Document, in the HTML namespace.
+     @param baseUri base URI of document
+     @see org.jsoup.Jsoup#parse
+     @see #Document(String namespace, String baseUri)
+     */
+    public Document(String baseUri) {
+        this(Parser.NamespaceHtml, baseUri);
     }
 
     /**
@@ -207,7 +218,7 @@ public class Document extends Element {
      @return new element
      */
     public Element createElement(String tagName) {
-        return new Element(Tag.valueOf(tagName, ParseSettings.preserveCase), this.baseUri());
+        return new Element(Tag.valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase), this.baseUri());
     }
 
     @Override
@@ -311,7 +322,7 @@ public class Document extends Element {
 
     @Override
     public Document shallowClone() {
-        Document clone = new Document(baseUri());
+        Document clone = new Document(this.tag().namespace(), baseUri());
         if (attributes != null)
             clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();

@@ -7,15 +7,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * HTML Tag capabilities.
+ * Tag capabilities.
  *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Tag implements Cloneable {
-    private static final Map<String, Tag> tags = new HashMap<>(); // map of known tags
+    private static final Map<String, Tag> Tags = new HashMap<>(); // map of known tags
 
     private String tagName;
-    private String normalName; // always the lower case version of this tag, regardless of case preservation mode
+    private final String normalName; // always the lower case version of this tag, regardless of case preservation mode
+    private String namespace;
     private boolean isBlock = true; // block
     private boolean formatAsBlock = true; // should be formatted as a block
     private boolean empty = false; // can hold nothing; e.g. img
@@ -24,9 +25,10 @@ public class Tag implements Cloneable {
     private boolean formList = false; // a control that appears in forms: input, textarea, output etc
     private boolean formSubmit = false; // a control that can be submitted in a form: input etc
 
-    private Tag(String tagName) {
+    private Tag(String tagName, String namespace) {
         this.tagName = tagName;
         normalName = Normalizer.lowerCase(tagName);
+        this.namespace = namespace;
     }
 
     /**
@@ -46,35 +48,44 @@ public class Tag implements Cloneable {
         return normalName;
     }
 
+    public String namespace() {
+        return namespace;
+    }
+
     /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
      * <p>
-     * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
+     * Pre-defined tags (p, div etc) will be ==, but unknown tags are not registered and will only .equals().
      * </p>
      * 
-     * @param tagName Name of tag, e.g. "p". Case insensitive.
+     * @param tagName Name of tag, e.g. "p". Case-insensitive.
+     * @param namespace the namespace for the tag.
      * @param settings used to control tag name sensitivity
      * @return The tag, either defined or new generic.
      */
-    public static Tag valueOf(String tagName, ParseSettings settings) {
-        Validate.notNull(tagName);
-        Tag tag = tags.get(tagName);
+    public static Tag valueOf(String tagName, String namespace, ParseSettings settings) {
+        Validate.notEmpty(tagName);
+        Validate.notNull(namespace);
+        Tag tag = Tags.get(tagName);
+        if (tag != null && tag.namespace.equals(namespace))
+            return tag;
 
-        if (tag == null) {
-            tagName = settings.normalizeTag(tagName); // the name we'll use
-            Validate.notEmpty(tagName);
-            String normalName = Normalizer.lowerCase(tagName); // the lower-case name to get tag settings off
-            tag = tags.get(normalName);
-
-            if (tag == null) {
-                // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
-                tag = new Tag(tagName);
-                tag.isBlock = false;
-            } else if (settings.preserveTagCase() && !tagName.equals(normalName))  {
+        tagName = settings.normalizeTag(tagName); // the name we'll use
+        Validate.notEmpty(tagName);
+        String normalName = Normalizer.lowerCase(tagName); // the lower-case name to get tag settings off
+        tag = Tags.get(normalName);
+        if (tag != null && tag.namespace.equals(namespace)) {
+            if (settings.preserveTagCase() && !tagName.equals(normalName)) {
                 tag = tag.clone(); // get a new version vs the static one, so name update doesn't reset all
                 tag.tagName = tagName;
             }
+            return tag;
         }
+
+        // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
+        tag = new Tag(tagName, namespace);
+        tag.isBlock = false;
+
         return tag;
     }
 
@@ -86,9 +97,25 @@ public class Tag implements Cloneable {
      *
      * @param tagName Name of tag, e.g. "p". <b>Case sensitive</b>.
      * @return The tag, either defined or new generic.
+     * @see #valueOf(String tagName, String namespace, ParseSettings settings)
      */
     public static Tag valueOf(String tagName) {
-        return valueOf(tagName, ParseSettings.preserveCase);
+        return valueOf(tagName, Parser.NamespaceHtml, ParseSettings.preserveCase);
+    }
+
+    /**
+     * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
+     * <p>
+     * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
+     * </p>
+     *
+     * @param tagName Name of tag, e.g. "p". <b>Case sensitive</b>.
+     * @param settings used to control tag name sensitivity
+     * @return The tag, either defined or new generic.
+     * @see #valueOf(String tagName, String namespace, ParseSettings settings)
+     */
+    public static Tag valueOf(String tagName, ParseSettings settings) {
+        return valueOf(tagName, Parser.NamespaceHtml, settings);
     }
 
     /**
@@ -128,9 +155,9 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Get if this tag is self closing.
+     * Get if this tag is self-closing.
      *
-     * @return if this tag should be output as self closing.
+     * @return if this tag should be output as self-closing.
      */
     public boolean isSelfClosing() {
         return empty || selfClosing;
@@ -142,7 +169,7 @@ public class Tag implements Cloneable {
      * @return if a known tag
      */
     public boolean isKnownTag() {
-        return tags.containsKey(tagName);
+        return Tags.containsKey(tagName);
     }
 
     /**
@@ -152,7 +179,7 @@ public class Tag implements Cloneable {
      * @return if known HTML tag
      */
     public static boolean isKnownTag(String tagName) {
-        return tags.containsKey(tagName);
+        return Tags.containsKey(tagName);
     }
 
     /**
@@ -247,7 +274,9 @@ public class Tag implements Cloneable {
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
             "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
             "data", "bdi", "s", "strike", "nobr",
-            "rb" // deprecated but still known / special handling
+            "rb", // deprecated but still known / special handling
+            "text", // in SVG NS
+            "mi", "mo", "msup", "mn", "mtext" // in MathML NS, to ensure inline
     };
     private static final String[] emptyTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
@@ -270,14 +299,21 @@ public class Tag implements Cloneable {
             "input", "keygen", "object", "select", "textarea"
     };
 
+    private static final Map<String, String[]> namespaces = new HashMap<>();
+    static {
+        namespaces.put(Parser.NamespaceMathml, new String[]{"math", "mi", "mo", "msup", "mn", "mtext"});
+        namespaces.put(Parser.NamespaceSvg, new String[]{"svg", "text"});
+        // We don't need absolute coverage here as other cases will be inferred by the HtmlTreeBuilder
+    }
+
     static {
         // creates
         for (String tagName : blockTags) {
-            Tag tag = new Tag(tagName);
+            Tag tag = new Tag(tagName, Parser.NamespaceHtml);
             register(tag);
         }
         for (String tagName : inlineTags) {
-            Tag tag = new Tag(tagName);
+            Tag tag = new Tag(tagName, Parser.NamespaceHtml);
             tag.isBlock = false;
             tag.formatAsBlock = false;
             register(tag);
@@ -285,37 +321,46 @@ public class Tag implements Cloneable {
 
         // mods:
         for (String tagName : emptyTags) {
-            Tag tag = tags.get(tagName);
+            Tag tag = Tags.get(tagName);
             Validate.notNull(tag);
             tag.empty = true;
         }
 
         for (String tagName : formatAsInlineTags) {
-            Tag tag = tags.get(tagName);
+            Tag tag = Tags.get(tagName);
             Validate.notNull(tag);
             tag.formatAsBlock = false;
         }
 
         for (String tagName : preserveWhitespaceTags) {
-            Tag tag = tags.get(tagName);
+            Tag tag = Tags.get(tagName);
             Validate.notNull(tag);
             tag.preserveWhitespace = true;
         }
 
         for (String tagName : formListedTags) {
-            Tag tag = tags.get(tagName);
+            Tag tag = Tags.get(tagName);
             Validate.notNull(tag);
             tag.formList = true;
         }
 
         for (String tagName : formSubmitTags) {
-            Tag tag = tags.get(tagName);
+            Tag tag = Tags.get(tagName);
             Validate.notNull(tag);
             tag.formSubmit = true;
+        }
+
+        // namespace setup
+        for (Map.Entry<String, String[]> ns : namespaces.entrySet()) {
+            for (String tagName : ns.getValue()) {
+                Tag tag = Tags.get(tagName);
+                Validate.notNull(tag);
+                tag.namespace = ns.getKey();
+            }
         }
     }
 
     private static void register(Tag tag) {
-        tags.put(tag.tagName, tag);
+        Tags.put(tag.tagName, tag);
     }
 }

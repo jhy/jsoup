@@ -311,10 +311,11 @@ abstract class Token {
 
         @Override
         public String toString() {
+            String closer = isSelfClosing() ? "/>" : ">";
             if (hasAttributes() && attributes.size() > 0)
-                return "<" + toStringName() + " " + attributes.toString() + ">";
+                return "<" + toStringName() + " " + attributes.toString() + closer;
             else
-                return "<" + toStringName() + ">";
+                return "<" + toStringName() + closer;
         }
     }
 

@@ -4,6 +4,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.parser.HtmlTreeBuilder;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
@@ -339,9 +340,9 @@ public class W3CDom {
      * Implements the conversion by walking the input.
      */
     protected static class W3CBuilder implements NodeVisitor {
+        // TODO: move the namespace handling stuff into XmlTreeBuilder / HtmlTreeBuilder, now that Tags have namespaces
         private static final String xmlnsKey = "xmlns";
         private static final String xmlnsPrefix = "xmlns:";
-        private static final String xhtmlNs = "http://www.w3.org/1999/xhtml";
 
         private final Document doc;
         private boolean namespaceAware = true;
@@ -358,7 +359,7 @@ public class W3CDom {
             final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
             if (namespaceAware && inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder) {
               // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
-              namespacesStack.peek().put("", xhtmlNs);
+              namespacesStack.peek().put("", Parser.NamespaceHtml);
             }
           }
 

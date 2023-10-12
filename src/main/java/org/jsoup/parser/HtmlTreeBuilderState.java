@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -556,13 +557,11 @@ enum HtmlTreeBuilderState {
                     break;
                 case "math":
                     tb.reconstructFormattingElements();
-                    // todo: handle A start tag whose tag name is "math" (i.e. foreign, mathml)
-                    tb.insert(startTag);
+                    tb.insertForeign(startTag, Parser.NamespaceMathml);
                     break;
                 case "svg":
                     tb.reconstructFormattingElements();
-                    // todo: handle A start tag whose tag name is "svg" (xlink, svg)
-                    tb.insert(startTag);
+                    tb.insertForeign(startTag, Parser.NamespaceSvg);
                     break;
                 // static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
                 case "h1":
@@ -1740,9 +1739,83 @@ enum HtmlTreeBuilderState {
         }
     },
     ForeignContent {
+        // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
         boolean process(Token t, HtmlTreeBuilder tb) {
+            switch (t.type) {
+                case Character:
+                    Token.Character c = t.asCharacter();
+                    if (c.getData().equals(nullString))
+                        tb.error(this);
+                    else if (HtmlTreeBuilderState.isWhitespace(c))
+                        tb.insert(c);
+                    else {
+                        tb.insert(c);
+                        tb.framesetOk(false);
+                    }
+                    break;
+                case Comment:
+                    tb.insert(t.asComment());
+                    break;
+                case Doctype:
+                    tb.error(this);
+                    break;
+                case StartTag:
+                    Token.StartTag start = t.asStartTag();
+                    if (StringUtil.in(start.normalName, InForeignToHtml))
+                        return processAsHtml(t, tb);
+                    if (start.normalName.equals("font") && (
+                        start.attributes.hasKeyIgnoreCase("color")
+                            || start.attributes.hasKeyIgnoreCase("face")
+                            || start.attributes.hasKeyIgnoreCase("size")))
+                        return processAsHtml(t, tb);
+
+                    // Any other start:
+                    // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
+                    tb.insertForeign(start, tb.currentElement().tag().namespace());
+                    // (self-closing handled in insert)
+                    // if self-closing svg script -- level and execution elided
+                    break;
+
+                case EndTag:
+                    Token.EndTag end = t.asEndTag();
+                    if (end.normalName.equals("br") || end.normalName.equals("p"))
+                        return processAsHtml(t, tb);
+                    if (end.normalName.equals("script") && tb.currentElementIs("script", Parser.NamespaceSvg)) {
+                        // script level and execution elided.
+                        tb.pop();
+                        return true;
+                    }
+
+                    // Any other end tag
+                    ArrayList<Element> stack = tb.getStack();
+                    if (stack.isEmpty())
+                        Validate.wtf("Stack unexpectedly empty");
+                    int i = stack.size() - 1;
+                    Element el = stack.get(i);
+                    if (!el.normalName().equals(end.normalName))
+                        tb.error(this);
+                    while (i != 0) {
+                        if (el.normalName().equals(end.normalName)) {
+                            tb.popStackToClose(el.normalName());
+                            return true;
+                        }
+                        i--;
+                        el = stack.get(i);
+                        if (el.tag().namespace().equals(Parser.NamespaceHtml)) {
+                            return processAsHtml(t, tb);
+                        }
+                    }
+                    break;
+
+                case EOF:
+                    // won't come through here, but for completion:
+                    break;
+            }
             return true;
-            // todo: implement. Also; how do we get here?
+        }
+
+        boolean processAsHtml(Token t, HtmlTreeBuilder tb) {
+            return tb.state().process(t, tb);
         }
     };
 
@@ -1817,5 +1890,6 @@ enum HtmlTreeBuilderState {
         static final String[] InCaptionIgnore = new String[]{"body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTemplateToHead = new String[] {"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InTemplateToTable = new String[] {"caption", "colgroup", "tbody", "tfoot", "thead"};
+        static final String[] InForeignToHtml = new String[] {"b", "big", "blockquote", "body", "br", "center", "code", "dd", "div", "dl", "dt", "em", "embed", "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "i", "img", "li", "listing", "menu", "meta", "nobr", "ol", "p", "pre", "ruby", "s", "small", "span", "strike", "strong", "sub", "sup", "table", "tt", "u", "ul", "var"};
     }
 }

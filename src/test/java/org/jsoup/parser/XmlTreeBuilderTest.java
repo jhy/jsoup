@@ -127,7 +127,7 @@ public class XmlTreeBuilderTest {
     public void testDoesHandleEOFInTag() {
         String html = "<img src=asdf onerror=\"alert(1)\" x=";
         Document xmlDoc = Jsoup.parse(html, "", Parser.xmlParser());
-        assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\" />", xmlDoc.html());
+        assertEquals("<img src=\"asdf\" onerror=\"alert(1)\" x=\"\"></img>", xmlDoc.html());
     }
 
     @Test
@@ -312,6 +312,36 @@ public class XmlTreeBuilderTest {
         assertEquals("FOO", t3.getName());
         assertSame(t1, t2);
         assertSame(t3, t4);
-
     }
+
+    @Test void rootHasXmlSettings() {
+        Document doc = Jsoup.parse("<foo>", Parser.xmlParser());
+        ParseSettings settings = doc.parser().settings();
+        assertTrue(settings.preserveTagCase());
+        assertTrue(settings.preserveAttributeCase());
+        assertEquals(Parser.NamespaceXml, doc.parser().defaultNamespace());
+    }
+
+    @Test void xmlNamespace() {
+        String xml = "<foo><bar><div><svg><math>Qux</bar></foo>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        assertXmlNamespace(doc);
+        Elements els = doc.select("*");
+        for (Element el : els) {
+            assertXmlNamespace(el);
+        }
+
+        Document clone = doc.clone();
+        assertXmlNamespace(clone);
+        assertXmlNamespace(clone.expectFirst("bar"));
+
+        Document shallow = doc.shallowClone();
+        assertXmlNamespace(shallow);
+    }
+
+    private static void assertXmlNamespace(Element el) {
+        assertEquals(Parser.NamespaceXml, el.tag().namespace(), String.format("Element %s not in XML namespace", el.tagName()));
+    }
+
 }
