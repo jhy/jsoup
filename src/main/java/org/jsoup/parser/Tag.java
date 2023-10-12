@@ -275,7 +275,8 @@ public class Tag implements Cloneable {
             "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
             "data", "bdi", "s", "strike", "nobr",
             "rb", // deprecated but still known / special handling
-            "text" // in SVG NS
+            "text", // in SVG NS
+            "mi", "mo", "msup", "mn", "mtext" // in MathML NS, to ensure inline
     };
     private static final String[] emptyTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
@@ -297,6 +298,13 @@ public class Tag implements Cloneable {
     private static final String[] formSubmitTags = {
             "input", "keygen", "object", "select", "textarea"
     };
+
+    private static final Map<String, String[]> namespaces = new HashMap<>();
+    static {
+        namespaces.put(Parser.NamespaceMathml, new String[]{"math", "mi", "mo", "msup", "mn", "mtext"});
+        namespaces.put(Parser.NamespaceSvg, new String[]{"svg", "text"});
+        // We don't need absolute coverage here as other cases will be inferred by the HtmlTreeBuilder
+    }
 
     static {
         // creates
@@ -343,9 +351,13 @@ public class Tag implements Cloneable {
         }
 
         // namespace setup
-        Tags.get("svg").namespace = Parser.NamespaceSvg;
-        Tags.get("text").namespace = Parser.NamespaceSvg;
-        Tags.get("math").namespace = Parser.NamespaceMathml;
+        for (Map.Entry<String, String[]> ns : namespaces.entrySet()) {
+            for (String tagName : ns.getValue()) {
+                Tag tag = Tags.get(tagName);
+                Validate.notNull(tag);
+                tag.namespace = ns.getKey();
+            }
+        }
     }
 
     private static void register(Tag tag) {

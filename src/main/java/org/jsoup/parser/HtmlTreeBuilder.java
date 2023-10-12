@@ -191,7 +191,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         // If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
         // If the adjusted current node is a MathML text integration point and the token is a character token
-        // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
         if (isMathmlTextIntegration(el)) {
             if (token.isStartTag()
                     && !"mglyph".equals(token.asStartTag().normalName)
@@ -200,6 +199,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (token.isCharacter())
                     return true;
         }
+        // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
         if (Parser.NamespaceMathml.equals(ns)
             && el.normalName().equals("annotation-xml")
             && token.isStartTag()
