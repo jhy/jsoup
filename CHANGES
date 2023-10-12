@@ -32,6 +32,9 @@ Release 1.16.2 [PENDING]
     an element containing any whitespace was not considered empty.
     <https://github.com/jhy/jsoup/issues/1976>
 
+  * Improvement: in forms, <input type="image"> should be excluded from formData() (and hence from form submissions).
+    <https://github.com/jhy/jsoup/pull/2010>
+
   * Bugfix: `form` elements and empty elements (such as `img`) did not have their attributes de-duplicated.
     <https://github.com/jhy/jsoup/pull/1950>
 
