@@ -5,6 +5,7 @@ import org.jsoup.internal.Normalizer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Tag capabilities.
@@ -306,61 +307,35 @@ public class Tag implements Cloneable {
         // We don't need absolute coverage here as other cases will be inferred by the HtmlTreeBuilder
     }
 
-    static {
-        // creates
-        for (String tagName : blockTags) {
-            Tag tag = new Tag(tagName, Parser.NamespaceHtml);
-            register(tag);
-        }
-        for (String tagName : inlineTags) {
-            Tag tag = new Tag(tagName, Parser.NamespaceHtml);
-            tag.isBlock = false;
-            tag.formatAsBlock = false;
-            register(tag);
-        }
-
-        // mods:
-        for (String tagName : emptyTags) {
+    private static void setupTags(String[] tagNames, Consumer<Tag> tagModifier) {
+        for (String tagName : tagNames) {
             Tag tag = Tags.get(tagName);
-            Validate.notNull(tag);
-            tag.empty = true;
-        }
-
-        for (String tagName : formatAsInlineTags) {
-            Tag tag = Tags.get(tagName);
-            Validate.notNull(tag);
-            tag.formatAsBlock = false;
-        }
-
-        for (String tagName : preserveWhitespaceTags) {
-            Tag tag = Tags.get(tagName);
-            Validate.notNull(tag);
-            tag.preserveWhitespace = true;
-        }
-
-        for (String tagName : formListedTags) {
-            Tag tag = Tags.get(tagName);
-            Validate.notNull(tag);
-            tag.formList = true;
-        }
-
-        for (String tagName : formSubmitTags) {
-            Tag tag = Tags.get(tagName);
-            Validate.notNull(tag);
-            tag.formSubmit = true;
-        }
-
-        // namespace setup
-        for (Map.Entry<String, String[]> ns : namespaces.entrySet()) {
-            for (String tagName : ns.getValue()) {
-                Tag tag = Tags.get(tagName);
-                Validate.notNull(tag);
-                tag.namespace = ns.getKey();
+            if (tag == null) {
+                tag = new Tag(tagName, Parser.NamespaceHtml);
+                Tags.put(tag.tagName, tag);
             }
+            tagModifier.accept(tag);
         }
     }
 
-    private static void register(Tag tag) {
-        Tags.put(tag.tagName, tag);
+    static {
+        setupTags(blockTags, tag -> {
+            tag.isBlock = true;
+            tag.formatAsBlock = true;
+        });
+
+        setupTags(inlineTags, tag -> {
+            tag.isBlock = false;
+            tag.formatAsBlock = false;
+        });
+
+        setupTags(emptyTags, tag -> tag.empty = true);
+        setupTags(formatAsInlineTags, tag -> tag.formatAsBlock = false);
+        setupTags(preserveWhitespaceTags, tag -> tag.preserveWhitespace = true);
+        setupTags(formListedTags, tag -> tag.formList = true);
+        setupTags(formSubmitTags, tag -> tag.formSubmit = true);
+        for (Map.Entry<String, String[]> ns : namespaces.entrySet()) {
+            setupTags(ns.getValue(), tag -> tag.namespace = ns.getKey());
+        }
     }
 }
