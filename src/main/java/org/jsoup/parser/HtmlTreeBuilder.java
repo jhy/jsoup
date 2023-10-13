@@ -118,14 +118,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 case "noembed":
                 case "noframes":
                 case "style":
-                case "xml":
+                case "xmp":
                     tokeniser.transition(TokeniserState.Rawtext);
                     break;
                 case "script":
                     tokeniser.transition(TokeniserState.ScriptData);
-                    break;
-                case "noscript":
-                    tokeniser.transition(TokeniserState.Data); // if scripting enabled, rawtext
                     break;
                 case "plaintext":
                     tokeniser.transition(TokeniserState.PLAINTEXT);
