@@ -248,6 +248,8 @@ public class Safelist {
 
         for (String tagName : tags) {
             Validate.notEmpty(tagName);
+            Validate.isFalse(tagName.equalsIgnoreCase("noscript"),
+                "noscript is unsupported in Safelists, due to incompatibilities between parsers with and without script-mode enabled");
             tagNames.add(TagName.valueOf(tagName));
         }
         return this;
