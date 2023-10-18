@@ -1775,9 +1775,9 @@ enum HtmlTreeBuilderState {
                     if (StringUtil.in(start.normalName, InForeignToHtml))
                         return processAsHtml(t, tb);
                     if (start.normalName.equals("font") && (
-                        start.attributes.hasKeyIgnoreCase("color")
-                            || start.attributes.hasKeyIgnoreCase("face")
-                            || start.attributes.hasKeyIgnoreCase("size")))
+                        start.hasAttributeIgnoreCase("color")
+                            || start.hasAttributeIgnoreCase("face")
+                            || start.hasAttributeIgnoreCase("size")))
                         return processAsHtml(t, tb);
 
                     // Any other start:

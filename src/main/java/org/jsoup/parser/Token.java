@@ -172,8 +172,13 @@ abstract class Token {
             return attributes != null;
         }
 
+        /** Case-sensitive check */
         final boolean hasAttribute(String key) {
             return attributes != null && attributes.hasKey(key);
+        }
+
+        final boolean hasAttributeIgnoreCase(String key) {
+            return attributes != null && attributes.hasKeyIgnoreCase(key);
         }
 
         final void finaliseTag() {
