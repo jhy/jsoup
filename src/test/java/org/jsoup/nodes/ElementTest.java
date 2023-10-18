@@ -2773,4 +2773,47 @@ public class ElementTest {
             "</table>", out);
         // todo - I would prefer the </td> to wrap down there - but need to reimplement pretty printer to simplify and track indented state
     }
+
+    @Test void emptyDetachesChildren() {
+        String html = "<div><p>One<p>Two</p>Three</div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.expectFirst("div");
+        assertEquals(3, div.childNodeSize());
+
+        List<Node> childNodes = div.childNodes();
+
+        div.empty();
+        assertEquals(0, div.childNodeSize());
+        assertEquals(3, childNodes.size()); // copied before removing
+        for (Node childNode : childNodes) {
+            assertNull(childNode.parentNode);
+        }
+
+        Element p = (Element) childNodes.get(0);
+        assertEquals(p, p.childNode(0).parentNode()); // TextNode "One" still has parent p, as detachment is only on div element
+    }
+
+    @Test void emptyAndAddPreviousChild() {
+        String html = "<div><p>One<p>Two<p>Three</div>";
+        Document doc = Jsoup.parse(html);
+        Element div = doc.expectFirst("div");
+        Element p = div.expectFirst("p");
+        div
+            .empty()
+            .appendChild(p);
+
+        assertEquals("<p>One</p>", div.html());
+    }
+
+    @Test void emptyAndAddPreviousDescendant() {
+        String html = "<header><div><p>One<p>Two<p>Three</div></header>";
+        Document doc = Jsoup.parse(html);
+        Element header = doc.expectFirst("header");
+        Element p = header.expectFirst("p");
+        header
+            .empty()
+            .appendChild(p);
+
+        assertEquals("<p>One</p>", header.html());
+    }
 }

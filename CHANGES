@@ -64,6 +64,11 @@ Release 1.16.2 [PENDING]
     Further, a StackOverflowError may occur when running the query.
     <https://github.com/jhy/jsoup/issues/2001>
 
+  * Bugfix: appending a node back to its original Element after empty() would throw an Index out of bounds exception.
+    Also, now the child nodes that were removed have their parent node cleared, fully detaching them from the original
+    parent.
+    <https://github.com/jhy/jsoup/issues/2013>
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.

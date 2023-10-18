@@ -829,11 +829,16 @@ public class Element extends Node {
     }
 
     /**
-     * Remove all the element's child nodes. Any attributes are left as-is.
+     * Remove all the element's child nodes. Any attributes are left as-is. Each child node has its parent set to
+     * {@code null}.
      * @return this element
      */
     @Override
     public Element empty() {
+        // Detach each of the children -> parent links:
+        for (Node child : childNodes) {
+            child.parentNode = null;
+        }
         childNodes.clear();
         return this;
     }
