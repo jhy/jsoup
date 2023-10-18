@@ -597,7 +597,12 @@ public class Safelist {
         return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 
-    Attributes getEnforcedAttributes(String tagName) {
+    /**
+     Gets the Attributes that should be enforced for a given tag
+     * @param tagName the tag
+     * @return the attributes that will be enforced; empty if none are set for the given tag
+     */
+    public Attributes getEnforcedAttributes(String tagName) {
         Attributes attrs = new Attributes();
         TagName tag = TagName.valueOf(tagName);
         if (enforcedAttributes.containsKey(tag)) {
