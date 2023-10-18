@@ -308,6 +308,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 currentToken.tokenType(), currentToken, state));
     }
 
+    /** Inserts an HTML element for the given tag) */
     Element insert(final Token.StartTag startTag) {
         dedupeAttributes(startTag);
 
@@ -714,7 +715,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // don't walk too far up the tree
 
         for (int pos = bottom; pos >= top; pos--) {
-            final String elName = stack.get(pos).normalName();
+            Element el = stack.get(pos);
+            if (!el.tag().namespace().equals(NamespaceHtml)) continue;
+
+            final String elName = el.normalName();
             if (inSorted(elName, targetNames))
                 return true;
             if (inSorted(elName, baseTypes))

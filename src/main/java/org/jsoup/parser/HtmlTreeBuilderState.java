@@ -1299,13 +1299,20 @@ enum HtmlTreeBuilderState {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.normalName();
 
-                if (inSorted(name, InCellNames)) {
+                if (inSorted(name, InCellNames)) { // th, th
                     tb.clearStackToTableRowContext();
                     tb.insert(startTag);
                     tb.transition(InCell);
                     tb.insertMarkerToFormattingElements();
-                } else if (inSorted(name, InRowMissing)) {
-                    return handleMissingTr(t, tb);
+                } else if (inSorted(name, InRowMissing)) { // "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
+                    if (!tb.inTableScope("tr")) {
+                        tb.error(this);
+                        return false;
+                    }
+                    tb.clearStackToTableRowContext();
+                    tb.pop(); // tr
+                    tb.transition(InTableBody);
+                    return tb.process(t);
                 } else {
                     return anythingElse(t, tb);
                 }
@@ -1322,15 +1329,27 @@ enum HtmlTreeBuilderState {
                     tb.pop(); // tr
                     tb.transition(InTableBody);
                 } else if (name.equals("table")) {
-                    return handleMissingTr(t, tb);
-                } else if (inSorted(name, InTableToBody)) {
-                    if (!tb.inTableScope(name) || !tb.inTableScope("tr")) {
+                    if (!tb.inTableScope("tr")) {
                         tb.error(this);
                         return false;
                     }
                     tb.clearStackToTableRowContext();
                     tb.pop(); // tr
                     tb.transition(InTableBody);
+                    return tb.process(t);
+                } else if (inSorted(name, InTableToBody)) { // "tbody", "tfoot", "thead"
+                    if (!tb.inTableScope(name)) {
+                        tb.error(this);
+                        return false;
+                    }
+                    if (!tb.inTableScope("tr")) {
+                        // not an error per spec?
+                        return false;
+                    }
+                    tb.clearStackToTableRowContext();
+                    tb.pop(); // tr
+                    tb.transition(InTableBody);
+                    return tb.process(t);
                 } else if (inSorted(name, InRowIgnore)) {
                     tb.error(this);
                     return false;
@@ -1345,14 +1364,6 @@ enum HtmlTreeBuilderState {
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             return tb.process(t, InTable);
-        }
-
-        private boolean handleMissingTr(Token t, TreeBuilder tb) {
-            boolean processed = tb.processEndTag("tr");
-            if (processed)
-                return tb.process(t);
-            else
-                return false;
         }
     },
     InCell {
