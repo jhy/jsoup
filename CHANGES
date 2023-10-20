@@ -69,6 +69,9 @@ Release 1.16.2 [PENDING]
     parent.
     <https://github.com/jhy/jsoup/issues/2013>
 
+  * Bugfix: in Jsoup.Connection when adding headers, the value may have been assumed to be an incorrectly decoded
+    ISO_8859_1 string, and re-encoded as UTF-8. The value is now left as-is.
+
   * Change: removed previously deprecated methods Document#normalise, Element#forEach(org.jsoup.helper.Consumer<>),
     Node#forEach(org.jsoup.helper.Consumer<>), and the org.jsoup.helper.Consumer interface; the latter being a
     previously required compatibility shim prior to Android's de-sugaring support.

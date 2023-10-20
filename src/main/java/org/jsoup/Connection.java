@@ -412,11 +412,11 @@ public interface Connection {
 
         /**
          * Get the value of a header. If there is more than one header value with the same name, the headers are returned
-         * comma seperated, per <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2">rfc2616-sec4</a>.
+         * comma separated, per <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2">rfc2616-sec4</a>.
          * <p>
-         * Header names are case insensitive.
+         * Header names are case-insensitive.
          * </p>
-         * @param name name of header (case insensitive)
+         * @param name name of header (case-insensitive)
          * @return value of header, or null if not set.
          * @see #hasHeader(String)
          * @see #cookie(String)
@@ -425,14 +425,16 @@ public interface Connection {
 
         /**
          * Get the values of a header.
-         * @param name header name, case insensitive.
+         * @param name header name, case-insensitive.
          * @return a list of values for this header, or an empty list if not set.
          */
         List<String> headers(String name);
 
         /**
-         * Set a header. This method will overwrite any existing header with the same case insensitive name. (If there
+         * Set a header. This method will overwrite any existing header with the same case-insensitive name. If there
          * is more than one value for this header, this method will update the first matching header.
+         * <p>For compatibility, if the content of the header includes text that cannot be represented by ISO-8859-1,
+         * then it should be encoded first per <a href="https://www.ietf.org/rfc/rfc2047.txt">RFC 2047</a>.</p>
          * @param name Name of header
          * @param value Value of header
          * @return this, for chaining
@@ -442,6 +444,8 @@ public interface Connection {
 
         /**
          * Add a header. The header will be added regardless of whether a header with the same name already exists.
+         * <p>For compatibility, if the content of the header includes text that cannot be represented by ISO-8859-1,
+         * then it should be encoded first per <a href="https://www.ietf.org/rfc/rfc2047.txt">RFC 2047</a>.</p>
          * @param name Name of new header
          * @param value Value of new header
          * @return this, for chaining
@@ -450,22 +454,22 @@ public interface Connection {
 
         /**
          * Check if a header is present
-         * @param name name of header (case insensitive)
+         * @param name name of header (case-insensitive)
          * @return if the header is present in this request/response
          */
         boolean hasHeader(String name);
 
         /**
          * Check if a header is present, with the given value
-         * @param name header name (case insensitive)
-         * @param value value (case insensitive)
+         * @param name header name (case-insensitive)
+         * @param value value (case-insensitive)
          * @return if the header and value pair are set in this req/res
          */
         boolean hasHeaderWithValue(String name, String value);
 
         /**
          * Remove headers by name. If there is more than one header with this name, they will all be removed.
-         * @param name name of header to remove (case insensitive)
+         * @param name name of header to remove (case-insensitive)
          * @return this, for chaining
          */
         T removeHeader(String name);

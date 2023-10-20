@@ -358,4 +358,13 @@ public class HttpConnectionTest {
         }
         assertTrue(threw);
     }
+
+    @Test void setHeaderWithUnicodeValue() {
+        Connection connect = Jsoup.connect("https://example.com");
+        String value = "/foo/我的";
+        connect.header("Key", value);
+
+        String actual = connect.request().header("Key");
+        assertEquals(value, actual);
+    }
 }

@@ -448,7 +448,7 @@ public class HttpConnection implements Connection {
         }
 
         @Override
-        public T addHeader(String name, String value) {
+        public T addHeader(String name, @Nullable String value) {
             Validate.notEmptyParam(name, "name");
             //noinspection ConstantConditions
             value = value == null ? "" : value;
@@ -458,7 +458,7 @@ public class HttpConnection implements Connection {
                 values = new ArrayList<>();
                 headers.put(name, values);
             }
-            values.add(fixHeaderEncoding(value));
+            values.add(value);
 
             return (T) this;
         }
@@ -467,55 +467,6 @@ public class HttpConnection implements Connection {
         public List<String> headers(String name) {
             Validate.notEmptyParam(name, "name");
             return getHeadersCaseInsensitive(name);
-        }
-
-        private static String fixHeaderEncoding(String val) {
-            byte[] bytes = val.getBytes(ISO_8859_1);
-            if (!looksLikeUtf8(bytes))
-                return val;
-            return new String(bytes, UTF_8);
-        }
-
-        private static boolean looksLikeUtf8(byte[] input) {
-            int i = 0;
-            // BOM:
-            if (input.length >= 3
-                && (input[0] & 0xFF) == 0xEF
-                && (input[1] & 0xFF) == 0xBB
-                && (input[2] & 0xFF) == 0xBF) {
-                i = 3;
-            }
-
-            int end;
-            for (int j = input.length; i < j; ++i) {
-                int o = input[i];
-                if ((o & 0x80) == 0) {
-                    continue; // ASCII
-                }
-
-                // UTF-8 leading:
-                if ((o & 0xE0) == 0xC0) {
-                    end = i + 1;
-                } else if ((o & 0xF0) == 0xE0) {
-                    end = i + 2;
-                } else if ((o & 0xF8) == 0xF0) {
-                    end = i + 3;
-                } else {
-                    return false;
-                }
-
-                if (end >= input.length)
-                    return false;
-
-                while (i < end) {
-                    i++;
-                    o = input[i];
-                    if ((o & 0xC0) != 0x80) {
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
 
         @Override
@@ -1162,9 +1113,67 @@ public class HttpConnection implements Connection {
                     }
                 }
                 for (String value : values) {
-                    addHeader(name, value);
+                    addHeader(name, fixHeaderEncoding(value));
                 }
             }
+        }
+
+        /**
+         Servers may encode response headers in UTF-8 instead of RFC defined 8859. This method attempts to detect that
+         and re-decode the string as UTF-8.
+         * @param val a header value string that may have been incorrectly decoded as 8859.
+         * @return a potentially re-decoded string.
+         */
+        @Nullable
+        private static String fixHeaderEncoding(@Nullable String val) {
+            if (val == null) return val;
+            byte[] bytes = val.getBytes(ISO_8859_1);
+            if (looksLikeUtf8(bytes))
+                return new String(bytes, UTF_8);
+            else
+                return val;
+        }
+
+        private static boolean looksLikeUtf8(byte[] input) {
+            int i = 0;
+            // BOM:
+            if (input.length >= 3
+                && (input[0] & 0xFF) == 0xEF
+                && (input[1] & 0xFF) == 0xBB
+                && (input[2] & 0xFF) == 0xBF) {
+                i = 3;
+            }
+
+            int end;
+            for (int j = input.length; i < j; ++i) {
+                int o = input[i];
+                if ((o & 0x80) == 0) {
+                    continue; // ASCII
+                }
+
+                // UTF-8 leading:
+                if ((o & 0xE0) == 0xC0) {
+                    end = i + 1;
+                } else if ((o & 0xF0) == 0xE0) {
+                    end = i + 2;
+                } else if ((o & 0xF8) == 0xF0) {
+                    end = i + 3;
+                } else {
+                    return false;
+                }
+
+                if (end >= input.length)
+                    return false;
+
+                while (i < end) {
+                    i++;
+                    o = input[i];
+                    if ((o & 0xC0) != 0x80) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         private @Nullable static String setOutputContentType(final Connection.Request req) {
