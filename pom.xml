@@ -24,7 +24,7 @@
     <url>https://github.com/jhy/jsoup</url>
     <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
     <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
-    <tag>jsoup-1.16.1</tag>
+    <tag>jsoup-1.16.2</tag>
   </scm>
   <organization>
     <name>Jonathan Hedley</name>
@@ -94,13 +94,12 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.6.0</version>
         <configuration>
-            <doclint>none</doclint>
-            <source>8</source>
+          <doclint>none</doclint>
+          <source>8</source>
         </configuration>
         <executions>
           <execution>
             <id>attach-javadoc</id>
-            <phase>verify</phase>
             <goals>
               <goal>jar</goal>
             </goals>
@@ -119,9 +118,8 @@
         <executions>
           <execution>
             <id>attach-sources</id>
-            <phase>verify</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
@@ -292,7 +290,7 @@
             <executions>
               <execution>
                 <id>sign-artifacts</id>
-                <phase>verify</phase>
+                <phase>package</phase>
                 <goals>
                   <goal>sign</goal>
                 </goals>
