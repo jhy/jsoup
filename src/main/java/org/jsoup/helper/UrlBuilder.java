@@ -90,6 +90,7 @@ final class UrlBuilder {
             } else if (c > 127) { // out of ascii range
                 sb.append(URLEncoder.encode(new String(Character.toChars(c)), UTF_8.name()));
                 // ^^ is a bit heavy-handed - if perf critical, we could optimize
+                if (Character.charCount(c) == 2) i++; // advance past supplemental
             } else {
                 sb.append((char) c);
             }

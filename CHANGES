@@ -49,6 +49,9 @@ Release 1.16.2 [PENDING]
     ASCII.
     <https://github.com/jhy/jsoup/issues/1952>
 
+  * Bugfix: in Jsoup.connect(url), strings containing supplemental characters (e.g. emoji) were not URL escaped
+    correctly.
+
   * Bugfix: in Jsoup.connect(url), the ConstrainableInputStream would clear Thread interrupts when reading the body.
     This precluded callers from spawning a thread, running a number of requests for a length of time, then joining that
     thread after interrupting it.

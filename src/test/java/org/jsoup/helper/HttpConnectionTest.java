@@ -260,6 +260,12 @@ public class HttpConnectionTest {
         assertEquals("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag", url2.toExternalForm());
     }
 
+    @Test public void encodeUrlSupplementary() throws MalformedURLException {
+        URL url1 = new URL("https://example.com/tools/test💩.html"); // = "/tools/test\uD83D\uDCA9.html"
+        URL url2 = new UrlBuilder(url1).build();
+        assertEquals("https://example.com/tools/test%F0%9F%92%A9.html", url2.toExternalForm());
+    }
+
     @Test void encodedUrlDoesntDoubleEncode() throws MalformedURLException {
         URL url1 = new URL("https://test.com/foo%20bar/%5BOne%5D?q=white+space#frag%20ment");
         URL url2 = new UrlBuilder(url1).build();
