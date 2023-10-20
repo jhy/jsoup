@@ -1145,11 +1145,13 @@ public class HttpConnection implements Connection {
             }
 
             int end;
+            boolean foundNonAscii = false;
             for (int j = input.length; i < j; ++i) {
                 int o = input[i];
                 if ((o & 0x80) == 0) {
                     continue; // ASCII
                 }
+                foundNonAscii = true;
 
                 // UTF-8 leading:
                 if ((o & 0xE0) == 0xC0) {
@@ -1173,7 +1175,7 @@ public class HttpConnection implements Connection {
                     }
                 }
             }
-            return true;
+            return foundNonAscii;
         }
 
         private @Nullable static String setOutputContentType(final Connection.Request req) {
