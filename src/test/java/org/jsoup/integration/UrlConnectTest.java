@@ -396,8 +396,8 @@ public class UrlConnectTest {
     public void handlesUnescapedRedirects() throws IOException {
         // URL locations should be url safe (ascii) but are often not, so we should try to guess
         // in this case the location header is utf-8, but defined in spec as iso8859, so detect, convert, encode
-        String url = "http://direct.infohound.net/tools/302-utf.pl";
-        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
+        String url = "https://direct.infohound.net/tools/302-utf.pl";
+        String urlEscaped = "https://direct.infohound.net/tools/test%F0%9F%92%A9.html";
 
         Connection.Response res = Jsoup.connect(url).execute();
         Document doc = res.parse();
@@ -410,17 +410,17 @@ public class UrlConnectTest {
     }
 
     @Test public void handlesEscapesInRedirecct() throws IOException {
-        Document doc = Jsoup.connect("http://infohound.net/tools/302-escaped.pl").get();
-        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
+        Document doc = Jsoup.connect("https://direct.infohound.net/tools/302-escaped.pl").get();
+        assertEquals("https://direct.infohound.net/tools/q.pl?q=one%20two", doc.location());
 
-        doc = Jsoup.connect("http://infohound.net/tools/302-white.pl").get();
-        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
+        doc = Jsoup.connect("https://direct.infohound.net/tools/302-white.pl").get();
+        assertEquals("https://direct.infohound.net/tools/q.pl?q=one+two", doc.location());
     }
 
     @Test
     public void handlesUt8fInUrl() throws IOException {
-        String url = "http://direct.infohound.net/tools/test\uD83D\uDCA9.html";
-        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
+        String url = "https://direct.infohound.net/tools/test\uD83D\uDCA9.html";
+        String urlEscaped = "https://direct.infohound.net/tools/test%F0%9F%92%A9.html";
 
         Connection.Response res = Jsoup.connect(url).execute();
         Document doc = res.parse();
