@@ -28,14 +28,14 @@ import java.util.Map;
  cookie store. The cookie store for the session is available via {@link #cookieStore()}. You may provide your own
  implementation via {@link #cookieStore(java.net.CookieStore)} before making requests.</p>
  <p>Request configuration can be made using either the shortcut methods in Connection (e.g. {@link #userAgent(String)}),
- or by methods in the Connection.Request object directly. All request configuration must be made before the request is
+ or by methods in the {@link Connection.Request} object directly. All request configuration must be made before the request is
  executed. When used as an ongoing session, initialize all defaults prior to making multi-threaded {@link
 #newRequest()}s.</p>
  <p>Note that the term "Connection" used here does not mean that a long-lived connection is held against a server for
  the lifetime of the Connection object. A socket connection is only made at the point of request execution ({@link
 #execute()}, {@link #get()}, or {@link #post()}), and the server's response consumed.</p>
  <p>For multi-threaded implementations, it is important to use a {@link #newRequest()} for each request. The session may
- be shared across threads but a given request, not.</p>
+ be shared across concurrent threads, but a not a specific request.</p>
  */
 @SuppressWarnings("unused")
 public interface Connection {
@@ -62,7 +62,8 @@ public interface Connection {
     }
 
     /**
-     Creates a new request, using this Connection as the session-state and to initialize the connection settings (which may then be independently on the returned Connection.Request object).
+     Creates a new request, using this Connection as the session-state and to initialize the connection settings (which
+     may then be independently changed on the returned {@link Connection.Request} object).
      @return a new Connection object, with a shared Cookie Store and initialized settings from this Connection and Request
      @since 1.14.1
      */
@@ -135,7 +136,7 @@ public interface Connection {
     Connection referrer(String referrer);
 
     /**
-     * Configures the connection to (not) follow server redirects. By default this is <b>true</b>.
+     * Configures the connection to (not) follow server redirects. By default, this is <b>true</b>.
      * @param followRedirects true if server redirects should be followed.
      * @return this Connection, for chaining
      */
@@ -149,8 +150,8 @@ public interface Connection {
     Connection method(Method method);
 
     /**
-     * Configures the connection to not throw exceptions when a HTTP error occurs. (4xx - 5xx, e.g. 404 or 500). By
-     * default this is <b>false</b>; an IOException is thrown if an error is encountered. If set to <b>true</b>, the
+     * Configures the connection to not throw exceptions when an HTTP error occurs. (4xx - 5xx, e.g. 404 or 500). By
+     * default, this is <b>false</b>; an IOException is thrown if an error is encountered. If set to <b>true</b>, the
      * response is populated with the error body, and the status message will reflect the error.
      * @param ignoreHttpErrors - false (default) if HTTP errors should be ignored.
      * @return this Connection, for chaining
@@ -158,7 +159,7 @@ public interface Connection {
     Connection ignoreHttpErrors(boolean ignoreHttpErrors);
 
     /**
-     * Ignore the document's Content-Type when parsing the response. By default this is <b>false</b>, an unrecognised
+     * Ignore the document's Content-Type when parsing the response. By default, this is <b>false</b>, an unrecognised
      * content-type will cause an IOException to be thrown. (This is to prevent producing garbage by attempting to parse
      * a JPEG binary image, for example.) Set to true to force a parse attempt regardless of content type.
      * @param ignoreContentType set to true if you would like the content type ignored on parsing the response into a
@@ -191,7 +192,7 @@ public interface Connection {
      * component.
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * You must close the InputStream in a {@code finally} block.
-     * @return this Connections, for chaining
+     * @return this Connection, for chaining
      * @see #data(String, String, InputStream, String) if you want to set the uploaded file's mimetype.
      */
     Connection data(String key, String filename, InputStream inputStream);
@@ -205,7 +206,7 @@ public interface Connection {
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * @param contentType the Content Type (aka mimetype) to specify for this file.
      * You must close the InputStream in a {@code finally} block.
-     * @return this Connections, for chaining
+     * @return this Connection, for chaining
      */
     Connection data(String key, String filename, InputStream inputStream, String contentType);
 
@@ -224,12 +225,13 @@ public interface Connection {
     Connection data(Map<String, String> data);
 
     /**
-     Add one or more request {@code key, val} data parameter pairs.<p>Multiple parameters may be set at once, e.g.:
+     Add one or more request {@code key, val} data parameter pairs.
+     <p>Multiple parameters may be set at once, e.g.:
      <code>.data("name", "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
      <code>{@literal ?name=jsoup&language=Java&language=English}</code></p>
      <p>For GET requests, data parameters will be sent on the request query string. For POST (and other methods that
-     contain a body), they will be sent as body form parameters, unless the body is explicitly set by {@link
-    #requestBody(String)}, in which case they will be query string parameters.</p>
+     contain a body), they will be sent as body form parameters, unless the body is explicitly set by
+     {@link #requestBody(String)}, in which case they will be query string parameters.</p>
 
      @param keyvals a set of key value pairs.
      @return this Connection, for chaining
@@ -244,8 +246,8 @@ public interface Connection {
     @Nullable KeyVal data(String key);
 
     /**
-     * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
-     * encoded form key/value pairs. E.g.:
+     * Set a POST (or PUT) request body. Useful when a server expects a plain request body (such as JSON), and not a set
+     * of URL encoded form key/value pairs. E.g.:
      * <code><pre>Jsoup.connect(url)
      * .requestBody(json)
      * .header("Content-Type", "application/json")
@@ -256,16 +258,18 @@ public interface Connection {
     Connection requestBody(String body);
 
     /**
-     * Set a request header.
+     * Set a request header. Replaces any existing header with the same case-insensitive name.
      * @param name header name
      * @param value header value
      * @return this Connection, for chaining
+     * @see org.jsoup.Connection.Request#header(String, String)
      * @see org.jsoup.Connection.Request#headers()
      */
     Connection header(String name, String value);
 
     /**
-     * Adds each of the supplied headers to the request.
+     * Sets each of the supplied headers on the request. Existing headers with the same case-insensitive name will be
+     * replaced with the new value.
      * @param headers map of headers name {@literal ->} value pairs
      * @return this Connection, for chaining
      * @see org.jsoup.Connection.Request#headers()
@@ -303,15 +307,16 @@ public interface Connection {
     CookieStore cookieStore();
 
     /**
-     * Provide an alternate parser to use when parsing the response to a Document. If not set, defaults to the HTML
-     * parser, unless the response content-type is XML, in which case the XML parser is used.
+     * Provide a specific parser to use when parsing the response to a Document. If not set, jsoup defaults to the
+     * {@link Parser#htmlParser() HTML parser}, unless the response content-type is XML, in which case the
+     * {@link Parser#xmlParser() XML parser} is used.
      * @param parser alternate parser
      * @return this Connection, for chaining
      */
     Connection parser(Parser parser);
 
     /**
-     * Sets the default post data character set for x-www-form-urlencoded post data
+     * Set the character-set used to encode for x-www-form-urlencoded post data. Defaults to {@code UTF-8}.
      * @param charset character set to encode post data
      * @return this Connection, for chaining
      */
@@ -320,7 +325,7 @@ public interface Connection {
     /**
      * Execute the request as a GET, and parse the result.
      * @return parsed Document
-     * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
+     * @throws java.net.MalformedURLException if the request URL is not an HTTP or HTTPS URL, or is otherwise malformed
      * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
      * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
      * @throws java.net.SocketTimeoutException if the connection times out
@@ -341,7 +346,7 @@ public interface Connection {
 
     /**
      * Execute the request.
-     * @return a response object
+     * @return the executed {@link Response}
      * @throws java.net.MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
      * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
      * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
@@ -650,7 +655,7 @@ public interface Connection {
         Collection<KeyVal> data();
 
         /**
-         * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set for URL
+         * Set a POST (or PUT) request body. Useful when a server expects a plain request body, not a set of URL
          * encoded form key/value pairs. E.g.:
          * <code><pre>Jsoup.connect(url)
          * .requestBody(json)
@@ -754,8 +759,9 @@ public interface Connection {
 
         /**
          * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
-         * same connection response (otherwise, once the response is read, its InputStream will have been drained and
-         * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.
+         * same connection response. Otherwise, once the response is read, its InputStream will have been drained and
+         * may not be re-read.
+         * <p>Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.</p>
          * @return this response, for chaining
          * @throws UncheckedIOException if an IO exception occurs during buffering.
          */
