@@ -1181,4 +1181,29 @@ public class SelectorTest {
         assertEquals("4", notEmpty.get(0).id());
         assertEquals("5", notEmpty.get(1).id());
     }
+
+    @Test public void parentFromSpecifiedDescender() {
+        // https://github.com/jhy/jsoup/issues/2018
+        String html = "<ul id=outer><li>Foo</li><li>Bar <ul id=inner><li>Baz</li><li>Qux</li></ul> </li></ul>";
+        Document doc = Jsoup.parse(html);
+
+        Element ul = doc.expectFirst("#outer");
+        assertEquals(2, ul.childrenSize());
+
+        Element li1 = ul.expectFirst("> li:nth-child(1)");
+        assertEquals("Foo", li1.ownText());
+        assertTrue(li1.select("ul").isEmpty());
+
+        Element li2 = ul.expectFirst("> li:nth-child(2)");
+        assertEquals("Bar", li2.ownText());
+
+        // And now for the bug - li2 select was not restricted to the li2 context
+        Elements innerLis = li2.select("ul > li");
+        assertEquals(2, innerLis.size());
+        assertEquals("Baz", innerLis.first().ownText());
+
+        // Confirm that parent selector (" ") works same as immediate parent (">");
+        Elements innerLisFromParent = li2.select("ul li");
+        assertEquals(innerLis, innerLisFromParent);
+    }
 }

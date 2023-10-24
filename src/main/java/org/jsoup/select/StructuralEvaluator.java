@@ -189,7 +189,9 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            // evaluate from last to first
+            if (element == root)
+                return false; // cannot match as the second eval (first parent test) would be above the root
+
             for (int i = evaluators.size() -1; i >= 0; --i) {
                 if (element == null)
                     return false;

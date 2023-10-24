@@ -12,6 +12,10 @@ Release 1.17.1 [PENDING]
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>
 
+  * Bugfix: the Immediate Parent selector `>` could match elements above the root context element, causing incorrect
+    elements to be returned when used on elements other than the root document.
+    <https://github.com/jhy/jsoup/issues/2018>
+
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
     are sorted by their relative execution cost, and executed in order of lower to higher cost. This speeds the
