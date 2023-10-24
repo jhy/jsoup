@@ -36,8 +36,9 @@ public class Comment extends LeafNode {
         return this;
     }
 
+    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && ((siblingIndex() == 0 && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock()) || (out.outline() )))
+        if (out.prettyPrint() && ((isEffectivelyFirst() && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock()) || (out.outline() )))
             indent(accum, depth, out);
         accum
                 .append("<!--")
@@ -45,7 +46,8 @@ public class Comment extends LeafNode {
                 .append("-->");
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+    @Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public String toString() {
@@ -86,7 +88,7 @@ public class Comment extends LeafNode {
         String fragment = "<" + declContent + ">";
         // use the HTML parser not XML, so we don't get into a recursive XML Declaration on contrived data
         Document doc = Parser.htmlParser().settings(ParseSettings.preserveCase).parseInput(fragment, baseUri());
-        if (doc.body().children().size() > 0) {
+        if (doc.body().childrenSize() > 0) {
             Element el = doc.body().child(0);
             decl = new XmlDeclaration(NodeUtils.parser(doc).settings().normalizeTag(el.tagName()), data.startsWith("!"));
             decl.attributes().addAll(el.attributes());

@@ -5,12 +5,11 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.jsoup.integration.servlets.BaseServlet;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.net.InetSocketAddress;
 
 public class TestServer {
-    private static final Server jetty = new Server(0);
+    private static final Server jetty = new Server(new InetSocketAddress("localhost", 0));
     private static final ServletHandler handler = new ServletHandler();
-    private static AtomicInteger latch = new AtomicInteger(0);
 
     static {
         jetty.setHandler(handler);
@@ -21,26 +20,10 @@ public class TestServer {
 
     public static void start() {
         synchronized (jetty) {
-            int count = latch.getAndIncrement();
-            if (count == 0) {
-                try {
-                    jetty.start();
-                } catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-    }
-
-    public static void stop() {
-        synchronized (jetty) {
-            int count = latch.getAndDecrement();
-            if (count == 0) {
-                try {
-                    jetty.stop();
-                } catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
+            try {
+                jetty.start(); // jetty will safely no-op a start on an already running instance
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
             }
         }
     }

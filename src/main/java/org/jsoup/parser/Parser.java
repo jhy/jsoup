@@ -9,13 +9,20 @@ import java.io.StringReader;
 import java.util.List;
 
 /**
- * Parses HTML into a {@link org.jsoup.nodes.Document}. Generally best to use one of the  more convenient parse methods
- * in {@link org.jsoup.Jsoup}.
- */
+ Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
+ {@link org.jsoup.Jsoup}.
+ <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
+ environment, use {@link #newInstance()} to make copies. */
 public class Parser {
+    public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
+    public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
+    public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
+    public static final String NamespaceSvg = "http://www.w3.org/2000/svg";
+
     private TreeBuilder treeBuilder;
     private ParseErrorList errors;
     private ParseSettings settings;
+    private boolean trackPosition = false;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -39,6 +46,7 @@ public class Parser {
         treeBuilder = copy.treeBuilder.newInstance(); // because extended
         errors = new ParseErrorList(copy.errors); // only copies size, not contents
         settings = new ParseSettings(copy.settings);
+        trackPosition = copy.trackPosition;
     }
     
     public Document parseInput(String html, String baseUri) {
@@ -63,7 +71,7 @@ public class Parser {
 
     /**
      * Update the TreeBuilder used when parsing content.
-     * @param treeBuilder current TreeBuilder
+     * @param treeBuilder new TreeBuilder
      * @return this, for chaining
      */
     public Parser setTreeBuilder(TreeBuilder treeBuilder) {
@@ -99,11 +107,40 @@ public class Parser {
         return errors;
     }
 
+    /**
+     Test if position tracking is enabled. If it is, Nodes will have a Position to track where in the original input
+     source they were created from. By default, tracking is not enabled.
+     * @return current track position setting
+     */
+    public boolean isTrackPosition() {
+        return trackPosition;
+    }
+
+    /**
+     Enable or disable source position tracking. If enabled, Nodes will have a Position to track where in the original
+     input source they were created from.
+     @param trackPosition position tracking setting; {@code true} to enable
+     @return this Parser, for chaining
+     */
+    public Parser setTrackPosition(boolean trackPosition) {
+        this.trackPosition = trackPosition;
+        return this;
+    }
+
+    /**
+     Update the ParseSettings of this Parser, to control the case sensitivity of tags and attributes.
+     * @param settings the new settings
+     * @return this Parser
+     */
     public Parser settings(ParseSettings settings) {
         this.settings = settings;
         return this;
     }
 
+    /**
+     Gets the current ParseSettings for this Parser
+     * @return current ParseSettings
+     */
     public ParseSettings settings() {
         return settings;
     }
@@ -114,6 +151,10 @@ public class Parser {
      */
     public boolean isContentForTagData(String normalName) {
         return getTreeBuilder().isContentForTagData(normalName);
+    }
+
+    public String defaultNamespace() {
+        return getTreeBuilder().defaultNamespace();
     }
 
     // static parse functions below

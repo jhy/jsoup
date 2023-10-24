@@ -34,20 +34,23 @@ final class Tokeniser {
     private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
-    private Token emitPending; // the token we are about to emit on next read
+    @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
-    private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
-    private StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
+    @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
+    private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
-    Token.Tag tagPending; // tag we are building up
     Token.StartTag startPending = new Token.StartTag();
     Token.EndTag endPending = new Token.EndTag();
+    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
     Token.Character charPending = new Token.Character();
     Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     Token.Comment commentPending = new Token.Comment(); // comment building up
-    private String lastStartTag; // the last start tag emitted, to test appropriate end tag
+    @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
+
+    private static final int Unset = -1;
+    private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
     Tokeniser(CharacterReader reader, ParseErrorList errors) {
         this.reader = reader;
@@ -64,14 +67,16 @@ final class Tokeniser {
         if (cb.length() != 0) {
             String str = cb.toString();
             cb.delete(0, cb.length());
+            Token token = charPending.data(str);
             charsString = null;
-            return charPending.data(str);
+            return token;
         } else if (charsString != null) {
             Token token = charPending.data(charsString);
             charsString = null;
             return token;
         } else {
             isEmitPending = false;
+            assert emitPending != null;
             return emitPending;
         }
     }
@@ -81,6 +86,9 @@ final class Tokeniser {
 
         emitPending = token;
         isEmitPending = true;
+        token.startPos(markupStartPos);
+        token.endPos(reader.pos());
+        charStartPos = Unset;
 
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
@@ -98,38 +106,41 @@ final class Tokeniser {
         // does not set isEmitPending; read checks that
         if (charsString == null) {
             charsString = str;
-        }
-        else {
+        } else {
             if (charsBuilder.length() == 0) { // switching to string builder as more than one emit before read
                 charsBuilder.append(charsString);
             }
             charsBuilder.append(str);
         }
+        charPending.startPos(charStartPos);
+        charPending.endPos(reader.pos());
     }
 
     // variations to limit need to create temp strings
     void emit(final StringBuilder str) {
         if (charsString == null) {
             charsString = str.toString();
-        }
-        else {
+        } else {
             if (charsBuilder.length() == 0) {
                 charsBuilder.append(charsString);
             }
             charsBuilder.append(str);
         }
+        charPending.startPos(charStartPos);
+        charPending.endPos(reader.pos());
     }
 
     void emit(char c) {
         if (charsString == null) {
             charsString = String.valueOf(c);
-        }
-        else {
+        } else {
             if (charsBuilder.length() == 0) {
                 charsBuilder.append(charsString);
             }
             charsBuilder.append(c);
         }
+        charPending.startPos(charStartPos);
+        charPending.endPos(reader.pos());
     }
 
     void emit(char[] chars) {
@@ -144,18 +155,28 @@ final class Tokeniser {
         return state;
     }
 
-    void transition(TokeniserState state) {
-        this.state = state;
+    void transition(TokeniserState newState) {
+        // track markup / data position on state transitions
+        switch (newState) {
+            case TagOpen:
+                markupStartPos = reader.pos();
+                break;
+            case Data:
+                if (charStartPos == Unset) // don't reset when we are jumping between e.g data -> char ref -> data
+                    charStartPos = reader.pos();
+        }
+
+        this.state = newState;
     }
 
-    void advanceTransition(TokeniserState state) {
+    void advanceTransition(TokeniserState newState) {
+        transition(newState);
         reader.advance();
-        this.state = state;
     }
 
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
-    @Nullable int[] consumeCharacterReference(Character additionalAllowedCharacter, boolean inAttribute) {
+    @Nullable int[] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -272,7 +293,7 @@ final class Tokeniser {
         return lastStartTag != null && tagPending.name().equalsIgnoreCase(lastStartTag);
     }
 
-    String appropriateEndTagName() {
+    @Nullable String appropriateEndTagName() {
         return lastStartTag; // could be null
     }
 

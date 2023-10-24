@@ -17,7 +17,7 @@ See [**jsoup.org**](https://jsoup.org/) for downloads and the full [API document
 [![Build Status](https://github.com/jhy/jsoup/workflows/Build/badge.svg)](https://github.com/jhy/jsoup/actions?query=workflow%3ABuild)
 
 ## Example
-Fetch the [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/index.html?org/jsoup/select/Elements.html):
+Fetch the [Wikipedia](https://en.wikipedia.org/wiki/Main_Page) homepage, parse it to a [DOM](https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction), and select the headlines from the *In the News* section into a list of [Elements](https://jsoup.org/apidocs/org/jsoup/select/Elements.html):
 
 ```java
 Document doc = Jsoup.connect("https://en.wikipedia.org/").get();
@@ -37,6 +37,9 @@ jsoup is an open source project distributed under the liberal [MIT license](http
 1. [Download](https://jsoup.org/download) the latest jsoup jar (or add it to your Maven/Gradle build)
 2. Read the [cookbook](https://jsoup.org/cookbook/)
 3. Enjoy!
+
+### Android support
+When used in Android projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with the [NIO specification](https://developer.android.com/studio/write/java11-nio-support-table) should be enabled to support Java 8+ features.
 
 ## Development and support
 If you have any questions on how to use jsoup, or have ideas for future development, please get in touch via the [mailing list](https://jsoup.org/discussion).

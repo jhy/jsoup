@@ -39,6 +39,7 @@ public class DataNode extends LeafNode {
         return this;
     }
 
+    @Override
 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if(out.escapeMode() == EscapeMode.xhtml) {
             accum.append("<![CDATA[");
@@ -49,7 +50,8 @@ public class DataNode extends LeafNode {
         }
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+    @Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public String toString() {

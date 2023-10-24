@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.Consumer;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
@@ -16,6 +15,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -28,7 +28,7 @@ public abstract class Node implements Cloneable {
     int siblingIndex;
 
     /**
-     * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
+     * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
      */
     protected Node() {
     }
@@ -38,6 +38,16 @@ public abstract class Node implements Cloneable {
      @return node name
      */
     public abstract String nodeName();
+
+    /**
+     Get the normalized name of this node. For node types other than Element, this is the same as {@link #nodeName()}.
+     For an Element, will be the lower-cased tag name.
+     @return normalized node name
+     @since 1.15.4.
+     */
+    public String normalName() {
+        return nodeName();
+    }
 
     /**
      * Check if this Node has an actual Attributes object.
@@ -82,7 +92,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get all of the element's attributes.
+     * Get each of the element's attributes.
      * @return attributes (which implements iterable, in same order as presented in original HTML).
      */
     public abstract Attributes attributes();
@@ -141,7 +151,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Clear (remove) all of the attributes in this node.
+     * Clear (remove) each of the attributes in this node.
      * @return this, for chaining
      */
     public Node clearAttributes() {
@@ -305,11 +315,12 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
+     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed. If this node is
+     * an orphan, nothing happens.
      */
     public void remove() {
-        Validate.notNull(parentNode);
-        parentNode.removeChild(this);
+        if (parentNode != null)
+            parentNode.removeChild(this);
     }
 
     /**
@@ -332,6 +343,9 @@ public abstract class Node implements Cloneable {
     public Node before(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex, node);
         return this;
@@ -357,6 +371,9 @@ public abstract class Node implements Cloneable {
     public Node after(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex + 1, node);
         return this;
@@ -431,8 +448,7 @@ public abstract class Node implements Cloneable {
      */
     public @Nullable Node unwrap() {
         Validate.notNull(parentNode);
-        final List<Node> childNodes = ensureChildNodes();
-        Node firstChild = childNodes.size() > 0 ? childNodes.get(0) : null;
+        Node firstChild = firstChild();
         parentNode.addChildren(siblingIndex, this.childNodesAsArray());
         this.remove();
 
@@ -440,11 +456,12 @@ public abstract class Node implements Cloneable {
     }
 
     private Element getDeepChild(Element el) {
-        List<Element> children = el.children();
-        if (children.size() > 0)
-            return getDeepChild(children.get(0));
-        else
-            return el;
+        Element child = el.firstElementChild();
+        while (child != null) {
+            el = child;
+            child = child.firstElementChild();
+        }
+        return el;
     }
 
     void nodelistChanged() {
@@ -453,7 +470,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Replace this node in the DOM with the supplied node.
-     * @param in the node that will will replace the existing node.
+     * @param in the node that will replace the existing node.
      */
     public void replaceWith(Node in) {
         Validate.notNull(in);
@@ -471,6 +488,8 @@ public abstract class Node implements Cloneable {
     protected void replaceChild(Node out, Node in) {
         Validate.isTrue(out.parentNode == this);
         Validate.notNull(in);
+        if (out == in) return; // no-op self replacement
+
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
 
@@ -547,16 +566,16 @@ public abstract class Node implements Cloneable {
     }
 
     private void reindexChildren(int start) {
-        if (childNodeSize() == 0) return;
+        final int size = childNodeSize();
+        if (size == 0) return;
         final List<Node> childNodes = ensureChildNodes();
-
-        for (int i = start; i < childNodes.size(); i++) {
+        for (int i = start; i < size; i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
     }
 
     /**
-     Retrieves this node's sibling nodes. Similar to {@link #childNodes()  node.parent.childNodes()}, but does not
+     Retrieves this node's sibling nodes. Similar to {@link #childNodes() node.parent.childNodes()}, but does not
      include this node (a node is not a sibling of itself).
      @return node siblings. If the node has no parent, returns an empty list.
      */
@@ -614,6 +633,33 @@ public abstract class Node implements Cloneable {
 
     protected void setSiblingIndex(int siblingIndex) {
         this.siblingIndex = siblingIndex;
+    }
+
+    /**
+     Gets the first child node of this node, or {@code null} if there is none. This could be any Node type, such as an
+     Element, TextNode, Comment, etc. Use {@link Element#firstElementChild()} to get the first Element child.
+     @return the first child node, or null if there are no children.
+     @see Element#firstElementChild()
+     @see #lastChild()
+     @since 1.15.2
+     */
+    public @Nullable Node firstChild() {
+        if (childNodeSize() == 0) return null;
+        return ensureChildNodes().get(0);
+    }
+
+    /**
+     Gets the last child node of this node, or {@code null} if there is none.
+     @return the last child node, or null if there are no children.
+     @see Element#lastElementChild()
+     @see #firstChild()
+     @since 1.15.2
+     */
+    public @Nullable Node lastChild() {
+        final int size = childNodeSize();
+        if (size == 0) return null;
+        List<Node> children = ensureChildNodes();
+        return children.get(size - 1);
     }
 
     /**
@@ -688,6 +734,38 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Get the source range (start and end positions) in the original input source that this node was parsed from. Position
+     tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the start tag.
+     @return the range for the start of the node.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Element#endSourceRange()
+     @since 1.15.2
+     */
+    public Range sourceRange() {
+        return Range.of(this, true);
+    }
+
+    /** Test if this node is not null and has the supplied normal name. */
+    static boolean isNode(@Nullable Node node, String normalName) {
+        return node != null && node.normalName().equals(normalName);
+    }
+
+    /** Test if this node has the supplied normal name. */
+    final boolean isNode(String normalName) {
+        return normalName().equals(normalName);
+    }
+
+    /** Test if this node is the first child, or first following blank text. */
+    final boolean isEffectivelyFirst() {
+        if (siblingIndex == 0) return true;
+        if (siblingIndex == 1) {
+            final Node prev = previousSibling();
+            return prev instanceof TextNode && (((TextNode) prev).isBlank());
+        }
+        return false;
+    }
+
+    /**
      * Gets this node's outer HTML.
      * @return outer HTML.
      * @see #outerHtml()
@@ -714,7 +792,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Provides a hashCode for this Node, based on it's object identity. Changes to the Node's content will not impact the
+     Provides a hashCode for this Node, based on its object identity. Changes to the Node's content will not impact the
      result.
      @return an object identity based hashcode for this Node
      */
@@ -725,7 +803,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Check if this node is has the same content as another node. A node is considered the same if its name, attributes and content match the
+     * Check if this node has the same content as another node. A node is considered the same if its name, attributes and content match the
      * other node; particularly its position in the tree does not influence its similarity.
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other

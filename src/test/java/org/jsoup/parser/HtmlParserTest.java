@@ -7,13 +7,16 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.jsoup.parser.ParseSettings.preserveCase;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,16 +49,25 @@ public class HtmlParserTest {
         assertEquals("foo > bar", p.attr("class"));
     }
 
-    @Test public void dropsDuplicateAttributes() {
-        String html = "<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>";
+    @ParameterizedTest @MethodSource("dupeAttributeData")
+    public void dropsDuplicateAttributes(String html, String expected) {
         Parser parser = Parser.htmlParser().setTrackErrors(10);
         Document doc = parser.parseInput(html, "");
 
-        Element p = doc.selectFirst("p");
-        assertEquals("<p one=\"One\" two=\"two\">Text</p>", p.outerHtml()); // normalized names due to lower casing
+        Element el = doc.expectFirst("body > *");
+        assertEquals(expected, el.outerHtml()); // normalized names due to lower casing
+        String tag = el.normalName();
 
         assertEquals(1, parser.getErrors().size());
-        assertEquals("Dropped duplicate attribute(s) in tag [p]", parser.getErrors().get(0).getErrorMessage());
+        assertEquals("Dropped duplicate attribute(s) in tag [" + tag + "]", parser.getErrors().get(0).getErrorMessage());
+    }
+
+    private static Stream<Arguments> dupeAttributeData() {
+        return Stream.of(
+            Arguments.of("<p One=One ONE=Two Two=two one=Three One=Four two=Five>Text</p>", "<p one=\"One\" two=\"two\">Text</p>"),
+            Arguments.of("<img One=One ONE=Two Two=two one=Three One=Four two=Five>", "<img one=\"One\" two=\"two\">"),
+            Arguments.of("<form One=One ONE=Two Two=two one=Three One=Four two=Five></form>", "<form one=\"One\" two=\"two\"></form>")
+        );
     }
 
     @Test public void retainsAttributesOfDifferentCaseIfSensitive() {
@@ -158,7 +170,7 @@ public class HtmlParserTest {
 
     @Test public void testSpaceAfterTag() {
         Document doc = Jsoup.parse("<div > <a name=\"top\"></a ><p id=1 >Hello</p></div>");
-        assertEquals("<div> <a name=\"top\"></a><p id=\"1\">Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div><a name=\"top\"></a><p id=\"1\">Hello</p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void createsDocumentStructure() {
@@ -273,13 +285,13 @@ public class HtmlParserTest {
 
     @Test public void handlesNestedImplicitTable() {
         Document doc = Jsoup.parse("<table><td>1</td></tr> <td>2</td></tr> <td> <table><td>3</td> <td>4</td></table> <tr><td>5</table>");
-        assertEquals("<table><tbody><tr><td>1</td></tr> <tr><td>2</td></tr> <tr><td> <table><tbody><tr><td>3</td> <td>4</td></tr></tbody></table> </td></tr><tr><td>5</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><tbody><tr><td>1</td></tr><tr><td>2</td></tr><tr><td><table><tbody><tr><td>3</td><td>4</td></tr></tbody></table></td></tr><tr><td>5</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesWhatWgExpensesTableExample() {
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/tabular-data.html#examples-0
         Document doc = Jsoup.parse("<table> <colgroup> <col> <colgroup> <col> <col> <col> <thead> <tr> <th> <th>2008 <th>2007 <th>2006 <tbody> <tr> <th scope=rowgroup> Research and development <td> $ 1,109 <td> $ 782 <td> $ 712 <tr> <th scope=row> Percentage of net sales <td> 3.4% <td> 3.3% <td> 3.7% <tbody> <tr> <th scope=rowgroup> Selling, general, and administrative <td> $ 3,761 <td> $ 2,963 <td> $ 2,433 <tr> <th scope=row> Percentage of net sales <td> 11.6% <td> 12.3% <td> 12.6% </table>");
-        assertEquals("<table> <colgroup> <col> </colgroup><colgroup> <col> <col> <col> </colgroup><thead> <tr> <th> </th><th>2008 </th><th>2007 </th><th>2006 </th></tr></thead><tbody> <tr> <th scope=\"rowgroup\"> Research and development </th><td> $ 1,109 </td><td> $ 782 </td><td> $ 712 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 3.4% </td><td> 3.3% </td><td> 3.7% </td></tr></tbody><tbody> <tr> <th scope=\"rowgroup\"> Selling, general, and administrative </th><td> $ 3,761 </td><td> $ 2,963 </td><td> $ 2,433 </td></tr><tr> <th scope=\"row\"> Percentage of net sales </th><td> 11.6% </td><td> 12.3% </td><td> 12.6% </td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<table><colgroup><col></colgroup><colgroup><col><col><col></colgroup><thead><tr><th></th><th>2008</th><th>2007</th><th>2006</th></tr></thead><tbody><tr><th scope=\"rowgroup\">Research and development</th><td>$ 1,109</td><td>$ 782</td><td>$ 712</td></tr><tr><th scope=\"row\">Percentage of net sales</th><td>3.4%</td><td>3.3%</td><td>3.7%</td></tr></tbody><tbody><tr><th scope=\"rowgroup\">Selling, general, and administrative</th><td>$ 3,761</td><td>$ 2,963</td><td>$ 2,433</td></tr><tr><th scope=\"row\">Percentage of net sales</th><td>11.6%</td><td>12.3%</td><td>12.6%</td></tr></tbody></table>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesTbodyTable() {
@@ -294,7 +306,7 @@ public class HtmlParserTest {
 
     @Test public void noTableDirectInTable() {
         Document doc = Jsoup.parse("<table> <td>One <td><table><td>Two</table> <table><td>Three");
-        assertEquals("<table> <tbody><tr><td>One </td><td><table><tbody><tr><td>Two</td></tr></tbody></table> <table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
+        assertEquals("<table><tbody><tr><td>One</td><td><table><tbody><tr><td>Two</td></tr></tbody></table><table><tbody><tr><td>Three</td></tr></tbody></table></td></tr></tbody></table>",
             TextUtil.stripNewlines(doc.body().html()));
     }
 
@@ -472,7 +484,7 @@ public class HtmlParserTest {
         // if a known tag, allow self closing outside of spec, but force an end tag. unknown tags can be self closing.
         String h = "<div id='1' /><script src='/foo' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
         Document doc = Jsoup.parse(h);
-        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo> <hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo><hr> hr text <hr> hr text two", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesKnownEmptyNoFrames() {
@@ -568,7 +580,7 @@ public class HtmlParserTest {
     @Test public void normalisesDocument() {
         String h = "<!doctype html>One<html>Two<head>Three<link></head>Four<body>Five </body>Six </html>Seven ";
         Document doc = Jsoup.parse(h);
-        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven </body></html>",
+        assertEquals("<!doctype html><html><head></head><body>OneTwoThree<link>FourFive Six Seven</body></html>",
             TextUtil.stripNewlines(doc.html()));
     }
 
@@ -599,7 +611,7 @@ public class HtmlParserTest {
     @Test public void testHgroup() {
         // jsoup used to not allow hgroup in h{n}, but that's not in spec, and browsers are OK
         Document doc = Jsoup.parse("<h1>Hello <h2>There <hgroup><h1>Another<h2>headline</hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup>");
-        assertEquals("<h1>Hello </h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup> <hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello</h1><h2>There <hgroup><h1>Another</h1><h2>headline</h2></hgroup><hgroup><h1>More</h1><p>stuff</p></hgroup></h2>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testRelaxedTags() {
@@ -611,13 +623,13 @@ public class HtmlParserTest {
         // h* tags (h1 .. h9) in browsers can handle any internal content other than other h*. which is not per any
         // spec, which defines them as containing phrasing content only. so, reality over theory.
         Document doc = Jsoup.parse("<h1>Hello <div>There</div> now</h1> <h2>More <h3>Content</h3></h2>");
-        assertEquals("<h1>Hello <div>There</div> now</h1> <h2>More </h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<h1>Hello <div>There</div> now</h1><h2>More</h2><h3>Content</h3>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testSpanContents() {
         // like h1 tags, the spec says SPAN is phrasing only, but browsers and publisher treat span as a block tag
         Document doc = Jsoup.parse("<span>Hello <div>there</div> <span>now</span></span>");
-        assertEquals("<span>Hello <div>there</div> <span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<span>Hello <div>there</div><span>now</span></span>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testNoImagesInNoScriptInHead() {
@@ -638,13 +650,13 @@ public class HtmlParserTest {
     @Test public void testAFlowContents() {
         // html5 has <a> as either phrasing or block
         Document doc = Jsoup.parse("<a>Hello <div>there</div> <span>now</span></a>");
-        assertEquals("<a>Hello <div>there</div> <span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a>Hello <div>there</div><span>now</span></a>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void testFontFlowContents() {
         // html5 has no definition of <font>; often used as flow
         Document doc = Jsoup.parse("<font>Hello <div>there</div> <span>now</span></font>");
-        assertEquals("<font>Hello <div>there</div> <span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<font>Hello <div>there</div><span>now</span></font>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void handlesMisnestedTagsBI() {
@@ -672,7 +684,7 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesUnexpectedMarkupInTables() {
-        // whatwg - tests markers in active formatting (if they didn't work, would get in in table)
+        // whatwg - tests markers in active formatting (if they didn't work, would get in table)
         // also tests foster parenting
         String h = "<table><b><tr><td>aaa</td></tr>bbb</table>ccc";
         Document doc = Jsoup.parse(h);
@@ -720,15 +732,8 @@ public class HtmlParserTest {
         // and the <i> inside the table and does not leak out.
         String h = "<p><b>One</p> <table><tr><td><p><i>Three<p>Four</i></td></tr></table> <p>Five</p>";
         Document doc = Jsoup.parse(h);
-        String want = "<p><b>One</b></p><b> \n" +
-            " <table>\n" +
-            "  <tbody>\n" +
-            "   <tr>\n" +
-            "    <td><p><i>Three</i></p><p><i>Four</i></p></td>\n" +
-            "   </tr>\n" +
-            "  </tbody>\n" +
-            " </table> <p>Five</p></b>";
-        assertEquals(want, doc.body().html());
+        String want = "<p><b>One</b></p><b><table><tbody><tr><td><p><i>Three</i></p><p><i>Four</i></p></td></tr></tbody></table><p>Five</p></b>";
+        assertEquals(want, TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void commentBeforeHtml() {
@@ -777,7 +782,7 @@ public class HtmlParserTest {
 
         Document two = Jsoup.parse("<title>One<b>Two <p>Test</p>"); // no title, so <b> causes </title> breakout
         assertEquals("One", two.title());
-        assertEquals("<b>Two <p>Test</p></b>", two.body().html());
+        assertEquals("<b>Two \n <p>Test</p></b>", two.body().html());
     }
 
     @Test public void handlesUnclosedScriptAtEof() {
@@ -1175,7 +1180,8 @@ public class HtmlParserTest {
         Document doc = Parser.htmlParser()
             .settings(preserveCase)
             .parseInput(html, "");
-        assertEquals("<A>ONE </A><A>Two</A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        //assertEquals("<A>ONE </A><A>Two</A>", StringUtil.normaliseWhitespace(doc.body().html()));
+        assertEquals("<A>ONE </A><A>Two</A>", doc.body().html());
     }
 
     @Test public void normalizesDiscordantTags() {
@@ -1191,7 +1197,7 @@ public class HtmlParserTest {
 
         assertTrue(Jsoup.isValid(html, Safelist.basic()));
         String clean = Jsoup.clean(html, Safelist.basic());
-        assertEquals("<p>test<br>test<br></p>", clean);
+        assertEquals("<p>test<br>\n test<br></p>", clean);
     }
 
     @Test public void selfClosingOnNonvoidIsError() {
@@ -1246,7 +1252,7 @@ public class HtmlParserTest {
         File in = ParseTest.getFile("/htmltests/comments.html");
         Document doc = Jsoup.parse(in, "UTF-8");
 
-        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --><!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"><!-- now --> <head><!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
+        assertEquals("<!--?xml version=\"1.0\" encoding=\"utf-8\"?--><!-- so --> <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><!-- what --> <html xml:lang=\"en\" lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\"> <!-- now --> <head> <!-- then --> <meta http-equiv=\"Content-type\" content=\"text/html; charset=utf-8\"> <title>A Certain Kind of Test</title> </head> <body> <h1>Hello</h1>h1&gt; (There is a UTF8 hidden BOM at the top of this file.) </body> </html>",
             StringUtil.normaliseWhitespace(doc.html()));
 
         assertEquals("A Certain Kind of Test", doc.head().select("title").text());
@@ -1399,15 +1405,14 @@ public class HtmlParserTest {
         String html = "\n<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n";
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n\n</body></html>\n", doc.outerHtml());
+        assertEquals("<!doctype html>\n<html>\n<head>\n<title>Hello</title>\n</head>\n<body>\n<p>One</p>\n</body>\n</html>\n", doc.outerHtml());
     }
 
     @Test public void handleContentAfterBody() {
         String html = "<body>One</body>  <p>Hello!</p></html> <p>There</p>";
-        // todo - ideally would move that space afer /html to the body when the There <p> is seen
         Document doc = Jsoup.parse(html);
         doc.outputSettings().prettyPrint(false);
-        assertEquals("<html><head></head><body>One  <p>Hello!</p><p>There</p></body></html> ", doc.outerHtml());
+        assertEquals("<html><head></head><body>One<p>Hello!</p><p>There</p></body>  </html> ", doc.outerHtml());
     }
 
     @Test public void preservesTabs() {
@@ -1470,7 +1475,7 @@ public class HtmlParserTest {
         assertEquals(1, nodes.size());
         Node node = nodes.get(0);
         assertEquals("h2", node.nodeName());
-        assertEquals("<p><h2>text</h2></p>", node.parent().outerHtml());
+        assertEquals("<p>\n <h2>text</h2></p>", node.parent().outerHtml());
     }
 
     @Test public void nestedPFragments() {
@@ -1479,7 +1484,7 @@ public class HtmlParserTest {
         List<Node> nodes = new Document("").parser().parseFragmentInput(bareFragment, new Element("p"), "");
         assertEquals(2, nodes.size());
         Node node = nodes.get(0);
-        assertEquals("<p><p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
+        assertEquals("<p>\n <p></p><a></a></p>", node.parent().outerHtml()); // mis-nested because fragment forced into the element, OK
     }
 
     @Test public void nestedAnchorAdoption() {
@@ -1487,7 +1492,7 @@ public class HtmlParserTest {
         String html = "<a>\n<b>\n<div>\n<a>test</a>\n</div>\n</b>\n</a>";
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
-        assertEquals("<a><b> </b></a><b><div><a></a><a>test</a></div> </b>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div></b>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void tagsMustStartWithAscii() {
@@ -1632,5 +1637,241 @@ public class HtmlParserTest {
         assertNotNull(doc);
         assertEquals("<template><select></select><input>&lt;</template>",
             TextUtil.stripNewlines(doc.head().html()));
+    }
+
+    @Test void errorsBeforeHtml() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<!doctype html><!doctype something></div>", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        assertEquals("<1:36>: Unexpected Doctype token [<!doctype something>] when in state [BeforeHtml]", errors.get(0).toString());
+        assertEquals("<1:42>: Unexpected EndTag token [</div>] when in state [BeforeHtml]", errors.get(1).toString());
+        assertEquals("<!doctype html><html><head></head><body></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void afterHeadReAdds() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse("<head></head><meta charset=UTF8><p>Hello", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("<1:33>: Unexpected StartTag token [<meta  charset=\"UTF8\">] when in state [AfterHead]", errors.get(0).toString());
+        assertEquals("<html><head><meta charset=\"UTF8\"></head><body><p>Hello</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        // meta gets added back into head
+    }
+
+    @Test void mergeHtmlAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html class=bar data=x><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\" data=\"x\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void mergeHtmlNoAttributesFromBody() {
+        Document doc = Jsoup.parse("<html id=1 class=foo><body><html><p>One");
+        assertEquals("<html id=\"1\" class=\"foo\"><head></head><body><p>One</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void supportsRuby() {
+        String html = "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rtc></ruby>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(3, errors.size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rbc><rb>10</rb><rb>31</rb><rb>2002</rb></rbc><rtc><rt>Month</rt><rt>Day</rt><rt>Year</rt></rtc><rtc><rt>Expiration Date</rt><rp>(*)</rp></rtc></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:38>: Unexpected StartTag token [<rb>] when in state [InBody]", errors.get(2).toString()); // 3 errors from rb in rtc as undefined
+    }
+
+    @Test void rubyRpRtImplicitClose() {
+        String html = "<ruby><rp>(<rt>Hello<rt>Hello<rp>)</ruby>\n";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><rp>(</rp><rt>Hello</rt><rt>Hello</rt><rp>)</rp></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+    }
+
+    @Test void rubyScopeError() {
+        String html = "<ruby><div><rp>Hello";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        Element ruby = doc.expectFirst("ruby");
+        assertEquals(
+            "<ruby><div><rp>Hello</rp></div></ruby>",
+            TextUtil.stripNewlines(ruby.outerHtml()));
+        assertEquals("<1:16>: Unexpected StartTag token [<rp>] when in state [InBody]", errors.get(0).toString());
+    }
+
+    @Test void errorOnEofIfOpen() {
+        String html = "<div>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(1, errors.size());
+        assertEquals("Unexpected EOF token [] when in state [InBody]", errors.get(0).getErrorMessage());
+    }
+
+    @Test void NoErrorOnEofIfBodyOpen() {
+        String html = "<body>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(0, errors.size());
+    }
+
+    @Test void htmlClose() {
+        // https://github.com/jhy/jsoup/issues/1851
+        String html = "<body><div>One</html>Two</div></body>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("OneTwo", doc.expectFirst("body > div").text());
+    }
+
+    @Test void largeTextareaContents() {
+        // https://github.com/jhy/jsoup/issues/1929
+        StringBuilder sb = new StringBuilder();
+        int num = 2000;
+        for (int i = 0; i <= num; i++) {
+            sb.append("\n<text>foo</text>\n");
+        }
+        String textContent = sb.toString();
+        String sourceHtml = "<textarea>" + textContent + "</textarea>";
+
+        Document doc = Jsoup.parse(sourceHtml);
+        Element textArea = doc.expectFirst("textarea");
+
+        assertEquals(textContent, textArea.wholeText());
+    }
+
+    @Test void svgParseTest() {
+        String html = "<div><svg viewBox=2><foreignObject><p>One</p></foreignObject></svg></div>";
+        Document doc = Jsoup.parse(html);
+
+        assertHtmlNamespace(doc);
+        Element div = doc.expectFirst("div");
+        assertHtmlNamespace(div);
+
+        Element svg = doc.expectFirst("svg");
+        assertTrue(svg.attributes().hasKey("viewBox"));
+        assertSvgNamespace(svg);
+        assertSvgNamespace(doc.expectFirst("foreignObject"));
+        assertHtmlNamespace(doc.expectFirst("p"));
+
+        String serialized = div.html();
+        assertEquals("<svg viewBox=\"2\">\n" +
+            " <foreignObject>\n" +
+            "  <p>One</p>\n" +
+            " </foreignObject>\n" +
+            "</svg>", serialized);
+    }
+
+    @Test void mathParseText() {
+        String html = "<div><math><mi><p>One</p><svg><text>Blah</text></svg></mi><ms></ms></div>";
+        Document doc = Jsoup.parse(html);
+
+        assertHtmlNamespace(doc.expectFirst("div"));
+        assertMathNamespace(doc.expectFirst("math"));
+        assertMathNamespace(doc.expectFirst("mi"));
+        assertHtmlNamespace(doc.expectFirst("p"));
+        assertSvgNamespace(doc.expectFirst("svg"));
+        assertSvgNamespace(doc.expectFirst("text"));
+        assertMathNamespace(doc.expectFirst("ms"));
+
+        String serialized = doc.expectFirst("div").html();
+        assertEquals("<math>\n" +
+            " <mi>\n" +
+            "  <p>One</p>\n" +
+            "  <svg>\n" +
+            "   <text>Blah</text>\n" +
+            "  </svg></mi><ms></ms>\n" +
+            "</math>", serialized);
+    }
+
+    private static void assertHtmlNamespace(Element el) {
+        assertEquals(Parser.NamespaceHtml, el.tag().namespace());
+    }
+
+    private static void assertSvgNamespace(Element el) {
+        assertEquals(Parser.NamespaceSvg, el.tag().namespace());
+    }
+
+    private static void assertMathNamespace(Element el) {
+        assertEquals(Parser.NamespaceMathml, el.tag().namespace());
+    }
+
+    @Test void mathSvgStyleTest() {
+        String html = "<style><img></style><math><svg><style><img></img></style></svg></math>";
+        Document doc = Jsoup.parse(html);
+
+        Element htmlStyle = doc.expectFirst("style");
+        assertHtmlNamespace(htmlStyle);
+        assertEquals("<img>", htmlStyle.data()); // that's not an element, it's data (textish)
+
+        Element svgStyle = doc.expectFirst("svg style");
+        assertMathNamespace(svgStyle); // in inherited math namespace as not an HTML integration point
+        Element styleImg = svgStyle.expectFirst("img");
+        assertHtmlNamespace(styleImg); // this one is an img tag - in foreign to html elements
+
+        assertMathNamespace(doc.expectFirst("svg"));
+        assertMathNamespace(doc.expectFirst("math"));
+    }
+
+    @Test void xmlnsAttributeError() {
+        String html = "<p><svg></svg></body>";
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, doc.parser().getErrors().size());
+
+        String html2 = "<html xmlns='http://www.w3.org/1999/xhtml'><p xmlns='http://www.w3.org/1999/xhtml'><i xmlns='xhtml'></i></body>";
+        Document doc2 = Jsoup.parse(html2, parser);
+        assertEquals(1, doc2.parser().getErrors().size());
+        assertEquals("Invalid xmlns attribute [xhtml] on tag [i]", parser.getErrors().get(0).getErrorMessage());
+    }
+
+    @Test void mathAnnotationSvg() {
+        String html = "<math><svg>"; // not in annotation, svg will be in math ns
+        Document doc = Jsoup.parse(html);
+        assertMathNamespace(doc.expectFirst("math"));
+        assertMathNamespace(doc.expectFirst("svg"));
+
+        String html2 = "<math><annotation-xml><svg>"; // svg will be in svg ns
+        Document doc2 = Jsoup.parse(html2);
+        assertMathNamespace(doc2.expectFirst("math"));
+        assertMathNamespace(doc2.expectFirst("annotation-xml"));
+        assertSvgNamespace(doc2.expectFirst("svg"));
+    }
+
+    @Test void mathHtmlIntegrationPoint() {
+        String html = "<math><div>Hello";
+        Document doc = Jsoup.parse(html);
+        assertMathNamespace(doc.expectFirst("math"));
+        assertHtmlNamespace(doc.expectFirst("div"));
+
+        String html2 = "<math><divv>Hello";
+        Document doc2 = Jsoup.parse(html2);
+        assertMathNamespace(doc2.expectFirst("math"));
+        assertMathNamespace(doc2.expectFirst("divv"));
+
+        String html3 = "<math><annotation-xml><divv>Hello";
+        Document doc3 = Jsoup.parse(html3);
+        assertMathNamespace(doc3.expectFirst("math"));
+        assertMathNamespace(doc3.expectFirst("annotation-xml"));
+        assertMathNamespace(doc3.expectFirst("divv"));
+
+        String html4 = "<math><annotation-xml encoding=text/html><divv>Hello";
+        Document doc4 = Jsoup.parse(html4);
+        assertMathNamespace(doc4.expectFirst("math"));
+        assertMathNamespace(doc4.expectFirst("annotation-xml"));
+        assertHtmlNamespace(doc4.expectFirst("divv"));
     }
 }

@@ -12,6 +12,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     // the number of instance fields is kept as low as possible giving an object size of 24 bytes
     private int size = 0; // number of slots used (not total capacity, which is keys.length)
     String[] keys = new String[InitialCapacity];
-    String[] vals = new String[InitialCapacity];
+    Object[] vals = new Object[InitialCapacity]; // Genericish: all non-internal attribute values must be Strings and are cast on access.
 
     // check there's room for more
     private void checkCapacity(int minNewSize) {
@@ -84,8 +85,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
-    static String checkNotNull(@Nullable String val) {
-        return val == null ? EmptyString : val;
+    // casts to String, so only for non-internal attributes
+    static String checkNotNull(@Nullable Object val) {
+        return val == null ? EmptyString : (String) val;
     }
 
     /**
@@ -110,15 +112,32 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Get an arbitrary user data object by key.
+     * @param key case sensitive key to the object.
+     * @return the object associated to this key, or {@code null} if not found.
+     */
+    @Nullable
+    Object getUserData(String key) {
+        Validate.notNull(key);
+        if (!isInternalKey(key)) key = internalKey(key);
+        int i = indexOfKeyIgnoreCase(key);
+        return i == NotFound ? null : vals[i];
+    }
+
+    /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      * @see Attributes#put(String, String)
      */
     public Attributes add(String key, @Nullable String value) {
+        addObject(key, value);
+        return this;
+    }
+
+    private void addObject(String key, @Nullable Object value) {
         checkCapacity(size + 1);
         keys[size] = key;
         vals[size] = value;
         size++;
-        return this;
     }
 
     /**
@@ -134,6 +153,25 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             vals[i] = value;
         else
             add(key, value);
+        return this;
+    }
+
+    /**
+     Put an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
+     * @param key case sensitive key
+     * @param value object value
+     * @return these attributes
+     * @see #getUserData(String)
+     */
+    Attributes putUserData(String key, Object value) {
+        Validate.notNull(key);
+        if (!isInternalKey(key)) key = internalKey(key);
+        Validate.notNull(value);
+        int i = indexOfKey(key);
+        if (i != NotFound)
+            vals[i] = value;
+        else
+            addObject(key, value);
         return this;
     }
 
@@ -283,10 +321,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     public Iterator<Attribute> iterator() {
         return new Iterator<Attribute>() {
+            int expectedSize = size;
             int i = 0;
 
             @Override
             public boolean hasNext() {
+                checkModified();
                 while (i < size) {
                     if (isInternalKey(keys[i])) // skip over internal keys
                         i++;
@@ -299,28 +339,34 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
             @Override
             public Attribute next() {
-                final Attribute attr = new Attribute(keys[i], vals[i], Attributes.this);
+                checkModified();
+                final Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
                 i++;
                 return attr;
+            }
+
+            private void checkModified() {
+                if (size != expectedSize) throw new ConcurrentModificationException("Use Iterator#remove() instead to remove attributes while iterating.");
             }
 
             @Override
             public void remove() {
                 Attributes.this.remove(--i); // next() advanced, so rewind
+                expectedSize--;
             }
         };
     }
 
     /**
      Get the attributes as a List, for iteration.
-     @return an view of the attributes as an unmodifiable List.
+     @return a view of the attributes as an unmodifiable List.
      */
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             if (isInternalKey(keys[i]))
                 continue; // skip internal keys
-            Attribute attr = new Attribute(keys[i], vals[i], Attributes.this);
+            Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
             list.add(attr);
         }
         return Collections.unmodifiableList(list);
@@ -356,7 +402,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 continue;
             final String key = Attribute.getValidKey(keys[i], out.syntax());
             if (key != null)
-                Attribute.htmlNoValidate(key, vals[i], accum.append(' '), out);
+                Attribute.htmlNoValidate(key, (String) vals[i], accum.append(' '), out);
         }
     }
 
@@ -383,8 +429,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             int thatI = that.indexOfKey(key);
             if (thatI == NotFound)
                 return false;
-            String val = vals[i];
-            String thatVal = that.vals[thatI];
+            Object val = vals[i];
+            Object thatVal = that.vals[thatI];
             if (val == null) {
                 if (thatVal != null)
                     return false;

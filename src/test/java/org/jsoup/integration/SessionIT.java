@@ -2,16 +2,14 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.UncheckedIOException;
-import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,25 +21,20 @@ public class SessionIT {
         TestServer.start();
     }
 
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
-    }
-
     @Test
     public void multiThread() throws InterruptedException {
         int numThreads = 20;
         int numThreadLoops = 5;
         String[] urls = {
-            FileServlet.urlTo("/htmltests/smh-biz-article-1.html.gz"),
-            FileServlet.urlTo("/htmltests/news-com-au-home.html.gz"),
-            FileServlet.urlTo("/htmltests/google-ipod.html.gz"),
+            FileServlet.urlTo("/htmltests/medium.html"),
+            FileServlet.urlTo("/htmltests/upload-form.html"),
+            FileServlet.urlTo("/htmltests/comments.html"),
             FileServlet.urlTo("/htmltests/large.html"),
         };
         String[] titles = {
-            "The board’s next fear: the female quota",
-            "News.com.au | News from Australia and around the world online | NewsComAu",
-            "ipod - Google Search",
+            "Medium HTML",
+            "Upload Form Test",
+            "A Certain Kind of Test",
             "Large HTML"
         };
         ThreadCatcher catcher = new ThreadCatcher();

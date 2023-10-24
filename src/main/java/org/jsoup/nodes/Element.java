@@ -1,11 +1,11 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
-import org.jsoup.helper.Consumer;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -27,19 +27,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
+import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
 
 /**
- * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
- * other elements).
- *
- * From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
- *
- * @author Jonathan Hedley, jonathan@hedley.net
- */
+ An HTML Element consists of a tag name, attributes, and child nodes (including text nodes and other elements).
+ <p>
+ From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
+*/
 @NonnullByDefault
 public class Element extends Node {
     private static final List<Element> EmptyChildren = Collections.emptyList();
@@ -51,15 +52,25 @@ public class Element extends Node {
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
     /**
-     * Create a new, standalone element.
+     * Create a new, standalone element, in the specified namespace.
      * @param tag tag name
+     * @param namespace namespace for this element
      */
-    public Element(String tag) {
-        this(Tag.valueOf(tag), "", null);
+    public Element(String tag, String namespace) {
+        this(Tag.valueOf(tag, namespace, ParseSettings.preserveCase), null);
     }
 
     /**
-     * Create a new, standalone Element. (Standalone in that is has no parent.)
+     * Create a new, standalone element, in the HTML namespace.
+     * @param tag tag name
+     * @see #Element(String tag, String namespace)
+     */
+    public Element(String tag) {
+        this(Tag.valueOf(tag, Parser.NamespaceHtml, ParseSettings.preserveCase), "", null);
+    }
+
+    /**
+     * Create a new, standalone Element. (Standalone in that it has no parent.)
      *
      * @param tag tag of this element
      * @param baseUri the base URI (optional, may be null to inherit from parent, or "" to clear parent's)
@@ -154,7 +165,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
+     * Get the normalized name of this Element's tag. This will always be the lower-cased version of the tag, regardless
      * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
      * normal name of {@code div}.
      * @return normal name
@@ -172,8 +183,22 @@ public class Element extends Node {
      * @see Elements#tagName(String)
      */
     public Element tagName(String tagName) {
-        Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
+        return tagName(tagName, tag.namespace());
+    }
+
+    /**
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @param namespace the new namespace for this element
+     * @return this element, for chaining
+     * @see Elements#tagName(String)
+     */
+    public Element tagName(String tagName, String namespace) {
+        Validate.notEmptyParam(tagName, "tagName");
+        Validate.notEmptyParam(namespace, "namespace");
+        tag = Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -266,20 +291,16 @@ public class Element extends Node {
 
     /**
      * Get this element's parent and ancestors, up to the document root.
-     * @return this element's stack of parents, closest first.
+     * @return this element's stack of parents, starting with the closest first.
      */
     public Elements parents() {
         Elements parents = new Elements();
-        accumulateParents(this, parents);
-        return parents;
-    }
-
-    private static void accumulateParents(Element el, Elements parents) {
-        Element parent = el.parent();
-        if (parent != null && !parent.tagName().equals("#root")) {
+        Element parent = this.parent();
+        while (parent != null && !parent.isNode("#root")) {
             parents.add(parent);
-            accumulateParents(parent, parents);
+            parent = parent.parent();
         }
+        return parents;
     }
 
     /**
@@ -441,6 +462,7 @@ public class Element extends Node {
      * <p>Also known as {@code querySelector()} in the Web DOM.</p>
      * @param cssQuery cssQuery a {@link Selector} CSS-like query
      * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     * @see #expectFirst(String)
      */
     public @Nullable Element selectFirst(String cssQuery) {
         return Selector.selectFirst(cssQuery, this);
@@ -452,10 +474,28 @@ public class Element extends Node {
      *
      * @param evaluator an element evaluator
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
-     *     matchn.
+     * match.
      */
     public @Nullable Element selectFirst(Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param cssQuery a {@link Selector} CSS-like query
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.2
+     */
+    public Element expectFirst(String cssQuery) {
+        return (Element) Validate.ensureNotNull(
+            Selector.selectFirst(cssQuery, this),
+            parent() != null ?
+                "No elements matched the query '%s' on element '%s'.":
+                "No elements matched the query '%s' in the document."
+            , cssQuery, this.tagName()
+        );
     }
 
     /**
@@ -510,6 +550,8 @@ public class Element extends Node {
 
     /**
      Find Elements that match the supplied XPath expression.
+     <p>Note that for convenience of writing the Xpath expression, namespaces are disabled, and queries can be
+     expressed using the element's local name only.</p>
      <p>By default, XPath 1.0 expressions are supported. If you would to use XPath 2.0 or higher, you can provide an
      alternate XPathFactory implementation:</p>
      <ol>
@@ -662,7 +704,11 @@ public class Element extends Node {
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
+        return appendElement(tagName, tag.namespace());
+    }
+
+    public Element appendElement(String tagName, String namespace) {
+        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -675,7 +721,11 @@ public class Element extends Node {
      *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element prependElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
+        return prependElement(tagName, tag.namespace());
+    }
+
+    public Element prependElement(String tagName, String namespace) {
+        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         prependChild(child);
         return child;
     }
@@ -683,7 +733,7 @@ public class Element extends Node {
     /**
      * Create and append a new TextNode to this element.
      *
-     * @param text the unencoded text to add
+     * @param text the (un-encoded) text to add
      * @return this element
      */
     public Element appendText(String text) {
@@ -696,7 +746,7 @@ public class Element extends Node {
     /**
      * Create and prepend a new TextNode to this element.
      *
-     * @param text the unencoded text to add
+     * @param text the decoded text to add
      * @return this element
      */
     public Element prependText(String text) {
@@ -779,11 +829,16 @@ public class Element extends Node {
     }
 
     /**
-     * Remove all of the element's child nodes. Any attributes are left as-is.
+     * Remove all the element's child nodes. Any attributes are left as-is. Each child node has its parent set to
+     * {@code null}.
      * @return this element
      */
     @Override
     public Element empty() {
+        // Detach each of the children -> parent links:
+        for (Node child : childNodes) {
+            child.parentNode = null;
+        }
         childNodes.clear();
         return this;
     }
@@ -812,7 +867,7 @@ public class Element extends Node {
     public String cssSelector() {
         if (id().length() > 0) {
             // prefer to return the ID - but check that it's actually unique first!
-            String idSel = "#" + id();
+            String idSel = "#" + escapeCssIdentifier(id());
             Document doc = ownerDocument();
             if (doc != null) {
                 Elements els = doc.select(idSel);
@@ -823,22 +878,36 @@ public class Element extends Node {
             }
         }
 
-        // Translate HTML namespace ns:tag to CSS namespace syntax ns|tag
-        String tagName = tagName().replace(':', '|');
-        StringBuilder selector = new StringBuilder(tagName);
-        String classes = StringUtil.join(classNames(), ".");
+        StringBuilder selector = StringUtil.borrowBuilder();
+        Element el = this;
+        while (el != null && !(el instanceof Document)) {
+            selector.insert(0, el.cssSelectorComponent());
+            el = el.parent();
+        }
+        return StringUtil.releaseBuilder(selector);
+    }
+
+    private String cssSelectorComponent() {
+        // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
+        String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
+        StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
+        // String classes = StringUtil.join(classNames().stream().map(TokenQueue::escapeCssIdentifier).iterator(), ".");
+        // todo - replace with ^^ in 1.16.1 when we enable Android support for stream etc
+        StringUtil.StringJoiner escapedClasses = new StringUtil.StringJoiner(".");
+        for (String name : classNames()) escapedClasses.add(escapeCssIdentifier(name));
+        String classes = escapedClasses.complete();
         if (classes.length() > 0)
             selector.append('.').append(classes);
 
         if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
-            return selector.toString();
+            return StringUtil.releaseBuilder(selector);
 
         selector.insert(0, " > ");
         if (parent().select(selector.toString()).size() > 1)
             selector.append(String.format(
                 ":nth-child(%d)", elementSiblingIndex() + 1));
 
-        return parent().cssSelector() + selector.toString();
+        return StringUtil.releaseBuilder(selector);
     }
 
     /**
@@ -868,13 +937,11 @@ public class Element extends Node {
      * @see #previousElementSibling()
      */
     public @Nullable Element nextElementSibling() {
-        if (parentNode == null) return null;
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        if (siblings.size() > index+1)
-            return siblings.get(index+1);
-        else
-            return null;
+        Node next = this;
+        while ((next = next.nextSibling()) != null) {
+            if (next instanceof Element) return (Element) next;
+        }
+        return null;
     }
 
     /**
@@ -892,13 +959,11 @@ public class Element extends Node {
      * @see #nextElementSibling()
      */
     public @Nullable Element previousElementSibling() {
-        if (parentNode == null) return null;
-        List<Element> siblings = parent().childElementsList();
-        int index = indexInList(this, siblings);
-        if (index > 0)
-            return siblings.get(index-1);
-        else
-            return null;
+        Node prev = this;
+        while ((prev = prev.previousSibling()) != null) {
+            if (prev instanceof Element) return (Element) prev;
+        }
+        return null;
     }
 
     /**
@@ -924,8 +989,8 @@ public class Element extends Node {
      */
     public Element firstElementSibling() {
         if (parent() != null) {
-            List<Element> siblings = parent().childElementsList();
-            return siblings.size() > 1 ? siblings.get(0) : this;
+            //noinspection DataFlowIssue (not nullable, would be this is no other sibs)
+            return parent().firstElementChild();
         } else
             return this; // orphan is its own first sibling
     }
@@ -946,8 +1011,8 @@ public class Element extends Node {
      */
     public Element lastElementSibling() {
         if (parent() != null) {
-            List<Element> siblings = parent().childElementsList();
-            return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : this;
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parent().lastElementChild();
         } else
             return this;
     }
@@ -959,6 +1024,38 @@ public class Element extends Node {
                 return i;
         }
         return 0;
+    }
+
+    /**
+     Gets the first child of this Element that is an Element, or {@code null} if there is none.
+     @return the first Element child node, or null.
+     @see #firstChild()
+     @see #lastElementChild()
+     @since 1.15.2
+     */
+    public @Nullable Element firstElementChild() {
+        Node child = firstChild();
+        while (child != null) {
+            if (child instanceof Element) return (Element) child;
+            child = child.nextSibling();
+        }
+        return null;
+    }
+
+    /**
+     Gets the last child of this Element that is an Element, or @{code null} if there is none.
+     @return the last Element child node, or null.
+     @see #lastChild()
+     @see #firstElementChild()
+     @since 1.15.2
+     */
+    public @Nullable Element lastElementChild() {
+        Node child = lastChild();
+        while (child != null) {
+            if (child instanceof Element) return (Element) child;
+            child = child.previousSibling();
+        }
+        return null;
     }
 
     // DOM type methods
@@ -995,9 +1092,9 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have this class, including or under this element. Case insensitive.
+     * Find elements that have this class, including or under this element. Case-insensitive.
      * <p>
-     * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
+     * Elements can have multiple classes (e.g. {@code <div class="header round first">}). This method
      * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
      *
      * @param className the name of the class to search for.
@@ -1012,7 +1109,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have a named attribute set. Case insensitive.
+     * Find elements that have a named attribute set. Case-insensitive.
      *
      * @param key name of the attribute, e.g. {@code href}
      * @return elements that have this attribute, empty if none
@@ -1028,7 +1125,7 @@ public class Element extends Node {
      * Find elements that have an attribute name starting with the supplied prefix. Use {@code data-} to find elements
      * that have HTML5 datasets.
      * @param keyPrefix name prefix of the attribute e.g. {@code data-}
-     * @return elements that have attribute names that start with with the prefix, empty if none.
+     * @return elements that have attribute names that start with the prefix, empty if none.
      */
     public Elements getElementsByAttributeStarting(String keyPrefix) {
         Validate.notEmpty(keyPrefix);
@@ -1038,7 +1135,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have an attribute with the specific value. Case insensitive.
+     * Find elements that have an attribute with the specific value. Case-insensitive.
      *
      * @param key name of the attribute
      * @param value value of the attribute
@@ -1049,7 +1146,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that either do not have this attribute, or have it with a different value. Case insensitive.
+     * Find elements that either do not have this attribute, or have it with a different value. Case-insensitive.
      *
      * @param key name of the attribute
      * @param value value of the attribute
@@ -1060,7 +1157,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes that start with the value prefix. Case insensitive.
+     * Find elements that have attributes that start with the value prefix. Case-insensitive.
      *
      * @param key name of the attribute
      * @param valuePrefix start of attribute value
@@ -1071,7 +1168,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes that end with the value suffix. Case insensitive.
+     * Find elements that have attributes that end with the value suffix. Case-insensitive.
      *
      * @param key name of the attribute
      * @param valueSuffix end of the attribute value
@@ -1082,7 +1179,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes whose value contains the match string. Case insensitive.
+     * Find elements that have attributes whose value contains the match string. Case-insensitive.
      *
      * @param key name of the attribute
      * @param match substring of value to search for
@@ -1093,7 +1190,7 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that have attributes whose values match the supplied regular expression.
+     * Find elements that have an attribute whose value matches the supplied regular expression.
      * @param key name of the attribute
      * @param pattern compiled regular expression to match against attribute values
      * @return elements that have attributes matching this regular expression
@@ -1147,10 +1244,10 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
+     * Find elements that contain the specified string. The search is case-insensitive. The text may appear directly
      * in the element, or in any of its descendants.
      * @param searchText to look for in the element's text
-     * @return elements that contain the string, case insensitive.
+     * @return elements that contain the string, case-insensitive.
      * @see Element#text()
      */
     public Elements getElementsContainingText(String searchText) {
@@ -1158,10 +1255,10 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
+     * Find elements that directly contain the specified string. The search is case-insensitive. The text must appear directly
      * in the element, not in any of its descendants.
      * @param searchText to look for in the element's own text
-     * @return elements that contain the string, case insensitive.
+     * @return elements that contain the string, case-insensitive.
      * @see Element#ownText()
      */
     public Elements getElementsContainingOwnText(String searchText) {
@@ -1237,50 +1334,58 @@ public class Element extends Node {
      <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
      children), use {@link #ownText()}
      <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
-     nodes (such as {@code <script>} tags are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     nodes (such as {@code <script>} tags) are not considered text. Use {@link #data()} or {@link #html()} to retrieve
      that content.
 
-     @return unencoded, normalized text, or empty string if none.
+     @return decoded, normalized text, or empty string if none.
      @see #wholeText()
      @see #ownText()
      @see #textNodes()
      */
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
-        NodeTraversor.traverse(new NodeVisitor() {
-            public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    TextNode textNode = (TextNode) node;
-                    appendNormalisedText(accum, textNode);
-                } else if (node instanceof Element) {
-                    Element element = (Element) node;
-                    if (accum.length() > 0 &&
-                        (element.isBlock() || element.tag.normalName().equals("br")) &&
-                        !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(' ');
-                }
-            }
-
-            public void tail(Node node, int depth) {
-                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
-                if (node instanceof Element) {
-                    Element element = (Element) node;
-                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
-                        accum.append(' ');
-                }
-
-            }
-        }, this);
-
+        NodeTraversor.traverse(new TextAccumulator(accum), this);
         return StringUtil.releaseBuilder(accum).trim();
     }
 
+    private static class TextAccumulator implements NodeVisitor {
+        private final StringBuilder accum;
+
+        public TextAccumulator(StringBuilder accum) {
+            this.accum = accum;
+        }
+
+        public void head(Node node, int depth) {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                appendNormalisedText(accum, textNode);
+            } else if (node instanceof Element) {
+                Element element = (Element) node;
+                if (accum.length() > 0 &&
+                    (element.isBlock() || element.isNode("br")) &&
+                    !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+        }
+
+        public void tail(Node node, int depth) {
+            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                Node next = node.nextSibling();
+                if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+
+        }
+    }
+
     /**
-     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
-     * original.
-     *
-     * @return unencoded, un-normalized text
-     * @see #text()
+     Get the non-normalized, decoded text of this element and its children, including only any newlines and spaces
+     present in the original source.
+     @return decoded, non-normalized text
+     @see #text()
+     @see #wholeOwnText()
      */
     public String wholeText() {
         final StringBuilder accum = StringUtil.borrowBuilder();
@@ -1291,16 +1396,15 @@ public class Element extends Node {
     private static void appendWholeText(Node node, StringBuilder accum) {
         if (node instanceof TextNode) {
             accum.append(((TextNode) node).getWholeText());
-        } else if (node instanceof Element) {
-            appendNewlineIfBr((Element) node, accum);
+        } else if (node.isNode("br")) {
+            accum.append("\n");
         }
     }
 
     /**
-     Get the (unencoded) text of this element, <b>not including</b> any child elements, including any newlines and spaces
-     present in the original.
-
-     @return unencoded, un-normalized text that is a direct child of this Element
+     Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including only any
+     newlines and spaces present in the original source.
+     @return decoded, non-normalized text that is a direct child of this Element
      @see #text()
      @see #wholeText()
      @see #ownText()
@@ -1324,7 +1428,7 @@ public class Element extends Node {
      * whereas {@code p.text()} returns {@code "Hello there now!"}.
      * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
      *
-     * @return unencoded text, or empty string if none.
+     * @return decoded text, or empty string if none.
      * @see #text()
      * @see #textNodes()
      */
@@ -1340,31 +1444,18 @@ public class Element extends Node {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
-            } else if (child instanceof Element) {
-                appendWhitespaceIfBr((Element) child, accum);
+            } else if (child.isNode("br") && !lastCharIsWhitespace(accum)) {
+                accum.append(" ");
             }
         }
     }
 
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
-
         if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
-            StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
-    }
-
-    /** For normalized text, treat a br element as a space, if there is not already a space. */
-    private static void appendWhitespaceIfBr(Element element, StringBuilder accum) {
-        if (element.tag.normalName().equals("br") && !TextNode.lastCharIsWhitespace(accum))
-            accum.append(" ");
-    }
-
-    /** For WholeText, treat a br element as a newline. */
-    private static void appendNewlineIfBr(Element element, StringBuilder accum) {
-        if (element.tag.normalName().equals("br"))
-            accum.append("\n");
+            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
     }
 
     static boolean preserveWhitespace(@Nullable Node node) {
@@ -1386,7 +1477,7 @@ public class Element extends Node {
      * Set the text of this element. Any existing contents (text or elements) will be cleared.
      * <p>As a special case, for {@code <script>} and {@code <style>} tags, the input text will be treated as data,
      * not visible text.</p>
-     * @param text unencoded text
+     * @param text decoded text
      * @return this element
      */
     public Element text(String text) {
@@ -1404,22 +1495,22 @@ public class Element extends Node {
     }
 
     /**
-     Test if this element has any text content (that is not just whitespace).
-     @return true if element has non-blank text content.
+     Checks if the current element or any of its child elements contain non-whitespace text.
+     @return {@code true} if the element has non-blank text content, {@code false} otherwise.
      */
     public boolean hasText() {
-        for (Node child: childNodes) {
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                if (!textNode.isBlank())
-                    return true;
-            } else if (child instanceof Element) {
-                Element el = (Element) child;
-                if (el.hasText())
-                    return true;
+        AtomicBoolean hasText = new AtomicBoolean(false);
+        filter((node, depth) -> {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                if (!textNode.isBlank()) {
+                    hasText.set(true);
+                    return NodeFilter.FilterResult.STOP;
+                }
             }
-        }
-        return false;
+            return NodeFilter.FilterResult.CONTINUE;
+        });
+        return hasText.get();
     }
 
     /**
@@ -1433,25 +1524,20 @@ public class Element extends Node {
      */
     public String data() {
         StringBuilder sb = StringUtil.borrowBuilder();
-
-        for (Node childNode : childNodes) {
+        traverse((childNode, depth) -> {
             if (childNode instanceof DataNode) {
                 DataNode data = (DataNode) childNode;
                 sb.append(data.getWholeData());
             } else if (childNode instanceof Comment) {
                 Comment comment = (Comment) childNode;
                 sb.append(comment.getData());
-            } else if (childNode instanceof Element) {
-                Element element = (Element) childNode;
-                String elementData = element.data();
-                sb.append(elementData);
             } else if (childNode instanceof CDataNode) {
                 // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
-                // but incase another type gets through.
+                // but in case another type gets through.
                 CDataNode cDataNode = (CDataNode) childNode;
                 sb.append(cDataNode.getWholeText());
             }
-        }
+        });
         return StringUtil.releaseBuilder(sb);
     }
 
@@ -1465,7 +1551,7 @@ public class Element extends Node {
     }
 
     /**
-     * Get all of the element's class names. E.g. on element {@code <div class="header gray">},
+     * Get each of the element's class names. E.g. on element {@code <div class="header gray">},
      * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
      * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
      * @return set of classnames, empty if no class attribute
@@ -1494,7 +1580,7 @@ public class Element extends Node {
     }
 
     /**
-     * Tests if this element has a class. Case insensitive.
+     * Tests if this element has a class. Case-insensitive.
      * @param className name of class to check for
      * @return true if it does, false if not
      */
@@ -1617,10 +1703,24 @@ public class Element extends Node {
         return this;
     }
 
-    boolean shouldIndent(final Document.OutputSettings out) {
-        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out);
+    /**
+     Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
+     enabled prior to parsing the content.
+     @return the range of the closing tag for this element, if it was explicitly closed in the source. {@code Untracked}
+     otherwise.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Node#sourceRange()
+     @since 1.15.2
+     */
+    public Range endSourceRange() {
+        return Range.of(this, false);
     }
 
+    boolean shouldIndent(final Document.OutputSettings out) {
+        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out) && !preserveWhitespace(parentNode);
+    }
+
+    @Override
     void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
         if (shouldIndent(out)) {
             if (accum instanceof StringBuilder) {
@@ -1644,10 +1744,12 @@ public class Element extends Node {
             accum.append('>');
     }
 
+    @Override
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
             if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                    tag.formatAsBlock() || (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
+                (tag.formatAsBlock() && !preserveWhitespace(parentNode)) ||
+                    (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
             )))
                 indent(accum, depth, out);
             accum.append("</").append(tagName()).append('>');
@@ -1757,6 +1859,7 @@ public class Element extends Node {
         return this;
     }
 
+
     @Override
     public Element filter(NodeFilter nodeFilter) {
         return  (Element) super.filter(nodeFilter);
@@ -1776,14 +1879,15 @@ public class Element extends Node {
     }
 
     private boolean isFormatAsBlock(Document.OutputSettings out) {
-        return tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
+        return tag.isBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
     }
 
     private boolean isInlineable(Document.OutputSettings out) {
-        return tag().isInline()
-            && !tag().isEmpty()
-            && (parent() == null || parent().isBlock())
-            && previousSibling() != null
-            && !out.outline();
+        if (!tag.isInline())
+            return false;
+        return (parent() == null || parent().isBlock())
+            && !isEffectivelyFirst()
+            && !out.outline()
+            && !isNode("br");
     }
 }

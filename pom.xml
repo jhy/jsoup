@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.15.1-SNAPSHOT</version><!-- remember to update previous version below for japicmp -->
+  <version>1.17.1-SNAPSHOT</version><!-- remember to update previous version below for japicmp -->
   <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for fetching URLs and extracting and manipulating data, using the best of HTML5 DOM methods and CSS selectors. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
   <url>https://jsoup.org/</url>
   <inceptionYear>2009</inceptionYear>
@@ -33,6 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jetty.version>9.4.53.v20231009</jetty.version>
   </properties>
 
   <build>
@@ -40,7 +41,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.11.0</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -57,7 +58,7 @@
         <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.20</version>
+        <version>1.23</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
@@ -76,6 +77,16 @@
                 <artifactId>android-api-level-10</artifactId>
                 <version>2.3.3_r2</version>
               </signature>
+              <ignores>
+                <ignore>java.util.function.Consumer</ignore>
+                <ignore>java.util.function.Supplier</ignore>
+                <ignore>java.lang.ThreadLocal</ignore>
+                <ignore>java.io.UncheckedIOException</ignore>
+                <ignore>java.util.function.Predicate</ignore>
+                <ignore>java.util.function.UnaryOperator</ignore>
+              </ignores>
+              <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring
+               Possibly OK to remove androidscents; keep for now to validate other additions are supported. -->
             </configuration>
           </execution>
         </executions>
@@ -83,15 +94,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>3.6.0</version>
         <configuration>
-            <doclint>none</doclint>
-            <source>8</source>
+          <doclint>none</doclint>
+          <source>8</source>
         </configuration>
         <executions>
           <execution>
             <id>attach-javadoc</id>
-            <phase>verify</phase>
             <goals>
               <goal>jar</goal>
             </goals>
@@ -101,7 +111,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.3.0</version>
         <configuration>
           <excludes>
             <exclude>org/jsoup/examples/**</exclude>
@@ -110,9 +120,8 @@
         <executions>
           <execution>
             <id>attach-sources</id>
-            <phase>verify</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
@@ -120,9 +129,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.0</version>
         <configuration>
           <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
             <manifestEntries>
               <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
             </manifestEntries>
@@ -136,7 +148,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>5.1.3</version>
+        <version>5.1.9</version>
         <executions>
           <execution>
             <id>bundle-manifest</id>
@@ -157,16 +169,16 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.1</version>
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
+        <version>3.0.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.2.1</version>
         <configuration>
           <!-- smaller stack to find stack overflows -->
           <argLine>-Xss256k</argLine>
@@ -174,7 +186,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <goals>
@@ -192,14 +204,14 @@
         <!-- API version compat check - https://siom79.github.io/japicmp/ -->
         <groupId>com.github.siom79.japicmp</groupId>
         <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.15.4</version>
+        <version>0.18.2</version>
         <configuration>
           <!-- hard code previous version; can't detect when running stateless on build server -->
           <oldVersion>
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.14.3</version>
+              <version>1.16.2</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
@@ -280,7 +292,7 @@
             <executions>
               <execution>
                 <id>sign-artifacts</id>
-                <phase>verify</phase>
+                <phase>package</phase>
                 <goals>
                   <goal>sign</goal>
                 </goals>
@@ -296,7 +308,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.0.0-M5</version>
+            <version>3.2.1</version>
             <executions>
               <execution>
                 <goals>
@@ -317,7 +329,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.8.2</version>
+      <version>5.10.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -325,7 +337,7 @@
       <!-- gson, to fetch entities from w3.org -->
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.8.9</version>
+      <version>2.10.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -333,7 +345,7 @@
       <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.4.44.v20210927</version>
+      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -341,7 +353,7 @@
       <!-- jetty for webserver integration tests -->
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.4.44.v20210927</version>
+      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
 

@@ -2,12 +2,20 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  Tests for ElementList.
@@ -178,15 +186,18 @@ public class ElementsTest {
         String h = "<p><b>This</b> is <b>jsoup</b>.</p> <p>How do you like it?</p>";
         Document doc = Jsoup.parse(h);
         doc.select("p").wrap("<div></div>");
-        assertEquals("<div><p><b>This</b> is <b>jsoup</b>.</p></div> <div><p>How do you like it?</p></div>",
-                TextUtil.stripNewlines(doc.body().html()));
+        assertEquals(
+            "<div>\n <p><b>This</b> is <b>jsoup</b>.</p>\n</div>\n<div>\n <p>How do you like it?</p>\n</div>",
+            doc.body().html());
     }
 
     @Test public void unwrap() {
         String h = "<div><font>One</font> <font><a href=\"/\">Two</a></font></div";
         Document doc = Jsoup.parse(h);
         doc.select("font").unwrap();
-        assertEquals("<div>One <a href=\"/\">Two</a></div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div>\n" +
+            " One <a href=\"/\">Two</a>\n" +
+            "</div>", doc.body().html());
     }
 
     @Test public void unwrapP() {
@@ -425,5 +436,167 @@ public class ElementsTest {
         assertEquals("http://example.com/foo", absAttrs.get(0));
         assertEquals("http://example.com/bar", absAttrs.get(1));
         assertEquals("http://example.com", absAttrs.get(2));
+    }
+
+    @Test public void setElementByIndex() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three");
+        Element newP = doc.createElement("p").text("New").attr("id", "new");
+
+        Elements ps = doc.select("p");
+        Element two = ps.get(1);
+        Element old = ps.set(1, newP);
+        assertSame(old, two);
+        assertSame(newP, ps.get(1)); // replaced in list
+        assertEquals("<p>One</p>\n<p id=\"new\">New</p>\n<p>Three</p>", doc.body().html()); // replaced in dom
+    }
+
+    @Test public void removeElementByIndex() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three");
+
+        Elements ps = doc.select("p");
+        Element two = ps.get(1);
+        assertTrue(ps.contains(two));
+        Element old = ps.remove(1);
+        assertSame(old, two);
+
+        assertEquals(2, ps.size()); // removed from list
+        assertFalse(ps.contains(old));
+        assertEquals("<p>One</p>\n<p>Three</p>", doc.body().html()); // removed from dom
+    }
+
+    @Test public void removeElementByObject() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three");
+
+        Elements ps = doc.select("p");
+        Element two = ps.get(1);
+        assertTrue(ps.contains(two));
+        boolean removed = ps.remove(two);
+        assertTrue(removed);
+
+        assertEquals(2, ps.size()); // removed from list
+        assertFalse(ps.contains(two));
+        assertEquals("<p>One</p>\n<p>Three</p>", doc.body().html()); // removed from dom
+    }
+
+    @Test public void removeElementObjectNoops() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three");
+        String origHtml = doc.html();
+        Element newP = doc.createElement("p").text("New");
+
+        Elements ps = doc.select("p");
+        int size = ps.size();
+        assertFalse(ps.remove(newP));
+        assertFalse(ps.remove(newP.childNodes()));
+        assertEquals(origHtml, doc.html());
+        assertEquals(size, ps.size());
+    }
+
+    @Test public void clear() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two</p><div>Three</div>");
+        Elements ps = doc.select("p");
+        assertEquals(2, ps.size());
+        ps.clear();
+        assertEquals(0, ps.size());
+
+        assertEquals(0, doc.select("p").size());
+    }
+
+    @Test public void removeAll() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four</p><div>Div");
+        Elements ps = doc.select("p");
+        assertEquals(4, ps.size());
+        Elements midPs = doc.select("p:gt(0):lt(3)"); //Two and Three
+        assertEquals(2, midPs.size());
+
+        boolean removed = ps.removeAll(midPs);
+        assertEquals(2, ps.size());
+        assertTrue(removed);
+        assertEquals(2, midPs.size());
+
+        Elements divs = doc.select("div");
+        assertEquals(1, divs.size());
+        assertFalse(ps.removeAll(divs));
+        assertEquals(2, ps.size());
+
+        assertEquals("<p>One</p>\n<p>Four</p>\n<div>\n Div\n</div>", doc.body().html());
+    }
+
+    @Test public void retainAll() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four</p><div>Div");
+        Elements ps = doc.select("p");
+        assertEquals(4, ps.size());
+        Elements midPs = doc.select("p:gt(0):lt(3)"); //Two and Three
+        assertEquals(2, midPs.size());
+
+        boolean removed = ps.retainAll(midPs);
+        assertEquals(2, ps.size());
+        assertTrue(removed);
+        assertEquals(2, midPs.size());
+
+        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>\n Div\n</div>", doc.body().html());
+
+        Elements psAgain = doc.select("p");
+        assertFalse(midPs.retainAll(psAgain));
+
+        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>\n Div\n</div>", doc.body().html());
+    }
+
+    @Test public void iteratorRemovesFromDom() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four");
+        Elements ps = doc.select("p");
+
+        assertEquals(4, ps.size());
+        for (Iterator<Element> it = ps.iterator(); it.hasNext(); ) {
+            Element el = it.next();
+            if (el.text().contains("Two"))
+                it.remove();
+        }
+        assertEquals(3, ps.size());
+        assertEquals("<p>One</p>\n<p>Three</p>\n<p>Four</p>", doc.body().html());
+    }
+
+    @Test public void removeIf() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four");
+        Elements ps = doc.select("p");
+
+        assertEquals(4, ps.size());
+        boolean removed = ps.removeIf(el -> el.text().contains("Two"));
+        assertTrue(removed);
+        assertEquals(3, ps.size());
+        assertEquals("<p>One</p>\n<p>Three</p>\n<p>Four</p>", doc.body().html());
+
+        assertFalse(ps.removeIf(el -> el.text().contains("Five")));
+        assertEquals("<p>One</p>\n<p>Three</p>\n<p>Four</p>", doc.body().html());
+    }
+
+    @Test public void removeIfSupportsConcurrentRead() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four");
+        Elements ps = doc.select("p");
+        assertEquals(4, ps.size());
+
+        boolean removed = ps.removeIf(el -> ps.contains(el));
+        assertTrue(removed);
+        assertEquals(0, ps.size());
+        assertEquals("", doc.body().html());
+    }
+
+    @Test public void replaceAll() {
+        Document doc = Jsoup.parse("<p>One<p>Two<p>Three<p>Four");
+        Elements ps = doc.select("p");
+        assertEquals(4, ps.size());
+
+        ps.replaceAll(el -> {
+            Element div = doc.createElement("div");
+            div.text(el.text());
+            return div;
+        });
+
+        // Check Elements
+        for (Element p : ps) {
+            assertEquals("div", p.tagName());
+        }
+
+        // check dom
+        assertEquals("<div> One</div><div> Two</div><div> Three</div><div> Four</div>", TextUtil.normalizeSpaces(doc.body().html()));
     }
 }

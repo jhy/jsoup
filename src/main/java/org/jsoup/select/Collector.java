@@ -24,33 +24,16 @@ public class Collector {
      @return list of matches; empty if none
      */
     public static Elements collect (Evaluator eval, Element root) {
+        eval.reset();
         Elements elements = new Elements();
-        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
-        return elements;
-    }
-
-    private static class Accumulator implements NodeVisitor {
-        private final Element root;
-        private final Elements elements;
-        private final Evaluator eval;
-
-        Accumulator(Element root, Elements elements, Evaluator eval) {
-            this.root = root;
-            this.elements = elements;
-            this.eval = eval;
-        }
-
-        public void head(Node node, int depth) {
+        NodeTraversor.traverse((node, depth) -> {
             if (node instanceof Element) {
                 Element el = (Element) node;
                 if (eval.matches(root, el))
                     elements.add(el);
             }
-        }
-
-        public void tail(Node node, int depth) {
-            // void
-        }
+        }, root);
+        return elements;
     }
 
     /**
@@ -61,6 +44,7 @@ public class Collector {
      @return the first match; {@code null} if none
      */
     public static @Nullable Element findFirst(Evaluator eval, Element root) {
+        eval.reset();
         FirstFinder finder = new FirstFinder(eval);
         return finder.find(root, root);
     }
@@ -92,11 +76,5 @@ public class Collector {
             }
             return CONTINUE;
         }
-
-        @Override
-        public FilterResult tail(Node node, int depth) {
-            return CONTINUE;
-        }
     }
-
 }

@@ -60,13 +60,14 @@ public class XmlDeclaration extends LeafNode {
                 accum.append(key);
                 if (!val.isEmpty()) {
                     accum.append("=\"");
-                    Entities.escape(accum, val, out, true, false, false);
+                    Entities.escape(accum, val, out, true, false, false, false);
                     accum.append('"');
                 }
             }
         }
     }
 
+    @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum
             .append("<")
@@ -78,6 +79,7 @@ public class XmlDeclaration extends LeafNode {
             .append(">");
     }
 
+    @Override
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
     }
 

@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
@@ -62,12 +63,23 @@ public class Cleaner {
     }
 
     /**
-     Determines if the input document <b>body</b>is valid, against the safelist. It is considered valid if all the tags and attributes
-     in the input HTML are allowed by the safelist, and that there is no content in the <code>head</code>.
+     Determines if the input document's <b>body</b> is valid, against the safelist. It is considered valid if all the
+     tags and attributes in the input HTML are allowed by the safelist, and that there is no content in the
+     <code>head</code>.
      <p>
-     This method can be used as a validator for user input. An invalid document will still be cleaned successfully
-     using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
-     to ensure enforced attributes are set correctly, and that the output is tidied.
+     This method is intended to be used in a user interface as a validator for user input. Note that regardless of the
+     output of this method, the input document <b>must always</b> be normalized using a method such as
+     {@link #clean(Document)}, and the result of that method used to store or serialize the document before later reuse
+     such as presentation to end users. This ensures that enforced attributes are set correctly, and that any
+     differences between how a given browser and how jsoup parses the input HTML are normalized.
+     </p>
+     <p>Example:
+     <pre>{@code
+     Document inputDoc = Jsoup.parse(inputHtml);
+     Cleaner cleaner = new Cleaner(Safelist.relaxed());
+     boolean isValid = cleaner.isValid(inputDoc);
+     Document normalizedDoc = cleaner.clean(inputDoc);
+     }</pre>
      </p>
      @param dirtyDocument document to test
      @return true if no tags or attributes need to be removed; false if they do
@@ -81,6 +93,27 @@ public class Cleaner {
             && dirtyDocument.head().childNodes().isEmpty(); // because we only look at the body, but we start from a shell, make sure there's nothing in the head
     }
 
+    /**
+     Determines if the input document's <b>body HTML</b> is valid, against the safelist. It is considered valid if all
+     the tags and attributes in the input HTML are allowed by the safelist.
+     <p>
+     This method is intended to be used in a user interface as a validator for user input. Note that regardless of the
+     output of this method, the input document <b>must always</b> be normalized using a method such as
+     {@link #clean(Document)}, and the result of that method used to store or serialize the document before later reuse
+     such as presentation to end users. This ensures that enforced attributes are set correctly, and that any
+     differences between how a given browser and how jsoup parses the input HTML are normalized.
+     </p>
+     <p>Example:
+     <pre>{@code
+     Document inputDoc = Jsoup.parse(inputHtml);
+     Cleaner cleaner = new Cleaner(Safelist.relaxed());
+     boolean isValid = cleaner.isValidBodyHtml(inputHtml);
+     Document normalizedDoc = cleaner.clean(inputDoc);
+     }</pre>
+     </p>
+     @param bodyHtml HTML fragment to test
+     @return true if no tags or attributes need to be removed; false if they do
+     */
     public boolean isValidBodyHtml(String bodyHtml) {
         Document clean = Document.createShell("");
         Document dirty = Document.createShell("");
@@ -147,7 +180,7 @@ public class Cleaner {
     private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
-        Element dest = new Element(Tag.valueOf(sourceTag), sourceEl.baseUri(), destAttrs);
+        Element dest = new Element(Tag.valueOf(sourceTag, sourceEl.tag().namespace(), ParseSettings.preserveCase), sourceEl.baseUri(), destAttrs);
         int numDiscarded = 0;
 
         Attributes sourceAttrs = sourceEl.attributes();
@@ -159,6 +192,13 @@ public class Cleaner {
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
+
+        // Copy the original start and end range, if set
+        // TODO - might be good to make a generic Element#userData set type interface, and copy those all over
+        if (sourceEl.sourceRange().isTracked())
+            sourceEl.sourceRange().track(dest, true);
+        if (sourceEl.endSourceRange().isTracked())
+            sourceEl.endSourceRange().track(dest, false);
 
         return new ElementMeta(dest, numDiscarded);
     }

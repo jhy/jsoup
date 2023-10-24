@@ -81,4 +81,26 @@ public class TagTest {
         assertTrue(Tag.isKnownTag("div"));
         assertFalse(Tag.isKnownTag("explain"));
     }
+
+    @Test public void knownSvgNamespace() {
+        Tag svgHtml = Tag.valueOf("svg"); // no namespace specified, defaults to html, so not the known tag
+        Tag svg = Tag.valueOf("svg", Parser.NamespaceSvg, ParseSettings.htmlDefault);
+
+        assertEquals(Parser.NamespaceHtml, svgHtml.namespace());
+        assertEquals(Parser.NamespaceSvg, svg.namespace());
+
+        assertFalse(svgHtml.isBlock()); // generated
+        assertTrue(svg.isBlock()); // known
+    }
+
+    @Test public void unknownTagNamespace() {
+        Tag fooHtml = Tag.valueOf("foo"); // no namespace specified, defaults to html
+        Tag foo = Tag.valueOf("foo", Parser.NamespaceSvg, ParseSettings.htmlDefault);
+
+        assertEquals(Parser.NamespaceHtml, fooHtml.namespace());
+        assertEquals(Parser.NamespaceSvg, foo.namespace());
+
+        assertFalse(fooHtml.isBlock()); // generated
+        assertFalse(foo.isBlock()); // generated
+    }
 }

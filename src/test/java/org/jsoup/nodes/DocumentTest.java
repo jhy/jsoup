@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,15 +56,15 @@ public class DocumentTest {
     @Test public void testOutputEncoding() {
         Document doc = Jsoup.parse("<p title=π>π & < > </p>");
         // default is utf-8
-        assertEquals("<p title=\"π\">π &amp; &lt; &gt; </p>", doc.body().html());
+        assertEquals("<p title=\"π\">π &amp; &lt; &gt;</p>", doc.body().html());
         assertEquals("UTF-8", doc.outputSettings().charset().name());
 
         doc.outputSettings().charset("ascii");
         assertEquals(Entities.EscapeMode.base, doc.outputSettings().escapeMode());
-        assertEquals("<p title=\"&#x3c0;\">&#x3c0; &amp; &lt; &gt; </p>", doc.body().html());
+        assertEquals("<p title=\"&#x3c0;\">&#x3c0; &amp; &lt; &gt;</p>", doc.body().html());
 
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
-        assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt; </p>", doc.body().html());
+        assertEquals("<p title=\"&pi;\">&pi; &amp; &lt; &gt;</p>", doc.body().html());
     }
 
     @Test public void testXhtmlReferences() {
@@ -109,11 +110,17 @@ public class DocumentTest {
         Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
         Document clone = doc.clone();
 
-        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
         clone.title("Hello there");
-        clone.select("p").first().text("One more").attr("id", "1");
-        assertEquals("<html><head><title>Hello there</title> </head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
-        assertEquals("<html><head><title>Hello</title> </head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
+        clone.expectFirst("p").text("One more").attr("id", "1");
+        assertEquals("<html><head><title>Hello there</title></head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
+        assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
+    }
+
+    @Test void testBasicIndent() {
+        Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
+        String expect = "<html>\n <head>\n  <title>Hello</title>\n </head>\n <body>\n  <p>One</p>\n  <p>Two</p>\n </body>\n</html>";
+        assertEquals(expect, doc.html());
     }
 
     @Test public void testClonesDeclarations() {
@@ -126,18 +133,15 @@ public class DocumentTest {
     }
 
     @Test public void testLocation() throws IOException {
-    	File in = ParseTest.getFile("/htmltests/yahoo-jp.html.gz");
-        Document doc = Jsoup.parse(in, "UTF-8", "http://www.yahoo.co.jp/index.html");
+        // tests location vs base href
+        File in = ParseTest.getFile("/htmltests/basehref.html");
+        Document doc = Jsoup.parse(in, "UTF-8", "http://example.com/");
         String location = doc.location();
         String baseUri = doc.baseUri();
-        assertEquals("http://www.yahoo.co.jp/index.html",location);
-        assertEquals("http://www.yahoo.co.jp/_ylh=X3oDMTB0NWxnaGxsBF9TAzIwNzcyOTYyNjUEdGlkAzEyBHRtcGwDZ2Ex/",baseUri);
-        in = ParseTest.getFile("/htmltests/nyt-article-1.html.gz");
-        doc = Jsoup.parse(in, null, "http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp");
-        location = doc.location();
-        baseUri = doc.baseUri();
-        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",location);
-        assertEquals("http://www.nytimes.com/2010/07/26/business/global/26bp.html?hp",baseUri);
+        assertEquals("http://example.com/", location);
+        assertEquals("https://example.com/path/file.html?query", baseUri);
+        assertEquals("./anotherfile.html", doc.expectFirst("a").attr("href"));
+        assertEquals("https://example.com/path/anotherfile.html", doc.expectFirst("a").attr("abs:href"));
     }
 
     @Test public void testLocationFromString() {
@@ -525,5 +529,44 @@ public class DocumentTest {
             " </frameset>\n" +
             "</html>";
         assertEquals(expected, doc.html());
+    }
+
+    @Test void forms() {
+        String html = "<body><form id=1><input name=foo></form><form id=2><input name=bar>";
+        Document doc = Jsoup.parse(html);
+
+        List<FormElement> forms = doc.forms();
+        assertEquals(2, forms.size());
+        FormElement form = forms.get(1);
+        assertEquals(1, form.elements().size());
+        assertEquals("bar", form.elements().first().attr("name"));
+
+        String emptyHtml = "<body>";
+        Document emptyDoc = Jsoup.parse(emptyHtml);
+        assertEquals(0, emptyDoc.forms().size());
+    }
+
+    @Test void expectForm() {
+        String html = "<body><div name=form></div><form id=1 name=form><input name=foo></form><form id=2><input name=bar>";
+        Document doc = Jsoup.parse(html);
+
+        // test finds first <form>
+        FormElement formEl1 = doc.expectForm("[name=form]");
+        assertEquals("1", formEl1.id()); // and not the div
+
+        FormElement formEl2 = doc.expectForm("form");
+        assertEquals("1", formEl2.id());
+
+        FormElement formEl3 = doc.expectForm("form:has([name=bar])");
+        assertEquals("2", formEl3.id());
+
+        boolean threw = false;
+        try {
+            FormElement nix = doc.expectForm("div");
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+
     }
 }

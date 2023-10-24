@@ -49,8 +49,8 @@ public final class ConstrainableInputStream extends BufferedInputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         if (interrupted || capped && remaining <= 0)
             return -1;
-        if (Thread.interrupted()) {
-            // interrupted latches, because parse() may call twice (and we still want the thread interupt to clear)
+        if (Thread.currentThread().isInterrupted()) {
+            // interrupted latches, because parse() may call twice
             interrupted = true;
             return -1;
         }
@@ -81,10 +81,9 @@ public final class ConstrainableInputStream extends BufferedInputStream {
         final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
 
         int read;
-        int remaining = bufferSize;
-
+        int remaining = max;
         while (true) {
-            read = read(readBuffer, 0, remaining);
+            read = read(readBuffer, 0, localCapped ? Math.min(remaining, bufferSize) : bufferSize);
             if (read == -1) break;
             if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
                 if (read >= remaining) {

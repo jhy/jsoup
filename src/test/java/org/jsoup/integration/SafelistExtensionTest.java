@@ -33,14 +33,14 @@ public class SafelistExtensionTest {
         }
 
         @Override
-        protected boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
+        public boolean isSafeAttribute(String tagName, Element el, Attribute attr) {
             if (attr.getKey().startsWith("open"))
                 return true;
             return super.isSafeAttribute(tagName, el, attr);
         }
 
         @Override
-        protected boolean isSafeTag(String tag) {
+        public boolean isSafeTag(String tag) {
             if (tag.startsWith("open"))
                 return true;
             return super.isSafeTag(tag);

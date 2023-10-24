@@ -3,6 +3,8 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
+import org.jsoup.Connection.Method;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
 import org.jsoup.internal.StringUtil;
@@ -12,7 +14,6 @@ import org.jsoup.nodes.FormElement;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -21,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
@@ -39,11 +41,6 @@ public class ConnectTest {
     public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
     }
 
     @Test
@@ -258,13 +255,38 @@ public class ConnectTest {
         assertEquals("auth=token", ihVal("Cookie", doc));
     }
 
+    @Test
+    public void doesDeleteWithBody() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1972
+        String body = "some body";
+        Connection.Response res = Jsoup.connect(echoUrl)
+            .requestBody(body)
+            .method(Method.DELETE)
+            .execute();
+
+        Document doc = res.parse();
+        assertEquals("DELETE", ihVal("Method", doc));
+        assertEquals(body, ihVal("Post Data", doc));
+    }
+
+    @Test
+    public void doesDeleteWithoutBody() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl)
+            .method(Method.DELETE)
+            .execute();
+
+        Document doc = res.parse();
+        assertEquals("DELETE", ihVal("Method", doc));
+        assertEquals(null, ihVal("Post Data", doc));
+    }
+
     /**
      * Tests upload of content to a remote service.
      */
     @Test
     public void postFiles() throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
-        File html = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File html = ParseTest.getFile("/htmltests/large.html");
 
         Document res = Jsoup
             .connect(EchoServlet.Url)
@@ -278,8 +300,8 @@ public class ConnectTest {
 
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
-        assertEquals("google-ipod.html.gz", ihVal("Part secondPart Filename", res));
-        assertEquals("12212", ihVal("Part secondPart Size", res));
+        assertEquals("large.html", ihVal("Part secondPart Filename", res));
+        assertEquals("280735", ihVal("Part secondPart Size", res));
 
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
@@ -517,15 +539,12 @@ public class ConnectTest {
     @Test
     public void handlesUnknownEscapesAcrossBuffer() throws IOException {
         String localPath = "/htmltests/escapes-across-buffer.html";
-        String url =
-            "https://gist.githubusercontent.com/krystiangorecki/d3bad50ef5615f06b077438607423533/raw/71adfdf81121282ea936510ed6cfe440adeb2d83/JsoupIssue1218.html";
         String localUrl = FileServlet.urlTo(localPath);
 
-        Document docFromGithub = Jsoup.connect(url).get(); // different chunks meant GH would error but local not...
         Document docFromLocalServer = Jsoup.connect(localUrl).get();
         Document docFromFileRead = Jsoup.parse(ParseTest.getFile(localPath), "UTF-8");
 
-        String text = docFromGithub.body().text();
+        String text = docFromLocalServer.body().text();
         assertEquals(14766, text.length());
         assertEquals(text, docFromLocalServer.body().text());
         assertEquals(text, docFromFileRead.body().text());
@@ -542,7 +561,7 @@ public class ConnectTest {
         FormElement form = forms.get(0);
         Connection post = form.submit();
 
-        File uploadFile = ParseTest.getFile("/htmltests/google-ipod.html.gz");
+        File uploadFile = ParseTest.getFile("/htmltests/large.html");
         FileInputStream stream = new FileInputStream(uploadFile);
 
         Connection.KeyVal fileData = post.data("_file");
@@ -655,7 +674,7 @@ public class ConnectTest {
         Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
 
-        int actualDocText = 269541;
+        int actualDocText = 269535;
         assertEquals(actualDocText, defaultRes.parse().text().length());
         assertEquals(49165, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());
@@ -670,5 +689,101 @@ public class ConnectTest {
         Document doc2 = con.get();
         assertEquals("Large HTML", doc1.title());
         assertEquals("Large HTML", doc2.title());
+    }
+
+    @Test
+    public void maxBodySizeInReadToByteBuffer() throws IOException {
+        // https://github.com/jhy/jsoup/issues/1774
+        // when calling readToByteBuffer, contents were not buffered up
+        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+
+        Connection.Response defaultRes = Jsoup.connect(url).execute();
+        Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
+        Connection.Response mediumRes = Jsoup.connect(url).maxBodySize(200 * 1024).execute(); // crops
+        Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
+        Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
+
+        int actualDocText = 280735;
+        assertEquals(actualDocText, defaultRes.body().length());
+        assertEquals(50 * 1024, smallRes.body().length());
+        assertEquals(200 * 1024, mediumRes.body().length());
+        assertEquals(actualDocText, largeRes.body().length());
+        assertEquals(actualDocText, unlimitedRes.body().length());
+    }
+
+    @Test void formLoginFlow() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+        Document loginDoc = Jsoup.connect(startUrl).get();
+        FormElement form = loginDoc.expectForm("#login");
+        assertNotNull(form);
+        form.expectFirst("[name=username]").val("admin");
+        form.expectFirst("[name=password]").val("Netscape engineers are weenies!");
+
+        // post it- should go to Cookie then bounce to Echo
+        Connection submit = form.submit();
+        assertEquals(Connection.Method.POST, submit.request().method());
+        Connection.Response postRes = submit.execute();
+        assertEquals(echoUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.GET, postRes.method());
+        Document resultDoc = postRes.parse();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", resultDoc));
+        // should be no form data sent to the echo redirect
+        assertEquals("", ihVal("Query String", resultDoc));
+
+        // new request to echo, should not have form data, but should have cookies from implicit session
+        Document newEcho = submit.newRequest().url(echoUrl).get();
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
+        assertEquals("", ihVal("Query String", newEcho));
+
+        Document cookieDoc = submit.newRequest().url(cookieUrl).get();
+        assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
+
+    }
+
+    @Test void formLoginFlow2() throws IOException {
+        String echoUrl = EchoServlet.Url;
+        String cookieUrl = CookieServlet.Url;
+        String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
+
+        Connection session = Jsoup.newSession();
+        Document loginDoc = session.newRequest().url(startUrl).get();
+        FormElement form = loginDoc.expectForm("#login2");
+        assertNotNull(form);
+        String username = "admin";
+        form.expectFirst("[name=username]").val(username);
+        String password = "Netscape engineers are weenies!";
+        form.expectFirst("[name=password]").val(password);
+
+        Connection submit = form.submit();
+        assertEquals(username, submit.data("username").value());
+        assertEquals(password, submit.data("password").value());
+
+        Connection.Response postRes = submit.execute();
+        assertEquals(cookieUrl, postRes.url().toExternalForm());
+        assertEquals(Connection.Method.POST, postRes.method());
+        Document resultDoc = postRes.parse();
+
+        Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
+        assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
+        assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
+    }
+
+    @Test void preservesUrlFragment() throws IOException {
+        // confirms https://github.com/jhy/jsoup/issues/1686
+        String url = EchoServlet.Url + "#fragment";
+        Document doc = Jsoup.connect(url).get();
+        assertEquals(url, doc.location());
+    }
+
+    @Test void fetchUnicodeUrl() throws IOException {
+        String url = EchoServlet.Url + "/✔/?鍵=値";
+        Document doc = Jsoup.connect(url).get();
+
+        assertEquals("/✔/", ihVal("Path Info", doc));
+        assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
+        assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
 }

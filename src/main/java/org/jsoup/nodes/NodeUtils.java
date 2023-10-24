@@ -4,14 +4,13 @@ import org.jsoup.helper.Validate;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
-import org.jsoup.select.Elements;
 import org.w3c.dom.NodeList;
 
 import java.util.List;
 
 /**
  * Internal helpers for Nodes, to keep the actual node APIs relatively clean. A jsoup internal class, so don't use it as
- * there is no contract API).
+ * there is no contract API.
  */
 final class NodeUtils {
     /**
@@ -42,7 +41,7 @@ final class NodeUtils {
         Validate.notNull(el);
         Validate.notNull(nodeType);
 
-        W3CDom w3c = new W3CDom();
+        W3CDom w3c = new W3CDom().namespaceAware(false);
         org.w3c.dom.Document wDoc = w3c.fromJsoup(el);
         org.w3c.dom.Node contextNode = w3c.contextNode(wDoc);
         NodeList nodeList = w3c.selectXpath(xpath, contextNode);

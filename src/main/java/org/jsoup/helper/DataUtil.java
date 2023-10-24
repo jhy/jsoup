@@ -1,6 +1,5 @@
 package org.jsoup.helper;
 
-import org.jsoup.UncheckedIOException;
 import org.jsoup.internal.ConstrainableInputStream;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
@@ -13,6 +12,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import javax.annotation.Nullable;
+import javax.annotation.WillClose;
+
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.File;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -103,7 +105,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
+    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
     }
 
@@ -116,7 +118,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return parseInputStream(in, charsetName, baseUri, parser);
     }
 
@@ -134,7 +136,7 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
+    static Document parseInputStream(@Nullable @WillClose InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
         input = ConstrainableInputStream.wrap(input, bufferSize, 0);
@@ -161,7 +163,7 @@ public final class DataUtil {
                     else
                         doc = parser.parseInput(defaultDecoded.toString(), baseUri);
                 } catch (UncheckedIOException e) {
-                    throw e.ioException();
+                    throw e.getCause();
                 }
 
                 // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
@@ -206,7 +208,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize); // Android level does not allow us try-with-resources
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), bufferSize); // Android level does not allow us try-with-resources
                 try {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
@@ -216,7 +218,7 @@ public final class DataUtil {
                         doc = parser.parseInput(reader, baseUri);
                     } catch (UncheckedIOException e) {
                         // io exception when parsing (not seen before because reading the stream as we go)
-                        throw e.ioException();
+                        throw e.getCause();
                     }
                     Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
                     doc.outputSettings().charset(charset);

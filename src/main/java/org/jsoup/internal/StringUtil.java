@@ -256,7 +256,7 @@ public final class StringUtil {
         final int len = haystack.length;
         for (int i = 0; i < len; i++) {
             if (haystack[i].equals(needle))
-            return true;
+               return true;
         }
         return false;
     }
@@ -290,6 +290,7 @@ public final class StringUtil {
      * @throws MalformedURLException if an error occurred generating the URL
      */
     public static URL resolve(URL base, String relUrl) throws MalformedURLException {
+        relUrl = stripControlChars(relUrl);
         // workaround: java resolves '//path/file + ?foo' to '//path/?foo', not '//path/file?foo' as desired
         if (relUrl.startsWith("?"))
             relUrl = base.getPath() + relUrl;
@@ -308,7 +309,9 @@ public final class StringUtil {
      * @param relUrl the relative URL to resolve. (If it's already absolute, it will be returned)
      * @return an absolute URL if one was able to be generated, or the empty string if not
      */
-    public static String resolve(final String baseUrl, final String relUrl) {
+    public static String resolve(String baseUrl, String relUrl) {
+        // workaround: java will allow control chars in a path URL and may treat as relative, but Chrome / Firefox will strip and may see as a scheme. Normalize to browser's view.
+        baseUrl = stripControlChars(baseUrl); relUrl = stripControlChars(relUrl);
         try {
             URL base;
             try {
@@ -327,12 +330,12 @@ public final class StringUtil {
     }
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
 
-    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = new ThreadLocal<Stack<StringBuilder>>() {
-        @Override
-        protected Stack<StringBuilder> initialValue() {
-            return new Stack<>();
-        }
-    };
+    private static final Pattern controlChars = Pattern.compile("[\\x00-\\x1f]*"); // matches ascii 0 - 31, to strip from url
+    private static String stripControlChars(final String input) {
+        return controlChars.matcher(input).replaceAll("");
+    }
+
+    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = ThreadLocal.withInitial(Stack::new);
 
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is

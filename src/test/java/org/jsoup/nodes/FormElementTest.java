@@ -7,7 +7,6 @@ import org.jsoup.integration.servlets.CookieServlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -27,11 +26,6 @@ public class FormElementTest {
         TestServer.start();
     }
 
-    @AfterAll
-    public static void tearDown() {
-        TestServer.stop();
-    }
-
     @Test public void hasAssociatedControls() {
         //"button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
         String html = "<form id=1><button id=1><fieldset id=2 /><input id=3><keygen id=4><object id=5><output id=6>" +
@@ -49,6 +43,7 @@ public class FormElementTest {
                 "<input name='eight' type='checkbox' checked><input name='nine' type='checkbox' value='unset'>" +
                 "<input name='ten' value='text' disabled>" +
                 "<input name='eleven' value='text' type='button'>" +
+                "<input name='twelve' value='text' type='image'>" +
                 "</form>";
         Document doc = Jsoup.parse(html);
         FormElement form = (FormElement) doc.select("form").first();

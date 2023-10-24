@@ -1,12 +1,12 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 
 import java.util.ArrayList;
 
@@ -31,6 +31,7 @@ enum HtmlTreeBuilderState {
                     tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
+                tb.onNodeInserted(doctype, t);
                 if (d.isForceQuirks())
                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);
                 tb.transition(BeforeHtml);
@@ -165,7 +166,7 @@ enum HtmlTreeBuilderState {
                             tb.error(this);
                         } else {
                             tb.generateImpliedEndTags(true);
-                            if (!name.equals(tb.currentElement().normalName())) tb.error(this);
+                            if (!tb.currentElementIs(name)) tb.error(this);
                             tb.popStackToClose(name);
                             tb.clearFormattingElementsToLastMarker();
                             tb.popTemplateMode();
@@ -309,7 +310,8 @@ enum HtmlTreeBuilderState {
                 case EOF:
                     if (tb.templateModeSize() > 0)
                         return tb.process(t, InTemplate);
-                    // todo: error if stack contains something not dd, dt, li, p, tbody, td, tfoot, th, thead, tr, body, html
+                    if (tb.onStackNot(InBodyEndOtherErrors))
+                        tb.error(this);
                     // stop parsing
                     break;
             }
@@ -384,8 +386,9 @@ enum HtmlTreeBuilderState {
                         return false; // ignore
                     } else {
                         tb.framesetOk(false);
-                        Element body = stack.get(1);
-                        if (startTag.hasAttributes()) {
+                        // will be on stack if this is a nested body. won't be if closed (which is a variance from spec, which leaves it on)
+                        Element body;
+                        if (startTag.hasAttributes() && (body = tb.getFromStack("body")) != null) { // we only ever put one body on stack
                             for (Attribute attribute : startTag.attributes) {
                                 if (!body.hasAttr(attribute.getKey()))
                                     body.attributes().put(attribute);
@@ -554,13 +557,11 @@ enum HtmlTreeBuilderState {
                     break;
                 case "math":
                     tb.reconstructFormattingElements();
-                    // todo: handle A start tag whose tag name is "math" (i.e. foreign, mathml)
-                    tb.insert(startTag);
+                    tb.insertForeign(startTag, Parser.NamespaceMathml);
                     break;
                 case "svg":
                     tb.reconstructFormattingElements();
-                    // todo: handle A start tag whose tag name is "svg" (xlink, svg)
-                    tb.insert(startTag);
+                    tb.insertForeign(startTag, Parser.NamespaceSvg);
                     break;
                 // static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
                 case "h1":
@@ -609,7 +610,7 @@ enum HtmlTreeBuilderState {
                     }
                     tb.insert(startTag);
                     break;
-                // static final String[] InBodyStartOptions = new String[]{"optgroup", "option"};
+
                 case "optgroup":
                 case "option":
                     if (tb.currentElementIs("option"))
@@ -617,19 +618,27 @@ enum HtmlTreeBuilderState {
                     tb.reconstructFormattingElements();
                     tb.insert(startTag);
                     break;
-                // static final String[] InBodyStartRuby = new String[]{"rp", "rt"};
+
+                case "rb":
+                case "rtc":
+                    if (tb.inScope("ruby")) {
+                        tb.generateImpliedEndTags();
+                        if (!tb.currentElementIs("ruby"))
+                            tb.error(this);
+                    }
+                    tb.insert(startTag);
+                    break;
+
                 case "rp":
                 case "rt":
                     if (tb.inScope("ruby")) {
-                        tb.generateImpliedEndTags();
-                        if (!tb.currentElementIs("ruby")) {
+                        tb.generateImpliedEndTags("rtc");
+                        if (!tb.currentElementIs("rtc") && !tb.currentElementIs("ruby"))
                             tb.error(this);
-                            tb.popStackToBefore("ruby"); // i.e. close up to but not include name
-                        }
-                        tb.insert(startTag);
                     }
-                    // todo - is this right? drops rp, rt if ruby not in scope?
+                    tb.insert(startTag);
                     break;
+
                 // InBodyStartEmptyFormatters:
                 case "area":
                 case "br":
@@ -716,15 +725,22 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         return false;
                     } else {
-                        // todo: error if stack contains something not dd, dt, li, optgroup, option, p, rp, rt, tbody, td, tfoot, th, thead, tr, body, html
+                        if (tb.onStackNot(InBodyEndOtherErrors))
+                            tb.error(this);
                         tb.transition(AfterBody);
                     }
                     break;
                 case "html":
-                    boolean notIgnored = tb.processEndTag("body");
-                    if (notIgnored)
-                        return tb.process(endTag);
-                    break;
+                    if (!tb.onStack("body")) {
+                        tb.error(this);
+                        return false; // ignore
+                    } else {
+                        if (tb.onStackNot(InBodyEndOtherErrors))
+                            tb.error(this);
+                        tb.transition(AfterBody);
+                        return tb.process(t); // re-process
+                    }
+
                 case "form":
                     if (!tb.onStack("template")) {
                         Element currentForm = tb.getFormElement();
@@ -977,7 +993,7 @@ enum HtmlTreeBuilderState {
     InTable {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isCharacter() && inSorted(tb.currentElement().normalName(), InTableFoster)) {
-                tb.newPendingTableCharacters();
+                tb.resetPendingTableCharacters();
                 tb.markInsertionMode();
                 tb.transition(InTableText);
                 return tb.process(t);
@@ -1088,25 +1104,25 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     return false;
                 } else {
-                    tb.getPendingTableCharacters().add(c.getData());
+                    tb.addPendingTableCharacters(c);
                 }
-            } else {// todo - don't really like the way these table character data lists are built
+            } else {
                 if (tb.getPendingTableCharacters().size() > 0) {
-                    for (String character : tb.getPendingTableCharacters()) {
-                        if (!isWhitespace(character)) {
+                    for (Token.Character c : tb.getPendingTableCharacters()) {
+                        if (!isWhitespace(c)) {
                             // InTable anything else section:
                             tb.error(this);
                             if (inSorted(tb.currentElement().normalName(), InTableFoster)) {
                                 tb.setFosterInserts(true);
-                                tb.process(new Token.Character().data(character), InBody);
+                                tb.process(c, InBody);
                                 tb.setFosterInserts(false);
                             } else {
-                                tb.process(new Token.Character().data(character), InBody);
+                                tb.process(c, InBody);
                             }
                         } else
-                            tb.insert(new Token.Character().data(character));
+                            tb.insert(c);
                     }
-                    tb.newPendingTableCharacters();
+                    tb.resetPendingTableCharacters();
                 }
                 tb.transition(tb.originalState());
                 return tb.process(t);
@@ -1283,13 +1299,20 @@ enum HtmlTreeBuilderState {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.normalName();
 
-                if (inSorted(name, InCellNames)) {
+                if (inSorted(name, InCellNames)) { // th, th
                     tb.clearStackToTableRowContext();
                     tb.insert(startTag);
                     tb.transition(InCell);
                     tb.insertMarkerToFormattingElements();
-                } else if (inSorted(name, InRowMissing)) {
-                    return handleMissingTr(t, tb);
+                } else if (inSorted(name, InRowMissing)) { // "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr"
+                    if (!tb.inTableScope("tr")) {
+                        tb.error(this);
+                        return false;
+                    }
+                    tb.clearStackToTableRowContext();
+                    tb.pop(); // tr
+                    tb.transition(InTableBody);
+                    return tb.process(t);
                 } else {
                     return anythingElse(t, tb);
                 }
@@ -1306,15 +1329,27 @@ enum HtmlTreeBuilderState {
                     tb.pop(); // tr
                     tb.transition(InTableBody);
                 } else if (name.equals("table")) {
-                    return handleMissingTr(t, tb);
-                } else if (inSorted(name, InTableToBody)) {
-                    if (!tb.inTableScope(name) || !tb.inTableScope("tr")) {
+                    if (!tb.inTableScope("tr")) {
                         tb.error(this);
                         return false;
                     }
                     tb.clearStackToTableRowContext();
                     tb.pop(); // tr
                     tb.transition(InTableBody);
+                    return tb.process(t);
+                } else if (inSorted(name, InTableToBody)) { // "tbody", "tfoot", "thead"
+                    if (!tb.inTableScope(name)) {
+                        tb.error(this);
+                        return false;
+                    }
+                    if (!tb.inTableScope("tr")) {
+                        // not an error per spec?
+                        return false;
+                    }
+                    tb.clearStackToTableRowContext();
+                    tb.pop(); // tr
+                    tb.transition(InTableBody);
+                    return tb.process(t);
                 } else if (inSorted(name, InRowIgnore)) {
                     tb.error(this);
                     return false;
@@ -1329,14 +1364,6 @@ enum HtmlTreeBuilderState {
 
         private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
             return tb.process(t, InTable);
-        }
-
-        private boolean handleMissingTr(Token t, TreeBuilder tb) {
-            boolean processed = tb.processEndTag("tr");
-            if (processed)
-                return tb.process(t);
-            else
-                return false;
         }
     },
     InCell {
@@ -1583,7 +1610,12 @@ enum HtmlTreeBuilderState {
     AfterBody {
         boolean process(Token t, HtmlTreeBuilder tb) {
             if (isWhitespace(t)) {
-                tb.insert(t.asCharacter()); // out of spec - include whitespace. spec would move into body
+                // spec deviation - currently body is still on stack, but we want this to go to the html node
+                Element html = tb.getFromStack("html");
+                if (html != null)
+                    tb.insert(t.asCharacter(), html);
+                else
+                    tb.process(t, InBody); // will get into body
             } else if (t.isComment()) {
                 tb.insert(t.asComment()); // into html node
             } else if (t.isDoctype()) {
@@ -1602,7 +1634,7 @@ enum HtmlTreeBuilderState {
                 // chillax! we're done
             } else {
                 tb.error(this);
-                tb.transition(InBody);
+                tb.resetBody();
                 return tb.process(t);
             }
             return true;
@@ -1687,21 +1719,14 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype() || (t.isStartTag() && t.asStartTag().normalName().equals("html"))) {
                 return tb.process(t, InBody);
             } else if (isWhitespace(t)) {
-                // allows space after </html>, and put the body back on stack to allow subsequent tags if any
-                // todo - might be better for </body> and </html> to close them, allow trailing space, and then reparent
-                //  that space into body if other tags get re-added. but that's overkill for now
-                Element html = tb.popStackToClose("html");
-                tb.insert(t.asCharacter());
-                if (html != null) {
-                    tb.stack.add(html);
-                    Element body = html.selectFirst("body");
-                    if (body != null) tb.stack.add(body);
-                }
+                // spec deviation - body and html still on stack, but want this space to go after </html>
+                Element doc = tb.getDocument();
+                tb.insert(t.asCharacter(), doc);
             }else if (t.isEOF()) {
                 // nice work chuck
             } else {
                 tb.error(this);
-                tb.transition(InBody);
+                tb.resetBody();
                 return tb.process(t);
             }
             return true;
@@ -1725,9 +1750,83 @@ enum HtmlTreeBuilderState {
         }
     },
     ForeignContent {
+        // https://html.spec.whatwg.org/multipage/parsing.html#parsing-main-inforeign
         boolean process(Token t, HtmlTreeBuilder tb) {
+            switch (t.type) {
+                case Character:
+                    Token.Character c = t.asCharacter();
+                    if (c.getData().equals(nullString))
+                        tb.error(this);
+                    else if (HtmlTreeBuilderState.isWhitespace(c))
+                        tb.insert(c);
+                    else {
+                        tb.insert(c);
+                        tb.framesetOk(false);
+                    }
+                    break;
+                case Comment:
+                    tb.insert(t.asComment());
+                    break;
+                case Doctype:
+                    tb.error(this);
+                    break;
+                case StartTag:
+                    Token.StartTag start = t.asStartTag();
+                    if (StringUtil.in(start.normalName, InForeignToHtml))
+                        return processAsHtml(t, tb);
+                    if (start.normalName.equals("font") && (
+                        start.hasAttributeIgnoreCase("color")
+                            || start.hasAttributeIgnoreCase("face")
+                            || start.hasAttributeIgnoreCase("size")))
+                        return processAsHtml(t, tb);
+
+                    // Any other start:
+                    // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
+                    tb.insertForeign(start, tb.currentElement().tag().namespace());
+                    // (self-closing handled in insert)
+                    // if self-closing svg script -- level and execution elided
+                    break;
+
+                case EndTag:
+                    Token.EndTag end = t.asEndTag();
+                    if (end.normalName.equals("br") || end.normalName.equals("p"))
+                        return processAsHtml(t, tb);
+                    if (end.normalName.equals("script") && tb.currentElementIs("script", Parser.NamespaceSvg)) {
+                        // script level and execution elided.
+                        tb.pop();
+                        return true;
+                    }
+
+                    // Any other end tag
+                    ArrayList<Element> stack = tb.getStack();
+                    if (stack.isEmpty())
+                        Validate.wtf("Stack unexpectedly empty");
+                    int i = stack.size() - 1;
+                    Element el = stack.get(i);
+                    if (!el.normalName().equals(end.normalName))
+                        tb.error(this);
+                    while (i != 0) {
+                        if (el.normalName().equals(end.normalName)) {
+                            tb.popStackToCloseAnyNamespace(el.normalName());
+                            return true;
+                        }
+                        i--;
+                        el = stack.get(i);
+                        if (el.tag().namespace().equals(Parser.NamespaceHtml)) {
+                            return processAsHtml(t, tb);
+                        }
+                    }
+                    break;
+
+                case EOF:
+                    // won't come through here, but for completion:
+                    break;
+            }
             return true;
-            // todo: implement. Also; how do we get here?
+        }
+
+        boolean processAsHtml(Token t, HtmlTreeBuilder tb) {
+            return tb.state().process(t, tb);
         }
     };
 
@@ -1741,10 +1840,6 @@ enum HtmlTreeBuilderState {
             return StringUtil.isBlank(data);
         }
         return false;
-    }
-
-    private static boolean isWhitespace(String data) {
-        return StringUtil.isBlank(data);
     }
 
     private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
@@ -1783,6 +1878,7 @@ enum HtmlTreeBuilderState {
         static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
             "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
             "nav", "ol", "pre", "section", "summary", "ul"};
+        static final String[] InBodyEndOtherErrors = new String[] {"body", "dd", "dt", "html", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
         static final String[] InTableToBody = new String[]{"tbody", "tfoot", "thead"};
@@ -1805,5 +1901,6 @@ enum HtmlTreeBuilderState {
         static final String[] InCaptionIgnore = new String[]{"body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InTemplateToHead = new String[] {"base", "basefont", "bgsound", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InTemplateToTable = new String[] {"caption", "colgroup", "tbody", "tfoot", "thead"};
+        static final String[] InForeignToHtml = new String[] {"b", "big", "blockquote", "body", "br", "center", "code", "dd", "div", "dl", "dt", "em", "embed", "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", "i", "img", "li", "listing", "menu", "meta", "nobr", "ol", "p", "pre", "ruby", "s", "small", "span", "strike", "strong", "sub", "sup", "table", "tt", "u", "ul", "var"};
     }
 }

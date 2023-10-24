@@ -147,6 +147,15 @@ public class StringUtilTest {
         assertEquals("http://example.com/b/c/g#s/../x", resolve("http://example.com/b/c/d;p?q", "g#s/../x"));
     }
 
+    @Test void stripsControlCharsFromUrls() {
+        // should resovle to an absolute url:
+        assertEquals("foo:bar", resolve("\nhttps://\texample.com/", "\r\nfo\to:ba\br"));
+    }
+
+    @Test void allowsSpaceInUrl() {
+        assertEquals("https://example.com/foo bar/", resolve("HTTPS://example.com/example/", "../foo bar/"));
+    }
+
     @Test
     void isAscii() {
         assertTrue(StringUtil.isAscii(""));
