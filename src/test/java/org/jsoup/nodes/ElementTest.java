@@ -2733,6 +2733,28 @@ public class ElementTest {
         assertEquals("Hello", parse.data());
     }
 
+    @Test void datanodesOutputCdataInXhtml() {
+        String html = "<p><script>1 && 2</script><style>3 && 4</style> 5 &amp;&amp; 6</p>";
+        Document doc = Jsoup.parse(html); // parsed as HTML
+        String out = TextUtil.normalizeSpaces(doc.body().html());
+        assertEquals(html, out);
+        Element scriptEl = doc.expectFirst("script");
+        DataNode scriptDataNode = (DataNode) scriptEl.childNode(0);
+        assertEquals("1 && 2", scriptDataNode.getWholeData());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        String xml = doc.body().html();
+        assertEquals(
+            "<p><script><![CDATA[1 && 2]]></script><style><![CDATA[3 && 4]]></style> 5 &amp;&amp; 6</p>",
+            TextUtil.normalizeSpaces(xml));
+
+        Document xmlDoc = Jsoup.parse(xml, Parser.xmlParser());
+        assertEquals(xml, xmlDoc.html());
+        Element scriptXmlEl = xmlDoc.expectFirst("script");
+        CDataNode scriptCdata = (CDataNode) scriptXmlEl.childNode(0);
+        assertEquals(scriptCdata.text(), scriptDataNode.getWholeData());
+    }
+
     @Test void outerHtmlAppendable() {
         // tests not string builder flow
         Document doc = Jsoup.parse("<div>One</div>");

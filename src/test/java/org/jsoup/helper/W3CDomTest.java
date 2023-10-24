@@ -345,5 +345,18 @@ public class W3CDomTest {
         org.jsoup.nodes.TextNode jText = (TextNode) jDiv.childNode(0).childNode(0);
         assertEquals(jText, textNode.getUserData(W3CDom.SourceProperty));
     }
+    
+    @Test public void canXmlParseCdataNodes() throws XPathExpressionException {
+        String html = "<p><script>1 && 2</script><style>3 && 4</style> 5 &amp;&amp; 6</p>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        jdoc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
+        String xml = jdoc.body().html();
+        assertTrue(xml.contains("<script><![CDATA[")); // as asserted in ElementTest
+        Document doc = parseXml(xml, false);
+        NodeList list = xpath(doc, "//script");
+        assertEquals(1, list.getLength());
+        Node script = list.item(0); // will be the cdata node
+        assertEquals("1 && 2", script.getTextContent());
+    }
 
 }
