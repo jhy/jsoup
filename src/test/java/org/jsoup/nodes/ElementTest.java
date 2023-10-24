@@ -2838,4 +2838,19 @@ public class ElementTest {
 
         assertEquals("<p>One</p>", header.html());
     }
+
+    @Test void xmlSyntaxSetsEscapeMode() {
+        String html = "Foo&nbsp;&Succeeds;";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().charset("ascii"); // so we can see the zws
+        assertEquals("Foo&nbsp;&#x227b;", doc.body().html());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        String out = doc.body().html();
+        assertEquals("Foo&#xa0;&#x227b;", out);
+
+        // can set back if desired
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
+        assertEquals("Foo&nbsp;&succ;", doc.body().html()); // succ is alias for Succeeds, and first hit in entities
+    }
 }

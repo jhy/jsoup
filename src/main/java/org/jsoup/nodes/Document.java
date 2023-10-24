@@ -488,11 +488,15 @@ public class Document extends Element {
         /**
          * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
          * {@code xml}, with self-closing tags.
+         * <p>When set to {@link Document.OutputSettings.Syntax#xml xml}, the {@link #escapeMode() escapeMode} is
+         * automatically set to {@link Entities.EscapeMode#xhtml}, but may be subsequently changed if desired.</p>
          * @param syntax serialization syntax
          * @return the document's output settings, for chaining
          */
         public OutputSettings syntax(Syntax syntax) {
             this.syntax = syntax;
+            if (syntax == Syntax.xml)
+                this.escapeMode(Entities.EscapeMode.xhtml);
             return this;
         }
 

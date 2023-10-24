@@ -6,6 +6,8 @@ Release 1.17.1 [PENDING]
     `#replaceAll(operator)`. These methods update the original DOM, as well as the Elements list.
     <https://github.com/jhy/jsoup/pull/2017>
 
+  * Improvement: when changing the OutputSettings syntax to XML, the xhtml EscapeMode is automatically set by default.
+
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>
