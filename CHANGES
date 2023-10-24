@@ -4,6 +4,7 @@ Release 1.17.1 [PENDING]
   * Improvement: in the Elements list, added direct support for `#set(index, element)`, `#remove(index)`,
     `#remove(object)`, `#clear()`, `#removeAll(collection)`, `#retainAll(collection)`, `#removeIf(filter)`,
     `#replaceAll(operator)`. These methods update the original DOM, as well as the Elements list.
+    <https://github.com/jhy/jsoup/pull/2017>
 
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
