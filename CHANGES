@@ -1,6 +1,6 @@
 jsoup changelog
 
-Release 1.16.2 [PENDING]
+Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
     are sorted by their relative execution cost, and executed in order of lower to higher cost. This speeds the
     matching process by ensuring that simpler evaluations (such as a tag name match) are conducted prior to more
