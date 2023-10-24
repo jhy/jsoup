@@ -40,13 +40,16 @@ public class DataNode extends LeafNode {
     }
 
     @Override
-	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        if(out.escapeMode() == EscapeMode.xhtml) {
-            accum.append("<![CDATA[");
-            accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
-            accum.append("]]>");
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+        if (out.syntax() == Document.OutputSettings.Syntax.xml) {
+            // In XML mode, output data nodes as CDATA, so can parse as XML
+            accum
+                .append("<![CDATA[")
+                .append(getWholeData())
+                .append("]]>");
         } else {
-            accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
+            // In HTML, data is not escaped in return from data nodes, so " in script, style is plain
+            accum.append(getWholeData());
         }
     }
 
