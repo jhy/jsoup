@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
+import org.jsoup.safety.Whitelist;
 
 import javax.annotation.Nullable;
 import javax.annotation.WillClose;
@@ -362,5 +363,21 @@ Connection con3 = session.newRequest();
      */
     public static boolean isValid(String bodyHtml, Safelist safelist) {
         return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
+    }
+
+    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
+        return clean(bodyHtml, baseUri, whitelist.getSafelist(), outputSettings);
+    }
+
+    public static boolean isValid(String bodyHtml, Whitelist whitelist) {
+        return isValid(bodyHtml, whitelist.getSafelist());
+    }
+
+    public static String clean(String bodyHtml, Whitelist whitelist) {
+        return clean(bodyHtml, whitelist.getSafelist());
+    }
+
+    public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
+        return clean(bodyHtml, baseUri, whitelist.getSafelist());
     }
 }

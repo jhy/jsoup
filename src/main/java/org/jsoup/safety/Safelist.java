@@ -613,7 +613,16 @@ public class Safelist {
         }
         return attrs;
     }
-    
+
+    protected Set<TagName> getTagNames() {
+        return this.tagNames;
+    }
+
+    protected Safelist setPreserverRelativeLinks(boolean preserve) {
+        this.preserveRelativeLinks = preserve;
+        return this;
+    }
+
     // named types for config. All just hold strings, but here for my sanity.
 
     static class TagName extends TypedValue {

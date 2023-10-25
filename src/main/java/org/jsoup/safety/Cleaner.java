@@ -45,6 +45,10 @@ public class Cleaner {
         this.safelist = safelist;
     }
 
+    public Cleaner(Whitelist whitelist) {
+        this(whitelist.getSafelist());
+    }
+
     /**
      Creates a new, clean document, from the original dirty document, containing only elements allowed by the safelist.
      The original document is not modified. Only elements from the dirty document's <code>body</code> are used. The
