@@ -45,6 +45,7 @@ public class Cleaner {
         this.safelist = safelist;
     }
 
+    @Deprecated
     public Cleaner(Whitelist whitelist) {
         this(whitelist.getSafelist());
     }

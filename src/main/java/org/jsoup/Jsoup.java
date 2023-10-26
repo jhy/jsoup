@@ -365,18 +365,22 @@ Connection con3 = session.newRequest();
         return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
     }
 
+    @Deprecated
     public static String clean(String bodyHtml, String baseUri, Whitelist whitelist, Document.OutputSettings outputSettings) {
         return clean(bodyHtml, baseUri, whitelist.getSafelist(), outputSettings);
     }
 
+    @Deprecated
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         return isValid(bodyHtml, whitelist.getSafelist());
     }
 
+    @Deprecated
     public static String clean(String bodyHtml, Whitelist whitelist) {
         return clean(bodyHtml, whitelist.getSafelist());
     }
 
+    @Deprecated
     public static String clean(String bodyHtml, String baseUri, Whitelist whitelist) {
         return clean(bodyHtml, baseUri, whitelist.getSafelist());
     }

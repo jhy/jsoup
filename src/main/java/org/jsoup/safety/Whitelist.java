@@ -5,6 +5,7 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Safelist.TagName;
 
+@Deprecated
 public class Whitelist {
 
     protected Safelist safelist;
