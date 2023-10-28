@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.jsoup.parser.Parser.NamespaceHtml;
+
 /**
  * @author Jonathan Hedley
  */
@@ -41,7 +43,7 @@ abstract class TreeBuilder {
         Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
 
-        doc = new Document(baseUri);
+        doc = new Document(parser.defaultNamespace(), baseUri);
         doc.parser(parser);
         this.parser = parser;
         settings = parser.settings();
@@ -133,7 +135,7 @@ abstract class TreeBuilder {
     }
 
     /**
-     Checks if the Current Element's normal name equals the supplied name.
+     Checks if the Current Element's normal name equals the supplied name, in the HTML namespace.
      @param normalName name to check
      @return true if there is a current element on the stack, and its name equals the supplied
      */
@@ -141,7 +143,22 @@ abstract class TreeBuilder {
         if (stack.size() == 0)
             return false;
         Element current = currentElement();
-        return current != null && current.normalName().equals(normalName);
+        return current != null && current.normalName().equals(normalName)
+            && current.tag().namespace().equals(NamespaceHtml);
+    }
+
+    /**
+     Checks if the Current Element's normal name equals the supplied name, in the specified namespace.
+     @param normalName name to check
+     @param namespace the namespace
+     @return true if there is a current element on the stack, and its name equals the supplied
+     */
+    protected boolean currentElementIs(String normalName, String namespace) {
+        if (stack.size() == 0)
+            return false;
+        Element current = currentElement();
+        return current != null && current.normalName().equals(normalName)
+            && current.tag().namespace().equals(namespace);
     }
 
     /**
@@ -171,13 +188,27 @@ abstract class TreeBuilder {
         return false;
     }
 
-    protected Tag tagFor(String tagName, ParseSettings settings) {
-        Tag tag = seenTags.get(tagName); // note that we don't normalize the cache key. But tag via valueOf may be normalized.
-        if (tag == null) {
-            tag = Tag.valueOf(tagName, settings);
+    protected Tag tagFor(String tagName, String namespace, ParseSettings settings) {
+        Tag cached = seenTags.get(tagName); // note that we don't normalize the cache key. But tag via valueOf may be normalized.
+        if (cached == null || !cached.namespace().equals(namespace)) {
+            // only return from cache if the namespace is the same. not running nested cache to save double hit on the common flow
+            Tag tag = Tag.valueOf(tagName, namespace, settings);
             seenTags.put(tagName, tag);
+            return tag;
         }
-        return tag;
+        return cached;
+    }
+
+    protected Tag tagFor(String tagName, ParseSettings settings) {
+        return tagFor(tagName, defaultNamespace(), settings);
+    }
+
+    /**
+     Gets the default namespace for this TreeBuilder
+     * @return the default namespace
+     */
+    protected String defaultNamespace() {
+        return NamespaceHtml;
     }
 
     /**

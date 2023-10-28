@@ -10,11 +10,11 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
+import org.jsoup.select.Selector;
 
 import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,15 +30,26 @@ public class Document extends Element {
     private boolean updateMetaCharset = false;
 
     /**
-     Create a new, empty Document.
+     Create a new, empty Document, in the specified namespace.
+     @param namespace the namespace of this Document's root node.
      @param baseUri base URI of document
      @see org.jsoup.Jsoup#parse
      @see #createShell
      */
-    public Document(String baseUri) {
-        super(Tag.valueOf("#root", ParseSettings.htmlDefault), baseUri);
+    public Document(String namespace, String baseUri) {
+        super(Tag.valueOf("#root", namespace, ParseSettings.htmlDefault), baseUri);
         this.location = baseUri;
         this.parser = Parser.htmlParser(); // default, but overridable
+    }
+
+    /**
+     Create a new, empty Document, in the HTML namespace.
+     @param baseUri base URI of document
+     @see org.jsoup.Jsoup#parse
+     @see #Document(String namespace, String baseUri)
+     */
+    public Document(String baseUri) {
+        this(Parser.NamespaceHtml, baseUri);
     }
 
     /**
@@ -101,9 +112,11 @@ public class Document extends Element {
      @return the root HTML element.
      */
     private Element htmlEl() {
-        for (Element el: childElementsList()) {
+        Element el = firstElementChild();
+        while (el != null) {
             if (el.normalName().equals("html"))
                 return el;
+            el = el.nextElementSibling();
         }
         return appendElement("html");
     }
@@ -117,10 +130,12 @@ public class Document extends Element {
      @return {@code head} element.
      */
     public Element head() {
-        Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
+        while (el != null) {
             if (el.normalName().equals("head"))
                 return el;
+            el = el.nextElementSibling();
         }
         return html.prependElement("head");
     }
@@ -135,12 +150,42 @@ public class Document extends Element {
      had no contents, or the outermost {@code <frameset> element} for frameset documents.
      */
     public Element body() {
-        Element html = htmlEl();
-        for (Element el: html.childElementsList()) {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
+        while (el != null) {
             if ("body".equals(el.normalName()) || "frameset".equals(el.normalName()))
                 return el;
+            el = el.nextElementSibling();
         }
         return html.appendElement("body");
+    }
+
+    /**
+     Get each of the {@code <form>} elements contained in this document.
+     @return a List of FormElement objects, which will be empty if there are none.
+     @see Elements#forms()
+     @see FormElement#elements()
+     @since 1.15.4
+     */
+    public List<FormElement> forms() {
+        return select("form").forms();
+    }
+
+    /**
+     Selects the first {@link FormElement} in this document that matches the query. If none match, throws an
+     {@link IllegalArgumentException}.
+     @param cssQuery a {@link Selector} CSS query
+     @return the first matching {@code <form>} element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.4
+     */
+    public FormElement expectForm(String cssQuery) {
+        Elements els = select(cssQuery);
+        for (Element el : els) {
+            if (el instanceof FormElement) return (FormElement) el;
+        }
+        Validate.fail("No form elements matched the query '%s' in the document.", cssQuery);
+        return null; // (not really)
     }
 
     /**
@@ -173,71 +218,7 @@ public class Document extends Element {
      @return new element
      */
     public Element createElement(String tagName) {
-        return new Element(Tag.valueOf(tagName, ParseSettings.preserveCase), this.baseUri());
-    }
-
-    /**
-     Normalise the document. This happens after the parse phase so generally does not need to be called.
-     Moves any text content that is not in the body element into the body.
-     @return this document after normalisation
-     */
-    public Document normalise() {
-        Element htmlEl = htmlEl(); // these all create if not found
-        Element head = head();
-        body();
-
-        // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
-        // of. do in inverse order to maintain text order.
-        normaliseTextNodes(head);
-        normaliseTextNodes(htmlEl);
-        normaliseTextNodes(this);
-
-        normaliseStructure("head", htmlEl);
-        normaliseStructure("body", htmlEl);
-        
-        ensureMetaCharsetElement();
-        
-        return this;
-    }
-
-    // does not recurse.
-    private void normaliseTextNodes(Element element) {
-        List<Node> toMove = new ArrayList<>();
-        for (Node node: element.childNodes) {
-            if (node instanceof TextNode) {
-                TextNode tn = (TextNode) node;
-                if (!tn.isBlank())
-                    toMove.add(tn);
-            }
-        }
-
-        for (int i = toMove.size()-1; i >= 0; i--) {
-            Node node = toMove.get(i);
-            element.removeChild(node);
-            body().prependChild(new TextNode(" "));
-            body().prependChild(node);
-        }
-    }
-
-    // merge multiple <head> or <body> contents into one, delete the remainder, and ensure they are owned by <html>
-    private void normaliseStructure(String tag, Element htmlEl) {
-        Elements elements = this.getElementsByTag(tag);
-        Element master = elements.first(); // will always be available as created above if not existent
-        if (elements.size() > 1) { // dupes, move contents to master
-            List<Node> toMove = new ArrayList<>();
-            for (int i = 1; i < elements.size(); i++) {
-                Node dupe = elements.get(i);
-                toMove.addAll(dupe.ensureChildNodes());
-                dupe.remove();
-            }
-
-            for (Node dupe : toMove)
-                master.appendChild(dupe);
-        }
-        // ensure parented by <html>
-        if (master.parent() != null && !master.parent().equals(htmlEl)) {
-            htmlEl.appendChild(master); // includes remove()            
-        }
+        return new Element(Tag.valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase), this.baseUri());
     }
 
     @Override
@@ -341,7 +322,7 @@ public class Document extends Element {
 
     @Override
     public Document shallowClone() {
-        Document clone = new Document(baseUri());
+        Document clone = new Document(this.tag().namespace(), baseUri());
         if (attributes != null)
             clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
@@ -414,9 +395,9 @@ public class Document extends Element {
         public enum Syntax {html, xml}
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset = DataUtil.UTF_8;
+        private Charset charset;
+        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
         private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
-        @Nullable Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
         private boolean outline = false;
@@ -424,7 +405,9 @@ public class Document extends Element {
         private int maxPaddingWidth = 30;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {}
+        public OutputSettings() {
+            charset(DataUtil.UTF_8);
+        }
         
         /**
          * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -468,6 +451,7 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
+            coreCharset = Entities.CoreCharset.byName(charset.name());
             return this;
         }
 
@@ -485,7 +469,6 @@ public class Document extends Element {
             // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
             CharsetEncoder encoder = charset.newEncoder();
             encoderThreadLocal.set(encoder);
-            coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
             return encoder;
         }
 
@@ -505,11 +488,15 @@ public class Document extends Element {
         /**
          * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
          * {@code xml}, with self-closing tags.
+         * <p>When set to {@link Document.OutputSettings.Syntax#xml xml}, the {@link #escapeMode() escapeMode} is
+         * automatically set to {@link Entities.EscapeMode#xhtml}, but may be subsequently changed if desired.</p>
          * @param syntax serialization syntax
          * @return the document's output settings, for chaining
          */
         public OutputSettings syntax(Syntax syntax) {
             this.syntax = syntax;
+            if (syntax == Syntax.xml)
+                this.escapeMode(Entities.EscapeMode.xhtml);
             return this;
         }
 
@@ -599,7 +586,7 @@ public class Document extends Element {
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
             }
-            clone.charset(charset.name()); // new charset and charset encoder
+            clone.charset(charset.name()); // new charset, coreCharset, and charset encoder
             clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;

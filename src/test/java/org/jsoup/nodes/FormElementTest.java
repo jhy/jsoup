@@ -43,6 +43,7 @@ public class FormElementTest {
                 "<input name='eight' type='checkbox' checked><input name='nine' type='checkbox' value='unset'>" +
                 "<input name='ten' value='text' disabled>" +
                 "<input name='eleven' value='text' type='button'>" +
+                "<input name='twelve' value='text' type='image'>" +
                 "</form>";
         Document doc = Jsoup.parse(html);
         FormElement form = (FormElement) doc.select("form").first();

@@ -172,8 +172,13 @@ abstract class Token {
             return attributes != null;
         }
 
+        /** Case-sensitive check */
         final boolean hasAttribute(String key) {
             return attributes != null && attributes.hasKey(key);
+        }
+
+        final boolean hasAttributeIgnoreCase(String key) {
+            return attributes != null && attributes.hasKeyIgnoreCase(key);
         }
 
         final void finaliseTag() {
@@ -311,10 +316,11 @@ abstract class Token {
 
         @Override
         public String toString() {
+            String closer = isSelfClosing() ? "/>" : ">";
             if (hasAttributes() && attributes.size() > 0)
-                return "<" + toStringName() + " " + attributes.toString() + ">";
+                return "<" + toStringName() + " " + attributes.toString() + closer;
             else
-                return "<" + toStringName() + ">";
+                return "<" + toStringName() + closer;
         }
     }
 
@@ -382,7 +388,7 @@ abstract class Token {
         }
     }
 
-    static class Character extends Token {
+    static class Character extends Token implements Cloneable {
         private String data;
 
         Character() {
@@ -409,6 +415,14 @@ abstract class Token {
         @Override
         public String toString() {
             return getData();
+        }
+
+        @Override protected Token.Character clone() {
+            try {
+                return (Token.Character) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -1,13 +1,13 @@
 package org.jsoup.safety;
 
+import org.jsoup.helper.ValidationException;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
@@ -59,6 +59,20 @@ public class SafelistTest {
         Element invalidElement = new Element(Tag.valueOf(TEST_TAG), "", attributes);
 
         assertFalse(safelist2.isSafeAttribute(TEST_TAG, invalidElement, invalidAttribute));
+    }
+
+    @Test
+    void noscriptIsBlocked() {
+        boolean threw = false;
+        Safelist safelist = null;
+        try {
+            safelist = Safelist.none().addTags("NOSCRIPT");
+        } catch (ValidationException validationException) {
+            threw = true;
+            assertTrue(validationException.getMessage().contains("unsupported"));
+        }
+        assertTrue(threw);
+        assertNull(safelist);
     }
 
 

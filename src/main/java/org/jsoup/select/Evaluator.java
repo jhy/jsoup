@@ -1,7 +1,6 @@
 package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
@@ -10,6 +9,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.PseudoTextElement;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.parser.ParseSettings;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,6 +38,20 @@ public abstract class Evaluator {
     public abstract boolean matches(Element root, Element element);
 
     /**
+     Reset any internal state in this Evaluator before executing a new Collector evaluation.
+     */
+    protected void reset() {
+    }
+
+    /**
+     A relative evaluator cost function. During evaluation, Evaluators are sorted by ascending cost as an optimization.
+     * @return the relative cost of this Evaluator
+     */
+    protected int cost() {
+        return 5; // a nominal default cost
+    }
+
+    /**
      * Evaluator for tag name
      */
     public static final class Tag extends Evaluator {
@@ -50,6 +64,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return (element.normalName().equals(tagName));
+        }
+
+        @Override protected int cost() {
+            return 1;
         }
 
         @Override
@@ -95,11 +113,13 @@ public abstract class Evaluator {
             return (id.equals(element.id()));
         }
 
+        @Override protected int cost() {
+            return 2;
+        }
         @Override
         public String toString() {
             return String.format("#%s", id);
         }
-
     }
 
     /**
@@ -115,6 +135,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return (element.hasClass(className));
+        }
+
+        @Override protected int cost() {
+            return 6; // does whitespace scanning
         }
 
         @Override
@@ -139,11 +163,14 @@ public abstract class Evaluator {
             return element.hasAttr(key);
         }
 
+        @Override protected int cost() {
+            return 2;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s]", key);
         }
-
     }
 
     /**
@@ -167,6 +194,10 @@ public abstract class Evaluator {
             return false;
         }
 
+        @Override protected int cost() {
+            return 6;
+        }
+
         @Override
         public String toString() {
             return String.format("[^%s]", keyPrefix);
@@ -185,6 +216,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim());
+        }
+
+        @Override protected int cost() {
+            return 3;
         }
 
         @Override
@@ -207,6 +242,10 @@ public abstract class Evaluator {
             return !value.equalsIgnoreCase(element.attr(key));
         }
 
+        @Override protected int cost() {
+            return 3;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s!=%s]", key, value);
@@ -227,11 +266,14 @@ public abstract class Evaluator {
             return element.hasAttr(key) && lowerCase(element.attr(key)).startsWith(value); // value is lower case already
         }
 
+        @Override protected int cost() {
+            return 4;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s^=%s]", key, value);
         }
-
     }
 
     /**
@@ -247,11 +289,14 @@ public abstract class Evaluator {
             return element.hasAttr(key) && lowerCase(element.attr(key)).endsWith(value); // value is lower case
         }
 
+        @Override protected int cost() {
+            return 4;
+        }
+
         @Override
         public String toString() {
             return String.format("[%s$=%s]", key, value);
         }
-
     }
 
     /**
@@ -265,6 +310,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && lowerCase(element.attr(key)).contains(value); // value is lower case
+        }
+
+        @Override protected int cost() {
+            return 6;
         }
 
         @Override
@@ -289,6 +338,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.hasAttr(key) && pattern.matcher(element.attr(key)).find();
+        }
+
+        @Override protected int cost() {
+            return 8;
         }
 
         @Override
@@ -332,6 +385,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return true;
+        }
+
+        @Override protected int cost() {
+            return 10;
         }
 
         @Override
@@ -407,7 +464,7 @@ public abstract class Evaluator {
 		@Override
 		public boolean matches(Element root, Element element) {
 			final Element p = element.parent();
-			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
+			return p != null && !(p instanceof Document) && element == p.lastElementChild();
 		}
 
 		@Override
@@ -508,7 +565,7 @@ public abstract class Evaluator {
         protected int calculatePosition(Element root, Element element) {
     	    if (element.parent() == null)
     	        return 0;
-        	return element.parent().children().size() - element.elementSiblingIndex();
+        	return element.parent().childrenSize()- element.elementSiblingIndex();
         }
 
 		@Override
@@ -522,50 +579,57 @@ public abstract class Evaluator {
      *
      */
     public static class IsNthOfType extends CssNthEvaluator {
-    	public IsNthOfType(int a, int b) {
-    		super(a,b);
-    	}
+        public IsNthOfType(int a, int b) {
+            super(a, b);
+        }
 
-		protected int calculatePosition(Element root, Element element) {
-			int pos = 0;
-            if (element.parent() == null)
+        protected int calculatePosition(Element root, Element element) {
+            Element parent = element.parent();
+            if (parent == null)
                 return 0;
-        	Elements family = element.parent().children();
-            for (Element el : family) {
-                if (el.tag().equals(element.tag())) pos++;
-                if (el == element) break;
-            }
-			return pos;
-		}
 
-		@Override
-		protected String getPseudoClass() {
-			return "nth-of-type";
-		}
+            int pos = 0;
+            final int size = parent.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                Node node = parent.childNode(i);
+                if (node.normalName().equals(element.normalName())) pos++;
+                if (node == element) break;
+            }
+            return pos;
+        }
+
+        @Override
+        protected String getPseudoClass() {
+            return "nth-of-type";
+        }
     }
 
     public static class IsNthLastOfType extends CssNthEvaluator {
 
-		public IsNthLastOfType(int a, int b) {
-			super(a, b);
-		}
+        public IsNthLastOfType(int a, int b) {
+            super(a, b);
+        }
 
-		@Override
-		protected int calculatePosition(Element root, Element element) {
-			int pos = 0;
-            if (element.parent() == null)
+        @Override
+        protected int calculatePosition(Element root, Element element) {
+            Element parent = element.parent();
+            if (parent == null)
                 return 0;
-        	Elements family = element.parent().children();
-        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
-        		if (family.get(i).tag().equals(element.tag())) pos++;
-        	}
-			return pos;
-		}
 
-		@Override
-		protected String getPseudoClass() {
-			return "nth-last-of-type";
-		}
+            int pos = 0;
+            Element next = element;
+            while (next != null) {
+                if (next.normalName().equals(element.normalName()))
+                    pos++;
+                next = next.nextElementSibling();
+            }
+            return pos;
+        }
+
+        @Override
+        protected String getPseudoClass() {
+            return "nth-last-of-type";
+        }
     }
 
     /**
@@ -575,7 +639,7 @@ public abstract class Evaluator {
     	@Override
     	public boolean matches(Element root, Element element) {
     		final Element p = element.parent();
-    		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
+    		return p != null && !(p instanceof Document) && element == p.firstElementChild();
     	}
 
     	@Override
@@ -592,9 +656,14 @@ public abstract class Evaluator {
     public static final class IsRoot extends Evaluator {
     	@Override
     	public boolean matches(Element root, Element element) {
-    		final Element r = root instanceof Document?root.child(0):root;
+    		final Element r = root instanceof Document ? root.firstElementChild() : root;
     		return element == r;
     	}
+
+        @Override protected int cost() {
+            return 1;
+        }
+
     	@Override
     	public String toString() {
     		return ":root";
@@ -620,9 +689,13 @@ public abstract class Evaluator {
 			if (p==null || p instanceof Document) return false;
 
 			int pos = 0;
-        	Elements family = p.children();
-            for (Element el : family) {
-                if (el.tag().equals(element.tag())) pos++;
+            Element next = p.firstElementChild();
+            while (next != null) {
+                if (next.normalName().equals(element.normalName()))
+                    pos++;
+                if (pos > 1)
+                    break;
+                next = next.nextElementSibling();
             }
         	return pos == 1;
 		}
@@ -637,7 +710,10 @@ public abstract class Evaluator {
 		public boolean matches(Element root, Element element) {
         	List<Node> family = element.childNodes();
             for (Node n : family) {
-                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType)) return false;
+                if (n instanceof TextNode)
+                    return ((TextNode)n).isBlank();
+                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
+                    return false;
             }
         	return true;
 		}
@@ -675,6 +751,10 @@ public abstract class Evaluator {
             return lowerCase(element.text()).contains(searchText);
         }
 
+        @Override protected int cost() {
+            return 10;
+        }
+
         @Override
         public String toString() {
             return String.format(":contains(%s)", searchText);
@@ -696,6 +776,10 @@ public abstract class Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return element.wholeText().contains(searchText);
+        }
+
+        @Override protected int cost() {
+            return 10;
         }
 
         @Override
@@ -785,6 +869,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 8;
+        }
+
         @Override
         public String toString() {
             return String.format(":matches(%s)", pattern);
@@ -805,6 +893,10 @@ public abstract class Evaluator {
         public boolean matches(Element root, Element element) {
             Matcher m = pattern.matcher(element.ownText());
             return m.find();
+        }
+
+        @Override protected int cost() {
+            return 7;
         }
 
         @Override
@@ -830,6 +922,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 8;
+        }
+
         @Override
         public String toString() {
             return String.format(":matchesWholeText(%s)", pattern);
@@ -853,6 +949,10 @@ public abstract class Evaluator {
             return m.find();
         }
 
+        @Override protected int cost() {
+            return 7;
+        }
+
         @Override
         public String toString() {
             return String.format(":matchesWholeOwnText(%s)", pattern);
@@ -869,11 +969,15 @@ public abstract class Evaluator {
             List<TextNode> textNodes = element.textNodes();
             for (TextNode textNode : textNodes) {
                 PseudoTextElement pel = new PseudoTextElement(
-                    org.jsoup.parser.Tag.valueOf(element.tagName()), element.baseUri(), element.attributes());
+                    org.jsoup.parser.Tag.valueOf(element.tagName(), element.tag().namespace(), ParseSettings.preserveCase), element.baseUri(), element.attributes());
                 textNode.replaceWith(pel);
                 pel.appendChild(textNode);
             }
             return false;
+        }
+
+        @Override protected int cost() {
+            return -1; // forces first evaluation, which prepares the DOM for later evaluator matches
         }
 
         @Override

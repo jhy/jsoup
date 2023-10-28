@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
+import java.util.IdentityHashMap;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +31,17 @@ public class SelectorTest {
         assertEquals(0, none.size());
     }
 
+    @Test public void byEscapedTag() {
+        // tested same result as js document.querySelector
+        Document doc = Jsoup.parse("<p.p>One</p.p> <p\\p>Two</p\\p>");
+
+        Element one = doc.expectFirst("p\\.p");
+        assertEquals("One", one.text());
+
+        Element two = doc.expectFirst("p\\\\p");
+        assertEquals("Two", two.text());
+    }
+
     @Test public void testById() {
         Elements els = Jsoup.parse("<div><p id=foo>Hello</p><p id=foo>Foo two!</p></div>").select("#foo");
         assertEquals(2, els.size());
@@ -38,6 +50,19 @@ public class SelectorTest {
 
         Elements none = Jsoup.parse("<div id=1></div>").select("#foo");
         assertEquals(0, none.size());
+    }
+
+    @Test public void byEscapedId() {
+        Document doc = Jsoup.parse("<p id='i.d'>One</p> <p id='i\\d'>Two</p> <p id='one-two/three'>Three</p>");
+
+        Element one = doc.expectFirst("#i\\.d");
+        assertEquals("One", one.text());
+
+        Element two = doc.expectFirst("#i\\\\d");
+        assertEquals("Two", two.text());
+
+        Element thr = doc.expectFirst("p#one-two\\/three");
+        assertEquals("Three", thr.text());
     }
 
     @Test public void testByClass() {
@@ -51,6 +76,13 @@ public class SelectorTest {
 
         Elements els2 = Jsoup.parse("<div class='One-Two'></div>").select(".one-two");
         assertEquals(1, els2.size());
+    }
+
+    @Test public void byEscapedClass() {
+        Element els = Jsoup.parse("<p class='one.two#three'>One</p>");
+
+        Element one = els.expectFirst("p.one\\.two\\#three");
+        assertEquals("One", one.text());
     }
 
     @Test public void testByClassCaseInsensitive() {
@@ -1111,5 +1143,67 @@ public class SelectorTest {
     @Test public void selectorExceptionNotStringFormatException() {
         Selector.SelectorParseException ex = new Selector.SelectorParseException("%&");
         assertEquals("%&", ex.getMessage());
+    }
+
+    @Test public void evaluatorMemosAreReset() {
+        Evaluator eval = QueryParser.parse("p ~ p");
+        CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
+        StructuralEvaluator.PreviousSibling prevEval = (StructuralEvaluator.PreviousSibling) andEval.evaluators.get(0);
+        IdentityHashMap<Element, IdentityHashMap<Element, Boolean>> map = prevEval.threadMemo.get();
+        assertEquals(0, map.size()); // no memo yet
+
+        Document doc1 = Jsoup.parse("<p>One<p>Two<p>Three");
+        Document doc2 = Jsoup.parse("<p>One2<p>Two2<p>Three2");
+
+        Elements s1 = doc1.select(eval);
+        assertEquals(2, s1.size());
+        assertEquals("Two", s1.first().text());
+        Elements s2 = doc2.select(eval);
+        assertEquals(2, s2.size());
+        assertEquals("Two2", s2.first().text());
+
+        assertEquals(1, map.size()); // root of doc 2
+    }
+
+    @Test public void blankTextNodesAreConsideredEmpty() {
+        // https://github.com/jhy/jsoup/issues/1976
+        String html = "<li id=1>\n </li><li id=2></li><li id=3> </li><li id=4>One</li><li id=5><span></li>";
+        Document doc = Jsoup.parse(html);
+        Elements empty = doc.select("li:empty");
+        Elements notEmpty = doc.select("li:not(:empty)");
+
+        assertEquals(3, empty.size());
+        assertEquals(2, notEmpty.size());
+
+        assertEquals("1", empty.get(0).id());
+        assertEquals("2", empty.get(1).id());
+        assertEquals("3", empty.get(2).id());
+        assertEquals("4", notEmpty.get(0).id());
+        assertEquals("5", notEmpty.get(1).id());
+    }
+
+    @Test public void parentFromSpecifiedDescender() {
+        // https://github.com/jhy/jsoup/issues/2018
+        String html = "<ul id=outer><li>Foo</li><li>Bar <ul id=inner><li>Baz</li><li>Qux</li></ul> </li></ul>";
+        Document doc = Jsoup.parse(html);
+
+        Element ul = doc.expectFirst("#outer");
+        assertEquals(2, ul.childrenSize());
+
+        Element li1 = ul.expectFirst("> li:nth-child(1)");
+        assertEquals("Foo", li1.ownText());
+        assertTrue(li1.select("ul").isEmpty());
+
+        Element li2 = ul.expectFirst("> li:nth-child(2)");
+        assertEquals("Bar", li2.ownText());
+
+        // And now for the bug - li2 select was not restricted to the li2 context
+        Elements innerLis = li2.select("ul > li");
+        assertEquals(2, innerLis.size());
+        assertEquals("Baz", innerLis.first().ownText());
+
+        // Confirm that parent selector (" ") works same as immediate parent (">");
+        Elements innerLisFromParent = li2.select("ul li");
+        assertEquals(innerLis, innerLisFromParent);
     }
 }

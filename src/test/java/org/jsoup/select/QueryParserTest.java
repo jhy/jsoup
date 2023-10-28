@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley
  */
 public class QueryParserTest {
-
     @Test public void testConsumeSubQuery() {
         Document doc = Jsoup.parse("<html><head>h</head><body>" +
                 "<li><strong>l1</strong></li>" +
@@ -23,6 +22,17 @@ public class QueryParserTest {
         assertEquals("l2 yes", doc.select("body>p>strong,body>*>li>strong").text());
         assertEquals("yes", doc.select(">body>*>li>strong,>body>p>strong").text());
         assertEquals("l2", doc.select(">body>p>strong,>body>*>li>strong").text());
+    }
+
+    @Test public void testImmediateParentRun() {
+        String query = "div > p > bold.brass";
+        Evaluator eval1 = QueryParser.parse(query);
+        assertEquals(query, eval1.toString());
+
+        StructuralEvaluator.ImmediateParentRun run = (StructuralEvaluator.ImmediateParentRun) eval1;
+        assertTrue(run.evaluators.get(0) instanceof Evaluator.Tag);
+        assertTrue(run.evaluators.get(1) instanceof Evaluator.Tag);
+        assertTrue(run.evaluators.get(2) instanceof CombiningEvaluator.And);
     }
 
     @Test public void testOrGetsCorrectPrecedence() {
@@ -42,17 +52,20 @@ public class QueryParserTest {
     }
 
     @Test public void testParsesMultiCorrectly() {
-        String query = ".foo > ol, ol > li + li";
+        String query = ".foo.qux > ol.bar, ol > li + li";
         Evaluator eval = QueryParser.parse(query);
         assertTrue(eval instanceof CombiningEvaluator.Or);
         CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
         assertEquals(2, or.evaluators.size());
 
-        CombiningEvaluator.And andLeft = (CombiningEvaluator.And) or.evaluators.get(0);
+        StructuralEvaluator.ImmediateParentRun run = (StructuralEvaluator.ImmediateParentRun) or.evaluators.get(0);
         CombiningEvaluator.And andRight = (CombiningEvaluator.And) or.evaluators.get(1);
 
-        assertEquals(".foo > ol", andLeft.toString());
-        assertEquals(2, andLeft.evaluators.size());
+        assertEquals(".foo.qux > ol.bar", run.toString());
+        assertEquals(2, run.evaluators.size());
+        Evaluator runAnd = run.evaluators.get(0);
+        assertTrue(runAnd instanceof CombiningEvaluator.And);
+        assertEquals(".foo.qux", runAnd.toString());
         assertEquals("ol > li + li", andRight.toString());
         assertEquals(2, andRight.evaluators.size());
         assertEquals(query, eval.toString());

@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import java.io.IOException;
+import org.jsoup.nodes.Entities.EscapeMode;
 
 /**
  A data node, for contents of style, script tags etc, where contents should not show in text().
@@ -38,11 +39,22 @@ public class DataNode extends LeafNode {
         return this;
     }
 
-	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        accum.append(getWholeData()); // data is not escaped in return from data nodes, so " in script, style is plain
+    @Override
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+        if (out.syntax() == Document.OutputSettings.Syntax.xml) {
+            // In XML mode, output data nodes as CDATA, so can parse as XML
+            accum
+                .append("<![CDATA[")
+                .append(getWholeData())
+                .append("]]>");
+        } else {
+            // In HTML, data is not escaped in return from data nodes, so " in script, style is plain
+            accum.append(getWholeData());
+        }
     }
 
-	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+    @Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public String toString() {

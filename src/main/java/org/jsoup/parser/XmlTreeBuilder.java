@@ -16,6 +16,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
+import static org.jsoup.parser.Parser.NamespaceXml;
+
 /**
  * Use the {@code XmlTreeBuilder} when you want to parse XML without any of the HTML DOM rules being applied to the
  * document.
@@ -49,6 +51,10 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     XmlTreeBuilder newInstance() {
         return new XmlTreeBuilder();
+    }
+
+    @Override public String defaultNamespace() {
+        return NamespaceXml;
     }
 
     @Override
@@ -90,15 +96,13 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     Element insert(Token.StartTag startTag) {
         Tag tag = tagFor(startTag.name(), settings);
-        // todo: wonder if for xml parsing, should treat all tags as unknown? because it's not html.
         if (startTag.hasAttributes())
             startTag.attributes.deduplicate(settings);
 
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         insertNode(el, startTag);
         if (startTag.isSelfClosing()) {
-            if (!tag.isKnownTag()) // unknown tag, remember this is self closing for output. see above.
-                tag.setSelfClosing();
+            tag.setSelfClosing();
         } else {
             stack.add(el);
         }
