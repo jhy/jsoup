@@ -359,7 +359,7 @@ public class CharacterReaderTest {
 
     @Test
     public void notEmptyAtBufferSplitPoint() {
-        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
+        CharacterReader r = new CharacterReader(new StringReader("How about now"));
         assertEquals("How", r.consumeTo(' '));
         assertFalse(r.isEmpty(), "Should not be empty");
 
@@ -437,10 +437,10 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!noTrack.matches("[foo]"))
             noTrack.consumeTo("[foo]");
-        assertEquals(32778, noTrack.pos());
+        assertEquals(32778, noTrack.pos()); // sensitive to maxBufferLen
         assertEquals(1, noTrack.lineNumber());
         assertEquals(noTrack.pos()+1, noTrack.columnNumber());
-        assertEquals("1:32779", noTrack.cursorPos());
+        assertEquals("1:8195", noTrack.cursorPos());
 
         // and the line numbers: "<foo>\n<bar>\n<qux>\n"
         assertEquals(0, track.pos());
@@ -468,12 +468,12 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!track.matches("[foo]"))
             track.consumeTo("[foo]");
-        assertEquals(32778, track.pos());
+        assertEquals(8194, track.pos());
         assertEquals(4, track.lineNumber());
-        assertEquals(32761, track.columnNumber());
-        assertEquals("4:32761", track.cursorPos());
+        assertEquals(8177, track.columnNumber());
+        assertEquals("4:8177", track.cursorPos());
         track.consumeTo('\n');
-        assertEquals("4:32766", track.cursorPos());
+        assertEquals("4:8182", track.cursorPos());
 
         track.consumeTo("[bar]");
         assertEquals(5, track.lineNumber());
@@ -493,7 +493,7 @@ public class CharacterReaderTest {
         assertEquals("1:1", reader.cursorPos());
         while (!reader.isEmpty())
             reader.consume();
-        assertEquals(131096, reader.pos());
+        assertEquals(131096, reader.pos()); // sensitive to maxBufferLen
         assertEquals(reader.pos() + 1, reader.columnNumber());
         assertEquals(1, reader.lineNumber());
     }

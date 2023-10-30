@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.BufferPool;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.Locale;
 public final class CharacterReader {
     static final char EOF = (char) -1;
     private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 32; // visible for testing
+    static final int maxBufferLen = 1024 * 8; // visible for testing
     static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
     private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
 
@@ -30,25 +31,35 @@ public final class CharacterReader {
     private int readerPos;
     private int bufMark = -1;
     private static final int stringCacheSize = 512;
-    private String[] stringCache = new String[stringCacheSize]; // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache; // holds reused strings in this doc, to lessen garbage
 
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
-    public CharacterReader(Reader input, int sz) {
+    /**
+     Create a new CharacterReader that reads from the input Reader.
+     @param input the Reader to read from. Need not be a BufferedReader, as CharacterReader maintains a buffer
+     internally.
+     */
+    public CharacterReader(Reader input) {
         Validate.notNull(input);
-        Validate.isTrue(input.markSupported());
         reader = input;
-        charBuf = new char[Math.min(sz, maxBufferLen)];
+        charBuf = CharArrayPool.borrow();
+        stringCache = StringCachePool.borrow();
         bufferUp();
     }
 
-    public CharacterReader(Reader input) {
-        this(input, maxBufferLen);
+    /**
+     @deprecated The initial buffer size parameter is no longer supported. This method will be removed in the next
+     release.
+     */
+    @Deprecated
+    public CharacterReader(Reader input, int sz) {
+        this(input);
     }
 
     public CharacterReader(String input) {
-        this(new StringReader(input), input.length());
+        this(new StringReader(input));
     }
 
     public void close() {
@@ -59,46 +70,44 @@ public final class CharacterReader {
         } catch (IOException ignored) {
         } finally {
             reader = null;
+            CharArrayPool.release(charBuf);
             charBuf = null;
+            StringCachePool.release(stringCache);
             stringCache = null;
         }
     }
 
     private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
+
     private void bufferUp() {
         if (readFully || bufPos < bufSplitPoint)
             return;
 
-        final int pos;
-        final int offset;
-        if (bufMark != -1) {
-            pos = bufMark;
-            offset = bufPos - bufMark;
-        } else {
-            pos = bufPos;
-            offset = 0;
+        // discard the consumed characters from the buffer and pull the remainder forward:
+        if (bufPos > 0) {
+            int offset = bufMark == -1 ? bufPos : bufMark; // if set, mark is before pos
+            int remainder = bufLength - offset;
+            System.arraycopy(charBuf, offset, charBuf, 0, remainder);
+            readerPos += offset;
+            bufLength = remainder;
+            if (bufMark != -1) {
+                bufPos = bufMark;
+                bufMark = 0;
+            } else {
+                bufPos = 0;
+            }
         }
 
+        // blocking read until we get the minimum buffered up, then read until would block
         try {
-            final long skipped = reader.skip(pos);
-            reader.mark(maxBufferLen);
-            int read = 0;
-            while (read <= minReadAheadLen) {
-                int thisRead = reader.read(charBuf, read, charBuf.length - read);
-                if (thisRead == -1)
+            while (bufLength <= minReadAheadLen || (bufLength < charBuf.length && reader.ready())) {
+                int thisRead = reader.read(charBuf, bufLength, charBuf.length - bufLength);
+                if (thisRead == -1) {
                     readFully = true;
-                if (thisRead <= 0)
                     break;
-                read += thisRead;
-            }
-            reader.reset();
-            if (read > 0) {
-                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
-                bufLength = read;
-                readerPos += pos;
-                bufPos = offset;
-                if (bufMark != -1)
-                    bufMark = 0;
+                }
+                bufLength += thisRead;
+                if (bufMark != -1) bufMark = 0;
                 bufSplitPoint = Math.min(bufLength, readAheadLimit);
             }
         } catch (IOException e) {
@@ -761,4 +770,31 @@ public final class CharacterReader {
     boolean rangeEquals(final int start, final int count, final String cached) {
         return rangeEquals(charBuf, start, count, cached);
     }
+
+    // only useful for CharacterReader - does not reset so can be used across reads
+    private static final BufferPool<String[]> StringCachePool =
+        new BufferPool<>(2, new BufferPool.Lifecycle<String[]>() {
+
+        @Override public String[] create() {
+            return new String[stringCacheSize];
+        }
+
+        @Override public String[] reset(String[] arr) {
+            // no-op as we don't grow, and want to reuse the contents between parses
+            return arr;
+        }
+    });
+
+    public static final BufferPool<char[]> CharArrayPool =
+        new BufferPool<>(2, new BufferPool.Lifecycle<char[]>() {
+            @Override public char[] create() {
+                return new char[maxBufferLen];
+            }
+
+            @Override public char[] reset(char[] arr) {
+                // no size check as it's fixed size
+                Arrays.fill(arr, '\0'); // zero it to make sure we never inadvertently read stale input
+                return arr;
+            }
+        });
 }

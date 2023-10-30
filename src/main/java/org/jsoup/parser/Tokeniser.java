@@ -1,16 +1,33 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.StringBuilderRecycler;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
 
 import javax.annotation.Nullable;
+
+import java.lang.ref.SoftReference;
 import java.util.Arrays;
 
 /**
  * Readers the input stream into tokens.
  */
 final class Tokeniser {
+    protected static final ThreadLocal<SoftReference<StringBuilderRecycler>> stringCacheRef = new ThreadLocal<>();
+
+    public static StringBuilderRecycler getStringBuilderCache() {
+        SoftReference<StringBuilderRecycler> ref = stringCacheRef.get();
+        StringBuilderRecycler br = (ref == null) ? null : ref.get();
+
+        if (br == null) {
+            br = new StringBuilderRecycler();
+            ref = new SoftReference<>(br);
+            stringCacheRef.set(ref);
+        }
+        return br;
+    }
+
     static final char replacementChar = '\uFFFD'; // replaces null character
     private static final char[] notCharRefCharsSorted = new char[]{'\t', '\n', '\r', '\f', ' ', '<', '&'};
 
@@ -37,8 +54,8 @@ final class Tokeniser {
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
     @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
-    private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
-    StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
+    private StringBuilder charsBuilder = getStringBuilderCache().get(1024); // buffers characters to output as one token, if more than one emit per read
+    StringBuilder dataBuffer = getStringBuilderCache().get(1024);  // buffers data looking for </script>
 
     Token.StartTag startPending = new Token.StartTag();
     Token.EndTag endPending = new Token.EndTag();
@@ -359,5 +376,11 @@ final class Tokeniser {
             }
         }
         return StringUtil.releaseBuilder(builder);
+    }
+
+    void release() {
+        StringBuilderRecycler stringBuilderCache = getStringBuilderCache();
+        stringBuilderCache.releaseByteBuffer(charsBuilder);
+        stringBuilderCache.releaseByteBuffer(dataBuffer);
     }
 }

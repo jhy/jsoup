@@ -22,7 +22,7 @@ public class InterruptedServlet extends BaseServlet {
 
         StringBuilder sb = new StringBuilder();
         sb.append("<title>Something</title>");
-        while (sb.length() <= CharacterReaderTest.maxBufferLen) {
+        while (sb.length() <= CharacterReaderTest.maxBufferLen * 4) {
             sb.append("A suitable amount of data. \n");
         }
         sb.append("<p>Finale.</p>");
