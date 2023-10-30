@@ -19,16 +19,31 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class SelectorTest {
+
+    /** Test that the selected elements match exactly the specified IDs. */
+    static void assertSelectedIds(Elements els, String... ids) {
+        assertNotNull(els);
+        assertEquals(ids.length, els.size());
+        for (int i = 0; i < ids.length; i++) {
+            assertEquals(ids[i], els.get(i).id());
+        }
+    }
+
+    static void assertSelectedOwnText(Elements els, String... ownTexts) {
+        assertNotNull(els);
+        assertEquals(ownTexts.length, els.size());
+        for (int i = 0; i < ownTexts.length; i++) {
+            assertEquals(ownTexts[i], els.get(i).ownText());
+        }
+    }
+
     @Test public void testByTag() {
-        // should be case insensitive
+        // should be case-insensitive
         Elements els = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><DIV id=3>").select("DIV");
-        assertEquals(3, els.size());
-        assertEquals("1", els.get(0).id());
-        assertEquals("2", els.get(1).id());
-        assertEquals("3", els.get(2).id());
+        assertSelectedIds(els, "1", "2", "3");
 
         Elements none = Jsoup.parse("<div id=1><div id=2><p>Hello</p></div></div><div id=3>").select("span");
-        assertEquals(0, none.size());
+        assertTrue(none.isEmpty());
     }
 
     @Test public void byEscapedTag() {
@@ -44,12 +59,10 @@ public class SelectorTest {
 
     @Test public void testById() {
         Elements els = Jsoup.parse("<div><p id=foo>Hello</p><p id=foo>Foo two!</p></div>").select("#foo");
-        assertEquals(2, els.size());
-        assertEquals("Hello", els.get(0).text());
-        assertEquals("Foo two!", els.get(1).text());
+        assertSelectedOwnText(els, "Hello", "Foo two!");
 
         Elements none = Jsoup.parse("<div id=1></div>").select("#foo");
-        assertEquals(0, none.size());
+        assertTrue(none.isEmpty());
     }
 
     @Test public void byEscapedId() {
@@ -67,22 +80,18 @@ public class SelectorTest {
 
     @Test public void testByClass() {
         Elements els = Jsoup.parse("<p id=0 class='ONE two'><p id=1 class='one'><p id=2 class='two'>").select("P.One");
-        assertEquals(2, els.size());
-        assertEquals("0", els.get(0).id());
-        assertEquals("1", els.get(1).id());
+        assertSelectedIds(els, "0", "1");
 
         Elements none = Jsoup.parse("<div class='one'></div>").select(".foo");
-        assertEquals(0, none.size());
+        assertTrue(none.isEmpty());
 
-        Elements els2 = Jsoup.parse("<div class='One-Two'></div>").select(".one-two");
-        assertEquals(1, els2.size());
+        Elements els2 = Jsoup.parse("<div class='One-Two' id=1></div>").select(".one-two");
+        assertSelectedIds(els2, "1");
     }
 
     @Test public void byEscapedClass() {
-        Element els = Jsoup.parse("<p class='one.two#three'>One</p>");
-
-        Element one = els.expectFirst("p.one\\.two\\#three");
-        assertEquals("One", one.text());
+        Document doc = Jsoup.parse("<p class='one.two#three'>One</p>");
+        assertSelectedOwnText(doc.select("p.one\\.two\\#three"), "One");
     }
 
     @Test public void testByClassCaseInsensitive() {
@@ -91,8 +100,7 @@ public class SelectorTest {
         Elements elsFromAttr = Jsoup.parse(html).select("p[class=foo]");
 
         assertEquals(elsFromAttr.size(), elsFromClass.size());
-        assertEquals(3, elsFromClass.size());
-        assertEquals("Two", elsFromClass.get(1).text());
+        assertSelectedOwnText(elsFromClass, "One", "Two", "Three");
     }
 
 
@@ -143,43 +151,31 @@ public class SelectorTest {
     @Test public void testNamespacedTag() {
         Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>");
         Elements byTag = doc.select("abc|def");
-        assertEquals(2, byTag.size());
-        assertEquals("1", byTag.first().id());
-        assertEquals("2", byTag.last().id());
+        assertSelectedIds(byTag, "1", "2");
 
         Elements byAttr = doc.select(".bold");
-        assertEquals(1, byAttr.size());
-        assertEquals("2", byAttr.last().id());
+        assertSelectedIds(byAttr, "2");
 
         Elements byTagAttr = doc.select("abc|def.bold");
-        assertEquals(1, byTagAttr.size());
-        assertEquals("2", byTagAttr.last().id());
+        assertSelectedIds(byTagAttr, "2");
 
         Elements byContains = doc.select("abc|def:contains(e)");
-        assertEquals(2, byContains.size());
-        assertEquals("1", byContains.first().id());
-        assertEquals("2", byContains.last().id());
+        assertSelectedIds(byContains, "1", "2");
     }
 
     @Test public void testWildcardNamespacedTag() {
         Document doc = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div> <abc:def class=bold id=2>There</abc:def>");
         Elements byTag = doc.select("*|def");
-        assertEquals(2, byTag.size());
-        assertEquals("1", byTag.first().id());
-        assertEquals("2", byTag.last().id());
+        assertSelectedIds(byTag, "1", "2");
 
         Elements byAttr = doc.select(".bold");
-        assertEquals(1, byAttr.size());
-        assertEquals("2", byAttr.last().id());
+        assertSelectedIds(byAttr, "2");
 
         Elements byTagAttr = doc.select("*|def.bold");
-        assertEquals(1, byTagAttr.size());
-        assertEquals("2", byTagAttr.last().id());
+        assertSelectedIds(byTagAttr, "2");
 
         Elements byContains = doc.select("*|def:contains(e)");
-        assertEquals(2, byContains.size());
-        assertEquals("1", byContains.first().id());
-        assertEquals("2", byContains.last().id());
+        assertSelectedIds(byContains, "1", "2");
     }
 
     @Test public void testWildcardNamespacedXmlTag() {
@@ -189,22 +185,16 @@ public class SelectorTest {
         );
 
         Elements byTag = doc.select("*|Def");
-        assertEquals(2, byTag.size());
-        assertEquals("1", byTag.first().id());
-        assertEquals("2", byTag.last().id());
+        assertSelectedIds(byTag, "1", "2");
 
         Elements byAttr = doc.select(".bold");
-        assertEquals(1, byAttr.size());
-        assertEquals("2", byAttr.last().id());
+        assertSelectedIds(byAttr, "2");
 
         Elements byTagAttr = doc.select("*|Def.bold");
-        assertEquals(1, byTagAttr.size());
-        assertEquals("2", byTagAttr.last().id());
+        assertSelectedIds(byTagAttr, "2");
 
         Elements byContains = doc.select("*|Def:contains(e)");
-        assertEquals(2, byContains.size());
-        assertEquals("1", byContains.first().id());
-        assertEquals("2", byContains.last().id());
+        assertSelectedIds(byContains, "1", "2");
     }
 
     @Test public void testWildCardNamespacedCaseVariations() {
@@ -242,18 +232,13 @@ public class SelectorTest {
     @Test public void testByAttributeRegex() {
         Document doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif><img></p>");
         Elements imgs = doc.select("img[src~=(?i)\\.(png|jpe?g)]");
-        assertEquals(3, imgs.size());
-        assertEquals("1", imgs.get(0).id());
-        assertEquals("2", imgs.get(1).id());
-        assertEquals("3", imgs.get(2).id());
+        assertSelectedIds(imgs, "1", "2", "3");
     }
 
     @Test public void testByAttributeRegexCharacterClass() {
         Document doc = Jsoup.parse("<p><img src=foo.png id=1><img src=bar.jpg id=2><img src=qux.JPEG id=3><img src=old.gif id=4></p>");
         Elements imgs = doc.select("img[src~=[o]]");
-        assertEquals(2, imgs.size());
-        assertEquals("1", imgs.get(0).id());
-        assertEquals("4", imgs.get(1).id());
+        assertSelectedIds(imgs, "1", "4");
     }
 
     @Test public void testByAttributeRegexCombined() {
@@ -1172,14 +1157,8 @@ public class SelectorTest {
         Elements empty = doc.select("li:empty");
         Elements notEmpty = doc.select("li:not(:empty)");
 
-        assertEquals(3, empty.size());
-        assertEquals(2, notEmpty.size());
-
-        assertEquals("1", empty.get(0).id());
-        assertEquals("2", empty.get(1).id());
-        assertEquals("3", empty.get(2).id());
-        assertEquals("4", notEmpty.get(0).id());
-        assertEquals("5", notEmpty.get(1).id());
+        assertSelectedIds(empty, "1", "2", "3");
+        assertSelectedIds(notEmpty, "4", "5");
     }
 
     @Test public void parentFromSpecifiedDescender() {
@@ -1199,8 +1178,7 @@ public class SelectorTest {
 
         // And now for the bug - li2 select was not restricted to the li2 context
         Elements innerLis = li2.select("ul > li");
-        assertEquals(2, innerLis.size());
-        assertEquals("Baz", innerLis.first().ownText());
+        assertSelectedOwnText(innerLis, "Baz", "Qux");
 
         // Confirm that parent selector (" ") works same as immediate parent (">");
         Elements innerLisFromParent = li2.select("ul li");
@@ -1215,8 +1193,6 @@ public class SelectorTest {
         Document doc = Jsoup.parse(html);
 
         Elements els = doc.select("p:has(> span, > i)"); // should match a p with an immediate span or i
-        assertEquals(2, els.size());
-        assertEquals("0", els.get(0).id());
-        assertEquals("2", els.get(1).id());
+        assertSelectedIds(els, "0", "2");
     }
 }
