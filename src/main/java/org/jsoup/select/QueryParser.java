@@ -145,18 +145,21 @@ public class QueryParser {
 
     private String consumeSubQuery() {
         StringBuilder sq = StringUtil.borrowBuilder();
+        boolean seenNonCombinator = false; // eat until we hit a combinator after eating something else
         while (!tq.isEmpty()) {
             if (tq.matches("("))
                 sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
             else if (tq.matches("["))
                 sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
             else if (tq.matchesAny(Combinators))
-                if (sq.length() > 0)
+                if (seenNonCombinator)
                     break;
                 else
-                    tq.consume();
-            else
+                    sq.append(tq.consume());
+            else {
+                seenNonCombinator = true;
                 sq.append(tq.consume());
+            }
         }
         return StringUtil.releaseBuilder(sq);
     }
