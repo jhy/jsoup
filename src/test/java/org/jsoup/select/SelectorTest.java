@@ -23,17 +23,17 @@ public class SelectorTest {
     /** Test that the selected elements match exactly the specified IDs. */
     static void assertSelectedIds(Elements els, String... ids) {
         assertNotNull(els);
-        assertEquals(ids.length, els.size());
+        assertEquals(ids.length, els.size(), "Incorrect number of selected elements");
         for (int i = 0; i < ids.length; i++) {
-            assertEquals(ids[i], els.get(i).id());
+            assertEquals(ids[i], els.get(i).id(), "Incorrect content at index");
         }
     }
 
     static void assertSelectedOwnText(Elements els, String... ownTexts) {
         assertNotNull(els);
-        assertEquals(ownTexts.length, els.size());
+        assertEquals(ownTexts.length, els.size(), "Incorrect number of selected elements");
         for (int i = 0; i < ownTexts.length; i++) {
-            assertEquals(ownTexts[i], els.get(i).ownText());
+            assertEquals(ownTexts[i], els.get(i).ownText(), "Incorrect content at index");
         }
     }
 
@@ -1194,5 +1194,30 @@ public class SelectorTest {
 
         Elements els = doc.select("p:has(> span, > i)"); // should match a p with an immediate span or i
         assertSelectedIds(els, "0", "2");
+    }
+
+    @Test public void is() {
+        String html = "<h1 id=1><p></p></h1> <section><h1 id=2></h1></section> <article><h2 id=3></h2></article> <h2 id=4><p></p></h2>";
+        Document doc = Jsoup.parse(html);
+
+        assertSelectedIds(
+            doc.select(":is(section, article) :is(h1, h2, h3)"),
+            "2", "3");
+
+        assertSelectedIds(
+            doc.select(":is(section, article) ~ :is(h1, h2, h3):has(p)"),
+            "4");
+
+        assertSelectedIds(
+            doc.select(":is(h1:has(p), h2:has(section), h3)"),
+            "1");
+
+        assertSelectedIds(
+            doc.select(":is(h1, h2, h3):has(p)"),
+            "1", "4");
+
+        String query = "div :is(h1, h2)";
+        Evaluator parse = QueryParser.parse(query);
+        assertEquals(query, parse.toString());
     }
 }
