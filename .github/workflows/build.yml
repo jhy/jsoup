@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         # choosing to run a reduced set of LTS, current, and next, to balance coverage and execution time
-        java: [8, 17, 20]
+        java: [8, 17, 20, 21]
       fail-fast: false
     name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
     steps:
