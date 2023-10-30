@@ -192,6 +192,8 @@ public class QueryParser {
                 return new Evaluator.IndexEquals(consumeIndex());
             case "has":
                 return has();
+            case "is":
+                return is();
             case "contains":
                 return contains(false);
             case "containsOwn":
@@ -366,6 +368,13 @@ public class QueryParser {
         String subQuery = consumeParens();
         Validate.notEmpty(subQuery, ":has(selector) sub-select must not be empty");
         return new StructuralEvaluator.Has(parse(subQuery));
+    }
+
+    // psuedo selector :is()
+    private Evaluator is() {
+        String subQuery = consumeParens();
+        Validate.notEmpty(subQuery, ":is(selector) sub-select must not be empty");
+        return new StructuralEvaluator.Is(parse(subQuery));
     }
 
     // pseudo selector :contains(text), containsOwn(text)

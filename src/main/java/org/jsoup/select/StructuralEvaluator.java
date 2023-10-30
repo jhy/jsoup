@@ -90,6 +90,27 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
+    /** Implements the :is(sub-query) pseudo-selector */
+    static class Is extends StructuralEvaluator {
+        public Is(Evaluator evaluator) {
+            super(evaluator);
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return evaluator.matches(root, element);
+        }
+
+        @Override protected int cost() {
+            return 2 + evaluator.cost();
+        }
+
+        @Override
+        public String toString() {
+            return String.format(":is(%s)", evaluator);
+        }
+    }
+
     static class Not extends StructuralEvaluator {
         public Not(Evaluator evaluator) {
             super(evaluator);
