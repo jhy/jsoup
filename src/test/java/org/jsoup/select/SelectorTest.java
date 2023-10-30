@@ -1206,4 +1206,17 @@ public class SelectorTest {
         Elements innerLisFromParent = li2.select("ul li");
         assertEquals(innerLis, innerLisFromParent);
     }
+
+    @Test public void rootImmediateParentSubquery() {
+        // a combinator at the start of the query is applied to the Root selector. i.e. "> p" matches a P immediately parented
+        // by the Root (which is <html> for a top level query, or the context element in :has)
+        // in the sub query, the combinator was dropped incorrectly
+        String html = "<p id=0><span>A</p> <p id=1><b><i><span>B</p> <p id=2><i>C</p>\n";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p:has(> span, > i)"); // should match a p with an immediate span or i
+        assertEquals(2, els.size());
+        assertEquals("0", els.get(0).id());
+        assertEquals("2", els.get(1).id());
+    }
 }
