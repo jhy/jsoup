@@ -359,4 +359,12 @@ public class W3CDomTest {
         assertEquals("1 && 2", script.getTextContent());
     }
 
+    @Test public void handlesEmptyDoctype() {
+        String html = "<!doctype>Foo";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        Document doc = (new W3CDom()).fromJsoup(jdoc);
+        assertNull(doc.getDoctype());
+        assertEquals("Foo", doc.getFirstChild().getTextContent());
+    }
+
 }

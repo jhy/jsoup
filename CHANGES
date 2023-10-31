@@ -23,6 +23,9 @@ Release 1.17.1 [PENDING]
     incorrectly skipped, such that the sub-query was parsed as `i` instead of `> i`.
     <https://github.com/jhy/jsoup/issues/1707>
 
+  * Bugfix: in W3CDom, if the jsoup input document contained an empty doctype, the conversion would fail with a
+    DOMException. Now, said doctype is discarded, and the conversion continues.
+
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
     are sorted by their relative execution cost, and executed in order of lower to higher cost. This speeds the
