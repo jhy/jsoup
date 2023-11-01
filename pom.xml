@@ -60,22 +60,8 @@
               <target>1.8</target>
             </configuration>
           </execution>
-          <execution>
-            <id>compile-java-9</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <configuration>
-              <release>9</release>
-              <compileSourceRoots>
-                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
-              </compileSourceRoots>
-              <multiReleaseOutput>true</multiReleaseOutput>
-            </configuration>
-          </execution>
+          <!-- There is a JDK 9+ profile execution below, which adds multi-release=true and compiles module-info -->
         </executions>
-
       </plugin>
 
       <!-- Ensure Java 8 and Android 10 API compatibility -->
@@ -300,6 +286,44 @@
   </distributionManagement>
 
   <profiles>
+    <!-- Compiles the multi-release jar when executed on JDK9+ -->
+    <profile>
+      <id>compile-multi-release</id>
+      <activation>
+        <jdk>[9,2000)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>compile-java-8</id>
+                <configuration>
+                  <release>8</release>
+                </configuration>
+              </execution>
+              <execution>
+                <id>compile-java-9</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <release>9</release>
+                  <compileSourceRoots>
+                    <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+                  </compileSourceRoots>
+                  <multiReleaseOutput>true</multiReleaseOutput>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>release-sign-artifacts</id>
       <activation>
