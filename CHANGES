@@ -12,6 +12,7 @@ Release 1.17.1 [PENDING]
     the selector list. Useful for making large ORed selectors more readable.
 
   * Improvement: repackaged the library with native (vs automatic) JPMS module support.
+    <https://github.com/jhy/jsoup/pull/2025>
 
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
