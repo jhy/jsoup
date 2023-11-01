@@ -11,6 +11,8 @@ Release 1.17.1 [PENDING]
   * Improvement: added the `:is(selector list)` pseudo-selector, which finds elements that match any of the selectors in
     the selector list. Useful for making large ORed selectors more readable.
 
+  * Improvement: repackaged the library with native (vs automatic) JPMS module support.
+
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>

@@ -38,13 +38,12 @@
 
   <build>
     <plugins>
+      <!-- Compile -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
           <encoding>UTF-8</encoding>
           <compilerArgs>
             <!-- saves output for package-info.java, so mvn sees it has completed it, so incremental compile works -->
@@ -53,9 +52,34 @@
           <!-- this means incremental = true... -->
           <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
+        <executions>
+          <execution>
+            <id>compile-java-8</id>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>compile-java-9</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>9</release>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+              </compileSourceRoots>
+              <multiReleaseOutput>true</multiReleaseOutput>
+            </configuration>
+          </execution>
+        </executions>
+
       </plugin>
+
+      <!-- Ensure Java 8 and Android 10 API compatibility -->
       <plugin>
-        <!-- Ensure Java 8 and Android 10 API compatibility -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
         <version>1.23</version>
@@ -136,7 +160,7 @@
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
             <manifestEntries>
-              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
+              <Multi-Release>true</Multi-Release>
             </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
