@@ -78,7 +78,7 @@ public class ConnectTest {
         assertTrue(threw);
     }
 
-    private static String ihVal(String key, Document doc) {
+    static String ihVal(String key, Document doc) {
         final Element first = doc.select("th:contains(" + key + ") + td").first();
         return first != null ? first.text() : null;
     }

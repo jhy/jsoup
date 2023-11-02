@@ -33,7 +33,7 @@ public class FileServlet extends BaseServlet {
             Files.copy(file.toPath(), out);
             out.flush();
         } else {
-            res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            res.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 

@@ -5,6 +5,7 @@ import org.jsoup.integration.TestServer;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 public class RedirectServlet extends BaseServlet {
     public static final String Url = TestServer.map(RedirectServlet.class);
@@ -14,7 +15,7 @@ public class RedirectServlet extends BaseServlet {
     private static final int DefaultCode = HttpServletResponse.SC_MOVED_TEMPORARILY;
 
     @Override
-    protected void doIt(HttpServletRequest req, HttpServletResponse res) {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String location = req.getParameter(LocationParam);
         if (location == null)
             location = "";
@@ -31,6 +32,7 @@ public class RedirectServlet extends BaseServlet {
 
         res.setHeader("Location", location);
         res.setStatus(intCode);
+        res.flushBuffer();
     }
 
 }
