@@ -16,7 +16,7 @@ public class SlowRider extends BaseServlet {
     public static final String MaxTimeParam = "maxTime";
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         pause(1000);
         res.setContentType(TextHtml);
         res.setStatus(HttpServletResponse.SC_OK);

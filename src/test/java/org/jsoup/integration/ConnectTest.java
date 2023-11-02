@@ -403,7 +403,7 @@ public class ConnectTest {
 
     @Test
     public void supportsDeflate() throws IOException {
-        Connection.Response res = Jsoup.connect(Deflateservlet.Url).execute();
+        Connection.Response res = Jsoup.connect(DeflateServlet.Url).execute();
         assertEquals("deflate", res.header("Content-Encoding"));
 
         Document doc = res.parse();

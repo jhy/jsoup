@@ -2,35 +2,19 @@ package org.jsoup.integration.servlets;
 
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class CookieServlet extends BaseServlet{
+public class CookieServlet extends BaseServlet {
     public static final String Url = TestServer.map(CookieServlet.class);
     public static final String SetCookiesParam = "setCookies";
     public static final String LocationParam = "loc";
 
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         // Do we want to set cookies?
         if (req.getParameter(SetCookiesParam) != null)
             setCookies(res);

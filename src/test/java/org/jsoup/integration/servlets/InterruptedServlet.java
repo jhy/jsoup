@@ -12,9 +12,8 @@ public class InterruptedServlet extends BaseServlet {
     public static final String Magnitude = "magnitude";
     public static final String Larger = "larger";
 
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String magnitude = req.getParameter(Magnitude);
         magnitude  = magnitude == null ? "" : magnitude;
         res.setContentType(TextHtml);
