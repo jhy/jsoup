@@ -58,7 +58,7 @@ public class TestServer {
         }
     }
 
-    public static ProxySettings proxySettings(Class<? extends BaseServlet> servletClass) {
+    public static ProxySettings proxySettings() {
         synchronized (jetty) {
             if (!jetty.isStarted())
                 start(); // if running out of the test cases

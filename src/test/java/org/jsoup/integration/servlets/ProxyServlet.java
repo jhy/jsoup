@@ -11,12 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class ProxyServlet extends BaseServlet{
-    public static TestServer.ProxySettings ProxySettings = TestServer.proxySettings(ProxyServlet.class);
+    public static TestServer.ProxySettings ProxySettings = TestServer.proxySettings();
     public static String Via = "1.1 jsoup test proxy";
 
     @Override
