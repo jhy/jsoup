@@ -35,11 +35,12 @@ public class ProxyServlet extends BaseServlet{
             .ignoreHttpErrors(true);
 
         // request headers
-        for (Iterator<String> it = req.getHeaderNames().asIterator(); it.hasNext(); ) {
-            String name = it.next();
+        Enumeration<String> headerNames = req.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
             Enumeration<String> values = req.getHeaders(name);
-            for (Iterator<String> valuesIt = values.asIterator(); valuesIt.hasNext(); ) {
-                String value = valuesIt.next();
+            while (values.hasMoreElements()) {
+                String value = values.nextElement();
                 //System.out.println("Header: " + name + " = " + value);
                 fetch.header(name, value); // todo - this invocation will replace existing header, not add
             }
