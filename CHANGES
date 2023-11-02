@@ -29,6 +29,8 @@ Release 1.17.1 [PENDING]
   * Bugfix: in W3CDom, if the jsoup input document contained an empty doctype, the conversion would fail with a
     DOMException. Now, said doctype is discarded, and the conversion continues.
 
+  * Build Improvement: added a local test proxy implementation, for proxy integration tests.
+
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
     are sorted by their relative execution cost, and executed in order of lower to higher cost. This speeds the

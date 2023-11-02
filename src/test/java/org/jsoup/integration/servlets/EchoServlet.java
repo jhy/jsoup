@@ -26,26 +26,7 @@ public class EchoServlet extends BaseServlet {
     private static final int DefaultCode = HttpServletResponse.SC_OK;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        doIt(req, res);
-    }
-
-    private void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         int intCode = DefaultCode;
         String code = req.getHeader(CodeParam);
         if (code != null)

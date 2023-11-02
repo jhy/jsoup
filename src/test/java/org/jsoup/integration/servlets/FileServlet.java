@@ -16,7 +16,7 @@ public class FileServlet extends BaseServlet {
     public static final String DefaultType = "text/html";
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String contentType = req.getParameter(ContentTypeParam);
         if (contentType == null)
             contentType = DefaultType;
@@ -33,16 +33,11 @@ public class FileServlet extends BaseServlet {
             Files.copy(file.toPath(), out);
             out.flush();
         } else {
-            res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            res.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
     public static String urlTo(String path) {
         return Url + path;
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        doGet(req, res);
     }
 }

@@ -78,7 +78,7 @@ public class ConnectTest {
         assertTrue(threw);
     }
 
-    private static String ihVal(String key, Document doc) {
+    static String ihVal(String key, Document doc) {
         final Element first = doc.select("th:contains(" + key + ") + td").first();
         return first != null ? first.text() : null;
     }
@@ -403,7 +403,7 @@ public class ConnectTest {
 
     @Test
     public void supportsDeflate() throws IOException {
-        Connection.Response res = Jsoup.connect(Deflateservlet.Url).execute();
+        Connection.Response res = Jsoup.connect(DeflateServlet.Url).execute();
         assertEquals("deflate", res.header("Content-Encoding"));
 
         Document doc = res.parse();
