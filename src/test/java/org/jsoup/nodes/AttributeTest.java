@@ -89,4 +89,25 @@ public class AttributeTest {
         Document doc2 = Jsoup.parse(html, Parser.htmlParser().settings(ParseSettings.preserveCase));
         assertEquals("<a href=\"autofocus\" REQUIRED>One</a>", doc2.selectFirst("a").outerHtml());
     }
+
+    @Test
+    public void testEquals() {
+        Attributes attributes = new Attributes();
+        Attribute attribute = new Attribute("name", "value", attributes);
+        Attribute sameAttribute = new Attribute("name", "value", attributes);
+        Attribute differentAttribute = new Attribute("newName", "value", attributes);
+
+        assertTrue(attribute.equals(sameAttribute));
+        assertFalse(attribute.equals(differentAttribute));
+    }
+
+    @Test
+    public void testClone() {
+        Attributes attributes = new Attributes();
+        Attribute attribute = new Attribute("name", "value", attributes);
+        Attribute clonedAttribute = attribute.clone();
+        assertEquals(attribute.getKey(), clonedAttribute.getKey());
+        assertEquals(attribute.getValue(), clonedAttribute.getValue());
+    }
+
 }

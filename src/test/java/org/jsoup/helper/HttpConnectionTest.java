@@ -373,4 +373,14 @@ public class HttpConnectionTest {
         String actual = connect.request().header("Key");
         assertEquals(value, actual);
     }
+
+    @Test void testHeadersMethod(){
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("Accept", "Something");
+        req.addHeader("Foo", "Bar");
+
+        Map<String, String> headerMap =  req.headers();
+        assertEquals("Something", headerMap.get("Accept"));
+        assertEquals("Bar", headerMap.get("Foo"));
+    }
 }
