@@ -406,6 +406,14 @@
     </dependency>
 
     <dependency>
+      <!-- jetty proxy, for integration tests -->
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-proxy</artifactId>
+      <version>${jetty.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <!-- javax.annotations.nonnull, with Apache 2 (not GPL) license. Build time only. -->
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>

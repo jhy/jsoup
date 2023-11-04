@@ -11,7 +11,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public class FileServlet extends BaseServlet {
-    public static final String Url = TestServer.map(FileServlet.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(FileServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
     public static final String ContentTypeParam = "contentType";
     public static final String DefaultType = "text/html";
 
@@ -39,5 +45,9 @@ public class FileServlet extends BaseServlet {
 
     public static String urlTo(String path) {
         return Url + path;
+    }
+
+    public static String tlsUrlTo(String path) {
+        return TlsUrl + path;
     }
 }

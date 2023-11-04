@@ -7,7 +7,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class HelloServlet extends BaseServlet {
-    public static final String Url = TestServer.map(HelloServlet.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(HelloServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
 
     @Override
     protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {

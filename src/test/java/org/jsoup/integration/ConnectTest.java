@@ -16,6 +16,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,8 +25,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
@@ -46,6 +50,13 @@ public class ConnectTest {
     @Test
     public void canConnectToLocalServer() throws IOException {
         String url = HelloServlet.Url;
+        Document doc = Jsoup.connect(url).get();
+        Element p = doc.selectFirst("p");
+        assertEquals("Hello, World!", p.text());
+    }
+
+    @Test void canConnectToLocalTlsServer() throws IOException {
+        String url = HelloServlet.TlsUrl;
         Document doc = Jsoup.connect(url).get();
         Element p = doc.selectFirst("p");
         assertEquals("Hello, World!", p.text());
@@ -283,16 +294,16 @@ public class ConnectTest {
     /**
      * Tests upload of content to a remote service.
      */
-    @Test
-    public void postFiles() throws IOException {
+    @ParameterizedTest @MethodSource("echoUrls") // http and https
+    public void postFiles(String url) throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
         File html = ParseTest.getFile("/htmltests/large.html");
 
         Document res = Jsoup
-            .connect(EchoServlet.Url)
+            .connect(url)
             .data("firstname", "Jay")
-            .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
-            .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
+            .data("firstPart", thumb.getName(), Files.newInputStream(thumb.toPath()), "image/jpeg")
+            .data("secondPart", html.getName(), Files.newInputStream(html.toPath())) // defaults to "application-octetstream";
             .data("surname", "Soup")
             .post();
 
@@ -785,5 +796,12 @@ public class ConnectTest {
         assertEquals("/✔/", ihVal("Path Info", doc));
         assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
         assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
+    }
+
+    /**
+     Provides HTTP and HTTPS EchoServlet URLs
+     */
+    private static Stream<String> echoUrls() {
+        return Stream.of(EchoServlet.Url, EchoServlet.TlsUrl);
     }
 }
