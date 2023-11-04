@@ -30,6 +30,10 @@ Release 1.17.1 [PENDING]
     DOMException. Now, said doctype is discarded, and the conversion continues.
 
   * Build Improvement: added a local test proxy implementation, for proxy integration tests.
+    <https://github.com/jhy/jsoup/pull/2029>
+
+  * Build Improvement: added tests for HTTPS request support, using a local self-signed cert. Includes proxy tests.
+    <https://github.com/jhy/jsoup/pull/2032>
 
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
