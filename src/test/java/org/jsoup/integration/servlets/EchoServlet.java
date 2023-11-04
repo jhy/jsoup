@@ -22,8 +22,14 @@ import static org.jsoup.nodes.Entities.escape;
 
 public class EchoServlet extends BaseServlet {
     public static final String CodeParam = "code";
-    public static final String Url = TestServer.map(EchoServlet.class);
     private static final int DefaultCode = HttpServletResponse.SC_OK;
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(EchoServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
 
     @Override
     protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -114,7 +120,7 @@ public class EchoServlet extends BaseServlet {
     // allow the servlet to run as a main program, for local test
     public static void main(String[] args) {
         TestServer.start();
-        System.out.println(Url);
+        System.out.println("Listening on " + Url + " and " + TlsUrl);
     }
 
     private static boolean maybeEnableMultipart(HttpServletRequest req) {

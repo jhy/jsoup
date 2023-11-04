@@ -8,7 +8,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class InterruptedServlet extends BaseServlet {
-    public static final String Url = TestServer.map(InterruptedServlet.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(InterruptedServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
     public static final String Magnitude = "magnitude";
     public static final String Larger = "larger";
 

@@ -1,73 +1,37 @@
 package org.jsoup.integration.servlets;
 
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.proxy.AsyncProxyServlet;
+import org.eclipse.jetty.proxy.ConnectHandler;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
 
-public class ProxyServlet extends BaseServlet{
+public class ProxyServlet extends AsyncProxyServlet {
     public static TestServer.ProxySettings ProxySettings = TestServer.proxySettings();
     public static String Via = "1.1 jsoup test proxy";
 
+    public static Handler createHandler() {
+        // ConnectHandler wraps this ProxyServlet and handles CONNECT, which sets up a tunnel for HTTPS requests and is
+        // opaque to the proxy. The ProxyServlet handles simple HTTP requests.
+        ConnectHandler connectHandler = new ConnectHandler();
+        ServletHandler proxyHandler = new ServletHandler();
+        ServletHolder proxyServletHolder = new ServletHolder(ProxyServlet.class); // Holder wraps as it requires maxThreads initialization
+        proxyServletHolder.setAsyncSupported(true);
+        proxyServletHolder.setInitParameter("maxThreads", "8");
+        proxyHandler.addServletWithMapping(proxyServletHolder, "/*");
+        connectHandler.setHandler(proxyHandler);
+
+        return connectHandler;
+    }
+
     @Override
-    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-        StringBuffer urlBuf = req.getRequestURL();
-        if (req.getQueryString() != null) {
-            urlBuf.append('?').append(req.getQueryString());
-        }
-        String url = urlBuf.toString();
-        //log("Proxying URL: " + url);
-
-        Connection.Method method = Enum.valueOf(Connection.Method.class, req.getMethod());
-        Connection fetch = Jsoup.connect(url)
-            .method(method)
-            .followRedirects(false)
-            .ignoreHttpErrors(true);
-
-        // request headers
-        Enumeration<String> headerNames = req.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String name = headerNames.nextElement();
-            Enumeration<String> values = req.getHeaders(name);
-            while (values.hasMoreElements()) {
-                String value = values.nextElement();
-                //System.out.println("Header: " + name + " = " + value);
-                fetch.header(name, value); // todo - this invocation will replace existing header, not add
-            }
-        }
-
-        // execute
-        Connection.Response fetchRes = fetch.execute();
-        res.setStatus(fetchRes.statusCode());
-
-        // write the response headers
-        res.addHeader("Via", Via);
-        for (Map.Entry<String, List<String>> entry : fetchRes.multiHeaders().entrySet()) {
-            String header = entry.getKey();
-            for (String value : entry.getValue()) {
-                res.addHeader(header,value);
-            }
-        }
-
-        // write the body
-        ServletOutputStream outputStream = res.getOutputStream();
-        BufferedInputStream inputStream = fetchRes.bodyStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-
-        outputStream.close();
-        inputStream.close();
+    protected void onServerResponseHeaders(HttpServletRequest clientRequest, HttpServletResponse proxyResponse, Response serverResponse) {
+        super.onServerResponseHeaders(clientRequest, proxyResponse, serverResponse);
+        proxyResponse.addHeader("Via", Via);
     }
 }

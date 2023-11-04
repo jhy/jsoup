@@ -9,7 +9,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class CookieServlet extends BaseServlet {
-    public static final String Url = TestServer.map(CookieServlet.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(CookieServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
     public static final String SetCookiesParam = "setCookies";
     public static final String LocationParam = "loc";
 
