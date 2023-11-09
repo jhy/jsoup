@@ -19,17 +19,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static org.jsoup.helper.AuthenticationHandlerTest.MaxAttempts;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
@@ -745,11 +749,11 @@ public class ConnectTest {
         assertEquals("", ihVal("Query String", resultDoc));
 
         // new request to echo, should not have form data, but should have cookies from implicit session
-        Document newEcho = submit.newRequest().url(echoUrl).get();
+        Document newEcho = submit.newRequest(echoUrl).get();
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
         assertEquals("", ihVal("Query String", newEcho));
 
-        Document cookieDoc = submit.newRequest().url(cookieUrl).get();
+        Document cookieDoc = submit.newRequest(cookieUrl).get();
         assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
 
     }
@@ -760,7 +764,7 @@ public class ConnectTest {
         String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
 
         Connection session = Jsoup.newSession();
-        Document loginDoc = session.newRequest().url(startUrl).get();
+        Document loginDoc = session.newRequest(startUrl).get();
         FormElement form = loginDoc.expectForm("#login2");
         assertNotNull(form);
         String username = "admin";
@@ -777,7 +781,7 @@ public class ConnectTest {
         assertEquals(Connection.Method.POST, postRes.method());
         Document resultDoc = postRes.parse();
 
-        Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
+        Document echo2 = resultDoc.connection().newRequest(echoUrl).get();
         assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
     }
@@ -804,4 +808,70 @@ public class ConnectTest {
     private static Stream<String> echoUrls() {
         return Stream.of(EchoServlet.Url, EchoServlet.TlsUrl);
     }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void failsIfNotAuthenticated(String url) throws IOException {
+        String password = AuthFilter.newServerPassword(); // we don't send it, but ensures cache won't hit
+        Connection.Response res = Jsoup.connect(url)
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .ignoreHttpErrors(true)
+            .execute();
+
+        assertEquals(401, res.statusCode());
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void canAuthenticate(String url) throws IOException {
+        AtomicInteger count = new AtomicInteger(0);
+        String password = AuthFilter.newServerPassword();
+        Connection.Response res = Jsoup.connect(url)
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .auth(ctx -> {
+                count.incrementAndGet();
+                assertEquals(Authenticator.RequestorType.SERVER, ctx.type());
+                assertEquals("localhost", ctx.url().getHost());
+                assertEquals(AuthFilter.ServerRealm, ctx.realm());
+
+                return ctx.credentials(AuthFilter.ServerUser, password);
+            })
+            .execute();
+
+        assertEquals(1, count.get());
+
+        Document doc = res.parse();
+        assertTrue(ihVal("Authorization", doc).startsWith("Basic ")); // tests we set the auth header
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void incorrectAuth(String url) throws IOException {
+        Connection session = Jsoup.newSession()
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .ignoreHttpErrors(true);
+
+        String password = AuthFilter.newServerPassword();
+        int code = session.newRequest(url).execute().statusCode(); // no auth sent
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, code);
+
+        AtomicInteger count = new AtomicInteger(0);
+        Connection.Response res = session.newRequest(url)
+            .auth(ctx -> {
+                count.incrementAndGet();
+                return ctx.credentials(AuthFilter.ServerUser, password + "wrong"); // incorrect
+            })
+            .execute();
+        assertEquals(MaxAttempts, count.get());
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.statusCode());
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        Connection.Response successRes = session.newRequest(url)
+            .auth(ctx -> {
+                successCount.incrementAndGet();
+                return ctx.credentials(AuthFilter.ServerUser, password); // correct
+            })
+            .execute();
+        assertEquals(1, successCount.get());
+        assertEquals(HttpServletResponse.SC_OK, successRes.statusCode());
+    }
+
+    // proxy connection tests are in ProxyTest
 }

@@ -377,6 +377,10 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override public Connection auth(RequestAuthenticator authenticator) {
+        req.auth(authenticator);
+        return this;
+    }
 
     @SuppressWarnings("unchecked")
     private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
@@ -596,6 +600,7 @@ public class HttpConnection implements Connection {
         private String postDataCharset = DataUtil.defaultCharsetName;
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
+        private @Nullable RequestAuthenticator authenticator;
         private volatile boolean executing = false;
 
         Request() {
@@ -626,6 +631,7 @@ public class HttpConnection implements Connection {
             parserDefined = copy.parserDefined;
             sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
             cookieManager = copy.cookieManager;
+            authenticator = copy.authenticator;
             executing = false;
         }
 
@@ -764,6 +770,15 @@ public class HttpConnection implements Connection {
         CookieManager cookieManager() {
             return cookieManager;
         }
+
+        @Override public Connection.Request auth(@Nullable RequestAuthenticator authenticator) {
+            this.authenticator = authenticator;
+            return this;
+        }
+
+        @Override @Nullable public RequestAuthenticator auth() {
+            return authenticator;
+        }
     }
 
     public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
@@ -898,6 +913,10 @@ public class HttpConnection implements Connection {
                 throw e;
             } finally {
                 req.executing = false;
+
+                // detach any thread local auth delegate
+                if (req.authenticator != null)
+                    AuthenticationHandler.handler.remove();
             }
 
             res.executed = true;
@@ -1008,6 +1027,8 @@ public class HttpConnection implements Connection {
 
             if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
                 ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
+            if (req.authenticator != null)
+                AuthenticationHandler.handler.enable(req.authenticator, conn); // removed in finally
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             CookieUtil.applyCookiesToRequest(req, conn); // from the Request key/val cookies and the Cookie Store
