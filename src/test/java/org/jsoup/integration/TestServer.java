@@ -9,8 +9,11 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.jsoup.integration.servlets.AuthFilter;
 import org.jsoup.integration.servlets.BaseServlet;
 import org.jsoup.integration.servlets.ProxyServlet;
 
@@ -29,6 +32,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestServer {
     static int Port;
@@ -40,9 +44,10 @@ public class TestServer {
     private static final Server Jetty = newServer();
     private static final ServletHandler JettyHandler = new ServletHandler();
     private static final Server Proxy = newServer();
+    private static final Server AuthedProxy = newServer();
     private static final HandlerWrapper ProxyHandler = new HandlerWrapper();
+    private static final HandlerWrapper AuthedProxyHandler = new HandlerWrapper();
     private static final ProxySettings ProxySettings = new ProxySettings();
-
 
     private static Server newServer() {
         return new Server(new InetSocketAddress(Localhost, 0));
@@ -51,6 +56,7 @@ public class TestServer {
     static {
         Jetty.setHandler(JettyHandler);
         Proxy.setHandler(ProxyHandler);
+        AuthedProxy.setHandler(AuthedProxyHandler);
 
         // TLS setup:
         try {
@@ -72,17 +78,37 @@ public class TestServer {
 
             try {
                 Jetty.start();
+                JettyHandler.addFilterWithMapping(new FilterHolder(new AuthFilter(false, false)), "/*", FilterMapping.ALL);
                 Connector[] jcons = Jetty.getConnectors();
                 Port = ((ServerConnector) jcons[0]).getLocalPort();
                 TlsPort = ((ServerConnector) jcons[1]).getLocalPort();
 
-                ProxyHandler.setHandler(ProxyServlet.createHandler());
+                ProxyHandler.setHandler(ProxyServlet.createHandler(false)); // includes proxy, CONNECT proxy, and Auth filters
                 Proxy.start();
                 ProxySettings.port = ((ServerConnector) Proxy.getConnectors()[0]).getLocalPort();
+
+                AuthedProxyHandler.setHandler(ProxyServlet.createHandler(true));
+                AuthedProxy.start();
+                ProxySettings.authedPort = ((ServerConnector) AuthedProxy.getConnectors()[0]).getLocalPort();
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
         }
+    }
+
+    /**
+     Close any current connections to the authed proxy. Tunneled connections only authenticate in their first
+     CONNECT, and may be kept alive and reused. So when we want to test unauthed - authed flows, we need to disconnect
+     them first.
+     */
+    static int closeAuthedProxyConnections() {
+        ServerConnector connector = (ServerConnector) AuthedProxy.getConnectors()[0];
+        AtomicInteger count = new AtomicInteger();
+        connector.getConnectedEndPoints().forEach(endPoint -> {
+            endPoint.close();
+            count.getAndIncrement();
+        });
+        return count.get();
     }
 
     public static ServletUrls map(Class<? extends BaseServlet> servletClass) {
@@ -122,6 +148,7 @@ public class TestServer {
     public static class ProxySettings {
         final String hostname = Localhost;
         int port;
+        int authedPort;
     }
 
     private static void addHttpsConnector(File keystoreFile, Server server) {
