@@ -515,4 +515,20 @@ public class CharacterReaderTest {
         assertEquals(14, reader.columnNumber());
     }
 
+    @Test public void consumeAttributeQuotedCanConsumeToSingleQuote() {
+        String html = "<p title=\"He'llo\" >";
+        CharacterReader r = new CharacterReader(html);
+        r.consumeAttributeQuoted(false);
+        r.advance();
+        assertEquals("He'llo", r.consumeAttributeQuoted(false));
+    }
+
+    @Test public void consumeAttributeQuotedCanConsumeToDoubleQuote() {
+        String html = "<p title='He\"llo' >";
+        CharacterReader r = new CharacterReader(html);
+        r.consumeAttributeQuoted(true);
+        r.advance();
+        assertEquals("He\"llo", r.consumeAttributeQuoted(true));
+    }
+
 }
