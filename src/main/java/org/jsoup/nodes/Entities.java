@@ -6,8 +6,8 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;

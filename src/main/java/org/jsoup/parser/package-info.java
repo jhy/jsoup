@@ -1,7 +1,7 @@
 /**
  Contains the HTML parser, tag specifications, and HTML tokeniser.
  */
-@NonnullByDefault
+@NullMarked
 package org.jsoup.parser;
 
-import org.jsoup.internal.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

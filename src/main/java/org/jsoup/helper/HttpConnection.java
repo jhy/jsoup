@@ -9,8 +9,8 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
@@ -111,7 +111,7 @@ public class HttpConnection implements Connection {
     }
 
     private HttpConnection.Request req;
-    private @Nullable Connection.Response res;
+    private Connection.@Nullable Response res;
 
     @Override
     public Connection newRequest() {
@@ -539,7 +539,7 @@ public class HttpConnection implements Connection {
             return Collections.emptyList();
         }
 
-        private @Nullable Map.Entry<String, List<String>> scanHeaders(String name) {
+        private Map.@Nullable Entry<String, List<String>> scanHeaders(String name) {
             String lc = lowerCase(name);
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 if (lowerCase(entry.getKey()).equals(lc))
@@ -1061,7 +1061,7 @@ public class HttpConnection implements Connection {
         }
 
         // set up url, method, header, cookies
-        private Response(HttpURLConnection conn, HttpConnection.Request request, @Nullable HttpConnection.Response previousResponse) throws IOException {
+        private Response(HttpURLConnection conn, HttpConnection.Request request, HttpConnection.@Nullable Response previousResponse) throws IOException {
             this.conn = conn;
             this.req = request;
             method = Method.valueOf(conn.getRequestMethod());

@@ -3,8 +3,8 @@ package org.jsoup;
 import org.jsoup.helper.RequestAuthenticator;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;

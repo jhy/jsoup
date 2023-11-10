@@ -2,8 +2,8 @@ package org.jsoup.nodes;
 
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**

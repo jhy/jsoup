@@ -10,8 +10,8 @@ import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
@@ -30,7 +30,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         return ParseSettings.preserveCase;
     }
 
-    @Override @ParametersAreNonnullByDefault
+    @Override
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
         stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack)

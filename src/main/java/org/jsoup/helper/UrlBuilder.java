@@ -2,8 +2,8 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.internal.StringUtil;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.IDN;
 import java.net.MalformedURLException;

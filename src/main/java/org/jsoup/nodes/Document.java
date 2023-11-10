@@ -11,8 +11,8 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.Selector;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.List;

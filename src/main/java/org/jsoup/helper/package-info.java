@@ -1,7 +1,7 @@
 /**
  Package containing classes supporting the core jsoup code.
  */
-@NonnullByDefault
+@NullMarked
 package org.jsoup.helper;
 
-import org.jsoup.internal.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

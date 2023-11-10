@@ -1,7 +1,8 @@
 package org.jsoup.parser;
 
 import org.jsoup.nodes.Attributes;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import static org.jsoup.internal.Normalizer.lowerCase;
 
 /**

@@ -2,8 +2,8 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

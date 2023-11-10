@@ -6,9 +6,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +36,6 @@ abstract class TreeBuilder {
 
     private boolean trackSourceRange;  // optionally tracks the source range of nodes
 
-    @ParametersAreNonnullByDefault
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
         Validate.notNullParam(baseUri, "baseUri");
@@ -57,7 +55,6 @@ abstract class TreeBuilder {
         this.baseUri = baseUri;
     }
 
-    @ParametersAreNonnullByDefault
     Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();

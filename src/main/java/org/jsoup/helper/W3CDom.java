@@ -17,8 +17,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -353,7 +353,7 @@ public class W3CDom {
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Node dest;
         private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
-        @Nullable private final org.jsoup.nodes.Element contextElement;
+        /*@Nullable*/ private final org.jsoup.nodes.Element contextElement; // todo - unsure why this can't be marked nullable?
 
         public W3CBuilder(Document doc) {
             this.doc = doc;

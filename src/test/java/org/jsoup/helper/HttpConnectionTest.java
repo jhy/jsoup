@@ -6,7 +6,6 @@ import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.MalformedURLException;

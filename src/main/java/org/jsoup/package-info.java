@@ -1,7 +1,7 @@
 /**
  Contains the main {@link org.jsoup.Jsoup} class, which provides convenient static access to the jsoup functionality.
  */
-@NonnullByDefault
+@NullMarked
 package org.jsoup;
 
-import org.jsoup.internal.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;
