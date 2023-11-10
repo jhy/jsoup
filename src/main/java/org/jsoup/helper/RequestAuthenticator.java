@@ -1,8 +1,8 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;

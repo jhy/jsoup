@@ -7,9 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
-
-import javax.annotation.Nullable;
-import javax.annotation.WillClose;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -196,7 +194,7 @@ Connection con3 = session.newRequest();
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    public static Document parse(@WillClose InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
+    public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
     }
 

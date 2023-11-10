@@ -1,8 +1,8 @@
 package org.jsoup.internal;
 
 import org.jsoup.helper.Validate;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;

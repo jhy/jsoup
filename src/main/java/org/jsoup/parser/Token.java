@@ -2,8 +2,8 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 
 /**
  * Parse tokens for the Tokeniser.

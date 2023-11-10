@@ -2,8 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
 import static org.jsoup.select.NodeFilter.FilterResult.STOP;
