@@ -3,6 +3,7 @@ jsoup changelog
 Release 1.17.1 [PENDING]
   * Improvement: in Jsoup.connect(), added support for request-level authentication, supporting authentication to
     proxies and to servers.
+    <https://github.com/jhy/jsoup/pull/2046>
 
   * Improvement: in the Elements list, added direct support for `#set(index, element)`, `#remove(index)`,
     `#remove(object)`, `#clear()`, `#removeAll(collection)`, `#retainAll(collection)`, `#removeIf(filter)`,
