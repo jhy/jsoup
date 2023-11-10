@@ -7,5 +7,5 @@ module org.jsoup {
     exports org.jsoup.select;
 
     requires transitive java.xml; // for org.w3c.dom out of W3CDom
-    requires static org.jspecify; // TODO[must] migrate to another nullable package prior to next release
+    requires static org.jspecify; // nullability annotations
 }
