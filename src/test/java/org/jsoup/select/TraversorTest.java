@@ -8,6 +8,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -192,5 +194,20 @@ public class TraversorTest {
         }, doc);
 
         assertEquals("<div><p id=\"2\">Two</p><p></p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void elementFunctionalTraverse() {
+        Document doc = Jsoup.parse("<div><p>1<p>2<p>3");
+        Element body = doc.body();
+
+        AtomicInteger seenCount = new AtomicInteger();
+        AtomicInteger deepest = new AtomicInteger();
+        body.traverse((node, depth) -> {
+            seenCount.incrementAndGet();
+            if (depth > deepest.get()) deepest.set(depth);
+        });
+
+        assertEquals(8, seenCount.get()); // body and contents
+        assertEquals(3, deepest.get());
     }
 }

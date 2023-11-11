@@ -4,13 +4,26 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 
 /**
- * Node visitor interface. Provide an implementing class to {@link NodeTraversor} to iterate through nodes.
- * <p>
- * This interface provides two methods, {@code head} and {@code tail}. The head method is called when the node is first
- * seen, and the tail method when all of the node's children have been visited. As an example, {@code head} can be used to
- * emit a start tag for a node, and {@code tail} to create the end tag.
- * </p>
+ Node visitor interface. Provide an implementing class to {@link NodeTraversor} or to {@link Node#traverse(NodeVisitor)}
+ to iterate through nodes.
+ <p>
+ This interface provides two methods, {@link #head} and {@link #tail}. The head method is called when the node is first
+ seen, and the tail method when all of the node's children have been visited. As an example, {@code head} can be used to
+ emit a start tag for a node, and {@code tail} to create the end tag. The {@code tail} method defaults to a no-op, so
+ the {@code head} method is the {@link FunctionalInterface}.
+ </p>
+ <p><b>Example:</b></p>
+ <pre><code>
+ doc.body().traverse((node, depth) -> {
+     switch (node) {
+         case Element el     -> print(el.tag() + ": " + el.ownText());
+         case DataNode data  -> print("Data: " + data.getWholeData());
+         default             -> print(node.nodeName() + " at depth " + depth);
+     }
+ });
+ </code></pre>
  */
+@FunctionalInterface
 public interface NodeVisitor {
     /**
      Callback for when a node is first visited.
