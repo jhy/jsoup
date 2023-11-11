@@ -66,7 +66,7 @@ public abstract class Node implements Cloneable {
     /**
      * Get an attribute's value by its key. <b>Case insensitive</b>
      * <p>
-     * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
+     * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs:</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
      * </p>
      * E.g.:
