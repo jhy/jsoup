@@ -593,7 +593,7 @@ public abstract class Node implements Cloneable {
 
     /**
      Get this node's next sibling.
-     @return next sibling, or @{code null} if this is the last sibling
+     @return next sibling, or {@code null} if this is the last sibling
      */
     public @Nullable Node nextSibling() {
         if (parentNode == null)
