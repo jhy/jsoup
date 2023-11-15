@@ -13,6 +13,7 @@ Release 1.17.1 [PENDING]
   * Improvement: added the NodeIterator class, to efficiently traverse a node tree using the Iterator interface. And
     added Stream Element#stream() and Node#nodeStream() methods, to enable fluent composable stream pipelines of node
     traversals.
+    <https://github.com/jhy/jsoup/pull/2051>
 
   * Improvement: when changing the OutputSettings syntax to XML, the xhtml EscapeMode is automatically set by default.
 

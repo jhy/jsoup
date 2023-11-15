@@ -29,11 +29,13 @@ public abstract class Evaluator {
     }
 
     /**
-     Provides a Predicate for this Evaluator, matching the test Element
+     Provides a Predicate for this Evaluator, matching the test Element.
      * @param root the root Element, for match evaluation
      * @return a predicate that accepts an Element to test for matches with this Evaluator
+     * @since 1.17.1
      */
     public Predicate<Element> asPredicate(Element root) {
+        //noinspection ReturnOfInnerClass
         return new MatchPredicate(root);
     }
 

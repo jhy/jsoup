@@ -703,6 +703,7 @@ public abstract class Node implements Cloneable {
      Returns a Stream of this Node and all of its descendant Nodes. The stream has document order.
      @return a stream of all nodes.
      @see Element#stream()
+     @since 1.17.1
      */
     public Stream<Node> nodeStream() {
         return NodeUtils.stream(this, Node.class);
@@ -713,6 +714,7 @@ public abstract class Node implements Cloneable {
      order.
      @return a stream of nodes filtered by type.
      @see Element#stream()
+     @since 1.17.1
      */
     public <T extends Node> Stream<T> nodeStream(Class<T> type) {
         return NodeUtils.stream(this, type);

@@ -4,11 +4,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
-import org.jsoup.select.NodeTraversor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

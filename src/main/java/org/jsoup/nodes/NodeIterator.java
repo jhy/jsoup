@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
  {@link Node#replaceWith(Node)}, {@link Node#wrap(String)}, etc.
  <p>See also the {@link org.jsoup.select.NodeTraversor NodeTraversor} if {@code head} and {@code tail} callbacks are
  desired for each node.</p>
+ @since 1.17.1
  */
 public class NodeIterator<T extends Node> implements Iterator<T> {
     private Node root;                      // root / starting node

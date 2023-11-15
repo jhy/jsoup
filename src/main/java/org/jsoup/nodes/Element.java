@@ -2,7 +2,6 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.NonnullByDefault;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -42,7 +41,6 @@ import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
  <p>
  From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
 */
-@NonnullByDefault
 public class Element extends Node {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
@@ -383,6 +381,7 @@ public class Element extends Node {
      Returns a Stream of this Element and all of its descendant Elements. The stream has document order.
      @return a stream of this element and its descendants.
      @see #nodeStream()
+     @since 1.17.1
      */
     public Stream<Element> stream() {
         return NodeUtils.stream(this, Element.class);
