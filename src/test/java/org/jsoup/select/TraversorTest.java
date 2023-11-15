@@ -8,10 +8,10 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TraversorTest {
     // Note: NodeTraversor.traverse(new NodeVisitor) is tested in
@@ -209,5 +209,15 @@ public class TraversorTest {
 
         assertEquals(8, seenCount.get()); // body and contents
         assertEquals(3, deepest.get());
+    }
+
+    @Test void seesDocRoot() {
+        Document doc = Jsoup.parse("<p>One");
+        AtomicBoolean seen = new AtomicBoolean(false);
+        doc.traverse((node, depth) -> {
+            if (node.equals(doc))
+                seen.set(true);
+        });
+        assertTrue(seen.get());
     }
 }

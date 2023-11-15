@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -177,12 +178,8 @@ class PositionTest {
         String html = "<table>foo<tr>bar<td>baz</td>qux</tr>coo</table>";
         Document doc = Jsoup.parse(html, TrackingParser);
 
-        List<TextNode> textNodes = new ArrayList<>();
-        NodeTraversor.traverse((Node node, int depth) -> {
-            if (node instanceof TextNode) {
-                textNodes.add((TextNode) node);
-            }
-        }, doc);
+        List<TextNode> textNodes = doc.nodeStream(TextNode.class)
+            .collect(Collectors.toList());
 
         assertEquals(5, textNodes.size());
         assertEquals("1,8:7-1,11:10", textNodes.get(0).sourceRange().toString());

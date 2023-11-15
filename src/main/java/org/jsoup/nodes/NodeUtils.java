@@ -6,7 +6,12 @@ import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.w3c.dom.NodeList;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Internal helpers for Nodes, to keep the actual node APIs relatively clean. A jsoup internal class, so don't use it as
@@ -46,5 +51,19 @@ final class NodeUtils {
         org.w3c.dom.Node contextNode = w3c.contextNode(wDoc);
         NodeList nodeList = w3c.selectXpath(xpath, contextNode);
         return w3c.sourceNodes(nodeList, nodeType);
+    }
+
+    /** Creates a Stream, starting with the supplied node. */
+    static <T extends Node> Stream<T> stream(Node start, Class<T> type) {
+        NodeIterator<T> iterator = new NodeIterator<>(start, type);
+        Spliterator<T> spliterator = spliterator(iterator);
+
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    static <T extends Node> Spliterator<T> spliterator(Iterator<T> iterator) {
+        return Spliterators.spliteratorUnknownSize(
+                iterator,
+                Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED);
     }
 }

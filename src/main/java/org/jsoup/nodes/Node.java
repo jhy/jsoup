@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -225,7 +226,8 @@ public abstract class Node implements Cloneable {
     /**
      Get a child node by its 0-based index.
      @param index index of child node
-     @return the child node at this index. Throws a {@code IndexOutOfBoundsException} if the index is out of bounds.
+     @return the child node at this index.
+     @throws IndexOutOfBoundsException if the index is out of bounds.
      */
     public Node childNode(int index) {
         return ensureChildNodes().get(index);
@@ -682,12 +684,12 @@ public abstract class Node implements Cloneable {
      */
     public Node forEachNode(Consumer<? super Node> action) {
         Validate.notNull(action);
-        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
+        nodeStream().forEach(action);
         return this;
     }
 
     /**
-     * Perform a depth-first filtering through this node and its descendants.
+     * Perform a depth-first filtered traversal through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
      */
@@ -695,6 +697,25 @@ public abstract class Node implements Cloneable {
         Validate.notNull(nodeFilter);
         NodeTraversor.filter(nodeFilter, this);
         return this;
+    }
+
+    /**
+     Returns a Stream of this Node and all of its descendant Nodes. The stream has document order.
+     @return a stream of all nodes.
+     @see Element#stream()
+     */
+    public Stream<Node> nodeStream() {
+        return NodeUtils.stream(this, Node.class);
+    }
+
+    /**
+     Returns a Stream of this and descendant nodes, containing only nodes of the specified type. The stream has document
+     order.
+     @return a stream of nodes filtered by type.
+     @see Element#stream()
+     */
+    public <T extends Node> Stream<T> nodeStream(Class<T> type) {
+        return NodeUtils.stream(this, type);
     }
 
     /**

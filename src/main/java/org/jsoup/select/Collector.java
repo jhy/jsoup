@@ -4,6 +4,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
 import static org.jsoup.select.NodeFilter.FilterResult.STOP;
 
@@ -24,15 +28,10 @@ public class Collector {
      */
     public static Elements collect (Evaluator eval, Element root) {
         eval.reset();
-        Elements elements = new Elements();
-        NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof Element) {
-                Element el = (Element) node;
-                if (eval.matches(root, el))
-                    elements.add(el);
-            }
-        }, root);
-        return elements;
+
+        return root.stream()
+            .filter(eval.asPredicate(root))
+            .collect(Collectors.toCollection(Elements::new));
     }
 
     /**
@@ -44,36 +43,8 @@ public class Collector {
      */
     public static @Nullable Element findFirst(Evaluator eval, Element root) {
         eval.reset();
-        FirstFinder finder = new FirstFinder(eval);
-        return finder.find(root, root);
-    }
 
-    static class FirstFinder implements NodeFilter {
-        private @Nullable Element evalRoot = null;
-        private @Nullable Element match = null;
-        private final Evaluator eval;
-
-        FirstFinder(Evaluator eval) {
-            this.eval = eval;
-        }
-
-        @Nullable Element find(Element root, Element start) {
-            evalRoot = root;
-            match = null;
-            NodeTraversor.filter(this, start);
-            return match;
-        }
-
-        @Override
-        public FilterResult head(Node node, int depth) {
-            if (node instanceof Element) {
-                Element el = (Element) node;
-                if (eval.matches(evalRoot, el)) {
-                    match = el;
-                    return STOP;
-                }
-            }
-            return CONTINUE;
-        }
+        Optional<Element> first = root.stream().filter(eval.asPredicate(root)).findFirst();
+        return first.orElse(null);
     }
 }

@@ -2,7 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
+import org.jsoup.nodes.NodeIterator;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -59,23 +59,21 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Has extends StructuralEvaluator {
-        final Collector.FirstFinder finder;
+        final NodeIterator<Element> it = new NodeIterator<>(new Element("html"), Element.class);
+        // the element here is just a placeholder so this can be final - gets set in restart()
 
         public Has(Evaluator evaluator) {
             super(evaluator);
-            finder = new Collector.FirstFinder(evaluator);
         }
 
-        @Override
         public boolean matches(Element root, Element element) {
             // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
-            for (int i = 0; i < element.childNodeSize(); i++) {
-                Node node = element.childNode(i);
-                if (node instanceof Element) {
-                    Element match = finder.find(element, (Element) node);
-                    if (match != null)
-                        return true;
-                }
+            it.restart(element);
+            while (it.hasNext()) {
+                Element el = it.next();
+                if (el == element) continue; // don't match self, only descendants
+                if (evaluator.matches(element, el))
+                    return true;
             }
             return false;
         }

@@ -12,6 +12,7 @@ import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.ParseSettings;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,6 +26,27 @@ import static org.jsoup.internal.StringUtil.normaliseWhitespace;
  */
 public abstract class Evaluator {
     protected Evaluator() {
+    }
+
+    /**
+     Provides a Predicate for this Evaluator, matching the test Element
+     * @param root the root Element, for match evaluation
+     * @return a predicate that accepts an Element to test for matches with this Evaluator
+     */
+    public Predicate<Element> asPredicate(Element root) {
+        return new MatchPredicate(root);
+    }
+
+    class MatchPredicate implements Predicate<Element> {
+        final Element root;
+
+        public MatchPredicate(Element root) {
+            this.root = root;
+        }
+
+        @Override public boolean test(Element element) {
+            return matches(root, element);
+        }
     }
 
     /**

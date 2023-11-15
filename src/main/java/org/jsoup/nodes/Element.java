@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
@@ -379,6 +380,15 @@ public class Element extends Node {
     }
 
     /**
+     Returns a Stream of this Element and all of its descendant Elements. The stream has document order.
+     @return a stream of this element and its descendants.
+     @see #nodeStream()
+     */
+    public Stream<Element> stream() {
+        return NodeUtils.stream(this, Element.class);
+    }
+
+    /**
      * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
      * <p>
      * This is effectively a filter on {@link #childNodes()} to get Text nodes.
@@ -453,7 +463,6 @@ public class Element extends Node {
     public Elements select(Evaluator evaluator) {
         return Selector.select(evaluator, this);
     }
-
 
     /**
      * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
@@ -697,7 +706,7 @@ public class Element extends Node {
     }
 
     /**
-     * Create a new element by tag name, and add it as the last child.
+     * Create a new element by tag name, and add it as this Element's last child.
      *
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
@@ -707,6 +716,13 @@ public class Element extends Node {
         return appendElement(tagName, tag.namespace());
     }
 
+    /**
+     * Create a new element by tag name and namespace, add it as this Element's last child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @param namespace the namespace of the tag (e.g. {@link Parser#NamespaceHtml})
+     * @return the new element, in the specified namespace
+     */
     public Element appendElement(String tagName, String namespace) {
         Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         appendChild(child);
@@ -714,7 +730,7 @@ public class Element extends Node {
     }
 
     /**
-     * Create a new element by tag name, and add it as the first child.
+     * Create a new element by tag name, and add it as this Element's first child.
      *
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
@@ -724,6 +740,13 @@ public class Element extends Node {
         return prependElement(tagName, tag.namespace());
     }
 
+    /**
+     * Create a new element by tag name and namespace, and add it as this Element's first child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @param namespace the namespace of the tag (e.g. {@link Parser#NamespaceHtml})
+     * @return the new element, in the specified namespace
+     */
     public Element prependElement(String tagName, String namespace) {
         Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
         prependChild(child);
@@ -1389,7 +1412,7 @@ public class Element extends Node {
      */
     public String wholeText() {
         final StringBuilder accum = StringUtil.borrowBuilder();
-        NodeTraversor.traverse((node, depth) -> appendWholeText(node, accum), this);
+        nodeStream().forEach(node -> appendWholeText(node, accum));
         return StringUtil.releaseBuilder(accum);
     }
 
@@ -1402,7 +1425,7 @@ public class Element extends Node {
     }
 
     /**
-     Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including only any
+     Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including any
      newlines and spaces present in the original source.
      @return decoded, non-normalized text that is a direct child of this Element
      @see #text()
@@ -1849,16 +1872,14 @@ public class Element extends Node {
      @param action the function to perform on the element
      @return this Element, for chaining
      @see Node#forEachNode(Consumer)
+     @deprecated use {@link #stream()}.{@link Stream#forEach(Consumer) forEach(Consumer)} instead. (Removing this method
+     so Element can implement Iterable, which this signature conflicts with due to the non-void return.)
      */
+    @Deprecated
     public Element forEach(Consumer<? super Element> action) {
-        Validate.notNull(action);
-        NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof Element)
-                action.accept((Element) node);
-        }, this);
+        stream().forEach(action);
         return this;
     }
-
 
     @Override
     public Element filter(NodeFilter nodeFilter) {
