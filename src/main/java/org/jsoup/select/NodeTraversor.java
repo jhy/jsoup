@@ -4,10 +4,6 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeFilter.FilterResult;
-import org.jspecify.annotations.Nullable;
-
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  A depth-first node traversor. Use to walk through all nodes under and including the specified root node, in document

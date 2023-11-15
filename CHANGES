@@ -10,6 +10,11 @@ Release 1.17.1 [PENDING]
     `#replaceAll(operator)`. These methods update the original DOM, as well as the Elements list.
     <https://github.com/jhy/jsoup/pull/2017>
 
+  * Improvement: added the NodeIterator class, to efficiently traverse a node tree using the Iterator interface. And
+    added Stream Element#stream() and Node#nodeStream() methods, to enable fluent composable stream pipelines of node
+    traversals.
+    <https://github.com/jhy/jsoup/pull/2051>
+
   * Improvement: when changing the OutputSettings syntax to XML, the xhtml EscapeMode is automatically set by default.
 
   * Improvement: added the `:is(selector list)` pseudo-selector, which finds elements that match any of the selectors in
