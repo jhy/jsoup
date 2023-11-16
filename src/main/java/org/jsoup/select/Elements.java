@@ -27,7 +27,7 @@ import java.util.function.UnaryOperator;
  replace} Elements in the list will also act on the underlying {@link org.jsoup.nodes.Document DOM}.</p>
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Elements extends ArrayList<Element> {
+public final class Elements extends ArrayList<Element> {
     public Elements() {
     }
 
@@ -65,7 +65,7 @@ public class Elements extends ArrayList<Element> {
     /**
      Get an attribute value from the first matched element that has the attribute.
      @param attributeKey The attribute key.
-     @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
+     @return The attribute value from the first matched element that has the attribute. If no elements were matched (isEmpty() == true),
      or if the no elements have the attribute, returns empty string.
      @see #hasAttr(String)
      */

@@ -351,8 +351,8 @@ public abstract class Evaluator {
      * Evaluator for attribute name/value matching (value regex matching)
      */
     public static final class AttributeWithValueMatching extends Evaluator {
-        String key;
-        Pattern pattern;
+        final String key;
+        final Pattern pattern;
 
         public AttributeWithValueMatching(String key, Pattern pattern) {
             this.key = normalize(key);
@@ -379,8 +379,8 @@ public abstract class Evaluator {
      * Abstract evaluator for attribute name/value matching
      */
     public abstract static class AttributeKeyPair extends Evaluator {
-        String key;
-        String value;
+        final String key;
+        final String value;
 
         public AttributeKeyPair(String key, String value) {
             this(key, value, true);
@@ -565,12 +565,12 @@ public abstract class Evaluator {
     		super(a,b);
 		}
 
-		protected int calculatePosition(Element root, Element element) {
+		@Override protected int calculatePosition(Element root, Element element) {
 			return element.elementSiblingIndex()+1;
 		}
 
 
-		protected String getPseudoClass() {
+		@Override protected String getPseudoClass() {
 			return "nth-child";
 		}
     }
@@ -607,7 +607,7 @@ public abstract class Evaluator {
             super(a, b);
         }
 
-        protected int calculatePosition(Element root, Element element) {
+        @Override protected int calculatePosition(Element root, Element element) {
             Element parent = element.parent();
             if (parent == null)
                 return 0;
@@ -753,7 +753,7 @@ public abstract class Evaluator {
      * @author ant
      */
     public abstract static class IndexEvaluator extends Evaluator {
-        int index;
+        final int index;
 
         public IndexEvaluator(int index) {
             this.index = index;

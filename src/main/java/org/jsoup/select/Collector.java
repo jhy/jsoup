@@ -1,15 +1,10 @@
 package org.jsoup.select;
 
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
-import static org.jsoup.select.NodeFilter.FilterResult.STOP;
 
 /**
  * Collects a list of elements that match the supplied criteria.

@@ -30,8 +30,8 @@ abstract class TreeBuilder {
     protected ParseSettings settings;
     protected Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
-    private Token.StartTag start = new Token.StartTag(); // start tag to process
-    private Token.EndTag end  = new Token.EndTag();
+    private final Token.StartTag start = new Token.StartTag(); // start tag to process
+    private final Token.EndTag end  = new Token.EndTag();
     abstract ParseSettings defaultSettings();
 
     private boolean trackSourceRange;  // optionally tracks the source range of nodes

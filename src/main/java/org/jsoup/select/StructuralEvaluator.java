@@ -66,7 +66,7 @@ abstract class StructuralEvaluator extends Evaluator {
             super(evaluator);
         }
 
-        public boolean matches(Element root, Element element) {
+        @Override public boolean matches(Element root, Element element) {
             // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
             it.restart(element);
             while (it.hasNext()) {

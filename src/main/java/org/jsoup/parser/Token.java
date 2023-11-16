@@ -358,7 +358,7 @@ abstract class Token {
             return dataS != null ? dataS : data.toString();
         }
 
-        final Comment append(String append) {
+        Comment append(String append) {
             ensureData();
             if (data.length() == 0) {
                 dataS = append;
@@ -368,7 +368,7 @@ abstract class Token {
             return this;
         }
 
-        final Comment append(char append) {
+        Comment append(char append) {
             ensureData();
             data.append(append);
             return this;

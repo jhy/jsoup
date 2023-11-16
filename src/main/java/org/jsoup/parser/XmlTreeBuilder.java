@@ -10,7 +10,6 @@ import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
-import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -26,7 +25,7 @@ import static org.jsoup.parser.Parser.NamespaceXml;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
-    ParseSettings defaultSettings() {
+    @Override ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
     }
 
@@ -176,7 +175,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         return doc.childNodes();
     }
 
-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
+    @Override List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
         return parseFragment(inputFragment, baseUri, parser);
     }
 }

@@ -65,7 +65,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean fosterInserts; // if next inserts should be fostered
     private boolean fragmentParsing; // if parsing a fragment of html
 
-    ParseSettings defaultSettings() {
+    @Override ParseSettings defaultSettings() {
         return ParseSettings.htmlDefault;
     }
 
@@ -94,7 +94,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
+    @Override List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
@@ -213,7 +213,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return token.isEOF();
     }
 
-    boolean isMathmlTextIntegration(Element el) {
+    static boolean isMathmlTextIntegration(Element el) {
         /*
         A node is a MathML text integration point if it is one of the following elements:
         A MathML mi element
@@ -226,7 +226,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             && StringUtil.inSorted(el.normalName(), TagMathMlTextIntegration));
     }
 
-    boolean isHtmlIntegration(Element el) {
+    static boolean isHtmlIntegration(Element el) {
         /*
         A node is an HTML integration point if it is one of the following elements:
         A MathML annotation-xml element whose start tag token had an attribute with the name "encoding" whose value was an ASCII case-insensitive match for the string "text/html"
@@ -600,7 +600,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         replaceInQueue(stack, out, in);
     }
 
-    private void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
+    private static void replaceInQueue(ArrayList<Element> queue, Element out, Element in) {
         int i = queue.lastIndexOf(out);
         Validate.isTrue(i != -1);
         queue.set(i, in);
@@ -700,7 +700,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     // todo: tidy up in specific scope methods
-    private String[] specificScopeTarget = {null};
+    private final String[] specificScopeTarget = {null};
 
     private boolean inSpecificScope(String targetName, String[] baseTypes, String[] extraTypes) {
         specificScopeTarget[0] = targetName;
@@ -861,7 +861,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         popStackToClose(name);
     }
 
-    boolean isSpecial(Element el) {
+    static boolean isSpecial(Element el) {
         // todo: mathml's mi, mo, mn
         // todo: svg's foreigObject, desc, title
         String name = el.normalName();
@@ -924,7 +924,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    private boolean isSameFormattingElement(Element a, Element b) {
+    private static boolean isSameFormattingElement(Element a, Element b) {
         // same if: same namespace, tag, and attributes. Element.equals only checks tag, might in future check children
         return a.normalName().equals(b.normalName()) &&
                 // a.namespace().equals(b.namespace()) &&
@@ -1067,7 +1067,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 '}';
     }
 
-    protected boolean isContentForTagData(final String normalName) {
+    @Override protected boolean isContentForTagData(final String normalName) {
         return (normalName.equals("script") || normalName.equals("style"));
     }
 }
