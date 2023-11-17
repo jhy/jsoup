@@ -62,7 +62,7 @@ public class Range {
         if (!node.hasAttr(key))
             return Untracked;
         else
-            return (Range) Validate.ensureNotNull(node.attributes().getUserData(key));
+            return (Range) Validate.ensureNotNull(node.attributes().userData(key));
     }
 
     /**
@@ -71,7 +71,7 @@ public class Range {
      * @param start if this is the starting range. {@code false} for Element end tags.
      */
     public void track(Node node, boolean start) {
-        node.attributes().putUserData(start ? RangeKey : EndRangeKey, this);
+        node.attributes().userData(start ? RangeKey : EndRangeKey, this);
     }
 
     @Override

@@ -113,11 +113,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      Get an arbitrary user data object by key.
-     * @param key case sensitive key to the object.
+     * @param key case-sensitive key to the object.
      * @return the object associated to this key, or {@code null} if not found.
      */
     @Nullable
-    Object getUserData(String key) {
+    Object userData(String key) {
         Validate.notNull(key);
         if (!isInternalKey(key)) key = internalKey(key);
         int i = indexOfKeyIgnoreCase(key);
@@ -143,7 +143,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      * Set a new attribute, or replace an existing one by key.
      * @param key case sensitive attribute key (not null)
-     * @param value attribute value (may be null, to set a boolean attribute)
+     * @param value attribute value (which can be null, to set a true boolean attribute)
      * @return these attributes, for chaining
      */
     public Attributes put(String key, @Nullable String value) {
@@ -157,13 +157,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Put an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
-     * @param key case sensitive key
+     Set an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
+     * @param key case-sensitive key
      * @param value object value
      * @return these attributes
-     * @see #getUserData(String)
+     * @see #userData(String)
      */
-    Attributes putUserData(String key, Object value) {
+    Attributes userData(String key, Object value) {
         Validate.notNull(key);
         if (!isInternalKey(key)) key = internalKey(key);
         Validate.notNull(value);
@@ -187,7 +187,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     * Set a new boolean attribute, remove attribute if value is false.
+     * Set a new boolean attribute. Removes the attribute if the value is false.
      * @param key case <b>insensitive</b> attribute key
      * @param value attribute value
      * @return these attributes, for chaining
@@ -202,7 +202,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      Set a new attribute, or replace an existing one by key.
-     @param attribute attribute with case sensitive key
+     @param attribute attribute with case-sensitive key
      @return these attributes, for chaining
      */
     public Attributes put(Attribute attribute) {
