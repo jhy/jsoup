@@ -515,4 +515,32 @@ public class CharacterReaderTest {
         assertEquals(14, reader.columnNumber());
     }
 
+    @Test public void consumeDoubleQuotedAttributeConsumesThruSingleQuote() {
+        String html = "He'llo\" >";
+        CharacterReader r = new CharacterReader(html);
+        assertEquals("He'llo", r.consumeAttributeQuoted(false));
+        assertEquals('"', r.consume());
+    }
+
+    @Test public void consumeSingleQuotedAttributeConsumesThruDoubleQuote() {
+        String html = "He\"llo' >";
+        CharacterReader r = new CharacterReader(html);
+        assertEquals("He\"llo", r.consumeAttributeQuoted(true));
+        assertEquals('\'', r.consume());
+    }
+
+    @Test public void consumeDoubleQuotedAttributeConsumesThruSingleQuoteToAmp() {
+        String html = "He'llo &copy;\" >";
+        CharacterReader r = new CharacterReader(html);
+        assertEquals("He'llo ", r.consumeAttributeQuoted(false));
+        assertEquals('&', r.consume());
+    }
+
+    @Test public void consumeSingleQuotedAttributeConsumesThruDoubleQuoteToAmp() {
+        String html = "He\"llo &copy;' >";
+        CharacterReader r = new CharacterReader(html);
+        assertEquals("He\"llo ", r.consumeAttributeQuoted(true));
+        assertEquals('&', r.consume());
+    }
+
 }

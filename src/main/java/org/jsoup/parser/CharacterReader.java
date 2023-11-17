@@ -451,11 +451,12 @@ public final class CharacterReader {
                     break OUTER;
                 case '\'':
                     if (single) break OUTER;
+                    break;
                 case '"':
                     if (!single) break OUTER;
-                default:
-                    pos++;
+                    break;
             }
+            pos++;
         }
         bufPos = pos;
         return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
