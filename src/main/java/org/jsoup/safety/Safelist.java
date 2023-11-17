@@ -52,9 +52,8 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 
  <p>
  The cleaner and these safelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
- supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
- document HTML around the cleaned body HTML, or create a safelist that allows <code>html</code> and <code>head</code>
- elements as appropriate.
+ supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, you could wrap
+ the templated document HTML around the cleaned body HTML.
  </p>
  <p>
  If you are going to extend a safelist, please be very careful. Make sure you understand what attributes may lead to
