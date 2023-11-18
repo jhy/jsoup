@@ -35,20 +35,7 @@ public abstract class Evaluator {
      * @since 1.17.1
      */
     public Predicate<Element> asPredicate(Element root) {
-        //noinspection ReturnOfInnerClass
-        return new MatchPredicate(root);
-    }
-
-    class MatchPredicate implements Predicate<Element> {
-        final Element root;
-
-        public MatchPredicate(Element root) {
-            this.root = root;
-        }
-
-        @Override public boolean test(Element element) {
-            return matches(root, element);
-        }
+        return element -> matches(root, element);
     }
 
     /**
