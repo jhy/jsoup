@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -167,14 +168,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     protected boolean process(Token token) {
         currentToken = token;
 
-    if (shouldDispatchToCurrentInsertionMode(token)) {
-            return this.state.process(token, this);
-        } else {
-            return ForeignContent.process(token, this);
-        }
+        HtmlTreeBuilderState dispatch = useCurrentOrForeignInsert(token) ? this.state : ForeignContent;
+        return dispatch.process(token, this);
     }
 
-    boolean shouldDispatchToCurrentInsertionMode(Token token) {
+    boolean useCurrentOrForeignInsert(Token token) {
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction
         // If the stack of open elements is empty
         if (stack.isEmpty())
@@ -307,80 +305,79 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 currentToken.tokenType(), currentToken, state));
     }
 
-    /** Inserts an HTML element for the given tag) */
-    Element insert(final Token.StartTag startTag) {
-        dedupeAttributes(startTag);
+    Element createElementFor(Token.StartTag startTag, String namespace, boolean forcePreserveCase) {
+        // dedupe and normalize the attributes:
+        Attributes attributes = startTag.attributes;
+        if (!forcePreserveCase)
+            attributes = settings.normalizeAttributes(attributes);
+        if (attributes != null && !attributes.isEmpty()) {
+            int dupes = attributes.deduplicate(settings);
+            if (dupes > 0) {
+                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
+            }
+        }
 
+        Tag tag = tagFor(startTag.tagName, namespace,
+            forcePreserveCase ? ParseSettings.preserveCase : settings);
+
+        return (tag.normalName().equals("form")) ?
+            new FormElement(tag, null, attributes) :
+            new Element(tag, null, attributes);
+    }
+
+    /** Inserts an HTML element for the given tag) */
+    Element insertElementFor(final Token.StartTag startTag) {
         // handle empty unknown tags
         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
-            Element el = insertEmpty(startTag);
+            Element el = insertEmptyElementFor(startTag);
             stack.add(el);
             tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
             tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
             return el;
         }
 
-        Element el = new Element(tagFor(startTag.name(), settings), null, settings.normalizeAttributes(startTag.attributes));
-        insert(el, startTag);
+        Element el = createElementFor(startTag, NamespaceHtml, false);
+        insertElement(el, startTag);
         return el;
     }
 
     /**
      Inserts a foreign element. Preserves the case of the tag name and of the attributes.
      */
-    Element insertForeign(final Token.StartTag startTag, String namespace) {
-        dedupeAttributes(startTag);
-        Tag tag = tagFor(startTag.name(), namespace, ParseSettings.preserveCase);
-        Element el = new Element(tag, null, ParseSettings.preserveCase.normalizeAttributes(startTag.attributes));
-        insert(el, startTag);
+    Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
+        Element el = createElementFor(startTag, namespace, true);
+        insertElement(el, startTag);
 
         if (startTag.isSelfClosing()) {
-            tag.setSelfClosing(); // remember this is self-closing for output
+            el.tag().setSelfClosing(); // remember this is self-closing for output
             pop();
         }
 
         return el;
     }
 
-	Element insertStartTag(String startTagName) {
-        Element el = new Element(tagFor(startTagName, settings), null);
-        insert(el);
-        return el;
-    }
-
-    void insert(Element el) {
-        insertNode(el, null);
-        stack.add(el);
-    }
-
-    private void insert(Element el, @Nullable Token token) {
+    private void insertElement(Element el, @Nullable Token token) {
         insertNode(el, token);
         stack.add(el);
     }
 
-    Element insertEmpty(Token.StartTag startTag) {
-        dedupeAttributes(startTag);
-
-        Tag tag = tagFor(startTag.name(), settings);
-        Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
+    Element insertEmptyElementFor(Token.StartTag startTag) {
+        Element el = createElementFor(startTag, NamespaceHtml, false);
         insertNode(el, startTag);
         if (startTag.isSelfClosing()) {
-            if (tag.isKnownTag()) {
-                if (!tag.isEmpty())
-                    tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
-            }
+            Tag tag = el.tag();
+            if (tag.isKnownTag() && !tag.isEmpty())
+                tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
             else // unknown tag, remember this is self-closing for output
                 tag.setSelfClosing();
         }
         return el;
     }
 
-    FormElement insertForm(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
-        dedupeAttributes(startTag);
+    FormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+        FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
 
-        Tag tag = tagFor(startTag.name(), settings);
-        FormElement el = new FormElement(tag, null, settings.normalizeAttributes(startTag.attributes));
         if (checkTemplateStack) {
             if(!onStack("template"))
                 setFormElement(el);
@@ -393,19 +390,19 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    void insert(Token.Comment commentToken) {
+    void insertCommentNode(Token.Comment commentToken) {
         Comment comment = new Comment(commentToken.getData());
         insertNode(comment, commentToken);
     }
 
     /** Inserts the provided character token into the current element. */
-    void insert(Token.Character characterToken) {
-        final Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
-        insert(characterToken, el);
+    void insertCharacterNode(Token.Character characterToken) {
+        Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
+        insertCharacterToElement(characterToken, el);
     }
 
     /** Inserts the provided character token into the provided element. */
-    void insert(Token.Character characterToken, Element el) {
+    void insertCharacterToElement(Token.Character characterToken, Element el) {
         final Node node;
         final String tagName = el.normalName();
         final String data = characterToken.getData();
@@ -440,16 +437,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
         }
         onNodeInserted(node, token);
-    }
-
-    /** Cleanup duplicate attributes. **/
-    private void dedupeAttributes(StartTag startTag) {
-        if (startTag.hasAttributes() && !startTag.attributes.isEmpty()) {
-            int dupes = startTag.attributes.deduplicate(settings);
-            if (dupes > 0) {
-                error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
-            }
-        }
     }
 
     Element pop() {
@@ -961,7 +948,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
             Element newEl = new Element(tagFor(entry.normalName(), settings), null, entry.attributes().clone());
-            insert(newEl);
+            insertElement(newEl, null);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);
