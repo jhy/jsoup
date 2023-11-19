@@ -12,7 +12,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.parser.Token.StartTag;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -327,18 +326,23 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Inserts an HTML element for the given tag) */
     Element insertElementFor(final Token.StartTag startTag) {
-        // handle empty unknown tags
-        // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+        Element el = createElementFor(startTag, NamespaceHtml, false);
+        doInsertElement(el, startTag);
+
+        // handle empty unknown tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
-            Element el = insertEmptyElementFor(startTag);
-            stack.add(el);
+            Tag tag = el.tag();
+            if (tag.isKnownTag() && !tag.isEmpty())
+                tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
+            else // unknown tag, remember this is self-closing for output
+                tag.setSelfClosing();
+
+            // effectively a pop, but fiddles with the state. handles empty style, title etc which would otherwise leave us in data state
             tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
             tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
-            return el;
+            pop();
         }
 
-        Element el = createElementFor(startTag, NamespaceHtml, false);
-        insertElement(el, startTag);
         return el;
     }
 
@@ -347,7 +351,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
         Element el = createElementFor(startTag, namespace, true);
-        insertElement(el, startTag);
+        doInsertElement(el, startTag);
 
         if (startTag.isSelfClosing()) {
             el.tag().setSelfClosing(); // remember this is self-closing for output
@@ -357,21 +361,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    private void insertElement(Element el, @Nullable Token token) {
-        insertNode(el, token);
-        stack.add(el);
-    }
-
     Element insertEmptyElementFor(Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
-        insertNode(el, startTag);
-        if (startTag.isSelfClosing()) {
-            Tag tag = el.tag();
-            if (tag.isKnownTag() && !tag.isEmpty())
-                tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
-            else // unknown tag, remember this is self-closing for output
-                tag.setSelfClosing();
-        }
+        doInsertElement(el, startTag);
+        pop();
         return el;
     }
 
@@ -384,15 +377,37 @@ public class HtmlTreeBuilder extends TreeBuilder {
         } else
             setFormElement(el);
 
-        insertNode(el, startTag);
-        if (onStack)
-            stack.add(el);
+        doInsertElement(el, startTag);
+        if (!onStack) pop();
         return el;
     }
 
-    void insertCommentNode(Token.Comment commentToken) {
-        Comment comment = new Comment(commentToken.getData());
-        insertNode(comment, commentToken);
+    /** Inserts the Element onto the stack. All element inserts must run through this method. Performs any general
+     tests on the Element before insertion.
+     * @param el the Element to insert and make the current element
+     * @param token the token this element was parsed from. If null, uses a zero-width current token as intrinsic insert
+     */
+    private void doInsertElement(Element el, @Nullable Token token) {
+        if (el.tag().isFormListed() && formElement != null)
+            formElement.addElement(el); // connect form controls to their form element
+
+        // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
+        if (el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
+            error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
+
+        if (isFosterInserts() && StringUtil.inSorted(currentElement().normalName(), InTableFoster))
+            insertInFosterParent(el);
+        else
+            currentElement().appendChild(el);
+
+        stack.add(el);
+        onNodeInserted(el, token);
+    }
+
+    void insertCommentNode(Token.Comment token) {
+        Comment node = new Comment(token.getData());
+        currentElement().appendChild(node);
+        onNodeInserted(node, token);
     }
 
     /** Inserts the provided character token into the current element. */
@@ -415,28 +430,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
             node = new TextNode(data);
         el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
         onNodeInserted(node, characterToken);
-    }
-
-    /** Inserts the provided Node into the current element. */
-    private void insertNode(Node node, @Nullable Token token) {
-        // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
-        if (stack.isEmpty())
-            doc.appendChild(node);
-        else if (isFosterInserts() && StringUtil.inSorted(currentElement().normalName(), InTableFoster))
-            insertInFosterParent(node);
-        else
-            currentElement().appendChild(node);
-
-        if (node instanceof Element) {
-            Element el = (Element) node;
-            if (el.tag().isFormListed() && formElement != null)
-                formElement.addElement(el); // connect form controls to their form element
-
-            // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
-            if (el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
-                error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
-        }
-        onNodeInserted(node, token);
     }
 
     Element pop() {
@@ -948,7 +941,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
             Element newEl = new Element(tagFor(entry.normalName(), settings), null, entry.attributes().clone());
-            insertElement(newEl, null);
+            doInsertElement(newEl, null);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);
