@@ -329,18 +329,21 @@ public class HtmlTreeBuilder extends TreeBuilder {
         Element el = createElementFor(startTag, NamespaceHtml, false);
         doInsertElement(el, startTag);
 
-        // handle empty unknown tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+        // handle self-closing tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
             Tag tag = el.tag();
-            if (tag.isKnownTag() && !tag.isEmpty())
-                tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
-            else // unknown tag, remember this is self-closing for output
+            if (tag.isKnownTag()) {
+                if (!tag.isEmpty())
+                    tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
+                // else: ok
+            }
+            else { // unknown tag: remember this is self-closing, for output
                 tag.setSelfClosing();
+            }
 
             // effectively a pop, but fiddles with the state. handles empty style, title etc which would otherwise leave us in data state
             tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
             tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
-            pop();
         }
 
         return el;
