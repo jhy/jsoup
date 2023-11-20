@@ -36,6 +36,15 @@ public class Range {
     }
 
     /**
+     Get the starting cursor position of this range.
+     @return the 0-based start cursor position.
+     @since 1.17.1
+     */
+    public int startPos() {
+        return start.pos;
+    }
+
+    /**
      Get the end position of this node.
      * @return the end position
      */
@@ -44,11 +53,34 @@ public class Range {
     }
 
     /**
+     Get the ending cursor position of this range.
+     @return the 0-based ending cursor position.
+     @since 1.17.1
+     */
+    public int endPos() {
+        return end.pos;
+    }
+
+    /**
      Test if this source range was tracked during parsing.
      * @return true if this was tracked during parsing, false otherwise (and all fields will be {@code -1}).
      */
     public boolean isTracked() {
         return this != Untracked;
+    }
+
+    /**
+     Checks if the range represents a node that was implicitly created / closed.
+     <p>For example, with HTML of {@code <p>One<p>Two}, both {@code p} elements will have an explicit
+     {@link Element#sourceRange()} but an implicit {@link Element#endSourceRange()} marking the end position, as neither
+     have closing {@code </p>} tags. The TextNodes will have explicit sourceRanges.
+     <p>A range is considered implicit if its start and end positions are the same.
+     @return true if the range is tracked and its start and end positions are the same, false otherwise.
+     @since 1.17.1
+     */
+    public boolean isImplicit() {
+        if (!isTracked()) return false;
+        return start.equals(end);
     }
 
     /**
@@ -124,7 +156,7 @@ public class Range {
 
         /**
          Gets the position index (0-based) of the original input source that this Position was read at. This tracks the
-         total number of characters read into the source at this position, regardless of the number of preceeding lines.
+         total number of characters read into the source at this position, regardless of the number of preceding lines.
          * @return the position, or {@code -1} if untracked.
          */
         public int pos() {

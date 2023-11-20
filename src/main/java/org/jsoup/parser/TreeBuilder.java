@@ -4,9 +4,9 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
-import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -23,12 +23,12 @@ abstract class TreeBuilder {
     protected Parser parser;
     CharacterReader reader;
     Tokeniser tokeniser;
-    protected Document doc; // current doc we are building into
-    protected ArrayList<Element> stack; // the stack of open elements
-    protected String baseUri; // current base uri, for creating new elements
-    protected Token currentToken; // currentToken is used only for error tracking.
-    protected ParseSettings settings;
-    protected Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
+    Document doc; // current doc we are building into
+    ArrayList<Element> stack; // the stack of open elements
+    String baseUri; // current base uri, for creating new elements
+    Token currentToken; // currentToken is used only for error tracking.
+    ParseSettings settings;
+    Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
     private final Token.StartTag start = new Token.StartTag(); // start tag to process
     private final Token.EndTag end  = new Token.EndTag();
@@ -36,7 +36,7 @@ abstract class TreeBuilder {
 
     private boolean trackSourceRange;  // optionally tracks the source range of nodes
 
-    protected void initialiseParse(Reader input, String baseUri, Parser parser) {
+    void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
         Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
@@ -77,23 +77,26 @@ abstract class TreeBuilder {
 
     abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
 
-    protected void runParser() {
+    void runParser() {
         final Tokeniser tokeniser = this.tokeniser;
         final Token.TokenType eof = Token.TokenType.EOF;
 
         while (true) {
             Token token = tokeniser.read();
+            currentToken = token;
             process(token);
-            token.reset();
-
             if (token.type == eof)
                 break;
+            token.reset();
         }
+
+        // once we hit the end, pop remaining items off the stack
+        while (!stack.isEmpty()) pop();
     }
 
-    protected abstract boolean process(Token token);
+    abstract boolean process(Token token);
 
-    protected boolean processStartTag(String name) {
+    boolean processStartTag(String name) {
         // these are "virtual" start tags (auto-created by the treebuilder), so not tracking the start position
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
@@ -102,7 +105,7 @@ abstract class TreeBuilder {
         return process(start.reset().name(name));
     }
 
-    public boolean processStartTag(String name, Attributes attrs) {
+    boolean processStartTag(String name, Attributes attrs) {
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
             return process(new Token.StartTag().nameAttr(name, attrs));
@@ -112,20 +115,39 @@ abstract class TreeBuilder {
         return process(start);
     }
 
-    protected boolean processEndTag(String name) {
+    boolean processEndTag(String name) {
         if (currentToken == end) { // don't recycle an in-use token
             return process(new Token.EndTag().name(name));
         }
         return process(end.reset().name(name));
     }
 
+    /**
+     Removes the last Element from the stack, hits onNodeClosed, and then returns it.
+     * @return
+     */
+    final Element pop() {
+        int size = stack.size();
+        Element removed = stack.remove(size - 1);
+        onNodeClosed(removed);
+        return removed;
+    }
+
+    /**
+     Adds the specified Element to the end of the stack, and hits onNodeInserted.
+     * @param element
+     */
+    final void push(Element element) {
+        stack.add(element);
+        onNodeInserted(element);
+    }
 
     /**
      Get the current element (last on the stack). If all items have been removed, returns the document instead
      (which might not actually be on the stack; use stack.size() == 0 to test if required.
      @return the last element on the stack, if any; or the root document
      */
-    protected Element currentElement() {
+    Element currentElement() {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : doc;
     }
@@ -135,7 +157,7 @@ abstract class TreeBuilder {
      @param normalName name to check
      @return true if there is a current element on the stack, and its name equals the supplied
      */
-    protected boolean currentElementIs(String normalName) {
+    boolean currentElementIs(String normalName) {
         if (stack.size() == 0)
             return false;
         Element current = currentElement();
@@ -149,7 +171,7 @@ abstract class TreeBuilder {
      @param namespace the namespace
      @return true if there is a current element on the stack, and its name equals the supplied
      */
-    protected boolean currentElementIs(String normalName, String namespace) {
+    boolean currentElementIs(String normalName, String namespace) {
         if (stack.size() == 0)
             return false;
         Element current = currentElement();
@@ -161,7 +183,7 @@ abstract class TreeBuilder {
      * If the parser is tracking errors, add an error at the current position.
      * @param msg error message
      */
-    protected void error(String msg) {
+    void error(String msg) {
         error(msg, (Object[]) null);
     }
 
@@ -170,7 +192,7 @@ abstract class TreeBuilder {
      * @param msg error message template
      * @param args template arguments
      */
-    protected void error(String msg, Object... args) {
+    void error(String msg, Object... args) {
         ParseErrorList errors = parser.getErrors();
         if (errors.canAddError())
             errors.add(new ParseError(reader, msg, args));
@@ -180,11 +202,11 @@ abstract class TreeBuilder {
      (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
      Data Nodes).
      */
-    protected boolean isContentForTagData(String normalName) {
+    boolean isContentForTagData(String normalName) {
         return false;
     }
 
-    protected Tag tagFor(String tagName, String namespace, ParseSettings settings) {
+    Tag tagFor(String tagName, String namespace, ParseSettings settings) {
         Tag cached = seenTags.get(tagName); // note that we don't normalize the cache key. But tag via valueOf may be normalized.
         if (cached == null || !cached.namespace().equals(namespace)) {
             // only return from cache if the namespace is the same. not running nested cache to save double hit on the common flow
@@ -195,7 +217,7 @@ abstract class TreeBuilder {
         return cached;
     }
 
-    protected Tag tagFor(String tagName, ParseSettings settings) {
+    Tag tagFor(String tagName, ParseSettings settings) {
         return tagFor(tagName, defaultNamespace(), settings);
     }
 
@@ -203,40 +225,58 @@ abstract class TreeBuilder {
      Gets the default namespace for this TreeBuilder
      * @return the default namespace
      */
-    protected String defaultNamespace() {
+    String defaultNamespace() {
         return NamespaceHtml;
     }
 
     /**
      Called by implementing TreeBuilders when a node has been inserted. This implementation includes optionally tracking
-     the source range of the node.
-     * @param node the node that was just inserted
-     * @param token the (optional) token that created this node
+     the source range of the node.  @param node the node that was just inserted
      */
-    protected void onNodeInserted(Node node, @Nullable Token token) {
-        trackNodePosition(node, token, true);
+    void onNodeInserted(Node node) {
+        trackNodePosition(node, true);
     }
 
     /**
      Called by implementing TreeBuilders when a node is explicitly closed. This implementation includes optionally
-     tracking the closing source range of the node.
-     * @param node the node being closed
-     * @param token the end-tag token that closed this node
+     tracking the closing source range of the node.  @param node the node being closed
      */
-    protected void onNodeClosed(Node node, Token token) {
-        trackNodePosition(node, token, false);
+    void onNodeClosed(Node node) {
+        trackNodePosition(node, false);
     }
 
-    private void trackNodePosition(Node node, @Nullable Token token, boolean start) {
-        if (trackSourceRange && token != null) {
-            int startPos = token.startPos();
-            if (startPos == Token.Unset) return; // untracked, virtual token
+    private void trackNodePosition(Node node, boolean isStart) {
+        if (!trackSourceRange) return;
 
-            Range.Position startRange = new Range.Position(startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
-            int endPos = token.endPos();
-            Range.Position endRange = new Range.Position(endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
-            Range range = new Range(startRange, endRange);
-            range.track(node, start);
+        final Token token = currentToken;
+        int startPos = token.startPos();
+        int endPos = token.endPos();
+
+        // handle implicit element open / closes.
+        if (node instanceof Element) {
+            final Element el = (Element) node;
+            if (token.isEOF()) {
+                if (el.endSourceRange().isTracked())
+                    return; // /body and /html are left on stack until EOF, don't reset them
+                startPos = endPos = reader.pos();
+            } else if (isStart) { // opening tag
+                if  (!token.isStartTag() || !el.normalName().equals(token.asStartTag().normalName)) {
+                    endPos = startPos;
+                }
+            } else { // closing tag
+                if (!el.tag().isEmpty() && !el.tag().isSelfClosing()) {
+                    if (!token.isEndTag() || !el.normalName().equals(token.asEndTag().normalName)) {
+                        endPos = startPos;
+                    }
+                }
+            }
         }
+
+        Range.Position startPosition = new Range.Position
+            (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
+        Range.Position endPosition = new Range.Position
+            (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
+        Range range = new Range(startPosition, endPosition);
+        range.track(node, isStart);
     }
 }
