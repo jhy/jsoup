@@ -23,6 +23,10 @@ Release 1.17.1 [PENDING]
   * Improvement: repackaged the library with native (vs automatic) JPMS module support.
     <https://github.com/jhy/jsoup/pull/2025>
 
+  * Improvement: better fidelity of source positions when tracking is enabled. And implicitly created or closed elements
+    are tracked and detectable via Range.isImplicit().
+    <https://github.com/jhy/jsoup/pull/2056>
+
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>
