@@ -3,10 +3,9 @@ package org.jsoup.nodes;
 import java.util.List;
 
 /**
- A node that cannot hold any children (e.g. {@link TextNode}). Used primarily as a memory optimization, vs behavioural
- differences.
+ A node that does not hold any children. E.g.: {@link TextNode}, {@link DataNode}, {@link Comment}.
  */
-abstract class LeafNode extends Node {
+public abstract class LeafNode extends Node {
     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
 
     protected final boolean hasAttributes() {

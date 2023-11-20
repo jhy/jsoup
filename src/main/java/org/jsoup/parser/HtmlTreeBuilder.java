@@ -135,7 +135,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             }
             root = new Element(tagFor(contextTag, settings), baseUri);
             doc.appendChild(root);
-            stack.add(root);
+            push(root);
             resetInsertionMode();
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
@@ -165,8 +165,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     @Override
     protected boolean process(Token token) {
-        currentToken = token;
-
         HtmlTreeBuilderState dispatch = useCurrentOrForeignInsert(token) ? this.state : ForeignContent;
         return dispatch.process(token, this);
     }
@@ -246,7 +244,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean process(Token token, HtmlTreeBuilderState state) {
-        currentToken = token;
         return state.process(token, this);
     }
 
@@ -403,14 +400,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
         else
             currentElement().appendChild(el);
 
-        stack.add(el);
-        onNodeInserted(el, token);
+        push(el);
     }
 
     void insertCommentNode(Token.Comment token) {
         Comment node = new Comment(token.getData());
         currentElement().appendChild(node);
-        onNodeInserted(node, token);
+        onNodeInserted(node);
     }
 
     /** Inserts the provided character token into the current element. */
@@ -432,16 +428,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         else
             node = new TextNode(data);
         el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
-        onNodeInserted(node, characterToken);
-    }
-
-    Element pop() {
-        int size = stack.size();
-        return stack.remove(size-1);
-    }
-
-    void push(Element element) {
-        stack.add(element);
+        onNodeInserted(node);
     }
 
     ArrayList<Element> getStack() {
@@ -489,6 +476,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             Element next = stack.get(pos);
             if (next == el) {
                 stack.remove(pos);
+                onNodeClosed(el);
                 return true;
             }
         }
@@ -499,11 +487,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     @Nullable
     Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            stack.remove(pos);
+            Element el = pop();
             if (el.normalName().equals(elName) && NamespaceHtml.equals(el.tag().namespace())) {
-                if (currentToken instanceof Token.EndTag)
-                    onNodeClosed(el, currentToken);
                 return el;
             }
         }
@@ -514,11 +499,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     @Nullable
     Element popStackToCloseAnyNamespace(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            stack.remove(pos);
+            Element el = pop();
             if (el.normalName().equals(elName)) {
-                if (currentToken instanceof Token.EndTag)
-                    onNodeClosed(el, currentToken);
                 return el;
             }
         }
@@ -528,11 +510,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Pops the stack until one of the given HTML elements is removed. */
     void popStackToClose(String... elNames) { // elnames is sorted, comes from Constants
         for (int pos = stack.size() -1; pos >= 0; pos--) {
-            Element el = stack.get(pos);
-            stack.remove(pos);
+            Element el = pop();
             if (inSorted(el.normalName(), elNames) && NamespaceHtml.equals(el.tag().namespace())) {
-                if (currentToken instanceof Token.EndTag)
-                    onNodeClosed(el, currentToken);
                 break;
             }
         }
@@ -558,7 +537,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html")))
                 break;
             else
-                stack.remove(pos);
+                pop();
         }
     }
 
@@ -677,7 +656,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Places the body back onto the stack and moves to InBody, for cases in AfterBody / AfterAfterBody when more content comes */
     void resetBody() {
         if (!onStack("body")) {
-            stack.add(doc.body());
+            stack.add(doc.body()); // not onNodeInserted, as already seen
         }
         transition(HtmlTreeBuilderState.InBody);
     }
@@ -790,7 +769,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void resetPendingTableCharacters() {
-        pendingTableCharacters = new ArrayList<>();
+        pendingTableCharacters.clear();
     }
 
     List<Token.Character> getPendingTableCharacters() {

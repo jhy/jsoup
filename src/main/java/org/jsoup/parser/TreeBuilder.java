@@ -4,9 +4,9 @@ import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
-import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -83,12 +83,15 @@ abstract class TreeBuilder {
 
         while (true) {
             Token token = tokeniser.read();
+            currentToken = token;
             process(token);
-            token.reset();
-
             if (token.type == eof)
                 break;
+            token.reset();
         }
+
+        // once we hit the end, pop remaining items off the stack
+        while (!stack.isEmpty()) pop();
     }
 
     abstract boolean process(Token token);
@@ -119,6 +122,25 @@ abstract class TreeBuilder {
         return process(end.reset().name(name));
     }
 
+    /**
+     Removes the last Element from the stack, hits onNodeClosed, and then returns it.
+     * @return
+     */
+    final Element pop() {
+        int size = stack.size();
+        Element removed = stack.remove(size - 1);
+        onNodeClosed(removed);
+        return removed;
+    }
+
+    /**
+     Adds the specified Element to the end of the stack, and hits onNodeInserted.
+     * @param element
+     */
+    final void push(Element element) {
+        stack.add(element);
+        onNodeInserted(element);
+    }
 
     /**
      Get the current element (last on the stack). If all items have been removed, returns the document instead
@@ -209,34 +231,52 @@ abstract class TreeBuilder {
 
     /**
      Called by implementing TreeBuilders when a node has been inserted. This implementation includes optionally tracking
-     the source range of the node.
-     * @param node the node that was just inserted
-     * @param token the (optional) token that created this node
+     the source range of the node.  @param node the node that was just inserted
      */
-    void onNodeInserted(Node node, @Nullable Token token) {
-        trackNodePosition(node, token, true);
+    void onNodeInserted(Node node) {
+        trackNodePosition(node, true);
     }
 
     /**
      Called by implementing TreeBuilders when a node is explicitly closed. This implementation includes optionally
-     tracking the closing source range of the node.
-     * @param node the node being closed
-     * @param token the end-tag token that closed this node
+     tracking the closing source range of the node.  @param node the node being closed
      */
-    void onNodeClosed(Node node, Token token) {
-        trackNodePosition(node, token, false);
+    void onNodeClosed(Node node) {
+        trackNodePosition(node, false);
     }
 
-    private void trackNodePosition(Node node, @Nullable Token token, boolean start) {
-        if (trackSourceRange && token != null) {
-            int startPos = token.startPos();
-            if (startPos == Token.Unset) return; // untracked, virtual token
+    private void trackNodePosition(Node node, boolean isStart) {
+        if (!trackSourceRange) return;
 
-            Range.Position startRange = new Range.Position(startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
-            int endPos = token.endPos();
-            Range.Position endRange = new Range.Position(endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
-            Range range = new Range(startRange, endRange);
-            range.track(node, start);
+        final Token token = currentToken;
+        int startPos = token.startPos();
+        int endPos = token.endPos();
+
+        // handle implicit element open / closes.
+        if (node instanceof Element) {
+            final Element el = (Element) node;
+            if (token.isEOF()) {
+                if (el.endSourceRange().isTracked())
+                    return; // /body and /html are left on stack until EOF, don't reset them
+                startPos = endPos = reader.pos();
+            } else if (isStart) { // opening tag
+                if  (!token.isStartTag() || !el.normalName().equals(token.asStartTag().normalName)) {
+                    endPos = startPos;
+                }
+            } else { // closing tag
+                if (!el.tag().isEmpty() && !el.tag().isSelfClosing()) {
+                    if (!token.isEndTag() || !el.normalName().equals(token.asEndTag().normalName)) {
+                        endPos = startPos;
+                    }
+                }
+            }
         }
+
+        Range.Position startPosition = new Range.Position
+            (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
+        Range.Position endPosition = new Range.Position
+            (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
+        Range range = new Range(startPosition, endPosition);
+        range.track(node, isStart);
     }
 }

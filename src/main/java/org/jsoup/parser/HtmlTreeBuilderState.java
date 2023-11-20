@@ -31,7 +31,7 @@ enum HtmlTreeBuilderState {
                     tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
-                tb.onNodeInserted(doctype, t);
+                tb.onNodeInserted(doctype);
                 if (d.isForceQuirks())
                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);
                 tb.transition(BeforeHtml);
@@ -727,6 +727,7 @@ enum HtmlTreeBuilderState {
                     } else {
                         if (tb.onStackNot(InBodyEndOtherErrors))
                             tb.error(this);
+                        tb.onNodeClosed(tb.getFromStack("body")); // track source position of close; everything is still on stack in case of trailers
                         tb.transition(AfterBody);
                     }
                     break;
@@ -1107,8 +1108,11 @@ enum HtmlTreeBuilderState {
                     tb.addPendingTableCharacters(c);
                 }
             } else {
+                // insert gathered table text into the correct element:
                 if (tb.getPendingTableCharacters().size() > 0) {
+                    final Token og = tb.currentToken; // update current token, so we can track cursor pos correctly
                     for (Token.Character c : tb.getPendingTableCharacters()) {
+                        tb.currentToken = c;
                         if (!isWhitespace(c)) {
                             // InTable anything else section:
                             tb.error(this);
@@ -1122,6 +1126,7 @@ enum HtmlTreeBuilderState {
                         } else
                             tb.insertCharacterNode(c);
                     }
+                    tb.currentToken = og;
                     tb.resetPendingTableCharacters();
                 }
                 tb.transition(tb.originalState());
@@ -1609,9 +1614,9 @@ enum HtmlTreeBuilderState {
     },
     AfterBody {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
+            Element html = tb.getFromStack("html");
             if (isWhitespace(t)) {
                 // spec deviation - currently body is still on stack, but we want this to go to the html node
-                Element html = tb.getFromStack("html");
                 if (html != null)
                     tb.insertCharacterToElement(t.asCharacter(), html);
                 else
@@ -1628,6 +1633,7 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     return false;
                 } else {
+                    if (html != null) tb.onNodeClosed(html); // track source position of close; everything is still on stack in case of trailers
                     tb.transition(AfterAfterBody);
                 }
             } else if (t.isEOF()) {

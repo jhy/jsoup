@@ -31,9 +31,10 @@ class PositionTest {
     }
 
     @Test void tracksPosition() {
-        String html = "<p id=1\n class=foo>\n<span>Hello\n &reg;\n there &copy.</span> now.\n <!-- comment --> ";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        String content = "<p id=1\n class=foo>\n<span>Hello\n &reg;\n there &copy.</span> now.\n <!-- comment --> ";
+        Document doc = Jsoup.parse(content, TrackingParser);
 
+        Element html = doc.expectFirst("html");
         Element body = doc.expectFirst("body");
         Element p = doc.expectFirst("p");
         Element span = doc.expectFirst("span");
@@ -44,14 +45,28 @@ class PositionTest {
         Comment comment = (Comment) now.nextSibling();
         assertNotNull(comment);
 
-        assertFalse(body.sourceRange().isTracked());
+        // implicit
+        assertTrue(body.sourceRange().isTracked());
+        assertTrue(body.endSourceRange().isTracked());
+        assertTrue(body.sourceRange().isImplicit());
+        assertTrue(body.endSourceRange().isImplicit());
+        Range htmlRange = html.sourceRange();
+        assertEquals("1,1:0-1,1:0", htmlRange.toString());
+        assertEquals(htmlRange, body.sourceRange());
+        assertEquals(html.endSourceRange(), body.endSourceRange());
+
 
         Range pRange = p.sourceRange();
         assertEquals("1,1:0-2,12:19", pRange.toString());
+        assertFalse(pRange.isImplicit());
+        assertTrue(p.endSourceRange().isImplicit());
+        assertEquals("6,19:83-6,19:83", p.endSourceRange().toString());
+        assertEquals(p.endSourceRange(), html.endSourceRange());
 
         // no explicit P closer
         Range pEndRange = p.endSourceRange();
-        assertFalse(pEndRange.isTracked());
+        assertTrue(pEndRange.isTracked());
+        assertTrue(pEndRange.isImplicit());
 
         Range.Position pStart = pRange.start();
         assertTrue(pStart.isTracked());
@@ -85,6 +100,76 @@ class PositionTest {
 
         assertEquals("6,2:66", comment.sourceRange().start().toString());
         assertEquals("6,18:82", comment.sourceRange().end().toString());
+    }
+
+    @Test void tracksExpectedPoppedElements() {
+        // When TreeBuilder hits a direct .pop(), vs popToClose(..)
+        String html = "<html><head><meta></head><body><img><p>One</p><p>Two</p></body></html>";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        StringBuilder track = new StringBuilder();
+        doc.expectFirst("html").stream().forEach(el -> {
+            accumulatePositions(el, track);
+            assertTrue(el.sourceRange().isTracked(), el.tagName());
+            assertTrue(el.endSourceRange().isTracked(), el.tagName());
+            assertFalse(el.sourceRange().isImplicit(), el.tagName());
+            assertFalse(el.endSourceRange().isImplicit(), el.tagName());
+        });
+        assertEquals("html:0-6~63-70; head:6-12~18-25; meta:12-18~12-18; body:25-31~56-63; img:31-36~31-36; p:36-39~42-46; p:46-49~52-56; ", track.toString());
+
+        StringBuilder textTrack = new StringBuilder();
+        doc.nodeStream(TextNode.class).forEach(text -> accumulatePositions(text, textTrack));
+        assertEquals("#text:39-42; #text:49-52; ", textTrack.toString());
+    }
+
+    static void accumulatePositions(Node node, StringBuilder sb) {
+        sb
+            .append(node.nodeName())
+            .append(':')
+            .append(node.sourceRange().startPos())
+            .append('-')
+            .append(node.sourceRange().endPos());
+
+        if (node instanceof Element) {
+            Element el = (Element) node;
+            sb
+                .append("~")
+                .append(el.endSourceRange().startPos())
+                .append('-')
+                .append(el.endSourceRange().endPos());
+        }
+        sb.append("; ");
+    }
+
+    @Test void tracksImplicitPoppedElements() {
+        // When TreeBuilder hits a direct .pop(), vs popToClose(..)
+        String html = "<meta><img><p>One<p>Two<p>Three";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        StringBuilder track = new StringBuilder();
+        doc.expectFirst("html").stream().forEach(el -> {
+            assertTrue(el.sourceRange().isTracked());
+            assertTrue(el.endSourceRange().isTracked());
+            accumulatePositions(el, track);
+        });
+
+        assertTrue(doc.expectFirst("p").endSourceRange().isImplicit());
+        assertFalse(doc.expectFirst("meta").endSourceRange().isImplicit());
+        assertEquals("html:0-0~31-31; head:0-0~6-6; meta:0-6~0-6; body:6-6~31-31; img:6-11~6-11; p:11-14~17-17; p:17-20~23-23; p:23-26~31-31; ", track.toString());
+    }
+    private void printRange(Node node) {
+        if (node instanceof Element) {
+            Element el = (Element) node;
+            System.out.println(el.tagName() + "\t"
+                + el.sourceRange().start().pos() + "-" + el.sourceRange().end().pos()
+                + "\t... "
+                + el.endSourceRange().start().pos() + "-" + el.endSourceRange().end().pos()
+            );
+        } else {
+            System.out.println(node.nodeName() + "\t"
+                + node.sourceRange().start().pos() + "-" + node.sourceRange().end().pos()
+            );
+        }
     }
 
     @Test void tracksMarkup() {
@@ -176,15 +261,19 @@ class PositionTest {
         String html = "<table>foo<tr>bar<td>baz</td>qux</tr>coo</table>";
         Document doc = Jsoup.parse(html, TrackingParser);
 
+        StringBuilder track = new StringBuilder();
         List<TextNode> textNodes = doc.nodeStream(TextNode.class)
+            .peek(node -> accumulatePositions(node, track))
             .collect(Collectors.toList());
 
         assertEquals(5, textNodes.size());
-        assertEquals("1,8:7-1,11:10", textNodes.get(0).sourceRange().toString());
-        assertEquals("1,15:14-1,18:17", textNodes.get(1).sourceRange().toString());
-        assertEquals("1,22:21-1,25:24", textNodes.get(2).sourceRange().toString());
-        assertEquals("1,30:29-1,33:32", textNodes.get(3).sourceRange().toString());
-        assertEquals("1,38:37-1,41:40", textNodes.get(4).sourceRange().toString());
+        assertEquals("foo", textNodes.get(0).text());
+        assertEquals("bar", textNodes.get(1).text());
+        assertEquals("baz", textNodes.get(2).text());
+        assertEquals("qux", textNodes.get(3).text());
+        assertEquals("coo", textNodes.get(4).text());
+
+        assertEquals("#text:7-10; #text:14-17; #text:21-24; #text:29-32; #text:37-40; ", track.toString());
     }
 
     @Test void tracksClosingHtmlTagsInXml() {
