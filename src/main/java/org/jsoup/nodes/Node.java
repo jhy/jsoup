@@ -19,7 +19,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
- The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
+ The base, abstract Node model. {@link Element}, {@link Document}, {@link Comment}, {@link TextNode}, et al.,
+ are instances of Node.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {

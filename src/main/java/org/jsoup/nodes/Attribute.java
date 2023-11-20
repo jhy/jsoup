@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jspecify.annotations.Nullable;
@@ -191,6 +192,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     protected static boolean isDataAttribute(String key) {
         return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
+    }
+
+    /**
+     Is this an internal attribute? Internal attributes can be fetched by key, but are not serialized.
+     * @return if an internal attribute.
+     */
+    public boolean isInternal() {
+        return Attributes.isInternalKey(key);
     }
 
     /**

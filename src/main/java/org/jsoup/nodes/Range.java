@@ -2,6 +2,8 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 
+import static org.jsoup.internal.SharedConstants.PrivatePrefix;
+
 /**
  A Range object tracks the character positions in the original input source where a Node starts or ends. If you want to
  track these positions, tracking must be enabled in the Parser with
@@ -12,8 +14,8 @@ import org.jsoup.helper.Validate;
 public class Range {
     private final Position start, end;
 
-    private static final String RangeKey = Attributes.internalKey("jsoup.sourceRange");
-    private static final String EndRangeKey = Attributes.internalKey("jsoup.endSourceRange");
+    private static final String RangeKey = PrivatePrefix + "sourceRange";
+    private static final String EndRangeKey = PrivatePrefix + "endSourceRange";
     private static final Position UntrackedPos = new Position(-1, -1, -1);
     private static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
 

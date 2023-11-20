@@ -190,13 +190,13 @@ public final class CharacterReader {
     }
 
     /**
-     Get a formatted string representing the current line and cursor positions. E.g. <code>5:10</code> indicating line
+     Get a formatted string representing the current line and column positions. E.g. <code>5:10</code> indicating line
      number 5 and column number 10.
      @return line:col position
      @since 1.14.3
      @see #trackNewlines(boolean)
      */
-    String cursorPos() {
+    String posLineCol() {
         return lineNumber() + ":" + columnNumber();
     }
 

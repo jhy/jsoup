@@ -1,10 +1,11 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SharedConstants;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
 
@@ -30,7 +31,7 @@ abstract class TreeBuilder {
     ParseSettings settings;
     Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
-    private final Token.StartTag start = new Token.StartTag(); // start tag to process
+    private Token.StartTag start; // start tag to process
     private final Token.EndTag end  = new Token.EndTag();
     abstract ParseSettings defaultSettings();
 
@@ -49,9 +50,10 @@ abstract class TreeBuilder {
         trackSourceRange = parser.isTrackPosition();
         reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
         currentToken = null;
-        tokeniser = new Tokeniser(reader, parser.getErrors());
+        tokeniser = new Tokeniser(reader, parser.getErrors(), trackSourceRange);
         stack = new ArrayList<>(32);
         seenTags = new HashMap<>();
+        start = new Token.StartTag(trackSourceRange);
         this.baseUri = baseUri;
     }
 
@@ -100,7 +102,7 @@ abstract class TreeBuilder {
         // these are "virtual" start tags (auto-created by the treebuilder), so not tracking the start position
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
-            return process(new Token.StartTag().name(name));
+            return process(new Token.StartTag(trackSourceRange).name(name));
         }
         return process(start.reset().name(name));
     }
@@ -108,7 +110,7 @@ abstract class TreeBuilder {
     boolean processStartTag(String name, Attributes attrs) {
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
-            return process(new Token.StartTag().nameAttr(name, attrs));
+            return process(new Token.StartTag(trackSourceRange).nameAttr(name, attrs));
         }
         start.reset();
         start.nameAttr(name, attrs);
@@ -263,6 +265,7 @@ abstract class TreeBuilder {
                 if  (!token.isStartTag() || !el.normalName().equals(token.asStartTag().normalName)) {
                     endPos = startPos;
                 }
+                trackAttributePositions(el);
             } else { // closing tag
                 if (!el.tag().isEmpty() && !el.tag().isSelfClosing()) {
                     if (!token.isEndTag() || !el.normalName().equals(token.asEndTag().normalName)) {
@@ -278,5 +281,27 @@ abstract class TreeBuilder {
             (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
         Range range = new Range(startPosition, endPosition);
         range.track(node, isStart);
+    }
+
+    private void trackAttributePositions(Element el) {
+        // the element will have Ranges setup but no line / col position
+        String[] prefixes = {SharedConstants.AttrNamePos, SharedConstants.AttrValPos};
+
+        for (Attribute attribute : el.attributes()) {
+            if (attribute.isInternal()) continue;
+
+            for (String prefix : prefixes) {
+                String key = prefix + attribute.getKey();
+                Range range = (Range) el.attributes().userData(key);
+                assert range != null;
+                int startPos = range.startPos();
+                int endPos = range.endPos();
+                Range replace = new Range(
+                    new Range.Position(startPos, reader.lineNumber(startPos), reader.columnNumber(startPos)),
+                    new Range.Position(endPos, reader.lineNumber(endPos), reader.columnNumber(endPos)));
+
+                el.attributes().userData(key, replace);
+            }
+        }
     }
 }

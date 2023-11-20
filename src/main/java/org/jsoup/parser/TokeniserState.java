@@ -595,7 +595,7 @@ enum TokeniserState {
                 case '=':
                     t.error(this);
                     t.tagPending.newAttribute();
-                    t.tagPending.appendAttributeName(c);
+                    t.tagPending.appendAttributeName(c, r.pos()-1, r.pos());
                     t.transition(AttributeName);
                     break;
                 default: // A-Z, anything else
@@ -608,9 +608,11 @@ enum TokeniserState {
     AttributeName {
         // from before attribute name
         @Override void read(Tokeniser t, CharacterReader r) {
+            int pos = r.pos();
             String name = r.consumeToAnySorted(attributeNameCharsSorted); // spec deviate - consume and emit nulls in one hit vs stepping
-            t.tagPending.appendAttributeName(name);
+            t.tagPending.appendAttributeName(name, pos, r.pos());
 
+            pos = r.pos();
             char c = r.consume();
             switch (c) {
                 case '\t':
@@ -638,10 +640,10 @@ enum TokeniserState {
                 case '\'':
                 case '<':
                     t.error(this);
-                    t.tagPending.appendAttributeName(c);
+                    t.tagPending.appendAttributeName(c, pos, r.pos());
                     break;
                 default: // buffer underrun
-                    t.tagPending.appendAttributeName(c);
+                    t.tagPending.appendAttributeName(c, pos, r.pos());
             }
         }
     },
@@ -668,7 +670,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.tagPending.appendAttributeName(replacementChar);
+                    t.tagPending.appendAttributeName(replacementChar, r.pos()-1, r.pos());
                     t.transition(AttributeName);
                     break;
                 case eof:
@@ -680,7 +682,7 @@ enum TokeniserState {
                 case '<':
                     t.error(this);
                     t.tagPending.newAttribute();
-                    t.tagPending.appendAttributeName(c);
+                    t.tagPending.appendAttributeName(c, r.pos()-1, r.pos());
                     t.transition(AttributeName);
                     break;
                 default: // A-Z, anything else
@@ -713,7 +715,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.tagPending.appendAttributeValue(replacementChar);
+                    t.tagPending.appendAttributeValue(replacementChar, r.pos()-1, r.pos());
                     t.transition(AttributeValue_unquoted);
                     break;
                 case eof:
@@ -730,7 +732,7 @@ enum TokeniserState {
                 case '=':
                 case '`':
                     t.error(this);
-                    t.tagPending.appendAttributeValue(c);
+                    t.tagPending.appendAttributeValue(c, r.pos()-1, r.pos());
                     t.transition(AttributeValue_unquoted);
                     break;
                 default:
@@ -741,12 +743,14 @@ enum TokeniserState {
     },
     AttributeValue_doubleQuoted {
         @Override void read(Tokeniser t, CharacterReader r) {
+            int pos = r.pos();
             String value = r.consumeAttributeQuoted(false);
             if (value.length() > 0)
-                t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeValue(value, pos, r.pos());
             else
                 t.tagPending.setEmptyAttributeValue();
 
+            pos = r.pos();
             char c = r.consume();
             switch (c) {
                 case '"':
@@ -755,31 +759,33 @@ enum TokeniserState {
                 case '&':
                     int[] ref = t.consumeCharacterReference('"', true);
                     if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                        t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
-                        t.tagPending.appendAttributeValue('&');
+                        t.tagPending.appendAttributeValue('&', pos, r.pos());
                     break;
                 case nullChar:
                     t.error(this);
-                    t.tagPending.appendAttributeValue(replacementChar);
+                    t.tagPending.appendAttributeValue(replacementChar, pos, r.pos());
                     break;
                 case eof:
                     t.eofError(this);
                     t.transition(Data);
                     break;
                 default: // hit end of buffer in first read, still in attribute
-                    t.tagPending.appendAttributeValue(c);
+                    t.tagPending.appendAttributeValue(c, pos, r.pos());
             }
         }
     },
     AttributeValue_singleQuoted {
         @Override void read(Tokeniser t, CharacterReader r) {
+            int pos = r.pos();
             String value = r.consumeAttributeQuoted(true);
             if (value.length() > 0)
-                t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeValue(value, pos, r.pos());
             else
                 t.tagPending.setEmptyAttributeValue();
 
+            pos = r.pos();
             char c = r.consume();
             switch (c) {
                 case '\'':
@@ -788,29 +794,31 @@ enum TokeniserState {
                 case '&':
                     int[] ref = t.consumeCharacterReference('\'', true);
                     if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                        t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
-                        t.tagPending.appendAttributeValue('&');
+                        t.tagPending.appendAttributeValue('&', pos, r.pos());
                     break;
                 case nullChar:
                     t.error(this);
-                    t.tagPending.appendAttributeValue(replacementChar);
+                    t.tagPending.appendAttributeValue(replacementChar, pos, r.pos());
                     break;
                 case eof:
                     t.eofError(this);
                     t.transition(Data);
                     break;
                 default: // hit end of buffer in first read, still in attribute
-                    t.tagPending.appendAttributeValue(c);
+                    t.tagPending.appendAttributeValue(c, pos, r.pos());
             }
         }
     },
     AttributeValue_unquoted {
         @Override void read(Tokeniser t, CharacterReader r) {
+            int pos = r.pos();
             String value = r.consumeToAnySorted(attributeValueUnquoted);
             if (value.length() > 0)
-                t.tagPending.appendAttributeValue(value);
+                t.tagPending.appendAttributeValue(value, pos, r.pos());
 
+            pos = r.pos();
             char c = r.consume();
             switch (c) {
                 case '\t':
@@ -823,9 +831,9 @@ enum TokeniserState {
                 case '&':
                     int[] ref = t.consumeCharacterReference('>', true);
                     if (ref != null)
-                        t.tagPending.appendAttributeValue(ref);
+                        t.tagPending.appendAttributeValue(ref, pos, r.pos());
                     else
-                        t.tagPending.appendAttributeValue('&');
+                        t.tagPending.appendAttributeValue('&', pos, r.pos());
                     break;
                 case '>':
                     t.emitTagPending();
@@ -833,7 +841,7 @@ enum TokeniserState {
                     break;
                 case nullChar:
                     t.error(this);
-                    t.tagPending.appendAttributeValue(replacementChar);
+                    t.tagPending.appendAttributeValue(replacementChar, pos, r.pos());
                     break;
                 case eof:
                     t.eofError(this);
@@ -845,10 +853,10 @@ enum TokeniserState {
                 case '=':
                 case '`':
                     t.error(this);
-                    t.tagPending.appendAttributeValue(c);
+                    t.tagPending.appendAttributeValue(c, pos, r.pos());
                     break;
                 default: // hit end of buffer in first read, still in attribute
-                    t.tagPending.appendAttributeValue(c);
+                    t.tagPending.appendAttributeValue(c, pos, r.pos());
             }
 
         }
