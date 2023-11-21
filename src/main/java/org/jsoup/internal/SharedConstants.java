@@ -10,8 +10,7 @@ public final class SharedConstants {
     public static final char    InternalPrefix  = '/';
     public static final String  PrivatePrefix   = "/jsoup.";
 
-    public static final String  AttrNamePos     = PrivatePrefix + "namePos.";
-    public static final String  AttrValPos      = PrivatePrefix + "valPos.";
+    public static final String  AttrRange     = PrivatePrefix + "attrRange.";
 
     private SharedConstants() {}
 }

@@ -20,11 +20,14 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.nodes.Range.AttributeRange.Untracked;
 
 /**
  * The attributes of an Element.
  * <p>
- * Attributes are treated as a map: there can be only one value associated with an attribute key/name.
+ * During parsing, attributes in with the same name in an element are deduplicated, according to the configured parser's
+ * attribute case-sensitive setting. It is possible to have duplicate attributes subsequently if
+ * {@link #add(String, String)} vs {@link #put(String, String)} is used.
  * </p>
  * <p>
  * Attribute name and value comparisons are generally <b>case sensitive</b>. By default for HTML, attribute names are
@@ -320,6 +323,26 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             else
                 add(attr.getKey(), attr.getValue());
         }
+    }
+
+    /**
+     Get the source ranges (start to end position) in the original input source from which this attribute's <b>name</b>
+     and <b>value</b> were parsed.
+     <p>Position tracking must be enabled prior to parsing the content.</p>
+     @param key the attribute name
+     @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
+     was not tracked.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Attribute#sourceRange()
+     @see Node#sourceRange()
+     @see Element#endSourceRange()
+     @since 1.17.1
+     */
+    public Range.AttributeRange sourceRange(String key) {
+        if (!hasKey(key)) return Untracked;
+        final String rangeKey = SharedConstants.AttrRange + key;
+        if (!hasDeclaredValueForKey(rangeKey)) return Untracked;
+        return (Range.AttributeRange) Validate.ensureNotNull(userData(rangeKey));
     }
 
     public Iterator<Attribute> iterator() {

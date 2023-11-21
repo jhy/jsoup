@@ -176,23 +176,35 @@ abstract class Token {
                     // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known, and we can warn for duplicates.
                     attributes.add(name, value);
 
-                    if (trackSource) {
-                        // these Ranges are fixed up (line numbers) during the TreeBuilder track node inserted
-                        // we don't have the Reader here to get the line / col number
-                        String[] keys = {AttrNamePos, AttrValPos};
-                        int[] vals = {attrNameStart, attrNameEnd, attrValStart, attrValEnd};
-                        for (int i = 0; i < keys.length; i++) {
-                            String key = keys[i] + name;
-                            if (hasAttribute(key))
-                                continue; // deduping as we go as case-sensitive key; want first
-                            attributes.userData(key, new Range(
-                                new Range.Position(vals[i], Unset, Unset),
-                                new Range.Position(vals[i+1], Unset, Unset)));
-                        }
-                    }
+                    trackAttributeRange(name);
                 }
             }
             resetPendingAttr();
+        }
+
+        private void trackAttributeRange(String name) {
+            if (trackSource && isStartTag()) {
+                final StartTag start = asStartTag();
+                final CharacterReader r = start.reader;
+
+                // if there's no value (e.g. boolean), make it an implicit range at current
+                if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
+
+                Range.AttributeRange range = new Range.AttributeRange(
+                    new Range(
+                        new Range.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
+                        new Range.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
+                    new Range(
+                        new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
+                        new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
+                );
+
+                // todo - deduping as we go as case-sensitive key; want first
+                String key = AttrRange + name;
+
+                assert attributes != null;
+                attributes.userData(key, range);
+            }
         }
 
         final boolean hasAttributes() {
@@ -302,8 +314,8 @@ abstract class Token {
                 attrName = null;
             }
             if (trackSource) {
-                attrNameStart = Math.max(attrNameStart, startPos);
-                attrNameEnd = Math.max(attrNameEnd, endPos);
+                attrNameStart = attrNameStart > Unset ? attrNameStart : startPos; // latches to first
+                attrNameEnd = endPos;
             }
         }
 
@@ -315,8 +327,8 @@ abstract class Token {
                 attrValue = null;
             }
             if (trackSource) {
-                attrValStart = Math.max(attrValStart, startPos);
-                attrValEnd = Math.max(attrValEnd, endPos);
+                attrValStart = attrValStart > Unset ? attrValStart : startPos; // latches to first
+                attrValEnd = endPos;
             }
         }
 
@@ -325,9 +337,13 @@ abstract class Token {
     }
 
     final static class StartTag extends Tag {
-        StartTag(boolean trackSource) {
+        final CharacterReader reader;
+
+        // Reader is provided so if tracking, can get line / column positions for Range.
+        StartTag(boolean trackSource, CharacterReader reader) {
             super(trackSource);
             type = TokenType.StartTag;
+            this.reader = reader;
         }
 
         @Override

@@ -100,7 +100,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @param val the new attribute value; may be null (to set an enabled boolean attribute)
      @return the previous value (if was null; an empty string)
      */
-    public String setValue(@Nullable String val) {
+    @Override public String setValue(@Nullable String val) {
         String oldVal = this.val;
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
@@ -126,6 +126,23 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         	throw new SerializationException(exception);
         }
         return StringUtil.releaseBuilder(sb);
+    }
+
+    /**
+     Get the source ranges (start to end positions) in the original input source from which this attribute's <b>name</b>
+     and <b>value</b> were parsed.
+     <p>Position tracking must be enabled prior to parsing the content.</p>
+     @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
+     was not tracked.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Attributes#sourceRange(String)
+     @see Node#sourceRange()
+     @see Element#endSourceRange()
+     @since 1.17.1
+     */
+    public Range.AttributeRange sourceRange() {
+        if (parent == null) return Range.AttributeRange.Untracked;
+        return parent.sourceRange(key);
     }
 
     protected void html(Appendable accum, Document.OutputSettings out) throws IOException {

@@ -53,7 +53,7 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
     Tokeniser(CharacterReader reader, ParseErrorList errors, boolean trackSource) {
-        tagPending = startPending  = new Token.StartTag(trackSource);
+        tagPending = startPending  = new Token.StartTag(trackSource, reader);
         this.reader = reader;
         this.errors = errors;
     }

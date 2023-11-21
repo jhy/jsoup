@@ -1,8 +1,11 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SharedConstants;
 
-import static org.jsoup.internal.SharedConstants.PrivatePrefix;
+import java.util.Objects;
+
+import static org.jsoup.internal.SharedConstants.*;
 
 /**
  A Range object tracks the character positions in the original input source where a Node starts or ends. If you want to
@@ -17,7 +20,9 @@ public class Range {
     private static final String RangeKey = PrivatePrefix + "sourceRange";
     private static final String EndRangeKey = PrivatePrefix + "endSourceRange";
     private static final Position UntrackedPos = new Position(-1, -1, -1);
-    private static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
+
+    /** An untracked source range. */
+    static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
 
     /**
      Creates a new Range with start and end Positions. Called by TreeBuilder when position tracking is on.
@@ -93,10 +98,8 @@ public class Range {
      */
     static Range of(Node node, boolean start) {
         final String key = start ? RangeKey : EndRangeKey;
-        if (!node.hasAttr(key))
-            return Untracked;
-        else
-            return (Range) Validate.ensureNotNull(node.attributes().userData(key));
+        if (!node.hasAttr(key)) return Untracked;
+        return (Range) Validate.ensureNotNull(node.attributes().userData(key));
     }
 
     /**
@@ -216,6 +219,46 @@ public class Range {
             result = 31 * result + columnNumber;
             return result;
         }
+    }
 
+    public static class AttributeRange {
+        static final AttributeRange Untracked = new AttributeRange(Range.Untracked, Range.Untracked);
+
+        private final Range nameRange;
+        private final Range valueRange;
+
+        /** Creates a new AttributeRange. Called during parsing by Token.StartTag. */
+        public AttributeRange(Range nameRange, Range valueRange) {
+            this.nameRange = nameRange;
+            this.valueRange = valueRange;
+        }
+
+        /** Get the source range for the attribute's name. */
+        public Range nameRange() {
+            return nameRange;
+        }
+
+        /** Get the source range for the attribute's value. */
+        public Range valueRange() {
+            return valueRange;
+        }
+
+        /** Get a String presentation of this Attribute range, in the form
+         {@code line,column:pos-line,column:pos=line,column:pos-line,column:pos} (name start - name end = val start - val end).
+         . */
+        @Override public String toString() {
+            return nameRange().toString() + "=" + valueRange().toString();
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AttributeRange that = (AttributeRange) o;
+            return Objects.equals(nameRange, that.nameRange) && Objects.equals(valueRange, that.valueRange);
+        }
+
+        @Override public int hashCode() {
+            return Objects.hash(nameRange, valueRange);
+        }
     }
 }
