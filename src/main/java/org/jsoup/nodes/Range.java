@@ -253,12 +253,17 @@ public class Range {
         @Override public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
+
             AttributeRange that = (AttributeRange) o;
-            return Objects.equals(nameRange, that.nameRange) && Objects.equals(valueRange, that.valueRange);
+
+            if (!nameRange.equals(that.nameRange)) return false;
+            return valueRange.equals(that.valueRange);
         }
 
         @Override public int hashCode() {
-            return Objects.hash(nameRange, valueRange);
+            int result = nameRange.hashCode();
+            result = 31 * result + valueRange.hashCode();
+            return result;
         }
     }
 }
