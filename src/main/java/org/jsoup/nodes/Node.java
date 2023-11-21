@@ -19,7 +19,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
- The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
+ The base, abstract Node model. {@link Element}, {@link Document}, {@link Comment}, {@link TextNode}, et al.,
+ are instances of Node.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
@@ -757,11 +758,14 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the source range (start and end positions) in the original input source that this node was parsed from. Position
-     tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the start tag.
-     @return the range for the start of the node.
+     Get the source range (start and end positions) in the original input source from which this node was parsed.
+     Position tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the
+     start tag.
+     @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Range#isImplicit()
      @see Element#endSourceRange()
+     @see Attributes#nameRange(String name)
      @since 1.15.2
      */
     public Range sourceRange() {

@@ -303,4 +303,80 @@ class PositionTest {
         assertEquals("1,20:19-1,25:24", h2.endSourceRange().toString());
     }
 
+    @Test void tracksAttributes() {
+        String html = "<div one=\"Hello there\" id=1 class=foo attr1 = \"bar &amp; qux\" attr2='val &gt x' attr3=\"\" attr4 attr5>Text";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        Element div = doc.expectFirst("div");
+
+        StringBuilder track = new StringBuilder();
+        for (Attribute attr : div.attributes()) {
+            if (attr.isInternal()) continue;
+
+            Range.AttributeRange attrRange = attr.sourceRange();
+            assertTrue(attrRange.nameRange().isTracked());
+            assertTrue(attrRange.valueRange().isTracked());
+            assertSame(attrRange, div.attributes().sourceRange(attr.getKey()));
+
+            assertFalse(attrRange.nameRange().isImplicit());
+            if (attr.getValue().isEmpty())
+                assertTrue(attrRange.valueRange().isImplicit());
+            else
+                assertFalse(attrRange.valueRange().isImplicit());
+
+
+            accumulatePositions(attr, track);
+        }
+
+        System.out.println(track);
+        assertEquals("one:5-8=10-21; id:23-25=26-27; class:28-33=34-37; attr1:38-43=47-60; attr2:62-67=69-78; attr3:80-85=85-85; attr4:89-94=94-94; attr5:95-100=100-100; ", track.toString());
+    }
+
+    @Test void tracksAttributesAcrossLines() {
+        String html = "<div one=\"Hello\nthere\" \nid=1 \nclass=\nfoo\nattr5>Text";
+        Document doc = Jsoup.parse(html, TrackingParser);
+
+        Element div = doc.expectFirst("div");
+
+        StringBuilder track = new StringBuilder();
+        for (Attribute attr : div.attributes()) {
+            if (attr.isInternal()) continue;
+            Range.AttributeRange attrRange = attr.sourceRange();
+            assertTrue(attrRange.nameRange().isTracked());
+            assertTrue(attrRange.valueRange().isTracked());
+            assertSame(attrRange, div.attributes().sourceRange(attr.getKey()));
+            assertFalse(attrRange.nameRange().isImplicit());
+            if (attr.getValue().isEmpty())
+                assertTrue(attrRange.valueRange().isImplicit());
+            else
+                assertFalse(attrRange.valueRange().isImplicit());
+            accumulatePositions(attr, track);
+        }
+
+        String value = div.attributes().get("class");
+        assertEquals("foo", value);
+        Range.AttributeRange foo = div.attributes().sourceRange("class");
+        assertEquals("4,1:30-4,6:35=5,1:37-5,4:40", foo.toString());
+
+        System.out.println(track);
+        assertEquals("one:5-8=10-21; id:24-26=27-28; class:30-35=37-40; attr5:41-46=46-46; ", track.toString());
+    }
+
+    static void accumulatePositions(Attribute attr, StringBuilder sb) {
+        Range.AttributeRange range = attr.sourceRange();
+
+        sb
+            .append(attr.getKey())
+            .append(':')
+            .append(range.nameRange().startPos())
+            .append('-')
+            .append(range.nameRange().endPos())
+
+            .append('=')
+            .append(range.valueRange().startPos())
+            .append('-')
+            .append(range.valueRange().endPos());
+
+        sb.append("; ");
+    }
 }

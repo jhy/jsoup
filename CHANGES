@@ -27,6 +27,10 @@ Release 1.17.1 [PENDING]
     are tracked and detectable via Range.isImplicit().
     <https://github.com/jhy/jsoup/pull/2056>
 
+  * Improvement: when source tracking is enabled, the source position for attribute names and values is now available.
+    Attribute#sourceRange() provides the ranges.
+    <https://github.com/jhy/jsoup/pull/2057>
+
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>

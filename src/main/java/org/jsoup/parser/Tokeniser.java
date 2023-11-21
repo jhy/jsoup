@@ -40,9 +40,9 @@ final class Tokeniser {
     private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
-    final Token.StartTag startPending = new Token.StartTag();
+    final Token.StartTag startPending;
     final Token.EndTag endPending = new Token.EndTag();
-    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
+    Token.Tag tagPending; // tag we are building up: start or end pending
     final Token.Character charPending = new Token.Character();
     final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     final Token.Comment commentPending = new Token.Comment(); // comment building up
@@ -52,7 +52,8 @@ final class Tokeniser {
     private static final int Unset = -1;
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
-    Tokeniser(CharacterReader reader, ParseErrorList errors) {
+    Tokeniser(CharacterReader reader, ParseErrorList errors, boolean trackSource) {
+        tagPending = startPending  = new Token.StartTag(trackSource, reader);
         this.reader = reader;
         this.errors = errors;
     }
