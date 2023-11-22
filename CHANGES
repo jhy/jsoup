@@ -31,6 +31,12 @@ Release 1.17.1 [PENDING]
     Attribute#sourceRange() provides the ranges.
     <https://github.com/jhy/jsoup/pull/2057>
 
+  * Improvement: when running concurrently under Java 21+ Virtual Threads, virtual threads could be pinned to their
+    carrier platform thread when parsing an input stream. To improve performance, particularly when parsing fetched
+    URLs, the internal ConstrainableInputStream has been replaced by ControllableInputStream, which avoids the locking
+    which caused that pinning.
+    <https://github.com/jhy/jsoup/issues/2054>
+
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
     <https://github.com/jhy/jsoup/pull/1720>
@@ -51,6 +57,13 @@ Release 1.17.1 [PENDING]
 
   * Build Improvement: added tests for HTTPS request support, using a local self-signed cert. Includes proxy tests.
     <https://github.com/jhy/jsoup/pull/2032>
+
+  * Change: the InputStream returned in Connection.Response.bodyStream() is no longer a ConstrainedInputStream, and
+    so is not subject to settings such as timeout or maximum size. It is now a plain BufferedInputStream around the
+    response stream. Whilst this behaviour was not documented, you may have been inadvertently relying on those
+    constraints. The constraints are still applied to other methods such as .parse() and .bufferUp(). So if you do want
+    a constrained BufferedInputStream, you may do Connection.Response.bufferUp().bodyStream().
+    <https://github.com/jhy/jsoup/issues/2054>
 
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators
