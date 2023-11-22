@@ -12,5 +12,7 @@ public final class SharedConstants {
 
     public static final String  AttrRange     = PrivatePrefix + "attrRange.";
 
+    public static final int DefaultBufferSize = 1024 * 32;
+
     private SharedConstants() {}
 }

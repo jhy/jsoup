@@ -871,10 +871,15 @@ public interface Connection {
         Response bufferUp();
 
         /**
-         * Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done with it.
-         * Other body methods (like bufferUp, body, parse, etc) will not work in conjunction with this method.
-         * <p>This method is useful for writing large responses to disk, without buffering them completely into memory first.</p>
-         * @return the response body input stream
+         Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done
+         with it.
+         <p>Other body methods (like bufferUp, body, parse, etc) will generally not work in conjunction with this method,
+         as it consumes the InputStream.</p>
+         <p>Any configured max size or maximum read timeout applied to the connection will not be applied to this stream,
+         unless {@link #bufferUp()} is called prior.</p>
+         <p>This method is useful for writing large responses to disk, without buffering them completely into memory
+         first.</p>
+         @return the response body input stream
          */
         BufferedInputStream bodyStream();
     }
