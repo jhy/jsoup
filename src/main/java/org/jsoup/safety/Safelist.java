@@ -6,6 +6,7 @@ package org.jsoup.safety;
  */
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
@@ -296,8 +297,8 @@ public class Safelist {
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
+        addTags(tag);
         TagName tagName = TagName.valueOf(tag);
-        tagNames.add(tagName);
         Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
@@ -621,7 +622,7 @@ public class Safelist {
         }
 
         static TagName valueOf(String value) {
-            return new TagName(value);
+            return new TagName(Normalizer.lowerCase(value));
         }
     }
 

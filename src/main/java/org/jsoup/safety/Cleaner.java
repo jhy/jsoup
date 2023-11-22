@@ -155,7 +155,7 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
-            } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().nodeName())) {
+            } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().normalName())) {
               DataNode sourceData = (DataNode) source;
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
@@ -165,7 +165,7 @@ public class Cleaner {
         }
 
         public void tail(Node source, int depth) {
-            if (source instanceof Element && safelist.isSafeTag(source.nodeName())) {
+            if (source instanceof Element && safelist.isSafeTag(source.normalName())) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
         }
@@ -180,7 +180,7 @@ public class Cleaner {
     private ElementMeta createSafeElement(Element sourceEl) {
         String sourceTag = sourceEl.tagName();
         Attributes destAttrs = new Attributes();
-        Element dest = new Element(Tag.valueOf(sourceTag, sourceEl.tag().namespace(), ParseSettings.preserveCase), sourceEl.baseUri(), destAttrs);
+        Element dest = new Element(sourceEl.tag(), sourceEl.baseUri(), destAttrs);
         int numDiscarded = 0;
 
         Attributes sourceAttrs = sourceEl.attributes();
