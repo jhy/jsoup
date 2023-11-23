@@ -1822,7 +1822,7 @@ public class Element extends Node {
     public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
         String baseUri = baseUri();
-        if (baseUri.equals("")) baseUri = null; // saves setting a blank internal attribute
+        if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
         return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
