@@ -17,6 +17,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -367,6 +368,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             @Override
             public Attribute next() {
                 checkModified();
+                if (i >= size) throw new NoSuchElementException();
                 final Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
                 i++;
                 return attr;
