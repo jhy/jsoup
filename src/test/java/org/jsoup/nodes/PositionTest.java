@@ -311,7 +311,6 @@ class PositionTest {
 
         StringBuilder track = new StringBuilder();
         for (Attribute attr : div.attributes()) {
-            if (attr.isInternal()) continue;
 
             Range.AttributeRange attrRange = attr.sourceRange();
             assertTrue(attrRange.nameRange().isTracked());
@@ -339,7 +338,6 @@ class PositionTest {
 
         StringBuilder track = new StringBuilder();
         for (Attribute attr : div.attributes()) {
-            if (attr.isInternal()) continue;
             Range.AttributeRange attrRange = attr.sourceRange();
             assertTrue(attrRange.nameRange().isTracked());
             assertTrue(attrRange.valueRange().isTracked());

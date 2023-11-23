@@ -10,7 +10,6 @@ import org.jsoup.nodes.Range;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
@@ -392,16 +391,21 @@ public class CleanerTest {
     }
 
     @Test void preservesSourcePositionViaUserData() {
-        Document orig = Jsoup.parse("<script>xss</script>\n <p>Hello</p>", Parser.htmlParser().setTrackPosition(true));
+        Document orig = Jsoup.parse("<script>xss</script>\n <p id=1>Hello</p>", Parser.htmlParser().setTrackPosition(true));
         Element p = orig.expectFirst("p");
         Range origRange = p.sourceRange();
-        assertEquals("2,2:22-2,5:25", origRange.toString());
+        assertEquals("2,2:22-2,10:30", origRange.toString());
 
-        Document clean = new Cleaner(Safelist.relaxed()).clean(orig);
+        Range.AttributeRange attributeRange = p.attributes().sourceRange("id");
+        assertEquals("2,5:25-2,7:27=2,8:28-2,9:29", attributeRange.toString());
+
+        Document clean = new Cleaner(Safelist.relaxed().addAttributes("p", "id")).clean(orig);
         Element cleanP = clean.expectFirst("p");
+        assertEquals("1", cleanP.id());
         Range cleanRange = cleanP.sourceRange();
-        assertEquals(cleanRange, origRange);
-        assertEquals(clean.endSourceRange(), orig.endSourceRange());
+        assertEquals(origRange, cleanRange);
+        assertEquals(orig.endSourceRange(), clean.endSourceRange());
+        assertEquals(attributeRange, cleanP.attributes().sourceRange("id"));
     }
 
     @ParameterizedTest @ValueSource(booleans = {true, false})

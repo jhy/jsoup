@@ -141,7 +141,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @since 1.17.1
      */
     public Range.AttributeRange sourceRange() {
-        if (parent == null) return Range.AttributeRange.Untracked;
+        if (parent == null) return Range.AttributeRange.UntrackedAttr;
         return parent.sourceRange(key);
     }
 
@@ -209,14 +209,6 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
 
     protected static boolean isDataAttribute(String key) {
         return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
-    }
-
-    /**
-     Is this an internal attribute? Internal attributes can be fetched by key, but are not serialized.
-     * @return if an internal attribute.
-     */
-    public boolean isInternal() {
-        return Attributes.isInternalKey(key);
     }
 
     /**

@@ -2,7 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.SharedConstants;
-import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -279,6 +278,6 @@ abstract class TreeBuilder {
         Range.Position endPosition = new Range.Position
             (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
         Range range = new Range(startPosition, endPosition);
-        range.track(node, isStart);
+        node.attributes().userData(isStart ? SharedConstants.RangeKey : SharedConstants.EndRangeKey, range);
     }
 }

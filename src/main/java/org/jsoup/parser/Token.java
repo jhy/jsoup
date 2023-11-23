@@ -1,10 +1,12 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.jsoup.internal.SharedConstants.*;
 
@@ -186,6 +188,15 @@ abstract class Token {
             if (trackSource && isStartTag()) {
                 final StartTag start = asStartTag();
                 final CharacterReader r = start.reader;
+                assert attributes != null;
+                //noinspection unchecked
+                Map<String, Range.AttributeRange> attrRanges =
+                    (Map<String, Range.AttributeRange>) attributes.userData(AttrRangeKey);
+                if (attrRanges == null) {
+                    attrRanges = new HashMap<>();
+                    attributes.userData(AttrRangeKey, attrRanges);
+                }
+                if (attrRanges.containsKey(name)) return; // dedupe ranges on case-sensitive name as we go; actual attributes get deduped later
 
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
@@ -198,12 +209,7 @@ abstract class Token {
                         new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
                         new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
                 );
-
-                // todo - deduping as we go as case-sensitive key; want first
-                String key = AttrRange + name;
-
-                assert attributes != null;
-                attributes.userData(key, range);
+                attrRanges.put(name, range);
             }
         }
 
