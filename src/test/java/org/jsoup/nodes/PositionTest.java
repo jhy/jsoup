@@ -324,7 +324,6 @@ class PositionTest {
             else
                 assertFalse(attrRange.valueRange().isImplicit());
 
-
             accumulatePositions(attr, track);
         }
 
@@ -358,7 +357,6 @@ class PositionTest {
         Range.AttributeRange foo = div.attributes().sourceRange("class");
         assertEquals("4,1:30-4,6:35=5,1:37-5,4:40", foo.toString());
 
-        System.out.println(track);
         assertEquals("one:5-8=10-21; id:24-26=27-28; class:30-35=37-40; attr5:41-46=46-46; ", track.toString());
     }
 

@@ -765,7 +765,7 @@ public abstract class Node implements Cloneable {
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Range#isImplicit()
      @see Element#endSourceRange()
-     @see Attributes#nameRange(String name)
+     @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
     public Range sourceRange() {

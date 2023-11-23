@@ -345,8 +345,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return (Range.AttributeRange) Validate.ensureNotNull(userData(rangeKey));
     }
 
+    @Override
     public Iterator<Attribute> iterator() {
-        return new Iterator<Attribute>() {
+        return new Iterator<>() {
             int expectedSize = size;
             int i = 0;
 
