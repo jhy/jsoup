@@ -1,10 +1,5 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.SharedConstants;
-
-import java.util.Objects;
-
 import static org.jsoup.internal.SharedConstants.*;
 
 /**
@@ -15,11 +10,8 @@ import static org.jsoup.internal.SharedConstants.*;
  @since 1.15.2
  */
 public class Range {
-    private final Position start, end;
-
-    private static final String RangeKey = PrivatePrefix + "sourceRange";
-    private static final String EndRangeKey = PrivatePrefix + "endSourceRange";
     private static final Position UntrackedPos = new Position(-1, -1, -1);
+    private final Position start, end;
 
     /** An untracked source range. */
     static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
@@ -98,18 +90,16 @@ public class Range {
      */
     static Range of(Node node, boolean start) {
         final String key = start ? RangeKey : EndRangeKey;
-        if (!node.hasAttr(key)) return Untracked;
-        return (Range) Validate.ensureNotNull(node.attributes().userData(key));
+        if (!node.hasAttributes()) return Untracked;
+        Object range = node.attributes().userData(key);
+        return range != null ? (Range) range : Untracked;
     }
 
     /**
-     Internal jsoup method, called by the TreeBuilder. Tracks a Range for a Node.
-     * @param node the node to associate this position to
-     * @param start if this is the starting range. {@code false} for Element end tags.
+     @deprecated no-op; internal method moved out of visibility
      */
-    public void track(Node node, boolean start) {
-        node.attributes().userData(start ? RangeKey : EndRangeKey, this);
-    }
+    @Deprecated
+    public void track(Node node, boolean start) {}
 
     @Override
     public boolean equals(Object o) {
@@ -222,7 +212,7 @@ public class Range {
     }
 
     public static class AttributeRange {
-        static final AttributeRange Untracked = new AttributeRange(Range.Untracked, Range.Untracked);
+        static final AttributeRange UntrackedAttr = new AttributeRange(Range.Untracked, Range.Untracked);
 
         private final Range nameRange;
         private final Range valueRange;

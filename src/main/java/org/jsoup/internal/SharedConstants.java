@@ -5,12 +5,10 @@ package org.jsoup.internal;
  this package when modules are enabled.
  */
 public final class SharedConstants {
-    // Indicates a jsoup internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
-    // that. Suppressed from list, iter.
-    public static final char    InternalPrefix  = '/';
-    public static final String  PrivatePrefix   = "/jsoup.";
-
-    public static final String  AttrRange     = PrivatePrefix + "attrRange.";
+    public static final String UserDataKey = "/jsoup.userdata";
+    public final static String AttrRangeKey = "jsoup.attrs";
+    public static final String RangeKey = "jsoup.start";
+    public static final String EndRangeKey = "jsoup.end";
 
     public static final int DefaultBufferSize = 1024 * 32;
 

@@ -1821,7 +1821,9 @@ public class Element extends Node {
     @Override
     public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
-        return new Element(tag, baseUri(), attributes == null ? null : attributes.clone());
+        String baseUri = baseUri();
+        if (baseUri.equals("")) baseUri = null; // saves setting a blank internal attribute
+        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     @Override
@@ -1838,8 +1840,9 @@ public class Element extends Node {
     @Override
     public Element clearAttributes() {
         if (attributes != null) {
-            super.clearAttributes();
-            attributes = null;
+            super.clearAttributes(); // keeps internal attributes via iterator
+            if (attributes.size() == 0)
+                attributes = null; // only remove entirely if no internal attributes
         }
 
         return this;

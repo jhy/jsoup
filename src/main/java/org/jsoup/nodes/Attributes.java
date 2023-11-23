@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
-import static org.jsoup.nodes.Range.AttributeRange.Untracked;
+import static org.jsoup.internal.SharedConstants.AttrRangeKey;
+import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
 
 /**
  * The attributes of an Element.
@@ -39,6 +41,10 @@ import static org.jsoup.nodes.Range.AttributeRange.Untracked;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute>, Cloneable {
+    // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
+    // that. Suppressed from list, iter.)
+    static final char InternalPrefix = '/';
+
     // The Attributes object is only created on the first use of an attribute; the Element will just have a null
     // Attribute slot otherwise
     protected static final String dataPrefix = "data-";
@@ -115,21 +121,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get an arbitrary user data object by key.
-     * @param key case-sensitive key to the object.
-     * @return the object associated to this key, or {@code null} if not found.
-     * @see #userData(String key, Object val)
-     * @since 1.17.2
-     */
-    @Nullable
-    public Object userData(String key) {
-        Validate.notNull(key);
-        if (!isInternalKey(key)) key = internalKey(key);
-        int i = indexOfKey(key);
-        return i == NotFound ? null : vals[i];
-    }
-
-    /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      * @see Attributes#put(String, String)
      */
@@ -162,6 +153,40 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Get the map holding any user-data associated with these Attributes. Will be created empty on first use. Held as
+     an internal attribute, not a field member, to reduce the memory footprint of Attributes when not used. Can hold
+     arbitrary objects; use for source ranges, connecting W3C nodes to Elements, etc.
+     * @return the map holding user-data
+     */
+    Map<String, Object> userData() {
+        final Map<String, Object> userData;
+        int i = indexOfKey(SharedConstants.UserDataKey);
+        if (i == NotFound) {
+            userData = new HashMap<>();
+            addObject(SharedConstants.UserDataKey, userData);
+        } else {
+            //noinspection unchecked
+            userData = (Map<String, Object>) vals[i];
+        }
+        return userData;
+    }
+
+    /**
+     Get an arbitrary user-data object by key.
+     * @param key case-sensitive key to the object.
+     * @return the object associated to this key, or {@code null} if not found.
+     * @see #userData(String key, Object val)
+     * @since 1.17.1
+     */
+    @Nullable
+    public Object userData(String key) {
+        Validate.notNull(key);
+        if (!hasKey(SharedConstants.UserDataKey)) return null; // no user data exists
+        Map<String, Object> userData = userData();
+        return userData.get(key);
+    }
+
+    /**
      Set an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
      * @param key case-sensitive key
      * @param value object value
@@ -171,13 +196,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public Attributes userData(String key, Object value) {
         Validate.notNull(key);
-        if (!isInternalKey(key)) key = internalKey(key);
-        Validate.notNull(value);
-        int i = indexOfKey(key);
-        if (i != NotFound)
-            vals[i] = value;
-        else
-            addObject(key, value);
+        userData().put(key, value);
         return this;
     }
 
@@ -340,10 +359,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @since 1.17.1
      */
     public Range.AttributeRange sourceRange(String key) {
-        if (!hasKey(key)) return Untracked;
-        final String rangeKey = SharedConstants.AttrRange + key;
-        if (!hasDeclaredValueForKey(rangeKey)) return Untracked;
-        return (Range.AttributeRange) Validate.ensureNotNull(userData(rangeKey));
+        if (!hasKey(key)) return UntrackedAttr;
+        //noinspection unchecked
+        Map<String, Range.AttributeRange> ranges = (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        if (ranges == null) return Range.AttributeRange.UntrackedAttr;
+        Range.AttributeRange range = ranges.get(key);
+        return range != null ? range : Range.AttributeRange.UntrackedAttr;
     }
 
     @Override
@@ -592,10 +613,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     static String internalKey(String key) {
-        return SharedConstants.InternalPrefix + key;
+        return InternalPrefix + key;
     }
 
     static boolean isInternalKey(String key) {
-        return key != null && key.length() > 1 && key.charAt(0) == SharedConstants.InternalPrefix;
+        return key != null && key.length() > 1 && key.charAt(0) == InternalPrefix;
     }
 }
