@@ -407,18 +407,19 @@ public class CleanerTest {
     @ParameterizedTest @ValueSource(booleans = {true, false})
     void cleansCaseSensitiveElements(boolean preserveCase) {
         // https://github.com/jhy/jsoup/issues/2049
-        String html = "<svg><feMerge><feMergeNode kernelMatrix=1 /><feMergeNode><clipPath /></feMergeNode><feMergeNode />";
+        String html = "<svg><feMerge baseFrequency=2><feMergeNode kernelMatrix=1 /><feMergeNode><clipPath /></feMergeNode><feMergeNode />";
         String[] tags = {"svg", "feMerge", "feMergeNode", "clipPath"};
-        String[] attrs = {"kernelMatrix"};
+        String[] attrs = {"kernelMatrix", "baseFrequency"};
 
         if (!preserveCase) {
             tags = Arrays.stream(tags).map(String::toLowerCase).toArray(String[]::new);
+            attrs = Arrays.stream(attrs).map(String::toLowerCase).toArray(String[]::new);
         }
 
         Safelist safelist = Safelist.none().addTags(tags).addAttributes(":all", attrs);
         String clean = Jsoup.clean(html, safelist);
         String expected = "<svg>\n" +
-            " <feMerge>\n" +
+            " <feMerge baseFrequency=\"2\">\n" +
             "  <feMergeNode kernelMatrix=\"1\" />\n" +
             "  <feMergeNode>\n" +
             "   <clipPath />\n" +

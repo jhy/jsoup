@@ -632,7 +632,7 @@ public class Safelist {
         }
 
         static AttributeKey valueOf(String value) {
-            return new AttributeKey(value);
+            return new AttributeKey(Normalizer.lowerCase(value));
         }
     }
 
