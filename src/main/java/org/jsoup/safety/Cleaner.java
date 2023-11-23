@@ -137,7 +137,7 @@ public class Cleaner {
             this.destination = destination;
         }
 
-        public void head(Node source, int depth) {
+        @Override public void head(Node source, int depth) {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
@@ -164,7 +164,7 @@ public class Cleaner {
             }
         }
 
-        public void tail(Node source, int depth) {
+        @Override public void tail(Node source, int depth) {
             if (source instanceof Element && safelist.isSafeTag(source.normalName())) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
