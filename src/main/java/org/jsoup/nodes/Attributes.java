@@ -348,7 +348,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     @Override
     public Iterator<Attribute> iterator() {
-        return new Iterator<>() {
+        return new Iterator<Attribute>() {
             int expectedSize = size;
             int i = 0;
 
