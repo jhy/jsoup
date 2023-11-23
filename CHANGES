@@ -38,8 +38,9 @@ Release 1.17.1 [PENDING]
     <https://github.com/jhy/jsoup/issues/2054>
 
   * Improvement: in Jsoup.Connect, allow any XML mimetype as a supported mimetype. Was previously limited to
-    {application|text}/xml. This enables for e.g. fetching SVGs with a image/svg+xml mimetype, without having to
+    `{application|text}/xml`. This enables for e.g. fetching SVGs with a image/svg+xml mimetype, without having to
     disable mimetype validation.
+    <https://github.com/jhy/jsoup/issues/2059>
 
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
