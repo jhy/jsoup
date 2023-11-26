@@ -211,13 +211,14 @@ public interface Connection {
     /**
      * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
      * input stream.
+     * <p>Use the {@link #data(String, String, InputStream, String)} method to set the uploaded file's mimetype.</p>
      * @param key data key (form item name)
      * @param filename the name of the file to present to the remove server. Typically just the name, not path,
      * component.
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * You must close the InputStream in a {@code finally} block.
      * @return this Connection, for chaining
-     * @see #data(String, String, InputStream, String) if you want to set the uploaded file's mimetype.
+     * @see #data(String, String, InputStream, String)
      */
     Connection data(String key, String filename, InputStream inputStream);
 
