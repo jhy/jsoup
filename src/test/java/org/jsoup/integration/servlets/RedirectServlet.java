@@ -8,7 +8,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class RedirectServlet extends BaseServlet {
-    public static final String Url = TestServer.map(RedirectServlet.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(RedirectServlet.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
     public static final String LocationParam = "loc";
     public static final String CodeParam = "code";
     public static final String SetCookiesParam = "setCookies";

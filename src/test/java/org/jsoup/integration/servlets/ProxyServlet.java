@@ -1,74 +1,69 @@
 package org.jsoup.integration.servlets;
 
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.proxy.AsyncProxyServlet;
+import org.eclipse.jetty.proxy.ConnectHandler;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.FilterMapping;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.jsoup.integration.TestServer;
 
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
-public class ProxyServlet extends BaseServlet{
-    public static TestServer.ProxySettings ProxySettings = TestServer.proxySettings(ProxyServlet.class);
+import static org.jsoup.integration.servlets.AuthFilter.ProxyRealm;
+
+public class ProxyServlet extends AsyncProxyServlet {
+    public static TestServer.ProxySettings ProxySettings = TestServer.proxySettings();
     public static String Via = "1.1 jsoup test proxy";
 
+    static {
+        System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+        // removes Basic, which is otherwise excluded from auth for CONNECT tunnels
+    }
+
+    public static Handler createHandler(boolean alwaysAuth) {
+        // ConnectHandler wraps this ProxyServlet and handles CONNECT, which sets up a tunnel for HTTPS requests and is
+        // opaque to the proxy. The ProxyServlet handles simple HTTP requests.
+        AuthFilter authFilter = new AuthFilter(alwaysAuth, true);
+        ConnectHandler connectHandler = new ConnectProxy(authFilter);
+        ServletHandler proxyHandler = new ServletHandler();
+        proxyHandler.addFilterWithMapping(new FilterHolder(authFilter), "/*", FilterMapping.ALL); // auth for HTTP proxy
+        ServletHolder proxyServletHolder = new ServletHolder(ProxyServlet.class); // Holder wraps as it requires maxThreads initialization
+        proxyServletHolder.setAsyncSupported(true);
+        proxyServletHolder.setInitParameter("maxThreads", "8");
+        proxyHandler.addServletWithMapping(proxyServletHolder, "/*");
+        connectHandler.setHandler(proxyHandler);
+
+        return connectHandler;
+    }
+
     @Override
-    protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-        StringBuffer urlBuf = req.getRequestURL();
-        if (req.getQueryString() != null) {
-            urlBuf.append('?').append(req.getQueryString());
+    protected void onServerResponseHeaders(HttpServletRequest clientRequest, HttpServletResponse proxyResponse, Response serverResponse) {
+        super.onServerResponseHeaders(clientRequest, proxyResponse, serverResponse);
+        proxyResponse.addHeader("Via", Via);
+    }
+
+    /** Supports CONNECT tunnels */
+    static class ConnectProxy extends ConnectHandler {
+        final AuthFilter authFilter;
+
+        public ConnectProxy(AuthFilter authFilter) {
+            this.authFilter = authFilter;
         }
-        String url = urlBuf.toString();
-        //log("Proxying URL: " + url);
 
-        Connection.Method method = Enum.valueOf(Connection.Method.class, req.getMethod());
-        Connection fetch = Jsoup.connect(url)
-            .method(method)
-            .followRedirects(false)
-            .ignoreHttpErrors(true);
+        @Override
+        protected boolean handleAuthentication(HttpServletRequest req, HttpServletResponse res, String address) {
+            boolean accessGranted = authFilter.checkAuth(req);
+            //System.err.println("CONNECT AUTH: " + accessGranted);
 
-        // request headers
-        Enumeration<String> headerNames = req.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String name = headerNames.nextElement();
-            Enumeration<String> values = req.getHeaders(name);
-            while (values.hasMoreElements()) {
-                String value = values.nextElement();
-                //System.out.println("Header: " + name + " = " + value);
-                fetch.header(name, value); // todo - this invocation will replace existing header, not add
+            // need to add the desired auth header if not granted. Returning false here will also send 407 header
+            if (!accessGranted) {
+                res.setHeader("Proxy-Authenticate", "Basic realm=\"" + ProxyRealm + "\"");
             }
+            return accessGranted;
         }
-
-        // execute
-        Connection.Response fetchRes = fetch.execute();
-        res.setStatus(fetchRes.statusCode());
-
-        // write the response headers
-        res.addHeader("Via", Via);
-        for (Map.Entry<String, List<String>> entry : fetchRes.multiHeaders().entrySet()) {
-            String header = entry.getKey();
-            for (String value : entry.getValue()) {
-                res.addHeader(header,value);
-            }
-        }
-
-        // write the body
-        ServletOutputStream outputStream = res.getOutputStream();
-        BufferedInputStream inputStream = fetchRes.bodyStream();
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-
-        outputStream.close();
-        inputStream.close();
     }
 }

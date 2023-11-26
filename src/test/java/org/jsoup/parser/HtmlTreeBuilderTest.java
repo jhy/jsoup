@@ -1,14 +1,11 @@
 package org.jsoup.parser;
 
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
-
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,12 +28,10 @@ public class HtmlTreeBuilderTest {
     }
 
     @Test public void nonnullAssertions() throws NoSuchMethodException {
-        Method parseMethod = TreeBuilder.class.getDeclaredMethod("parse", Reader.class, String.class, Parser.class);
-        assertNotNull(parseMethod);
-        Annotation[] declaredAnnotations = parseMethod.getDeclaredAnnotations();
+        Annotation[] declaredAnnotations = TreeBuilder.class.getPackage().getDeclaredAnnotations();
         boolean seen = false;
         for (Annotation annotation : declaredAnnotations) {
-            if (annotation.annotationType().isAssignableFrom(ParametersAreNonnullByDefault.class))
+            if (annotation.annotationType().isAssignableFrom(NullMarked.class))
                 seen = true;
         }
 

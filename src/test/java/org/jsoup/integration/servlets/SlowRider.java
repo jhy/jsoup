@@ -11,7 +11,13 @@ import java.io.PrintWriter;
  * Slowly, interminably writes output. For the purposes of testing timeouts and interrupts.
  */
 public class SlowRider extends BaseServlet {
-    public static final String Url = TestServer.map(SlowRider.class);
+    public static final String Url;
+    public static final String TlsUrl;
+    static {
+        TestServer.ServletUrls urls = TestServer.map(SlowRider.class);
+        Url = urls.url;
+        TlsUrl = urls.tlsUrl;
+    }
     private static final int SleepTime = 2000;
     public static final String MaxTimeParam = "maxTime";
 

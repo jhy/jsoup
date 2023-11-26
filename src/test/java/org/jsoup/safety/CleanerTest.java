@@ -9,7 +9,10 @@ import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Range;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -388,15 +391,47 @@ public class CleanerTest {
     }
 
     @Test void preservesSourcePositionViaUserData() {
-        Document orig = Jsoup.parse("<script>xss</script>\n <p>Hello</p>", Parser.htmlParser().setTrackPosition(true));
+        Document orig = Jsoup.parse("<script>xss</script>\n <p id=1>Hello</p>", Parser.htmlParser().setTrackPosition(true));
         Element p = orig.expectFirst("p");
         Range origRange = p.sourceRange();
-        assertEquals("2,2:22-2,5:25", origRange.toString());
+        assertEquals("2,2:22-2,10:30", origRange.toString());
 
-        Document clean = new Cleaner(Safelist.relaxed()).clean(orig);
+        Range.AttributeRange attributeRange = p.attributes().sourceRange("id");
+        assertEquals("2,5:25-2,7:27=2,8:28-2,9:29", attributeRange.toString());
+
+        Document clean = new Cleaner(Safelist.relaxed().addAttributes("p", "id")).clean(orig);
         Element cleanP = clean.expectFirst("p");
+        assertEquals("1", cleanP.id());
         Range cleanRange = cleanP.sourceRange();
-        assertEquals(cleanRange, origRange);
-        assertEquals(clean.endSourceRange(), orig.endSourceRange());
+        assertEquals(origRange, cleanRange);
+        assertEquals(orig.endSourceRange(), clean.endSourceRange());
+        assertEquals(attributeRange, cleanP.attributes().sourceRange("id"));
     }
+
+    @ParameterizedTest @ValueSource(booleans = {true, false})
+    void cleansCaseSensitiveElements(boolean preserveCase) {
+        // https://github.com/jhy/jsoup/issues/2049
+        String html = "<svg><feMerge baseFrequency=2><feMergeNode kernelMatrix=1 /><feMergeNode><clipPath /></feMergeNode><feMergeNode />";
+        String[] tags = {"svg", "feMerge", "feMergeNode", "clipPath"};
+        String[] attrs = {"kernelMatrix", "baseFrequency"};
+
+        if (!preserveCase) {
+            tags = Arrays.stream(tags).map(String::toLowerCase).toArray(String[]::new);
+            attrs = Arrays.stream(attrs).map(String::toLowerCase).toArray(String[]::new);
+        }
+
+        Safelist safelist = Safelist.none().addTags(tags).addAttributes(":all", attrs);
+        String clean = Jsoup.clean(html, safelist);
+        String expected = "<svg>\n" +
+            " <feMerge baseFrequency=\"2\">\n" +
+            "  <feMergeNode kernelMatrix=\"1\" />\n" +
+            "  <feMergeNode>\n" +
+            "   <clipPath />\n" +
+            "  </feMergeNode>\n" +
+            "  <feMergeNode />\n" +
+            " </feMerge>\n" +
+            "</svg>";
+        assertEquals(expected, clean);
+    }
+
 }

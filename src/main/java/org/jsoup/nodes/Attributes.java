@@ -2,10 +2,11 @@ package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -13,17 +14,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.internal.SharedConstants.AttrRangeKey;
+import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
 
 /**
  * The attributes of an Element.
  * <p>
- * Attributes are treated as a map: there can be only one value associated with an attribute key/name.
+ * During parsing, attributes in with the same name in an element are deduplicated, according to the configured parser's
+ * attribute case-sensitive setting. It is possible to have duplicate attributes subsequently if
+ * {@link #add(String, String)} vs {@link #put(String, String)} is used.
  * </p>
  * <p>
  * Attribute name and value comparisons are generally <b>case sensitive</b>. By default for HTML, attribute names are
@@ -34,12 +41,13 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute>, Cloneable {
+    // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
+    // that. Suppressed from list, iter.)
+    static final char InternalPrefix = '/';
+
     // The Attributes object is only created on the first use of an attribute; the Element will just have a null
     // Attribute slot otherwise
     protected static final String dataPrefix = "data-";
-    // Indicates a jsoup internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
-    // that. Suppressed from list, iter.
-    static final char InternalPrefix = '/';
     private static final int InitialCapacity = 3; // sampling found mean count when attrs present = 1.49; 1.08 overall. 2.6:1 don't have any attrs.
 
     // manages the key/val arrays
@@ -51,6 +59,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     private int size = 0; // number of slots used (not total capacity, which is keys.length)
     String[] keys = new String[InitialCapacity];
     Object[] vals = new Object[InitialCapacity]; // Genericish: all non-internal attribute values must be Strings and are cast on access.
+    // todo - make keys iterable without creating Attribute objects
 
     // check there's room for more
     private void checkCapacity(int minNewSize) {
@@ -112,19 +121,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get an arbitrary user data object by key.
-     * @param key case sensitive key to the object.
-     * @return the object associated to this key, or {@code null} if not found.
-     */
-    @Nullable
-    Object getUserData(String key) {
-        Validate.notNull(key);
-        if (!isInternalKey(key)) key = internalKey(key);
-        int i = indexOfKeyIgnoreCase(key);
-        return i == NotFound ? null : vals[i];
-    }
-
-    /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      * @see Attributes#put(String, String)
      */
@@ -143,7 +139,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      * Set a new attribute, or replace an existing one by key.
      * @param key case sensitive attribute key (not null)
-     * @param value attribute value (may be null, to set a boolean attribute)
+     * @param value attribute value (which can be null, to set a true boolean attribute)
      * @return these attributes, for chaining
      */
     public Attributes put(String key, @Nullable String value) {
@@ -157,21 +153,50 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Put an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
-     * @param key case sensitive key
+     Get the map holding any user-data associated with these Attributes. Will be created empty on first use. Held as
+     an internal attribute, not a field member, to reduce the memory footprint of Attributes when not used. Can hold
+     arbitrary objects; use for source ranges, connecting W3C nodes to Elements, etc.
+     * @return the map holding user-data
+     */
+    Map<String, Object> userData() {
+        final Map<String, Object> userData;
+        int i = indexOfKey(SharedConstants.UserDataKey);
+        if (i == NotFound) {
+            userData = new HashMap<>();
+            addObject(SharedConstants.UserDataKey, userData);
+        } else {
+            //noinspection unchecked
+            userData = (Map<String, Object>) vals[i];
+        }
+        return userData;
+    }
+
+    /**
+     Get an arbitrary user-data object by key.
+     * @param key case-sensitive key to the object.
+     * @return the object associated to this key, or {@code null} if not found.
+     * @see #userData(String key, Object val)
+     * @since 1.17.1
+     */
+    @Nullable
+    public Object userData(String key) {
+        Validate.notNull(key);
+        if (!hasKey(SharedConstants.UserDataKey)) return null; // no user data exists
+        Map<String, Object> userData = userData();
+        return userData.get(key);
+    }
+
+    /**
+     Set an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
+     * @param key case-sensitive key
      * @param value object value
      * @return these attributes
-     * @see #getUserData(String)
+     * @see #userData(String key)
+     * @since 1.17.1
      */
-    Attributes putUserData(String key, Object value) {
+    public Attributes userData(String key, Object value) {
         Validate.notNull(key);
-        if (!isInternalKey(key)) key = internalKey(key);
-        Validate.notNull(value);
-        int i = indexOfKey(key);
-        if (i != NotFound)
-            vals[i] = value;
-        else
-            addObject(key, value);
+        userData().put(key, value);
         return this;
     }
 
@@ -187,7 +212,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     * Set a new boolean attribute, remove attribute if value is false.
+     * Set a new boolean attribute. Removes the attribute if the value is false.
      * @param key case <b>insensitive</b> attribute key
      * @param value attribute value
      * @return these attributes, for chaining
@@ -202,7 +227,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     /**
      Set a new attribute, or replace an existing one by key.
-     @param attribute attribute with case sensitive key
+     @param attribute attribute with case-sensitive key
      @return these attributes, for chaining
      */
     public Attributes put(Attribute attribute) {
@@ -291,6 +316,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public int size() {
         return size;
+        // todo - exclude internal attributes from this count - maintain size, count of internals
     }
 
     /**
@@ -319,6 +345,29 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
     }
 
+    /**
+     Get the source ranges (start to end position) in the original input source from which this attribute's <b>name</b>
+     and <b>value</b> were parsed.
+     <p>Position tracking must be enabled prior to parsing the content.</p>
+     @param key the attribute name
+     @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
+     was not tracked.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Attribute#sourceRange()
+     @see Node#sourceRange()
+     @see Element#endSourceRange()
+     @since 1.17.1
+     */
+    public Range.AttributeRange sourceRange(String key) {
+        if (!hasKey(key)) return UntrackedAttr;
+        //noinspection unchecked
+        Map<String, Range.AttributeRange> ranges = (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        if (ranges == null) return Range.AttributeRange.UntrackedAttr;
+        Range.AttributeRange range = ranges.get(key);
+        return range != null ? range : Range.AttributeRange.UntrackedAttr;
+    }
+
+    @Override
     public Iterator<Attribute> iterator() {
         return new Iterator<Attribute>() {
             int expectedSize = size;
@@ -340,6 +389,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             @Override
             public Attribute next() {
                 checkModified();
+                if (i >= size) throw new NoSuchElementException();
                 final Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
                 i++;
                 return attr;
@@ -467,11 +517,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     * Internal method. Lowercases all keys.
+     * Internal method. Lowercases all (non-internal) keys.
      */
     public void normalize() {
         for (int i = 0; i < size; i++) {
-            keys[i] = lowerCase(keys[i]);
+            if (!isInternalKey(keys[i]))
+                keys[i] = lowerCase(keys[i]);
         }
     }
 
@@ -565,7 +616,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return InternalPrefix + key;
     }
 
-    private boolean isInternalKey(String key) {
+    static boolean isInternalKey(String key) {
         return key != null && key.length() > 1 && key.charAt(0) == InternalPrefix;
     }
 }

@@ -6,8 +6,8 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,9 +16,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
- The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
+ The base, abstract Node model. {@link Element}, {@link Document}, {@link Comment}, {@link TextNode}, et al.,
+ are instances of Node.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
@@ -66,7 +68,7 @@ public abstract class Node implements Cloneable {
     /**
      * Get an attribute's value by its key. <b>Case insensitive</b>
      * <p>
-     * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
+     * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs:</b></code>,
      * which is a shortcut to the {@link #absUrl} method.
      * </p>
      * E.g.:
@@ -225,7 +227,8 @@ public abstract class Node implements Cloneable {
     /**
      Get a child node by its 0-based index.
      @param index index of child node
-     @return the child node at this index. Throws a {@code IndexOutOfBoundsException} if the index is out of bounds.
+     @return the child node at this index.
+     @throws IndexOutOfBoundsException if the index is out of bounds.
      */
     public Node childNode(int index) {
         return ensureChildNodes().get(index);
@@ -593,7 +596,7 @@ public abstract class Node implements Cloneable {
 
     /**
      Get this node's next sibling.
-     @return next sibling, or @{code null} if this is the last sibling
+     @return next sibling, or {@code null} if this is the last sibling
      */
     public @Nullable Node nextSibling() {
         if (parentNode == null)
@@ -682,12 +685,12 @@ public abstract class Node implements Cloneable {
      */
     public Node forEachNode(Consumer<? super Node> action) {
         Validate.notNull(action);
-        NodeTraversor.traverse((node, depth) -> action.accept(node), this);
+        nodeStream().forEach(action);
         return this;
     }
 
     /**
-     * Perform a depth-first filtering through this node and its descendants.
+     * Perform a depth-first filtered traversal through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
      */
@@ -695,6 +698,27 @@ public abstract class Node implements Cloneable {
         Validate.notNull(nodeFilter);
         NodeTraversor.filter(nodeFilter, this);
         return this;
+    }
+
+    /**
+     Returns a Stream of this Node and all of its descendant Nodes. The stream has document order.
+     @return a stream of all nodes.
+     @see Element#stream()
+     @since 1.17.1
+     */
+    public Stream<Node> nodeStream() {
+        return NodeUtils.stream(this, Node.class);
+    }
+
+    /**
+     Returns a Stream of this and descendant nodes, containing only nodes of the specified type. The stream has document
+     order.
+     @return a stream of nodes filtered by type.
+     @see Element#stream()
+     @since 1.17.1
+     */
+    public <T extends Node> Stream<T> nodeStream(Class<T> type) {
+        return NodeUtils.stream(this, type);
     }
 
     /**
@@ -734,11 +758,14 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the source range (start and end positions) in the original input source that this node was parsed from. Position
-     tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the start tag.
-     @return the range for the start of the node.
+     Get the source range (start and end positions) in the original input source from which this node was parsed.
+     Position tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the
+     start tag.
+     @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Range#isImplicit()
      @see Element#endSourceRange()
+     @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
     public Range sourceRange() {

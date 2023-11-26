@@ -3,8 +3,8 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 
 /**
@@ -38,21 +38,22 @@ final class Tokeniser {
     private boolean isEmitPending = false;
     @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
     private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
-    StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
+    final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
-    Token.StartTag startPending = new Token.StartTag();
-    Token.EndTag endPending = new Token.EndTag();
-    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
-    Token.Character charPending = new Token.Character();
-    Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
-    Token.Comment commentPending = new Token.Comment(); // comment building up
+    final Token.StartTag startPending;
+    final Token.EndTag endPending = new Token.EndTag();
+    Token.Tag tagPending; // tag we are building up: start or end pending
+    final Token.Character charPending = new Token.Character();
+    final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
+    final Token.Comment commentPending = new Token.Comment(); // comment building up
     @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     private static final int Unset = -1;
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
-    Tokeniser(CharacterReader reader, ParseErrorList errors) {
+    Tokeniser(CharacterReader reader, ParseErrorList errors, boolean trackSource) {
+        tagPending = startPending  = new Token.StartTag(trackSource, reader);
         this.reader = reader;
         this.errors = errors;
     }
@@ -329,7 +330,7 @@ final class Tokeniser {
             errors.add(new ParseError(reader, errorMsg, args));
     }
 
-    boolean currentNodeInHtmlNS() {
+    static boolean currentNodeInHtmlNS() {
         // todo: implement namespaces correctly
         return true;
         // Element currentNode = currentNode();

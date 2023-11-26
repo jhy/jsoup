@@ -2,8 +2,14 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Range;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.jsoup.internal.SharedConstants.*;
+
 
 /**
  * Parse tokens for the Tokeniser.
@@ -102,35 +108,50 @@ abstract class Token {
 
     static abstract class Tag extends Token {
         @Nullable protected String tagName;
-        @Nullable protected String normalName; // lc version of tag name, for case insensitive tree build
+        @Nullable protected String normalName; // lc version of tag name, for case-insensitive tree build
+        boolean selfClosing = false;
+        @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
-        private final StringBuilder attrName = new StringBuilder(); // try to get attr names and vals in one shot, vs Builder
-        @Nullable private String attrNameS;
+        @Nullable private String attrName; // try to get attr names and vals in one shot, vs Builder
+        private final StringBuilder attrNameSb = new StringBuilder();
         private boolean hasAttrName = false;
 
-        private final StringBuilder attrValue = new StringBuilder();
-        @Nullable private String attrValueS;
+        @Nullable private String attrValue;
+        private final StringBuilder attrValueSb = new StringBuilder();
         private boolean hasAttrValue = false;
         private boolean hasEmptyAttrValue = false; // distinguish boolean attribute from empty string value
 
-        boolean selfClosing = false;
-        @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+        // attribute source range tracking
+        final boolean trackSource;
+        int attrNameStart, attrNameEnd, attrValStart, attrValEnd;
+
+        Tag(boolean trackSource) {
+            this.trackSource = trackSource;
+        }
 
         @Override
         Tag reset() {
             super.reset();
             tagName = null;
             normalName = null;
-            reset(attrName);
-            attrNameS = null;
-            hasAttrName = false;
-            reset(attrValue);
-            attrValueS = null;
-            hasEmptyAttrValue = false;
-            hasAttrValue = false;
             selfClosing = false;
             attributes = null;
+            resetPendingAttr();
             return this;
+        }
+
+        private void resetPendingAttr() {
+            reset(attrNameSb);
+            attrName = null;
+            hasAttrName = false;
+
+            reset(attrValueSb);
+            attrValue = null;
+            hasEmptyAttrValue = false;
+            hasAttrValue = false;
+
+            if (trackSource)
+                attrNameStart = attrNameEnd = attrValStart = attrValEnd = Unset;
         }
 
         /* Limits runaway crafted HTML from spewing attributes and getting a little sluggish in ensureCapacity.
@@ -144,28 +165,52 @@ abstract class Token {
 
             if (hasAttrName && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
-                String name = attrName.length() > 0 ? attrName.toString() : attrNameS;
+                String name = attrNameSb.length() > 0 ? attrNameSb.toString() : attrName;
                 name = name.trim();
                 if (name.length() > 0) {
                     String value;
                     if (hasAttrValue)
-                        value = attrValue.length() > 0 ? attrValue.toString() : attrValueS;
+                        value = attrValueSb.length() > 0 ? attrValueSb.toString() : attrValue;
                     else if (hasEmptyAttrValue)
                         value = "";
                     else
                         value = null;
-                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known (the appropriate tree builder).
+                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known, and we can warn for duplicates.
                     attributes.add(name, value);
+
+                    trackAttributeRange(name);
                 }
             }
-            reset(attrName);
-            attrNameS = null;
-            hasAttrName = false;
+            resetPendingAttr();
+        }
 
-            reset(attrValue);
-            attrValueS = null;
-            hasAttrValue = false;
-            hasEmptyAttrValue = false;
+        private void trackAttributeRange(String name) {
+            if (trackSource && isStartTag()) {
+                final StartTag start = asStartTag();
+                final CharacterReader r = start.reader;
+                assert attributes != null;
+                //noinspection unchecked
+                Map<String, Range.AttributeRange> attrRanges =
+                    (Map<String, Range.AttributeRange>) attributes.userData(AttrRangeKey);
+                if (attrRanges == null) {
+                    attrRanges = new HashMap<>();
+                    attributes.userData(AttrRangeKey, attrRanges);
+                }
+                if (attrRanges.containsKey(name)) return; // dedupe ranges on case-sensitive name as we go; actual attributes get deduped later
+
+                // if there's no value (e.g. boolean), make it an implicit range at current
+                if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
+
+                Range.AttributeRange range = new Range.AttributeRange(
+                    new Range(
+                        new Range.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
+                        new Range.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
+                    new Range(
+                        new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
+                        new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
+                );
+                attrRanges.put(name, range);
+            }
         }
 
         final boolean hasAttributes() {
@@ -225,46 +270,41 @@ abstract class Token {
             appendTagName(String.valueOf(append));
         }
 
-        final void appendAttributeName(String append) {
+        final void appendAttributeName(String append, int startPos, int endPos) {
             // might have null chars because we eat in one pass - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
 
-            ensureAttrName();
-            if (attrName.length() == 0) {
-                attrNameS = append;
+            ensureAttrName(startPos, endPos);
+            if (attrNameSb.length() == 0) {
+                attrName = append;
             } else {
-                attrName.append(append);
+                attrNameSb.append(append);
             }
         }
 
-        final void appendAttributeName(char append) {
-            ensureAttrName();
-            attrName.append(append);
+        final void appendAttributeName(char append, int startPos, int endPos) {
+            ensureAttrName(startPos, endPos);
+            attrNameSb.append(append);
         }
 
-        final void appendAttributeValue(String append) {
-            ensureAttrValue();
-            if (attrValue.length() == 0) {
-                attrValueS = append;
+        final void appendAttributeValue(String append, int startPos, int endPos) {
+            ensureAttrValue(startPos, endPos);
+            if (attrValueSb.length() == 0) {
+                attrValue = append;
             } else {
-                attrValue.append(append);
+                attrValueSb.append(append);
             }
         }
 
-        final void appendAttributeValue(char append) {
-            ensureAttrValue();
-            attrValue.append(append);
+        final void appendAttributeValue(char append, int startPos, int endPos) {
+            ensureAttrValue(startPos, endPos);
+            attrValueSb.append(append);
         }
 
-        final void appendAttributeValue(char[] append) {
-            ensureAttrValue();
-            attrValue.append(append);
-        }
-
-        final void appendAttributeValue(int[] appendCodepoints) {
-            ensureAttrValue();
+        final void appendAttributeValue(int[] appendCodepoints, int startPos, int endPos) {
+            ensureAttrValue(startPos, endPos);
             for (int codepoint : appendCodepoints) {
-                attrValue.appendCodePoint(codepoint);
+                attrValueSb.appendCodePoint(codepoint);
             }
         }
         
@@ -272,21 +312,29 @@ abstract class Token {
             hasEmptyAttrValue = true;
         }
 
-        private void ensureAttrName() {
+        private void ensureAttrName(int startPos, int endPos) {
             hasAttrName = true;
             // if on second hit, we'll need to move to the builder
-            if (attrNameS != null) {
-                attrName.append(attrNameS);
-                attrNameS = null;
+            if (attrName != null) {
+                attrNameSb.append(attrName);
+                attrName = null;
+            }
+            if (trackSource) {
+                attrNameStart = attrNameStart > Unset ? attrNameStart : startPos; // latches to first
+                attrNameEnd = endPos;
             }
         }
 
-        private void ensureAttrValue() {
+        private void ensureAttrValue(int startPos, int endPos) {
             hasAttrValue = true;
             // if on second hit, we'll need to move to the builder
-            if (attrValueS != null) {
-                attrValue.append(attrValueS);
-                attrValueS = null;
+            if (attrValue != null) {
+                attrValueSb.append(attrValue);
+                attrValue = null;
+            }
+            if (trackSource) {
+                attrValStart = attrValStart > Unset ? attrValStart : startPos; // latches to first
+                attrValEnd = endPos;
             }
         }
 
@@ -295,9 +343,13 @@ abstract class Token {
     }
 
     final static class StartTag extends Tag {
-        StartTag() {
-            super();
+        final CharacterReader reader;
+
+        // Reader is provided so if tracking, can get line / column positions for Range.
+        StartTag(boolean trackSource, CharacterReader reader) {
+            super(trackSource);
             type = TokenType.StartTag;
+            this.reader = reader;
         }
 
         @Override
@@ -326,7 +378,7 @@ abstract class Token {
 
     final static class EndTag extends Tag{
         EndTag() {
-            super();
+            super(false);
             type = TokenType.EndTag;
         }
 
@@ -358,7 +410,7 @@ abstract class Token {
             return dataS != null ? dataS : data.toString();
         }
 
-        final Comment append(String append) {
+        Comment append(String append) {
             ensureData();
             if (data.length() == 0) {
                 dataS = append;
@@ -368,7 +420,7 @@ abstract class Token {
             return this;
         }
 
-        final Comment append(char append) {
+        Comment append(char append) {
             ensureData();
             data.append(append);
             return this;

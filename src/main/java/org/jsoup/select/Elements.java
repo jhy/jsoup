@@ -8,8 +8,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +65,7 @@ public class Elements extends ArrayList<Element> {
     /**
      Get an attribute value from the first matched element that has the attribute.
      @param attributeKey The attribute key.
-     @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
+     @return The attribute value from the first matched element that has the attribute. If no elements were matched (isEmpty() == true),
      or if the no elements have the attribute, returns empty string.
      @see #hasAttr(String)
      */

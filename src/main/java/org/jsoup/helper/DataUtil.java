@@ -1,7 +1,8 @@
 package org.jsoup.helper;
 
-import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -10,9 +11,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
-
-import javax.annotation.Nullable;
-import javax.annotation.WillClose;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
@@ -34,6 +33,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
+
 /**
  * Internal static utilities for handling data.
  *
@@ -44,7 +45,6 @@ public final class DataUtil {
     public static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, as those only appear in Android API 19, and we target 10.
     static final String defaultCharsetName = UTF_8.name(); // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
-    static final int bufferSize = 1024 * 32;
     private static final char[] mimeBoundaryChars =
             "-_1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     static final int boundaryLength = 32;
@@ -105,7 +105,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
+    public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
     }
 
@@ -118,7 +118,7 @@ public final class DataUtil {
      * @return Document
      * @throws IOException on IO error
      */
-    public static Document load(@WillClose InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return parseInputStream(in, charsetName, baseUri, parser);
     }
 
@@ -129,23 +129,23 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     static void crossStreams(final InputStream in, final OutputStream out) throws IOException {
-        final byte[] buffer = new byte[bufferSize];
+        final byte[] buffer = new byte[DefaultBufferSize];
         int len;
         while ((len = in.read(buffer)) != -1) {
             out.write(buffer, 0, len);
         }
     }
 
-    static Document parseInputStream(@Nullable @WillClose InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
+    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
-        input = ConstrainableInputStream.wrap(input, bufferSize, 0);
+        input = ControllableInputStream.wrap(input, DefaultBufferSize, 0);
 
         @Nullable Document doc = null;
 
         // read the start of the stream and look for a BOM or meta charset
         try {
-            input.mark(bufferSize);
+            input.mark(DefaultBufferSize);
             ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
             boolean fullyRead = (input.read() == -1);
             input.reset();
@@ -208,7 +208,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), bufferSize); // Android level does not allow us try-with-resources
+                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), DefaultBufferSize); // Android level does not allow us try-with-resources
                 try {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
@@ -247,9 +247,7 @@ public final class DataUtil {
      * @throws IOException if an exception occurs whilst reading from the input stream.
      */
     public static ByteBuffer readToByteBuffer(InputStream inStream, int maxSize) throws IOException {
-        Validate.isTrue(maxSize >= 0, "maxSize must be 0 (unlimited) or larger");
-        final ConstrainableInputStream input = ConstrainableInputStream.wrap(inStream, bufferSize, maxSize);
-        return input.readToByteBuffer(maxSize);
+        return ControllableInputStream.readToByteBuffer(inStream, maxSize);
     }
 
     static ByteBuffer emptyByteBuffer() {

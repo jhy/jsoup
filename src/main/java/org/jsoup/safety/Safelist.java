@@ -6,6 +6,7 @@ package org.jsoup.safety;
  */
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
@@ -52,9 +53,8 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 
  <p>
  The cleaner and these safelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
- supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, either wrap the
- document HTML around the cleaned body HTML, or create a safelist that allows <code>html</code> and <code>head</code>
- elements as appropriate.
+ supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, you could wrap
+ the templated document HTML around the cleaned body HTML.
  </p>
  <p>
  If you are going to extend a safelist, please be very careful. Make sure you understand what attributes may lead to
@@ -297,8 +297,8 @@ public class Safelist {
         Validate.notNull(attributes);
         Validate.isTrue(attributes.length > 0, "No attribute names supplied.");
 
+        addTags(tag);
         TagName tagName = TagName.valueOf(tag);
-        tagNames.add(tagName);
         Set<AttributeKey> attributeSet = new HashSet<>();
         for (String key : attributes) {
             Validate.notEmpty(key);
@@ -622,7 +622,7 @@ public class Safelist {
         }
 
         static TagName valueOf(String value) {
-            return new TagName(value);
+            return new TagName(Normalizer.lowerCase(value));
         }
     }
 
@@ -632,7 +632,7 @@ public class Safelist {
         }
 
         static AttributeKey valueOf(String value) {
-            return new AttributeKey(value);
+            return new AttributeKey(Normalizer.lowerCase(value));
         }
     }
 

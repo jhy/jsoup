@@ -1,10 +1,19 @@
 jsoup changelog
 
 Release 1.17.1 [PENDING]
+  * Improvement: in Jsoup.connect(), added support for request-level authentication, supporting authentication to
+    proxies and to servers.
+    <https://github.com/jhy/jsoup/pull/2046>
+
   * Improvement: in the Elements list, added direct support for `#set(index, element)`, `#remove(index)`,
     `#remove(object)`, `#clear()`, `#removeAll(collection)`, `#retainAll(collection)`, `#removeIf(filter)`,
     `#replaceAll(operator)`. These methods update the original DOM, as well as the Elements list.
     <https://github.com/jhy/jsoup/pull/2017>
+
+  * Improvement: added the NodeIterator class, to efficiently traverse a node tree using the Iterator interface. And
+    added Stream Element#stream() and Node#nodeStream() methods, to enable fluent composable stream pipelines of node
+    traversals.
+    <https://github.com/jhy/jsoup/pull/2051>
 
   * Improvement: when changing the OutputSettings syntax to XML, the xhtml EscapeMode is automatically set by default.
 
@@ -13,6 +22,25 @@ Release 1.17.1 [PENDING]
 
   * Improvement: repackaged the library with native (vs automatic) JPMS module support.
     <https://github.com/jhy/jsoup/pull/2025>
+
+  * Improvement: better fidelity of source positions when tracking is enabled. And implicitly created or closed elements
+    are tracked and detectable via Range.isImplicit().
+    <https://github.com/jhy/jsoup/pull/2056>
+
+  * Improvement: when source tracking is enabled, the source position for attribute names and values is now available.
+    Attribute#sourceRange() provides the ranges.
+    <https://github.com/jhy/jsoup/pull/2057>
+
+  * Improvement: when running concurrently under Java 21+ Virtual Threads, virtual threads could be pinned to their
+    carrier platform thread when parsing an input stream. To improve performance, particularly when parsing fetched
+    URLs, the internal ConstrainableInputStream has been replaced by ControllableInputStream, which avoids the locking
+    which caused that pinning.
+    <https://github.com/jhy/jsoup/issues/2054>
+
+  * Improvement: in Jsoup.Connect, allow any XML mimetype as a supported mimetype. Was previously limited to
+    `{application|text}/xml`. This enables for e.g. fetching SVGs with a image/svg+xml mimetype, without having to
+    disable mimetype validation.
+    <https://github.com/jhy/jsoup/issues/2059>
 
   * Bugfix: when outputting with XML syntax, HTML elements that were parsed as data nodes (<script> and <style>) should
     be emitted as CDATA nodes, so that they can be parsed correctly by an XML parser.
@@ -29,7 +57,26 @@ Release 1.17.1 [PENDING]
   * Bugfix: in W3CDom, if the jsoup input document contained an empty doctype, the conversion would fail with a
     DOMException. Now, said doctype is discarded, and the conversion continues.
 
+  * Bugfix: when cleaning a document containing SVG elements (or other foreign elements that have preserved case names),
+    the cleaned output would be incorrectly nested if the safelist had a different case than the input document.
+    <https://github.com/jhy/jsoup/issues/2049>
+
+  * Bugfix: when cleaning a document, the output style of unknown self-closing tags from the input was not preserved in
+    the output. (So a <foo /> in the input, if safe-listed, would be output as <foo></foo>.)
+    <https://github.com/jhy/jsoup/issues/2049>
+
   * Build Improvement: added a local test proxy implementation, for proxy integration tests.
+    <https://github.com/jhy/jsoup/pull/2029>
+
+  * Build Improvement: added tests for HTTPS request support, using a local self-signed cert. Includes proxy tests.
+    <https://github.com/jhy/jsoup/pull/2032>
+
+  * Change: the InputStream returned in Connection.Response.bodyStream() is no longer a ConstrainedInputStream, and
+    so is not subject to settings such as timeout or maximum size. It is now a plain BufferedInputStream around the
+    response stream. Whilst this behaviour was not documented, you may have been inadvertently relying on those
+    constraints. The constraints are still applied to other methods such as .parse() and .bufferUp(). So if you do want
+    a constrained BufferedInputStream, you may do Connection.Response.bufferUp().bodyStream().
+    <https://github.com/jhy/jsoup/issues/2054>
 
 Release 1.16.2 [20-Oct-2023]
   * Improvement: optimized the performance of complex CSS selectors, by adding a cost-based query planner. Evaluators

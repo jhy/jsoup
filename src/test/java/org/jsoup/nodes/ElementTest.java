@@ -208,6 +208,18 @@ public class ElementTest {
         assertEquals("Hello  \n  there", doc.wholeText());
     }
 
+    @Test void wholeTextRuns() {
+        Document doc = Jsoup.parse("<div><p id=1></p><p id=2> </p><p id=3>.  </p>");
+
+        Element p1 = doc.expectFirst("#1");
+        Element p2 = doc.expectFirst("#2");
+        Element p3 = doc.expectFirst("#3");
+
+        assertEquals("", p1.wholeText());
+        assertEquals(" ", p2.wholeText());
+        assertEquals(".  ", p3.wholeText());
+    }
+
     @Test
     public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");

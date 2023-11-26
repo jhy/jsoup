@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Method;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
@@ -11,21 +12,31 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
+import static org.jsoup.helper.AuthenticationHandlerTest.MaxAttempts;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
@@ -46,6 +57,13 @@ public class ConnectTest {
     @Test
     public void canConnectToLocalServer() throws IOException {
         String url = HelloServlet.Url;
+        Document doc = Jsoup.connect(url).get();
+        Element p = doc.selectFirst("p");
+        assertEquals("Hello, World!", p.text());
+    }
+
+    @Test void canConnectToLocalTlsServer() throws IOException {
+        String url = HelloServlet.TlsUrl;
         Document doc = Jsoup.connect(url).get();
         Element p = doc.selectFirst("p");
         assertEquals("Hello, World!", p.text());
@@ -283,16 +301,16 @@ public class ConnectTest {
     /**
      * Tests upload of content to a remote service.
      */
-    @Test
-    public void postFiles() throws IOException {
+    @ParameterizedTest @MethodSource("echoUrls") // http and https
+    public void postFiles(String url) throws IOException {
         File thumb = ParseTest.getFile("/htmltests/thumb.jpg");
         File html = ParseTest.getFile("/htmltests/large.html");
 
         Document res = Jsoup
-            .connect(EchoServlet.Url)
+            .connect(url)
             .data("firstname", "Jay")
-            .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
-            .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
+            .data("firstPart", thumb.getName(), Files.newInputStream(thumb.toPath()), "image/jpeg")
+            .data("secondPart", html.getName(), Files.newInputStream(html.toPath())) // defaults to "application-octetstream";
             .data("surname", "Soup")
             .post();
 
@@ -494,7 +512,7 @@ public class ConnectTest {
     }
 
     @Test
-    public void testBinaryContentTypeThrowsException() {
+    public void testBinaryContentTypeThrowsException() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
 
@@ -502,9 +520,9 @@ public class ConnectTest {
         try {
             con.execute();
             Document doc = con.response().parse();
-        } catch (IOException e) {
+        } catch (UnsupportedMimeTypeException e) {
             threw = true;
-            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/*+xml", e.getMessage());
+            assertEquals("Unhandled content type. Must be text/*, */xml, or */*+xml", e.getMessage());
         }
         assertTrue(threw);
     }
@@ -523,6 +541,26 @@ public class ConnectTest {
         assertEquals("application/rss+xml", con.response().contentType());
         assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
         assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
+    }
+
+    @Test public void imageXmlMimeType() throws IOException {
+        // test that we switch to XML, and that we support image/svg+xml
+        String mimetype = "image/svg+xml";
+
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/osi-logo.svg"))
+            .data(FileServlet.ContentTypeParam, mimetype);
+        Document doc = con.get();
+
+        assertEquals(mimetype, con.response().contentType());
+        assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
+        assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
+        Node firstChild = doc.firstChild();
+        XmlDeclaration decl = (XmlDeclaration) firstChild;
+        assertEquals("no", decl.attr("standalone"));
+        Element svg = doc.expectFirst("svg");
+        Element flowRoot = svg.expectFirst("flowRoot");
+        assertEquals("flowRoot", flowRoot.tagName());
+        assertEquals("preserve", flowRoot.attr("xml:space"));
     }
 
     @Test
@@ -734,11 +772,11 @@ public class ConnectTest {
         assertEquals("", ihVal("Query String", resultDoc));
 
         // new request to echo, should not have form data, but should have cookies from implicit session
-        Document newEcho = submit.newRequest().url(echoUrl).get();
+        Document newEcho = submit.newRequest(echoUrl).get();
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", newEcho));
         assertEquals("", ihVal("Query String", newEcho));
 
-        Document cookieDoc = submit.newRequest().url(cookieUrl).get();
+        Document cookieDoc = submit.newRequest(cookieUrl).get();
         assertEquals("CookieServlet", ihVal("One", cookieDoc)); // different cookie path
 
     }
@@ -749,7 +787,7 @@ public class ConnectTest {
         String startUrl = FileServlet.urlTo("/htmltests/form-tests.html");
 
         Connection session = Jsoup.newSession();
-        Document loginDoc = session.newRequest().url(startUrl).get();
+        Document loginDoc = session.newRequest(startUrl).get();
         FormElement form = loginDoc.expectForm("#login2");
         assertNotNull(form);
         String username = "admin";
@@ -766,7 +804,7 @@ public class ConnectTest {
         assertEquals(Connection.Method.POST, postRes.method());
         Document resultDoc = postRes.parse();
 
-        Document echo2 = resultDoc.connection().newRequest().url(echoUrl).get();
+        Document echo2 = resultDoc.connection().newRequest(echoUrl).get();
         assertEquals("", ihVal("Query String", echo2)); // should not re-send the data
         assertEquals("One=EchoServlet; One=Root", ihVal("Cookie", echo2));
     }
@@ -786,4 +824,77 @@ public class ConnectTest {
         assertEquals("%E9%8D%B5=%E5%80%A4", ihVal("Query String", doc));
         assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
+
+    /**
+     Provides HTTP and HTTPS EchoServlet URLs
+     */
+    private static Stream<String> echoUrls() {
+        return Stream.of(EchoServlet.Url, EchoServlet.TlsUrl);
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void failsIfNotAuthenticated(String url) throws IOException {
+        String password = AuthFilter.newServerPassword(); // we don't send it, but ensures cache won't hit
+        Connection.Response res = Jsoup.connect(url)
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .ignoreHttpErrors(true)
+            .execute();
+
+        assertEquals(401, res.statusCode());
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void canAuthenticate(String url) throws IOException {
+        AtomicInteger count = new AtomicInteger(0);
+        String password = AuthFilter.newServerPassword();
+        Connection.Response res = Jsoup.connect(url)
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .auth(ctx -> {
+                count.incrementAndGet();
+                assertEquals(Authenticator.RequestorType.SERVER, ctx.type());
+                assertEquals("localhost", ctx.url().getHost());
+                assertEquals(AuthFilter.ServerRealm, ctx.realm());
+
+                return ctx.credentials(AuthFilter.ServerUser, password);
+            })
+            .execute();
+
+        assertEquals(1, count.get());
+
+        Document doc = res.parse();
+        assertTrue(ihVal("Authorization", doc).startsWith("Basic ")); // tests we set the auth header
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls")
+    void incorrectAuth(String url) throws IOException {
+        Connection session = Jsoup.newSession()
+            .header(AuthFilter.WantsServerAuthentication, "1")
+            .ignoreHttpErrors(true);
+
+        String password = AuthFilter.newServerPassword();
+        int code = session.newRequest(url).execute().statusCode(); // no auth sent
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, code);
+
+        AtomicInteger count = new AtomicInteger(0);
+        Connection.Response res = session.newRequest(url)
+            .auth(ctx -> {
+                count.incrementAndGet();
+                return ctx.credentials(AuthFilter.ServerUser, password + "wrong"); // incorrect
+            })
+            .execute();
+        assertEquals(MaxAttempts, count.get());
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.statusCode());
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        Connection.Response successRes = session.newRequest(url)
+            .auth(ctx -> {
+                successCount.incrementAndGet();
+                return ctx.credentials(AuthFilter.ServerUser, password); // correct
+            })
+            .execute();
+        assertEquals(1, successCount.get());
+        assertEquals(HttpServletResponse.SC_OK, successRes.statusCode());
+    }
+
+    // proxy connection tests are in ProxyTest
 }

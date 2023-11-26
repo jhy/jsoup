@@ -1,6 +1,6 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.Validate;
+import static org.jsoup.internal.SharedConstants.*;
 
 /**
  A Range object tracks the character positions in the original input source where a Node starts or ends. If you want to
@@ -10,12 +10,11 @@ import org.jsoup.helper.Validate;
  @since 1.15.2
  */
 public class Range {
+    private static final Position UntrackedPos = new Position(-1, -1, -1);
     private final Position start, end;
 
-    private static final String RangeKey = Attributes.internalKey("jsoup.sourceRange");
-    private static final String EndRangeKey = Attributes.internalKey("jsoup.endSourceRange");
-    private static final Position UntrackedPos = new Position(-1, -1, -1);
-    private static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
+    /** An untracked source range. */
+    static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
 
     /**
      Creates a new Range with start and end Positions. Called by TreeBuilder when position tracking is on.
@@ -36,11 +35,29 @@ public class Range {
     }
 
     /**
+     Get the starting cursor position of this range.
+     @return the 0-based start cursor position.
+     @since 1.17.1
+     */
+    public int startPos() {
+        return start.pos;
+    }
+
+    /**
      Get the end position of this node.
      * @return the end position
      */
     public Position end() {
         return end;
+    }
+
+    /**
+     Get the ending cursor position of this range.
+     @return the 0-based ending cursor position.
+     @since 1.17.1
+     */
+    public int endPos() {
+        return end.pos;
     }
 
     /**
@@ -52,6 +69,20 @@ public class Range {
     }
 
     /**
+     Checks if the range represents a node that was implicitly created / closed.
+     <p>For example, with HTML of {@code <p>One<p>Two}, both {@code p} elements will have an explicit
+     {@link Element#sourceRange()} but an implicit {@link Element#endSourceRange()} marking the end position, as neither
+     have closing {@code </p>} tags. The TextNodes will have explicit sourceRanges.
+     <p>A range is considered implicit if its start and end positions are the same.
+     @return true if the range is tracked and its start and end positions are the same, false otherwise.
+     @since 1.17.1
+     */
+    public boolean isImplicit() {
+        if (!isTracked()) return false;
+        return start.equals(end);
+    }
+
+    /**
      Retrieves the source range for a given Node.
      * @param node the node to retrieve the position for
      * @param start if this is the starting range. {@code false} for Element end tags.
@@ -59,20 +90,16 @@ public class Range {
      */
     static Range of(Node node, boolean start) {
         final String key = start ? RangeKey : EndRangeKey;
-        if (!node.hasAttr(key))
-            return Untracked;
-        else
-            return (Range) Validate.ensureNotNull(node.attributes().getUserData(key));
+        if (!node.hasAttributes()) return Untracked;
+        Object range = node.attributes().userData(key);
+        return range != null ? (Range) range : Untracked;
     }
 
     /**
-     Internal jsoup method, called by the TreeBuilder. Tracks a Range for a Node.
-     * @param node the node to associate this position to
-     * @param start if this is the starting range. {@code false} for Element end tags.
+     @deprecated no-op; internal method moved out of visibility
      */
-    public void track(Node node, boolean start) {
-        node.attributes().putUserData(start ? RangeKey : EndRangeKey, this);
-    }
+    @Deprecated
+    public void track(Node node, boolean start) {}
 
     @Override
     public boolean equals(Object o) {
@@ -124,7 +151,7 @@ public class Range {
 
         /**
          Gets the position index (0-based) of the original input source that this Position was read at. This tracks the
-         total number of characters read into the source at this position, regardless of the number of preceeding lines.
+         total number of characters read into the source at this position, regardless of the number of preceding lines.
          * @return the position, or {@code -1} if untracked.
          */
         public int pos() {
@@ -182,6 +209,51 @@ public class Range {
             result = 31 * result + columnNumber;
             return result;
         }
+    }
 
+    public static class AttributeRange {
+        static final AttributeRange UntrackedAttr = new AttributeRange(Range.Untracked, Range.Untracked);
+
+        private final Range nameRange;
+        private final Range valueRange;
+
+        /** Creates a new AttributeRange. Called during parsing by Token.StartTag. */
+        public AttributeRange(Range nameRange, Range valueRange) {
+            this.nameRange = nameRange;
+            this.valueRange = valueRange;
+        }
+
+        /** Get the source range for the attribute's name. */
+        public Range nameRange() {
+            return nameRange;
+        }
+
+        /** Get the source range for the attribute's value. */
+        public Range valueRange() {
+            return valueRange;
+        }
+
+        /** Get a String presentation of this Attribute range, in the form
+         {@code line,column:pos-line,column:pos=line,column:pos-line,column:pos} (name start - name end = val start - val end).
+         . */
+        @Override public String toString() {
+            return nameRange().toString() + "=" + valueRange().toString();
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            AttributeRange that = (AttributeRange) o;
+
+            if (!nameRange.equals(that.nameRange)) return false;
+            return valueRange.equals(that.valueRange);
+        }
+
+        @Override public int hashCode() {
+            int result = nameRange.hashCode();
+            result = 31 * result + valueRange.hashCode();
+            return result;
+        }
     }
 }

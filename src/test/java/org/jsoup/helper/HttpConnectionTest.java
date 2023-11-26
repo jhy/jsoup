@@ -7,7 +7,9 @@ import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -372,5 +374,38 @@ public class HttpConnectionTest {
 
         String actual = connect.request().header("Key");
         assertEquals(value, actual);
+    }
+
+    @Test void setAuth() throws MalformedURLException {
+        Connection con = Jsoup.newSession();
+
+        assertNull(con.request().auth());
+
+        RequestAuthenticator auth1 = new RequestAuthenticator() {
+            @Override public PasswordAuthentication authenticate(Context auth) {
+                return auth.credentials("foo", "bar");
+            }
+        };
+
+        RequestAuthenticator auth2 = new RequestAuthenticator() {
+            @Override public PasswordAuthentication authenticate(Context auth) {
+                return auth.credentials("qux", "baz");
+            }
+        };
+
+        con.auth(auth1);
+        assertSame(con.request().auth(), auth1);
+
+        con.auth(auth2);
+        assertSame(con.request().auth(), auth2);
+
+        con.request().auth(auth1);
+        assertSame(con.request().auth(), auth1);
+
+        PasswordAuthentication creds = auth1.authenticate(
+            new RequestAuthenticator.Context(new URL("http://example.com"), Authenticator.RequestorType.SERVER, "Realm"));
+        assertNotNull(creds);
+        assertEquals("foo", creds.getUserName());
+        assertEquals("bar", new String(creds.getPassword()));
     }
 }

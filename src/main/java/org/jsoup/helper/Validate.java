@@ -1,6 +1,6 @@
 package org.jsoup.helper;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Validators to check that method arguments meet expectations. 

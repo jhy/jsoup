@@ -1,14 +1,16 @@
 package org.jsoup;
 
+import org.jsoup.helper.RequestAuthenticator;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.Authenticator;
 import java.net.CookieStore;
 import java.net.Proxy;
 import java.net.URL;
@@ -68,6 +70,28 @@ public interface Connection {
      @since 1.14.1
      */
     Connection newRequest();
+
+    /**
+     Creates a new request, using this Connection as the session-state and to initialize the connection settings (which
+     may then be independently changed on the returned {@link Connection.Request} object).
+     @return a new Connection object, with a shared Cookie Store and initialized settings from this Connection and Request
+     @param url URL for the new request
+     @since 1.17.1
+     */
+    default Connection newRequest(String url) {
+        return newRequest().url(url);
+    }
+
+    /**
+     Creates a new request, using this Connection as the session-state and to initialize the connection settings (which
+     may then be independently changed on the returned {@link Connection.Request} object).
+     @return a new Connection object, with a shared Cookie Store and initialized settings from this Connection and Request
+     @param url URL for the new request
+     @since 1.17.1
+     */
+    default Connection newRequest(URL url) {
+        return newRequest().url(url);
+    }
 
     /**
      * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
@@ -321,6 +345,64 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     Connection postDataCharset(String charset);
+
+    /**
+     Set the authenticator to use for this connection, enabling requests to URLs, and via proxies, that require
+     authentication credentials.
+     <p>The authentication scheme used is automatically detected during the request execution.
+     Supported schemes (subject to the platform) are {@code basic}, {@code digest}, {@code NTLM},
+     and {@code Kerberos}.</p>
+
+     <p>To use, supply a {@link RequestAuthenticator} function that:
+     <ol>
+     <li>validates the URL that is requesting authentication, and</li>
+     <li>returns the appropriate credentials (username and password)</li>
+     </ol>
+     </p>
+
+     <p>For example, to authenticate both to a proxy and a downstream web server:
+     <code><pre>
+     Connection session = Jsoup.newSession()
+         .proxy("proxy.example.com", 8080)
+         .auth(auth -> {
+             if (auth.isServer()) { // provide credentials for the request url
+                 Validate.isTrue(auth.url().getHost().equals("example.com"));
+                 // check that we're sending credentials were we expect, and not redirected out
+                 return auth.credentials("username", "password");
+             } else { // auth.isProxy()
+                 return auth.credentials("proxy-user", "proxy-password");
+             }
+         });
+
+     Connection.Response response = session.newRequest("https://example.com/adminzone/").execute();
+     </pre></code>
+     </p>
+
+     <p>The system may cache the authentication and use it for subsequent requests to the same resource.</p>
+
+     <p><b>Implementation notes</b></p>
+     <p>For compatibility, on a Java 8 platform, authentication is set up via the system-wide default
+     {@link java.net.Authenticator#setDefault(Authenticator)} method via a ThreadLocal delegator. Whilst the
+     authenticator used is request specific and thread-safe, if you have other calls to {@code setDefault}, they will be
+     incompatible with this implementation.</p>
+     <p>On Java 9 and above, the preceding note does not apply; authenticators are directly set on the request. </p>
+     <p>If you are attempting to authenticate to a proxy that uses the {@code basic} scheme and will be fetching HTTPS
+     URLs, you need to configure your Java platform to enable that, by setting the
+     {@code jdk.http.auth.tunneling.disabledSchemes} system property to {@code ""}.
+     This must be executed prior to any authorization attempts. E.g.:
+     <code><pre>
+     static {
+        System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+        // removes Basic, which is otherwise excluded from auth for CONNECT tunnels
+     }</pre></code>
+     </p>
+     * @param authenticator the authenticator to use in this connection
+     * @return this Connection, for chaining
+     * @since 1.17.1
+     */
+    default Connection auth(@Nullable RequestAuthenticator authenticator) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Execute the request as a GET, and parse the result.
@@ -699,6 +781,27 @@ public interface Connection {
          */
         String postDataCharset();
 
+        /**
+         Set the authenticator to use for this request.
+         See {@link Connection#auth(RequestAuthenticator) Connection.auth(authenticator)} for examples and
+         implementation notes.
+         * @param authenticator the authenticator
+         * @return this Request, for chaining.
+         * @since 1.17.1
+         */
+        default Request auth(@Nullable RequestAuthenticator authenticator)  {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         Get the RequestAuthenticator, if any, that will be used on this request.
+         * @return the RequestAuthenticator, or {@code null} if not set
+         * @since 1.17.1
+         */
+        @Nullable
+        default RequestAuthenticator auth() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
@@ -768,10 +871,15 @@ public interface Connection {
         Response bufferUp();
 
         /**
-         * Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done with it.
-         * Other body methods (like bufferUp, body, parse, etc) will not work in conjunction with this method.
-         * <p>This method is useful for writing large responses to disk, without buffering them completely into memory first.</p>
-         * @return the response body input stream
+         Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done
+         with it.
+         <p>Other body methods (like bufferUp, body, parse, etc) will generally not work in conjunction with this method,
+         as it consumes the InputStream.</p>
+         <p>Any configured max size or maximum read timeout applied to the connection will not be applied to this stream,
+         unless {@link #bufferUp()} is called prior.</p>
+         <p>This method is useful for writing large responses to disk, without buffering them completely into memory
+         first.</p>
+         @return the response body input stream
          */
         BufferedInputStream bodyStream();
     }
