@@ -1482,6 +1482,7 @@ public class Element extends Node {
 
     static boolean preserveWhitespace(@Nullable Node node) {
         // looks only at this element and five levels up, to prevent recursion & needless stack searches
+        int MAX_SEARCH_DEPTH = 6;
         if (node instanceof Element) {
             Element el = (Element) node;
             int i = 0;
@@ -1490,7 +1491,7 @@ public class Element extends Node {
                     return true;
                 el = el.parent();
                 i++;
-            } while (i < 6 && el != null);
+            } while (i < MAX_SEARCH_DEPTH && el != null);
         }
         return false;
     }
