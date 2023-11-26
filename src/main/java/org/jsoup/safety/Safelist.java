@@ -688,4 +688,25 @@ public class Safelist {
             return value;
         }
     }
+
+    public ElementMeta createSafeElement(Element sourceEl) {
+        Element dest = sourceEl.shallowClone(); // reuses tag, clones attributes and preserves any user data
+        String sourceTag = sourceEl.tagName();
+        Attributes destAttrs = dest.attributes();
+        dest.clearAttributes(); // clear all non-internal attributes, ready for safe copy
+
+        int numDiscarded = 0;
+        Attributes sourceAttrs = sourceEl.attributes();
+        for (Attribute sourceAttr : sourceAttrs) {
+            if (this.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
+                destAttrs.put(sourceAttr);
+            else
+                numDiscarded++;
+        }
+        Attributes enforcedAttrs = this.getEnforcedAttributes(sourceTag);
+        destAttrs.addAll(enforcedAttrs);
+        dest.attributes().addAll(destAttrs); // re-attach, if removed in clear
+        return new ElementMeta(dest, numDiscarded);
+    }
+
 }
