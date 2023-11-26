@@ -893,7 +893,7 @@ public class HttpConnection implements Connection {
                     if (!req.parserDefined) req.parser(Parser.xmlParser());
                 }
 
-                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+                res.charset = CharsetUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     InputStream stream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
                     if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))

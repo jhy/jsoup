@@ -18,21 +18,21 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DataUtilTest {
     @Test
     public void testCharset() {
-        assertEquals("utf-8", DataUtil.getCharsetFromContentType("text/html;charset=utf-8 "));
-        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset=UTF-8"));
-        assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1"));
-        assertNull(DataUtil.getCharsetFromContentType("text/html"));
-        assertNull(DataUtil.getCharsetFromContentType(null));
-        assertNull(DataUtil.getCharsetFromContentType("text/html;charset=Unknown"));
+        assertEquals("utf-8", CharsetUtil.getCharsetFromContentType("text/html;charset=utf-8 "));
+        assertEquals("UTF-8", CharsetUtil.getCharsetFromContentType("text/html; charset=UTF-8"));
+        assertEquals("ISO-8859-1", CharsetUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1"));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html"));
+        assertNull(CharsetUtil.getCharsetFromContentType(null));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html;charset=Unknown"));
     }
 
     @Test
     public void testQuotedCharset() {
-        assertEquals("utf-8", DataUtil.getCharsetFromContentType("text/html; charset=\"utf-8\""));
-        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html;charset=\"UTF-8\""));
-        assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=\"ISO-8859-1\""));
-        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=\"Unsupported\""));
-        assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
+        assertEquals("utf-8", CharsetUtil.getCharsetFromContentType("text/html; charset=\"utf-8\""));
+        assertEquals("UTF-8", CharsetUtil.getCharsetFromContentType("text/html;charset=\"UTF-8\""));
+        assertEquals("ISO-8859-1", CharsetUtil.getCharsetFromContentType("text/html; charset=\"ISO-8859-1\""));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html; charset=\"Unsupported\""));
+        assertEquals("UTF-8", CharsetUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
 
     private InputStream stream(String data) {
@@ -60,23 +60,23 @@ public class DataUtilTest {
 
     @Test
     public void shouldNotThrowExceptionOnEmptyCharset() {
-        assertNull(DataUtil.getCharsetFromContentType("text/html; charset="));
-        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=;"));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html; charset="));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html; charset=;"));
     }
 
     @Test
     public void shouldSelectFirstCharsetOnWeirdMultileCharsetsInMetaTags() {
-        assertEquals("ISO-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1, charset=1251"));
+        assertEquals("ISO-8859-1", CharsetUtil.getCharsetFromContentType("text/html; charset=ISO-8859-1, charset=1251"));
     }
 
     @Test
     public void shouldCorrectCharsetForDuplicateCharsetString() {
-        assertEquals("iso-8859-1", DataUtil.getCharsetFromContentType("text/html; charset=charset=iso-8859-1"));
+        assertEquals("iso-8859-1", CharsetUtil.getCharsetFromContentType("text/html; charset=charset=iso-8859-1"));
     }
 
     @Test
     public void shouldReturnNullForIllegalCharsetNames() {
-        assertNull(DataUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
+        assertNull(CharsetUtil.getCharsetFromContentType("text/html; charset=$HJKDF§$/("));
     }
 
     @Test

@@ -41,7 +41,6 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
  */
 @SuppressWarnings("CharsetObjectCanBeUsed")
 public final class DataUtil {
-    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
     public static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, as those only appear in Android API 19, and we target 10.
     static final String defaultCharsetName = UTF_8.name(); // used if not found in header or meta charset
     private static final int firstReadBufferSize = 1024 * 5;
@@ -171,7 +170,7 @@ public final class DataUtil {
                 String foundCharset = null; // if not found, will keep utf-8 as best attempt
                 for (Element meta : metaElements) {
                     if (meta.hasAttr("http-equiv"))
-                        foundCharset = getCharsetFromContentType(meta.attr("content"));
+                        foundCharset = CharsetUtil.getCharsetFromContentType(meta.attr("content"));
                     if (foundCharset == null && meta.hasAttr("charset"))
                         foundCharset = meta.attr("charset");
                     if (foundCharset != null)
@@ -194,7 +193,7 @@ public final class DataUtil {
                             foundCharset = decl.attr("encoding");
                     }
                 }
-                foundCharset = validateCharset(foundCharset);
+                foundCharset = CharsetUtil.validateCharset(foundCharset);
                 if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case insensitive check here to match how validate works)
                     foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                     charsetName = foundCharset;
@@ -252,36 +251,6 @@ public final class DataUtil {
 
     static ByteBuffer emptyByteBuffer() {
         return ByteBuffer.allocate(0);
-    }
-
-    /**
-     * Parse out a charset from a content type header. If the charset is not supported, returns null (so the default
-     * will kick in.)
-     * @param contentType e.g. "text/html; charset=EUC-JP"
-     * @return "EUC-JP", or null if not found. Charset is trimmed and uppercased.
-     */
-    static @Nullable String getCharsetFromContentType(@Nullable String contentType) {
-        if (contentType == null) return null;
-        Matcher m = charsetPattern.matcher(contentType);
-        if (m.find()) {
-            String charset = m.group(1).trim();
-            charset = charset.replace("charset=", "");
-            return validateCharset(charset);
-        }
-        return null;
-    }
-
-    private @Nullable static String validateCharset(@Nullable String cs) {
-        if (cs == null || cs.length() == 0) return null;
-        cs = cs.trim().replaceAll("[\"']", "");
-        try {
-            if (Charset.isSupported(cs)) return cs;
-            cs = cs.toUpperCase(Locale.ENGLISH);
-            if (Charset.isSupported(cs)) return cs;
-        } catch (IllegalCharsetNameException e) {
-            // if our this charset matching fails.... we just take the default
-        }
-        return null;
     }
 
     /**
