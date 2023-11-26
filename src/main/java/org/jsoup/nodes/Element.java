@@ -1390,15 +1390,18 @@ public class Element extends Node {
             }
         }
 
-        public void tail(Node node, int depth) {
-            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
-            if (node instanceof Element) {
+        private static boolean shouldAppendSpace(Node node, StringBuilder accum) {
+            if(!(node instanceof Element)) return false;
                 Element element = (Element) node;
                 Node next = node.nextSibling();
-                if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
-                    accum.append(' ');
+            return element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum);
             }
 
+        public void tail(Node node, int depth) {
+            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
+            if (shouldAppendSpace(node, accum)){
+                accum.append(' ');
+            }
         }
     }
 
