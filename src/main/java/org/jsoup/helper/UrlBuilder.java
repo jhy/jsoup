@@ -21,53 +21,53 @@ import static org.jsoup.helper.DataUtil.UTF_8;
  the query string (or the fragment/anchor) are escaped, but any existing escapes in those components are preserved.</p>
  */
 final class UrlBuilder {
-    URL u;
-    @Nullable StringBuilder q;
+    URL inputUrl;
+    @Nullable StringBuilder queryBuilder;
 
     UrlBuilder(URL inputUrl) {
-        this.u = inputUrl;
-        if (u.getQuery() != null)
-            q = StringUtil.borrowBuilder().append(u.getQuery());
+        this.inputUrl = inputUrl;
+        if (this.inputUrl.getQuery() != null)
+            queryBuilder = StringUtil.borrowBuilder().append(this.inputUrl.getQuery());
     }
 
     URL build() {
         try {
             // use the URI class to encode non-ascii in path
             URI uri = new URI(
-                u.getProtocol(),
-                u.getUserInfo(),
-                IDN.toASCII(decodePart(u.getHost())), // puny-code
-                u.getPort(),
+                inputUrl.getProtocol(),
+                inputUrl.getUserInfo(),
+                IDN.toASCII(decodePart(inputUrl.getHost())), // puny-code
+                inputUrl.getPort(),
                 null, null, null // path, query and fragment appended later so as not to encode
             );
 
             StringBuilder normUrl = StringUtil.borrowBuilder().append(uri.toASCIIString());
-            appendToAscii(u.getPath(), false, normUrl);
-            if (q != null) {
+            appendToAscii(inputUrl.getPath(), false, normUrl);
+            if (queryBuilder != null) {
                 normUrl.append('?');
-                appendToAscii(StringUtil.releaseBuilder(q), true, normUrl);
+                appendToAscii(StringUtil.releaseBuilder(queryBuilder), true, normUrl);
             }
-            if (u.getRef() != null) {
+            if (inputUrl.getRef() != null) {
                 normUrl.append('#');
-                appendToAscii(u.getRef(), false, normUrl);
+                appendToAscii(inputUrl.getRef(), false, normUrl);
             }
-            u = new URL(StringUtil.releaseBuilder(normUrl));
-            return u;
+            inputUrl = new URL(StringUtil.releaseBuilder(normUrl));
+            return inputUrl;
         } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             // we assert here so that any incomplete normalization issues can be caught in devel. but in practise,
             // the remote end will be able to handle it, so in prod we just pass the original URL.
             // The UnsupportedEncodingException would never happen as always UTF8
             assert Validate.assertFail(e.toString());
-            return u;
+            return inputUrl;
         }
     }
 
     void appendKeyVal(Connection.KeyVal kv) throws UnsupportedEncodingException {
-        if (q == null)
-            q = StringUtil.borrowBuilder();
+        if (queryBuilder == null)
+            queryBuilder = StringUtil.borrowBuilder();
         else
-            q.append('&');
-        q
+            queryBuilder.append('&');
+        queryBuilder
             .append(URLEncoder.encode(kv.key(), UTF_8.name()))
             .append('=')
             .append(URLEncoder.encode(kv.value(), UTF_8.name()));
@@ -81,18 +81,18 @@ final class UrlBuilder {
         }
     }
 
-    private static void appendToAscii(String s, boolean spaceAsPlus, StringBuilder sb) throws UnsupportedEncodingException {
+    private static void appendToAscii(String string, boolean spaceAsPlus, StringBuilder stringBuilder) throws UnsupportedEncodingException {
         // minimal normalization of Unicode -> Ascii, and space normal. Existing escapes are left as-is.
-        for (int i = 0; i < s.length(); i++) {
-            int c = s.codePointAt(i);
-            if (c == ' ') {
-                sb.append(spaceAsPlus ? '+' : "%20");
-            } else if (c > 127) { // out of ascii range
-                sb.append(URLEncoder.encode(new String(Character.toChars(c)), UTF_8.name()));
+        for (int i = 0; i < string.length(); i++) {
+            int codePoint = string.codePointAt(i);
+            if (codePoint == ' ') {
+                stringBuilder.append(spaceAsPlus ? '+' : "%20");
+            } else if (codePoint > 127) { // out of ascii range
+                stringBuilder.append(URLEncoder.encode(new String(Character.toChars(codePoint)), UTF_8.name()));
                 // ^^ is a bit heavy-handed - if perf critical, we could optimize
-                if (Character.charCount(c) == 2) i++; // advance past supplemental
+                if (Character.charCount(codePoint) == 2) i++; // advance past supplemental
             } else {
-                sb.append((char) c);
+                stringBuilder.append((char) codePoint);
             }
         }
     }
