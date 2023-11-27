@@ -1,8 +1,18 @@
-package org.jsoup.nodes;
+package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.parser.Parser;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.CDataNode;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.Range;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
