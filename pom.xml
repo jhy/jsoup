@@ -117,6 +117,7 @@
         <configuration>
           <doclint>none</doclint>
           <source>8</source>
+          <linksource>true</linksource>
         </configuration>
         <executions>
           <execution>
