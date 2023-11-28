@@ -9,6 +9,7 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
 import org.jsoup.nodes.TextNode;
@@ -26,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
  Functional tests for the Position tracking behavior (across nodes, treebuilder, etc.)
  */
 class PositionTest {
-    static Parser TrackingParser = Parser.htmlParser().setTrackPosition(true);
+    static Parser TrackingHtmlParser = Parser.htmlParser().setTrackPosition(true);
+    static Parser TrackingXmlParser = Parser.xmlParser().setTrackPosition(true);
 
     @Test void parserTrackDefaults() {
         Parser htmlParser = Parser.htmlParser();
@@ -34,7 +36,7 @@ class PositionTest {
         htmlParser.setTrackPosition(true);
         assertTrue(htmlParser.isTrackPosition());
 
-        Parser xmlParser = Parser.htmlParser();
+        Parser xmlParser = Parser.xmlParser();
         assertFalse(xmlParser.isTrackPosition());
         xmlParser.setTrackPosition(true);
         assertTrue(xmlParser.isTrackPosition());
@@ -42,7 +44,7 @@ class PositionTest {
 
     @Test void tracksPosition() {
         String content = "<p id=1\n class=foo>\n<span>Hello\n &reg;\n there &copy.</span> now.\n <!-- comment --> ";
-        Document doc = Jsoup.parse(content, TrackingParser);
+        Document doc = Jsoup.parse(content, TrackingHtmlParser);
 
         Element html = doc.expectFirst("html");
         Element body = doc.expectFirst("body");
@@ -115,7 +117,7 @@ class PositionTest {
     @Test void tracksExpectedPoppedElements() {
         // When TreeBuilder hits a direct .pop(), vs popToClose(..)
         String html = "<html><head><meta></head><body><img><p>One</p><p>Two</p></body></html>";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         StringBuilder track = new StringBuilder();
         doc.expectFirst("html").stream().forEach(el -> {
@@ -154,7 +156,7 @@ class PositionTest {
     @Test void tracksImplicitPoppedElements() {
         // When TreeBuilder hits a direct .pop(), vs popToClose(..)
         String html = "<meta><img><p>One<p>Two<p>Three";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         StringBuilder track = new StringBuilder();
         doc.expectFirst("html").stream().forEach(el -> {
@@ -184,7 +186,7 @@ class PositionTest {
 
     @Test void tracksMarkup() {
         String html = "<!doctype\nhtml>\n<title>jsoup &copy;\n2022</title><body>\n<![CDATA[\n<jsoup>\n]]>";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         DocumentType doctype = doc.documentType();
         assertNotNull(doctype);
@@ -206,7 +208,7 @@ class PositionTest {
 
     @Test void tracksDataNodes() {
         String html = "<head>\n<script>foo;\nbar()\n5 <= 4;</script>";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         Element script = doc.expectFirst("script");
         assertNotNull(script);
@@ -218,7 +220,7 @@ class PositionTest {
 
     @Test void tracksXml() {
         String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!doctype html>\n<rss url=foo>\nXML\n</rss>\n<!-- comment -->";
-        Document doc = Jsoup.parse(xml, Parser.xmlParser().setTrackPosition(true));
+        Document doc = Jsoup.parse(xml, TrackingXmlParser);
 
         XmlDeclaration decl = (XmlDeclaration) doc.childNode(0);
         assertEquals("1,1:0-1,39:38", decl.sourceRange().toString());
@@ -241,7 +243,7 @@ class PositionTest {
 
     @Test void tracksFromFetch() throws IOException {
         String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
-        Document doc = Jsoup.connect(url).parser(TrackingParser).get();
+        Document doc = Jsoup.connect(url).parser(TrackingHtmlParser).get();
 
         Element firstP = doc.expectFirst("p");
         assertNotNull(firstP);
@@ -259,7 +261,7 @@ class PositionTest {
 
     @Test void tracksFromXmlFetch() throws IOException {
         String url = FileServlet.urlTo("/htmltests/test-rss.xml");
-        Document doc = Jsoup.connect(url).parser(Parser.xmlParser().setTrackPosition(true)).get();
+        Document doc = Jsoup.connect(url).parser(TrackingXmlParser).get();
 
         Element item = doc.expectFirst("item + item");
         assertNotNull(item);
@@ -269,7 +271,7 @@ class PositionTest {
 
     @Test void tracksTableMovedText() {
         String html = "<table>foo<tr>bar<td>baz</td>qux</tr>coo</table>";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         StringBuilder track = new StringBuilder();
         List<TextNode> textNodes = doc.nodeStream(TextNode.class)
@@ -289,7 +291,7 @@ class PositionTest {
     @Test void tracksClosingHtmlTagsInXml() {
         // verifies https://github.com/jhy/jsoup/issues/1935
         String xml = "<p>One</p><title>Two</title><data>Three</data>";
-        Document doc = Jsoup.parse(xml, Parser.xmlParser().setTrackPosition(true));
+        Document doc = Jsoup.parse(xml, TrackingXmlParser);
         Elements els = doc.children();
         for (Element el : els) {
             assertTrue(el.sourceRange().isTracked());
@@ -300,7 +302,7 @@ class PositionTest {
     @Test void tracksClosingHeadingTags() {
         // https://github.com/jhy/jsoup/issues/1987
         String html = "<h1>One</h1><h2>Two</h2><h10>Ten</h10>";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         Elements els = doc.body().children();
         for (Element el : els) {
@@ -315,7 +317,7 @@ class PositionTest {
 
     @Test void tracksAttributes() {
         String html = "<div one=\"Hello there\" id=1 class=foo attr1 = \"bar &amp; qux\" attr2='val &gt x' attr3=\"\" attr4 attr5>Text";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         Element div = doc.expectFirst("div");
 
@@ -336,13 +338,12 @@ class PositionTest {
             accumulatePositions(attr, track);
         }
 
-        System.out.println(track);
         assertEquals("one:5-8=10-21; id:23-25=26-27; class:28-33=34-37; attr1:38-43=47-60; attr2:62-67=69-78; attr3:80-85=85-85; attr4:89-94=94-94; attr5:95-100=100-100; ", track.toString());
     }
 
     @Test void tracksAttributesAcrossLines() {
         String html = "<div one=\"Hello\nthere\" \nid=1 \nclass=\nfoo\nattr5>Text";
-        Document doc = Jsoup.parse(html, TrackingParser);
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
 
         Element div = doc.expectFirst("div");
 
@@ -366,6 +367,91 @@ class PositionTest {
         assertEquals("4,1:30-4,6:35=5,1:37-5,4:40", foo.toString());
 
         assertEquals("one:5-8=10-21; id:24-26=27-28; class:30-35=37-40; attr5:41-46=46-46; ", track.toString());
+    }
+
+    @Test void trackAttributePositionInFirstElement() {
+        String html = "<html lang=en class=dark><p hidden></p></html>";
+
+        Document htmlDoc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder htmlPos = new StringBuilder();
+        htmlDoc.expectFirst("html").nodeStream().forEach(node -> {
+            accumulatePositions(node, htmlPos);
+            accumulateAttributePositions(node, htmlPos);
+        });
+
+        assertEquals("html:0-25~39-46; lang:6-10=11-13; class:14-19=20-24; head:25-25~25-25; body:25-25~46-46; p:25-35~35-39; hidden:28-34=34-34; ", htmlPos.toString());
+
+        Document xmlDoc = Jsoup.parse(html, TrackingXmlParser);
+        StringBuilder xmlPos = new StringBuilder();
+        xmlDoc.expectFirst("html").nodeStream().forEach(node -> {
+            accumulatePositions(node, xmlPos);
+            accumulateAttributePositions(node, xmlPos);
+        });
+
+        assertEquals("html:0-25~39-46; lang:6-10=11-13; class:14-19=20-24; p:25-35~35-39; hidden:28-34=34-34; ", xmlPos.toString());
+    }
+
+    @Test void trackAttributePositionWithCase() {
+        String pomXml = "<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n" +
+            "    <modelVersion>4.0.0</modelVersion>";
+
+        Document htmlDoc = Jsoup.parse(pomXml, TrackingHtmlParser);
+        StringBuilder htmlPos = new StringBuilder();
+        htmlDoc.expectFirst("html").nodeStream().forEach(node -> {
+            accumulatePositions(node, htmlPos);
+            accumulateAttributePositions(node, htmlPos);
+        });
+
+        assertEquals("html:0-0~243-243; head:0-0~0-0; body:0-0~243-243; project:0-204~243-243; xmlns:9-14=16-49; xmlns:xsi:51-60=62-103; xsi:schemalocation:105-123=125-202; #text:204-209; modelversion:209-223~228-243; #text:223-228; ", htmlPos.toString());
+
+        Document xmlDoc = Jsoup.parse(pomXml, TrackingXmlParser);
+        StringBuilder xmlPos = new StringBuilder();
+        xmlDoc.expectFirst("project").nodeStream().forEach(node -> {
+            accumulatePositions(node, xmlPos);
+            accumulateAttributePositions(node, xmlPos);
+        });
+
+        assertEquals("project:0-204~243-243; xmlns:9-14=16-49; xmlns:xsi:51-60=62-103; xsi:schemaLocation:105-123=125-202; #text:204-209; modelVersion:209-223~228-243; #text:223-228; ", xmlPos.toString());
+
+        Document xmlDocLc = Jsoup.parse(pomXml, Parser.xmlParser().setTrackPosition(true).settings(new ParseSettings(false, false)));
+        StringBuilder xmlPosLc = new StringBuilder();
+        xmlDocLc.expectFirst("project").nodeStream().forEach(node -> {
+            accumulatePositions(node, xmlPosLc);
+            accumulateAttributePositions(node, xmlPosLc);
+        });
+
+        assertEquals("project:0-204~243-243; xmlns:9-14=16-49; xmlns:xsi:51-60=62-103; xsi:schemalocation:105-123=125-202; #text:204-209; modelversion:209-223~228-243; #text:223-228; ", xmlPosLc.toString());
+    }
+
+
+    @Test void trackAttributesPositionsDedupes() {
+        String html = "<p id=1 id=2 Id=3 Id=4 id=5 Id=6>";
+        Document      htmlDoc   = Jsoup.parse(html, TrackingHtmlParser);
+        Document      htmlDocUc = Jsoup.parse(html, Parser.htmlParser().setTrackPosition(true).settings(new ParseSettings(true, true)));
+        Document      xmlDoc    = Jsoup.parse(html, TrackingXmlParser);
+        Document      xmlDocLc  = Jsoup.parse(html, Parser.xmlParser().setTrackPosition(true).settings(new ParseSettings(false, false)));
+
+        StringBuilder htmlPos   = new StringBuilder();
+        StringBuilder htmlUcPos = new StringBuilder();
+        StringBuilder xmlPos    = new StringBuilder();
+        StringBuilder xmlLcPos  = new StringBuilder();
+
+        accumulateAttributePositions(htmlDoc   .expectFirst("p"), htmlPos);
+        accumulateAttributePositions(htmlDocUc .expectFirst("p"), htmlUcPos);
+        accumulateAttributePositions(xmlDoc    .expectFirst("p"), xmlPos);
+        accumulateAttributePositions(xmlDocLc  .expectFirst("p"), xmlLcPos);
+
+        assertEquals("id:3-5=6-7; ", htmlPos   .toString());
+        assertEquals("id:3-5=6-7; Id:13-15=16-17; ", htmlUcPos .toString());
+        assertEquals("id:3-5=6-7; Id:13-15=16-17; ", xmlPos    .toString());
+        assertEquals("id:3-5=6-7; ", xmlLcPos .toString());
+    }
+
+    static void accumulateAttributePositions(Node node, StringBuilder sb) {
+        if (node instanceof LeafNode) return; // leafnode pseudo attributes are not tracked
+        for (Attribute attribute : node.attributes()) {
+            accumulatePositions(attribute, sb);
+        }
     }
 
     static void accumulatePositions(Attribute attr, StringBuilder sb) {
