@@ -16,11 +16,12 @@ import static org.jsoup.internal.SharedConstants.*;
  * Parse tokens for the Tokeniser.
  */
 abstract class Token {
-    TokenType type;
+    final TokenType type; // used in switches in TreeBuilder vs .getClass()
     static final int Unset = -1;
     private int startPos, endPos = Unset; // position in CharacterReader this token was read from
 
-    private Token() {
+    private Token(TokenType type) {
+        this.type = type;
     }
     
     String tokenType() {
@@ -67,7 +68,7 @@ abstract class Token {
         boolean forceQuirks = false;
 
         Doctype() {
-            type = TokenType.Doctype;
+            super(TokenType.Doctype);
         }
 
         @Override
@@ -127,7 +128,8 @@ abstract class Token {
         final boolean trackSource;
         int attrNameStart, attrNameEnd, attrValStart, attrValEnd;
 
-        Tag(TreeBuilder treeBuilder) {
+        Tag(TokenType type, TreeBuilder treeBuilder) {
+            super(type);
             this.treeBuilder = treeBuilder;
             this.trackSource = treeBuilder.trackSourceRange;
         }
@@ -353,8 +355,7 @@ abstract class Token {
 
         // TreeBuilder is provided so if tracking, can get line / column positions for Range; and can dedupe as we go
         StartTag(TreeBuilder treeBuilder) {
-            super(treeBuilder);
-            type = TokenType.StartTag;
+            super(TokenType.StartTag, treeBuilder);
         }
 
         @Override
@@ -383,8 +384,7 @@ abstract class Token {
 
     final static class EndTag extends Tag{
         EndTag(TreeBuilder treeBuilder) {
-            super(treeBuilder);
-            type = TokenType.EndTag;
+            super(TokenType.EndTag, treeBuilder);
         }
 
         @Override
@@ -408,7 +408,7 @@ abstract class Token {
         }
 
         Comment() {
-            type = TokenType.Comment;
+            super(TokenType.Comment);
         }
 
         String getData() {
@@ -449,8 +449,7 @@ abstract class Token {
         private String data;
 
         Character() {
-            super();
-            type = TokenType.Character;
+            super(TokenType.Character);
         }
 
         @Override
@@ -498,7 +497,7 @@ abstract class Token {
 
     final static class EOF extends Token {
         EOF() {
-            type = Token.TokenType.EOF;
+            super(Token.TokenType.EOF);
         }
 
         @Override
