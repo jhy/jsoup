@@ -2,7 +2,6 @@ package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
@@ -524,23 +523,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         for (int i = 0; i < size; i++) {
             if (!isInternalKey(keys[i]))
                 keys[i] = lowerCase(keys[i]);
-        }
-
-        // if we are tracking attribute source ranges, normalize those keys also
-        //noinspection unchecked
-        Map<String, Range.AttributeRange> ranges = (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
-        if (ranges != null) {
-            Object[] names = ranges.keySet().toArray(); // copy to array to avoid CMEs during put
-            for (Object name : names) {
-                String normal = lowerCase((String) name);
-                if (normal.equals(name)) continue;
-                if (ranges.containsKey(normal)) {
-                    ranges.remove(name); // dedupe now that we have normalized
-                } else {
-                    Range.AttributeRange range = ranges.remove(name);
-                    ranges.put(normal, range);
-                }
-            }
         }
     }
 

@@ -245,7 +245,9 @@ public class Parser {
      * @return an unescaped string
      */
     public static String unescapeEntities(String string, boolean inAttribute) {
-        Tokeniser tokeniser = new Tokeniser(new CharacterReader(string), ParseErrorList.noTracking(), false);
+        Parser parser = Parser.htmlParser();
+        parser.treeBuilder.initialiseParse(new StringReader(string), "", parser);
+        Tokeniser tokeniser = new Tokeniser(parser.treeBuilder);
         return tokeniser.unescapeEntities(inAttribute);
     }
 

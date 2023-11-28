@@ -88,7 +88,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements = new ArrayList<>();
         tmplInsertMode = new ArrayList<>();
         pendingTableCharacters = new ArrayList<>();
-        emptyEnd = new Token.EndTag();
+        emptyEnd = new Token.EndTag(this);
         framesetOk = true;
         fosterInserts = false;
         fragmentParsing = false;

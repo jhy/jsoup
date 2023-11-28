@@ -41,7 +41,7 @@ final class Tokeniser {
     final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
     final Token.StartTag startPending;
-    final Token.EndTag endPending = new Token.EndTag();
+    final Token.EndTag endPending;
     Token.Tag tagPending; // tag we are building up: start or end pending
     final Token.Character charPending = new Token.Character();
     final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
@@ -52,10 +52,11 @@ final class Tokeniser {
     private static final int Unset = -1;
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
-    Tokeniser(CharacterReader reader, ParseErrorList errors, boolean trackSource) {
-        tagPending = startPending  = new Token.StartTag(trackSource, reader);
-        this.reader = reader;
-        this.errors = errors;
+    Tokeniser(TreeBuilder treeBuilder) {
+        tagPending = startPending  = new Token.StartTag(treeBuilder);
+        endPending = new Token.EndTag(treeBuilder);
+        this.reader = treeBuilder.reader;
+        this.errors = treeBuilder.parser.getErrors();
     }
 
     Token read() {

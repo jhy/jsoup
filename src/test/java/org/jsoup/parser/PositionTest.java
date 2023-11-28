@@ -447,6 +447,29 @@ class PositionTest {
         assertEquals("id:3-5=6-7; ", xmlLcPos .toString());
     }
 
+    @Test void trackAttributesPositionsDirectionalDedupes() {
+        String html = "<p Id=1 id=2 Id=3 Id=4 id=5 Id=6>";
+        Document      htmlDoc   = Jsoup.parse(html, TrackingHtmlParser);
+        Document      htmlDocUc = Jsoup.parse(html, Parser.htmlParser().setTrackPosition(true).settings(new ParseSettings(true, true)));
+        Document      xmlDoc    = Jsoup.parse(html, TrackingXmlParser);
+        Document      xmlDocLc  = Jsoup.parse(html, Parser.xmlParser().setTrackPosition(true).settings(new ParseSettings(false, false)));
+
+        StringBuilder htmlPos   = new StringBuilder();
+        StringBuilder htmlUcPos = new StringBuilder();
+        StringBuilder xmlPos    = new StringBuilder();
+        StringBuilder xmlLcPos  = new StringBuilder();
+
+        accumulateAttributePositions(htmlDoc   .expectFirst("p"), htmlPos);
+        accumulateAttributePositions(htmlDocUc .expectFirst("p"), htmlUcPos);
+        accumulateAttributePositions(xmlDoc    .expectFirst("p"), xmlPos);
+        accumulateAttributePositions(xmlDocLc  .expectFirst("p"), xmlLcPos);
+
+        assertEquals("id:3-5=6-7; ", htmlPos   .toString());
+        assertEquals("Id:3-5=6-7; id:8-10=11-12; ", htmlUcPos .toString());
+        assertEquals("Id:3-5=6-7; id:8-10=11-12; ", xmlPos    .toString());
+        assertEquals("id:3-5=6-7; ", xmlLcPos .toString());
+    }
+
     static void accumulateAttributePositions(Node node, StringBuilder sb) {
         if (node instanceof LeafNode) return; // leafnode pseudo attributes are not tracked
         for (Attribute attribute : node.attributes()) {

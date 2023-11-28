@@ -31,10 +31,10 @@ abstract class TreeBuilder {
     Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
     private Token.StartTag start; // start tag to process
-    private final Token.EndTag end  = new Token.EndTag();
+    private final Token.EndTag end  = new Token.EndTag(this);
     abstract ParseSettings defaultSettings();
 
-    private boolean trackSourceRange;  // optionally tracks the source range of nodes
+    boolean trackSourceRange;  // optionally tracks the source range of nodes and attributes
 
     void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
@@ -49,10 +49,10 @@ abstract class TreeBuilder {
         trackSourceRange = parser.isTrackPosition();
         reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
         currentToken = null;
-        tokeniser = new Tokeniser(reader, parser.getErrors(), trackSourceRange);
+        tokeniser = new Tokeniser(this);
         stack = new ArrayList<>(32);
         seenTags = new HashMap<>();
-        start = new Token.StartTag(trackSourceRange, reader);
+        start = new Token.StartTag(this);
         this.baseUri = baseUri;
     }
 
@@ -101,7 +101,7 @@ abstract class TreeBuilder {
         // these are "virtual" start tags (auto-created by the treebuilder), so not tracking the start position
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
-            return process(new Token.StartTag(trackSourceRange, reader).name(name));
+            return process(new Token.StartTag(this).name(name));
         }
         return process(start.reset().name(name));
     }
@@ -109,7 +109,7 @@ abstract class TreeBuilder {
     boolean processStartTag(String name, Attributes attrs) {
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
-            return process(new Token.StartTag(trackSourceRange, reader).nameAttr(name, attrs));
+            return process(new Token.StartTag(this).nameAttr(name, attrs));
         }
         start.reset();
         start.nameAttr(name, attrs);
@@ -118,7 +118,7 @@ abstract class TreeBuilder {
 
     boolean processEndTag(String name) {
         if (currentToken == end) { // don't recycle an in-use token
-            return process(new Token.EndTag().name(name));
+            return process(new Token.EndTag(this).name(name));
         }
         return process(end.reset().name(name));
     }

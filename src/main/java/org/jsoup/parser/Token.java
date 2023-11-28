@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
@@ -122,11 +123,13 @@ abstract class Token {
         private boolean hasEmptyAttrValue = false; // distinguish boolean attribute from empty string value
 
         // attribute source range tracking
+        final TreeBuilder treeBuilder;
         final boolean trackSource;
         int attrNameStart, attrNameEnd, attrValStart, attrValEnd;
 
-        Tag(boolean trackSource) {
-            this.trackSource = trackSource;
+        Tag(TreeBuilder treeBuilder) {
+            this.treeBuilder = treeBuilder;
+            this.trackSource = treeBuilder.trackSourceRange;
         }
 
         @Override
@@ -187,7 +190,9 @@ abstract class Token {
         private void trackAttributeRange(String name) {
             if (trackSource && isStartTag()) {
                 final StartTag start = asStartTag();
-                final CharacterReader r = start.reader;
+                final CharacterReader r = start.treeBuilder.reader;
+                final boolean preserve = start.treeBuilder.settings.preserveAttributeCase();
+
                 assert attributes != null;
                 //noinspection unchecked
                 Map<String, Range.AttributeRange> attrRanges =
@@ -196,7 +201,9 @@ abstract class Token {
                     attrRanges = new HashMap<>();
                     attributes.userData(AttrRangeKey, attrRanges);
                 }
-                if (attrRanges.containsKey(name)) return; // dedupe ranges on case-sensitive name as we go; actual attributes get deduped later
+
+                if (!preserve) name = Normalizer.lowerCase(name);
+                if (attrRanges.containsKey(name)) return; // dedupe ranges as we go; actual attributes get deduped later for error count
 
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
@@ -343,13 +350,11 @@ abstract class Token {
     }
 
     final static class StartTag extends Tag {
-        final CharacterReader reader;
 
-        // Reader is provided so if tracking, can get line / column positions for Range.
-        StartTag(boolean trackSource, CharacterReader reader) {
-            super(trackSource);
+        // TreeBuilder is provided so if tracking, can get line / column positions for Range; and can dedupe as we go
+        StartTag(TreeBuilder treeBuilder) {
+            super(treeBuilder);
             type = TokenType.StartTag;
-            this.reader = reader;
         }
 
         @Override
@@ -377,8 +382,8 @@ abstract class Token {
     }
 
     final static class EndTag extends Tag{
-        EndTag() {
-            super(false);
+        EndTag(TreeBuilder treeBuilder) {
+            super(treeBuilder);
             type = TokenType.EndTag;
         }
 
