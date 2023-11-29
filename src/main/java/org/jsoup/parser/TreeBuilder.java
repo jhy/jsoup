@@ -26,7 +26,7 @@ abstract class TreeBuilder {
     Document doc; // current doc we are building into
     ArrayList<Element> stack; // the stack of open elements
     String baseUri; // current base uri, for creating new elements
-    Token currentToken; // currentToken is used only for error tracking.
+    Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
     Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
 
@@ -48,11 +48,11 @@ abstract class TreeBuilder {
         reader = new CharacterReader(input);
         trackSourceRange = parser.isTrackPosition();
         reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
-        currentToken = null;
         tokeniser = new Tokeniser(this);
         stack = new ArrayList<>(32);
         seenTags = new HashMap<>();
         start = new Token.StartTag(this);
+        currentToken = start; // init current token to the virtual start token.
         this.baseUri = baseUri;
     }
 

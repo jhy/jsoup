@@ -470,6 +470,23 @@ class PositionTest {
         assertEquals("id:3-5=6-7; ", xmlLcPos .toString());
     }
 
+    @Test void tracksFrag() {
+        // https://github.com/jhy/jsoup/issues/2068
+        String html = "<h1 id=1>One</h1>\n<h2 id=2>Two</h2><h10>Ten</h10>";
+        Document shellDoc = Document.createShell("");
+
+        List<Node> nodes = TrackingHtmlParser.parseFragmentInput(html, shellDoc.body(), shellDoc.baseUri());
+        StringBuilder track = new StringBuilder();
+
+        // nodes is the top level nodes - want to descend to check all tracked OK
+        nodes.forEach(node -> node.nodeStream().forEach(descend -> {
+            accumulatePositions(descend, track);
+            accumulateAttributePositions(descend, track);
+        }));
+
+        assertEquals("h1:0-9~12-17; id:4-6=7-8; #text:9-12; #text:17-18; h2:18-27~30-35; id:22-24=25-26; #text:27-30; h10:35-40~43-49; #text:40-43; ", track.toString());
+    }
+
     static void accumulateAttributePositions(Node node, StringBuilder sb) {
         if (node instanceof LeafNode) return; // leafnode pseudo attributes are not tracked
         for (Attribute attribute : node.attributes()) {
