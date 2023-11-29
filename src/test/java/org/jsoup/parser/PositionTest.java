@@ -487,6 +487,52 @@ class PositionTest {
         assertEquals("h1:0-9~12-17; id:4-6=7-8; #text:9-12; #text:17-18; h2:18-27~30-35; id:22-24=25-26; #text:27-30; h10:35-40~43-49; #text:40-43; ", track.toString());
     }
 
+    @Test void updateKeyMaintainsRangeLc() {
+        String html = "<p xsi:CLASS=On>One</p>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        Element p = doc.expectFirst("p");
+        Attribute attr = p.attribute("xsi:class");
+        assertNotNull(attr);
+
+        String expectedRange = "1,4:3-1,13:12=1,14:13-1,16:15";
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        attr.setKey("class");
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        assertEquals("class=\"On\"", attr.html());
+    }
+
+    @Test void updateKeyMaintainsRangeUc() {
+        String html = "<p xsi:CLASS=On>One</p>";
+        Document doc = Jsoup.parse(html, TrackingXmlParser);
+        Element p = doc.expectFirst("p");
+        Attribute attr = p.attribute("xsi:CLASS");
+        assertNotNull(attr);
+
+        String expectedRange = "1,4:3-1,13:12=1,14:13-1,16:15";
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        attr.setKey("class");
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        assertEquals("class=\"On\"", attr.html());
+
+        attr.setKey("CLASSY");
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        assertEquals("CLASSY=\"On\"", attr.html());
+
+        attr.setValue("To");
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        assertEquals("CLASSY=\"To\"", attr.html());
+
+        assertEquals("<p CLASSY=\"To\">One</p>", p.outerHtml());
+
+        p.attr("CLASSY", "Tree");
+        assertEquals(expectedRange, attr.sourceRange().toString());
+        assertEquals("CLASSY=\"To\"", attr.html()); // changes in this direction do not get to the attribute as it's not connected that way
+
+        Attribute attr2 = p.attribute("CLASSY");
+        assertEquals("CLASSY=\"Tree\"", attr2.html());
+        assertEquals(expectedRange, attr2.sourceRange().toString());
+    }
+
     static void accumulateAttributePositions(Node node, StringBuilder sb) {
         if (node instanceof LeafNode) return; // leafnode pseudo attributes are not tracked
         for (Attribute attribute : node.attributes()) {

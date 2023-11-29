@@ -111,6 +111,19 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Get an Attribute by key. The Attribute will remain connected to these Attributes, so changes made via
+     {@link Attribute#setKey(String)}, {@link Attribute#setValue(String)} etc will cascade back to these Attributes and
+     their owning Element.
+     @param key the (case-sensitive) attribute key
+     @return the Attribute for this key, or null if not present.
+     @since 1.17.2
+     */
+    public Attribute attribute(String key) {
+        int i = indexOfKey(key);
+        return i == NotFound ? null : new Attribute(key, checkNotNull(vals[i]), this);
+    }
+
+    /**
      * Get an attribute's value by case-insensitive key
      * @param key the attribute name
      * @return the first matching attribute value if set; or empty string if not set (ora boolean attribute).
@@ -360,12 +373,18 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public Range.AttributeRange sourceRange(String key) {
         if (!hasKey(key)) return UntrackedAttr;
-        //noinspection unchecked
-        Map<String, Range.AttributeRange> ranges = (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        Map<String, Range.AttributeRange> ranges = getRanges();
         if (ranges == null) return Range.AttributeRange.UntrackedAttr;
         Range.AttributeRange range = ranges.get(key);
         return range != null ? range : Range.AttributeRange.UntrackedAttr;
     }
+
+    /** Get the Ranges, if tracking is enabled; null otherwise. */
+    @Nullable Map<String, Range.AttributeRange> getRanges() {
+        //noinspection unchecked
+        return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+    }
+
 
     @Override
     public Iterator<Attribute> iterator() {

@@ -2865,4 +2865,23 @@ public class ElementTest {
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
         assertEquals("Foo&nbsp;&succ;", doc.body().html()); // succ is alias for Succeeds, and first hit in entities
     }
+
+    @Test void attribute() {
+        String html = "<p CLASS='yes'>One</p>";
+        Document doc = Jsoup.parse(html);
+        Element p = doc.expectFirst("p");
+        Attribute attr = p.attribute("class"); // HTML parse lower-cases names
+        assertNotNull(attr);
+        assertEquals("class", attr.getKey());
+        assertEquals("yes", attr.getValue());
+        assertFalse(attr.sourceRange().nameRange().start().isTracked()); // tracking disabled
+
+        assertNull(p.attribute("CLASS")); // no such key
+
+        attr.setKey("CLASS"); // set preserves input case
+        attr.setValue("YES");
+
+        assertEquals("<p CLASS=\"YES\">One</p>", p.outerHtml());
+        assertEquals("CLASS=\"YES\"", attr.html());
+    }
 }

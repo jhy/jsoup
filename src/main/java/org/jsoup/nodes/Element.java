@@ -267,6 +267,17 @@ public class Element extends Node {
     }
 
     /**
+     Get an Attribute by key. Changes made via {@link Attribute#setKey(String)}, {@link Attribute#setValue(String)} etc
+     will cascade back to this Element.
+     @param key the (case-sensitive) attribute key
+     @return the Attribute for this key, or null if not present.
+     @since 1.17.2
+     */
+    public Attribute attribute(String key) {
+        return hasAttributes() ? attributes().attribute(key) : null;
+    }
+
+    /**
      * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
      * starting with "data-" is included the dataset.
      * <p>

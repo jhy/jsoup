@@ -3,7 +3,6 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jspecify.annotations.Nullable;
@@ -72,8 +71,17 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
-            if (i != Attributes.NotFound)
+            if (i != Attributes.NotFound) {
+                String oldKey = parent.keys[i];
                 parent.keys[i] = key;
+
+                // if tracking source positions, update the key in the range map
+                Map<String, Range.AttributeRange> ranges = parent.getRanges();
+                if (ranges != null) {
+                    Range.AttributeRange range = ranges.remove(oldKey);
+                    ranges.put(key, range);
+                }
+            }
         }
         this.key = key;
     }

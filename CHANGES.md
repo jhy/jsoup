@@ -2,6 +2,12 @@
 
 ## 1.17.2 (Pending)
 
+### Improvements
+* Added `Element.attribute(String)` and `Attributes.attribute(String)` to more simply obtain an `Attribute` object. 
+  [2069](https://github.com/jhy/jsoup/issues/2069)
+* If source tracking is on, and an Attribute's key is changed (via `Attribute.setKey(String)`), the source range is 
+  now still tracked in `Attribute.sourceRange()`. [2070](https://github.com/jhy/jsoup/issues/2070)
+
 ### Bug Fixes
 
 * When tracking the source position of attributes, if source attribute name was mix-cased but the parser was
