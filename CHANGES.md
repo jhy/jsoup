@@ -15,6 +15,8 @@
   correctly. [2067](https://github.com/jhy/jsoup/issues/2067)
 * When tracking the source position of a body fragment parse, a null pointer exception was
   thrown. [2068](https://github.com/jhy/jsoup/issues/2068)
+* A multi-point encoded emoji entity may be incorrectly decoded to the replacement
+  character. [2047](https://github.com/jhy/jsoup/issues/2074)
 
 ---
 Older changes for versions 0.1.1 (2010-Jan-31) through 1.17.1 (2023-Nov-27) may be found in
