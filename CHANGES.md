@@ -17,6 +17,10 @@
   thrown. [2068](https://github.com/jhy/jsoup/issues/2068)
 * A multi-point encoded emoji entity may be incorrectly decoded to the replacement
   character. [2074](https://github.com/jhy/jsoup/issues/2074)
+* (Regression) in a selector like `parent [attr=va], other`, the `, OR` was binding to `[attr=va]` instead of
+  `parent [attr=va]`, causing incorrect selections. The fix includes a EvaluatorDebug class that generates a sexpr
+  to represent the query, allowing simpler and more thorough query parse
+  tests. [2073](https://github.com/jhy/jsoup/issues/2073)
 
 ---
 Older changes for versions 0.1.1 (2010-Jan-31) through 1.17.1 (2023-Nov-27) may be found in

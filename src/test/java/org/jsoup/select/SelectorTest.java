@@ -1220,4 +1220,14 @@ public class SelectorTest {
         Evaluator parse = QueryParser.parse(query);
         assertEquals(query, parse.toString());
     }
+
+    @Test public void orAfterClass() {
+        // see also QueryParserTest#parsesOrAfterAttribute
+        // https://github.com/jhy/jsoup/issues/2073
+        Document doc = Jsoup.parse("<div id=parent><span class=child></span><span class=child></span><span class=child></span></div>");
+        String q = "#parent [class*=child], .some-other-selector .nested";
+        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", EvaluatorDebug.sexpr(q));
+        Elements els = doc.select(q);
+        assertEquals(3, els.size());
+    }
 }

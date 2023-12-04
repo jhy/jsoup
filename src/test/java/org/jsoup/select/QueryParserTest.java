@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
+import static org.jsoup.select.EvaluatorDebug.sexpr;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -26,49 +27,80 @@ public class QueryParserTest {
 
     @Test public void testImmediateParentRun() {
         String query = "div > p > bold.brass";
-        Evaluator eval1 = QueryParser.parse(query);
-        assertEquals(query, eval1.toString());
+        assertEquals("(ImmediateParentRun (Tag 'div')(Tag 'p')(And (Tag 'bold')(Class '.brass')))", sexpr(query));
 
-        StructuralEvaluator.ImmediateParentRun run = (StructuralEvaluator.ImmediateParentRun) eval1;
-        assertTrue(run.evaluators.get(0) instanceof Evaluator.Tag);
-        assertTrue(run.evaluators.get(1) instanceof Evaluator.Tag);
-        assertTrue(run.evaluators.get(2) instanceof CombiningEvaluator.And);
+        /*
+        <ImmediateParentRun css="div > p > bold.brass" cost="11">
+          <Tag css="div" cost="1"></Tag>
+          <Tag css="p" cost="1"></Tag>
+          <And css="bold.brass" cost="7">
+            <Tag css="bold" cost="1"></Tag>
+            <Class css=".brass" cost="6"></Class>
+          </And>
+        </ImmediateParentRun>
+         */
     }
 
     @Test public void testOrGetsCorrectPrecedence() {
         // tests that a selector "a b, c d, e f" evals to (a AND b) OR (c AND d) OR (e AND f)"
         // top level or, three child ands
-        Evaluator eval = QueryParser.parse("a b, c d, e f");
-        assertTrue(eval instanceof CombiningEvaluator.Or);
-        CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
-        assertEquals(3, or.evaluators.size());
-        for (Evaluator innerEval: or.evaluators) {
-            assertTrue(innerEval instanceof CombiningEvaluator.And);
-            CombiningEvaluator.And and = (CombiningEvaluator.And) innerEval;
-            assertEquals(2, and.evaluators.size());
-            assertTrue(and.evaluators.get(0) instanceof StructuralEvaluator.Parent);
-            assertTrue(and.evaluators.get(1) instanceof Evaluator.Tag);
-        }
+        String query = "a b, c d, e f";
+        String parsed = sexpr(query);
+        assertEquals("(Or (And (Tag 'b')(Parent (Tag 'a')))(And (Tag 'd')(Parent (Tag 'c')))(And (Tag 'f')(Parent (Tag 'e'))))", parsed);
+
+        /*
+        <Or css="a b, c d, e f" cost="9">
+          <And css="a b" cost="3">
+            <Tag css="b" cost="1"></Tag>
+            <Parent css="a " cost="2">
+              <Tag css="a" cost="1"></Tag>
+            </Parent>
+          </And>
+          <And css="c d" cost="3">
+            <Tag css="d" cost="1"></Tag>
+            <Parent css="c " cost="2">
+              <Tag css="c" cost="1"></Tag>
+            </Parent>
+          </And>
+          <And css="e f" cost="3">
+            <Tag css="f" cost="1"></Tag>
+            <Parent css="e " cost="2">
+              <Tag css="e" cost="1"></Tag>
+            </Parent>
+          </And>
+        </Or>
+         */
     }
 
     @Test public void testParsesMultiCorrectly() {
-        String query = ".foo.qux > ol.bar, ol > li + li";
-        Evaluator eval = QueryParser.parse(query);
-        assertTrue(eval instanceof CombiningEvaluator.Or);
-        CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
-        assertEquals(2, or.evaluators.size());
+        String query = ".foo.qux[attr=bar] > ol.bar, ol > li + li";
+        String parsed = sexpr(query);
+        assertEquals("(Or (And (Tag 'li')(ImmediatePreviousSibling (ImmediateParentRun (Tag 'ol')(Tag 'li'))))(ImmediateParentRun (And (AttributeWithValue '[attr=bar]')(Class '.foo')(Class '.qux'))(And (Tag 'ol')(Class '.bar'))))", parsed);
 
-        StructuralEvaluator.ImmediateParentRun run = (StructuralEvaluator.ImmediateParentRun) or.evaluators.get(0);
-        CombiningEvaluator.And andRight = (CombiningEvaluator.And) or.evaluators.get(1);
-
-        assertEquals(".foo.qux > ol.bar", run.toString());
-        assertEquals(2, run.evaluators.size());
-        Evaluator runAnd = run.evaluators.get(0);
-        assertTrue(runAnd instanceof CombiningEvaluator.And);
-        assertEquals(".foo.qux", runAnd.toString());
-        assertEquals("ol > li + li", andRight.toString());
-        assertEquals(2, andRight.evaluators.size());
-        assertEquals(query, eval.toString());
+        /*
+        <Or css=".foo.qux[attr=bar] > ol.bar, ol > li + li" cost="31">
+          <And css="ol > li + li" cost="7">
+            <Tag css="li" cost="1"></Tag>
+            <ImmediatePreviousSibling css="ol > li + " cost="6">
+              <ImmediateParentRun css="ol > li" cost="4">
+                <Tag css="ol" cost="1"></Tag>
+                <Tag css="li" cost="1"></Tag>
+              </ImmediateParentRun>
+            </ImmediatePreviousSibling>
+          </And>
+          <ImmediateParentRun css=".foo.qux[attr=bar] > ol.bar" cost="24">
+            <And css=".foo.qux[attr=bar]" cost="15">
+              <AttributeWithValue css="[attr=bar]" cost="3"></AttributeWithValue>
+              <Class css=".foo" cost="6"></Class>
+              <Class css=".qux" cost="6"></Class>
+            </And>
+            <And css="ol.bar" cost="7">
+              <Tag css="ol" cost="1"></Tag>
+              <Class css=".bar" cost="6"></Class>
+            </And>
+          </ImmediateParentRun>
+        </Or>
+         */
     }
 
     @Test public void exceptionOnUncloseAttribute() {
@@ -97,5 +129,18 @@ public class QueryParserTest {
         String q = "a:not(:has(span.foo)) b d > e + f ~ g";
         Evaluator parse = QueryParser.parse(q);
         assertEquals(q, parse.toString());
+        String parsed = sexpr(q);
+        assertEquals("(And (Tag 'g')(PreviousSibling (And (Tag 'f')(ImmediatePreviousSibling (ImmediateParentRun (And (Tag 'd')(Parent (And (Tag 'b')(Parent (And (Tag 'a')(Not (Has (And (Tag 'span')(Class '.foo')))))))))(Tag 'e'))))))", parsed);
+    }
+
+    @Test public void parsesOrAfterAttribute() {
+        // https://github.com/jhy/jsoup/issues/2073
+        String q = "#parent [class*=child], .some-other-selector .nested";
+        String parsed = sexpr(q);
+        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", parsed);
+
+        assertEquals("(Or (Class '.some-other-selector')(And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]')))", sexpr("#parent [class*=child], .some-other-selector"));
+        assertEquals("(Or (Class '.some-other-selector')(And (Id '#el')(AttributeWithValueContaining '[class*=child]')))", sexpr("#el[class*=child], .some-other-selector"));
+        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", sexpr("#parent [class*=child], .some-other-selector .nested"));
     }
 }
