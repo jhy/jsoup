@@ -1138,15 +1138,12 @@ enum HtmlTreeBuilderState {
     InCaption {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.isEndTag() && t.asEndTag().normalName().equals("caption")) {
-                Token.EndTag endTag = t.asEndTag();
-                String name = endTag.normalName();
-                if (!tb.inTableScope(name)) {
+                if (!tb.inTableScope("caption")) { // fragment case
                     tb.error(this);
                     return false;
                 } else {
                     tb.generateImpliedEndTags();
-                    if (!tb.currentElementIs("caption"))
-                        tb.error(this);
+                    if (!tb.currentElementIs("caption")) tb.error(this);
                     tb.popStackToClose("caption");
                     tb.clearFormattingElementsToLastMarker();
                     tb.transition(InTable);
@@ -1155,10 +1152,17 @@ enum HtmlTreeBuilderState {
                     t.isStartTag() && inSorted(t.asStartTag().normalName(), InCellCol) ||
                             t.isEndTag() && t.asEndTag().normalName().equals("table"))
                     ) {
-                tb.error(this);
-                boolean processed = tb.processEndTag("caption");
-                if (processed)
-                    return tb.process(t);
+                // same as above but processes after transition
+                if (!tb.inTableScope("caption")) { // fragment case
+                    tb.error(this);
+                    return false;
+                }
+                tb.generateImpliedEndTags(false);
+                if (!tb.currentElementIs("caption")) tb.error(this);
+                tb.popStackToClose("caption");
+                tb.clearFormattingElementsToLastMarker();
+                tb.transition(InTable);
+                InTable.process(t, tb); // doesn't check foreign context
             } else if (t.isEndTag() && inSorted(t.asEndTag().normalName(), InCaptionIgnore)) {
                 tb.error(this);
                 return false;
