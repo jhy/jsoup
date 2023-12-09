@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
@@ -916,7 +915,7 @@ public class Element extends Node {
         String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
         StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
         String classes = classNames().stream().map(TokenQueue::escapeCssIdentifier)
-                .collect(Collectors.joining("."));
+                .collect(StringUtil.joining("."));
         if (!classes.isEmpty())
             selector.append('.').append(classes);
 

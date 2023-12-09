@@ -92,13 +92,10 @@
                 <ignore>java.util.function.*</ignore>
                 <ignore>java.lang.ThreadLocal</ignore>
                 <ignore>java.io.UncheckedIOException</ignore>
-                <ignore>java.util.stream.Stream</ignore>
-                <ignore>java.util.stream.StreamSupport</ignore>
+                <ignore>java.util.stream.*</ignore>
                 <ignore>java.util.Spliterator</ignore>
                 <ignore>java.util.Spliterators</ignore>
                 <ignore>java.util.Optional</ignore>
-                <ignore>java.util.stream.Collector</ignore>
-                <ignore>java.util.stream.Collectors</ignore>
 
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
               </ignores>
