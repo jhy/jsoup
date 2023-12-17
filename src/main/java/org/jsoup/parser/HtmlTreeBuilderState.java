@@ -351,7 +351,7 @@ enum HtmlTreeBuilderState {
                     stack = tb.getStack();
                     for (int i = stack.size() - 1; i > 0; i--) {
                         el = stack.get(i);
-                        if (el.normalName().equals("li")) {
+                        if (el.nameIs("li")) {
                             tb.processEndTag("li");
                             break;
                         }
@@ -381,7 +381,7 @@ enum HtmlTreeBuilderState {
                 case "body":
                     tb.error(this);
                     stack = tb.getStack();
-                    if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body")) || tb.onStack("template")) {
+                    if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nameIs("body")) || tb.onStack("template")) {
                         // only in fragment case
                         return false; // ignore
                     } else {
@@ -399,7 +399,7 @@ enum HtmlTreeBuilderState {
                 case "frameset":
                     tb.error(this);
                     stack = tb.getStack();
-                    if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).normalName().equals("body"))) {
+                    if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nameIs("body"))) {
                         // only in fragment case
                         return false; // ignore
                     } else if (!tb.framesetOk()) {
@@ -856,7 +856,7 @@ enum HtmlTreeBuilderState {
 
             for (int pos = stack.size() - 1; pos >= 0; pos--) {
                 Element node = stack.get(pos);
-                if (node.normalName().equals(name)) {
+                if (node.nameIs(name)) {
                     tb.generateImpliedEndTags(name);
                     if (!tb.currentElementIs(name))
                         tb.error(this);
@@ -1484,7 +1484,7 @@ enum HtmlTreeBuilderState {
                     name = end.normalName();
                     switch (name) {
                         case "optgroup":
-                            if (tb.currentElementIs("option") && tb.aboveOnStack(tb.currentElement()) != null && tb.aboveOnStack(tb.currentElement()).normalName().equals("optgroup"))
+                            if (tb.currentElementIs("option") && tb.aboveOnStack(tb.currentElement()) != null && tb.aboveOnStack(tb.currentElement()).nameIs("optgroup"))
                                 tb.processEndTag("option");
                             if (tb.currentElementIs("optgroup"))
                                 tb.pop();
@@ -1813,10 +1813,10 @@ enum HtmlTreeBuilderState {
                         Validate.wtf("Stack unexpectedly empty");
                     int i = stack.size() - 1;
                     Element el = stack.get(i);
-                    if (!el.normalName().equals(end.normalName))
+                    if (!el.nameIs(end.normalName))
                         tb.error(this);
                     while (i != 0) {
-                        if (el.normalName().equals(end.normalName)) {
+                        if (el.nameIs(end.normalName)) {
                             tb.popStackToCloseAnyNamespace(el.normalName());
                             return true;
                         }

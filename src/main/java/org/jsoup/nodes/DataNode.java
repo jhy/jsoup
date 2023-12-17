@@ -1,9 +1,6 @@
 package org.jsoup.nodes;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
-
-import org.jsoup.nodes.Entities.EscapeMode;
 
 /**
  A data node, for contents of style, script tags etc, where contents should not show in text().
@@ -47,9 +44,9 @@ public class DataNode extends LeafNode {
         parsed as HTML, so don't double up Cdata. Output in polygot HTML / XHTML / XML format. */
         final String data = getWholeData();
         if (out.syntax() == Document.OutputSettings.Syntax.xml && !data.contains("<![CDATA[")) {
-            if (hasParent() && parentNode.normalName().equals("script"))
+            if (parentNameIs("script"))
                 accum.append("//<![CDATA[\n").append(data).append("\n//]]>");
-            else if (hasParent() && parentNode.normalName().equals("style"))
+            else if (parentNameIs("style"))
                 accum.append("/*<![CDATA[*/\n").append(data).append("\n/*]]>*/");
             else
                 accum.append("<![CDATA[").append(data).append("]]>");

@@ -74,7 +74,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.normalName().equals(tagName));
+            return (element.nameIs(tagName));
         }
 
         @Override protected int cost() {

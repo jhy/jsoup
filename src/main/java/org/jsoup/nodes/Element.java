@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
+import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
 
 /**
@@ -171,6 +172,27 @@ public class Element extends Node {
      */
     public String normalName() {
         return tag.normalName();
+    }
+
+    /**
+     Test if this Element has the specified normalized name, in any namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @return true if the element's normal name matches exactly
+     * @since 1.17.2
+     */
+    public boolean nameIs(String normalName) {
+        return tag.normalName().equals(normalName);
+    }
+
+    /**
+     Test if this Element has the specified normalized name, and is in the specified namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @param namespace the namespace
+     * @return true if the element's normal name matches exactly, and is in the specified namespace
+     * @since 1.17.2
+     */
+    public boolean elementIs(String normalName, String namespace) {
+        return tag.normalName().equals(normalName) && tag.namespace().equals(namespace);
     }
 
     /**
@@ -1717,7 +1739,7 @@ public class Element extends Node {
      * @return the value of the form element, or empty string if not set.
      */
     public String val() {
-        if (normalName().equals("textarea"))
+        if (elementIs("textarea", NamespaceHtml))
             return text();
         else
             return attr("value");
@@ -1729,7 +1751,7 @@ public class Element extends Node {
      * @return this element (for chaining)
      */
     public Element val(String value) {
-        if (normalName().equals("textarea"))
+        if (elementIs("textarea", NamespaceHtml))
             text(value);
         else
             attr("value", value);

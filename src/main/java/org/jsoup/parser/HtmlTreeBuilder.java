@@ -193,7 +193,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
         // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
         if (Parser.NamespaceMathml.equals(ns)
-            && el.normalName().equals("annotation-xml")
+            && el.nameIs("annotation-xml")
             && token.isStartTag()
             && "svg".equals(token.asStartTag().normalName))
             return true;
@@ -231,7 +231,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         An SVG title element
          */
         if (Parser.NamespaceMathml.equals(el.tag().namespace())
-            && el.normalName().equals("annotation-xml")) {
+            && el.nameIs("annotation-xml")) {
             String encoding = Normalizer.normalize(el.attr("encoding"));
             if (encoding.equals("text/html") || encoding.equals("application/xhtml+xml"))
                 return true;
@@ -464,7 +464,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
         for (int pos = bottom; pos >= upper; pos--) {
             Element next = stack.get(pos);
-            if (next.normalName().equals(elName) && NamespaceHtml.equals(next.tag().namespace())) {
+            if (next.elementIs(elName, next.tag().namespace())) {
                 return next;
             }
         }
@@ -488,7 +488,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
-            if (el.normalName().equals(elName) && NamespaceHtml.equals(el.tag().namespace())) {
+            if (el.elementIs(elName, el.tag().namespace())) {
                 return el;
             }
         }
@@ -500,7 +500,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element popStackToCloseAnyNamespace(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
-            if (el.normalName().equals(elName)) {
+            if (el.nameIs(elName)) {
                 return el;
             }
         }
@@ -534,7 +534,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             if (NamespaceHtml.equals(next.tag().namespace()) &&
-                (StringUtil.in(next.normalName(), nodeNames) || next.normalName().equals("html")))
+                (StringUtil.in(next.normalName(), nodeNames) || next.nameIs("html")))
                 break;
             else
                 pop();
@@ -963,7 +963,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             Element next = formattingElements.get(pos);
             if (next == null) // scope marker
                 break;
-            else if (next.normalName().equals(nodeName))
+            else if (next.nameIs(nodeName))
                 return next;
         }
         return null;
