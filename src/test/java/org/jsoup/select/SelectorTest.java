@@ -1230,4 +1230,17 @@ public class SelectorTest {
         Elements els = doc.select(q);
         assertEquals(3, els.size());
     }
+
+    @Test public void emptyAttributePrefix() {
+        // https://github.com/jhy/jsoup/issues/2079
+        // Discovered feature: [^] should find elements with any attribute (any prefix)
+        String html = "<p one>One<p one two>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("[^]");
+        assertSelectedOwnText(els, "One", "Two");
+
+        Elements emptyAttr = doc.select("p:not([^])");
+        assertSelectedOwnText(emptyAttr, "Three");
+    }
 }

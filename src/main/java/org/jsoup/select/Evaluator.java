@@ -191,7 +191,7 @@ public abstract class Evaluator {
         private final String keyPrefix;
 
         public AttributeStarting(String keyPrefix) {
-            Validate.notEmpty(keyPrefix);
+            Validate.notNull(keyPrefix); // OK to be empty - will find elements with any attributes
             this.keyPrefix = lowerCase(keyPrefix);
         }
 
