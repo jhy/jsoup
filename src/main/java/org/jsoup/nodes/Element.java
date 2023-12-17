@@ -175,16 +175,6 @@ public class Element extends Node {
     }
 
     /**
-     Test if this Element has the specified normalized name, in any namespace.
-     * @param normalName a normalized element name (e.g. {@code div}).
-     * @return true if the element's normal name matches exactly
-     * @since 1.17.2
-     */
-    public boolean nameIs(String normalName) {
-        return tag.normalName().equals(normalName);
-    }
-
-    /**
      Test if this Element has the specified normalized name, and is in the specified namespace.
      * @param normalName a normalized element name (e.g. {@code div}).
      * @param namespace the namespace
@@ -328,7 +318,7 @@ public class Element extends Node {
     public Elements parents() {
         Elements parents = new Elements();
         Element parent = this.parent();
-        while (parent != null && !parent.isNode("#root")) {
+        while (parent != null && !parent.nameIs("#root")) {
             parents.add(parent);
             parent = parent.parent();
         }
@@ -1417,7 +1407,7 @@ public class Element extends Node {
             } else if (node instanceof Element) {
                 Element element = (Element) node;
                 if (accum.length() > 0 &&
-                    (element.isBlock() || element.isNode("br")) &&
+                    (element.isBlock() || element.nameIs("br")) &&
                     !lastCharIsWhitespace(accum))
                     accum.append(' ');
             }
@@ -1451,7 +1441,7 @@ public class Element extends Node {
     private static void appendWholeText(Node node, StringBuilder accum) {
         if (node instanceof TextNode) {
             accum.append(((TextNode) node).getWholeText());
-        } else if (node.isNode("br")) {
+        } else if (node.nameIs("br")) {
             accum.append("\n");
         }
     }
@@ -1499,7 +1489,7 @@ public class Element extends Node {
             if (child instanceof TextNode) {
                 TextNode textNode = (TextNode) child;
                 appendNormalisedText(accum, textNode);
-            } else if (child.isNode("br") && !lastCharIsWhitespace(accum)) {
+            } else if (child.nameIs("br") && !lastCharIsWhitespace(accum)) {
                 accum.append(" ");
             }
         }
@@ -1944,6 +1934,6 @@ public class Element extends Node {
         return (parent() == null || parent().isBlock())
             && !isEffectivelyFirst()
             && !out.outline()
-            && !isNode("br");
+            && !nameIs("br");
     }
 }

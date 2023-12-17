@@ -456,8 +456,7 @@ public class NodeTest {
         assertEquals("DIV", div.tagName());
         assertEquals("DIV", div.nodeName());
         assertEquals("div", div.normalName());
-        assertTrue(div.isNode("div"));
-        assertTrue(Node.isNode(div, "div"));
+        assertTrue(div.nameIs("div"));
 
         TextNode text = new TextNode("Some Text");
         assertEquals("#text", text.nodeName());

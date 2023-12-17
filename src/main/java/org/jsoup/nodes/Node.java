@@ -52,6 +52,16 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Test if this Element has the specified normalized name, in any namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @return true if the element's normal name matches exactly
+     * @since 1.17.2
+     */
+    public boolean nameIs(String normalName) {
+        return normalName().equals(normalName);
+    }
+
+    /**
      Test if this node's parent has the specified normalized name.
      * @param normalName a normalized name (e.g. {@code div}).
      * @return true if the parent element's normal name matches exactly
@@ -792,16 +802,6 @@ public abstract class Node implements Cloneable {
      */
     public Range sourceRange() {
         return Range.of(this, true);
-    }
-
-    /** Test if this node is not null and has the supplied normal name. */
-    static boolean isNode(@Nullable Node node, String normalName) {
-        return node != null && node.normalName().equals(normalName);
-    }
-
-    /** Test if this node has the supplied normal name. */
-    final boolean isNode(String normalName) {
-        return normalName().equals(normalName);
     }
 
     /** Test if this node is the first child, or first following blank text. */
