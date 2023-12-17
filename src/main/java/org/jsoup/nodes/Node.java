@@ -52,7 +52,7 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Test if this Element has the specified normalized name, in any namespace.
+     Test if this node has the specified normalized name, in any namespace.
      * @param normalName a normalized element name (e.g. {@code div}).
      * @return true if the element's normal name matches exactly
      * @since 1.17.2
