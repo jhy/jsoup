@@ -464,7 +464,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
         for (int pos = bottom; pos >= upper; pos--) {
             Element next = stack.get(pos);
-            if (next.elementIs(elName, next.tag().namespace())) {
+            if (next.elementIs(elName, NamespaceHtml)) {
                 return next;
             }
         }
@@ -488,7 +488,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element popStackToClose(String elName) {
         for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
-            if (el.elementIs(elName, el.tag().namespace())) {
+            if (el.elementIs(elName, NamespaceHtml)) {
                 return el;
             }
         }
