@@ -292,6 +292,8 @@ public class QueryParser {
         if (cq.isEmpty()) {
             if (key.startsWith("^"))
                 eval = new Evaluator.AttributeStarting(key.substring(1));
+            else if (key.equals("*")) // any attribute
+                eval = new Evaluator.AttributeStarting("");
             else
                 eval = new Evaluator.Attribute(key);
         } else {

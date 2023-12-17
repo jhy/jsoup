@@ -3,10 +3,13 @@
 ## 1.17.2 (Pending)
 
 ### Improvements
-* Added `Element.attribute(String)` and `Attributes.attribute(String)` to more simply obtain an `Attribute` object. 
+
+* Added `Element.attribute(String)` and `Attributes.attribute(String)` to more simply obtain an `Attribute` object.
   [2069](https://github.com/jhy/jsoup/issues/2069)
-* If source tracking is on, and an Attribute's key is changed (via `Attribute.setKey(String)`), the source range is 
+* If source tracking is on, and an Attribute's key is changed (via `Attribute.setKey(String)`), the source range is
   now still tracked in `Attribute.sourceRange()`. [2070](https://github.com/jhy/jsoup/issues/2070)
+* Added support for the `[*]` element with any attribute selector. And also restored support for selecting by an empty
+  attribute name prefix (`[^]`). [2079](https://github.com/jhy/jsoup/issues/2079)
 
 ### Bug Fixes
 

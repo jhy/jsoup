@@ -1243,4 +1243,16 @@ public class SelectorTest {
         Elements emptyAttr = doc.select("p:not([^])");
         assertSelectedOwnText(emptyAttr, "Three");
     }
+
+    @Test public void anyAttribute() {
+        // https://github.com/jhy/jsoup/issues/2079
+        String html = "<div id=1><p one>One<p one two>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p[*]");
+        assertSelectedOwnText(els, "One", "Two");
+
+        Elements emptyAttr = doc.select("p:not([*])");
+        assertSelectedOwnText(emptyAttr, "Three");
+    }
 }
