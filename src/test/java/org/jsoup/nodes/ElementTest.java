@@ -2755,16 +2755,56 @@ public class ElementTest {
         assertEquals("1 && 2", scriptDataNode.getWholeData());
 
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-        String xml = doc.body().html();
+        Element p = doc.expectFirst("p");
+        String xml = p.html();
         assertEquals(
-            "<p><script><![CDATA[1 && 2]]></script><style><![CDATA[3 && 4]]></style> 5 &amp;&amp; 6</p>",
-            TextUtil.normalizeSpaces(xml));
+            "<script>//<![CDATA[\n" +
+                "1 && 2\n" +
+                "//]]></script>\n" +
+                "<style>/*<![CDATA[*/\n" +
+                "3 && 4\n" +
+                "/*]]>*/</style> 5 &amp;&amp; 6",
+            xml);
 
         Document xmlDoc = Jsoup.parse(xml, Parser.xmlParser());
         assertEquals(xml, xmlDoc.html());
         Element scriptXmlEl = xmlDoc.expectFirst("script");
-        CDataNode scriptCdata = (CDataNode) scriptXmlEl.childNode(0);
-        assertEquals(scriptCdata.text(), scriptDataNode.getWholeData());
+        TextNode scriptText = (TextNode) scriptXmlEl.childNode(0);
+        assertEquals("//", scriptText.getWholeText());
+        CDataNode scriptCdata = (CDataNode) scriptXmlEl.childNode(1);
+        assertEquals("\n1 && 2\n//", scriptCdata.text());
+    }
+
+    @Test void datanodesOutputExistingCdataInXhtml() {
+        String html = "<p><script>//<![CDATA[\n1 && 2\n//]]></script><style>\n/*<![CDATA[*/3 && 4\n/*]]>*/</style> 5 &amp;&amp; 6</p>";;
+        Document doc = Jsoup.parse(html); // parsed as HTML
+        String out = TextUtil.normalizeSpaces(doc.body().html());
+        assertEquals("<p><script>//<![CDATA[1 && 2//]]></script><style>/*<![CDATA[*/3 && 4/*]]>*/</style> 5 &amp;&amp; 6</p>", out);
+        Element scriptEl = doc.expectFirst("script");
+        DataNode scriptDataNode = (DataNode) scriptEl.childNode(0);
+        assertEquals("//<![CDATA[\n" +
+            "1 && 2\n" +
+            "//]]>", scriptDataNode.getWholeData());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        Element p = doc.expectFirst("p");
+        String xml = p.html();
+        assertEquals(
+            "<script>//<![CDATA[\n" +
+                "1 && 2\n" +
+                "//]]></script>\n" +
+                "<style>\n" +
+                "/*<![CDATA[*/3 && 4\n" +
+                "/*]]>*/</style> 5 &amp;&amp; 6",
+            xml);
+
+        Document xmlDoc = Jsoup.parse(xml, Parser.xmlParser());
+        assertEquals(xml, xmlDoc.html());
+        Element scriptXmlEl = xmlDoc.expectFirst("script");
+        TextNode scriptText = (TextNode) scriptXmlEl.childNode(0);
+        assertEquals("//", scriptText.getWholeText());
+        CDataNode scriptCdata = (CDataNode) scriptXmlEl.childNode(1);
+        assertEquals("\n1 && 2\n//", scriptCdata.text());
     }
 
     @Test void outerHtmlAppendable() {

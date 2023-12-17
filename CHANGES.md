@@ -21,6 +21,9 @@
   `parent [attr=va]`, causing incorrect selections. The fix includes a EvaluatorDebug class that generates a sexpr
   to represent the query, allowing simpler and more thorough query parse
   tests. [2073](https://github.com/jhy/jsoup/issues/2073)
+* When generating XML-syntax output from parsed HTML, script nodes containing (pseudo) CData sections would have an
+  extraneous CData section added, causing script execution errors. Now, the data content is emitted in a HTML/XML/XHTML
+  polyglot format, if the data is not already within a CData section. [2078](https://github.com/jhy/jsoup/issues/2078)
 
 ---
 Older changes for versions 0.1.1 (2010-Jan-31) through 1.17.1 (2023-Nov-27) may be found in
