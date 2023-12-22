@@ -27,6 +27,9 @@
 * When generating XML-syntax output from parsed HTML, script nodes containing (pseudo) CData sections would have an
   extraneous CData section added, causing script execution errors. Now, the data content is emitted in a HTML/XML/XHTML
   polyglot format, if the data is not already within a CData section. [2078](https://github.com/jhy/jsoup/issues/2078)
+* The `:has` evaluator held a non-thread-safe Iterator, and so if an Evaluator object was shared across multiple
+  concurrent threads, a NoSuchElement exception may be thrown, and the selected results may be incorrect. Now, the
+  iterator object is a thread-local. [2088](https://github.com/jhy/jsoup/issues/2088)
 
 ---
 Older changes for versions 0.1.1 (2010-Jan-31) through 1.17.1 (2023-Nov-27) may be found in
