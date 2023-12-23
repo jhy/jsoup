@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
@@ -411,6 +412,13 @@ public class Element extends Node {
         return NodeUtils.stream(this, Element.class);
     }
 
+    private <T> List<T> filterNodes(Class<T> clazz) {
+        return childNodes.stream()
+                .filter(clazz::isInstance)
+                .map(clazz::cast)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+    }
+
     /**
      * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
      * <p>
@@ -428,12 +436,7 @@ public class Element extends Node {
      * </ul>
      */
     public List<TextNode> textNodes() {
-        List<TextNode> textNodes = new ArrayList<>();
-        for (Node node : childNodes) {
-            if (node instanceof TextNode)
-                textNodes.add((TextNode) node);
-        }
-        return Collections.unmodifiableList(textNodes);
+        return filterNodes(TextNode.class);
     }
 
     /**
@@ -446,12 +449,7 @@ public class Element extends Node {
      * @see #data()
      */
     public List<DataNode> dataNodes() {
-        List<DataNode> dataNodes = new ArrayList<>();
-        for (Node node : childNodes) {
-            if (node instanceof DataNode)
-                dataNodes.add((DataNode) node);
-        }
-        return Collections.unmodifiableList(dataNodes);
+        return filterNodes(DataNode.class);
     }
 
     /**
