@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -50,7 +51,6 @@ import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.helper.DataUtil.UTF_8;
-import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
@@ -410,18 +410,18 @@ public class HttpConnection implements Connection {
         Map<String, String> cookies;
 
         private Base() {
-            headers = new LinkedHashMap<>();
+            headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             cookies = new LinkedHashMap<>();
         }
 
         private Base(Base<T> copy) {
+            this();
             url = copy.url; // unmodifiable object
             method = copy.method;
-            headers = new LinkedHashMap<>();
             for (Map.Entry<String, List<String>> entry : copy.headers.entrySet()) {
                 headers.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
-            cookies = new LinkedHashMap<>(); cookies.putAll(copy.cookies); // just holds strings
+            cookies.putAll(copy.cookies); // just holds strings
         }
 
         @Override
@@ -453,8 +453,8 @@ public class HttpConnection implements Connection {
         @Override
         public String header(String name) {
             Validate.notNullParam(name, "name");
-            List<String> vals = getHeadersCaseInsensitive(name);
-            if (vals.size() > 0) {
+            List<String> vals = headers.get(name);
+            if (vals != null) {
                 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
                 return StringUtil.join(vals, ", ");
             }
@@ -465,15 +465,9 @@ public class HttpConnection implements Connection {
         @Override
         public T addHeader(String name, @Nullable String value) {
             Validate.notEmptyParam(name, "name");
-            //noinspection ConstantConditions
-            value = value == null ? "" : value;
 
-            List<String> values = headers(name);
-            if (values.isEmpty()) {
-                values = new ArrayList<>();
-                headers.put(name, values);
-            }
-            values.add(value);
+            headers.computeIfAbsent(name, Functions.listFunction())
+                    .add(value == null ? "" : value);
 
             return (T) this;
         }
@@ -481,7 +475,7 @@ public class HttpConnection implements Connection {
         @Override
         public List<String> headers(String name) {
             Validate.notEmptyParam(name, "name");
-            return getHeadersCaseInsensitive(name);
+            return headers.getOrDefault(name, Collections.emptyList());
         }
 
         @Override
@@ -495,7 +489,7 @@ public class HttpConnection implements Connection {
         @Override
         public boolean hasHeader(String name) {
             Validate.notEmptyParam(name, "name");
-            return !getHeadersCaseInsensitive(name).isEmpty();
+            return headers.containsKey(name);
         }
 
         /**
@@ -505,20 +499,14 @@ public class HttpConnection implements Connection {
         public boolean hasHeaderWithValue(String name, String value) {
             Validate.notEmpty(name);
             Validate.notEmpty(value);
-            List<String> values = headers(name);
-            for (String candidate : values) {
-                if (value.equalsIgnoreCase(candidate))
-                    return true;
-            }
-            return false;
+            return headers.getOrDefault(name, Collections.emptyList()).stream()
+                    .anyMatch(value::equalsIgnoreCase);
         }
 
         @Override
         public T removeHeader(String name) {
             Validate.notEmptyParam(name, "name");
-            Map.Entry<String, List<String>> entry = scanHeaders(name); // remove is case-insensitive too
-            if (entry != null)
-                headers.remove(entry.getKey()); // ensures correct case
+            headers.remove(name); // remove is case-insensitive too
             return (T) this;
         }
 
@@ -537,26 +525,6 @@ public class HttpConnection implements Connection {
         @Override
         public Map<String, List<String>> multiHeaders() {
             return headers;
-        }
-
-        private List<String> getHeadersCaseInsensitive(String name) {
-            Validate.notNull(name);
-
-            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-                if (name.equalsIgnoreCase(entry.getKey()))
-                    return entry.getValue();
-            }
-
-            return Collections.emptyList();
-        }
-
-        private Map.@Nullable Entry<String, List<String>> scanHeaders(String name) {
-            String lc = lowerCase(name);
-            for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-                if (lowerCase(entry.getKey()).equals(lc))
-                    return entry;
-            }
-            return null;
         }
 
         @Override
