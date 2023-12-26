@@ -59,7 +59,8 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Has extends StructuralEvaluator {
-        final NodeIterator<Element> it = new NodeIterator<>(new Element("html"), Element.class);
+        static final ThreadLocal<NodeIterator<Element>> ThreadElementIter =
+            ThreadLocal.withInitial(() -> new NodeIterator<>(new Element("html"), Element.class));
         // the element here is just a placeholder so this can be final - gets set in restart()
 
         public Has(Evaluator evaluator) {
@@ -68,6 +69,8 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override public boolean matches(Element root, Element element) {
             // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
+            NodeIterator<Element> it = ThreadElementIter.get();
+
             it.restart(element);
             while (it.hasNext()) {
                 Element el = it.next();

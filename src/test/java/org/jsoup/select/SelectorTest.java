@@ -2,7 +2,6 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
-import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
@@ -1219,5 +1218,40 @@ public class SelectorTest {
         String query = "div :is(h1, h2)";
         Evaluator parse = QueryParser.parse(query);
         assertEquals(query, parse.toString());
+    }
+
+    @Test public void orAfterClass() {
+        // see also QueryParserTest#parsesOrAfterAttribute
+        // https://github.com/jhy/jsoup/issues/2073
+        Document doc = Jsoup.parse("<div id=parent><span class=child></span><span class=child></span><span class=child></span></div>");
+        String q = "#parent [class*=child], .some-other-selector .nested";
+        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", EvaluatorDebug.sexpr(q));
+        Elements els = doc.select(q);
+        assertEquals(3, els.size());
+    }
+
+    @Test public void emptyAttributePrefix() {
+        // https://github.com/jhy/jsoup/issues/2079
+        // Discovered feature: [^] should find elements with any attribute (any prefix)
+        String html = "<p one>One<p one two>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("[^]");
+        assertSelectedOwnText(els, "One", "Two");
+
+        Elements emptyAttr = doc.select("p:not([^])");
+        assertSelectedOwnText(emptyAttr, "Three");
+    }
+
+    @Test public void anyAttribute() {
+        // https://github.com/jhy/jsoup/issues/2079
+        String html = "<div id=1><p one>One<p one two>Two<p>Three";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p[*]");
+        assertSelectedOwnText(els, "One", "Two");
+
+        Elements emptyAttr = doc.select("p:not([*])");
+        assertSelectedOwnText(emptyAttr, "Three");
     }
 }

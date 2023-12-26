@@ -851,7 +851,7 @@ public class HtmlParserTest {
     }
 
     @Test public void tracksErrorsWhenRequested() {
-        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font />&#33 &amp &#xD800;<br /></div><foo";
+        String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font />&#33 &amp &#x110000;<br /></div><foo";
         Parser parser = Parser.htmlParser().setTrackErrors(500);
         Document doc = Jsoup.parse(html, "http://example.com", parser);
 
@@ -863,9 +863,9 @@ public class HtmlParserTest {
         assertEquals("<3:16>: Tag [font] cannot be self closing; not a void tag", errors.get(3).toString());
         assertEquals("<3:20>: Invalid character reference: missing semicolon on [&#33]", errors.get(4).toString());
         assertEquals("<3:25>: Invalid character reference: missing semicolon on [&amp]", errors.get(5).toString());
-        assertEquals("<3:34>: Invalid character reference: character [55296] outside of valid range", errors.get(6).toString());
-        assertEquals("<3:46>: Unexpected EndTag token [</div>] when in state [InBody]", errors.get(7).toString());
-        assertEquals("<3:51>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(8).toString());
+        assertEquals("<3:36>: Invalid character reference: character [1114112] outside of valid range", errors.get(6).toString());
+        assertEquals("<3:48>: Unexpected EndTag token [</div>] when in state [InBody]", errors.get(7).toString());
+        assertEquals("<3:53>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(8).toString());
     }
 
     @Test public void tracksLimitedErrorsWhenRequested() {
@@ -1873,5 +1873,19 @@ public class HtmlParserTest {
         assertMathNamespace(doc4.expectFirst("math"));
         assertMathNamespace(doc4.expectFirst("annotation-xml"));
         assertHtmlNamespace(doc4.expectFirst("divv"));
+    }
+
+    @Test void parseEmojiFromMultipointEncoded() {
+        String html = "<img multi='&#55357;&#56495;' single='&#128175;' hexsingle='&#x1f4af;'>";
+        Document document = Jsoup.parse(html);
+        Element img = document.expectFirst("img");
+        assertEquals("\uD83D\uDCAF", img.attr("multi"));
+        assertEquals("\uD83D\uDCAF", img.attr("single"));
+        assertEquals("\uD83D\uDCAF", img.attr("hexsingle"));
+
+        assertEquals("<img multi=\"\uD83D\uDCAF\" single=\"\uD83D\uDCAF\" hexsingle=\"\uD83D\uDCAF\">", img.outerHtml());
+
+        img.ownerDocument().outputSettings().charset("ascii");
+        assertEquals("<img multi=\"&#x1f4af;\" single=\"&#x1f4af;\" hexsingle=\"&#x1f4af;\">", img.outerHtml());
     }
 }

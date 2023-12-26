@@ -211,13 +211,14 @@ public interface Connection {
     /**
      * Add an input stream as a request data parameter. For GETs, has no effect, but for POSTS this will upload the
      * input stream.
+     * <p>Use the {@link #data(String, String, InputStream, String)} method to set the uploaded file's mimetype.</p>
      * @param key data key (form item name)
      * @param filename the name of the file to present to the remove server. Typically just the name, not path,
      * component.
      * @param inputStream the input stream to upload, that you probably obtained from a {@link java.io.FileInputStream}.
      * You must close the InputStream in a {@code finally} block.
      * @return this Connection, for chaining
-     * @see #data(String, String, InputStream, String) if you want to set the uploaded file's mimetype.
+     * @see #data(String, String, InputStream, String)
      */
     Connection data(String key, String filename, InputStream inputStream);
 
@@ -871,10 +872,15 @@ public interface Connection {
         Response bufferUp();
 
         /**
-         * Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done with it.
-         * Other body methods (like bufferUp, body, parse, etc) will not work in conjunction with this method.
-         * <p>This method is useful for writing large responses to disk, without buffering them completely into memory first.</p>
-         * @return the response body input stream
+         Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done
+         with it.
+         <p>Other body methods (like bufferUp, body, parse, etc) will generally not work in conjunction with this method,
+         as it consumes the InputStream.</p>
+         <p>Any configured max size or maximum read timeout applied to the connection will not be applied to this stream,
+         unless {@link #bufferUp()} is called prior.</p>
+         <p>This method is useful for writing large responses to disk, without buffering them completely into memory
+         first.</p>
+         @return the response body input stream
          */
         BufferedInputStream bodyStream();
     }

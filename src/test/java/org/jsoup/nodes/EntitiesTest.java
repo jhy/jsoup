@@ -175,4 +175,14 @@ public class EntitiesTest {
         String escaped2 = assertDoesNotThrow(() -> Entities.escape(text, clone2));
         assertEquals(escaped1, escaped2);
     }
+
+    @Test void parseHtmlEncodedEmojiMultipoint() {
+        String emoji = Parser.unescapeEntities("&#55357;&#56495;", false); // 💯
+        assertEquals("\uD83D\uDCAF", emoji);
+    }
+
+    @Test void parseHtmlEncodedEmoji() {
+        String emoji = Parser.unescapeEntities("&#128175;", false); // 💯
+        assertEquals("\uD83D\uDCAF", emoji);
+    }
 }

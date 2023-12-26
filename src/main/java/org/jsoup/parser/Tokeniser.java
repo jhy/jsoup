@@ -40,9 +40,9 @@ final class Tokeniser {
     private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
-    final Token.StartTag startPending = new Token.StartTag();
-    final Token.EndTag endPending = new Token.EndTag();
-    Token.Tag tagPending = startPending; // tag we are building up: start or end pending
+    final Token.StartTag startPending;
+    final Token.EndTag endPending;
+    Token.Tag tagPending; // tag we are building up: start or end pending
     final Token.Character charPending = new Token.Character();
     final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     final Token.Comment commentPending = new Token.Comment(); // comment building up
@@ -52,9 +52,11 @@ final class Tokeniser {
     private static final int Unset = -1;
     private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
 
-    Tokeniser(CharacterReader reader, ParseErrorList errors) {
-        this.reader = reader;
-        this.errors = errors;
+    Tokeniser(TreeBuilder treeBuilder) {
+        tagPending = startPending  = new Token.StartTag(treeBuilder);
+        endPending = new Token.EndTag(treeBuilder);
+        this.reader = treeBuilder.reader;
+        this.errors = treeBuilder.parser.getErrors();
     }
 
     Token read() {
@@ -203,8 +205,11 @@ final class Tokeniser {
                 int base = isHexMode ? 16 : 10;
                 charval = Integer.valueOf(numRef, base);
             } catch (NumberFormatException ignored) {
-            } // skip
-            if (charval == -1 || (charval >= 0xD800 && charval <= 0xDFFF) || charval > 0x10FFFF) {
+                // skip
+            }
+            // todo: check for extra illegal unicode points as parse errors - described https://html.spec.whatwg.org/multipage/syntax.html#character-references and in Infra
+            // The numeric character reference forms described above are allowed to reference any code point excluding U+000D CR, noncharacters, and controls other than ASCII whitespace.
+            if (charval == -1 || charval > 0x10FFFF) {
                 characterReferenceError("character [%s] outside of valid range", charval);
                 codeRef[0] = replacementChar;
             } else {

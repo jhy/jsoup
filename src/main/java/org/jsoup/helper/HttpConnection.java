@@ -4,7 +4,8 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.internal.ControllableInputStream;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -787,7 +788,7 @@ public class HttpConnection implements Connection {
         private final int statusCode;
         private final String statusMessage;
         private @Nullable ByteBuffer byteData;
-        private @Nullable InputStream bodyStream;
+        private @Nullable ControllableInputStream bodyStream;
         private @Nullable HttpURLConnection conn;
         private @Nullable String charset;
         private @Nullable final String contentType;
@@ -797,9 +798,9 @@ public class HttpConnection implements Connection {
         private final HttpConnection.Request req;
 
         /*
-         * Matches XML content types (like text/xml, application/xhtml+xml;charset=UTF8, etc)
+         * Matches XML content types (like text/xml, image/svg+xml, application/xhtml+xml;charset=UTF8, etc)
          */
-        private static final Pattern xmlContentTypeRxp = Pattern.compile("(application|text)/\\w*\\+?xml.*");
+        private static final Pattern xmlContentTypeRxp = Pattern.compile("(\\w+)/\\w*\\+?xml.*");
 
         /**
          <b>Internal only! </b>Creates a dummy HttpConnection.Response, useful for testing. All actual responses
@@ -884,7 +885,7 @@ public class HttpConnection implements Connection {
                         && !contentType.startsWith("text/")
                         && !xmlContentTypeRxp.matcher(contentType).matches()
                         )
-                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml",
+                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, */xml, or */*+xml",
                             contentType, req.url().toString());
 
                 // switch to the XML parser if content type is xml and not parser not explicitly set
@@ -894,17 +895,15 @@ public class HttpConnection implements Connection {
 
                 res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
-                    res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    Validate.notNull(res.bodyStream);
-                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
-                        res.bodyStream = new GZIPInputStream(res.bodyStream);
-                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
-                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
-                    }
-                    res.bodyStream = ConstrainableInputStream
-                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
-                        .timeout(startTime, req.timeout())
-                    ;
+                    InputStream stream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                        stream = new GZIPInputStream(stream);
+                    else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate"))
+                        stream = new InflaterInputStream(stream, new Inflater(true));
+                    
+                    res.bodyStream = ControllableInputStream.wrap(
+                        stream, SharedConstants.DefaultBufferSize, req.maxBodySize())
+                        .timeout(startTime, req.timeout());
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -951,12 +950,13 @@ public class HttpConnection implements Connection {
 
         public Document parse() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
+            InputStream stream = bodyStream;
             if (byteData != null) { // bytes have been read in to the buffer, parse that
-                bodyStream = new ByteArrayInputStream(byteData.array());
+                stream = new ByteArrayInputStream(byteData.array());
                 inputStreamRead = false; // ok to reparse if in bytes
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
-            Document doc = DataUtil.parseInputStream(bodyStream, charset, url.toExternalForm(), req.parser());
+            Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             inputStreamRead = true;
@@ -1006,9 +1006,16 @@ public class HttpConnection implements Connection {
         @Override
         public BufferedInputStream bodyStream() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
+
+            // if we have read to bytes (via buffer up), return those as a stream.
+            if (byteData != null) {
+                return new BufferedInputStream(new ByteArrayInputStream(byteData.array()), SharedConstants.DefaultBufferSize);
+            }
+
             Validate.isFalse(inputStreamRead, "Request has already been read");
+            Validate.notNull(bodyStream);
             inputStreamRead = true;
-            return ConstrainableInputStream.wrap(bodyStream, DataUtil.bufferSize, req.maxBodySize());
+            return bodyStream.inputStream();
         }
 
         // set up connection defaults, and details from request

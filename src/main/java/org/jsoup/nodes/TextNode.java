@@ -98,14 +98,14 @@ public class TextNode extends LeafNode {
             boolean isBlank = isBlank();
             boolean couldSkip = (next instanceof Element && ((Element) next).shouldIndent(out)) // next will indent
                 || (next instanceof TextNode && (((TextNode) next).isBlank())) // next is blank text, from re-parenting
-                || (prev instanceof Element && (((Element) prev).isBlock() || prev.isNode("br"))) // br is a bit special - make sure we don't get a dangling blank line, but not a block otherwise wraps in head
+                || (prev instanceof Element && (((Element) prev).isBlock() || prev.nameIs("br"))) // br is a bit special - make sure we don't get a dangling blank line, but not a block otherwise wraps in head
                 ;
             if (couldSkip && isBlank) return;
 
             if (
-                (siblingIndex == 0 && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
+                (prev == null && parent != null && parent.tag().formatAsBlock() && !isBlank) ||
                 (out.outline() && siblingNodes().size() > 0 && !isBlank) ||
-                (siblingIndex > 0 && isNode(prev, "br")) // special case wrap on inline <br> - doesn't make sense as a block tag
+                (prev != null && prev.nameIs("br")) // special case wrap on inline <br> - doesn't make sense as a block tag
             )
                 indent(accum, depth, out);
         }

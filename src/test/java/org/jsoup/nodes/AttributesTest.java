@@ -7,6 +7,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -141,6 +142,29 @@ public class AttributesTest {
             seen++;
         }
         assertEquals(2, seen);
+    }
+
+    @Test void iteratorThrows() {
+        Attributes attrs = new Attributes();
+        attrs.put("One", "one").put("Two", "two");
+
+        Iterator<Attribute> it = attrs.iterator();
+        int seen = 0;
+        while (it.hasNext()) {
+            it.next();
+            seen++;
+        }
+        assertFalse(it.hasNext());
+        assertEquals(2, seen);
+
+        boolean threw = false;
+        try {
+            Attribute next = it.next();
+            assertNotNull(next); // not hit
+        } catch (NoSuchElementException e) {
+            threw = true;
+        }
+        assertTrue(threw);
     }
 
     @Test

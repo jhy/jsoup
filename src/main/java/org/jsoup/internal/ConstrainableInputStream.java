@@ -1,9 +1,9 @@
 package org.jsoup.internal;
 
+import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
@@ -12,10 +12,10 @@ import java.nio.ByteBuffer;
 /**
  * A jsoup internal class (so don't use it as there is no contract API) that enables constraints on an Input Stream,
  * namely a maximum read size, and the ability to Thread.interrupt() the read.
+ * @deprecated use {@link ControllableInputStream} instead (but don't use that either, because this is jsoup internal!)
  */
+@Deprecated
 public final class ConstrainableInputStream extends BufferedInputStream {
-    private static final int DefaultSize = 1024 * 32;
-
     private final boolean capped;
     private final int maxSize;
     private long startTime;
@@ -74,27 +74,7 @@ public final class ConstrainableInputStream extends BufferedInputStream {
      * reading just the first bytes.
      */
     public ByteBuffer readToByteBuffer(int max) throws IOException {
-        Validate.isTrue(max >= 0, "maxSize must be 0 (unlimited) or larger");
-        final boolean localCapped = max > 0; // still possibly capped in total stream
-        final int bufferSize = localCapped && max < DefaultSize ? max : DefaultSize;
-        final byte[] readBuffer = new byte[bufferSize];
-        final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
-
-        int read;
-        int remaining = max;
-        while (true) {
-            read = read(readBuffer, 0, localCapped ? Math.min(remaining, bufferSize) : bufferSize);
-            if (read == -1) break;
-            if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
-                if (read >= remaining) {
-                    outStream.write(readBuffer, 0, remaining);
-                    break;
-                }
-                remaining -= read;
-            }
-            outStream.write(readBuffer, 0, read);
-        }
-        return ByteBuffer.wrap(outStream.toByteArray());
+        return DataUtil.readToByteBuffer(this, max);
     }
 
     @Override

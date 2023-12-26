@@ -93,7 +93,7 @@ public class FormElement extends Element {
 
             if (type.equalsIgnoreCase("button") || type.equalsIgnoreCase("image")) continue; // browsers don't submit these
 
-            if ("select".equals(el.normalName())) {
+            if (el.nameIs("select")) {
                 Elements options = el.select("option[selected]");
                 boolean set = false;
                 for (Element option: options) {

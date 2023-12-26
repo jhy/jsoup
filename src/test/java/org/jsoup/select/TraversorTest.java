@@ -132,7 +132,7 @@ public class TraversorTest {
             public void head(Node node, int depth) {
                 if (node instanceof Element) {
                     Element el = (Element) node;
-                    if (el.normalName().equals("i")) {
+                    if (el.nameIs("i")) {
                         Element u = new Element("u").insertChildren(0, el.childNodes());
                         el.replaceWith(u);
                     }

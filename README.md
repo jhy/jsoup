@@ -1,6 +1,6 @@
 # jsoup: Java HTML Parser
 
-**jsoup** is a Java library that simplifies working with real-world HTML and XML. It offers an easy-to-use API for URL fetching, data parsing, extraction, and manipulation using DOM API methods, CSS, and xpath selectors.
+**jsoup** is a Java library that makes it easy to work with real-world HTML and XML. It offers an easy-to-use API for URL fetching, data parsing, extraction, and manipulation using DOM API methods, CSS, and xpath selectors.
 
 **jsoup** implements the [WHATWG HTML5](https://html.spec.whatwg.org/multipage/) specification, and parses HTML to the same DOM as modern browsers.
 
@@ -42,7 +42,7 @@ jsoup is an open source project distributed under the liberal [MIT license](http
 When used in Android projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with the [NIO specification](https://developer.android.com/studio/write/java11-nio-support-table) should be enabled to support Java 8+ features.
 
 ## Development and support
-If you have any questions on how to use jsoup, or have ideas for future development, please get in touch via the [mailing list](https://jsoup.org/discussion).
+If you have any questions on how to use jsoup, or have ideas for future development, please get in touch via [jsoup Discussions](https://github.com/jhy/jsoup/discussions).
 
 If you find any issues, please file a [bug](https://jsoup.org/bugs) after checking for duplicates.
 

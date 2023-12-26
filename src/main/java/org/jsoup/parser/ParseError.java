@@ -10,13 +10,13 @@ public class ParseError {
 
     ParseError(CharacterReader reader, String errorMsg) {
         pos = reader.pos();
-        cursorPos = reader.cursorPos();
+        cursorPos = reader.posLineCol();
         this.errorMsg = errorMsg;
     }
 
     ParseError(CharacterReader reader, String errorFormat, Object... args) {
         pos = reader.pos();
-        cursorPos = reader.cursorPos();
+        cursorPos = reader.posLineCol();
         this.errorMsg = String.format(errorFormat, args);
     }
 

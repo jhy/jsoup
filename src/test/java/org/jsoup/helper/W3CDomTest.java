@@ -351,12 +351,17 @@ public class W3CDomTest {
         org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
         jdoc.outputSettings().syntax(org.jsoup.nodes.Document.OutputSettings.Syntax.xml);
         String xml = jdoc.body().html();
-        assertTrue(xml.contains("<script><![CDATA[")); // as asserted in ElementTest
+        assertTrue(xml.contains("<script>//<![CDATA[\n1 && 2\n//]]></script>")); // as asserted in ElementTest
         Document doc = parseXml(xml, false);
         NodeList list = xpath(doc, "//script");
-        assertEquals(1, list.getLength());
-        Node script = list.item(0); // will be the cdata node
-        assertEquals("1 && 2", script.getTextContent());
+        assertEquals(2, list.getLength());
+        Node scriptComment = list.item(0); // will be the cdata node
+        assertEquals("//", scriptComment.getTextContent());
+        Node script = list.item(1);
+        assertEquals("\n" +
+            "1 && 2\n" +
+            "//", script.getTextContent());
+
     }
 
     @Test public void handlesEmptyDoctype() {

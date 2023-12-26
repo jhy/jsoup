@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Method;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
@@ -11,6 +12,8 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.XmlTreeBuilder;
@@ -509,7 +512,7 @@ public class ConnectTest {
     }
 
     @Test
-    public void testBinaryContentTypeThrowsException() {
+    public void testBinaryContentTypeThrowsException() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
         con.data(FileServlet.ContentTypeParam, "image/jpeg");
 
@@ -517,9 +520,9 @@ public class ConnectTest {
         try {
             con.execute();
             Document doc = con.response().parse();
-        } catch (IOException e) {
+        } catch (UnsupportedMimeTypeException e) {
             threw = true;
-            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/*+xml", e.getMessage());
+            assertEquals("Unhandled content type. Must be text/*, */xml, or */*+xml", e.getMessage());
         }
         assertTrue(threw);
     }
@@ -538,6 +541,26 @@ public class ConnectTest {
         assertEquals("application/rss+xml", con.response().contentType());
         assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
         assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
+    }
+
+    @Test public void imageXmlMimeType() throws IOException {
+        // test that we switch to XML, and that we support image/svg+xml
+        String mimetype = "image/svg+xml";
+
+        Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/osi-logo.svg"))
+            .data(FileServlet.ContentTypeParam, mimetype);
+        Document doc = con.get();
+
+        assertEquals(mimetype, con.response().contentType());
+        assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
+        assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
+        Node firstChild = doc.firstChild();
+        XmlDeclaration decl = (XmlDeclaration) firstChild;
+        assertEquals("no", decl.attr("standalone"));
+        Element svg = doc.expectFirst("svg");
+        Element flowRoot = svg.expectFirst("flowRoot");
+        assertEquals("flowRoot", flowRoot.tagName());
+        assertEquals("preserve", flowRoot.attr("xml:space"));
     }
 
     @Test

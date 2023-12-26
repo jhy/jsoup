@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.jsoup.parser.Parser.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -455,11 +456,41 @@ public class NodeTest {
         assertEquals("DIV", div.tagName());
         assertEquals("DIV", div.nodeName());
         assertEquals("div", div.normalName());
-        assertTrue(div.isNode("div"));
-        assertTrue(Node.isNode(div, "div"));
+        assertTrue(div.nameIs("div"));
 
         TextNode text = new TextNode("Some Text");
         assertEquals("#text", text.nodeName());
         assertEquals("#text", text.normalName());
+    }
+
+    @Test void elementIs() {
+        String html = "<div><p>One</p>";
+        Document doc = Jsoup.parse(html);
+
+        Element p = doc.expectFirst("p");
+        TextNode text = (TextNode) p.childNode(0);
+
+        assertTrue(text.parentElementIs("p", NamespaceHtml));
+        assertFalse(text.parentElementIs("div", NamespaceHtml));
+        assertFalse(text.parentElementIs("p", NamespaceXml));
+
+        assertTrue(p.parentElementIs("div", NamespaceHtml));
+        assertTrue(p.elementIs("p", NamespaceHtml));
+        assertTrue(p.nameIs("p"));
+        assertFalse(p.nameIs("P"));
+    }
+
+    @Test void svgElementIs() {
+        String html = "<div><svg><path>1,2,3</path></svg></div>";
+        Document doc = Jsoup.parse(html);
+
+        Element svg = doc.expectFirst("svg");
+        assertTrue(svg.nameIs("svg"));
+        assertFalse(svg.elementIs("svg", NamespaceHtml));
+        assertTrue(svg.elementIs("svg", NamespaceSvg));
+
+        TextNode data = (TextNode) svg.childNode(0).childNode(0);
+        assertTrue(data.parentElementIs("path", NamespaceSvg));
+        assertTrue(data.parentNameIs("path"));
     }
 }

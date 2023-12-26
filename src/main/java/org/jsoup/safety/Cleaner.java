@@ -9,14 +9,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
-import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
-import org.jsoup.parser.Tag;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.util.List;
-
 
 /**
  The safelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
@@ -137,7 +134,7 @@ public class Cleaner {
             this.destination = destination;
         }
 
-        public void head(Node source, int depth) {
+        @Override public void head(Node source, int depth) {
             if (source instanceof Element) {
                 Element sourceEl = (Element) source;
 
@@ -155,7 +152,7 @@ public class Cleaner {
                 TextNode sourceText = (TextNode) source;
                 TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
-            } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().nodeName())) {
+            } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().normalName())) {
               DataNode sourceData = (DataNode) source;
               DataNode destData = new DataNode(sourceData.getWholeData());
               destination.appendChild(destData);
@@ -164,8 +161,8 @@ public class Cleaner {
             }
         }
 
-        public void tail(Node source, int depth) {
-            if (source instanceof Element && safelist.isSafeTag(source.nodeName())) {
+        @Override public void tail(Node source, int depth) {
+            if (source instanceof Element && safelist.isSafeTag(source.normalName())) {
                 destination = destination.parent(); // would have descended, so pop destination stack
             }
         }
@@ -178,11 +175,12 @@ public class Cleaner {
     }
 
     private ElementMeta createSafeElement(Element sourceEl) {
+        Element dest = sourceEl.shallowClone(); // reuses tag, clones attributes and preserves any user data
         String sourceTag = sourceEl.tagName();
-        Attributes destAttrs = new Attributes();
-        Element dest = new Element(Tag.valueOf(sourceTag, sourceEl.tag().namespace(), ParseSettings.preserveCase), sourceEl.baseUri(), destAttrs);
-        int numDiscarded = 0;
+        Attributes destAttrs = dest.attributes();
+        dest.clearAttributes(); // clear all non-internal attributes, ready for safe copy
 
+        int numDiscarded = 0;
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
             if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
@@ -192,14 +190,7 @@ public class Cleaner {
         }
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
         destAttrs.addAll(enforcedAttrs);
-
-        // Copy the original start and end range, if set
-        // TODO - might be good to make a generic Element#userData set type interface, and copy those all over
-        if (sourceEl.sourceRange().isTracked())
-            sourceEl.sourceRange().track(dest, true);
-        if (sourceEl.endSourceRange().isTracked())
-            sourceEl.endSourceRange().track(dest, false);
-
+        dest.attributes().addAll(destAttrs); // re-attach, if removed in clear
         return new ElementMeta(dest, numDiscarded);
     }
 

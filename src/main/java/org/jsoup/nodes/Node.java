@@ -19,7 +19,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
- The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
+ The base, abstract Node model. {@link Element}, {@link Document}, {@link Comment}, {@link TextNode}, et al.,
+ are instances of Node.
 
  @author Jonathan Hedley, jonathan@hedley.net */
 public abstract class Node implements Cloneable {
@@ -48,6 +49,38 @@ public abstract class Node implements Cloneable {
      */
     public String normalName() {
         return nodeName();
+    }
+
+    /**
+     Test if this node has the specified normalized name, in any namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @return true if the element's normal name matches exactly
+     * @since 1.17.2
+     */
+    public boolean nameIs(String normalName) {
+        return normalName().equals(normalName);
+    }
+
+    /**
+     Test if this node's parent has the specified normalized name.
+     * @param normalName a normalized name (e.g. {@code div}).
+     * @return true if the parent element's normal name matches exactly
+     * @since 1.17.2
+     */
+    public boolean parentNameIs(String normalName) {
+        return parentNode != null && parentNode.normalName().equals(normalName);
+    }
+
+    /**
+     Test if this node's parent is an Element with the specified normalized name and namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @param namespace the namespace
+     * @return true if the parent element's normal name matches exactly, and that element is in the specified namespace
+     * @since 1.17.2
+     */
+    public boolean parentElementIs(String normalName, String namespace) {
+        return parentNode != null && parentNode instanceof Element
+            && ((Element) parentNode).elementIs(normalName, namespace);
     }
 
     /**
@@ -757,25 +790,18 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the source range (start and end positions) in the original input source that this node was parsed from. Position
-     tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the start tag.
-     @return the range for the start of the node.
+     Get the source range (start and end positions) in the original input source from which this node was parsed.
+     Position tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the
+     start tag.
+     @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Range#isImplicit()
      @see Element#endSourceRange()
+     @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
     public Range sourceRange() {
         return Range.of(this, true);
-    }
-
-    /** Test if this node is not null and has the supplied normal name. */
-    static boolean isNode(@Nullable Node node, String normalName) {
-        return node != null && node.normalName().equals(normalName);
-    }
-
-    /** Test if this node has the supplied normal name. */
-    final boolean isNode(String normalName) {
-        return normalName().equals(normalName);
     }
 
     /** Test if this node is the first child, or first following blank text. */

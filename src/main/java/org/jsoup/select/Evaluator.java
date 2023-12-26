@@ -35,20 +35,7 @@ public abstract class Evaluator {
      * @since 1.17.1
      */
     public Predicate<Element> asPredicate(Element root) {
-        //noinspection ReturnOfInnerClass
-        return new MatchPredicate(root);
-    }
-
-    class MatchPredicate implements Predicate<Element> {
-        final Element root;
-
-        public MatchPredicate(Element root) {
-            this.root = root;
-        }
-
-        @Override public boolean test(Element element) {
-            return matches(root, element);
-        }
+        return element -> matches(root, element);
     }
 
     /**
@@ -87,7 +74,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return (element.normalName().equals(tagName));
+            return (element.nameIs(tagName));
         }
 
         @Override protected int cost() {
@@ -204,7 +191,7 @@ public abstract class Evaluator {
         private final String keyPrefix;
 
         public AttributeStarting(String keyPrefix) {
-            Validate.notEmpty(keyPrefix);
+            Validate.notNull(keyPrefix); // OK to be empty - will find elements with any attributes
             this.keyPrefix = lowerCase(keyPrefix);
         }
 

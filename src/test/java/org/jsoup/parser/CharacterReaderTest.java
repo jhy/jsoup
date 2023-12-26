@@ -433,14 +433,14 @@ public class CharacterReaderTest {
         assertEquals(12, noTrack.pos());
         assertEquals(1, noTrack.lineNumber());
         assertEquals(13, noTrack.columnNumber());
-        assertEquals("1:13", noTrack.cursorPos());
+        assertEquals("1:13", noTrack.posLineCol());
         // get over the buffer
         while (!noTrack.matches("[foo]"))
             noTrack.consumeTo("[foo]");
         assertEquals(32778, noTrack.pos());
         assertEquals(1, noTrack.lineNumber());
         assertEquals(noTrack.pos()+1, noTrack.columnNumber());
-        assertEquals("1:32779", noTrack.cursorPos());
+        assertEquals("1:32779", noTrack.posLineCol());
 
         // and the line numbers: "<foo>\n<bar>\n<qux>\n"
         assertEquals(0, track.pos());
@@ -462,24 +462,24 @@ public class CharacterReaderTest {
         assertEquals(12, track.pos());
         assertEquals(3, track.lineNumber());
         assertEquals(1, track.columnNumber());
-        assertEquals("3:1", track.cursorPos());
+        assertEquals("3:1", track.posLineCol());
         assertEquals("<qux>", track.consumeTo('\n'));
-        assertEquals("3:6", track.cursorPos());
+        assertEquals("3:6", track.posLineCol());
         // get over the buffer
         while (!track.matches("[foo]"))
             track.consumeTo("[foo]");
         assertEquals(32778, track.pos());
         assertEquals(4, track.lineNumber());
         assertEquals(32761, track.columnNumber());
-        assertEquals("4:32761", track.cursorPos());
+        assertEquals("4:32761", track.posLineCol());
         track.consumeTo('\n');
-        assertEquals("4:32766", track.cursorPos());
+        assertEquals("4:32766", track.posLineCol());
 
         track.consumeTo("[bar]");
         assertEquals(5, track.lineNumber());
-        assertEquals("5:1", track.cursorPos());
+        assertEquals("5:1", track.posLineCol());
         track.consumeToEnd();
-        assertEquals("5:6", track.cursorPos());
+        assertEquals("5:6", track.posLineCol());
     }
 
     @Test public void countsColumnsOverBufferWhenNoNewlines() {
@@ -490,7 +490,7 @@ public class CharacterReaderTest {
         CharacterReader reader = new CharacterReader(content);
         reader.trackNewlines(true);
 
-        assertEquals("1:1", reader.cursorPos());
+        assertEquals("1:1", reader.posLineCol());
         while (!reader.isEmpty())
             reader.consume();
         assertEquals(131096, reader.pos());
