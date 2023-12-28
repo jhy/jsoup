@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.stream.Stream;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
@@ -112,6 +113,32 @@ public class Selector {
         Validate.notNull(evaluator);
         Validate.notNull(root);
         return Collector.collect(evaluator, root);
+    }
+
+    /**
+     * Find elements matching selector.
+     *
+     * @param query CSS selector
+     * @param root  root element to descend into
+     * @return matching elements, empty if none
+     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     */
+    public static Stream<Element> selectAsStream(String query, Element root) {
+        Validate.notEmpty(query);
+        return selectAsStream(QueryParser.parse(query), root);
+    }
+
+    /**
+     * Find elements matching selector.
+     *
+     * @param evaluator CSS selector
+     * @param root root element to descend into
+     * @return matching elements, empty if none
+     */
+    public static Stream<Element> selectAsStream(Evaluator evaluator, Element root) {
+        Validate.notNull(evaluator);
+        Validate.notNull(root);
+        return Collector.stream(evaluator, root);
     }
 
     /**
