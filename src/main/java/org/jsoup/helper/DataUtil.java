@@ -114,7 +114,7 @@ public final class DataUtil {
 
      * @return Document
      * @throws IOException on IO error
-     * @since 1.17.1
+     * @since 1.17.2
      */
     public static Document load(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         final SeekableByteChannel byteChannel = Files.newByteChannel(path);
