@@ -5,11 +5,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Stack;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -380,18 +379,19 @@ public final class StringUtil {
 
     /**
      * Return a {@link Collector} similar to the one returned by {@link Collectors#joining(CharSequence)},
-     * but backed by Jsoup's {@link StringJoiner}, which allows for more efficient garbage collection.
+     * but backed by jsoup's {@link StringJoiner}, which allows for more efficient garbage collection.
      *
      * @param delimiter The delimiter for separating the strings.
-     * @return The final string
+     * @return A {@code Collector} which concatenates CharSequence elements, separated by the specified delimiter
      */
     public static Collector<CharSequence, ?, String> joining(String delimiter) {
-        return Collector.of(() -> new StringJoiner(delimiter), StringJoiner::add,
-                (j1, j2) -> {
-                    j1.append(j2.complete());
-                    return j1;
-                },
-                StringJoiner::complete);
+        return Collector.of(() -> new StringJoiner(delimiter),
+            StringJoiner::add,
+            (j1, j2) -> {
+                j1.append(j2.complete());
+                return j1;
+            },
+            StringJoiner::complete);
     }
 
     private static final int MaxCachedBuilderSize = 8 * 1024;
