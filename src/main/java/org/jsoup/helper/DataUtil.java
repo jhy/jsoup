@@ -2,7 +2,6 @@ package org.jsoup.helper;
 
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -172,16 +171,15 @@ public final class DataUtil {
     static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
-        input = ControllableInputStream.wrap(input, DefaultBufferSize, 0);
 
         @Nullable Document doc = null;
 
         // read the start of the stream and look for a BOM or meta charset
-        try {
-            input.mark(DefaultBufferSize);
-            ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
-            boolean fullyRead = (input.read() == -1);
-            input.reset();
+        try (InputStream wrappedInputStream = ControllableInputStream.wrap(input, DefaultBufferSize, 0)) {
+            wrappedInputStream.mark(DefaultBufferSize);
+            ByteBuffer firstBytes = readToByteBuffer(wrappedInputStream, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+            boolean fullyRead = (wrappedInputStream.read() == -1);
+            wrappedInputStream.reset();
 
             // look for BOM - overrides any other header or input
             BomCharset bomCharset = detectCharsetFromBom(firstBytes);
@@ -222,9 +220,8 @@ public final class DataUtil {
                         if (comment.isXmlDeclaration())
                             decl = comment.asXmlDeclaration();
                     }
-                    if (decl != null) {
-                        if (decl.name().equalsIgnoreCase("xml"))
-                            foundCharset = decl.attr("encoding");
+                    if (decl != null && decl.name().equalsIgnoreCase("xml")) {
+                        foundCharset = decl.attr("encoding");
                     }
                 }
                 foundCharset = validateCharset(foundCharset);
@@ -241,8 +238,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), DefaultBufferSize); // Android level does not allow us try-with-resources
-                try {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(wrappedInputStream, Charset.forName(charsetName)), DefaultBufferSize)) {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
                         Validate.isTrue(skipped == 1); // WTF if this fails.
@@ -260,13 +256,7 @@ public final class DataUtil {
                         doc.charset(UTF_8);
                     }
                 }
-                finally {
-                    reader.close();
-                }
             }
-        }
-        finally {
-            input.close();
         }
         return doc;
     }
