@@ -95,6 +95,7 @@
                 <ignore>java.util.List</ignore> <!-- List#stream() -->
                 <ignore>java.util.Objects</ignore>
                 <ignore>java.util.Optional</ignore>
+                <ignore>java.util.Set</ignore> <!-- Set#stream() -->
                 <ignore>java.util.Spliterator</ignore>
                 <ignore>java.util.Spliterators</ignore>
 

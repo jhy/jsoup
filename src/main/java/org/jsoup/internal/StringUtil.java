@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Stack;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  A minimal String utility class. Designed for <b>internal</b> jsoup use only - the API and outcome may change without
@@ -373,6 +375,23 @@ public final class StringUtil {
             builders.pop();
         }
         return string;
+    }
+
+    /**
+     * Return a {@link Collector} similar to the one returned by {@link Collectors#joining(CharSequence)},
+     * but backed by jsoup's {@link StringJoiner}, which allows for more efficient garbage collection.
+     *
+     * @param delimiter The delimiter for separating the strings.
+     * @return A {@code Collector} which concatenates CharSequence elements, separated by the specified delimiter
+     */
+    public static Collector<CharSequence, ?, String> joining(String delimiter) {
+        return Collector.of(() -> new StringJoiner(delimiter),
+            StringJoiner::add,
+            (j1, j2) -> {
+                j1.append(j2.complete());
+                return j1;
+            },
+            StringJoiner::complete);
     }
 
     private static final int MaxCachedBuilderSize = 8 * 1024;
