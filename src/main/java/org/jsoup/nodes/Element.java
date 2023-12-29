@@ -1163,11 +1163,7 @@ public class Element extends Node {
     public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
 
-        Elements elements = Collector.collect(new Evaluator.Id(id), this);
-        if (elements.size() > 0)
-            return elements.get(0);
-        else
-            return null;
+        return selectAsStream(new Evaluator.Id(id)).findFirst().orElse(null);
     }
 
     /**
