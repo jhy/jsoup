@@ -95,12 +95,6 @@ public class Range {
         return range != null ? (Range) range : Untracked;
     }
 
-    /**
-     @deprecated no-op; internal method moved out of visibility
-     */
-    @Deprecated
-    public void track(Node node, boolean start) {}
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

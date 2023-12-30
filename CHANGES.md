@@ -7,6 +7,10 @@
 * Added `Path` accepting parse methods: `Jsoup.parse(Path)`, `Jsoup.parse(path, charsetName, baseUri, parser)`,
   etc. [2055](https://github.com/jhy/jsoup/pull/2055)
 
+### Changes
+
+* Removed previously deprecated internal classes and methods.
+
 ---
 
 ## 1.17.2 (2023-Dec-29)

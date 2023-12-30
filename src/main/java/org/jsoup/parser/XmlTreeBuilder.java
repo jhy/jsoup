@@ -131,20 +131,6 @@ public class XmlTreeBuilder extends TreeBuilder {
         insertLeafNode(doctypeNode);
     }
 
-    /** @deprecated unused and will be removed. */
-    @Deprecated
-    protected void insertNode(Node node) {
-        currentElement().appendChild(node);
-        onNodeInserted(node);
-    }
-
-    /** @deprecated unused and will be removed. */
-    @Deprecated
-    protected void insertNode(Node node, Token token) {
-        currentElement().appendChild(node);
-        onNodeInserted(node);
-    }
-
     /**
      * If the stack contains an element with this tag's name, pop up the stack to remove the first occurrence. If not
      * found, skips.
