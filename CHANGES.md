@@ -1,5 +1,14 @@
 # jsoup Changelog
 
+## 1.18.1 (Pending)
+
+### Improvements
+
+* Added `Path` accepting parse methods: `Jsoup.parse(Path)`, `Jsoup.parse(path, charsetName, baseUri, parser)`,
+  etc. [2055](https://github.com/jhy/jsoup/pull/2055)
+
+---
+
 ## 1.17.2 (2023-Dec-29)
 
 ### Improvements
