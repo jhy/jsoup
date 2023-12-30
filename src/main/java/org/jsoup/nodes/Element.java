@@ -6,6 +6,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
+import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
@@ -935,12 +936,9 @@ public class Element extends Node {
         // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
         String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
         StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
-        // String classes = StringUtil.join(classNames().stream().map(TokenQueue::escapeCssIdentifier).iterator(), ".");
-        // todo - replace with ^^ in 1.16.1 when we enable Android support for stream etc
-        StringUtil.StringJoiner escapedClasses = new StringUtil.StringJoiner(".");
-        for (String name : classNames()) escapedClasses.add(escapeCssIdentifier(name));
-        String classes = escapedClasses.complete();
-        if (classes.length() > 0)
+        String classes = classNames().stream().map(TokenQueue::escapeCssIdentifier)
+                .collect(StringUtil.joining("."));
+        if (!classes.isEmpty())
             selector.append('.').append(classes);
 
         if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
