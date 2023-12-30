@@ -123,9 +123,9 @@ public class Selector {
      * @return matching elements, empty if none
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
-    public static Stream<Element> selectAsStream(String query, Element root) {
+    public static Stream<Element> selectStream(String query, Element root) {
         Validate.notEmpty(query);
-        return selectAsStream(QueryParser.parse(query), root);
+        return selectStream(QueryParser.parse(query), root);
     }
 
     /**
@@ -135,7 +135,7 @@ public class Selector {
      * @param root root element to descend into
      * @return matching elements, empty if none
      */
-    public static Stream<Element> selectAsStream(Evaluator evaluator, Element root) {
+    public static Stream<Element> selectStream(Evaluator evaluator, Element root) {
         Validate.notNull(evaluator);
         Validate.notNull(root);
         return Collector.stream(evaluator, root);
