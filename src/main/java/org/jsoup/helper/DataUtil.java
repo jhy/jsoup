@@ -2,7 +2,6 @@ package org.jsoup.helper;
 
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -16,7 +15,6 @@ import org.jspecify.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,8 +23,12 @@ import java.io.UncheckedIOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -63,7 +65,7 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(File file, @Nullable String charsetName, String baseUri) throws IOException {
-        return load(file, charsetName, baseUri, Parser.htmlParser());
+        return load(file.toPath(), charsetName, baseUri);
     }
 
     /**
@@ -81,18 +83,48 @@ public final class DataUtil {
      * @since 1.14.2
      */
     public static Document load(File file, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        InputStream stream = new FileInputStream(file);
-        String name = Normalizer.lowerCase(file.getName());
-        if (name.endsWith(".gz") || name.endsWith(".z")) {
-            // unfortunately file input streams don't support marks (why not?), so we will close and reopen after read
-            boolean zipped;
-            try {
-                zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
-            } finally {
-                stream.close();
+        return load(file.toPath(), charsetName, baseUri, parser);
+    }
 
+    /**
+     * Loads and parses a file to a Document, with the HtmlParser. Files that are compressed with gzip (and end in {@code .gz} or {@code .z})
+     * are supported in addition to uncompressed files.
+     *
+     * @param path file to load
+     * @param charsetName (optional) character set of input; specify {@code null} to attempt to autodetect. A BOM in
+     *     the file will always override this setting.
+     * @param baseUri base URI of document, to resolve relative links against
+     * @return Document
+     * @throws IOException on IO error
+     */
+    public static Document load(Path path, @Nullable String charsetName, String baseUri) throws IOException {
+        return load(path, charsetName, baseUri, Parser.htmlParser());
+    }
+
+    /**
+     * Loads and parses a file to a Document. Files that are compressed with gzip (and end in {@code .gz} or {@code .z})
+     * are supported in addition to uncompressed files.
+     *
+     * @param path file to load
+     * @param charsetName (optional) character set of input; specify {@code null} to attempt to autodetect. A BOM in
+     *     the file will always override this setting.
+     * @param baseUri base URI of document, to resolve relative links against
+     * @param parser alternate {@link Parser#xmlParser() parser} to use.
+
+     * @return Document
+     * @throws IOException on IO error
+     * @since 1.17.2
+     */
+    public static Document load(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        final SeekableByteChannel byteChannel = Files.newByteChannel(path);
+        InputStream stream = Channels.newInputStream(byteChannel);
+        String name = Normalizer.lowerCase(path.getFileName().toString());
+        if (name.endsWith(".gz") || name.endsWith(".z")) {
+            final boolean zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
+            byteChannel.position(0); // reset to start of file
+            if (zipped) {
+                stream = new GZIPInputStream(stream);
             }
-            stream = zipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file);
         }
         return parseInputStream(stream, charsetName, baseUri, parser);
     }
@@ -139,16 +171,15 @@ public final class DataUtil {
     static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
         if (input == null) // empty body
             return new Document(baseUri);
-        input = ControllableInputStream.wrap(input, DefaultBufferSize, 0);
 
         @Nullable Document doc = null;
 
         // read the start of the stream and look for a BOM or meta charset
-        try {
-            input.mark(DefaultBufferSize);
-            ByteBuffer firstBytes = readToByteBuffer(input, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
-            boolean fullyRead = (input.read() == -1);
-            input.reset();
+        try (InputStream wrappedInputStream = ControllableInputStream.wrap(input, DefaultBufferSize, 0)) {
+            wrappedInputStream.mark(DefaultBufferSize);
+            ByteBuffer firstBytes = readToByteBuffer(wrappedInputStream, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
+            boolean fullyRead = (wrappedInputStream.read() == -1);
+            wrappedInputStream.reset();
 
             // look for BOM - overrides any other header or input
             BomCharset bomCharset = detectCharsetFromBom(firstBytes);
@@ -189,9 +220,8 @@ public final class DataUtil {
                         if (comment.isXmlDeclaration())
                             decl = comment.asXmlDeclaration();
                     }
-                    if (decl != null) {
-                        if (decl.name().equalsIgnoreCase("xml"))
-                            foundCharset = decl.attr("encoding");
+                    if (decl != null && decl.name().equalsIgnoreCase("xml")) {
+                        foundCharset = decl.attr("encoding");
                     }
                 }
                 foundCharset = validateCharset(foundCharset);
@@ -208,8 +238,7 @@ public final class DataUtil {
             if (doc == null) {
                 if (charsetName == null)
                     charsetName = defaultCharsetName;
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charset.forName(charsetName)), DefaultBufferSize); // Android level does not allow us try-with-resources
-                try {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(wrappedInputStream, Charset.forName(charsetName)), DefaultBufferSize)) {
                     if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
                         long skipped = reader.skip(1);
                         Validate.isTrue(skipped == 1); // WTF if this fails.
@@ -227,13 +256,7 @@ public final class DataUtil {
                         doc.charset(UTF_8);
                     }
                 }
-                finally {
-                    reader.close();
-                }
             }
-        }
-        finally {
-            input.close();
         }
         return doc;
     }

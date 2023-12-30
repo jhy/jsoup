@@ -15,6 +15,8 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,6 +130,15 @@ public class ParseTest {
         try {
             URL resource = ParseTest.class.getResource(resourceName);
             return resource != null ? new File(resource.toURI()) : new File("/404");
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public static Path getPath(String resourceName) {
+        try {
+            URL resource = ParseTest.class.getResource(resourceName);
+            return resource != null ? Paths.get(resource.toURI()) : Paths.get("/404");
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }

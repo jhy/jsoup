@@ -1,11 +1,13 @@
 package org.jsoup.select;
 
+import org.jsoup.internal.Functions;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.NodeIterator;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Base structural evaluator.
@@ -23,19 +25,9 @@ abstract class StructuralEvaluator extends Evaluator {
         threadMemo = ThreadLocal.withInitial(IdentityHashMap::new);
 
     boolean memoMatches(final Element root, final Element element) {
-        // not using computeIfAbsent, as the lambda impl requires a new Supplier closure object on every hit: tons of GC
-        IdentityHashMap<Element, IdentityHashMap<Element, Boolean>> rootMemo = threadMemo.get();
-        IdentityHashMap<Element, Boolean> memo = rootMemo.get(root);
-        if (memo == null) {
-            memo = new IdentityHashMap<>();
-            rootMemo.put(root, memo);
-        }
-        Boolean matches = memo.get(element);
-        if (matches == null) {
-            matches = evaluator.matches(root, element);
-            memo.put(element, matches);
-        }
-        return matches;
+        Map<Element, IdentityHashMap<Element, Boolean>> rootMemo = threadMemo.get();
+        Map<Element, Boolean> memo = rootMemo.computeIfAbsent(root, Functions.identityMapFunction());
+        return memo.computeIfAbsent(element, key -> evaluator.matches(root, key));
     }
 
     @Override protected void reset() {
@@ -160,34 +152,6 @@ abstract class StructuralEvaluator extends Evaluator {
         @Override
         public String toString() {
             return String.format("%s ", evaluator);
-        }
-    }
-
-    /**
-     @deprecated replaced by {@link  ImmediateParentRun}
-     */
-    @Deprecated
-    static class ImmediateParent extends StructuralEvaluator {
-        public ImmediateParent(Evaluator evaluator) {
-            super(evaluator);
-        }
-
-        @Override
-        public boolean matches(Element root, Element element) {
-            if (root == element)
-                return false;
-
-            Element parent = element.parent();
-            return parent != null && memoMatches(root, parent);
-        }
-
-        @Override protected int cost() {
-            return 1 + evaluator.cost();
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s > ", evaluator);
         }
     }
 
