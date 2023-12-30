@@ -1,11 +1,18 @@
 package org.jsoup.internal;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
  * An internal class containing functions for use with {@link Map#computeIfAbsent(Object, Function)}.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Functions {
     private static final Function LIST_FUNCTION = key -> new ArrayList<>();
     private static final Function SET_FUNCTION = key -> new HashSet<>();
