@@ -156,34 +156,6 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     /**
-     @deprecated replaced by {@link  ImmediateParentRun}
-     */
-    @Deprecated
-    static class ImmediateParent extends StructuralEvaluator {
-        public ImmediateParent(Evaluator evaluator) {
-            super(evaluator);
-        }
-
-        @Override
-        public boolean matches(Element root, Element element) {
-            if (root == element)
-                return false;
-
-            Element parent = element.parent();
-            return parent != null && memoMatches(root, parent);
-        }
-
-        @Override protected int cost() {
-            return 1 + evaluator.cost();
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s > ", evaluator);
-        }
-    }
-
-    /**
      Holds a list of evaluators for one > two > three immediate parent matches, and the final direct evaluator under
      test. To match, these are effectively ANDed together, starting from the last, matching up to the first.
      */
