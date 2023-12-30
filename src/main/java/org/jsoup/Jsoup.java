@@ -194,7 +194,7 @@ Connection con3 = session.newRequest();
      @return sane HTML
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
-     @since 1.17.2
+     @since 1.18.1
      */
     public static Document parse(Path path, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(path, charsetName, baseUri);
@@ -210,7 +210,7 @@ Connection con3 = session.newRequest();
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      @see #parse(File, String, String) parse(file, charset, baseUri)
-     @since 1.17.2
+     @since 1.18.1
      */
     public static Document parse(Path path, @Nullable String charsetName) throws IOException {
         return DataUtil.load(path, charsetName, path.toAbsolutePath().toString());
@@ -227,7 +227,7 @@ Connection con3 = session.newRequest();
      @return sane HTML
      @throws IOException if the file could not be found or read.
      @see #parse(Path, String, String) parse(file, charset, baseUri)
-     @since 1.17.2
+     @since 1.18.1
      */
     public static Document parse(Path path) throws IOException {
         return DataUtil.load(path, null, path.toAbsolutePath().toString());
@@ -244,7 +244,7 @@ Connection con3 = session.newRequest();
      @return sane HTML
 
      @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
-     @since 1.17.2
+     @since 1.18.1
      */
     public static Document parse(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return DataUtil.load(path, charsetName, baseUri, parser);
