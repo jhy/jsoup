@@ -13,7 +13,7 @@ import java.util.function.Function;
  * An internal class containing functions for use with {@link Map#computeIfAbsent(Object, Function)}.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class Functions {
+public final class Functions {
     private static final Function ListFunction = key -> new ArrayList<>();
     private static final Function SetFunction = key -> new HashSet<>();
     private static final Function MapFunction = key -> new HashMap<>();
