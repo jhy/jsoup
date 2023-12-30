@@ -9,7 +9,7 @@
 
 ### Changes
 
-* Removed previously deprecated internal classes and methods.
+* Removed previously deprecated internal classes and methods. [2094](https://github.com/jhy/jsoup/pull/2094)
 
 ---
 
