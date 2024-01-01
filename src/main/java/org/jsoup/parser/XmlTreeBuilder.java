@@ -11,6 +11,7 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -164,13 +165,8 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
 
-    List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
-        initialiseParse(new StringReader(inputFragment), baseUri, parser);
+    @Override List<Node> doParseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         runParser();
         return doc.childNodes();
-    }
-
-    @Override List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
-        return parseFragment(inputFragment, baseUri, parser);
     }
 }

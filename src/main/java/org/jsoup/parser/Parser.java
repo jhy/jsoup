@@ -213,7 +213,7 @@ public class Parser {
      */
     public static List<Node> parseXmlFragment(String fragmentXml, String baseUri) {
         XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentXml, baseUri, new Parser(treeBuilder));
+        return treeBuilder.parseFragment(fragmentXml, null, baseUri, new Parser(treeBuilder));
     }
 
     /**

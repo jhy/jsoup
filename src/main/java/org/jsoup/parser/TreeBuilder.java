@@ -7,8 +7,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
+import org.jsoup.select.NodeVisitor;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +32,7 @@ abstract class TreeBuilder {
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
     Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
+    @Nullable NodeVisitor nodeListener; // optional listener for node add / removes
 
     private Token.StartTag start; // start tag to process
     private final Token.EndTag end  = new Token.EndTag(this);
@@ -56,18 +60,35 @@ abstract class TreeBuilder {
         this.baseUri = baseUri;
     }
 
-    Document parse(Reader input, String baseUri, Parser parser) {
-        initialiseParse(input, baseUri, parser);
-        runParser();
-
+    void completeParse() {
         // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
+        if (reader == null) return;
         reader.close();
         reader = null;
         tokeniser = null;
         stack = null;
         seenTags = null;
+    }
 
+    Document parse(Reader input, String baseUri, Parser parser) {
+        initialiseParse(input, baseUri, parser);
+        runParser();
+        completeParse();
         return doc;
+    }
+
+    List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
+        initialiseParse(new StringReader(inputFragment), baseUri, parser);
+        List<Node> nodes = doParseFragment(inputFragment, context, baseUri, parser);
+        completeParse();
+        return nodes;
+    }
+
+    abstract List<Node> doParseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser);
+
+    /** Set the node listener, which will then get callbacks for node insert and removals. */
+    void nodeListener(NodeVisitor nodeListener) {
+        this.nodeListener = nodeListener;
     }
 
     /**
@@ -76,23 +97,22 @@ abstract class TreeBuilder {
      */
     abstract TreeBuilder newInstance();
 
-    abstract List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser);
-
     void runParser() {
-        final Tokeniser tokeniser = this.tokeniser;
-        final Token.TokenType eof = Token.TokenType.EOF;
+        do {} while (stepParser()); // run until stepParser sees EOF
+    }
 
-        while (true) {
-            Token token = tokeniser.read();
-            currentToken = token;
-            process(token);
-            if (token.type == eof)
-                break;
-            token.reset();
+    boolean stepParser() {
+        // if we have reached the end already, step by popping off the stack, to hit nodeRemoved callbacks:
+        if (currentToken.type == Token.TokenType.EOF) {
+            if (stack.isEmpty()) return false;
+            pop();
+            return true;
         }
-
-        // once we hit the end, pop remaining items off the stack
-        while (!stack.isEmpty()) pop();
+        final Token token = tokeniser.read();
+        currentToken = token;
+        process(token);
+        token.reset();
+        return true;
     }
 
     abstract boolean process(Token token);
@@ -236,6 +256,9 @@ abstract class TreeBuilder {
      */
     void onNodeInserted(Node node) {
         trackNodePosition(node, true);
+
+        if (nodeListener != null)
+            nodeListener.head(node, stack.size());
     }
 
     /**
@@ -244,6 +267,9 @@ abstract class TreeBuilder {
      */
     void onNodeClosed(Node node) {
         trackNodePosition(node, false);
+
+        if (nodeListener != null)
+            nodeListener.tail(node, stack.size());
     }
 
     private void trackNodePosition(Node node, boolean isStart) {
