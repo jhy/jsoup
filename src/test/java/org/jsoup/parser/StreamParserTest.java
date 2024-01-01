@@ -62,7 +62,7 @@ class StreamParserTest {
         assertEquals("", seen3.toString());
     }
 
-    @Test void canStop() {
+    @Test void canStopAndCompleteAndReuse() {
         StreamParser parser = new StreamParser(Parser.htmlParser());
         String html1 = "<p>One<p>Two";
         parser.parse(html1, "");
@@ -78,7 +78,13 @@ class StreamParserTest {
         Optional<Element> p2 = parser.selectNext("p");
         assertFalse(p2.isPresent());
 
-        // can resume
+        Document completed = parser.complete();
+        Elements ps = completed.select("p");
+        assertEquals(2, ps.size());
+        assertEquals("One", ps.get(0).text());
+        assertEquals("Two", ps.get(1).text());
+
+        // can reuse
         parser.parse("<div>DIV", "");
         Optional<Element> div = parser.selectFirst("div");
         assertEquals("DIV", div.get().text());
@@ -156,5 +162,28 @@ class StreamParserTest {
         Elements divs = doc.select("div");
         assertEquals(2, divs.size());
         assertEquals("One Two", divs.text());
+    }
+
+    @Test void canSelectWithHas() {
+        String html = "<div>One</div><div><p>Two</div>";
+        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
+        parser.parse(html, "");
+
+        Optional<Element> el = parser.selectNext("div:has(p)");
+        assertTrue(el.isPresent());
+        assertEquals("Two", el.get().text());
+    }
+
+    @Test void canSelectWithSibling() {
+        String html = "<div>One</div><div><p>Two</div>";
+        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
+        parser.parse(html, "");
+
+        Optional<Element> el = parser.selectNext("div:first-of-type");
+        assertTrue(el.isPresent());
+        assertEquals("One", el.get().text());
+
+        Optional<Element> el2 = parser.selectNext("div:first-of-type");
+        assertFalse(el2.isPresent());
     }
 }
