@@ -53,6 +53,10 @@ public class StreamParser {
             false);
     }
 
+    public Iterator<Element> iterator() {
+        return it;
+    }
+
     public void stop() {
         stopped = true;
     }
