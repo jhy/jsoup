@@ -10,10 +10,13 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ Tests for the StreamParser. There are also some tests in {@link org.jsoup.integration.ConnectTest}.
+ */
 class StreamParserTest {
 
     @Test
-    void stream() {
+    void canStream() {
         String html = "<title>Test</title></head><div id=1>D1</div><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";
         try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
             StringBuilder seen;
@@ -24,7 +27,7 @@ class StreamParserTest {
         }
     }
 
-    @Test void iterator() {
+    @Test void canIterate() {
         // same as stream, just a different interface
         String html = "<title>Test</title></head><div id=1>D1</div><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";
         StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
@@ -182,5 +185,54 @@ class StreamParserTest {
 
         Element el2 = parser.selectNext("div:first-of-type");
         assertNull(el2);
+    }
+
+    @Test void closedOnStreamDrained() {
+        StreamParser streamer = basic();
+        assertFalse(isClosed(streamer));
+        long count = streamer.stream().count();
+        assertEquals(6, count);
+
+        assertTrue(isClosed(streamer));
+    }
+
+    @Test void closedOnIteratorDrained() {
+        StreamParser streamer = basic();
+
+        int count = 0;
+        Iterator<Element> it = streamer.iterator();
+        while (it.hasNext()) {
+            it.next();
+            count++;
+        }
+        assertEquals(6, count);
+        assertTrue(isClosed(streamer));
+    }
+
+    @Test void closedOnComplete() {
+        StreamParser streamer = basic();
+        Document doc = streamer.complete();
+        assertTrue(isClosed(streamer));
+    }
+
+    @Test void closedOnTryWithResources() {
+        StreamParser copy;
+        try(StreamParser streamer = basic()) {
+            copy = streamer;
+            assertFalse(isClosed(copy));
+        }
+        assertTrue(isClosed(copy));
+    }
+
+    static StreamParser basic() {
+        String html = "<div>One</div><div><p>Two</div>";
+        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
+        parser.parse(html, "");
+        return parser;
+    }
+
+    static boolean isClosed(StreamParser streamer) {
+        // a bit of a back door in!
+        return streamer.document().parser().getTreeBuilder().reader == null;
     }
 }

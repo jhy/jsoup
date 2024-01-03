@@ -73,14 +73,12 @@ abstract class TreeBuilder {
     Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
-        completeParse();
         return doc;
     }
 
     List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
         List<Node> nodes = doParseFragment(inputFragment, context, baseUri, parser);
-        completeParse();
         return nodes;
     }
 
@@ -99,6 +97,7 @@ abstract class TreeBuilder {
 
     void runParser() {
         do {} while (stepParser()); // run until stepParser sees EOF
+        completeParse();
     }
 
     boolean stepParser() {
