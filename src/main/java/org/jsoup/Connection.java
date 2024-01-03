@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.helper.RequestAuthenticator;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jspecify.annotations.Nullable;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -883,6 +884,10 @@ public interface Connection {
          @return the response body input stream
          */
         BufferedInputStream bodyStream();
+
+        default StreamParser streamParser() throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**

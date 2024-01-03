@@ -9,12 +9,12 @@ import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.jspecify.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -41,8 +41,10 @@ import java.util.stream.StreamSupport;
  New parsers should be used in each thread.</p>
  <p>The StreamParser interface is currently in <b>beta</b> and may change in subsequent releases. Feedback on the
  feature and how you're using it is very welcome via the <a href="https://jsoup.org/discussion">jsoup
- discussions</a>.</p> */
-public class StreamParser {
+ discussions</a>.</p>
+ @since 1.18.1
+ */
+public class StreamParser implements Closeable {
     final private Parser parser;
     final private TreeBuilder treeBuilder;
     final private ElementIterator it = new ElementIterator();
@@ -63,7 +65,7 @@ public class StreamParser {
      Provide the input for a parse. The input is not read until a consuming operation is called.
      @param input the input to be read.
      @param baseUri the URL of this input, for absolute link resolution
-     @return this parser
+     @return this parser, for chaining
      */
     public StreamParser parse(Reader input, String baseUri) {
         close(); // probably a no-op, but ensures any previous reader is closed
@@ -84,10 +86,11 @@ public class StreamParser {
     }
 
     /**
-     Provides a {@link Stream} of {@link Element}s , with the input being parsed as each element is consumed. Each
+     Creates a {@link Stream} of {@link Element}s, with the input being parsed as each element is consumed. Each
      Element returned will be complete (that is, all of its children will be included, and if it has a next sibling, that
-     (empty) sibling will exist in {@link Element#nextElementSibling()}. The stream will be emitted in document order as
-     each element is closed.
+     (empty) sibling will exist at {@link Element#nextElementSibling()}). The stream will be emitted in document order as
+     each element is closed. That means that child elements will be returned prior to their parents.
+     <p>The stream will start from the current position of the backing iterator and the parse.</p>
      @return a stream of Element objects
      */
     public Stream<Element> stream() {
@@ -98,13 +101,16 @@ public class StreamParser {
     }
 
     /**
-     Provides an {@link Iterator} of {@link Element}s , with the input being parsed as each element is consumed. Each
+     Returns an {@link Iterator} of {@link Element}s, with the input being parsed as each element is consumed. Each
      Element returned will be complete (that is, all of its children will be included, and if it has a next sibling, that
-     (empty) sibling will exist in {@link Element#nextElementSibling()}. The stream will be emitted in document order as
-     each element is closed.
+     (empty) sibling will exist at {@link Element#nextElementSibling()}). The elements will be emitted in document order as
+     each element is closed. That means that child elements will be returned prior to their parents.
+     <p>The iterator will start from the current position of the parse.</p>
+     <p>The iterator is backed by this StreamParser, and the resources it holds.</p>
      @return a stream of Element objects
      */
     public Iterator<Element> iterator() {
+        //noinspection ReturnOfInnerClass
         return it;
     }
 
@@ -118,12 +124,12 @@ public class StreamParser {
     }
 
     /**
-     Closes the input and releases resources. (The parser will also be closed when the input is fully read.)
-     @return this parser
+     Closes the input and releases resources including the underlying parser and reader.
+     <p>The parser will also be closed when the input is fully read.</p>
+     <p>The parser can be reused with another call to {@link #parse(Reader, String)}.</p>
      */
-    public StreamParser close() {
+    @Override public void close() {
         treeBuilder.completeParse(); // closes the reader, frees resources
-        return this;
     }
 
     /**
@@ -138,7 +144,7 @@ public class StreamParser {
     }
 
     /**
-     Runs the parser until the input is fully read, and returns the complete Document.
+     Runs the parser until the input is fully read, and returns the completed Document.
      @return the completed Document
      */
     public Document complete() {
@@ -151,24 +157,39 @@ public class StreamParser {
      Finds the first Element that matches the provided query. If the parsed Document does not already have a match, the
      input will be parsed until the first match is found, or the input is completely read.
      @param query the {@link org.jsoup.select.Selector} query.
-     @return an Optional containing the first matching Element, or empty if there's no match
+     @return the first matching {@link Element}, or {@code null} if there's no match
      */
-    public Optional<Element> selectFirst(String query) {
+    public @Nullable Element selectFirst(String query) {
         return selectFirst(QueryParser.parse(query));
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param query the {@link org.jsoup.select.Selector} query.
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     */
+    public Element expectFirst(String query) {
+        return (Element) Validate.ensureNotNull(
+            selectFirst(query),
+            "No elements matched the query '%s' in the document."
+            , query
+        );
     }
 
     /**
      Finds the first Element that matches the provided query. If the parsed Document does not already have a match, the
      input will be parsed until the first match is found, or the input is completely read.
      @param eval the {@link org.jsoup.select.Selector} evaluator.
-     @return an Optional containing the first matching Element, or empty if there's no match
+     @return the first matching {@link Element}, or {@code null} if there's no match
      */
-    public Optional<Element> selectFirst(Evaluator eval) {
+    public @Nullable Element selectFirst(Evaluator eval) {
         final Document doc = document();
 
         // run the query on the existing (partial) doc first, as there may be a hit already parsed
         Element first = doc.selectFirst(eval);
-        if (first != null) return Optional.of(first);
+        if (first != null) return first;
 
         return selectNext(eval);
     }
@@ -177,24 +198,40 @@ public class StreamParser {
      Finds the next Element that matches the provided query. The input will be parsed until the next match is found, or
      the input is completely read.
      @param query the {@link org.jsoup.select.Selector} query.
-     @return an Optional containing the next matching Element, or empty if there's no match
+     @return the next matching {@link Element}, or {@code null} if there's no match
      */
-    public Optional<Element> selectNext(String query) {
+    public @Nullable Element selectNext(String query) {
         return selectNext(QueryParser.parse(query));
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param query the {@link org.jsoup.select.Selector} query.
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     */
+    public Element expectNext(String query) {
+        return (Element) Validate.ensureNotNull(
+            selectNext(query),
+            "No elements matched the query '%s' in the document."
+            , query
+        );
     }
 
     /**
      Finds the next Element that matches the provided query. The input will be parsed until the next match is found, or
      the input is completely read.
      @param eval the {@link org.jsoup.select.Selector} evaluator.
-     @return an Optional containing the next matching Element, or empty if there's no match
+     @return the next matching {@link Element}, or {@code null} if there's no match
      */
-    public Optional<Element> selectNext(Evaluator eval) {
+    public @Nullable Element selectNext(Evaluator eval) {
         final Document doc = document();
 
         return stream()
             .filter(eval.asPredicate(doc))
-            .findFirst();
+            .findFirst()
+            .orElse(null);
     }
 
     final class ElementIterator implements Iterator<Element>, NodeVisitor {

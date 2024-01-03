@@ -2,14 +2,11 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,12 +15,13 @@ class StreamParserTest {
     @Test
     void stream() {
         String html = "<title>Test</title></head><div id=1>D1</div><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";
-        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
-
-        StringBuilder seen = new StringBuilder();
-        parser.stream().forEachOrdered(el -> trackSeen(el, seen));
-        assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;", seen.toString());
-        // checks expected order, and the + indicates that element had a next sibling at time of emission
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            StringBuilder seen;
+            seen = new StringBuilder();
+            parser.stream().forEachOrdered(el -> trackSeen(el, seen));
+            assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;", seen.toString());
+            // checks expected order, and the + indicates that element had a next sibling at time of emission
+        }
     }
 
     @Test void iterator() {
@@ -67,16 +65,16 @@ class StreamParserTest {
         String html1 = "<p>One<p>Two";
         parser.parse(html1, "");
 
-        Optional<Element> p = parser.selectFirst("p");
-        assertEquals("One", p.get().text());
+        Element p = parser.expectFirst("p");
+        assertEquals("One", p.text());
         parser.stop();
 
         Iterator<Element> it = parser.iterator();
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, it::next);
 
-        Optional<Element> p2 = parser.selectNext("p");
-        assertFalse(p2.isPresent());
+        Element p2 = parser.selectNext("p");
+        assertNull(p2);
 
         Document completed = parser.complete();
         Elements ps = completed.select("p");
@@ -86,8 +84,8 @@ class StreamParserTest {
 
         // can reuse
         parser.parse("<div>DIV", "");
-        Optional<Element> div = parser.selectFirst("div");
-        assertEquals("DIV", div.get().text());
+        Element div = parser.expectFirst("div");
+        assertEquals("DIV", div.text());
     }
 
     static void trackSeen(Element el, StringBuilder actual) {
@@ -106,27 +104,28 @@ class StreamParserTest {
         String html = "<title>One</title><p id=1>P One</p><p id=2>P Two</p>";
         StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
 
-        Element title = parser.selectFirst("title").get();
+        Element title = parser.expectFirst("title");
         assertEquals("One", title.text());
 
         Document partialDoc = title.ownerDocument();
+        assertNotNull(partialDoc);
         // at this point, we should have one P with no text - as title was emitted on P head
         Elements ps = partialDoc.select("p");
         assertEquals(1, ps.size());
         assertEquals("", ps.get(0).text());
         assertSame(partialDoc, parser.document());
 
-        Element title2 = parser.selectFirst("title").get();
+        Element title2 = parser.selectFirst("title");
         assertSame(title2, title);
 
-        Element p1 = parser.selectNext("p").get();
+        Element p1 = parser.expectNext("p");
         assertEquals("P One", p1.text());
 
-        Element p2 = parser.selectNext("p").get();
+        Element p2 = parser.expectNext("p");
         assertEquals("P Two", p2.text());
 
-        Optional<Element> pNone = parser.selectNext("p");
-        assertFalse(pNone.isPresent());
+        Element pNone = parser.selectNext("p");
+        assertNull(pNone);
     }
 
     @Test void canRemoveFromDom() {
@@ -169,9 +168,8 @@ class StreamParserTest {
         StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
         parser.parse(html, "");
 
-        Optional<Element> el = parser.selectNext("div:has(p)");
-        assertTrue(el.isPresent());
-        assertEquals("Two", el.get().text());
+        Element el = parser.expectNext("div:has(p)");
+        assertEquals("Two", el.text());
     }
 
     @Test void canSelectWithSibling() {
@@ -179,11 +177,10 @@ class StreamParserTest {
         StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
         parser.parse(html, "");
 
-        Optional<Element> el = parser.selectNext("div:first-of-type");
-        assertTrue(el.isPresent());
-        assertEquals("One", el.get().text());
+        Element el = parser.expectNext("div:first-of-type");
+        assertEquals("One", el.text());
 
-        Optional<Element> el2 = parser.selectNext("div:first-of-type");
-        assertFalse(el2.isPresent());
+        Element el2 = parser.selectNext("div:first-of-type");
+        assertNull(el2);
     }
 }
