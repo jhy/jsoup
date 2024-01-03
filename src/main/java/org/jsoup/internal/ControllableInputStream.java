@@ -75,6 +75,8 @@ public class ControllableInputStream extends FilterInputStream {
             remaining -= read;
             return read;
         } catch (SocketTimeoutException e) {
+            if (expired())
+                throw e;
             return 0;
         }
     }

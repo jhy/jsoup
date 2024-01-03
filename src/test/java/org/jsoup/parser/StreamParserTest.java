@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -233,6 +234,24 @@ class StreamParserTest {
 
     static boolean isClosed(StreamParser streamer) {
         // a bit of a back door in!
-        return streamer.document().parser().getTreeBuilder().reader == null;
+        return getReader(streamer) == null;
+    }
+
+     private static CharacterReader getReader(StreamParser streamer) {
+        return streamer.document().parser().getTreeBuilder().reader;
+    }
+
+    @Test void doesNotReadPastParse() {
+        StreamParser streamer = basic();
+        Element div = streamer.expectFirst("div");
+
+        // we should have read the sibling div, but not yet its children p
+        Element sib = div.nextElementSibling();
+        assertNotNull(sib);
+        assertEquals("div", sib.tagName());
+        assertEquals(0, sib.childNodeSize());
+
+        // the Reader should be at "<p>" because we haven't consumed it
+        assertTrue(getReader(streamer).matches("<p>Two"));
     }
 }

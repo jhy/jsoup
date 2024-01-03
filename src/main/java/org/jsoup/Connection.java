@@ -885,6 +885,11 @@ public interface Connection {
          */
         BufferedInputStream bodyStream();
 
+        /**
+         Returns a {@link StreamParser} that will parse the body input stream progressively.
+         * @return a StreamParser, prepared to parse this response.
+         * @throws IOException if an IO exception occurs preparing the parser.
+         */
         default StreamParser streamParser() throws IOException {
             throw new UnsupportedOperationException();
         }

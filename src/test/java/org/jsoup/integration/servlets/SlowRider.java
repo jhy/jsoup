@@ -20,6 +20,7 @@ public class SlowRider extends BaseServlet {
     }
     private static final int SleepTime = 2000;
     public static final String MaxTimeParam = "maxTime";
+    public static final String IntroSizeParam = "introSize";
 
     @Override
     protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -34,8 +35,25 @@ public class SlowRider extends BaseServlet {
             maxTime = Integer.parseInt(maxTimeP);
         }
 
+        int introSize = 0;
+        String introSizeP = req.getParameter(IntroSizeParam);
+        if (introSizeP != null) {
+            introSize = Integer.parseInt(introSizeP);
+        }
+
         long startTime = System.currentTimeMillis();
         w.println("<title>Slow Rider</title>");
+
+        // write out a bunch of stuff at the start before interim pauses, gets past some buffers
+        if (introSize != 0) {
+            StringBuilder s = new StringBuilder();
+            while (s.length() < introSize) {
+                s.append("<p>Hello and welcome to the Slow Rider!</p>\n");
+            }
+            w.println(s);
+            w.flush();
+        }
+
         while (true) {
             w.println("<p>Are you still there?");
             boolean err = w.checkError(); // flush, and check still ok
