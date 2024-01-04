@@ -165,7 +165,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
 
-    @Override List<Node> doParseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
+    @Override List<Node> doParseFragment(@Nullable Element context) {
         runParser();
         return doc.childNodes();
     }

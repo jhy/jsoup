@@ -94,7 +94,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    @Override List<Node> doParseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
+    @Override List<Node> doParseFragment(@Nullable Element context) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
         contextElement = context;

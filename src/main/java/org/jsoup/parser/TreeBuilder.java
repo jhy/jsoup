@@ -78,11 +78,10 @@ abstract class TreeBuilder {
 
     List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
-        List<Node> nodes = doParseFragment(inputFragment, context, baseUri, parser);
-        return nodes;
+        return doParseFragment(context);
     }
 
-    abstract List<Node> doParseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser);
+    abstract List<Node> doParseFragment(@Nullable Element context);
 
     /** Set the node listener, which will then get callbacks for node insert and removals. */
     void nodeListener(NodeVisitor nodeListener) {
