@@ -73,7 +73,7 @@ class StreamParserTest {
         assertEquals("", seen3.toString());
     }
 
-    @Test void canStopAndCompleteAndReuse() {
+    @Test void canStopAndCompleteAndReuse() throws IOException {
         StreamParser parser = new StreamParser(Parser.htmlParser());
         String html1 = "<p>One<p>Two";
         parser.parse(html1, "");
@@ -113,7 +113,7 @@ class StreamParserTest {
         actual.append(";");
     }
 
-    @Test void select() {
+    @Test void select() throws IOException {
         String html = "<title>One</title><p id=1>P One</p><p id=2>P Two</p>";
         StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
 
@@ -176,14 +176,14 @@ class StreamParserTest {
         assertEquals("One Two", divs.text());
     }
 
-    @Test void canSelectWithHas() {
+    @Test void canSelectWithHas() throws IOException {
         StreamParser parser = basic();
 
         Element el = parser.expectNext("div:has(p)");
         assertEquals("Two", el.text());
     }
 
-    @Test void canSelectWithSibling() {
+    @Test void canSelectWithSibling() throws IOException {
         StreamParser parser = basic();
 
         Element el = parser.expectNext("div:first-of-type");
@@ -193,7 +193,7 @@ class StreamParserTest {
         assertNull(el2);
     }
 
-    @Test void canLoopOnSelectNext() {
+    @Test void canLoopOnSelectNext() throws IOException {
         StreamParser streamer = new StreamParser(Parser.htmlParser()).parse("<div><p>One<p>Two<p>Thr</div>", "");
 
         int count = 0;
@@ -210,7 +210,7 @@ class StreamParserTest {
         assertTrue(isClosed(streamer)); // read to the end
     }
 
-    @Test void worksWithXmlParser() {
+    @Test void worksWithXmlParser() throws IOException {
         StreamParser streamer = new StreamParser(Parser.xmlParser()).parse("<div><p>One</p><p>Two</p><p>Thr</p></div>", "");
 
         int count = 0;
@@ -249,7 +249,7 @@ class StreamParserTest {
         assertTrue(isClosed(streamer));
     }
 
-    @Test void closedOnComplete() {
+    @Test void closedOnComplete() throws IOException {
         StreamParser streamer = basic();
         Document doc = streamer.complete();
         assertTrue(isClosed(streamer));
@@ -280,7 +280,7 @@ class StreamParserTest {
         return streamer.document().parser().getTreeBuilder().reader;
     }
 
-    @Test void doesNotReadPastParse() {
+    @Test void doesNotReadPastParse() throws IOException {
         StreamParser streamer = basic();
         Element div = streamer.expectFirst("div");
 

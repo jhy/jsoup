@@ -11,6 +11,7 @@ import org.jsoup.select.QueryParser;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
@@ -41,9 +42,8 @@ import java.util.stream.StreamSupport;
  until the input is fully consumed.</p>
  <p>A StreamParser can be reused via a new {@link #parse(Reader, String)}, but is not thread-safe for concurrent inputs.
  New parsers should be used in each thread.</p>
- <p>If created via {@link Connection.Response#streamParser()}, or another Reader that is I/O backed, the various methods
- that advance the parser (e.g. {@link #selectFirst(String)}, {@link #stream()}) will throw
- an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
+ <p>If created via {@link Connection.Response#streamParser()}, or another Reader that is I/O backed, the iterator and
+ stream consumers will throw an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
  <p>The StreamParser interface is currently in <b>beta</b> and may change in subsequent releases. Feedback on the
  feature and how you're using it is very welcome via the <a href="https://jsoup.org/discussion">jsoup
  discussions</a>.</p>
@@ -75,7 +75,7 @@ public class StreamParser implements Closeable {
     public StreamParser parse(Reader input, String baseUri) {
         close(); // probably a no-op, but ensures any previous reader is closed
         it.reset();
-        treeBuilder.initialiseParse(input, baseUri, parser);
+        treeBuilder.initialiseParse(input, baseUri, parser); // reader is not read, so no chance of IO error
         document = treeBuilder.doc;
         return this;
     }
@@ -96,8 +96,10 @@ public class StreamParser implements Closeable {
      (empty) sibling will exist at {@link Element#nextElementSibling()}). The stream will be emitted in document order as
      each element is closed. That means that child elements will be returned prior to their parents.
      <p>The stream will start from the current position of the backing iterator and the parse.</p>
+     <p>When consuming the stream, if the Reader that the Parser is reading throws an I/O exception (for example a
+     SocketTimeoutException), that will be emitted as an {@link UncheckedIOException}</p>
      @return a stream of Element objects
-     @throws UncheckedIOException if the underlying Reader excepts during a read
+     @throws UncheckedIOException if the underlying Reader excepts during a read (in stream consuming methods)
      */
     public Stream<Element> stream() {
         return StreamSupport.stream(
@@ -152,9 +154,9 @@ public class StreamParser implements Closeable {
     /**
      Runs the parser until the input is fully read, and returns the completed Document.
      @return the completed Document
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public Document complete() {
+    public Document complete() throws IOException {
         Document doc = document();
         treeBuilder.runParser();
         return doc;
@@ -165,9 +167,9 @@ public class StreamParser implements Closeable {
      input will be parsed until the first match is found, or the input is completely read.
      @param query the {@link org.jsoup.select.Selector} query.
      @return the first matching {@link Element}, or {@code null} if there's no match
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public @Nullable Element selectFirst(String query) {
+    public @Nullable Element selectFirst(String query) throws IOException {
         return selectFirst(QueryParser.parse(query));
     }
 
@@ -177,9 +179,9 @@ public class StreamParser implements Closeable {
      @param query the {@link org.jsoup.select.Selector} query.
      @return the first matching element
      @throws IllegalArgumentException if no match is found
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public Element expectFirst(String query) {
+    public Element expectFirst(String query) throws IOException {
         return (Element) Validate.ensureNotNull(
             selectFirst(query),
             "No elements matched the query '%s' in the document."
@@ -192,9 +194,9 @@ public class StreamParser implements Closeable {
      input will be parsed until the first match is found, or the input is completely read.
      @param eval the {@link org.jsoup.select.Selector} evaluator.
      @return the first matching {@link Element}, or {@code null} if there's no match
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public @Nullable Element selectFirst(Evaluator eval) {
+    public @Nullable Element selectFirst(Evaluator eval) throws IOException {
         final Document doc = document();
 
         // run the query on the existing (partial) doc first, as there may be a hit already parsed
@@ -209,9 +211,9 @@ public class StreamParser implements Closeable {
      the input is completely read.
      @param query the {@link org.jsoup.select.Selector} query.
      @return the next matching {@link Element}, or {@code null} if there's no match
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public @Nullable Element selectNext(String query) {
+    public @Nullable Element selectNext(String query) throws IOException {
         return selectNext(QueryParser.parse(query));
     }
 
@@ -221,9 +223,9 @@ public class StreamParser implements Closeable {
      @param query the {@link org.jsoup.select.Selector} query.
      @return the first matching element
      @throws IllegalArgumentException if no match is found
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public Element expectNext(String query) {
+    public Element expectNext(String query) throws IOException {
         return (Element) Validate.ensureNotNull(
             selectNext(query),
             "No elements matched the query '%s' in the document."
@@ -236,15 +238,19 @@ public class StreamParser implements Closeable {
      the input is completely read.
      @param eval the {@link org.jsoup.select.Selector} evaluator.
      @return the next matching {@link Element}, or {@code null} if there's no match
-     @throws UncheckedIOException if the underlying Reader errors during a read
+     @throws IOException if an I/O error occurs
      */
-    public @Nullable Element selectNext(Evaluator eval) {
-        final Document doc = document();
-
-        return stream()
-            .filter(eval.asPredicate(doc))
-            .findFirst()
-            .orElse(null);
+    public @Nullable Element selectNext(Evaluator eval) throws IOException {
+        try {
+            final Document doc = document(); // validates the parse was initialized, keeps stack trace out of stream
+            return stream()
+                .filter(eval.asPredicate(doc))
+                .findFirst()
+                .orElse(null);
+        } catch (UncheckedIOException e) {
+            // Reader threw an IO exception emitted via Iterator's next()
+            throw e.getCause();
+        }
     }
 
     final class ElementIterator implements Iterator<Element>, NodeVisitor {
