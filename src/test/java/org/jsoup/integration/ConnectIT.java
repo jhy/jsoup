@@ -150,9 +150,10 @@ public class ConnectIT {
         boolean caught = false;
         try {
             long count = streamParser.stream().count();
-        } catch (UncheckedIOException e) {
+        } catch (Exception e) {
             caught = true;
-            IOException cause = e.getCause();
+            UncheckedIOException ioe = (UncheckedIOException) e;
+            IOException cause = ioe.getCause();
             assertInstanceOf(SocketTimeoutException.class, cause);
         }
         assertTrue(caught);

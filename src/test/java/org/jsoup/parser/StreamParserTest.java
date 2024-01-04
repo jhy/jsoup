@@ -1,11 +1,19 @@
 package org.jsoup.parser;
 
+import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -168,24 +176,54 @@ class StreamParserTest {
     }
 
     @Test void canSelectWithHas() {
-        String html = "<div>One</div><div><p>Two</div>";
-        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
-        parser.parse(html, "");
+        StreamParser parser = basic();
 
         Element el = parser.expectNext("div:has(p)");
         assertEquals("Two", el.text());
     }
 
     @Test void canSelectWithSibling() {
-        String html = "<div>One</div><div><p>Two</div>";
-        StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "");
-        parser.parse(html, "");
+        StreamParser parser = basic();
 
         Element el = parser.expectNext("div:first-of-type");
         assertEquals("One", el.text());
 
         Element el2 = parser.selectNext("div:first-of-type");
         assertNull(el2);
+    }
+
+    @Test void canLoopOnSelectNext() {
+        StreamParser streamer = new StreamParser(Parser.htmlParser()).parse("<div><p>One<p>Two<p>Thr</div>", "");
+
+        int count = 0;
+        Element e;
+        while ((e = streamer.selectNext("p")) != null) {
+            assertEquals(3, e.text().length()); // has a body
+            e.remove();
+            count++;
+        }
+
+        assertEquals(3, count);
+        assertEquals(0, streamer.document().select("p").size()); // removed all during iter
+
+        assertTrue(isClosed(streamer)); // read to the end
+    }
+
+    @Test void worksWithXmlParser() {
+        StreamParser streamer = new StreamParser(Parser.xmlParser()).parse("<div><p>One</p><p>Two</p><p>Thr</p></div>", "");
+
+        int count = 0;
+        Element e;
+        while ((e = streamer.selectNext("p")) != null) {
+            assertEquals(3, e.text().length()); // has a body
+            e.remove();
+            count++;
+        }
+
+        assertEquals(3, count);
+        assertEquals(0, streamer.document().select("p").size()); // removed all during iter
+
+        assertTrue(isClosed(streamer)); // read to the end
     }
 
     @Test void closedOnStreamDrained() {
@@ -253,5 +291,25 @@ class StreamParserTest {
 
         // the Reader should be at "<p>" because we haven't consumed it
         assertTrue(getReader(streamer).matches("<p>Two"));
+    }
+
+    @Test void canParseFileReader() throws IOException {
+        File file = ParseTest.getFile("/htmltests/large.html");
+
+        // can't use FileReader from Java 11 here
+        InputStreamReader input = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8);
+        BufferedReader reader = new BufferedReader(input);
+        StreamParser streamer = new StreamParser(Parser.htmlParser()).parse(reader, file.getAbsolutePath());
+
+        Element last = null, e;
+        while ((e = streamer.selectNext("p")) != null) {
+            last = e;
+        }
+        assertTrue(last.text().startsWith("VESTIBULUM"));
+
+        // the reader should be closed as streamer is closed on completion of read
+        assertTrue(isClosed(streamer));
+
+        assertThrows(IOException.class, reader::ready); // ready() checks isOpen and throws
     }
 }
