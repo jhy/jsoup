@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.Connection;
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
@@ -9,6 +10,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jsoup.select.Elements;
 import org.jspecify.annotations.Nullable;
 
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -107,7 +110,7 @@ public final class DataUtil {
      *
      * @param path file to load
      * @param charsetName (optional) character set of input; specify {@code null} to attempt to autodetect. A BOM in
-     *     the file will always override this setting.
+     * the file will always override this setting.
      * @param baseUri base URI of document, to resolve relative links against
      * @param parser alternate {@link Parser#xmlParser() parser} to use.
 
@@ -116,6 +119,39 @@ public final class DataUtil {
      * @since 1.17.2
      */
     public static Document load(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        InputStream stream = openStream(path);
+        return parseInputStream(stream, charsetName, baseUri, parser);
+    }
+
+    /**
+     * Returns a {@link StreamParser} that will parse the supplied file progressively.
+     * Files that are compressed with gzip (and end in {@code .gz} or {@code .z})
+     * are supported in addition to uncompressed files.
+     *
+     * @param path file to load
+     * @param charset (optional) character set of input; specify {@code null} to attempt to autodetect from metadata.
+     * A BOM in the file will always override this setting.
+     * @param baseUri base URI of document, to resolve relative links against
+     * @param parser alternate {@link Parser#xmlParser() parser} to use.
+
+     * @return Document
+     * @throws IOException on IO error
+     * @since 1.18.2
+     * @see Connection.Response#streamParser()
+     */
+    public static StreamParser streamParser(Path path, @Nullable Charset charset, String baseUri, Parser parser) throws IOException {
+        StreamParser streamer = new StreamParser(parser);
+        String charsetName = charset != null? charset.name() : null;
+        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
+        maybeSkipBom(reader, charsetDoc);
+        streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+
+        return streamer;
+    }
+
+    /** Open an input stream from a file; if it's a gzip file, returns a GZIPInputStream to unzip it. */
+    private static InputStream openStream(Path path) throws IOException {
         final SeekableByteChannel byteChannel = Files.newByteChannel(path);
         InputStream stream = Channels.newInputStream(byteChannel);
         String name = Normalizer.lowerCase(path.getFileName().toString());
@@ -126,7 +162,7 @@ public final class DataUtil {
                 stream = new GZIPInputStream(stream);
             }
         }
-        return parseInputStream(stream, charsetName, baseUri, parser);
+        return stream;
     }
 
     /**
@@ -283,10 +319,7 @@ public final class DataUtil {
         final Document doc;
         final Charset charset = charsetDoc.charset;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, charset), DefaultBufferSize)) {
-            if (charsetDoc.skip) {
-                long skipped = reader.skip(1);
-                Validate.isTrue(skipped == 1); // WTF if this fails.
-            }
+            maybeSkipBom(reader, charsetDoc);
             try {
                 doc = parser.parseInput(reader, baseUri);
             } catch (UncheckedIOException e) {
@@ -300,6 +333,13 @@ public final class DataUtil {
             }
         }
         return doc;
+    }
+
+    static void maybeSkipBom(Reader reader, CharsetDoc charsetDoc) throws IOException {
+        if (charsetDoc.skip) {
+            long skipped = reader.skip(1);
+            Validate.isTrue(skipped == 1); // WTF if this fails.
+        }
     }
 
     /**

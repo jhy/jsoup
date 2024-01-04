@@ -985,6 +985,7 @@ public class HttpConnection implements Connection {
             // set up the stream parser and rig this connection up to the parsed doc:
             StreamParser streamer = new StreamParser(req.parser());
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charsetDoc.charset));
+            DataUtil.maybeSkipBom(reader, charsetDoc);
             streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
             streamer.document().connection(new HttpConnection(req, this));
             charset = charsetDoc.charset.name();

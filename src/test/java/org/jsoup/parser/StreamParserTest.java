@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.DataUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -311,5 +312,19 @@ class StreamParserTest {
         assertTrue(isClosed(streamer));
 
         assertThrows(IOException.class, reader::ready); // ready() checks isOpen and throws
+    }
+
+    @Test void canParseFile() throws IOException {
+        File file = ParseTest.getFile("/htmltests/large.html");
+        StreamParser streamer = DataUtil.streamParser(file.toPath(), StandardCharsets.UTF_8, "", Parser.htmlParser());
+
+        Element last = null, e;
+        while ((e = streamer.selectNext("p")) != null) {
+            last = e;
+        }
+        assertTrue(last.text().startsWith("VESTIBULUM"));
+
+        // the reader should be closed as streamer is closed on completion of read
+        assertTrue(isClosed(streamer));
     }
 }

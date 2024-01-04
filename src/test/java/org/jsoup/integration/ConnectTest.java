@@ -537,6 +537,14 @@ public class ConnectTest {
         assertEquals("OK", doc.title());
     }
 
+    @Test public void streamerGetUtf8Bom() throws IOException {
+        Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
+        Document doc = con.execute().streamParser().complete();
+
+        assertEquals("UTF-8", con.response().charset());
+        assertEquals("OK", doc.title());
+    }
+
     @Test
     public void testBinaryContentTypeThrowsException() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"));
