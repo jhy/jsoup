@@ -16,6 +16,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.HtmlTreeBuilder;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -245,9 +246,9 @@ public class ConnectTest {
         assertEquals(body, ihVal("Post Data", doc));
     }
 
-    @Test
-    public void doesGet() throws IOException {
-        Connection con = Jsoup.connect(echoUrl + "?what=the")
+    @ParameterizedTest @MethodSource("echoUrls") // http and https
+    public void doesGet(String url) throws IOException {
+        Connection con = Jsoup.connect(url + "?what=the")
             .userAgent("Mozilla")
             .referrer("http://example.com")
             .data("what", "about & me?");
@@ -257,6 +258,31 @@ public class ConnectTest {
         assertEquals("the, about & me?", ihVal("what", doc));
         assertEquals("Mozilla", ihVal("User-Agent", doc));
         assertEquals("http://example.com", ihVal("Referer", doc));
+    }
+
+    @ParameterizedTest @MethodSource("echoUrls") // http and https
+    public void streamParserGet(String url) throws IOException {
+        Connection con = Jsoup.connect(url)
+            .userAgent("Mozilla")
+            .referrer("http://example.com")
+            .data("what", "about & me?");
+
+        //final Element first = doc.select("th:contains(" + key + ") + td").first();
+        try (StreamParser streamer = con.execute().streamParser()) {
+            Element title = streamer.expectFirst("title");
+            assertEquals("Webserver Environment Variables", title.text());
+            Element method = streamer.expectNext(echoSelect("Method"));
+            assertEquals("GET", method.text());
+
+            Document doc = streamer.document();
+            assertSame(doc, title.ownerDocument());
+
+            assertEquals(url + "?what=about+%26+me%3F", doc.location()); // with the query string
+        }
+    }
+
+    static String echoSelect(String key) {
+        return String.format("th:contains(%s) + td", key);
     }
 
     @Test
@@ -506,6 +532,14 @@ public class ConnectTest {
     @Test public void getUtf8Bom() throws IOException {
         Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
         Document doc = con.get();
+
+        assertEquals("UTF-8", con.response().charset());
+        assertEquals("OK", doc.title());
+    }
+
+    @Test public void streamerGetUtf8Bom() throws IOException {
+        Connection con = Jsoup.connect(FileServlet.urlTo("/bomtests/bom_utf8.html"));
+        Document doc = con.execute().streamParser().complete();
 
         assertEquals("UTF-8", con.response().charset());
         assertEquals("OK", doc.title());

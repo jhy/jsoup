@@ -37,7 +37,7 @@ public final class CharacterReader {
 
     public CharacterReader(Reader input, int sz) {
         Validate.notNull(input);
-        Validate.isTrue(input.markSupported());
+        Validate.isTrue(input.markSupported(), "The supplied Reader must support mark(), but does not.");
         reader = input;
         charBuf = new char[Math.min(sz, maxBufferLen)];
         bufferUp();
