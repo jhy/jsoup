@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.SharedConstants.AttrRangeKey;
@@ -465,13 +466,29 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     final void html(final Appendable accum, final Document.OutputSettings out) throws IOException {
-        final int sz = size;
-        for (int i = 0; i < sz; i++) {
-            if (isInternalKey(keys[i]))
-                continue;
-            final String key = Attribute.getValidKey(keys[i], out.syntax());
-            if (key != null)
-                Attribute.htmlNoValidate(key, (String) vals[i], accum.append(' '), out);
+        if (out.sortAttributes()) {
+            IntStream.range(0, keys.length)
+                    .limit(size)
+                    .filter(i -> !isInternalKey(keys[i])
+                            && Attribute.getValidKey(keys[i], out.syntax()) != null)
+                    .mapToObj(Integer::valueOf)
+                    .sorted((a, b) -> keys[a].compareTo(keys[b]))
+                    .forEachOrdered(i -> {
+                        try {
+                            Attribute.htmlNoValidate(keys[i], (String) vals[i], accum.append(' '), out);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } else {
+            final int sz = size;
+            for (int i = 0; i < sz; i++) {
+                if (isInternalKey(keys[i]))
+                    continue;
+                final String key = Attribute.getValidKey(keys[i], out.syntax());
+                if (key != null)
+                    Attribute.htmlNoValidate(key, (String) vals[i], accum.append(' '), out);
+            }
         }
     }
 
