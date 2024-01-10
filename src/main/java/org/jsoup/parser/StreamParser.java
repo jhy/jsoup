@@ -17,6 +17,7 @@ import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Spliterator;
@@ -67,7 +68,7 @@ public class StreamParser implements Closeable {
     }
 
     /**
-     Provide the input for a parse. The input is not read until a consuming operation is called.
+     Provide the input for a Document parse. The input is not read until a consuming operation is called.
      @param input the input to be read.
      @param baseUri the URL of this input, for absolute link resolution
      @return this parser, for chaining
@@ -81,13 +82,39 @@ public class StreamParser implements Closeable {
     }
 
     /**
-     Provide the input for a parse. The input is not read until a consuming operation is called.
+     Provide the input for a Document parse. The input is not read until a consuming operation is called.
      @param input the input to be read
      @param baseUri the URL of this input, for absolute link resolution
      @return this parser
      */
     public StreamParser parse(String input, String baseUri) {
         return parse(new StringReader(input), baseUri);
+    }
+
+    /**
+     Provide the input for a fragment parse. The input is not read until a consuming operation is called.
+     @param input the input to be read
+     @param context the optional fragment context element
+     @param baseUri the URL of this input, for absolute link resolution
+     @return this parser
+     @see #completeFragment()
+     */
+    public StreamParser parseFragment(Reader input, @Nullable Element context, String baseUri) {
+        parse(input, baseUri);
+        treeBuilder.initialiseParseFragment(context);
+        return this;
+    }
+
+    /**
+     Provide the input for a fragment parse. The input is not read until a consuming operation is called.
+     @param input the input to be read
+     @param context the optional fragment context element
+     @param baseUri the URL of this input, for absolute link resolution
+     @return this parser
+     @see #completeFragment()
+     */
+    public StreamParser parseFragment(String input, @Nullable Element context, String baseUri) {
+        return parseFragment(new StringReader(input), context, baseUri);
     }
 
     /**
@@ -160,6 +187,18 @@ public class StreamParser implements Closeable {
         Document doc = document();
         treeBuilder.runParser();
         return doc;
+    }
+
+    /**
+     When initialized as a fragment parse, runs the parser until the input is fully read, and returns the completed
+     fragment child nodes.
+     @return the completed child nodes
+     @throws IOException if an I/O error occurs
+     @see #parseFragment(Reader, Element, String)
+     */
+    public List<Node> completeFragment() throws IOException {
+        treeBuilder.runParser();
+        return treeBuilder.completeParseFragment();
     }
 
     /**

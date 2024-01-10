@@ -34,7 +34,6 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
-        stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack). Note not push()ed, so not onNodeInserted.
         doc.outputSettings()
             .syntax(Document.OutputSettings.Syntax.xml)
             .escapeMode(Entities.EscapeMode.xhtml)
@@ -47,6 +46,10 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     Document parse(String input, String baseUri) {
         return parse(new StringReader(input), baseUri, new Parser(this));
+    }
+
+    @Override List<Node> completeParseFragment() {
+        return doc.childNodes();
     }
 
     @Override
@@ -164,9 +167,4 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
     }
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
-
-    @Override List<Node> doParseFragment(@Nullable Element context) {
-        runParser();
-        return doc.childNodes();
-    }
 }

@@ -78,10 +78,16 @@ abstract class TreeBuilder {
 
     List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         initialiseParse(new StringReader(inputFragment), baseUri, parser);
-        return doParseFragment(context);
+        initialiseParseFragment(context);
+        runParser();
+        return completeParseFragment();
     }
 
-    abstract List<Node> doParseFragment(@Nullable Element context);
+    void initialiseParseFragment(@Nullable Element context) {
+        // in Html, sets up context; no-op in XML
+    }
+
+    abstract List<Node> completeParseFragment();
 
     /** Set the node listener, which will then get callbacks for node insert and removals. */
     void nodeListener(NodeVisitor nodeListener) {
@@ -102,7 +108,7 @@ abstract class TreeBuilder {
     boolean stepParser() {
         // if we have reached the end already, step by popping off the stack, to hit nodeRemoved callbacks:
         if (currentToken.type == Token.TokenType.EOF) {
-            if (stack.isEmpty()) return false;
+            if (stack == null || stack.isEmpty()) return false; // stack will be null if TB was closed, as in case of runParser() + completeFragment()
             pop();
             return true;
         }

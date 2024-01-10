@@ -55,7 +55,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean baseUriSetFromDoc;
     private @Nullable Element headElement; // the current head element
     private @Nullable FormElement formElement; // the current form element
-    private @Nullable Element contextElement; // fragment parse context -- could be null even if fragment parsing
+    private @Nullable Element contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
     private ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
     private List<Token.Character> pendingTableCharacters; // chars in table to be shifted out
@@ -94,20 +94,19 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    @Override List<Node> doParseFragment(@Nullable Element context) {
+    @Override void initialiseParseFragment(@Nullable Element context) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
-        contextElement = context;
         fragmentParsing = true;
-        Element root = null;
 
         if (context != null) {
+            final String contextName = context.normalName();
+            contextElement = new Element(tagFor(contextName, settings), baseUri);
             if (context.ownerDocument() != null) // quirks setup:
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
             // initialise the tokeniser state:
-            String contextTag = context.normalName();
-            switch (contextTag) {
+            switch (contextName) {
                 case "title":
                 case "textarea":
                     tokeniser.transition(TokeniserState.Rcdata);
@@ -132,9 +131,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 default:
                     tokeniser.transition(TokeniserState.Data);
             }
-            root = new Element(tagFor(contextTag, settings), baseUri);
-            doc.appendChild(root);
-            push(root);
+            doc.appendChild(contextElement);
+            push(contextElement);
             resetInsertionMode();
 
             // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
@@ -148,15 +146,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 formSearch = formSearch.parent();
             }
         }
+    }
 
-        runParser();
-        if (context != null) {
+    @Override List<Node> completeParseFragment() {
+        if (contextElement != null) {
             // depending on context and the input html, content may have been added outside of the root el
             // e.g. context=p, input=div, the div will have been pushed out.
-            List<Node> nodes = root.siblingNodes();
+            List<Node> nodes = contextElement.siblingNodes();
             if (!nodes.isEmpty())
-                root.insertChildren(-1, nodes);
-            return root.childNodes();
+                contextElement.insertChildren(-1, nodes);
+            return contextElement.childNodes();
         }
         else
             return doc.childNodes();

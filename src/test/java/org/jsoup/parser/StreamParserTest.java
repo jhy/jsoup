@@ -4,18 +4,18 @@ import org.jsoup.helper.DataUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
-import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,6 +33,18 @@ class StreamParserTest {
             seen = new StringBuilder();
             parser.stream().forEachOrdered(el -> trackSeen(el, seen));
             assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;", seen.toString());
+            // checks expected order, and the + indicates that element had a next sibling at time of emission
+        }
+    }
+
+    @Test
+    void canStreamXml() {
+        String html = "<outmost><DIV id=1>D1</DIV><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";
+        try (StreamParser parser = new StreamParser(Parser.xmlParser()).parse(html, "")) {
+            StringBuilder seen;
+            seen = new StringBuilder();
+            parser.stream().forEachOrdered(el -> trackSeen(el, seen));
+            assertEquals("DIV#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];outmost;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
         }
     }
@@ -327,4 +339,94 @@ class StreamParserTest {
         // the reader should be closed as streamer is closed on completion of read
         assertTrue(isClosed(streamer));
     }
+
+    // Fragments
+
+    @Test
+    void canStreamFragment() {
+        String html = "<tr id=1><td>One</td><tr id=2><td>Two</td></tr><tr id=3><td>Three</td></tr>";
+        Element context = new Element("table");
+
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            StringBuilder seen = new StringBuilder();
+            parser.stream().forEachOrdered(el -> trackSeen(el, seen));
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;", seen.toString());
+            // checks expected order, and the + indicates that element had a next sibling at time of emission
+            // note that we don't get a full doc, just the fragment (and the context at the end of the stack)
+
+            assertTrue(isClosed(parser)); // as read to completion
+        }
+    }
+
+    @Test void canIterateFragment() {
+        // same as stream, just a different interface
+        String html = "<tr id=1><td>One</td><tr id=2><td>Two</td></tr><tr id=3><td>Three</td></tr>"; // missing </tr>, following <tr> infers it
+        Element context = new Element("table");
+
+        try(StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            StringBuilder seen = new StringBuilder();
+
+            Iterator<Element> it = parser.iterator();
+            while (it.hasNext()) {
+                trackSeen(it.next(), seen);
+            }
+
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;", seen.toString());
+            // checks expected order, and the + indicates that element had a next sibling at time of emission
+            // note that we don't get a full doc, just the fragment (and the context at the end of the stack)
+
+            assertTrue(isClosed(parser)); // as read to completion
+        }
+    }
+
+    @Test
+    void canSelectAndCompleteFragment() throws IOException {
+        String html = "<tr id=1><td>One</td><tr id=2><td>Two</td></tr><tr id=3><td>Three</td></tr>";
+        Element context = new Element("table");
+
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
+            Element first = parser.expectNext("td");
+            assertEquals("One", first.ownText());
+
+            Element el = parser.expectNext("td");
+            assertEquals("Two", el.ownText());
+
+            el = parser.expectNext("td");
+            assertEquals("Three", el.ownText());
+
+            el = parser.selectNext("td");
+            assertNull(el);
+
+            List<Node> nodes = parser.completeFragment();
+            assertEquals(1, nodes.size()); // should be the inferred tbody
+            Node tbody = nodes.get(0);
+            assertEquals("tbody", tbody.nodeName());
+            List<Node> trs = tbody.childNodes();
+            assertEquals(3, trs.size()); // should be the three TRs
+            assertSame(trs.get(0).childNode(0), first); // tr -> td
+
+            assertSame(parser.document(), first.ownerDocument()); // the shell document for this fragment
+        }
+    }
+
+    @Test
+    void canStreamFragmentXml() throws IOException {
+        String html = "<tr id=1><td>One</td></tr><tr id=2><td>Two</td></tr><tr id=3><td>Three</td></tr>";
+        Element context = new Element("Other");
+
+        try (StreamParser parser = new StreamParser(Parser.xmlParser()).parseFragment(html, context, "")) {
+            StringBuilder seen = new StringBuilder();
+            parser.stream().forEachOrdered(el -> trackSeen(el, seen));
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;", seen.toString());
+            // checks expected order, and the + indicates that element had a next sibling at time of emission
+            // note that we don't get a full doc, just the fragment
+
+            assertTrue(isClosed(parser)); // as read to completion
+
+            List<Node> nodes = parser.completeFragment();
+            assertEquals(3, nodes.size());
+            assertEquals("tr", nodes.get(0).nodeName());
+        }
+    }
+
 }
