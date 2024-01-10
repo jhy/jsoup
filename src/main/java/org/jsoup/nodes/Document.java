@@ -5,12 +5,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
-import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
-import org.jsoup.parser.Tag;
-import org.jsoup.select.Elements;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.Selector;
+import org.jsoup.parser.*;
+import org.jsoup.select.*;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
@@ -403,6 +399,7 @@ public class Document extends Element {
 
         private boolean prettyPrint = true;
         private boolean outline = false;
+        private boolean sortAttributes = false;
         private int indentAmount = 1;
         private int maxPaddingWidth = 30;
         private Syntax syntax = Syntax.html;
@@ -520,7 +517,25 @@ public class Document extends Element {
             prettyPrint = pretty;
             return this;
         }
-        
+
+        /**
+         * Get if attribute sorting is enabled. Default is false. If enabled, attributes will be sorted by name
+         * @return if attribute sorting is enabled.
+         */
+        public boolean sortAttributes() {
+            return sortAttributes;
+        }
+
+        /**
+         * Enable or disable attribute sorting.
+         * @param sort new attribute sorting setting
+         * @return this, for chaining
+         */
+        public OutputSettings sortAttributes(boolean sort) {
+            sortAttributes = sort;
+            return this;
+        }
+
         /**
          * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
          * all tags as block.

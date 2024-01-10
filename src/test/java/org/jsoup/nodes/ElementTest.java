@@ -469,6 +469,14 @@ public class ElementTest {
     }
 
     @Test
+    public void testOuterHtmlWithSortedAttributes() {
+        Document doc = Jsoup.parse("<p style='margin: 0' id='hello'>Hello</p>");
+        doc.outputSettings().sortAttributes(true);
+        assertEquals("<html><head></head><body><p id=\"hello\" style=\"margin: 0\">Hello</p></body></html>",
+                TextUtil.stripNewlines(doc.outerHtml()));
+    }
+
+    @Test
     public void testInnerHtml() {
         Document doc = Jsoup.parse("<div>\n <p>Hello</p> </div>");
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
