@@ -390,7 +390,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             formElement.addElement(el); // connect form controls to their form element
 
         // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
-        if (el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
+        if (parser.getErrors().canAddError() && el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
             error("Invalid xmlns attribute [%s] on tag [%s]", el.attr("xmlns"), el.tagName());
 
         if (isFosterInserts() && StringUtil.inSorted(currentElement().normalName(), InTableFoster))
