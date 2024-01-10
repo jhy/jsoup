@@ -487,6 +487,41 @@ public class Element extends Node {
     }
 
     /**
+     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
+     * may include this element, or any of its children.
+     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+     * multiple filters can be combined, e.g.:</p>
+     * <ul>
+     * <li>{@code el.selectStream("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
+     * <li>{@code el.selectStream("a[href*=example.com]")} - finds links pointing to example.com (loosely)
+     * </ul>
+     * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
+     * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
+     *
+     * @param cssQuery a {@link Selector} CSS-like query
+     * @return a {@link Stream} containing elements that match the query (empty if none match)
+     * @see Selector selector query syntax
+     * @see QueryParser#parse(String)
+     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     * @since 1.18.1
+     */
+    public Stream<Element> selectStream(String cssQuery) {
+        return Selector.selectStream(cssQuery, this);
+    }
+
+    /**
+     * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
+     * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
+     * repeatedly parsing the CSS query.
+     * @param evaluator an element evaluator
+     * @return a {@link Stream} containing elements that match the query (empty if none match)
+     * @since 1.18.1
+     */
+    public Stream<Element> selectStream(Evaluator evaluator) {
+        return Selector.selectStream(evaluator, this);
+    }
+
+    /**
      * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
      * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
      * execution stops on the first hit.</p>
@@ -1126,11 +1161,7 @@ public class Element extends Node {
     public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
 
-        Elements elements = Collector.collect(new Evaluator.Id(id), this);
-        if (elements.size() > 0)
-            return elements.get(0);
-        else
-            return null;
+        return selectStream(new Evaluator.Id(id)).findFirst().orElse(null);
     }
 
     /**
