@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import java.util.Objects;
+
 import static org.jsoup.internal.SharedConstants.*;
 
 /**
@@ -108,9 +110,7 @@ public class Range {
 
     @Override
     public int hashCode() {
-        int result = start.hashCode();
-        result = 31 * result + end.hashCode();
-        return result;
+        return Objects.hash(start, end);
     }
 
     /**
@@ -198,10 +198,7 @@ public class Range {
 
         @Override
         public int hashCode() {
-            int result = pos;
-            result = 31 * result + lineNumber;
-            result = 31 * result + columnNumber;
-            return result;
+            return Objects.hash(pos, lineNumber, columnNumber);
         }
     }
 
@@ -245,9 +242,7 @@ public class Range {
         }
 
         @Override public int hashCode() {
-            int result = nameRange.hashCode();
-            result = 31 * result + valueRange.hashCode();
-            return result;
+            return Objects.hash(nameRange, valueRange);
         }
     }
 }

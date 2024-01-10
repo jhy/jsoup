@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -496,14 +497,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         for (int i = 0; i < size; i++) {
             String key = keys[i];
             int thatI = that.indexOfKey(key);
-            if (thatI == NotFound)
-                return false;
-            Object val = vals[i];
-            Object thatVal = that.vals[thatI];
-            if (val == null) {
-                if (thatVal != null)
-                    return false;
-            } else if (!val.equals(thatVal))
+            if (thatI == NotFound || !Objects.equals(vals[i], that.vals[thatI]))
                 return false;
         }
         return true;
