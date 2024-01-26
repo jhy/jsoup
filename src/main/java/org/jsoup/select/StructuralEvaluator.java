@@ -12,19 +12,19 @@ import java.util.Map;
 /**
  * Base structural evaluator.
  */
-abstract class StructuralEvaluator extends Evaluator {
-    final Evaluator evaluator;
+public abstract class StructuralEvaluator extends Evaluator {
+    protected final Evaluator evaluator;
 
-    public StructuralEvaluator(Evaluator evaluator) {
+    protected StructuralEvaluator(Evaluator evaluator) {
         this.evaluator = evaluator;
     }
 
     // Memoize inner matches, to save repeated re-evaluations of parent, sibling etc.
     // root + element: Boolean matches. ThreadLocal in case the Evaluator is compiled then reused across multi threads
-    final ThreadLocal<IdentityHashMap<Element, IdentityHashMap<Element, Boolean>>>
+    protected final ThreadLocal<IdentityHashMap<Element, IdentityHashMap<Element, Boolean>>>
         threadMemo = ThreadLocal.withInitial(IdentityHashMap::new);
 
-    boolean memoMatches(final Element root, final Element element) {
+    protected boolean memoMatches(final Element root, final Element element) {
         Map<Element, IdentityHashMap<Element, Boolean>> rootMemo = threadMemo.get();
         Map<Element, Boolean> memo = rootMemo.computeIfAbsent(root, Functions.identityMapFunction());
         return memo.computeIfAbsent(element, key -> evaluator.matches(root, key));
@@ -35,7 +35,7 @@ abstract class StructuralEvaluator extends Evaluator {
         super.reset();
     }
 
-    static class Root extends Evaluator {
+    public static final class Root extends Evaluator {
         @Override
         public boolean matches(Element root, Element element) {
             return root == element;
@@ -50,7 +50,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class Has extends StructuralEvaluator {
+    public static final class Has extends StructuralEvaluator {
         static final ThreadLocal<NodeIterator<Element>> ThreadElementIter =
             ThreadLocal.withInitial(() -> new NodeIterator<>(new Element("html"), Element.class));
         // the element here is just a placeholder so this can be final - gets set in restart()
@@ -84,7 +84,7 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     /** Implements the :is(sub-query) pseudo-selector */
-    static class Is extends StructuralEvaluator {
+    public static final class Is extends StructuralEvaluator {
         public Is(Evaluator evaluator) {
             super(evaluator);
         }
@@ -104,7 +104,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class Not extends StructuralEvaluator {
+    public static final class Not extends StructuralEvaluator {
         public Not(Evaluator evaluator) {
             super(evaluator);
         }
@@ -124,7 +124,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class Parent extends StructuralEvaluator {
+    public static final class Parent extends StructuralEvaluator {
         public Parent(Evaluator evaluator) {
             super(evaluator);
         }
@@ -159,7 +159,7 @@ abstract class StructuralEvaluator extends Evaluator {
      Holds a list of evaluators for one > two > three immediate parent matches, and the final direct evaluator under
      test. To match, these are effectively ANDed together, starting from the last, matching up to the first.
      */
-    static class ImmediateParentRun extends Evaluator {
+    public static final class ImmediateParentRun extends Evaluator {
         final ArrayList<Evaluator> evaluators = new ArrayList<>();
         int cost = 2;
 
@@ -178,7 +178,7 @@ abstract class StructuralEvaluator extends Evaluator {
             if (element == root)
                 return false; // cannot match as the second eval (first parent test) would be above the root
 
-            for (int i = evaluators.size() -1; i >= 0; --i) {
+            for (int i = evaluators.size() - 1; i >= 0; --i) {
                 if (element == null)
                     return false;
                 Evaluator eval = evaluators.get(i);
@@ -199,7 +199,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class PreviousSibling extends StructuralEvaluator {
+    public static final class PreviousSibling extends StructuralEvaluator {
         public PreviousSibling(Evaluator evaluator) {
             super(evaluator);
         }
@@ -228,7 +228,7 @@ abstract class StructuralEvaluator extends Evaluator {
         }
     }
 
-    static class ImmediatePreviousSibling extends StructuralEvaluator {
+    public static final class ImmediatePreviousSibling extends StructuralEvaluator {
         public ImmediatePreviousSibling(Evaluator evaluator) {
             super(evaluator);
         }
