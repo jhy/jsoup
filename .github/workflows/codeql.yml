@@ -21,7 +21,7 @@ jobs:
           java-version: 17
           distribution: 'temurin'
           cache: 'maven'
-      - name: CodeQL Initialization
+      - name: CodeQL Initialization 
         uses: github/codeql-action/init@v2
         with:
           languages: java
