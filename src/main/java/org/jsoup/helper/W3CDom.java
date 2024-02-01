@@ -360,12 +360,14 @@ public class W3CDom {
             namespacesStack.push(new HashMap<>());
             dest = doc;
             contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty); // Track the context jsoup Element, so we can save the corresponding w3c element
-            final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
-            if (namespaceAware && inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder) {
-              // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
-              namespacesStack.peek().put("", Parser.NamespaceHtml);
+            if (contextElement != null) {
+                final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
+                if ( namespaceAware && inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder ) {
+                    // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
+                    namespacesStack.peek().put("", Parser.NamespaceHtml);
+                }
             }
-          }
+        }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
             namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
