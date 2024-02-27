@@ -43,4 +43,36 @@ public class ValidateTest {
         }
         assertTrue(threw);
     }
+    @Test
+    void testEnsureNotNullWithNonNullObject() {
+        Object nonNullObject = new Object();
+        assertEquals(nonNullObject, Validate.ensureNotNull(nonNullObject));
+    }
+
+    @Test
+    void testEnsureNotNullWithNullObject() {
+        Object nullObject = null;
+        assertThrows(ValidationException.class,() -> Validate.ensureNotNull(nullObject));
+    }
+
+    @Test
+    void testIsTrueWithFalseValue() {
+        assertThrows(ValidationException.class,() -> Validate.isTrue(false));
+    }
+
+    @Test
+    void testIsFalseWithTrueValue() {
+        assertThrows(ValidationException.class,() -> Validate.isFalse(true));
+    }
+
+    @Test
+    void testNoNullElementsWithNullElement() {
+        Object[] objects = { "notNull", null, "anotherNotNull" };
+        assertThrows(ValidationException.class, () -> Validate.noNullElements(objects, "Array must not contain null elements"));
+    }
+
+    @Test
+    void testSomeConditionThatShouldNotBeMet() {
+        assertThrows(ValidationException.class, () -> Validate.assertFail("This condition should not be met"));
+    }
 }
