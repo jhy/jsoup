@@ -6,6 +6,7 @@ import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
 import org.junit.jupiter.api.Test;
 
+import javax.net.ssl.HostnameVerifier;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.MalformedURLException;
@@ -254,6 +255,13 @@ public class HttpConnectionTest {
         Connection con = HttpConnection.connect("http://example.com/");
         con.requestBody("foo");
         assertEquals("foo", con.request().requestBody());
+    }
+
+    @Test public void hostnameVerifier() {
+        Connection con = HttpConnection.connect("http://example.com/");
+        HostnameVerifier hostnameVerifier = (hostname, session) -> false;
+        con.hostnameVerifier(hostnameVerifier);
+        assertEquals(hostnameVerifier, con.request().hostnameVerifier());
     }
 
     @Test public void encodeUrl() throws MalformedURLException {
