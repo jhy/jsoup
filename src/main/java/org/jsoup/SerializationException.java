@@ -4,6 +4,7 @@ package org.jsoup;
  * A SerializationException is raised whenever serialization of a DOM element fails. This exception usually wraps an
  * {@link java.io.IOException} that may be thrown due to an inaccessible output stream.
  */
+@SuppressWarnings("serial")
 public final class SerializationException extends RuntimeException {
 	/**
 	 * Creates and initializes a new serialization exception with no error message and cause.

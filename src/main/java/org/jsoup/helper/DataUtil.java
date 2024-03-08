@@ -44,7 +44,6 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
  * Internal static utilities for handling data.
  *
  */
-@SuppressWarnings("CharsetObjectCanBeUsed")
 public final class DataUtil {
     private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*(?:[\"'])?([^\\s,;\"']*)");
     public static final Charset UTF_8 = Charset.forName("UTF-8"); // Don't use StandardCharsets, as those only appear in Android API 19, and we target 10.
@@ -140,14 +139,15 @@ public final class DataUtil {
      * @see Connection.Response#streamParser()
      */
     public static StreamParser streamParser(Path path, @Nullable Charset charset, String baseUri, Parser parser) throws IOException {
-        StreamParser streamer = new StreamParser(parser);
-        String charsetName = charset != null? charset.name() : null;
-        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
-        maybeSkipBom(reader, charsetDoc);
-        streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+        try(StreamParser streamer = new StreamParser(parser);){
+	        String charsetName = charset != null? charset.name() : null;
+	        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+	        BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
+	        maybeSkipBom(reader, charsetDoc);
+	        streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
 
-        return streamer;
+	        return streamer;
+        }
     }
 
     /** Open an input stream from a file; if it's a gzip file, returns a GZIPInputStream to unzip it. */
@@ -155,6 +155,7 @@ public final class DataUtil {
         final SeekableByteChannel byteChannel = Files.newByteChannel(path);
         InputStream stream = Channels.newInputStream(byteChannel);
         String name = Normalizer.lowerCase(path.getFileName().toString());
+        
         if (name.endsWith(".gz") || name.endsWith(".z")) {
             final boolean zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
             byteChannel.position(0); // reset to start of file
@@ -220,7 +221,7 @@ public final class DataUtil {
     }
 
     static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        if (input == null) // empty body // todo reconsider?
+        if (input == null) // empty body // to do reconsider?
             return new Document(baseUri);
 
         final Document doc;
@@ -375,7 +376,7 @@ public final class DataUtil {
         return null;
     }
 
-    private @Nullable static String validateCharset(@Nullable String cs) {
+    @Nullable private static String validateCharset(@Nullable String cs) {
         if (cs == null || cs.length() == 0) return null;
         cs = cs.trim().replaceAll("[\"']", "");
         try {
@@ -401,7 +402,7 @@ public final class DataUtil {
     }
 
     private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
-        @SuppressWarnings("UnnecessaryLocalVariable") final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
+        final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
         buffer.mark();
         byte[] bom = new byte[4];
         if (byteData.remaining() >= bom.length) {

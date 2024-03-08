@@ -6,8 +6,9 @@ import java.util.Collection;
 /**
  * Implementation of ArrayList that watches out for changes to the contents.
  */
+@SuppressWarnings("serial")
 public abstract class ChangeNotifyingArrayList<E> extends ArrayList<E> {
-    public ChangeNotifyingArrayList(int initialCapacity) {
+    protected ChangeNotifyingArrayList(int initialCapacity) {
         super(initialCapacity);
     }
 
@@ -78,5 +79,4 @@ public abstract class ChangeNotifyingArrayList<E> extends ArrayList<E> {
         onContentsChanged();
         return super.retainAll(c);
     }
-
 }

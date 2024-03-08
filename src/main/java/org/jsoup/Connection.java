@@ -40,9 +40,7 @@ import java.util.Map;
  <p>For multi-threaded implementations, it is important to use a {@link #newRequest()} for each request. The session may
  be shared across concurrent threads, but a not a specific request.</p>
  */
-@SuppressWarnings("unused")
 public interface Connection {
-
     /**
      * GET and POST http methods.
      */
@@ -470,7 +468,6 @@ public interface Connection {
      * Common methods for Requests and Responses
      * @param <T> Type of Base, either Request or Response
      */
-    @SuppressWarnings("UnusedReturnValue")
     interface Base<T extends Base<T>> {
         /**
          * Get the URL of this Request or Response. For redirected responses, this will be the final destination URL.
@@ -623,7 +620,6 @@ public interface Connection {
     /**
      * Represents a HTTP request.
      */
-    @SuppressWarnings("UnusedReturnValue")
     interface Request extends Base<Request> {
         /**
          * Get the proxy used for this request.

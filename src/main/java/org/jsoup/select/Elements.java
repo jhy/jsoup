@@ -27,9 +27,9 @@ import java.util.function.UnaryOperator;
  replace} Elements in the list will also act on the underlying {@link org.jsoup.nodes.Document DOM}.</p>
 
  @author Jonathan Hedley, jonathan@hedley.net */
+@SuppressWarnings("serial")
 public class Elements extends ArrayList<Element> {
-    public Elements() {
-    }
+    public Elements() {}
 
     public Elements(int initialCapacity) {
         super(initialCapacity);
@@ -55,8 +55,9 @@ public class Elements extends ArrayList<Element> {
 	public Elements clone() {
         Elements clone = new Elements(size());
 
-        for(Element e : this)
+        for(Element e : this) {
     		clone.add(e.clone());
+        }
     	
     	return clone;
 	}
