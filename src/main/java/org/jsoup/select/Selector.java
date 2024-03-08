@@ -168,7 +168,8 @@ public class Selector {
         return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
-    public static class SelectorParseException extends IllegalStateException {
+    @SuppressWarnings("serial")
+	public static class SelectorParseException extends IllegalStateException {
         public SelectorParseException(String msg) {
             super(msg);
         }

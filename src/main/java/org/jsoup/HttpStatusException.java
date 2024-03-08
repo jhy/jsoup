@@ -5,6 +5,7 @@ import java.io.IOException;
 /**
  * Signals that a HTTP request resulted in a not OK HTTP response.
  */
+@SuppressWarnings("serial")
 public class HttpStatusException extends IOException {
     private final int statusCode;
     private final String url;

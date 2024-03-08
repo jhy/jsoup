@@ -6,6 +6,7 @@ import java.util.List;
 /**
  Validation exceptions, as thrown by the methods in {@link Validate}.
  */
+@SuppressWarnings("serial")
 public class ValidationException extends IllegalArgumentException {
 
     public static final String Validator = Validate.class.getName();

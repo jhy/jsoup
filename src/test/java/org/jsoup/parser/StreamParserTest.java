@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  Tests for the StreamParser. There are also some tests in {@link org.jsoup.integration.ConnectTest}.
  */
+@SuppressWarnings("resource")
 class StreamParserTest {
 
     @Test
@@ -37,7 +38,7 @@ class StreamParserTest {
         }
     }
 
-    @Test
+	@Test
     void canStreamXml() {
         String html = "<outmost><DIV id=1>D1</DIV><div id=2>D2<p id=3><span>P One</p><p id=4>P Two</p></div><div id=5>D3<p id=6>P three</p>";
         try (StreamParser parser = new StreamParser(Parser.xmlParser()).parse(html, "")) {
@@ -263,7 +264,8 @@ class StreamParserTest {
 
     @Test void closedOnComplete() throws IOException {
         StreamParser streamer = basic();
-        Document doc = streamer.complete();
+        @SuppressWarnings("unused")
+		Document doc = streamer.complete();
         assertTrue(isClosed(streamer));
     }
 

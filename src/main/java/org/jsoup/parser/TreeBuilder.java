@@ -101,7 +101,7 @@ abstract class TreeBuilder {
     abstract TreeBuilder newInstance();
 
     void runParser() {
-        do {} while (stepParser()); // run until stepParser sees EOF
+        do {/* Place holder comment. Internal loop like a while true. */} while (stepParser()); // run until stepParser sees EOF
         completeParse();
     }
 
@@ -183,7 +183,7 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     boolean currentElementIs(String normalName) {
-        if (stack.size() == 0)
+        if (stack.isEmpty())
             return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName)
@@ -197,7 +197,7 @@ abstract class TreeBuilder {
      @return true if there is a current element on the stack, and its name equals the supplied
      */
     boolean currentElementIs(String normalName, String namespace) {
-        if (stack.size() == 0)
+        if (stack.isEmpty())
             return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName)

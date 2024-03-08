@@ -5,6 +5,7 @@ import java.io.IOException;
 /**
  * Signals that a HTTP response returned a mime type that is not supported.
  */
+@SuppressWarnings("serial")
 public class UnsupportedMimeTypeException extends IOException {
     private final String mimeType;
     private final String url;

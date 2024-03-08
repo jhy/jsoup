@@ -42,7 +42,7 @@ class CookieUtil {
         for (Map.Entry<String, List<String>> entry : storedCookies.entrySet()) {
             // might be Cookie: name=value; name=value\nCookie2: name=value; name=value
             List<String> cookies = entry.getValue(); // these will be name=val
-            if (cookies == null || cookies.size() == 0) // the cookie store often returns just an empty "Cookie" key, no val
+            if (cookies == null || cookies.isEmpty()) // the cookie store often returns just an empty "Cookie" key, no val
                 continue;
 
             String key = entry.getKey(); // Cookie or Cookie2
@@ -85,6 +85,5 @@ class CookieUtil {
 
     static void storeCookies(HttpConnection.Request req, URL url, Map<String, List<String>> resHeaders) throws IOException {
         req.cookieManager().put(CookieUtil.asUri(url), resHeaders); // stores cookies for session
-
     }
 }

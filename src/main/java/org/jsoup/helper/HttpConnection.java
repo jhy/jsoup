@@ -57,7 +57,6 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  * Implementation of {@link Connection}.
  * @see org.jsoup.Jsoup#connect(String)
  */
-@SuppressWarnings("CharsetObjectCanBeUsed")
 public class HttpConnection implements Connection {
     public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
@@ -389,7 +388,7 @@ public class HttpConnection implements Connection {
     }
 
     @SuppressWarnings("unchecked")
-    private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
+    private abstract static class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
         private static final URL UnsetUrl; // only used if you created a new Request()
         static {
             try {
@@ -796,7 +795,7 @@ public class HttpConnection implements Connection {
         private @Nullable ControllableInputStream bodyStream;
         private @Nullable HttpURLConnection conn;
         private @Nullable String charset;
-        private @Nullable final String contentType;
+        @Nullable private final String contentType;
         private boolean executed = false;
         private boolean inputStreamRead = false;
         private int numRedirects = 0;
@@ -970,7 +969,7 @@ public class HttpConnection implements Connection {
         @Override public Document parse() throws IOException {
             InputStream stream = prepareParse();
             Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
-            doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
+            doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // to do - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
             safeClose();
             return doc;
@@ -980,7 +979,7 @@ public class HttpConnection implements Connection {
             InputStream stream = prepareParse();
             String baseUri = url.toExternalForm();
             DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
-            // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
+            // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. to do - revisit.
 
             // set up the stream parser and rig this connection up to the parsed doc:
             StreamParser streamer = new StreamParser(req.parser());
@@ -994,7 +993,8 @@ public class HttpConnection implements Connection {
             return streamer;
         }
 
-        private void prepareByteData() {
+        @SuppressWarnings("removal")
+		private void prepareByteData() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             if (bodyStream != null && byteData == null) {
                 Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
@@ -1231,12 +1231,12 @@ public class HttpConnection implements Connection {
             return foundNonAscii;
         }
 
-        private @Nullable static String setOutputContentType(final Connection.Request req) {
+        @Nullable private static String setOutputContentType(final Connection.Request req) {
             final String contentType = req.header(CONTENT_TYPE);
             String bound = null;
             if (contentType != null) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
-                // todo - if content type already set, we could add charset
+                // to do - if content type already set, we could add charset
 
                 // if user has set content type to multipart/form-data, auto add boundary.
                 if(contentType.contains(MULTIPART_FORM_DATA) && !contentType.contains("boundary")) {

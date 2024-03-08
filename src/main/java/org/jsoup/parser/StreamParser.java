@@ -51,9 +51,9 @@ import java.util.stream.StreamSupport;
  @since 1.18.1
  */
 public class StreamParser implements Closeable {
-    final private Parser parser;
-    final private TreeBuilder treeBuilder;
-    final private ElementIterator it = new ElementIterator();
+    private final Parser parser;
+    private final TreeBuilder treeBuilder;
+    private final ElementIterator it = new ElementIterator();
     @Nullable private Document document;
     private boolean stopped = false;
 
@@ -294,7 +294,7 @@ public class StreamParser implements Closeable {
 
     final class ElementIterator implements Iterator<Element>, NodeVisitor {
         // listeners add to a next emit queue, as a single token read step may yield multiple elements
-        final private Queue<Element> emitQueue = new LinkedList<>();
+    	private final Queue<Element> emitQueue = new LinkedList<>();
         private @Nullable Element current;  // most recently emitted
         private @Nullable Element next;     // element waiting to be picked up
         private @Nullable Element tail;     // The last tailed element (</html>), on hold for final pop
@@ -376,6 +376,3 @@ public class StreamParser implements Closeable {
         }
     }
 }
-
-
-

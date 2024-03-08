@@ -1,6 +1,5 @@
 package org.jsoup.internal;
 
-import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.BufferedInputStream;
@@ -110,13 +109,11 @@ public class ControllableInputStream extends FilterInputStream {
         return ByteBuffer.wrap(outStream.toByteArray());
     }
 
-    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
     @Override public void reset() throws IOException {
         super.reset();
         remaining = maxSize - markPos;
     }
 
-    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
     @Override public void mark(int readlimit) {
         super.mark(readlimit);
         markPos = maxSize - remaining;

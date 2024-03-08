@@ -136,7 +136,7 @@ public class W3CDom {
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
                 if (!StringUtil.isBlank(doctype.getSystemId()))
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-                    // handle <!doctype html> for legacy dom. TODO: nicer if <!doctype html>
+                    // handle <!doctype html> for legacy dom. TO DO: nicer if <!doctype html>
                 else if (doctype.getName().equalsIgnoreCase("html")
                     && StringUtil.isBlank(doctype.getPublicId())
                     && StringUtil.isBlank(doctype.getSystemId()))
@@ -158,12 +158,12 @@ public class W3CDom {
     }
 
     /** Canned default for HTML output. */
-    public static HashMap<String, String> OutputHtml() {
+    public static Map<String, String> OutputHtml() {
         return methodMap("html");
     }
 
     /** Canned default for XML output. */
-    public static HashMap<String, String> OutputXml() {
+    public static Map<String, String> OutputXml() {
         return methodMap("xml");
     }
 
@@ -353,7 +353,7 @@ public class W3CDom {
         private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Node dest;
         private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
-        /*@Nullable*/ private final org.jsoup.nodes.Element contextElement; // todo - unsure why this can't be marked nullable?
+        /*@Nullable*/ private final org.jsoup.nodes.Element contextElement; // to do - unsure why this can't be marked nullable?
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
@@ -414,6 +414,7 @@ public class W3CDom {
             dest.appendChild(append);
         }
 
+        @Override
         public void tail(org.jsoup.nodes.Node source, int depth) {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
                 dest = dest.getParentNode(); // undescend
@@ -454,6 +455,5 @@ public class W3CDom {
             int pos = el.tagName().indexOf(':');
             return pos > 0 ? el.tagName().substring(0, pos) : "";
         }
-
     }
 }
