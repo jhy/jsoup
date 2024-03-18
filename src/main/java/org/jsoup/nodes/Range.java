@@ -109,7 +109,7 @@ public class Range {
     @Override
     public int hashCode() {
         int result = start.hashCode();
-        result = 31 * result + end.hashCode();
+        result = HashPrime * result + end.hashCode();
         return result;
     }
 
@@ -199,8 +199,8 @@ public class Range {
         @Override
         public int hashCode() {
             int result = pos;
-            result = 31 * result + lineNumber;
-            result = 31 * result + columnNumber;
+            result = HashPrime * result + lineNumber;
+            result = HashPrime * result + columnNumber;
             return result;
         }
     }
@@ -246,7 +246,7 @@ public class Range {
 
         @Override public int hashCode() {
             int result = nameRange.hashCode();
-            result = 31 * result + valueRange.hashCode();
+            result = HashPrime * result + valueRange.hashCode();
             return result;
         }
     }
