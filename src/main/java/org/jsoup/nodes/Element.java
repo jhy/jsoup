@@ -185,7 +185,7 @@ public class Element extends Node {
      * @since 1.17.2
      */
     public boolean elementIs(String normalName, String namespace) {
-        return tag.normalName().equals(normalName) && tag.namespace().equals(namespace);
+        return tag.matchesTagAttributes(normalName, namespace);
     }
 
     /**

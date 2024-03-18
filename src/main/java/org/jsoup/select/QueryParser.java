@@ -5,7 +5,9 @@ import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,35 +108,18 @@ public class QueryParser {
         evals.clear();
 
         // for most combinators: change the current eval into an AND of the current eval and the new eval
-        switch (combinator) {
-            case '>':
-                ImmediateParentRun run = currentEval instanceof ImmediateParentRun ?
-                        (ImmediateParentRun) currentEval : new ImmediateParentRun(currentEval);
-                run.add(newEval);
-                currentEval = run;
-                break;
-            case ' ':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
-                break;
-            case '+':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
-                break;
-            case '~':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
-                break;
-            case ',':
-                CombiningEvaluator.Or or;
-                if (currentEval instanceof CombiningEvaluator.Or) {
-                    or = (CombiningEvaluator.Or) currentEval;
-                } else {
-                    or = new CombiningEvaluator.Or();
-                    or.add(currentEval);
-                }
-                or.add(newEval);
-                currentEval = or;
-                break;
-            default:
-                throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
+        Map<Character, CombinatorHandler> handlers = new HashMap<>();
+        handlers.put('>', new GreaterThanHandler());
+        handlers.put(' ', new SpaceHandler());
+        handlers.put('+', new PlusHandler());
+        handlers.put('~', new TildeHandler());
+        handlers.put(',', new CommaHandler());
+
+        CombinatorHandler handler = handlers.get(combinator);
+        if (handler != null) {
+            currentEval = handler.handle(currentEval, newEval);
+        } else {
+            throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
 
         if (replaceRightMost)
@@ -438,5 +423,50 @@ public class QueryParser {
     @Override
     public String toString() {
         return query;
+    }
+}
+
+interface CombinatorHandler {
+    Evaluator handle(Evaluator currentEval, Evaluator newEval);
+}
+
+class GreaterThanHandler implements CombinatorHandler {
+    public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
+        ImmediateParentRun run = currentEval instanceof ImmediateParentRun ?
+                (ImmediateParentRun) currentEval : new ImmediateParentRun(currentEval);
+        run.add(newEval);
+        return run;
+    }
+}
+
+class SpaceHandler implements CombinatorHandler {
+    public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
+        return new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
+    }
+}
+
+class PlusHandler implements CombinatorHandler {
+    public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
+        return new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
+    }
+}
+
+class TildeHandler implements CombinatorHandler {
+    public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
+        return new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
+    }
+}
+
+class CommaHandler implements CombinatorHandler {
+    public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
+        CombiningEvaluator.Or or;
+        if (currentEval instanceof CombiningEvaluator.Or) {
+            or = (CombiningEvaluator.Or) currentEval;
+        } else {
+            or = new CombiningEvaluator.Or();
+            or.add(currentEval);
+        }
+        or.add(newEval);
+        return or;
     }
 }
