@@ -54,6 +54,17 @@ public class Tag implements Cloneable {
     }
 
     /**
+     * Checks if the tag's normal name and namespace match the provided parameters.
+     *
+     * @param normalName The normalized name to check.
+     * @param namespace The namespace to check.
+     * @return true if the tag's normal name and namespace match the provided parameters, false otherwise.
+     */
+    public boolean matchesTagAttributes(String normalName, String namespace) {
+        return this.normalName().equals(normalName) && this.namespace().equals(namespace);
+    }
+
+    /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
      * <p>
      * Pre-defined tags (p, div etc) will be ==, but unknown tags are not registered and will only .equals().

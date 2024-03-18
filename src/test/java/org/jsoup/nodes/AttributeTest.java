@@ -89,4 +89,14 @@ public class AttributeTest {
         Document doc2 = Jsoup.parse(html, Parser.htmlParser().settings(ParseSettings.preserveCase));
         assertEquals("<a href=\"autofocus\" REQUIRED>One</a>", doc2.selectFirst("a").outerHtml());
     }
+
+    @Test
+    void createFromEncoded() {
+        String unencodedKey = "src";
+        String encodedValue = "&lt;img src=&quot;/image.jpg&quot;&gt;";
+        Attribute attribute = Attribute.createFromEncoded(unencodedKey, encodedValue);
+        assertNotNull(attribute);
+        assertEquals(unencodedKey, attribute.getKey());
+        assertEquals("<img src=\"/image.jpg\">", attribute.getValue());
+    }
 }

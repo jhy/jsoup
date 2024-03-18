@@ -11,6 +11,7 @@ public final class SharedConstants {
     public static final String EndRangeKey = "jsoup.end";
 
     public static final int DefaultBufferSize = 1024 * 32;
+    public static final int HashPrime = 31;
 
     private SharedConstants() {}
 }

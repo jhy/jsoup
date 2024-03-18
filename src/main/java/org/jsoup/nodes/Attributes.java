@@ -555,18 +555,32 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
-        OUTER: for (int i = 0; i < keys.length; i++) {
-            for (int j = i + 1; j < keys.length; j++) {
-                if (keys[j] == null)
-                    continue OUTER; // keys.length doesn't shrink when removing, so re-test
-                if ((preserve && keys[i].equals(keys[j])) || (!preserve && keys[i].equalsIgnoreCase(keys[j]))) {
-                    dupes++;
-                    remove(j);
-                    j--;
-                }
+
+        for (int i = 0; i < keys.length; i++) {
+            dupes += removeDuplicatesFrom(i, preserve);
+        }
+
+        return dupes;
+    }
+
+    private int removeDuplicatesFrom(int index, boolean preserve) {
+        int dupes = 0;
+
+        for (int j = index + 1; j < keys.length; j++) {
+            if (keys[j] == null)
+                break; // keys.length doesn't shrink when removing, so re-test
+
+            if (isDuplicate(keys[index], keys[j], preserve)) {
+                dupes++;
+                remove(j);
+                j--;
             }
         }
         return dupes;
+    }
+
+    private boolean isDuplicate(String key1, String key2, boolean preserve) {
+        return preserve ? key1.equals(key2) : key1.equalsIgnoreCase(key2);
     }
 
     private static class Dataset extends AbstractMap<String, String> {

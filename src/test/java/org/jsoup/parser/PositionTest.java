@@ -1,19 +1,9 @@
 package org.jsoup.parser;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.CDataNode;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.DataNode;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.DocumentType;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.LeafNode;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.Range;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
@@ -531,6 +521,35 @@ class PositionTest {
         Attribute attr2 = p.attribute("CLASSY");
         assertEquals("CLASSY=\"Tree\"", attr2.html());
         assertEquals(expectedRange, attr2.sourceRange().toString());
+    }
+
+    @Test void hashCodeShouldBeConsistentWithEquals() {
+        String html = "<div one=\"Hello\nthere\" \nid=1 \nclass=\nfoo\nattr5 data-custom=\"123\">Text";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+
+        Element div = doc.expectFirst("div");
+
+        Range.AttributeRange classAttributeRange = div.attributes().sourceRange("class");
+        int classAttributeNameRangeHash = classAttributeRange.nameRange().hashCode();
+        int classAttributeValueRangeHash = classAttributeRange.valueRange().hashCode();
+
+        Range.AttributeRange customAttributeRange = div.attributes().sourceRange("data-custom");
+        int customAttributeRangeNameRangeHash = customAttributeRange.nameRange().hashCode();
+        int customAttributeRangeValueRangeHash = customAttributeRange.valueRange().hashCode();
+
+
+        assertEquals(31 * classAttributeNameRangeHash + classAttributeValueRangeHash, classAttributeRange.hashCode());
+        assertEquals(31 * customAttributeRangeNameRangeHash + customAttributeRangeValueRangeHash, customAttributeRange.hashCode());
+    }
+
+    @Test public void formDataWithNoSelectedOption() {
+        String html = "<form><select name='foo'><option value='one'><option value='two'><option value='three'></form>";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement) doc.select("form").first();
+        List<Connection.KeyVal> data = form.formData();
+
+        assertEquals(1, data.size());
+        assertEquals("foo=one", data.get(0).toString());
     }
 
     static void accumulateAttributePositions(Node node, StringBuilder sb) {
