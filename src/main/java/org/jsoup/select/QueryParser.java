@@ -431,6 +431,7 @@ interface CombinatorHandler {
 }
 
 class GreaterThanHandler implements CombinatorHandler {
+    @Override
     public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
         ImmediateParentRun run = currentEval instanceof ImmediateParentRun ?
                 (ImmediateParentRun) currentEval : new ImmediateParentRun(currentEval);
@@ -440,24 +441,28 @@ class GreaterThanHandler implements CombinatorHandler {
 }
 
 class SpaceHandler implements CombinatorHandler {
+    @Override
     public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
         return new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
     }
 }
 
 class PlusHandler implements CombinatorHandler {
+    @Override
     public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
         return new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
     }
 }
 
 class TildeHandler implements CombinatorHandler {
+    @Override
     public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
         return new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
     }
 }
 
 class CommaHandler implements CombinatorHandler {
+    @Override
     public Evaluator handle(Evaluator currentEval, Evaluator newEval) {
         CombiningEvaluator.Or or;
         if (currentEval instanceof CombiningEvaluator.Or) {
