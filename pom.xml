@@ -56,8 +56,8 @@
           <execution>
             <id>compile-java-8</id>
             <configuration>
-              <source>1.8</source>
-              <target>1.8</target>
+              <source>17</source>
+              <target>17</target>
             </configuration>
           </execution>
           <!-- There is a JDK 9+ profile execution below, which adds multi-release=true and compiles module-info -->
