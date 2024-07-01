@@ -4,9 +4,17 @@
 
 ### Improvements
 
+* **Stream Parser**: A `StreamParser` provides a progressive parse of its input. As each `Element` is completed, it is
+  emitted via a `Stream` or `Iterator` interface. Elements returned will be complete with all their children, and an
+  (empty) next sibling, if applicable. Elements (or their children) may be removed from the DOM during the parse,
+  for e.g. to conserve memory, providing a mechanism to parse an input document that would otherwise be too large to fit
+  into memory, yet still providing a DOM interface to the document and its elements. Additionally, the parser provides
+  a `selectFirst(String query)` / `selectNext(String query)`, which will run the parser until a hit is found, at which
+  point the parse is suspended. It can be resumed via another `select()` call, or via the `stream()` or `iterator()`
+  methods. [2096](https://github.com/jhy/jsoup/pull/2096)
 * Added `Path` accepting parse methods: `Jsoup.parse(Path)`, `Jsoup.parse(path, charsetName, baseUri, parser)`,
   etc. [2055](https://github.com/jhy/jsoup/pull/2055)
-* Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()` 
+* Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()`
   method. [2105](https://github.com/jhy/jsoup/issues/2105)
 
 ### Changes
