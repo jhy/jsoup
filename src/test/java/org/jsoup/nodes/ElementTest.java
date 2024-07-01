@@ -220,6 +220,16 @@ public class ElementTest {
         assertEquals(".  ", p3.wholeText());
     }
 
+    @Test void buttonTextHasSpace() {
+        // https://github.com/jhy/jsoup/issues/2105
+        Document doc = Jsoup.parse("<html><button>Reply</button><button>All</button></html>");
+        String text = doc.body().text();
+        String wholetext = doc.body().wholeText();
+
+        assertEquals("Reply All", text);
+        assertEquals("ReplyAll", wholetext);
+    }
+
     @Test
     public void testGetSiblings() {
         Document doc = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>");

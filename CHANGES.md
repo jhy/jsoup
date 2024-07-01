@@ -6,6 +6,8 @@
 
 * Added `Path` accepting parse methods: `Jsoup.parse(Path)`, `Jsoup.parse(path, charsetName, baseUri, parser)`,
   etc. [2055](https://github.com/jhy/jsoup/pull/2055)
+* Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()` 
+  method. 
 
 ### Changes
 
