@@ -204,8 +204,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.3</version>
         <configuration>
-          <!-- smaller stack to find stack overflows -->
-          <argLine>-Xss256k</argLine>
+          <!-- smaller stack to find stack overflows. Was 256, but Zulu on MacOS ARM needs >= 640 -->
+          <argLine>-Xss640k</argLine>
         </configuration>
       </plugin>
       <plugin>
