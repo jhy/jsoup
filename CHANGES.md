@@ -13,6 +13,11 @@
 
 * Removed previously deprecated internal classes and methods. [2094](https://github.com/jhy/jsoup/pull/2094)
 
+### Bug Fixes
+
+* When tracking source positions, if the first node was a TextNode, its position was incorrectly set
+  to `-1.` [2106](https://github.com/jhy/jsoup/issues/2106)
+
 ---
 
 ## 1.17.2 (2023-Dec-29)
