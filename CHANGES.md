@@ -20,6 +20,7 @@
 ### Changes
 
 * Removed previously deprecated internal classes and methods. [2094](https://github.com/jhy/jsoup/pull/2094)
+* Build change: the built jar's OSGi manifest no longer imports itself. [2158](https://github.com/jhy/jsoup/issues/2158)
 
 ### Bug Fixes
 
