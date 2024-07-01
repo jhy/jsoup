@@ -17,6 +17,10 @@
 
 * When tracking source positions, if the first node was a TextNode, its position was incorrectly set
   to `-1.` [2106](https://github.com/jhy/jsoup/issues/2106)
+* When connecting (or redirecting) to URLs with characters such as `{`, `}` in the path, a Malformed URL exception would
+  be thrown (if in development), or the URL might otherwise not be escaped correctly (if in
+  production). The URL encoding process has been improved to handle these characters
+  correctly. [2142](https://github.com/jhy/jsoup/issues/2142)
 
 ---
 

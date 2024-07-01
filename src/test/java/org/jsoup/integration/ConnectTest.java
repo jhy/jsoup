@@ -859,6 +859,19 @@ public class ConnectTest {
         assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
 
+    @Test void willEscapePathInRedirect() throws IOException {
+        String append = "/Foo{bar}<>%/";
+        String url = EchoServlet.Url + append;
+        Document doc = Jsoup
+            .connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, url)
+            .get();
+
+        String path = ihVal("Path Info", doc);
+        assertEquals(append, path);
+        assertEquals("/EchoServlet/Foo%7Bbar%7D%3C%3E%25/", ihVal("Request URI", doc));
+    }
+
     /**
      Provides HTTP and HTTPS EchoServlet URLs
      */
