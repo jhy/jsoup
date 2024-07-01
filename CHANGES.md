@@ -21,6 +21,8 @@
   be thrown (if in development), or the URL might otherwise not be escaped correctly (if in
   production). The URL encoding process has been improved to handle these characters
   correctly. [2142](https://github.com/jhy/jsoup/issues/2142)
+* When using `W3CDom` with a custom output Document, a Null Pointer Exception would be
+  thrown. [2114](https://github.com/jhy/jsoup/pull/2114)
 
 ---
 
