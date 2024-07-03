@@ -593,6 +593,21 @@ public class SelectorTest {
         assertEquals("Two", divs.first().text());
     }
 
+    @Test public void testHasSibling() {
+        // https://github.com/jhy/jsoup/issues/2137
+        Document doc = Jsoup.parse("<h1 id=1>One</h1> <h2>Two</h2> <h1>Three</h1>");
+        Elements els = doc.select("h1:has(+h2)");
+        assertSelectedIds(els, "1");
+
+        els = doc.select("h1:has(~h1)");
+        assertSelectedIds(els, "1");
+
+        // nested with sibling
+        doc = Jsoup.parse("<div id=1><p><i>One</i><i>Two</p><p><i>Three</p></div> <div><p><i>Four</div>");
+        els = doc.select("div:has(p:has(i:has(~i)))");
+        assertSelectedIds(els, "1");
+    }
+
     @MultiLocaleTest
     public void testPseudoContains(Locale locale) {
         Locale.setDefault(locale);

@@ -32,6 +32,8 @@
   correctly. [2142](https://github.com/jhy/jsoup/issues/2142)
 * When using `W3CDom` with a custom output Document, a Null Pointer Exception would be
   thrown. [2114](https://github.com/jhy/jsoup/pull/2114)
+* The `:has()` selector did not match correctly when using sibling combinators (like
+  e.g.: `h1:has(+h2)`). [2137](https://github.com/jhy/jsoup/issues/2137)
 
 ---
 

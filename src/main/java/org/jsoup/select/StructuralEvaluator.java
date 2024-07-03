@@ -55,20 +55,42 @@ abstract class StructuralEvaluator extends Evaluator {
             ThreadLocal.withInitial(() -> new NodeIterator<>(new Element("html"), Element.class));
         // the element here is just a placeholder so this can be final - gets set in restart()
 
+        private final boolean checkSiblings; // evaluating against siblings (or children)
+
         public Has(Evaluator evaluator) {
             super(evaluator);
+            checkSiblings = evalWantsSiblings(evaluator);
         }
 
         @Override public boolean matches(Element root, Element element) {
-            // for :has, we only want to match children (or below), not the input element. And we want to minimize GCs
-            NodeIterator<Element> it = ThreadElementIter.get();
+            if (checkSiblings) { // evaluating against siblings
+                for (Element sib = element.firstElementSibling(); sib != null; sib = sib.nextElementSibling()) {
+                    if (sib != element && evaluator.matches(element, sib)) { // don't match against self
+                        return true;
+                    }
+                }
+            } else {
+                // otherwise we only want to match children (or below), and not the input element. And we want to minimize GCs so reusing the Iterator obj
+                NodeIterator<Element> it = ThreadElementIter.get();
+                it.restart(element);
+                while (it.hasNext()) {
+                    Element el = it.next();
+                    if (el == element) continue; // don't match self, only descendants
+                    if (evaluator.matches(element, el))
+                        return true;
+                }
+            }
+            return false;
+        }
 
-            it.restart(element);
-            while (it.hasNext()) {
-                Element el = it.next();
-                if (el == element) continue; // don't match self, only descendants
-                if (evaluator.matches(element, el))
-                    return true;
+        /* Test if the :has sub-clause wants sibling elements (vs nested elements) - will be a Combining eval */
+        private static boolean evalWantsSiblings(Evaluator eval) {
+            if (eval instanceof CombiningEvaluator) {
+                CombiningEvaluator ce = (CombiningEvaluator) eval;
+                for (Evaluator innerEval : ce.evaluators) {
+                    if (innerEval instanceof PreviousSibling || innerEval instanceof ImmediatePreviousSibling)
+                        return true;
+                }
             }
             return false;
         }
