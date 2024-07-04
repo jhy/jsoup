@@ -74,7 +74,7 @@ import java.util.IdentityHashMap;
  * <tr><td><code>:last-of-type</code></td><td>elements that are the last sibling of its type in the list of children of its parent element</td><td><code>tr {@literal >} td:last-of-type</code></td></tr>
  * <tr><td><code>:only-child</code></td><td>elements that have a parent element and whose parent element have no other element children</td><td></td></tr>
  * <tr><td><code>:only-of-type</code></td><td> an element that has a parent element and whose parent element has no other element children with the same expanded element name</td><td></td></tr>
- * <tr><td><code>:empty</code></td><td>elements that have no children at all</td><td></td></tr>
+ * <tr><td><code>:empty</code></td><td>elements that contain no child elements or nodes, with the exception of blank text nodes, comments, XML declarations, and doctype declarations. In other words, it matches elements that are effectively empty of meaningful content.</td><td><code>li:not(:empty)</code></td></tr>
  * </table>
  *
  * <p>A word on using regular expressions in these selectors: depending on the content of the regex, you will need to quote the pattern using <b><code>Pattern.quote("regex")</code></b> for it to parse correctly through both the selector parser and the regex parser. E.g. <code>String query = "div:matches(" + Pattern.quote(regex) + ");"</code>.</p>

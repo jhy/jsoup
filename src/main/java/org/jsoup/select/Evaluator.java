@@ -717,21 +717,22 @@ public abstract class Evaluator {
     }
 
     public static final class IsEmpty extends Evaluator {
-		@Override
-		public boolean matches(Element root, Element element) {
-        	List<Node> family = element.childNodes();
-            for (Node n : family) {
-                if (n instanceof TextNode)
-                    return ((TextNode)n).isBlank();
-                if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
-                    return false;
+        @Override
+        public boolean matches(Element root, Element el) {
+            for (Node n = el.firstChild(); n != null; n = n.nextSibling()) {
+                if (n instanceof TextNode) {
+                    if (!((TextNode) n).isBlank())
+                        return false; // non-blank text: not empty
+                } else if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType))
+                    return false; // non "blank" element: not empty
             }
-        	return true;
-		}
-    	@Override
-    	public String toString() {
-    		return ":empty";
-    	}
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return ":empty";
+        }
     }
 
     /**

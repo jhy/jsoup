@@ -1175,6 +1175,26 @@ public class SelectorTest {
         assertSelectedIds(notEmpty, "4", "5");
     }
 
+    @Test
+    public void emptyPseudo() {
+        // https://github.com/jhy/jsoup/issues/2130
+        String html = "<ul>" +
+            "  <li id='1'>\n </li>" + // Blank text node only
+            "  <li id='2'></li>" + // No nodes
+            "  <li id='3'><!-- foo --></li>" + // Comment node only
+            "  <li id='4'>One</li>" + // Text node with content
+            "  <li id='5'><span></span></li>" + // Element node
+            "  <li id='6'>\n <span></span></li>" + // Blank text node followed by an element
+            "  <li id='7'><!-- foo --><i></i></li>" + // Comment node with element
+            "</ul>";
+        Document doc = Jsoup.parse(html);
+        Elements empty = doc.select("li:empty");
+        assertSelectedIds(empty, "1", "2", "3");
+
+        Elements notEmpty = doc.select("li:not(:empty)");
+        assertSelectedIds(notEmpty, "4", "5", "6", "7");
+    }
+
     @Test public void parentFromSpecifiedDescender() {
         // https://github.com/jhy/jsoup/issues/2018
         String html = "<ul id=outer><li>Foo</li><li>Bar <ul id=inner><li>Baz</li><li>Qux</li></ul> </li></ul>";

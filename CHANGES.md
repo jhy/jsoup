@@ -34,6 +34,8 @@
   thrown. [2114](https://github.com/jhy/jsoup/pull/2114)
 * The `:has()` selector did not match correctly when using sibling combinators (like
   e.g.: `h1:has(+h2)`). [2137](https://github.com/jhy/jsoup/issues/2137)
+* The `:empty` selector incorrectly matched elements that started with a blank text node and were followed by 
+  non-empty nodes, due to an incorrect short-circuit. [2130](https://github.com/jhy/jsoup/issues/2130) 
 
 ---
 
