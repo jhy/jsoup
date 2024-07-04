@@ -24,8 +24,9 @@ import java.util.IdentityHashMap;
  * <tr><th align="left">Pattern</th><th align="left">Matches</th><th align="left">Example</th></tr>
  * <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
  * <tr><td><code>tag</code></td><td>elements with the given tag name</td><td><code>div</code></td></tr>
- * <tr><td><code>*|E</code></td><td>elements of type E in any namespace (including non-namespaced)</td><td><code>*|name</code> finds <code>&lt;fb:name&gt;</code> and <code>&lt;name&gt;</code> elements</td></tr>
- * <tr><td><code>ns|E</code></td><td>elements of type E in the namespace <i>ns</i></td><td><code>fb|name</code> finds <code>&lt;fb:name&gt;</code> elements</td></tr>
+ * <tr><td><code>*|E</code></td><td>elements of type E in any namespace (including non-namespaced)</td><td><code>*|name</code> finds <code>&lt;dc:name&gt;</code> and <code>&lt;name&gt;</code> elements</td></tr>
+ * <tr><td><code>ns|E</code></td><td>elements of type E in the namespace <i>ns</i></td><td><code>dc|name</code> finds <code>&lt;dc:name&gt;</code> elements</td></tr>
+ * <tr><td><code>ns|*</code></td><td>all elements in the namespace <i>ns</i></td><td><code>dc|*</code> finds <code>&lt;dc:p&gt;</code> and <code>&lt;dc:img&gt;</code>elements</td></tr>
  * <tr><td><code>#id</code></td><td>elements with attribute ID of "id"</td><td><code>div#wrap</code>, <code>#logo</code></td></tr>
  * <tr><td><code>.class</code></td><td>elements with a class name of "class"</td><td><code>div.left</code>, <code>.result</code></td></tr>
  * <tr><td><code>[attr]</code></td><td>elements with an attribute named "attr" (with any value)</td><td><code>a[href]</code>, <code>[title]</code></td></tr>

@@ -344,7 +344,7 @@ public class TokenQueue {
     public String consumeElementSelector() {
         return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
-    private static final String[] ElementSelectorChars = {"*|", "|", "_", "-"};
+    private static final String[] ElementSelectorChars = {"*", "|", "_", "-"};
 
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)

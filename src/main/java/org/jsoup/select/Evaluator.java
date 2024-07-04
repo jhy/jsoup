@@ -87,9 +87,30 @@ public abstract class Evaluator {
         }
     }
 
+    /**
+     * Evaluator for tag name that starts with prefix; used for ns|*
+     */
+    public static final class TagStartsWith extends Evaluator {
+        private final String tagName;
+
+        public TagStartsWith(String tagName) {
+            this.tagName = tagName;
+        }
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            return (element.normalName().startsWith(tagName));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%s", tagName);
+        }
+    }
+
 
     /**
-     * Evaluator for tag name that ends with
+     * Evaluator for tag name that ends with suffix; used for *|el
      */
     public static final class TagEndsWith extends Evaluator {
         private final String tagName;

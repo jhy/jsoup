@@ -177,6 +177,13 @@ public class SelectorTest {
         assertSelectedIds(byContains, "1", "2");
     }
 
+    @Test public void testNamespacedWildcardTag() {
+        // https://github.com/jhy/jsoup/issues/1811
+        Document doc = Jsoup.parse("<p>One</p> <ac:p id=2>Two</ac:p> <ac:img id=3>Three</ac:img>");
+        Elements byNs = doc.select("ac|*");
+        assertSelectedIds(byNs, "2", "3");
+    }
+
     @Test public void testWildcardNamespacedXmlTag() {
         Document doc = Jsoup.parse(
             "<div><Abc:Def id=1>Hello</Abc:Def></div> <Abc:Def class=bold id=2>There</abc:def>",

@@ -16,6 +16,7 @@
   etc. [2055](https://github.com/jhy/jsoup/pull/2055)
 * Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()`
   method. [2105](https://github.com/jhy/jsoup/issues/2105)
+* Added support for the `ns|*` all elements in namespace Selector. [1811](https://github.com/jhy/jsoup/issues/1811)
 
 ### Changes
 

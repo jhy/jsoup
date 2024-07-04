@@ -272,11 +272,13 @@ public class QueryParser {
                 new Evaluator.Tag(plainTag),
                 new Evaluator.TagEndsWith(tagName.replace("*|", ":"))
             );
+        } else if (tagName.endsWith("|*")){ // ns|*
+            String ns = tagName.substring(0, tagName.length() -2 ) + ":"; // strip |*, to ns:
+            eval = new Evaluator.TagStartsWith(ns);
         } else {
             // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
             if (tagName.contains("|"))
                 tagName = tagName.replace("|", ":");
-
             eval = new Evaluator.Tag(tagName);
         }
         return eval;
