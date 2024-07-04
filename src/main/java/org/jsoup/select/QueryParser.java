@@ -263,25 +263,22 @@ public class QueryParser {
         // consistency - both the selector and the element tag
         String tagName = normalize(tq.consumeElementSelector());
         Validate.notEmpty(tagName);
-        final Evaluator eval;
 
-        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
-        if (tagName.startsWith("*|")) {
+        // namespaces:
+        if (tagName.startsWith("*|")) { // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
             String plainTag = tagName.substring(2); // strip *|
-            eval = new CombiningEvaluator.Or(
+            return new CombiningEvaluator.Or(
                 new Evaluator.Tag(plainTag),
-                new Evaluator.TagEndsWith(tagName.replace("*|", ":"))
+                new Evaluator.TagEndsWith(":" + plainTag)
             );
-        } else if (tagName.endsWith("|*")){ // ns|*
-            String ns = tagName.substring(0, tagName.length() -2 ) + ":"; // strip |*, to ns:
-            eval = new Evaluator.TagStartsWith(ns);
-        } else {
-            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
-            if (tagName.contains("|"))
-                tagName = tagName.replace("|", ":");
-            eval = new Evaluator.Tag(tagName);
+        } else if (tagName.endsWith("|*")) { // ns|*
+            String ns = tagName.substring(0, tagName.length() - 2) + ":"; // strip |*, to ns:
+            return new Evaluator.TagStartsWith(ns);
+        } else if (tagName.contains("|")) { // flip "abc|def" to "abc:def"
+            tagName = tagName.replace("|", ":");
         }
-        return eval;
+
+        return new Evaluator.Tag(tagName);
     }
 
     private Evaluator byAttribute() {
