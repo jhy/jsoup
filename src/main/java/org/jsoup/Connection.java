@@ -47,7 +47,17 @@ public interface Connection {
      * GET and POST http methods.
      */
     enum Method {
-        GET(false), POST(true), PUT(true), DELETE(true), PATCH(true), HEAD(false), OPTIONS(false), TRACE(false);
+        GET(false),
+        POST(true),
+        PUT(true),
+        DELETE(true),
+        /**
+         Note that unfortunately, PATCH is not supported in many JDKs.
+         */
+        PATCH(true),
+        HEAD(false),
+        OPTIONS(false),
+        TRACE(false);
 
         private final boolean hasBody;
 
