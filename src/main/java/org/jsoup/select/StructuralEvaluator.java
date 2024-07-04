@@ -156,13 +156,11 @@ abstract class StructuralEvaluator extends Evaluator {
             if (root == element)
                 return false;
 
-            Element parent = element.parent();
-            while (parent != null) {
+            for (Element parent = element.parent(); parent != null; parent = parent.parent()) {
                 if (memoMatches(root, parent))
                     return true;
                 if (parent == root)
                     break;
-                parent = parent.parent();
             }
             return false;
         }
@@ -230,11 +228,9 @@ abstract class StructuralEvaluator extends Evaluator {
         public boolean matches(Element root, Element element) {
             if (root == element) return false;
 
-            Element sibling = element.firstElementSibling();
-            while (sibling != null) {
-                if (sibling == element) break;
-                if (memoMatches(root, sibling)) return true;
-                sibling = sibling.nextElementSibling();
+            for (Element sib = element.firstElementSibling(); sib != null; sib = sib.nextElementSibling()) {
+                if (sib == element) break;
+                if (memoMatches(root, sib)) return true;
             }
 
             return false;
