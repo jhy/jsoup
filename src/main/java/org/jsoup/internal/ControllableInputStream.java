@@ -1,7 +1,8 @@
 package org.jsoup.internal;
 
-import org.jsoup.helper.DataUtil;
+import org.jsoup.Progress;
 import org.jsoup.helper.Validate;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +28,12 @@ public class ControllableInputStream extends FilterInputStream {
     private int remaining;
     private int markPos;
     private boolean interrupted;
+
+    // if we are tracking progress, will have the expected content length, progress callback, connection
+    private @Nullable Progress<?> progress;
+    private @Nullable Object progressContext;
+    private int contentLength = -1;
+    private int readPos = 0; // amount read; can be reset()
 
     private ControllableInputStream(BufferedInputStream in, int maxSize) {
         super(in);
@@ -57,6 +64,8 @@ public class ControllableInputStream extends FilterInputStream {
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
+        if (readPos == 0) emitProgress(); // emits a progress
+        
         if (interrupted || capped && remaining <= 0)
             return -1;
         if (Thread.currentThread().isInterrupted()) {
@@ -72,7 +81,14 @@ public class ControllableInputStream extends FilterInputStream {
 
         try {
             final int read = super.read(b, off, len);
-            remaining -= read;
+            if (read == -1) { // completed
+                contentLength = readPos;
+            } else {
+                remaining -= read;
+                readPos += read;
+            }
+            emitProgress();
+
             return read;
         } catch (SocketTimeoutException e) {
             if (expired())
@@ -114,6 +130,7 @@ public class ControllableInputStream extends FilterInputStream {
     @Override public void reset() throws IOException {
         super.reset();
         remaining = maxSize - markPos;
+        readPos = markPos; // readPos is used for progress emits
     }
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
@@ -125,6 +142,24 @@ public class ControllableInputStream extends FilterInputStream {
     public ControllableInputStream timeout(long startTimeNanos, long timeoutMillis) {
         this.startTime = startTimeNanos;
         this.timeout = timeoutMillis * 1000000;
+        return this;
+    }
+
+    private void emitProgress() {
+        if (progress == null) return;
+        // calculate percent complete if contentLength > 0 (and cap to 100.0 if totalRead > contentLength):
+        float percent = contentLength > 0 ? Math.min(100f, readPos * 100f / contentLength) : 0;
+        //noinspection unchecked
+        ((Progress<Object>) progress).onProgress(readPos, contentLength, percent, progressContext); // (not actually unchecked - verified when set)
+        if (percent == 100.0f) progress = null; // detach once we reach 100%, so that any subsequent buffer hits don't report 100 again
+    }
+
+    public <ProgressContext> ControllableInputStream onProgress(int contentLength, Progress<ProgressContext> callback, ProgressContext context) {
+        Validate.notNull(callback);
+        Validate.notNull(context);
+        this.contentLength = contentLength;
+        this.progress = callback;
+        this.progressContext = context;
         return this;
     }
 
