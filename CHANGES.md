@@ -12,6 +12,9 @@
   a `selectFirst(String query)` / `selectNext(String query)`, which will run the parser until a hit is found, at which
   point the parse is suspended. It can be resumed via another `select()` call, or via the `stream()` or `iterator()`
   methods. [2096](https://github.com/jhy/jsoup/pull/2096)
+* **Download Progress**: added a Response Progress event interface, which reports progress and URLs are downloaded (and
+  parsed). Supported on both a session and a single connection
+  level. [2164](https://github.com/jhy/jsoup/pull/2164), [656](https://github.com/jhy/jsoup/issues/656)
 * Added `Path` accepting parse methods: `Jsoup.parse(Path)`, `Jsoup.parse(path, charsetName, baseUri, parser)`,
   etc. [2055](https://github.com/jhy/jsoup/pull/2055)
 * Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()`
