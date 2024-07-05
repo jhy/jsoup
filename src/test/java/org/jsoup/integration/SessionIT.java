@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,6 +105,57 @@ public class SessionIT {
         // only one should have passed, rest should have blown up (assuming the started whilst other was running)
         assertEquals(numThreads - 1, catcher.multiThreadExceptions.get());
         assertEquals(numThreads - 1, catcher.exceptionCount.get());
+    }
+
+    @Test
+    public void multiThreadWithProgressListener() throws InterruptedException {
+        // tests that we can use one progress listener for multiple URLs and threads.
+        int numThreads = 10;
+        String[] urls = {
+            FileServlet.urlTo("/htmltests/medium.html"),
+            FileServlet.urlTo("/htmltests/upload-form.html"),
+            FileServlet.urlTo("/htmltests/comments.html"),
+            FileServlet.urlTo("/htmltests/large.html"),
+        };
+        Set<String> seenUrls = ConcurrentHashMap.newKeySet();
+        AtomicInteger completedCount = new AtomicInteger(0);
+        ThreadCatcher catcher = new ThreadCatcher();
+
+        Connection session = Jsoup.newSession()
+            .onResponseProgress((processed, total, percent, response) -> {
+                if (percent == 100.0f) {
+                    //System.out.println("Completed " + Thread.currentThread().getName() + "- " + response.url());
+                    seenUrls.add(response.url().toExternalForm());
+                    completedCount.incrementAndGet();
+                }
+            });
+
+        Thread[] threads = new Thread[numThreads];
+        for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+            Thread thread = new Thread(() -> {
+                for (String url : urls) {
+                    try {
+                        Connection con = session.newRequest().url(url);
+                        con.get();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+            });
+            thread.setName("Runner-" + threadNum);
+            thread.start();
+            thread.setUncaughtExceptionHandler(catcher);
+            threads[threadNum] = thread;
+        }
+
+        // now join them all
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        assertEquals(0, catcher.exceptionCount.get());
+        assertEquals(urls.length, seenUrls.size());
+        assertEquals(urls.length * numThreads, completedCount.get());
     }
 
 

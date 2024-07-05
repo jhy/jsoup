@@ -150,7 +150,8 @@ public class ControllableInputStream extends FilterInputStream {
         // calculate percent complete if contentLength > 0 (and cap to 100.0 if totalRead > contentLength):
         float percent = contentLength > 0 ? Math.min(100f, readPos * 100f / contentLength) : 0;
         //noinspection unchecked
-        ((Progress<Object>) progress).onProgress(readPos, contentLength, percent, progressContext); // (not actually unchecked -
+        ((Progress<Object>) progress).onProgress(readPos, contentLength, percent, progressContext); // (not actually unchecked - verified when set)
+        if (percent == 100.0f) progress = null; // detach once we reach 100%, so that any subsequent buffer hits don't report 100 again
     }
 
     public <ProgressContext> ControllableInputStream onProgress(int contentLength, Progress<ProgressContext> callback, ProgressContext context) {
