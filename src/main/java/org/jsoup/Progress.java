@@ -7,8 +7,8 @@ public interface Progress<ProgressContext> {
      don't take to long, or hand it off to another thread.
      @param processed the number of bytes processed so far.
      @param total the total number of expected bytes, or -1 if unknown.
-     @param percent the percentage of completion, 0.0..100.0. If the expected total is unknown, % will remain at zero until complete.
-     until completion.
+     @param percent the percentage of completion, 0.0..100.0. If the expected total is unknown, % will remain at zero
+     until complete.
      @param context the object that progress was made on.
      */
     void onProgress(int processed, int total, float percent, ProgressContext context);

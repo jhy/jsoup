@@ -974,7 +974,7 @@ public class ConnectTest {
                 String contentLength = response.header("Content-Length");
                 if (knownContentLength) {
                     assertNotNull(contentLength);
-                    assertEquals(LargeDocFileLen, Integer.parseInt(contentLength));
+                    assertEquals(String.valueOf(LargeDocFileLen), contentLength);
                 } else {
                     assertNull(contentLength);
                 }
