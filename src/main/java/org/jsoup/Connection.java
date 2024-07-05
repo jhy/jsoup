@@ -477,6 +477,15 @@ public interface Connection {
     Connection response(Response response);
 
     /**
+     Set the response progress handler, which will be called as the response body is downloaded. As documents are parsed
+     as they are downloaded, this is also a good proxy for the parse progress.
+     <p>The Response is supplied as the progress context and may be read from to obtain headers etc.</p>
+     @param handler the progress handler
+     @return this Connection, for chaining
+     */
+    Connection onResponseProgress(Progress<Response> handler);
+
+    /**
      * Common methods for Requests and Responses
      * @param <T> Type of Base, either Request or Response
      */
