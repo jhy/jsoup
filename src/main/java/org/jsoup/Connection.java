@@ -483,7 +483,9 @@ public interface Connection {
      @param handler the progress handler
      @return this Connection, for chaining
      */
-    Connection onResponseProgress(Progress<Response> handler);
+    default Connection onResponseProgress(Progress<Response> handler) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Common methods for Requests and Responses
