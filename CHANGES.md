@@ -40,8 +40,14 @@
   e.g.: `h1:has(+h2)`). [2137](https://github.com/jhy/jsoup/issues/2137)
 * The `:empty` selector incorrectly matched elements that started with a blank text node and were followed by 
   non-empty nodes, due to an incorrect short-circuit. [2130](https://github.com/jhy/jsoup/issues/2130) 
-* `Element.cssSelector()` would fail with "Did not find balanced marker" when building a selector for elements that had a `(` or `[` in their class names. And selectors with those characters escaped would not match as expected. [2146](https://github.com/jhy/jsoup/issues/2146)
-* Fuzz: a Stack Overflow exception could occur when resolving a crafted `<base href>` URL, in the normalizing regex. 
+* `Element.cssSelector()` would fail with "Did not find balanced marker" when building a selector for elements that had
+  a `(` or `[` in their class names. And selectors with those characters escaped would not match as
+  expected. [2146](https://github.com/jhy/jsoup/issues/2146)
+* Updated `Entities.escape(string)` to make the escaped text suitable for both text nodes and attributes (previously was
+  only for text nodes). This does not impact the output of `Element.html()` which correctly applies a minimal escape
+  depending on if the use will be for text data or in a quoted
+  attribute. [1278](https://github.com/jhy/jsoup/issues/1278)
+* Fuzz: a Stack Overflow exception could occur when resolving a crafted `<base href>` URL, in the normalizing regex.
   [2165](https://github.com/jhy/jsoup/issues/2165)
 
 ---
