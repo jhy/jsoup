@@ -2612,6 +2612,30 @@ public class ElementTest {
         assertEquals(element, elements.first());
     }
 
+    @Test void cssSelectorWithBracket() {
+        // https://github.com/jhy/jsoup/issues/2146
+        Document doc = Jsoup.parse("<div class='a[foo]'>One</div><div class='b[bar]'>Two</div>");
+        Element div = doc.expectFirst("div");
+        String selector = div.cssSelector();
+        assertEquals("html > body > div.a\\[foo\\]", selector); // would fail with "Did not find balanced marker", consumeSubquery was not handling escapes
+
+        Elements selected = doc.select(selector);
+        assertEquals(1, selected.size());
+        assertEquals(selected.first(), div);
+    }
+
+    @Test void cssSelectorUnbalanced() {
+        // https://github.com/jhy/jsoup/issues/2146
+        Document doc = Jsoup.parse("<div class='a(foo'>One</div><div class='a-bar'>Two</div>");
+        Element div = doc.expectFirst("div");
+        String selector = div.cssSelector();
+        assertEquals("html > body > div.a\\(foo", selector);
+
+        Elements selected = doc.select(selector);
+        assertEquals(1, selected.size());
+        assertEquals(selected.first(), div);
+    }
+
     @Test void orphanSiblings() {
         Element el = new Element("div");
         assertEquals(0, el.siblingElements().size());
