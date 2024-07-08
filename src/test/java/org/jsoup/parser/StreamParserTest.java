@@ -353,7 +353,7 @@ class StreamParserTest {
 
         Connection con = Jsoup.connect(url)
             .onResponseProgress((processed, total, percent, response) -> {
-                System.out.println("Processed: " + processed + " Total: " + total + " Percent: " + percent);
+                //System.out.println("Processed: " + processed + " Total: " + total + " Percent: " + percent);
                 seenPercent.set(percent);
             });
 
