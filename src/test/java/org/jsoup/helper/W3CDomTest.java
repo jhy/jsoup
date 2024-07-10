@@ -151,7 +151,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body name=\"\" style=\"color: red\"/></html>", xml);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body _=\"\" name_=\"\" style=\"color: red\"/></html>", xml);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
-        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hnh=\"2\">unicode attr names coerced</p></body></html>";
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p h_nh=\"2\">unicode attr names coerced</p></body></html>";
         assertEquals(expected, TextUtil.stripNewlines(out));
     }
 

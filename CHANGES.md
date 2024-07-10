@@ -20,6 +20,9 @@
 * Updated the `button` tag configuration to include a space between multiple button elements in the `Element.text()`
   method. [2105](https://github.com/jhy/jsoup/issues/2105)
 * Added support for the `ns|*` all elements in namespace Selector. [1811](https://github.com/jhy/jsoup/issues/1811)
+* When normalising attribute names during serialization, invalid characters are now replaced with `_`, vs being
+  stripped. This should make the process clearer, and generally prevent an invalid attribute name being coerced
+  unexpectedly. [2143](https://github.com/jhy/jsoup/issues/2143)
 
 ### Changes
 
