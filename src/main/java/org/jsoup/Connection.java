@@ -477,11 +477,12 @@ public interface Connection {
     Connection response(Response response);
 
     /**
-     Set the response progress handler, which will be called as the response body is downloaded. As documents are parsed
-     as they are downloaded, this is also a good proxy for the parse progress.
-     <p>The Response is supplied as the progress context and may be read from to obtain headers etc.</p>
+     Set the response progress handler, which will be called periodically as the response body is downloaded. Since
+     documents are parsed as they are downloaded, this is also a good proxy for the parse progress.
+     <p>The Response object is supplied as the progress context, and may be read from to obtain headers etc.</p>
      @param handler the progress handler
      @return this Connection, for chaining
+     @since 1.18.1
      */
     default Connection onResponseProgress(Progress<Response> handler) {
         throw new UnsupportedOperationException();
