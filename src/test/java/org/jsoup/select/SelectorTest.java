@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SelectorTest {
 
     /** Test that the selected elements match exactly the specified IDs. */
-    static void assertSelectedIds(Elements els, String... ids) {
+    public static void assertSelectedIds(Elements els, String... ids) {
         assertNotNull(els);
         assertEquals(ids.length, els.size(), "Incorrect number of selected elements");
         for (int i = 0; i < ids.length; i++) {

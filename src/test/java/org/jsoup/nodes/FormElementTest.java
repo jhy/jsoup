@@ -7,6 +7,7 @@ import org.jsoup.integration.servlets.CookieServlet;
 import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.select.Elements;
+import org.jsoup.select.SelectorTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -210,5 +211,18 @@ public class FormElementTest {
         assertTrue(cookieDoc.connection().response().url().toExternalForm().contains("CookieServlet"));
         assertTrue(formDoc.connection().response().url().toExternalForm().contains("upload-form"));
         assertTrue(echo.connection().response().url().toExternalForm().contains("EchoServlet"));
+    }
+
+    @Test void formElementsAreLive() {
+        final String html = "<html><body><form><div id=d1><input id=foo name=foo value=none></div><input id=bar name=bar value=one></form></body></html>";
+        final Document doc = Jsoup.parse(html);
+        doc.select("#d1").remove();
+        final FormElement form = (FormElement) doc.selectFirst("form");
+        form.appendElement("input").attr("id", "baz").attr("name", "baz").attr("value", "two");
+        SelectorTest.assertSelectedIds(form.elements(), "bar", "baz");
+
+        List<Connection.KeyVal> keyVals = form.formData();
+        assertEquals("one", keyVals.get(0).value());
+        assertEquals("two", keyVals.get(1).value());
     }
 }

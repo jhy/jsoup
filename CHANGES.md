@@ -1,6 +1,12 @@
 # jsoup Changelog
 
-## 1.18.1 (Pending)
+## 1.18.2 (Pending)
+
+### Improvements
+* The form associated elements returned by `FormElement.elements()` now reflect changes made to the DOM, 
+  subsequently to the original parse. [2140](https://github.com/jhy/jsoup/issues/2140)
+
+## 1.18.1 (2024-Jul-10)
 
 ### Improvements
 

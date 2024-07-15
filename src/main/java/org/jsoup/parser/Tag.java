@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SharedConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -296,9 +297,7 @@ public class Tag implements Cloneable {
     private static final String[] formListedTags = {
             "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
-    private static final String[] formSubmitTags = {
-            "input", "keygen", "object", "select", "textarea"
-    };
+    private static final String[] formSubmitTags = SharedConstants.FormSubmitTags;
 
     private static final Map<String, String[]> namespaces = new HashMap<>();
     static {
