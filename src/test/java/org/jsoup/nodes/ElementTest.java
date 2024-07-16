@@ -2636,6 +2636,18 @@ public class ElementTest {
         assertEquals(selected.first(), div);
     }
 
+    @Test void cssSelectorWithAstrix() {
+        // https://github.com/jhy/jsoup/issues/2169
+        Document doc = Jsoup.parse("<div class='vds-items_flex-end [&amp;_>_*:first-child]:vds-pt_0'>One</div><div class='vds-items_flex-end'>Two</div>");
+        Element div = doc.expectFirst("div");
+        String selector = div.cssSelector();
+        assertEquals("html > body > div.vds-items_flex-end.\\[\\&_\\>_\\*\\:first-child\\]\\:vds-pt_0", selector);
+
+        Elements selected = doc.select(selector);
+        assertEquals(1, selected.size());
+        assertEquals(selected.first(), div);
+    }
+
     @Test void orphanSiblings() {
         Element el = new Element("div");
         assertEquals(0, el.siblingElements().size());
