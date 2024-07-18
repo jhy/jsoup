@@ -394,20 +394,11 @@ public class HttpConnection implements Connection {
     }
 
     @SuppressWarnings("unchecked")
-    private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
-        private static final URL UnsetUrl; // only used if you created a new Request()
-        static {
-            try {
-                UnsetUrl = new URL("http://undefined/");
-            } catch (MalformedURLException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        URL url = UnsetUrl;
-        Method method = Method.GET;
-        Map<String, List<String>> headers;
-        Map<String, String> cookies;
+    private abstract static class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
+        protected URL url;
+        protected Method method = Method.GET;
+        protected final Map<String, List<String>> headers;
+        protected final Map<String, String> cookies;
 
         private Base() {
             headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -426,7 +417,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public URL url() {
-            if (url == UnsetUrl)
+            if (url == null)
                 throw new IllegalArgumentException("URL not set. Make sure to call #url(...) before executing the request.");
             return url;
         }
@@ -590,7 +581,6 @@ public class HttpConnection implements Connection {
             maxBodySizeBytes = 1024 * 1024 * 2; // 2MB
             followRedirects = true;
             data = new ArrayList<>();
-            method = Method.GET;
             addHeader("Accept-Encoding", "gzip");
             addHeader(USER_AGENT, DEFAULT_UA);
             parser = Parser.htmlParser();
