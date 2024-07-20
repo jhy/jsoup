@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
+import org.jsoup.Progress;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ControllableInputStream;
@@ -43,7 +44,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -388,6 +388,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override public Connection onResponseProgress(Progress<Connection.Response> handler) {
+        req.responseProgress = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
         private static final URL UnsetUrl; // only used if you created a new Request()
@@ -607,6 +612,8 @@ public class HttpConnection implements Connection {
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
         private @Nullable RequestAuthenticator authenticator;
+        private @Nullable Progress<Connection.Response> responseProgress;
+
         private volatile boolean executing = false;
 
         Request() {
@@ -638,6 +645,7 @@ public class HttpConnection implements Connection {
             sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
             cookieManager = copy.cookieManager;
             authenticator = copy.authenticator;
+            responseProgress = copy.responseProgress;
             executing = false;
         }
 
@@ -909,6 +917,9 @@ public class HttpConnection implements Connection {
                     res.bodyStream = ControllableInputStream.wrap(
                         stream, SharedConstants.DefaultBufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout());
+
+                    if (req.responseProgress != null) // set response progress listener
+                        res.bodyStream.onProgress(conn.getContentLength(), req.responseProgress, res);
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }

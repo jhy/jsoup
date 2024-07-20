@@ -85,7 +85,7 @@ public class HtmlParserTest {
         // NOTE: per spec this should be the test case. but impacts too many ppl
         // assertEquals("<p =a>One<a <p>Something</a></p>\n<a <p>Else</a>", doc.body().html());
 
-        assertEquals("<p a>One<a></a></p><p><a>Something</a></p><a>Else</a>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p _a>One<a></a></p><p><a>Something</a></p><a>Else</a>", TextUtil.stripNewlines(doc.body().html()));
 
         doc = Jsoup.parse("<p .....>");
         assertEquals("<p .....></p>", doc.body().html());
@@ -1522,7 +1522,7 @@ public class HtmlParserTest {
         assertEquals(Document.OutputSettings.Syntax.html, doc.outputSettings().syntax());
 
         String out = doc.body().outerHtml();
-        assertEquals("<body style=\"color: red\" name>\n <div></div>\n</body>", out);
+        assertEquals("<body style=\"color: red\" _ name_>\n <div _></div>\n</body>", out);
     }
 
     @Test void templateInHead() {

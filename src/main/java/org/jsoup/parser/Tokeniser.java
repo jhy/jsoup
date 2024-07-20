@@ -50,7 +50,7 @@ final class Tokeniser {
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     private static final int Unset = -1;
-    private int markupStartPos, charStartPos = Unset; // reader pos at the start of markup / characters. updated on state transition
+    private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. updated on state transition. Initialized to start (0), but set to Unset after emissions.
 
     Tokeniser(TreeBuilder treeBuilder) {
         tagPending = startPending  = new Token.StartTag(treeBuilder);

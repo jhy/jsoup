@@ -168,24 +168,29 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         accum.append(key);
         if (!shouldCollapseAttribute(key, val, out)) {
             accum.append("=\"");
-            Entities.escape(accum, Attributes.checkNotNull(val) , out, true, false, false, false);
+            Entities.escape(accum, Attributes.checkNotNull(val) , out, false, true, false, false, false);
             accum.append('"');
         }
     }
 
     private static final Pattern xmlKeyValid = Pattern.compile("[a-zA-Z_:][-a-zA-Z0-9_:.]*");
-    private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]");
+    private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]+");
     private static final Pattern htmlKeyValid = Pattern.compile("[^\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
-    private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]");
+    private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
 
+    /**
+     * Get a valid attribute key for the given syntax. If the key is not valid, it will be coerced into a valid key.
+     * @param key the original attribute key
+     * @param syntax HTML or XML
+     * @return the original key if it's valid; a key with invalid characters replaced with "_" otherwise; or null if a valid key could not be created.
+     */
     @Nullable public static String getValidKey(String key, Syntax syntax) {
-        // we consider HTML attributes to always be valid. XML checks key validity
         if (syntax == Syntax.xml && !xmlKeyValid.matcher(key).matches()) {
-            key = xmlKeyReplace.matcher(key).replaceAll("");
+            key = xmlKeyReplace.matcher(key).replaceAll("_");
             return xmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
         }
         else if (syntax == Syntax.html && !htmlKeyValid.matcher(key).matches()) {
-            key = htmlKeyReplace.matcher(key).replaceAll("");
+            key = htmlKeyReplace.matcher(key).replaceAll("_");
             return htmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
         }
         return key;

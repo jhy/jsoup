@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -34,6 +35,7 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -47,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests Jsoup.connect against a local server.
  */
 public class ConnectTest {
+    private static final int LargeDocFileLen = 280735;
+    private static final int LargeDocTextLen = 269535;
     private static String echoUrl;
 
     @BeforeAll
@@ -746,7 +750,7 @@ public class ConnectTest {
         Connection.Response largeRes = Jsoup.connect(url).maxBodySize(300 * 1024).execute(); // does not crop
         Connection.Response unlimitedRes = Jsoup.connect(url).maxBodySize(0).execute();
 
-        int actualDocText = 269535;
+        int actualDocText = LargeDocTextLen;
         assertEquals(actualDocText, defaultRes.parse().text().length());
         assertEquals(49165, smallRes.parse().text().length());
         assertEquals(196577, mediumRes.parse().text().length());
@@ -859,6 +863,19 @@ public class ConnectTest {
         assertEquals("鍵=値", URLDecoder.decode(ihVal("Query String", doc), DataUtil.UTF_8.name()));
     }
 
+    @Test void willEscapePathInRedirect() throws IOException {
+        String append = "/Foo{bar}<>%/";
+        String url = EchoServlet.Url + append;
+        Document doc = Jsoup
+            .connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, url)
+            .get();
+
+        String path = ihVal("Path Info", doc);
+        assertEquals(append, path);
+        assertEquals("/EchoServlet/Foo%7Bbar%7D%3C%3E%25/", ihVal("Request URI", doc));
+    }
+
     /**
      Provides HTTP and HTTPS EchoServlet URLs
      */
@@ -931,4 +948,59 @@ public class ConnectTest {
     }
 
     // proxy connection tests are in ProxyTest
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/htmltests/large.html",
+        "/htmltests/large.html?" + FileServlet.SuppressContentLength
+    })
+    void progressListener(String path) throws IOException {
+        String url = FileServlet.urlTo(path);
+        boolean knownContentLength = !url.contains(FileServlet.SuppressContentLength);
+
+        AtomicBoolean seenProgress = new AtomicBoolean(false);
+        AtomicBoolean completed = new AtomicBoolean(false);
+        AtomicInteger numProgress = new AtomicInteger();
+
+        Connection con = Jsoup.connect(url).onResponseProgress((processed, total, percent, response) -> {
+            //System.out.println("Processed: " + processed + " of " + total + " (" + percent + "%)");
+            if (!seenProgress.get()) {
+                seenProgress.set(true);
+                assertEquals(0, processed);
+                assertEquals(knownContentLength ? LargeDocFileLen : -1, total);
+                assertEquals(0.0f, percent);
+
+                assertEquals(200, response.statusCode());
+                String contentLength = response.header("Content-Length");
+                if (knownContentLength) {
+                    assertNotNull(contentLength);
+                    assertEquals(String.valueOf(LargeDocFileLen), contentLength);
+                } else {
+                    assertNull(contentLength);
+                }
+                assertEquals(url, response.url().toExternalForm());
+            }
+            numProgress.getAndIncrement();
+
+            if (percent == 100.0f) {
+                // even if the content-length is not set, we get 100% when the read is completed
+                completed.set(true);
+                assertEquals(LargeDocFileLen, processed);
+            }
+
+        });
+        Document document = con.get();
+
+        assertTrue(seenProgress.get());
+        assertTrue(completed.get());
+
+        // should expect to see events relative to how large the buffer is.
+        int expected = LargeDocFileLen / 8192;
+        assertTrue(numProgress.get() > expected * 0.75);
+        assertTrue(numProgress.get() < expected * 1.25);
+
+        // check the document works
+        assertEquals(LargeDocTextLen, document.text().length());
+    }
 }
+

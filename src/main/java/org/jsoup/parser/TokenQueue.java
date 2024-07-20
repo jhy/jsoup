@@ -302,7 +302,7 @@ public class TokenQueue {
         StringBuilder out = StringUtil.borrowBuilder();
         TokenQueue q = new TokenQueue(in);
         while (!q.isEmpty()) {
-            if (q.matchesCssIdentifier(ElementSelectorChars)) {
+            if (q.matchesCssIdentifier(CssIdentifierChars)) {
                 out.append(q.consume());
             } else {
                 out.append(ESC).append(q.consume());
@@ -344,7 +344,7 @@ public class TokenQueue {
     public String consumeElementSelector() {
         return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
-    private static final String[] ElementSelectorChars = {"*|", "|", "_", "-"};
+    private static final String[] ElementSelectorChars = {"*", "|", "_", "-"};
 
     /**
      Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)

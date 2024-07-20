@@ -283,7 +283,7 @@ public final class StringUtil {
         return true;
     }
 
-    private static final Pattern extraDotSegmentsPattern = Pattern.compile("^/((\\.{1,2}/)+)");
+    private static final Pattern extraDotSegmentsPattern = Pattern.compile("^/(?>(?>\\.\\.?/)+)");
     /**
      * Create a new absolute URL, from a provided existing absolute URL and a relative URL component.
      * @param base the existing absolute base URL

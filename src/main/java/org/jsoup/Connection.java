@@ -47,7 +47,17 @@ public interface Connection {
      * GET and POST http methods.
      */
     enum Method {
-        GET(false), POST(true), PUT(true), DELETE(true), PATCH(true), HEAD(false), OPTIONS(false), TRACE(false);
+        GET(false),
+        POST(true),
+        PUT(true),
+        DELETE(true),
+        /**
+         Note that unfortunately, PATCH is not supported in many JDKs.
+         */
+        PATCH(true),
+        HEAD(false),
+        OPTIONS(false),
+        TRACE(false);
 
         private final boolean hasBody;
 
@@ -465,6 +475,18 @@ public interface Connection {
      * @return this Connection, for chaining
      */
     Connection response(Response response);
+
+    /**
+     Set the response progress handler, which will be called periodically as the response body is downloaded. Since
+     documents are parsed as they are downloaded, this is also a good proxy for the parse progress.
+     <p>The Response object is supplied as the progress context, and may be read from to obtain headers etc.</p>
+     @param handler the progress handler
+     @return this Connection, for chaining
+     @since 1.18.1
+     */
+    default Connection onResponseProgress(Progress<Response> handler) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Common methods for Requests and Responses
