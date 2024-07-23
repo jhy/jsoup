@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
+import org.jsoup.Progress;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ControllableInputStream;
@@ -10,16 +11,19 @@ import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.CookieManager;
@@ -40,7 +44,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -385,6 +388,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override public Connection onResponseProgress(Progress<Connection.Response> handler) {
+        req.responseProgress = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
         private static final URL UnsetUrl; // only used if you created a new Request()
@@ -604,6 +612,8 @@ public class HttpConnection implements Connection {
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
         private @Nullable RequestAuthenticator authenticator;
+        private @Nullable Progress<Connection.Response> responseProgress;
+
         private volatile boolean executing = false;
 
         Request() {
@@ -635,6 +645,7 @@ public class HttpConnection implements Connection {
             sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
             cookieManager = copy.cookieManager;
             authenticator = copy.authenticator;
+            responseProgress = copy.responseProgress;
             executing = false;
         }
 
@@ -906,6 +917,9 @@ public class HttpConnection implements Connection {
                     res.bodyStream = ControllableInputStream.wrap(
                         stream, SharedConstants.DefaultBufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout());
+
+                    if (req.responseProgress != null) // set response progress listener
+                        res.bodyStream.onProgress(conn.getContentLength(), req.responseProgress, res);
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -950,7 +964,8 @@ public class HttpConnection implements Connection {
             return contentType;
         }
 
-        public Document parse() throws IOException {
+        /** Called from parse() or streamParser(), validates and prepares the input stream, and aligns common settings. */
+        private InputStream prepareParse() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
             InputStream stream = bodyStream;
             if (byteData != null) { // bytes have been read in to the buffer, parse that
@@ -958,12 +973,36 @@ public class HttpConnection implements Connection {
                 inputStreamRead = false; // ok to reparse if in bytes
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
+            Validate.notNull(stream);
+            inputStreamRead = true;
+            return stream;
+        }
+
+        @Override public Document parse() throws IOException {
+            InputStream stream = prepareParse();
             Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
-            inputStreamRead = true;
             safeClose();
             return doc;
+        }
+
+        @Override public StreamParser streamParser() throws IOException {
+            InputStream stream = prepareParse();
+            String baseUri = url.toExternalForm();
+            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
+            // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
+
+            // set up the stream parser and rig this connection up to the parsed doc:
+            StreamParser streamer = new StreamParser(req.parser());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charsetDoc.charset));
+            DataUtil.maybeSkipBom(reader, charsetDoc);
+            streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+            streamer.document().connection(new HttpConnection(req, this));
+            charset = charsetDoc.charset.name();
+
+            // we don't safeClose() as in parse(); caller must close streamParser to close InputStream stream
+            return streamer;
         }
 
         private void prepareByteData() {

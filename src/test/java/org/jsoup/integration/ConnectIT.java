@@ -7,10 +7,12 @@ import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.StreamParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -134,6 +136,52 @@ public class ConnectIT {
 
         Element h1 = doc.selectFirst("h1");
         assertEquals("outatime", h1.text());
+    }
+
+    @Test void streamParserUncheckedExceptionOnTimeoutInStream() throws IOException {
+        boolean caught = false;
+        try (StreamParser streamParser = Jsoup.connect(SlowRider.Url)
+            .data(SlowRider.MaxTimeParam, "10000")
+            .data(SlowRider.IntroSizeParam, "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
+            .timeout(4000) // has a 1000 sleep at the start
+            .execute()
+            .streamParser()) {
+
+            // we should expect to timeout while in stream
+            try {
+                long count = streamParser.stream().count();
+            } catch (Exception e) {
+                caught = true;
+                UncheckedIOException ioe = (UncheckedIOException) e;
+                IOException cause = ioe.getCause();
+                //assertInstanceOf(SocketTimeoutException.class, cause); // different JDKs seem to wrap this differently
+                assertInstanceOf(IOException.class, cause);
+
+            }
+        }
+        assertTrue(caught);
+    }
+
+    @Test void streamParserCheckedExceptionOnTimeoutInSelect() throws IOException {
+        boolean caught = false;
+        try (StreamParser streamParser = Jsoup.connect(SlowRider.Url)
+            .data(SlowRider.MaxTimeParam, "10000")
+            .data(SlowRider.IntroSizeParam, "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
+            .timeout(4000) // has a 1000 sleep at the start
+            .execute()
+            .streamParser()) {
+
+            // we should expect to timeout while in stream
+            try {
+                long count = 0;
+                while (streamParser.selectNext("p") != null) {
+                    count++;
+                }
+            } catch (IOException e) {
+                caught = true;
+            }
+        }
+        assertTrue(caught);
     }
 
     @Test

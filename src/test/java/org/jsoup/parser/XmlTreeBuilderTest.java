@@ -296,7 +296,7 @@ public class XmlTreeBuilderTest {
         assertEquals(Syntax.xml, doc.outputSettings().syntax());
 
         String out = doc.html();
-        assertEquals("<body style=\"color: red\" name=\"\"><div></div></body>", out);
+        assertEquals("<body style=\"color: red\" _=\"\" name_=\"\"><div _=\"\"></div></body>", out);
     }
 
     @Test void customTagsAreFlyweights() {

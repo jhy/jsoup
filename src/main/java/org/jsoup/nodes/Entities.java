@@ -131,18 +131,20 @@ public class Entities {
     }
 
     /**
-     * HTML escape an input string. That is, {@code <} is returned as {@code &lt;}
-     *
-     * @param string the un-escaped string to escape
-     * @param out the output settings to use
-     * @return the escaped string
+     HTML escape an input string. That is, {@code <} is returned as {@code &lt;}. The escaped string is suitable for use
+     both in attributes and in text data.
+     @param string the un-escaped string to escape
+     @param out the output settings to use. This configures the character set escaped against (that is, if a
+     character is supported in the output character set, it doesn't have to be escaped), and also HTML or XML
+     settings.
+     @return the escaped string
      */
     public static String escape(String string, OutputSettings out) {
         if (string == null)
             return "";
         StringBuilder accum = StringUtil.borrowBuilder();
         try {
-            escape(accum, string, out, false, false, false, false);
+            escape(accum, string, out, true, true, false, false, false); // for text and for attribute; preserve whitespaces
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
@@ -151,10 +153,11 @@ public class Entities {
 
     /**
      * HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is returned as
-     * {@code &lt;}
+     * {@code &lt;}. The escaped string is suitable for use both in attributes and in text data.
      *
      * @param string the un-escaped string to escape
      * @return the escaped string
+     * @see #escape(String, OutputSettings)
      */
     public static String escape(String string) {
         if (DefaultOutput == null)
@@ -165,7 +168,7 @@ public class Entities {
 
     // this method does a lot, but other breakups cause rescanning and stringbuilder generations
     static void escape(Appendable accum, String string, OutputSettings out,
-                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
+                       boolean forText, boolean forAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
 
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
@@ -215,20 +218,30 @@ public class Entities {
                         break;
                     case '<':
                         // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
-                        if (!inAttribute || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
+                        if (forText || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
                             accum.append("&lt;");
                         else
                             accum.append(c);
                         break;
                     case '>':
-                        if (!inAttribute)
+                        if (forText)
                             accum.append("&gt;");
                         else
                             accum.append(c);
                         break;
                     case '"':
-                        if (inAttribute)
+                        if (forAttribute)
                             accum.append("&quot;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '\'':
+                        if (forAttribute && forText) { // special case for the Entities.escape(string) method when we are maximally escaping. Otherwise, because we output attributes in "", there's no need to escape.
+                            if (escapeMode == EscapeMode.xhtml)
+                                accum.append("&#x27;");
+                            else
+                                accum.append("&apos;");
+                        }
                         else
                             accum.append(c);
                         break;

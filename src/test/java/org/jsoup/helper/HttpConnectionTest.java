@@ -280,8 +280,8 @@ public class HttpConnectionTest {
         URL url1 = new URL("https://test.com/[foo] bar+/%5BOne%5D?q=white space#frag ment");
         URL url2 = new UrlBuilder(url1).build();
         URL url3 = new UrlBuilder(url2).build();
-        assertEquals("https://test.com/[foo]%20bar+/%5BOne%5D?q=white+space#frag%20ment", url2.toExternalForm());
-        assertEquals("https://test.com/[foo]%20bar+/%5BOne%5D?q=white+space#frag%20ment", url3.toExternalForm());
+        assertEquals("https://test.com/%5Bfoo%5D%20bar+/%5BOne%5D?q=white+space#frag%20ment", url2.toExternalForm());
+        assertEquals("https://test.com/%5Bfoo%5D%20bar+/%5BOne%5D?q=white+space#frag%20ment", url3.toExternalForm());
     }
 
     @Test void connectToEncodedUrl() {

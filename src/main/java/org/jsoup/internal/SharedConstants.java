@@ -12,5 +12,9 @@ public final class SharedConstants {
 
     public static final int DefaultBufferSize = 1024 * 32;
 
+    public static final String[] FormSubmitTags = {
+        "input", "keygen", "object", "select", "textarea"
+    };
+
     private SharedConstants() {}
 }

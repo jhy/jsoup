@@ -126,8 +126,8 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Get each of the element's attributes.
-     * @return attributes (which implements iterable, in same order as presented in original HTML).
+     * Get each of the Element's attributes.
+     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
      */
     public abstract Attributes attributes();
 

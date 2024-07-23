@@ -110,7 +110,7 @@ public class TextNode extends LeafNode {
                 indent(accum, depth, out);
         }
 
-        Entities.escape(accum, coreValue(), out, false, normaliseWhite, trimLeading, trimTrailing);
+        Entities.escape(accum, coreValue(), out, true, false, normaliseWhite, trimLeading, trimTrailing);
     }
 
     @Override

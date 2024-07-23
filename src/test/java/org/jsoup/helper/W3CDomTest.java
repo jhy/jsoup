@@ -13,6 +13,7 @@ import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -150,7 +151,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body name=\"\" style=\"color: red\"/></html>", xml);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body _=\"\" name_=\"\" style=\"color: red\"/></html>", xml);
     }
 
     @Test
@@ -174,7 +175,7 @@ public class W3CDomTest {
 
         Document w3Doc = W3CDom.convert(jsoupDoc);
         String out = W3CDom.asString(w3Doc, W3CDom.OutputHtml());
-        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p hnh=\"2\">unicode attr names coerced</p></body></html>";
+        String expected = "<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p h_nh=\"2\">unicode attr names coerced</p></body></html>";
         assertEquals(expected, TextUtil.stripNewlines(out));
     }
 
@@ -185,6 +186,20 @@ public class W3CDomTest {
         Document w3Doc = W3CDom.convert(jsoup);
         String xml = W3CDom.asString(w3Doc, W3CDom.OutputXml());
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body>&lt;インセンティブで高収入！&gt;Text <p>More</p></body></html>", xml);
+    }
+
+    @Test
+    public void canConvertToCustomDocument() throws ParserConfigurationException {
+        org.jsoup.nodes.Document document = Jsoup.parse("<html><div></div></html>");
+
+        DocumentBuilderFactory localDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
+        Document customDocumentResult = localDocumentBuilderFactory.newDocumentBuilder().newDocument();
+
+        W3CDom w3cDom = new W3CDom();
+        w3cDom.convert(document, customDocumentResult);
+
+        String html = W3CDom.asString(customDocumentResult, W3CDom.OutputHtml());
+        assertEquals("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><div></div></body></html>", html);
     }
 
     @Test
