@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,12 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class FuzzFixesTest {
 
-    private static Stream<File> testFiles() {
-        File[] files = FuzzFixesIT.testDir.listFiles();
-        assertNotNull(files);
-        assertTrue(files.length > 10);
-
-        return Stream.of(files);
+    private static Stream<Path> testPaths() throws IOException {
+        return Files.list(FuzzFixesIT.testDir);
     }
 
     @Test
@@ -48,16 +45,16 @@ public class FuzzFixesTest {
     }
 
     @ParameterizedTest
-    @MethodSource("testFiles")
-    void testHtmlParse(File file) throws IOException {
-        Document doc = Jsoup.parse(file, "UTF-8", "https://example.com/");
+    @MethodSource("testPaths")
+    void testHtmlParse(Path path) throws IOException {
+        Document doc = Jsoup.parse(path, "UTF-8", "https://example.com/");
         assertNotNull(doc);
     }
 
     @ParameterizedTest
-    @MethodSource("testFiles")
-    void testXmlParse(File file) throws IOException {
-        Document doc = Jsoup.parse(file, "UTF-8", "https://example.com/", Parser.xmlParser());
+    @MethodSource("testPaths")
+    void testXmlParse(Path path) throws IOException {
+        Document doc = Jsoup.parse(path, "UTF-8", "https://example.com/", Parser.xmlParser());
         assertNotNull(doc);
     }
 }
