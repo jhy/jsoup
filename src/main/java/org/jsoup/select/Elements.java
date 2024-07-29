@@ -215,8 +215,8 @@ public class Elements extends ArrayList<Element> {
      */
     public String text() {
         return stream()
-                .map(Element::text)
-                .collect(StringUtil.joining(" "));
+            .map(Element::text)
+            .collect(StringUtil.joining(" "));
     }
 
     /**
@@ -257,8 +257,8 @@ public class Elements extends ArrayList<Element> {
      */
     public String html() {
         return stream()
-                .map(Element::html)
-                .collect(StringUtil.joining("\n"));
+            .map(Element::html)
+            .collect(StringUtil.joining("\n"));
     }
     
     /**
@@ -269,8 +269,8 @@ public class Elements extends ArrayList<Element> {
      */
     public String outerHtml() {
         return stream()
-                .map(Element::outerHtml)
-                .collect(StringUtil.joining("\n"));
+            .map(Element::outerHtml)
+            .collect(StringUtil.joining("\n"));
     }
 
     /**

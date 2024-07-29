@@ -1430,20 +1430,15 @@ public class Element extends Node {
      @see #wholeOwnText()
      */
     public String wholeText() {
-        return getWholeText(nodeStream());
+        return wholeTextOf(nodeStream());
     }
 
-    private static String getWholeText(Stream<Node> stream) {
+    private static String wholeTextOf(Stream<Node> stream) {
         return stream.map(node -> {
-                    if (node instanceof TextNode) {
-                        return ((TextNode) node).getWholeText();
-                    } else if (node.nameIs("br")) {
-                        return "\n";
-                    } else {
-                        return "";
-                    }
-                })
-                .collect(StringUtil.joining(""));
+            if (node instanceof TextNode) return ((TextNode) node).getWholeText();
+            if (node.nameIs("br")) return "\n";
+            return "";
+        }).collect(StringUtil.joining(""));
     }
 
     /**
@@ -1456,7 +1451,7 @@ public class Element extends Node {
      @since 1.15.1
      */
     public String wholeOwnText() {
-        return getWholeText(childNodes.stream());
+        return wholeTextOf(childNodes.stream());
     }
 
     /**
