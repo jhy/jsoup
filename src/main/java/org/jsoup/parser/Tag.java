@@ -235,7 +235,7 @@ public class Tag implements Cloneable {
     @Override
     public int hashCode() {
         return Objects.hash(tagName, isBlock, formatAsBlock, empty, selfClosing, preserveWhitespace,
-                formList, formSubmit);
+            formList, formSubmit);
     }
 
     @Override
