@@ -458,7 +458,7 @@ public class HttpConnection implements Connection {
             Validate.notEmptyParam(name, "name");
 
             headers.computeIfAbsent(name, Functions.listFunction())
-                    .add(value == null ? "" : value);
+                .add(value == null ? "" : value);
 
             return (T) this;
         }
@@ -491,7 +491,7 @@ public class HttpConnection implements Connection {
             Validate.notEmpty(name);
             Validate.notEmpty(value);
             return headers.getOrDefault(name, Collections.emptyList()).stream()
-                    .anyMatch(value::equalsIgnoreCase);
+                .anyMatch(value::equalsIgnoreCase);
         }
 
         @Override
