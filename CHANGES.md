@@ -3,8 +3,12 @@
 ## 1.18.2 (Pending)
 
 ### Improvements
-* The form associated elements returned by `FormElement.elements()` now reflect changes made to the DOM, 
+
+* The form associated elements returned by `FormElement.elements()` now reflect changes made to the DOM,
   subsequently to the original parse. [2140](https://github.com/jhy/jsoup/issues/2140)
+* In the `TreeBuilder`, the `onNodeInserted()` and `onNodeClosed()` events are now also fired for the outermost /
+  root `Document` node. This enables source position tracking on the Document node (which was previously unset). And
+  it also enables the node traversor to see the outer Document node. [2182](https://github.com/jhy/jsoup/pull/2182)
 
 ### Bug Fixes
 
