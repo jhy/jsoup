@@ -49,8 +49,7 @@ final class Tokeniser {
     @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
-    private static final int Unset = -1;
-    private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. updated on state transition. Initialized to start (0), but set to Unset after emissions.
+    private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
         tagPending = startPending  = new Token.StartTag(treeBuilder);
@@ -90,7 +89,7 @@ final class Tokeniser {
         isEmitPending = true;
         token.startPos(markupStartPos);
         token.endPos(reader.pos());
-        charStartPos = Unset;
+        charStartPos = reader.pos(); // update char start when we complete a token emit
 
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
@@ -158,15 +157,9 @@ final class Tokeniser {
     }
 
     void transition(TokeniserState newState) {
-        // track markup / data position on state transitions
-        switch (newState) {
-            case TagOpen:
-                markupStartPos = reader.pos();
-                break;
-            case Data:
-                if (charStartPos == Unset) // don't reset when we are jumping between e.g data -> char ref -> data
-                    charStartPos = reader.pos();
-        }
+        // track markup position on state transitions
+        if (newState == TokeniserState.TagOpen)
+            markupStartPos = reader.pos();
 
         this.state = newState;
     }

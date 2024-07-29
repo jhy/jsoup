@@ -10,6 +10,8 @@
 
 * `Element.cssSelector()` would fail if the element's class contained a `*`
   character. [2169](https://github.com/jhy/jsoup/issues/2169)
+* When tracking source ranges, a text node following an invalid self-closing element may be left
+  untracked.[2175](https://github.com/jhy/jsoup/issues/2175)
 
 ## 1.18.1 (2024-Jul-10)
 
