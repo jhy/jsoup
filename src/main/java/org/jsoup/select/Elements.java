@@ -214,13 +214,9 @@ public class Elements extends ArrayList<Element> {
      * @see #eachText()
      */
     public String text() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        for (Element element : this) {
-            if (sb.length() != 0)
-                sb.append(" ");
-            sb.append(element.text());
-        }
-        return StringUtil.releaseBuilder(sb);
+        return stream()
+            .map(Element::text)
+            .collect(StringUtil.joining(" "));
     }
 
     /**
@@ -260,13 +256,9 @@ public class Elements extends ArrayList<Element> {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        for (Element element : this) {
-            if (sb.length() != 0)
-                sb.append("\n");
-            sb.append(element.html());
-        }
-        return StringUtil.releaseBuilder(sb);
+        return stream()
+            .map(Element::html)
+            .collect(StringUtil.joining("\n"));
     }
     
     /**
@@ -276,13 +268,9 @@ public class Elements extends ArrayList<Element> {
      * @see #html()
      */
     public String outerHtml() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        for (Element element : this) {
-            if (sb.length() != 0)
-                sb.append("\n");
-            sb.append(element.outerHtml());
-        }
-        return StringUtil.releaseBuilder(sb);
+        return stream()
+            .map(Element::outerHtml)
+            .collect(StringUtil.joining("\n"));
     }
 
     /**

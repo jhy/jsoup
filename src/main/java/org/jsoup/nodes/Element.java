@@ -1430,17 +1430,15 @@ public class Element extends Node {
      @see #wholeOwnText()
      */
     public String wholeText() {
-        final StringBuilder accum = StringUtil.borrowBuilder();
-        nodeStream().forEach(node -> appendWholeText(node, accum));
-        return StringUtil.releaseBuilder(accum);
+        return wholeTextOf(nodeStream());
     }
 
-    private static void appendWholeText(Node node, StringBuilder accum) {
-        if (node instanceof TextNode) {
-            accum.append(((TextNode) node).getWholeText());
-        } else if (node.nameIs("br")) {
-            accum.append("\n");
-        }
+    private static String wholeTextOf(Stream<Node> stream) {
+        return stream.map(node -> {
+            if (node instanceof TextNode) return ((TextNode) node).getWholeText();
+            if (node.nameIs("br")) return "\n";
+            return "";
+        }).collect(StringUtil.joining(""));
     }
 
     /**
@@ -1453,14 +1451,7 @@ public class Element extends Node {
      @since 1.15.1
      */
     public String wholeOwnText() {
-        final StringBuilder accum = StringUtil.borrowBuilder();
-        final int size = childNodeSize();
-        for (int i = 0; i < size; i++) {
-            Node node = childNodes.get(i);
-            appendWholeText(node, accum);
-        }
-
-        return StringUtil.releaseBuilder(accum);
+        return wholeTextOf(childNodes.stream());
     }
 
     /**
