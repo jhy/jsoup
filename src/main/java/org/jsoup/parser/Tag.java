@@ -6,6 +6,7 @@ import org.jsoup.internal.SharedConstants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -233,15 +234,8 @@ public class Tag implements Cloneable {
 
     @Override
     public int hashCode() {
-        int result = tagName.hashCode();
-        result = 31 * result + (isBlock ? 1 : 0);
-        result = 31 * result + (formatAsBlock ? 1 : 0);
-        result = 31 * result + (empty ? 1 : 0);
-        result = 31 * result + (selfClosing ? 1 : 0);
-        result = 31 * result + (preserveWhitespace ? 1 : 0);
-        result = 31 * result + (formList ? 1 : 0);
-        result = 31 * result + (formSubmit ? 1 : 0);
-        return result;
+        return Objects.hash(tagName, isBlock, formatAsBlock, empty, selfClosing, preserveWhitespace,
+            formList, formSubmit);
     }
 
     @Override

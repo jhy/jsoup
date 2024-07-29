@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -253,15 +254,12 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Attribute attribute = (Attribute) o;
-        if (key != null ? !key.equals(attribute.key) : attribute.key != null) return false;
-        return val != null ? val.equals(attribute.val) : attribute.val == null;
+        return Objects.equals(key, attribute.key) && Objects.equals(val, attribute.val);
     }
 
     @Override
     public int hashCode() { // note parent not considered
-        int result = key != null ? key.hashCode() : 0;
-        result = 31 * result + (val != null ? val.hashCode() : 0);
-        return result;
+        return Objects.hash(key, val);
     }
 
     @Override

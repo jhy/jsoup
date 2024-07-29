@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -646,21 +647,15 @@ public class Safelist {
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((value == null) ? 0 : value.hashCode());
-            return result;
+            return value.hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (obj == null) return false;
-            if (getClass() != obj.getClass()) return false;
+            if (obj == null || getClass() != obj.getClass()) return false;
             TypedValue other = (TypedValue) obj;
-            if (value == null) {
-                return other.value == null;
-            } else return value.equals(other.value);
+            return Objects.equals(value, other.value);
         }
 
         @Override
