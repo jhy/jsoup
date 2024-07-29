@@ -395,6 +395,8 @@ public class CleanerTest {
         Element p = orig.expectFirst("p");
         Range origRange = p.sourceRange();
         assertEquals("2,2:22-2,10:30", origRange.toString());
+        assertEquals("1,1:0-1,1:0", orig.sourceRange().toString());
+        assertEquals("2,19:39-2,19:39", orig.endSourceRange().toString());
 
         Range.AttributeRange attributeRange = p.attributes().sourceRange("id");
         assertEquals("2,5:25-2,7:27=2,8:28-2,9:29", attributeRange.toString());
@@ -404,7 +406,7 @@ public class CleanerTest {
         assertEquals("1", cleanP.id());
         Range cleanRange = cleanP.sourceRange();
         assertEquals(origRange, cleanRange);
-        assertEquals(orig.endSourceRange(), clean.endSourceRange());
+        assertEquals(p.endSourceRange(), cleanP.endSourceRange());
         assertEquals(attributeRange, cleanP.attributes().sourceRange("id"));
     }
 

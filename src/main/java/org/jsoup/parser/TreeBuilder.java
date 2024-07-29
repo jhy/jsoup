@@ -58,6 +58,7 @@ abstract class TreeBuilder {
         start = new Token.StartTag(this);
         currentToken = start; // init current token to the virtual start token.
         this.baseUri = baseUri;
+        onNodeInserted(doc);
     }
 
     void completeParse() {
@@ -108,7 +109,13 @@ abstract class TreeBuilder {
     boolean stepParser() {
         // if we have reached the end already, step by popping off the stack, to hit nodeRemoved callbacks:
         if (currentToken.type == Token.TokenType.EOF) {
-            if (stack == null || stack.isEmpty()) return false; // stack will be null if TB was closed, as in case of runParser() + completeFragment()
+            if (stack == null) {
+                return false;
+            } if (stack.isEmpty()) {
+                onNodeClosed(doc); // the root doc is not on the stack, so let this final step close it
+                stack = null;
+                return true;
+            }
             pop();
             return true;
         }
