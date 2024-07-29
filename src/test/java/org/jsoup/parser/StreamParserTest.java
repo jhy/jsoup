@@ -36,7 +36,7 @@ class StreamParserTest {
             StringBuilder seen;
             seen = new StringBuilder();
             parser.stream().forEachOrdered(el -> trackSeen(el, seen));
-            assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;", seen.toString());
+            assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;#root;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
         }
     }
@@ -48,7 +48,7 @@ class StreamParserTest {
             StringBuilder seen;
             seen = new StringBuilder();
             parser.stream().forEachOrdered(el -> trackSeen(el, seen));
-            assertEquals("DIV#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];outmost;", seen.toString());
+            assertEquals("DIV#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];outmost;#root;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
         }
     }
@@ -64,7 +64,7 @@ class StreamParserTest {
             trackSeen(it.next(), seen);
         }
 
-        assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;", seen.toString());
+        assertEquals("title[Test];head+;div#1[D1]+;span[P One];p#3+;p#4[P Two];div#2[D2]+;p#6[P three];div#5[D3];body;html;#root;", seen.toString());
         // checks expected order, and the + indicates that element had a next sibling at time of emission
     }
 
@@ -75,13 +75,13 @@ class StreamParserTest {
 
         StringBuilder seen = new StringBuilder();
         parser.stream().forEach(el -> trackSeen(el, seen));
-        assertEquals("head+;p[One]+;p[Two];body;html;", seen.toString());
+        assertEquals("head+;p[One]+;p[Two];body;html;#root;", seen.toString());
 
         String html2 = "<div>Three<div>Four</div></div>";
         StringBuilder seen2 = new StringBuilder();
         parser.parse(html2, "");
         parser.stream().forEach(el -> trackSeen(el, seen2));
-        assertEquals("head+;div[Four];div[Three];body;html;", seen2.toString());
+        assertEquals("head+;div[Four];div[Three];body;html;#root;", seen2.toString());
 
         // re-run without a new parse should be empty
         StringBuilder seen3 = new StringBuilder();
@@ -247,7 +247,7 @@ class StreamParserTest {
         StreamParser streamer = basic();
         assertFalse(isClosed(streamer));
         long count = streamer.stream().count();
-        assertEquals(6, count);
+        assertEquals(7, count);
 
         assertTrue(isClosed(streamer));
     }
@@ -261,7 +261,7 @@ class StreamParserTest {
             it.next();
             count++;
         }
-        assertEquals(6, count);
+        assertEquals(7, count);
         assertTrue(isClosed(streamer));
     }
 
@@ -384,7 +384,7 @@ class StreamParserTest {
         try (StreamParser parser = new StreamParser(Parser.htmlParser()).parseFragment(html, context, "")) {
             StringBuilder seen = new StringBuilder();
             parser.stream().forEachOrdered(el -> trackSeen(el, seen));
-            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;", seen.toString());
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;#root;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
             // note that we don't get a full doc, just the fragment (and the context at the end of the stack)
 
@@ -405,7 +405,7 @@ class StreamParserTest {
                 trackSeen(it.next(), seen);
             }
 
-            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;", seen.toString());
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;tbody;table;#root;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
             // note that we don't get a full doc, just the fragment (and the context at the end of the stack)
 
@@ -451,7 +451,7 @@ class StreamParserTest {
         try (StreamParser parser = new StreamParser(Parser.xmlParser()).parseFragment(html, context, "")) {
             StringBuilder seen = new StringBuilder();
             parser.stream().forEachOrdered(el -> trackSeen(el, seen));
-            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;", seen.toString());
+            assertEquals("td[One];tr#1+;td[Two];tr#2+;td[Three];tr#3;#root;", seen.toString());
             // checks expected order, and the + indicates that element had a next sibling at time of emission
             // note that we don't get a full doc, just the fragment
 

@@ -519,6 +519,22 @@ class PositionTest {
         assertEquals("class=\"On\"", attr.html());
     }
 
+    @Test void tracksDocument() {
+        String html = "<!doctype html><title>Foo</title><p>Bar.";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("#document:0-0~40-40; #doctype:0-15; html:15-15~40-40; head:15-15~33-33; title:15-22~15-33; #text:22-25; body:33-33~40-40; p:33-36~40-40; #text:36-40; ", track.toString());
+    }
+
+    @Test void tracksDocumentXml() {
+        String html = "<!doctype html><title>Foo</title><p>Bar.";
+        Document doc = Jsoup.parse(html, TrackingXmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("#document:0-0~40-40; #doctype:0-15; title:15-22~25-33; #text:22-25; p:33-36~40-40; #text:36-40; ", track.toString());
+    }
+
     @Test void updateKeyMaintainsRangeUc() {
         String html = "<p xsi:CLASS=On>One</p>";
         Document doc = Jsoup.parse(html, TrackingXmlParser);
