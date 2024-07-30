@@ -322,7 +322,7 @@ public class Entities {
             case ascii:
                 return c < 0x80;
             case utf:
-                return !Character.isSurrogate(c);
+                return !(c >= Character.MIN_SURROGATE && c < (Character.MAX_SURROGATE + 1)); // !Character.isSurrogate(c); but not in Android 10 desugar
             default:
                 return fallback.canEncode(c);
         }
