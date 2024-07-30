@@ -174,11 +174,8 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         }
     }
 
-    private static final Pattern xmlKeyValid = Pattern.compile("[a-zA-Z_:][-a-zA-Z0-9_:.]*");
     private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]+");
-    private static final Pattern htmlKeyValid = Pattern.compile("[^\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
     private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
-
     /**
      * Get a valid attribute key for the given syntax. If the key is not valid, it will be coerced into a valid key.
      * @param key the original attribute key
@@ -186,15 +183,44 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * @return the original key if it's valid; a key with invalid characters replaced with "_" otherwise; or null if a valid key could not be created.
      */
     @Nullable public static String getValidKey(String key, Syntax syntax) {
-        if (syntax == Syntax.xml && !xmlKeyValid.matcher(key).matches()) {
+        if (syntax == Syntax.xml && !isValidXmlKey(key)) {
             key = xmlKeyReplace.matcher(key).replaceAll("_");
-            return xmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
+            return isValidXmlKey(key) ? key : null; // null if could not be coerced
         }
-        else if (syntax == Syntax.html && !htmlKeyValid.matcher(key).matches()) {
+        else if (syntax == Syntax.html && !isValidHtmlKey(key)) {
             key = htmlKeyReplace.matcher(key).replaceAll("_");
-            return htmlKeyValid.matcher(key).matches() ? key : null; // null if could not be coerced
+            return isValidHtmlKey(key) ? key : null; // null if could not be coerced
         }
         return key;
+    }
+
+    // perf critical in html() so using manual scan vs regex:
+    // note that we aren't using anything in supplemental space, so OK to iter charAt
+    private static boolean isValidXmlKey(String key) {
+        // =~ [a-zA-Z_:][-a-zA-Z0-9_:.]*
+        final int length = key.length();
+        if (length ==0) return false;
+        char c = key.charAt(0);
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
+            return false;
+        for (int i = 1; i < length; i++) {
+            c = key.charAt(i);
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
+                return false;
+        }
+        return true;
+    }
+
+    private static boolean isValidHtmlKey(String key) {
+        // =~ [\x00-\x1f\x7f-\x9f "'/=]+
+        final int length = key.length();
+        if (length ==0) return false;
+        for (int i = 0; i < length; i++) {
+            char c = key.charAt(i);
+            if (c <= 0x1f || c >= 0x7f && c <= 0x9f || c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=')
+                return false;
+        }
+        return true;
     }
 
     /**

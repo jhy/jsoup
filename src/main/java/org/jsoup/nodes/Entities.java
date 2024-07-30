@@ -248,11 +248,20 @@ public class Entities {
             }
         } else {
             if (canEncode(coreCharset, c, encoder)) {
-                String s = new String(Character.toChars(codePoint));
-                accum.append(s);
-            } else appendEncoded(accum, escapeMode, codePoint);
+                // reads into charBuf - we go through these steps to avoid GC objects as much as possible (would be a new String and a new char[2] for each character)
+                char[] chars = charBuf.get();
+                int len = Character.toChars(codePoint, chars, 0);
+                if (accum instanceof StringBuilder) // true unless the user supplied their own
+                    ((StringBuilder) accum).append(chars, 0, len);
+                else
+                    accum.append(new String(chars, 0, len));
+            } else {
+                appendEncoded(accum, escapeMode, codePoint);
+            }
         }
     }
+
+    private static final ThreadLocal<char[]> charBuf = ThreadLocal.withInitial(() -> new char[2]);
 
     private static void appendNbsp(Appendable accum, EscapeMode escapeMode) throws IOException {
         if (escapeMode != EscapeMode.xhtml) accum.append("&nbsp;");

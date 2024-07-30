@@ -10,7 +10,7 @@
   root `Document` node. This enables source position tracking on the Document node (which was previously unset). And
   it also enables the node traversor to see the outer Document node. [2182](https://github.com/jhy/jsoup/pull/2182)
 * Speed optimized `html()` and `Entities.escape()` when the input contains UTF characters in a supplementary plane, by
-  around 22%. [2183](https://github.com/jhy/jsoup/pull/2183)
+  around 49%. [2183](https://github.com/jhy/jsoup/pull/2183)
 
 ### Bug Fixes
 
