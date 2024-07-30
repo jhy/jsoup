@@ -83,14 +83,17 @@ public class TextNode extends LeafNode {
     @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         final boolean prettyPrint = out.prettyPrint();
-        final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
         final boolean normaliseWhite = prettyPrint && !Element.preserveWhitespace(parentNode);
-        final boolean trimLikeBlock = parent != null && (parent.tag().isBlock() || parent.tag().formatAsBlock());
-        boolean trimLeading = false, trimTrailing = false;
+        int escape = Entities.ForText;
 
         if (normaliseWhite) {
-            trimLeading = (trimLikeBlock && siblingIndex == 0) || parentNode instanceof Document;
-            trimTrailing = trimLikeBlock && nextSibling() == null;
+            escape |= Entities.Normalise;
+            final Element parent = parentNode instanceof Element ? ((Element) parentNode) : null;
+            final boolean trimLikeBlock = parent != null && (parent.tag().isBlock() || parent.tag().formatAsBlock());
+            if ((trimLikeBlock && siblingIndex == 0) || parentNode instanceof Document)
+                escape |= Entities.TrimLeading;
+            if (trimLikeBlock && nextSibling() == null)
+                escape |= Entities.TrimTrailing;
 
             // if this text is just whitespace, and the next node will cause an indent, skip this text:
             Node next = nextSibling();
@@ -110,7 +113,7 @@ public class TextNode extends LeafNode {
                 indent(accum, depth, out);
         }
 
-        Entities.escape(accum, coreValue(), out, true, false, normaliseWhite, trimLeading, trimTrailing);
+        Entities.escape(accum, coreValue(), out, escape);
     }
 
     @Override

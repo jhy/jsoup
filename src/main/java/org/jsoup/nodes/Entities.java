@@ -22,6 +22,13 @@ import static org.jsoup.nodes.Entities.EscapeMode.extended;
  * HTML named character references</a>.
  */
 public class Entities {
+    // constants for escape options:
+    static final int ForText = 0x1;
+    static final int ForAttribute = 0x2;
+    static final int Normalise = 0x4;
+    static final int TrimLeading = 0x8;
+    static final int TrimTrailing = 0x10;
+
     private static final int empty = -1;
     private static final String emptyName = "";
     static final int codepointRadix = 36;
@@ -68,10 +75,6 @@ public class Entities {
                     nameVals[index + 1] : nameVals[index];
             }
             return emptyName;
-        }
-
-        private int size() {
-            return nameKeys.length;
         }
     }
 
@@ -144,7 +147,7 @@ public class Entities {
             return "";
         StringBuilder accum = StringUtil.borrowBuilder();
         try {
-            escape(accum, string, out, true, true, false, false, false); // for text and for attribute; preserve whitespaces
+            escape(accum, string, out, ForText | ForAttribute); // for text and for attribute; preserve whitespaces
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
@@ -166,27 +169,24 @@ public class Entities {
     }
     private static @Nullable OutputSettings DefaultOutput; // lazy-init, to break circular dependency with OutputSettings
 
-    // this method does a lot, but other breakups cause rescanning and stringbuilder generations
-    static void escape(Appendable accum, String string, OutputSettings out,
-                       boolean forText, boolean forAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
-
-        boolean lastWasWhite = false;
-        boolean reachedNonWhite = false;
+    static void escape(Appendable accum, String string, OutputSettings out, int options) throws IOException {
         final EscapeMode escapeMode = out.escapeMode();
         final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
         final int length = string.length();
 
         int codePoint;
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
         boolean skipped = false;
         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
             codePoint = string.codePointAt(offset);
 
-            if (normaliseWhite) {
+            if ((options & Normalise) != 0) {
                 if (StringUtil.isWhitespace(codePoint)) {
-                    if (stripLeadingWhite && !reachedNonWhite) continue;
+                    if ((options & TrimLeading) != 0 && !reachedNonWhite) continue;
                     if (lastWasWhite) continue;
-                    if (trimTrailing) {
+                    if ((options & TrimTrailing) != 0) {
                         skipped = true;
                         continue;
                     }
@@ -202,70 +202,77 @@ public class Entities {
                     }
                 }
             }
-            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
-            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
-                final char c = (char) codePoint;
-                // html specific and required escapes:
-                switch (c) {
-                    case '&':
-                        accum.append("&amp;");
-                        break;
-                    case 0xA0:
-                        if (escapeMode != EscapeMode.xhtml)
-                            accum.append("&nbsp;");
-                        else
-                            accum.append("&#xa0;");
-                        break;
-                    case '<':
-                        // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
-                        if (forText || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
-                            accum.append("&lt;");
-                        else
-                            accum.append(c);
-                        break;
-                    case '>':
-                        if (forText)
-                            accum.append("&gt;");
-                        else
-                            accum.append(c);
-                        break;
-                    case '"':
-                        if (forAttribute)
-                            accum.append("&quot;");
-                        else
-                            accum.append(c);
-                        break;
-                    case '\'':
-                        if (forAttribute && forText) { // special case for the Entities.escape(string) method when we are maximally escaping. Otherwise, because we output attributes in "", there's no need to escape.
-                            if (escapeMode == EscapeMode.xhtml)
-                                accum.append("&#x27;");
-                            else
-                                accum.append("&apos;");
-                        }
-                        else
-                            accum.append(c);
-                        break;
-                    // we escape ascii control <x20 (other than tab, line-feed, carriage return)  for XML compliance (required) and HTML ease of reading (not required) - https://www.w3.org/TR/xml/#charsets
-                    case 0x9:
-                    case 0xA:
-                    case 0xD:
-                        accum.append(c);
-                        break;
-                    default:
-                        if (c < 0x20 || !canEncode(coreCharset, c, encoder))
-                            appendEncoded(accum, escapeMode, codePoint);
-                        else
-                            accum.append(c);
-                }
-            } else {
-                final String c = new String(Character.toChars(codePoint));
-                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
-                    accum.append(c);
-                else
-                    appendEncoded(accum, escapeMode, codePoint);
-            }
+            appendEscaped(accum, out, options, codePoint, escapeMode, encoder, coreCharset);
         }
     }
+
+    private static void appendEscaped(Appendable accum, OutputSettings out, int options,
+        int codePoint, EscapeMode escapeMode, CharsetEncoder encoder, CoreCharset coreCharset) throws IOException {
+
+        // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+        final char c = (char) codePoint;
+        if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+            // html specific and required escapes:
+            switch (c) {
+                case '&':
+                    accum.append("&amp;");
+                    break;
+                case 0xA0:
+                    appendNbsp(accum, escapeMode);
+                    break;
+                case '<':
+                    // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
+                    appendLt(accum, options, escapeMode, out);
+                    break;
+                case '>':
+                    if ((options & ForText) != 0) accum.append("&gt;");
+                    else accum.append(c);
+                    break;
+                case '"':
+                    if ((options & ForAttribute) != 0) accum.append("&quot;");
+                    else accum.append(c);
+                    break;
+                case '\'':
+                    // special case for the Entities.escape(string) method when we are maximally escaping. Otherwise, because we output attributes in "", there's no need to escape.
+                    appendApos(accum, options, escapeMode);
+                    break;
+                // we escape ascii control <x20 (other than tab, line-feed, carriage return) for XML compliance (required) and HTML ease of reading (not required) - https://www.w3.org/TR/xml/#charsets
+                case 0x9:
+                case 0xA:
+                case 0xD:
+                    accum.append(c);
+                    break;
+                default:
+                    if (c < 0x20 || !canEncode(coreCharset, c, encoder)) appendEncoded(accum, escapeMode, codePoint);
+                    else accum.append(c);
+            }
+        } else {
+            if (canEncode(coreCharset, c, encoder)) {
+                String s = new String(Character.toChars(codePoint));
+                accum.append(s);
+            } else appendEncoded(accum, escapeMode, codePoint);
+        }
+    }
+
+    private static void appendNbsp(Appendable accum, EscapeMode escapeMode) throws IOException {
+        if (escapeMode != EscapeMode.xhtml) accum.append("&nbsp;");
+        else accum.append("&#xa0;");
+    }
+
+    private static void appendLt(Appendable accum, int options, EscapeMode escapeMode, OutputSettings out) throws IOException {
+        if ((options & ForText) != 0 || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml) accum.append("&lt;");
+        else accum.append('<');
+    }
+
+    private static void appendApos(Appendable accum, int options, EscapeMode escapeMode) throws IOException {
+        if ((options & ForAttribute) != 0 && (options & ForText) != 0) {
+            if (escapeMode == EscapeMode.xhtml) accum.append("&#x27;");
+            else accum.append("&apos;");
+        } else {
+            accum.append('\'');
+        }
+    }
+
 
     private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
         final String name = escapeMode.nameForCodepoint(codePoint);
@@ -315,7 +322,7 @@ public class Entities {
             case ascii:
                 return c < 0x80;
             case utf:
-                return true; // real is:!(Character.isLowSurrogate(c) || Character.isHighSurrogate(c)); - but already check above
+                return !(c >= Character.MIN_SURROGATE && c < (Character.MAX_SURROGATE + 1)); // !Character.isSurrogate(c); but not in Android 10 desugar
             default:
                 return fallback.canEncode(c);
         }
