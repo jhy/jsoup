@@ -2,11 +2,7 @@ name: CodeQL
 
 on:
   push:
-    branches:
-      - master
   pull_request:
-  schedule:
-    - cron: '0 5 * * 3'
 
 jobs:
   codeql:
@@ -22,11 +18,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - name: CodeQL Initialization
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: java
           queries: +security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
       - name: CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
