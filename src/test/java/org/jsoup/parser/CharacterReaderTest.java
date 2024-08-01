@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.integration.ParseTest;
+import org.jsoup.internal.StringUtil;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -359,24 +360,23 @@ public class CharacterReaderTest {
 
     @Test
     public void notEmptyAtBufferSplitPoint() {
-        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
-        assertEquals("How", r.consumeTo(' '));
-        assertFalse(r.isEmpty(), "Should not be empty");
+        int len = CharacterReader.BufferSize * 12;
+        StringBuilder builder = StringUtil.borrowBuilder();
+        while (builder.length() <= len) builder.append('!');
+        CharacterReader r = new CharacterReader(builder.toString());
+        StringUtil.releaseBuilder(builder);
 
-        assertEquals(' ', r.consume());
-        assertFalse(r.isEmpty());
-        assertEquals(4, r.pos());
-        assertEquals('a', r.consume());
-        assertEquals(5, r.pos());
-        assertEquals('b', r.consume());
-        assertEquals('o', r.consume());
-        assertEquals('u', r.consume());
-        assertEquals('t', r.consume());
-        assertEquals(' ', r.consume());
-        assertEquals('n', r.consume());
-        assertEquals('o', r.consume());
-        assertEquals('w', r.consume());
+        // consume through
+        for (int pos = 0; pos < len; pos ++) {
+            assertEquals(pos, r.pos());
+            assertFalse(r.isEmpty());
+            assertEquals('!', r.consume());
+            assertEquals(pos + 1, r.pos());
+            assertFalse(r.isEmpty());
+        }
+        assertEquals('!', r.consume());
         assertTrue(r.isEmpty());
+        assertEquals(CharacterReader.EOF, r.consume());
     }
 
     @Test public void bufferUp() {

@@ -20,7 +20,8 @@ public final class CharacterReader {
     static final char EOF = (char) -1;
     private static final int MaxStringCacheLen = 12;
     private static final int StringCacheSize = 512;
-    private String[] stringCache = new String[StringCacheSize]; // holds reused strings in this doc, to lessen garbage
+    private String[] stringCache; // holds reused strings in this doc, to lessen garbage
+    private static final SoftPool<String[]> StringPool = new SoftPool<>(() -> new String[StringCacheSize]); // reuse cache between iterations
 
     static final int BufferSize = 1024 * 2;         // visible for testing
     static final int RefillPoint = BufferSize / 2;  // when bufPos characters read, refill; visible for testing
@@ -41,18 +42,19 @@ public final class CharacterReader {
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
     public CharacterReader(Reader input, int sz) {
-        Validate.notNull(input);
-        reader = input;
-        charBuf = BufferPool.borrow();
-        bufferUp();
+        this(input); // sz is no longer used
     }
 
     public CharacterReader(Reader input) {
-        this(input, BufferSize);
+        Validate.notNull(input);
+        reader = input;
+        charBuf = BufferPool.borrow();
+        stringCache = StringPool.borrow();
+        bufferUp();
     }
 
     public CharacterReader(String input) {
-        this(new StringReader(input), input.length());
+        this(new StringReader(input));
     }
 
     public void close() {
@@ -66,6 +68,7 @@ public final class CharacterReader {
             Arrays.fill(charBuf, (char) 0); // before release, clear the buffer. Not required, but acts as a safety net, and makes debug view clearer
             BufferPool.release(charBuf);
             charBuf = null;
+            StringPool.release(stringCache); // conversely, we don't clear the string cache, so we can reuse the contents
             stringCache = null;
         }
     }
@@ -716,16 +719,16 @@ public final class CharacterReader {
      * some more duplicates.
      */
     private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
-        // limit (no cache):
-        if (count > MaxStringCacheLen)
+        if (count > MaxStringCacheLen) // don't cache strings that are too big
             return new String(charBuf, start, count);
         if (count < 1)
             return "";
 
         // calculate hash:
         int hash = 0;
-        for (int i = 0; i < count; i++) {
-            hash = 31 * hash + charBuf[start + i];
+        int end = count + start;
+        for (int i = start; i < end; i++) {
+            hash = 31 * hash + charBuf[i];
         }
 
         // get from cache
