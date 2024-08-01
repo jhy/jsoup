@@ -27,8 +27,8 @@ public class InterruptedServlet extends BaseServlet {
 
         StringBuilder sb = new StringBuilder();
         sb.append("<title>Something</title>");
-        while (sb.length() <= CharacterReaderTest.maxBufferLen) {
-            sb.append("A suitable amount of data. \n");
+        while (sb.length() <= 32 * 1024) {
+            sb.append("<div>A suitable amount of data.</div>\n");
         }
         sb.append("<p>Finale.</p>");
         String data = sb.toString();

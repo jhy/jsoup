@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class CharacterReaderTest {
-    public final static int maxBufferLen = CharacterReader.maxBufferLen;
+    public final static int maxBufferLen = CharacterReader.BufferSize;
 
     @Test public void consume() {
         CharacterReader r = new CharacterReader("one");
@@ -437,10 +437,10 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!noTrack.matches("[foo]"))
             noTrack.consumeTo("[foo]");
-        assertEquals(32778, noTrack.pos());
+        assertEquals(2090, noTrack.pos());
         assertEquals(1, noTrack.lineNumber());
         assertEquals(noTrack.pos()+1, noTrack.columnNumber());
-        assertEquals("1:32779", noTrack.posLineCol());
+        assertEquals("1:2091", noTrack.posLineCol());
 
         // and the line numbers: "<foo>\n<bar>\n<qux>\n"
         assertEquals(0, track.pos());
@@ -468,12 +468,12 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!track.matches("[foo]"))
             track.consumeTo("[foo]");
-        assertEquals(32778, track.pos());
+        assertEquals(2090, track.pos());
         assertEquals(4, track.lineNumber());
-        assertEquals(32761, track.columnNumber());
-        assertEquals("4:32761", track.posLineCol());
+        assertEquals(2073, track.columnNumber());
+        assertEquals("4:2073", track.posLineCol());
         track.consumeTo('\n');
-        assertEquals("4:32766", track.posLineCol());
+        assertEquals("4:2078", track.posLineCol());
 
         track.consumeTo("[bar]");
         assertEquals(5, track.lineNumber());
@@ -491,9 +491,11 @@ public class CharacterReaderTest {
         reader.trackNewlines(true);
 
         assertEquals("1:1", reader.posLineCol());
+        StringBuilder seen = new StringBuilder();
         while (!reader.isEmpty())
-            reader.consume();
-        assertEquals(131096, reader.pos());
+            seen.append(reader.consume());
+        assertEquals(content, seen.toString());
+        assertEquals(content.length(), reader.pos());
         assertEquals(reader.pos() + 1, reader.columnNumber());
         assertEquals(1, reader.lineNumber());
     }

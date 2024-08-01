@@ -318,7 +318,7 @@ public final class DataUtil {
         Validate.notNull(input);
         final Document doc;
         final Charset charset = charsetDoc.charset;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(input, charset), DefaultBufferSize)) {
+        try (Reader reader = new InputStreamReader(input, charset)) {
             maybeSkipBom(reader, charsetDoc);
             try {
                 doc = parser.parseInput(reader, baseUri);
