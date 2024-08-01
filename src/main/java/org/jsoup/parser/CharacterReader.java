@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SoftPool;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -34,13 +35,15 @@ public final class CharacterReader {
     private int bufMark = -1;   // if not -1, the marked rewind position
     private boolean readFully;  // if the underlying stream has been completely read, no value in further buffering
 
+    private static final SoftPool<char[]> BufferPool = new SoftPool<>(() -> new char[BufferSize]); // recycled char buffer
+
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
     public CharacterReader(Reader input, int sz) {
         Validate.notNull(input);
         reader = input;
-        charBuf = new char[BufferSize]; // todo - recycle this
+        charBuf = BufferPool.borrow();
         bufferUp();
     }
 
@@ -60,6 +63,8 @@ public final class CharacterReader {
         } catch (IOException ignored) {
         } finally {
             reader = null;
+            Arrays.fill(charBuf, (char) 0); // before release, clear the buffer. Not required, but acts as a safety net, and makes debug view clearer
+            BufferPool.release(charBuf);
             charBuf = null;
             stringCache = null;
         }
