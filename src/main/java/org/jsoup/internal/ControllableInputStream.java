@@ -20,7 +20,7 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
  */
 // reimplemented from ConstrainableInputStream for JDK21 - extending BufferedInputStream will pin threads during read
 public class ControllableInputStream extends FilterInputStream {
-    private final BufferedInputStream buff;
+    private final InputStream buff;
     private final boolean capped;
     private final int maxSize;
     private long startTime;
@@ -35,7 +35,7 @@ public class ControllableInputStream extends FilterInputStream {
     private int contentLength = -1;
     private int readPos = 0; // amount read; can be reset()
 
-    private ControllableInputStream(BufferedInputStream in, int maxSize) {
+    private ControllableInputStream(InputStream in, int maxSize) {
         super(in);
         Validate.isTrue(maxSize >= 0);
         buff = in;
@@ -54,12 +54,13 @@ public class ControllableInputStream extends FilterInputStream {
      * @return a controllable input stream
      */
     public static ControllableInputStream wrap(InputStream in, int bufferSize, int maxSize) {
+        // bufferSize currently unused; consider implementing as a min size in the SoftPool recycler
         if (in instanceof ControllableInputStream)
             return (ControllableInputStream) in;
         else if (in instanceof BufferedInputStream)
-            return new ControllableInputStream((BufferedInputStream) in, maxSize);
+            return new ControllableInputStream(in, maxSize);
         else
-            return new ControllableInputStream(new BufferedInputStream(in, bufferSize), maxSize);
+            return new ControllableInputStream(new SimpleBufferedInput(in), maxSize);
     }
 
     @Override
@@ -173,6 +174,9 @@ public class ControllableInputStream extends FilterInputStream {
     }
 
     public BufferedInputStream inputStream() {
-        return buff;
+        // called via HttpConnection.Response.bodyStream(), needs an OG BufferedInputStream
+        if (buff instanceof BufferedInputStream)
+            return (BufferedInputStream) buff; // if originally supplied a BIS in .wrap()
+        else return new BufferedInputStream(buff);
     }
 }
