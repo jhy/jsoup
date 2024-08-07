@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  they are no longer in use.
  <p>Like a ThreadLocal, should be stored in a static field.</p>
  @param <T> the type of object to pool.
- @since 1.18.1
+ @since 1.18.2
  */
 public class SoftPool<T> {
     final ThreadLocal<SoftReference<Stack<T>>> threadLocalStack;

@@ -11,15 +11,17 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
  A simple implemented of a buffered input stream, in which we can control the byte[] buffer to recycle it. Not safe for
- use between threads; no sync or locks. The buffer is borrowed on initial demand in fill. */
+ use between threads; no sync or locks. The buffer is borrowed on initial demand in fill.
+ @since 1.18.2
+ */
 class SimpleBufferedInput extends FilterInputStream {
     static final int BufferSize = DefaultBufferSize;
     static final SoftPool<byte[]> BufferPool = new SoftPool<>(() -> new byte[BufferSize]);
 
-    byte @Nullable [] byteBuf; // the byte buffer; recycled via SoftPool. Created in fill if required
-    int bufPos;
-    int bufLength;
-    int bufMark = -1;
+    private byte @Nullable [] byteBuf; // the byte buffer; recycled via SoftPool. Created in fill if required
+    private int bufPos;
+    private int bufLength;
+    private int bufMark = -1;
 
     SimpleBufferedInput(InputStream in) {
         super(in);
@@ -107,6 +109,7 @@ class SimpleBufferedInput extends FilterInputStream {
         return in.available();
     }
 
+    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // explicitly not synced
     @Override
     public void mark(int readlimit) {
         if (readlimit > BufferSize) {
@@ -115,6 +118,7 @@ class SimpleBufferedInput extends FilterInputStream {
         bufMark = bufPos;
     }
 
+    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // explicitly not synced
     @Override
     public void reset() throws IOException {
         if (bufMark < 0)

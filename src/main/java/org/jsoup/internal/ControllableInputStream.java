@@ -5,7 +5,6 @@ import org.jsoup.helper.Validate;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
