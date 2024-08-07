@@ -969,7 +969,7 @@ public class HttpConnection implements Connection {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
             InputStream stream = bodyStream;
             if (byteData != null) { // bytes have been read in to the buffer, parse that
-                stream = new ByteArrayInputStream(byteData.array());
+                stream = new ByteArrayInputStream(byteData.array(), 0, byteData.limit());
                 inputStreamRead = false; // ok to reparse if in bytes
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
@@ -1035,7 +1035,19 @@ public class HttpConnection implements Connection {
         public byte[] bodyAsBytes() {
             prepareByteData();
             Validate.notNull(byteData);
-            return byteData.array();
+            Validate.isTrue(byteData.hasArray()); // we made it, so it should
+
+            byte[] array = byteData.array();
+            int offset = byteData.arrayOffset();
+            int length = byteData.limit();
+
+            if (offset == 0 && length == array.length) { // exact, just return it
+                return array;
+            } else { // trim to size
+                byte[] exactArray = new byte[length];
+                System.arraycopy(array, offset, exactArray, 0, length);
+                return exactArray;
+            }
         }
 
         @Override
@@ -1050,7 +1062,9 @@ public class HttpConnection implements Connection {
 
             // if we have read to bytes (via buffer up), return those as a stream.
             if (byteData != null) {
-                return new BufferedInputStream(new ByteArrayInputStream(byteData.array()), SharedConstants.DefaultBufferSize);
+                return new BufferedInputStream(
+                    new ByteArrayInputStream(byteData.array(), 0, byteData.limit()),
+                    SharedConstants.DefaultBufferSize);
             }
 
             Validate.isFalse(inputStreamRead, "Request has already been read");

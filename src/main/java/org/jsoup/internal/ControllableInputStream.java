@@ -105,26 +105,33 @@ public class ControllableInputStream extends FilterInputStream {
     public static ByteBuffer readToByteBuffer(InputStream in, int max) throws IOException {
         Validate.isTrue(max >= 0, "maxSize must be 0 (unlimited) or larger");
         Validate.notNull(in);
-        final boolean localCapped = max > 0; // still possibly capped in total stream
-        final int bufferSize = localCapped && max < DefaultBufferSize ? max : DefaultBufferSize;
-        final byte[] readBuffer = new byte[bufferSize];
-        final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+        final boolean capped = max > 0;
+        final byte[] readBuf = SimpleBufferedInput.BufferPool.borrow(); // Share the same byte[] pool as SBI
+        final int outSize = capped ? Math.min(max, DefaultBufferSize) : DefaultBufferSize;
+        ByteBuffer outBuf = ByteBuffer.allocate(outSize);
 
-        int read;
-        int remaining = max;
-        while (true) {
-            read = in.read(readBuffer, 0, localCapped ? Math.min(remaining, bufferSize) : bufferSize);
-            if (read == -1) break;
-            if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
-                if (read >= remaining) {
-                    outStream.write(readBuffer, 0, remaining);
-                    break;
+        try {
+            int remaining = max;
+            int read;
+            while ((read = in.read(readBuf, 0, capped ? Math.min(remaining, DefaultBufferSize) : DefaultBufferSize)) != -1) {
+                if (outBuf.remaining() < read) { // needs to grow
+                    int newCapacity = (int) Math.max(outBuf.capacity() * 1.5, outBuf.capacity() + read);
+                    ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+                    outBuf.flip();
+                    newBuffer.put(outBuf);
+                    outBuf = newBuffer;
                 }
-                remaining -= read;
+                outBuf.put(readBuf, 0, read);
+                if (capped) {
+                    remaining -= read;
+                    if (remaining <= 0) break;
+                }
             }
-            outStream.write(readBuffer, 0, read);
+            outBuf.flip(); // Prepare the buffer for reading
+            return outBuf;
+        } finally {
+            SimpleBufferedInput.BufferPool.release(readBuf);
         }
-        return ByteBuffer.wrap(outStream.toByteArray());
     }
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs

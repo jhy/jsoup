@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -603,13 +604,22 @@ public class ConnectTest {
 
     @Test
     public void canFetchBinaryAsBytes() throws IOException {
-        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/thumb.jpg"))
+        String path = "/htmltests/thumb.jpg";
+        int actualSize = 1052;
+
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo(path))
             .data(FileServlet.ContentTypeParam, "image/jpeg")
             .ignoreContentType(true)
             .execute();
 
-        byte[] bytes = res.bodyAsBytes();
-        assertEquals(1052, bytes.length);
+        byte[] resBytes = res.bodyAsBytes();
+        assertEquals(actualSize, resBytes.length);
+
+        // compare the content of the file and the bytes:
+        Path filePath = ParseTest.getPath(path);
+        byte[] fileBytes = Files.readAllBytes(filePath);
+        assertEquals(actualSize, fileBytes.length);
+        assertArrayEquals(fileBytes, resBytes);
     }
 
     @Test

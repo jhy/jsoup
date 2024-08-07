@@ -331,7 +331,7 @@ public class DataUtilTest {
         VaryingReadInputStream stream = new VaryingReadInputStream(ParseTest.inputStreamFrom(input));
 
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
-        String read = new String(byteBuffer.array());
+        String read = new String(byteBuffer.array(), 0, byteBuffer.limit(), StandardCharsets.UTF_8);
 
         assertEquals(input, read);
     }
