@@ -1006,8 +1006,14 @@ public class ConnectTest {
 
         // should expect to see events relative to how large the buffer is.
         int expected = LargeDocFileLen / 8192;
-        assertTrue(numProgress.get() > expected * 0.75);
-        assertTrue(numProgress.get() < expected * 1.25);
+
+        int num = numProgress.get();
+        // debug log if not in those ranges:
+        if (num < expected * 0.75 || num > expected * 1.25) {
+            System.err.println("Expected: " + expected + ", got: " + num);
+        }
+        assertTrue(num > expected * 0.75);
+        assertTrue(num < expected * 1.25);
 
         // check the document works
         assertEquals(LargeDocTextLen, document.text().length());
