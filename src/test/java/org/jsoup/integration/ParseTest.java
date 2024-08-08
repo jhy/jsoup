@@ -153,7 +153,8 @@ public class ParseTest {
         if (file.getName().endsWith(".gz")) {
             InputStream stream = new GZIPInputStream(new FileInputStream(file));
             ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
-            bytes = byteBuffer.array();
+            bytes = new byte[byteBuffer.limit()];
+            System.arraycopy(byteBuffer.array(), 0, bytes, 0, byteBuffer.limit());
         } else {
             bytes = Files.readAllBytes(file.toPath());
         }

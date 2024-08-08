@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import static org.jsoup.parser.CharacterReader.maxBufferLen;
+import static org.jsoup.parser.CharacterReader.BufferSize;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TokeniserTest {
@@ -23,7 +23,7 @@ public class TokeniserTest {
             String tail = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
             StringBuilder sb = new StringBuilder(preamble);
 
-            final int charsToFillBuffer = maxBufferLen - preamble.length();
+            final int charsToFillBuffer = BufferSize - preamble.length();
             for (int i = 0; i < charsToFillBuffer; i++) {
                 sb.append('a');
             }
@@ -43,10 +43,10 @@ public class TokeniserTest {
     @Test public void handleSuperLargeTagNames() {
         // unlikely, but valid. so who knows.
 
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("LargeTagName");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String tag = sb.toString();
         String html = "<" + tag + ">One</" + tag + ">";
 
@@ -60,10 +60,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleSuperLargeAttributeName() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("LargAttributeName");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String attrName = sb.toString();
         String html = "<p " + attrName + "=foo>One</p>";
 
@@ -79,10 +79,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeText() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("A Large Amount of Text");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String text = sb.toString();
         String html = "<p>" + text + "</p>";
 
@@ -96,10 +96,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeComment() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("Quite a comment ");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String comment = sb.toString();
         String html = "<p><!-- " + comment + " --></p>";
 
@@ -114,10 +114,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeCdata() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("Quite a lot of CDATA <><><><>");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String cdata = sb.toString();
         String html = "<p><![CDATA[" + cdata + "]]></p>";
 
@@ -133,10 +133,10 @@ public class TokeniserTest {
     }
 
     @Test public void handleLargeTitle() {
-        StringBuilder sb = new StringBuilder(maxBufferLen);
+        StringBuilder sb = new StringBuilder(BufferSize);
         do {
             sb.append("Quite a long title");
-        } while (sb.length() < maxBufferLen);
+        } while (sb.length() < BufferSize);
         String title = sb.toString();
         String html = "<title>" + title + "</title>";
 
@@ -178,10 +178,10 @@ public class TokeniserTest {
     }
 
     @Test public void canParseVeryLongBogusComment() {
-        StringBuilder commentData = new StringBuilder(maxBufferLen);
+        StringBuilder commentData = new StringBuilder(BufferSize);
         do {
             commentData.append("blah blah blah blah ");
-        } while (commentData.length() < maxBufferLen);
+        } while (commentData.length() < BufferSize);
         String expectedCommentData = commentData.toString();
         String testMarkup = "<html><body><!" + expectedCommentData + "></body></html>";
         Parser parser = new Parser(new HtmlTreeBuilder());
@@ -196,7 +196,7 @@ public class TokeniserTest {
     @Test public void canParseCdataEndingAtEdgeOfBuffer() {
         String cdataStart = "<![CDATA[";
         String cdataEnd = "]]>";
-        int bufLen = maxBufferLen - cdataStart.length() - 1;    // also breaks with -2, but not with -3 or 0
+        int bufLen = BufferSize - cdataStart.length() - 1;    // also breaks with -2, but not with -3 or 0
         char[] cdataContentsArray = new char[bufLen];
         Arrays.fill(cdataContentsArray, 'x');
         String cdataContents = new String(cdataContentsArray);

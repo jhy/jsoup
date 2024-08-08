@@ -105,6 +105,7 @@
                 <ignore>java.util.Set</ignore> <!-- Set#stream() -->
                 <ignore>java.util.Spliterator</ignore>
                 <ignore>java.util.Spliterators</ignore>
+                <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
 
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
               </ignores>

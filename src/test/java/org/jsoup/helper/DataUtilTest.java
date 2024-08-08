@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.integration.ParseTest;
+import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
@@ -37,12 +38,12 @@ public class DataUtilTest {
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
 
-    private InputStream stream(String data) {
-        return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+    private ControllableInputStream stream(String data) {
+        return ControllableInputStream.wrap(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), 0);
     }
 
-    private InputStream stream(String data, String charset) {
-        return new ByteArrayInputStream(data.getBytes(Charset.forName(charset)));
+    private ControllableInputStream stream(String data, String charset) {
+        return ControllableInputStream.wrap(new ByteArrayInputStream(data.getBytes(Charset.forName(charset))), 0);
     }
 
     @Test
@@ -143,7 +144,8 @@ public class DataUtilTest {
                 stream(firstPart),
                 stream(secondPart)
         );
-        Document doc = DataUtil.parseInputStream(sequenceStream, null, "", Parser.htmlParser());
+        ControllableInputStream stream = ControllableInputStream.wrap(sequenceStream, 0);
+        Document doc = DataUtil.parseInputStream(stream, null, "", Parser.htmlParser());
         assertEquals(fileContent, doc.outerHtml());
     }
 
@@ -331,7 +333,7 @@ public class DataUtilTest {
         VaryingReadInputStream stream = new VaryingReadInputStream(ParseTest.inputStreamFrom(input));
 
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
-        String read = new String(byteBuffer.array());
+        String read = new String(byteBuffer.array(), 0, byteBuffer.limit(), StandardCharsets.UTF_8);
 
         assertEquals(input, read);
     }

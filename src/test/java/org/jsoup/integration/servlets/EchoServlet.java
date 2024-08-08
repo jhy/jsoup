@@ -90,7 +90,7 @@ public class EchoServlet extends BaseServlet {
 
         // post body
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(req.getInputStream(), 0);
-        String postData = new String(byteBuffer.array(), StandardCharsets.UTF_8);
+        String postData = new String(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.limit(), StandardCharsets.UTF_8);
         if (!StringUtil.isBlank(postData)) {
             write(w, "Post Data", postData);
         }

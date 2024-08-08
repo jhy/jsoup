@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SoftPool;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -17,38 +18,43 @@ import java.util.Locale;
  */
 public final class CharacterReader {
     static final char EOF = (char) -1;
-    private static final int maxStringCacheLen = 12;
-    static final int maxBufferLen = 1024 * 32; // visible for testing
-    static final int readAheadLimit = (int) (maxBufferLen * 0.75); // visible for testing
-    private static final int minReadAheadLen = 1024; // the minimum mark length supported. No HTML entities can be larger than this.
+    private static final int MaxStringCacheLen = 12;
+    private static final int StringCacheSize = 512;
+    private String[] stringCache; // holds reused strings in this doc, to lessen garbage
+    private static final SoftPool<String[]> StringPool = new SoftPool<>(() -> new String[StringCacheSize]); // reuse cache between iterations
 
-    private char[] charBuf;
-    private Reader reader;
-    private int bufLength;
-    private int bufSplitPoint;
-    private int bufPos;
-    private int readerPos;
-    private int bufMark = -1;
-    private static final int stringCacheSize = 512;
-    private String[] stringCache = new String[stringCacheSize]; // holds reused strings in this doc, to lessen garbage
+    static final int BufferSize = 1024 * 2;         // visible for testing
+    static final int RefillPoint = BufferSize / 2;  // when bufPos characters read, refill; visible for testing
+    private static final int RewindLimit = 1024;    // the maximum we can rewind. No HTML entities can be larger than this.
+
+    private Reader reader;      // underlying Reader, will be backed by a buffered+controlled input stream, or StringReader
+    private char[] charBuf;     // character buffer we consume from; filled from Reader
+    private int bufPos;         // position in charBuf that's been consumed to
+    private int bufLength;      // the num of characters actually buffered in charBuf, <= charBuf.length
+    private int fillPoint = 0;  // how far into the charBuf we read before re-filling. 0.5 of charBuf.length after bufferUp
+    private int consumed;       // how many characters total have been consumed from this CharacterReader (less the current bufPos)
+    private int bufMark = -1;   // if not -1, the marked rewind position
+    private boolean readFully;  // if the underlying stream has been completely read, no value in further buffering
+
+    private static final SoftPool<char[]> BufferPool = new SoftPool<>(() -> new char[BufferSize]); // recycled char buffer
 
     @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
     private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
 
     public CharacterReader(Reader input, int sz) {
-        Validate.notNull(input);
-        Validate.isTrue(input.markSupported(), "The supplied Reader must support mark(), but does not.");
-        reader = input;
-        charBuf = new char[Math.min(sz, maxBufferLen)];
-        bufferUp();
+        this(input); // sz is no longer used
     }
 
     public CharacterReader(Reader input) {
-        this(input, maxBufferLen);
+        Validate.notNull(input);
+        reader = input;
+        charBuf = BufferPool.borrow();
+        stringCache = StringPool.borrow();
+        bufferUp();
     }
 
     public CharacterReader(String input) {
-        this(new StringReader(input), input.length());
+        this(new StringReader(input));
     }
 
     public void close() {
@@ -59,53 +65,71 @@ public final class CharacterReader {
         } catch (IOException ignored) {
         } finally {
             reader = null;
+            Arrays.fill(charBuf, (char) 0); // before release, clear the buffer. Not required, but acts as a safety net, and makes debug view clearer
+            BufferPool.release(charBuf);
             charBuf = null;
+            StringPool.release(stringCache); // conversely, we don't clear the string cache, so we can reuse the contents
             stringCache = null;
         }
     }
 
-    private boolean readFully; // if the underlying stream has been completely read, no value in further buffering
     private void bufferUp() {
-        if (readFully || bufPos < bufSplitPoint)
+        if (readFully || bufPos < fillPoint || bufMark != -1)
             return;
+        doBufferUp(); // structured so bufferUp may become an intrinsic candidate
+    }
 
-        final int pos;
-        final int offset;
-        if (bufMark != -1) {
-            pos = bufMark;
-            offset = bufPos - bufMark;
-        } else {
-            pos = bufPos;
-            offset = 0;
-        }
-
-        try {
-            final long skipped = reader.skip(pos);
-            reader.mark(maxBufferLen);
-            int read = 0;
-            while (read <= minReadAheadLen) {
-                int thisRead = reader.read(charBuf, read, charBuf.length - read);
-                if (thisRead == -1)
+    private void doBufferUp() {
+        /*
+        The flow:
+        - if read fully, or if bufPos < fillPoint, or if marked - do not fill.
+        - update readerPos (total amount consumed from this CharacterReader) += bufPos
+        - shift charBuf contents such that bufPos = 0; set next read offset (bufLength) -= shift amount
+        - loop read the Reader until we fill charBuf. bufLength += read.
+        - readFully = true when read = -1
+         */
+        consumed += bufPos;
+        bufLength -= bufPos;
+        if (bufLength > 0)
+            System.arraycopy(charBuf, bufPos, charBuf, 0, bufLength);
+        bufPos = 0;
+        while (bufLength < BufferSize) {
+            try {
+                int read = reader.read(charBuf, bufLength, charBuf.length - bufLength);
+                if (read == -1) {
                     readFully = true;
-                if (thisRead <= 0)
                     break;
-                read += thisRead;
+                }
+                bufLength += read;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-            reader.reset();
-            if (read > 0) {
-                Validate.isTrue(skipped == pos); // Previously asserted that there is room in buf to skip, so this will be a WTF
-                bufLength = read;
-                readerPos += pos;
-                bufPos = offset;
-                if (bufMark != -1)
-                    bufMark = 0;
-                bufSplitPoint = Math.min(bufLength, readAheadLimit);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
+        fillPoint = Math.min(bufLength, RefillPoint);
+
         scanBufferForNewlines(); // if enabled, we index newline positions for line number tracking
         lastIcSeq = null; // cache for last containsIgnoreCase(seq)
+    }
+
+    void mark() {
+        // make sure there is enough look ahead capacity
+        if (bufLength - bufPos < RewindLimit)
+            fillPoint = 0;
+
+        bufferUp();
+        bufMark = bufPos;
+    }
+
+    void unmark() {
+        bufMark = -1;
+    }
+
+    void rewindToMark() {
+        if (bufMark == -1)
+            throw new UncheckedIOException(new IOException("Mark invalid"));
+
+        bufPos = bufMark;
+        unmark();
     }
 
     /**
@@ -113,7 +137,7 @@ public final class CharacterReader {
      * @return current position
      */
     public int pos() {
-        return readerPos + bufPos;
+        return consumed + bufPos;
     }
 
     /** Tests if the buffer has been fully read. */
@@ -131,7 +155,7 @@ public final class CharacterReader {
      */
     public void trackNewlines(boolean track) {
         if (track && newlinePositions == null) {
-            newlinePositions = new ArrayList<>(maxBufferLen / 80); // rough guess of likely count
+            newlinePositions = new ArrayList<>(BufferSize / 80); // rough guess of likely count
             scanBufferForNewlines(); // first pass when enabled; subsequently called during bufferUp
         }
         else if (!track)
@@ -216,7 +240,7 @@ public final class CharacterReader {
 
         if (newlinePositions.size() > 0) {
             // work out the line number that we have read up to (as we have likely scanned past this point)
-            int index = lineNumIndex(readerPos);
+            int index = lineNumIndex(consumed);
             if (index == -1) index = 0; // first line
             int linePos = newlinePositions.get(index);
             lineNumberOffset += index; // the num lines we've read up to
@@ -226,7 +250,7 @@ public final class CharacterReader {
 
         for (int i = bufPos; i < bufLength; i++) {
             if (charBuf[i] == '\n')
-                newlinePositions.add(1 + readerPos + i);
+                newlinePositions.add(1 + consumed + i);
         }
     }
 
@@ -274,27 +298,6 @@ public final class CharacterReader {
      */
     public void advance() {
         bufPos++;
-    }
-
-    void mark() {
-        // make sure there is enough look ahead capacity
-        if (bufLength - bufPos < minReadAheadLen)
-            bufSplitPoint = 0;
-
-        bufferUp();
-        bufMark = bufPos;
-    }
-
-    void unmark() {
-        bufMark = -1;
-    }
-
-    void rewindToMark() {
-        if (bufMark == -1)
-            throw new UncheckedIOException(new IOException("Mark invalid"));
-
-        bufPos = bufMark;
-        unmark();
     }
 
     /**
@@ -716,20 +719,20 @@ public final class CharacterReader {
      * some more duplicates.
      */
     private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
-        // limit (no cache):
-        if (count > maxStringCacheLen)
+        if (count > MaxStringCacheLen) // don't cache strings that are too big
             return new String(charBuf, start, count);
         if (count < 1)
             return "";
 
         // calculate hash:
         int hash = 0;
-        for (int i = 0; i < count; i++) {
-            hash = 31 * hash + charBuf[start + i];
+        int end = count + start;
+        for (int i = start; i < end; i++) {
+            hash = 31 * hash + charBuf[i];
         }
 
         // get from cache
-        final int index = hash & stringCacheSize - 1;
+        final int index = hash & StringCacheSize - 1;
         String cached = stringCache[index];
 
         if (cached != null && rangeEquals(charBuf, start, count, cached)) // positive hit

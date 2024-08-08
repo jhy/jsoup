@@ -208,21 +208,21 @@ public class TokeniserStateTest {
     @Test
     public void testUnconsumeAtBufferBoundary() {
         String triggeringSnippet = "<a href=\"\"foo";
-        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
+        char[] padding = new char[CharacterReader.RefillPoint - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
         Arrays.fill(padding, ' ');
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
 
         Parser.parseFragment(paddedSnippet, null, "", errorList);
 
-        assertEquals(CharacterReader.readAheadLimit - 1, errorList.get(0).getPosition());
+        assertEquals(CharacterReader.RefillPoint - 1, errorList.get(0).getPosition());
     }
 
     @Test
     public void testUnconsumeAfterBufferUp() {
         // test for after consume() a bufferUp occurs (look-forward) but then attempts to unconsume. Would throw a "No buffer left to unconsume"
         String triggeringSnippet = "<title>One <span>Two";
-        char[] padding = new char[CharacterReader.readAheadLimit - triggeringSnippet.length() + 8]; // The "<span" part must be just at the limit. The "containsIgnoreCase" scan does a bufferUp, losing the unconsume
+        char[] padding = new char[CharacterReader.RefillPoint - triggeringSnippet.length() + 8]; // The "<span" part must be just at the limit. The "containsIgnoreCase" scan does a bufferUp, losing the unconsume
         Arrays.fill(padding, ' ');
         String paddedSnippet = String.valueOf(padding) + triggeringSnippet;
         ParseErrorList errorList = ParseErrorList.tracking(1);
