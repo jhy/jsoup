@@ -48,10 +48,12 @@ class SimpleBufferedInput extends FilterInputStream {
         }
 
         int bufAvail = bufLength - bufPos;
-        if (bufAvail <= 0) {
-            if (desiredLen >= BufferSize && bufMark < 0) {
-                // We can skip creating / copying into a local buffer; just pass through
-                return in.read(dest, offset, desiredLen);
+        if (bufAvail <= 0) { // can't serve from the buffer
+            if (!inReadFully && bufMark < 0) {
+                // skip creating / copying into a local buffer; just pass through
+                int read = in.read(dest, offset, desiredLen);
+                closeIfDone(read);
+                return read;
             }
             fill();
             bufAvail = bufLength - bufPos;
@@ -97,6 +99,10 @@ class SimpleBufferedInput extends FilterInputStream {
                 bufLength += read;
             }
         }
+        closeIfDone(read);
+    }
+
+    private void closeIfDone(int read) throws IOException {
         if (read == -1) {
             inReadFully = true;
             super.close(); // close underlying stream immediately; frees resources a little earlier

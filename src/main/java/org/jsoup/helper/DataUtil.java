@@ -15,7 +15,6 @@ import org.jsoup.select.Elements;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedReader;
-import java.io.CharArrayReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,9 +22,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
@@ -143,7 +140,6 @@ public final class DataUtil {
         String charsetName = charset != null? charset.name() : null;
         DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
         BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
-        maybeSkipBom(reader, charsetDoc);
         streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
 
         return streamer;
@@ -208,13 +204,11 @@ public final class DataUtil {
         Charset charset;
         InputStream input;
         @Nullable Document doc;
-        boolean skip;
 
-        CharsetDoc(Charset charset, @Nullable Document doc, InputStream input, boolean skip) {
+        CharsetDoc(Charset charset, @Nullable Document doc, InputStream input) {
             this.charset = charset;
             this.input = input;
             this.doc = doc;
-            this.skip = skip;
         }
     }
 
@@ -238,9 +232,9 @@ public final class DataUtil {
         Document doc = null;
         // read the start of the stream and look for a BOM or meta charset:
         // look for BOM - overrides any other header or input
-        BomCharset bomCharset = detectCharsetFromBom(input); // resets
+        String bomCharset = detectCharsetFromBom(input); // resets / consumes appropriately
         if (bomCharset != null)
-            charsetName = bomCharset.charset;
+            charsetName = bomCharset;
 
         if (charsetName == null) { // read ahead and determine from meta. safe first parse as UTF-8
             int origMax = input.max();
@@ -303,9 +297,7 @@ public final class DataUtil {
         if (charsetName == null)
             charsetName = defaultCharsetName;
         Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
-        boolean skip = bomCharset != null && bomCharset.offset; // skip 1 if the BOM is there and needs offset
-        // if consumer needs to parse the input; prep it if there's a BOM. Can't skip in inputstream as wrapping buffer will ignore the pos
-        return new CharsetDoc(charset, doc, input, skip);
+        return new CharsetDoc(charset, doc, input);
     }
 
     static Document parseInputStream(CharsetDoc charsetDoc, String baseUri, Parser parser) throws IOException {
@@ -318,7 +310,6 @@ public final class DataUtil {
         final Document doc;
         final Charset charset = charsetDoc.charset;
         try (Reader reader = new InputStreamReader(input, charset)) {
-            maybeSkipBom(reader, charsetDoc);
             try {
                 doc = parser.parseInput(reader, baseUri);
             } catch (UncheckedIOException e) {
@@ -332,13 +323,6 @@ public final class DataUtil {
             }
         }
         return doc;
-    }
-
-    static void maybeSkipBom(Reader reader, CharsetDoc charsetDoc) throws IOException {
-        if (charsetDoc.skip) {
-            long skipped = reader.skip(1);
-            Validate.isTrue(skipped == 1); // WTF if this fails.
-        }
     }
 
     /**
@@ -399,33 +383,24 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
-    private static @Nullable BomCharset detectCharsetFromBom(ControllableInputStream input) throws IOException {
+    private static @Nullable String detectCharsetFromBom(ControllableInputStream input) throws IOException {
         byte[] bom = new byte[4];
         input.mark(bom.length);
         //noinspection ResultOfMethodCallIgnored
         input.read(bom, 0, 4);
         input.reset();
 
+        // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
         if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
-            return new BomCharset("UTF-32", false); // and I hope it's on your system
+            return "UTF-32"; // and I hope it's on your system
         } else if (bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE) {
-            return new BomCharset("UTF-16", false); // in all Javas
+            return "UTF-16"; // in all Javas
         } else if (bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF) {
-            return new BomCharset("UTF-8", true); // in all Javas
-            // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
+            input.read(bom, 0, 3); // consume the UTF-8 BOM
+            return "UTF-8"; // in all Javas
         }
         return null;
-    }
-
-    private static class BomCharset {
-        private final String charset;
-        private final boolean offset;
-
-        public BomCharset(String charset, boolean offset) {
-            this.charset = charset;
-            this.offset = offset;
-        }
     }
 }
