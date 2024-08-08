@@ -52,6 +52,7 @@ import java.util.zip.InflaterInputStream;
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.helper.DataUtil.UTF_8;
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
  * Implementation of {@link Connection}.
@@ -915,7 +916,7 @@ public class HttpConnection implements Connection {
                         stream = new InflaterInputStream(stream, new Inflater(true));
                     
                     res.bodyStream = ControllableInputStream.wrap(
-                        stream, SharedConstants.DefaultBufferSize, req.maxBodySize())
+                        stream, DefaultBufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout());
 
                     if (req.responseProgress != null) // set response progress listener
@@ -965,11 +966,12 @@ public class HttpConnection implements Connection {
         }
 
         /** Called from parse() or streamParser(), validates and prepares the input stream, and aligns common settings. */
-        private InputStream prepareParse() {
+        private ControllableInputStream prepareParse() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            InputStream stream = bodyStream;
+            ControllableInputStream stream = bodyStream;
             if (byteData != null) { // bytes have been read in to the buffer, parse that
-                stream = new ByteArrayInputStream(byteData.array(), 0, byteData.limit());
+                ByteArrayInputStream bytes = new ByteArrayInputStream(byteData.array(), 0, byteData.limit());
+                stream = ControllableInputStream.wrap(bytes, 0); // no max
                 inputStreamRead = false; // ok to reparse if in bytes
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
@@ -979,7 +981,7 @@ public class HttpConnection implements Connection {
         }
 
         @Override public Document parse() throws IOException {
-            InputStream stream = prepareParse();
+            ControllableInputStream stream = prepareParse();
             Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
@@ -988,7 +990,7 @@ public class HttpConnection implements Connection {
         }
 
         @Override public StreamParser streamParser() throws IOException {
-            InputStream stream = prepareParse();
+            ControllableInputStream stream = prepareParse();
             String baseUri = url.toExternalForm();
             DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
             // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
@@ -1064,7 +1066,7 @@ public class HttpConnection implements Connection {
             if (byteData != null) {
                 return new BufferedInputStream(
                     new ByteArrayInputStream(byteData.array(), 0, byteData.limit()),
-                    SharedConstants.DefaultBufferSize);
+                    DefaultBufferSize);
             }
 
             Validate.isFalse(inputStreamRead, "Request has already been read");

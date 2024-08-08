@@ -54,6 +54,7 @@ public class ConnectIT {
     @Test
     public void canInterruptDocumentRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
+        long start = System.currentTimeMillis();
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {
             try {
@@ -68,12 +69,15 @@ public class ConnectIT {
         });
 
         runner.start();
-        Thread.sleep(1000 * 3);
+        Thread.sleep(3 * 1000);
         runner.interrupt();
         assertTrue(runner.isInterrupted());
         runner.join();
 
-        assertEquals(0, body[0].length()); // doesn't read a failed doc
+        long end = System.currentTimeMillis();
+        // check we are between 3 and connect timeout seconds (should be just over 3; but allow some slack for slow CI runners)
+        assertTrue(end - start > 3 * 1000);
+        assertTrue(end - start < 10 * 1000);
     }
 
     @Test public void canInterruptThenJoinASpawnedThread() throws InterruptedException {

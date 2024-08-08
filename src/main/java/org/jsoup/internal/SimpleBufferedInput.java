@@ -22,6 +22,7 @@ class SimpleBufferedInput extends FilterInputStream {
     private int bufPos;
     private int bufLength;
     private int bufMark = -1;
+    private boolean inReadFully = false; // true when the underlying inputstream has been read fully
 
     SimpleBufferedInput(InputStream in) {
         super(in);
@@ -67,6 +68,7 @@ class SimpleBufferedInput extends FilterInputStream {
     }
 
     private void fill() throws IOException {
+        if (inReadFully) return;
         if (byteBuf == null) { // get one on first demand
             byteBuf = BufferPool.borrow();
         }
@@ -95,6 +97,10 @@ class SimpleBufferedInput extends FilterInputStream {
                 bufLength += read;
             }
         }
+        if (read == -1) {
+            inReadFully = true;
+            super.close(); // close underlying stream immediately; frees resources a little earlier
+        }
     }
 
     byte[] getBuf() {
@@ -102,11 +108,19 @@ class SimpleBufferedInput extends FilterInputStream {
         return byteBuf;
     }
 
+    /**
+     Check if the underlying InputStream has been read fully. There may still content in this buffer to be consumed.
+     @return true if the underlying inputstream has been read fully.
+     */
+    boolean baseReadFully() {
+        return inReadFully;
+    }
+
     @Override
     public int available() throws IOException {
         if (byteBuf != null && bufLength - bufPos > 0)
             return bufLength - bufPos; // doesn't include those in.available(), but mostly used as a block test
-        return in.available();
+        return inReadFully ? 0 : in.available();
     }
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // explicitly not synced

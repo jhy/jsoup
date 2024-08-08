@@ -119,8 +119,7 @@ public final class DataUtil {
      * @since 1.17.2
      */
     public static Document load(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        InputStream stream = openStream(path);
-        return parseInputStream(stream, charsetName, baseUri, parser);
+        return parseInputStream(openStream(path), charsetName, baseUri, parser);
     }
 
     /**
@@ -151,7 +150,7 @@ public final class DataUtil {
     }
 
     /** Open an input stream from a file; if it's a gzip file, returns a GZIPInputStream to unzip it. */
-    private static InputStream openStream(Path path) throws IOException {
+    private static ControllableInputStream openStream(Path path) throws IOException {
         final SeekableByteChannel byteChannel = Files.newByteChannel(path);
         InputStream stream = Channels.newInputStream(byteChannel);
         String name = Normalizer.lowerCase(path.getFileName().toString());
@@ -162,7 +161,7 @@ public final class DataUtil {
                 stream = new GZIPInputStream(stream);
             }
         }
-        return stream;
+        return ControllableInputStream.wrap(stream, 0);
     }
 
     /**
@@ -174,7 +173,7 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
-        return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
+        return parseInputStream(ControllableInputStream.wrap(in, 0), charsetName, baseUri, Parser.htmlParser());
     }
 
     /**
@@ -187,7 +186,7 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        return parseInputStream(in, charsetName, baseUri, parser);
+        return parseInputStream(ControllableInputStream.wrap(in, 0), charsetName, baseUri, parser);
     }
 
     /**
@@ -219,7 +218,7 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    static Document parseInputStream(@Nullable ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         if (input == null) // empty body // todo reconsider?
             return new Document(baseUri);
 
@@ -235,30 +234,28 @@ public final class DataUtil {
         return doc;
     }
 
-    static CharsetDoc detectCharset(InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         Document doc = null;
-
-        // read the start of the stream and look for a BOM or meta charset
-        InputStream wrappedInputStream = ControllableInputStream.wrap(input, DefaultBufferSize, 0);
-        wrappedInputStream.mark(DefaultBufferSize);
-        ByteBuffer firstBytes = readToByteBuffer(wrappedInputStream, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
-        boolean fullyRead = (wrappedInputStream.read() == -1);
-        wrappedInputStream.reset();
-
+        // read the start of the stream and look for a BOM or meta charset:
         // look for BOM - overrides any other header or input
-        BomCharset bomCharset = detectCharsetFromBom(firstBytes);
+        BomCharset bomCharset = detectCharsetFromBom(input); // resets
         if (bomCharset != null)
             charsetName = bomCharset.charset;
 
-        if (charsetName == null) { // determine from meta. safe first parse as UTF-8
+        if (charsetName == null) { // read ahead and determine from meta. safe first parse as UTF-8
+            int origMax = input.max();
+            input.max(firstReadBufferSize);
+            input.mark(firstReadBufferSize);
+            input.allowClose(false); // ignores closes during parse, in case we need to rewind
             try {
-                CharBuffer defaultDecoded = UTF_8.decode(firstBytes);
-                if (defaultDecoded.hasArray())
-                    doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
-                else
-                    doc = parser.parseInput(defaultDecoded.toString(), baseUri);
+                Reader reader = new InputStreamReader(input, UTF_8); // input is currently capped to firstReadBufferSize
+                doc = parser.parseInput(reader, baseUri);
+                input.reset();
+                input.max(origMax); // reset for a full read if required
             } catch (UncheckedIOException e) {
                 throw e.getCause();
+            } finally {
+                input.allowClose(true);
             }
 
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
@@ -293,7 +290,9 @@ public final class DataUtil {
                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                 charsetName = foundCharset;
                 doc = null;
-            } else if (!fullyRead) {
+            } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
+                input.close(); // the parser tried to close it
+            } else {
                 doc = null;
             }
         } else { // specified by content type header (or by user on file load)
@@ -306,7 +305,7 @@ public final class DataUtil {
         Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
         boolean skip = bomCharset != null && bomCharset.offset; // skip 1 if the BOM is there and needs offset
         // if consumer needs to parse the input; prep it if there's a BOM. Can't skip in inputstream as wrapping buffer will ignore the pos
-        return new CharsetDoc(charset, doc, wrappedInputStream, skip);
+        return new CharsetDoc(charset, doc, input, skip);
     }
 
     static Document parseInputStream(CharsetDoc charsetDoc, String baseUri, Parser parser) throws IOException {
@@ -400,14 +399,13 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
-    private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
-        @SuppressWarnings("UnnecessaryLocalVariable") final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
-        buffer.mark();
+    private static @Nullable BomCharset detectCharsetFromBom(ControllableInputStream input) throws IOException {
         byte[] bom = new byte[4];
-        if (byteData.remaining() >= bom.length) {
-            byteData.get(bom);
-            buffer.rewind();
-        }
+        input.mark(bom.length);
+        //noinspection ResultOfMethodCallIgnored
+        input.read(bom, 0, 4);
+        input.reset();
+
         if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
             return new BomCharset("UTF-32", false); // and I hope it's on your system
