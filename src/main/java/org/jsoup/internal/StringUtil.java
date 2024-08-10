@@ -8,7 +8,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Stack;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -337,7 +336,10 @@ public final class StringUtil {
         return controlChars.matcher(input).replaceAll("");
     }
 
-    private static final ThreadLocal<Stack<StringBuilder>> threadLocalBuilders = ThreadLocal.withInitial(Stack::new);
+    private static final int InitBuilderSize = 1024;
+    private static final int MaxBuilderSize = 8 * 1024;
+    private static final SoftPool<StringBuilder> BuilderPool = new SoftPool<>(
+        () -> new StringBuilder(InitBuilderSize));
 
     /**
      * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
@@ -347,10 +349,7 @@ public final class StringUtil {
      * @return an empty StringBuilder
      */
     public static StringBuilder borrowBuilder() {
-        Stack<StringBuilder> builders = threadLocalBuilders.get();
-        return builders.empty() ?
-            new StringBuilder(MaxCachedBuilderSize) :
-            builders.pop();
+        return BuilderPool.borrow();
     }
 
     /**
@@ -363,17 +362,12 @@ public final class StringUtil {
         Validate.notNull(sb);
         String string = sb.toString();
 
-        if (sb.length() > MaxCachedBuilderSize)
-            sb = new StringBuilder(MaxCachedBuilderSize); // make sure it hasn't grown too big
-        else
+        // if it hasn't grown too big, reset it and return it to the pool:
+        if (sb.length() <= MaxBuilderSize) {
             sb.delete(0, sb.length()); // make sure it's emptied on release
-
-        Stack<StringBuilder> builders = threadLocalBuilders.get();
-        builders.push(sb);
-
-        while (builders.size() > MaxIdleBuilders) {
-            builders.pop();
+            BuilderPool.release(sb);
         }
+
         return string;
     }
 
@@ -394,6 +388,4 @@ public final class StringUtil {
             StringJoiner::complete);
     }
 
-    private static final int MaxCachedBuilderSize = 8 * 1024;
-    private static final int MaxIdleBuilders = 8;
 }

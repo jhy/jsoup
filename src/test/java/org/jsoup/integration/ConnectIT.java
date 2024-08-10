@@ -54,6 +54,7 @@ public class ConnectIT {
     @Test
     public void canInterruptDocumentRead() throws InterruptedException {
         // todo - implement in interruptable channels, so it's immediate
+        long start = System.currentTimeMillis();
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {
             try {
@@ -68,12 +69,15 @@ public class ConnectIT {
         });
 
         runner.start();
-        Thread.sleep(1000 * 3);
+        Thread.sleep(3 * 1000);
         runner.interrupt();
         assertTrue(runner.isInterrupted());
         runner.join();
 
-        assertEquals(0, body[0].length()); // doesn't read a failed doc
+        long end = System.currentTimeMillis();
+        // check we are between 3 and connect timeout seconds (should be just over 3; but allow some slack for slow CI runners)
+        assertTrue(end - start > 3 * 1000);
+        assertTrue(end - start < 10 * 1000);
     }
 
     @Test public void canInterruptThenJoinASpawnedThread() throws InterruptedException {
@@ -184,6 +188,8 @@ public class ConnectIT {
         assertTrue(caught);
     }
 
+    private static final int LargeHtmlSize = 280735;
+
     @Test
     public void remainingAfterFirstRead() throws IOException {
         int bufferSize = 5 * 1024;
@@ -214,33 +220,34 @@ public class ConnectIT {
             // bodyStream is not capped to body size - only for jsoup consumed stream
             assertTrue(fullArray.length > capSize);
 
-            assertEquals(280735, fullArray.length);
-            String fullText = new String(fullArray, StandardCharsets.UTF_8);
+            assertEquals(LargeHtmlSize, fullRead.limit());
+            String fullText = new String(fullRead.array(), 0, fullRead.limit(), StandardCharsets.UTF_8);
             assertTrue(fullText.startsWith(firstText));
+            assertEquals(LargeHtmlSize, fullText.length());
         }
     }
 
     @Test
     public void noLimitAfterFirstRead() throws IOException {
-        int bufferSize = 5 * 1024;
+        int firstMaxRead = 5 * 1024;
 
         String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
         try (BufferedInputStream stream = Jsoup.connect(url).execute().bodyStream()) {
             // simulates parse which does a limited read first
-            stream.mark(bufferSize);
-            ByteBuffer firstBytes = DataUtil.readToByteBuffer(stream, bufferSize);
+            stream.mark(firstMaxRead);
+            ByteBuffer firstBytes = DataUtil.readToByteBuffer(stream, firstMaxRead);
             byte[] array = firstBytes.array();
             String firstText = new String(array, StandardCharsets.UTF_8);
             assertTrue(firstText.startsWith("<html><head><title>Large"));
-            assertEquals(bufferSize, array.length);
+            assertEquals(firstMaxRead, array.length);
 
             // reset and read fully
             stream.reset();
             ByteBuffer fullRead = DataUtil.readToByteBuffer(stream, 0);
-            byte[] fullArray = fullRead.array();
-            assertEquals(280735, fullArray.length);
-            String fullText = new String(fullArray, StandardCharsets.UTF_8);
+            assertEquals(LargeHtmlSize, fullRead.limit());
+            String fullText = new String(fullRead.array(), 0, fullRead.limit(), StandardCharsets.UTF_8);
             assertTrue(fullText.startsWith(firstText));
+            assertEquals(LargeHtmlSize, fullText.length());
         }
     }
 
@@ -255,8 +262,7 @@ public class ConnectIT {
             .bodyStream()) {
 
             ByteBuffer cappedRead = DataUtil.readToByteBuffer(stream, 0);
-            byte[] cappedArray = cappedRead.array();
-            assertEquals(cap, cappedArray.length);
+            assertEquals(cap, cappedRead.limit());
         }
     }
 }

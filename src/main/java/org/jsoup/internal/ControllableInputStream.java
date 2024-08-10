@@ -5,7 +5,6 @@ import org.jsoup.helper.Validate;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,19 +14,19 @@ import java.nio.ByteBuffer;
 import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
- * A jsoup internal class (so don't use it as there is no contract API) that enables controls on a Buffered Input Stream,
+ * A jsoup internal class (so don't use it as there is no contract API) that enables controls on a buffered input stream,
  * namely a maximum read size, and the ability to Thread.interrupt() the read.
  */
 // reimplemented from ConstrainableInputStream for JDK21 - extending BufferedInputStream will pin threads during read
 public class ControllableInputStream extends FilterInputStream {
-    private final BufferedInputStream buff;
-    private final boolean capped;
-    private final int maxSize;
+    private final SimpleBufferedInput buff; // super.in, but typed as SimpleBufferedInput
+    private int maxSize;
     private long startTime;
     private long timeout = 0; // optional max time of request
     private int remaining;
     private int markPos;
     private boolean interrupted;
+    private boolean allowClose = true; // for cases where we want to re-read the input, can ignore .close() from the parser
 
     // if we are tracking progress, will have the expected content length, progress callback, connection
     private @Nullable Progress<?> progress;
@@ -35,15 +34,28 @@ public class ControllableInputStream extends FilterInputStream {
     private int contentLength = -1;
     private int readPos = 0; // amount read; can be reset()
 
-    private ControllableInputStream(BufferedInputStream in, int maxSize) {
+    private ControllableInputStream(SimpleBufferedInput in, int maxSize) {
         super(in);
         Validate.isTrue(maxSize >= 0);
         buff = in;
-        capped = maxSize != 0;
         this.maxSize = maxSize;
         remaining = maxSize;
         markPos = -1;
         startTime = System.nanoTime();
+    }
+
+    /**
+     * If this InputStream is not already a ControllableInputStream, let it be one.
+     * @param in the input stream to (maybe) wrap
+     * @param maxSize the maximum size to allow to be read. 0 == infinite.
+     * @return a controllable input stream
+     */
+    public static ControllableInputStream wrap(InputStream in, int maxSize) {
+        // bufferSize currently unused; consider implementing as a min size in the SoftPool recycler
+        if (in instanceof ControllableInputStream)
+            return (ControllableInputStream) in;
+        else
+            return new ControllableInputStream(new SimpleBufferedInput(in), maxSize);
     }
 
     /**
@@ -54,18 +66,15 @@ public class ControllableInputStream extends FilterInputStream {
      * @return a controllable input stream
      */
     public static ControllableInputStream wrap(InputStream in, int bufferSize, int maxSize) {
-        if (in instanceof ControllableInputStream)
-            return (ControllableInputStream) in;
-        else if (in instanceof BufferedInputStream)
-            return new ControllableInputStream((BufferedInputStream) in, maxSize);
-        else
-            return new ControllableInputStream(new BufferedInputStream(in, bufferSize), maxSize);
+        // todo - bufferSize currently unused; consider implementing as a min size in the SoftPool recycler; or just deprecate if always DefaultBufferSize
+        return wrap(in, maxSize);
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (readPos == 0) emitProgress(); // emits a progress
-        
+
+        boolean capped = maxSize != 0;
         if (interrupted || capped && remaining <= 0)
             return -1;
         if (Thread.currentThread().isInterrupted()) {
@@ -73,27 +82,28 @@ public class ControllableInputStream extends FilterInputStream {
             interrupted = true;
             return -1;
         }
-        if (expired())
-            throw new SocketTimeoutException("Read timeout");
 
         if (capped && len > remaining)
             len = remaining; // don't read more than desired, even if available
 
-        try {
-            final int read = super.read(b, off, len);
-            if (read == -1) { // completed
-                contentLength = readPos;
-            } else {
-                remaining -= read;
-                readPos += read;
-            }
-            emitProgress();
-
-            return read;
-        } catch (SocketTimeoutException e) {
+        while (true) { // loop trying to read until we get some data or hit the overall timeout, if we have one
             if (expired())
-                throw e;
-            return 0;
+                throw new SocketTimeoutException("Read timeout");
+
+            try {
+                final int read = super.read(b, off, len);
+                if (read == -1) { // completed
+                    contentLength = readPos;
+                } else {
+                    remaining -= read;
+                    readPos += read;
+                }
+                emitProgress();
+                return read;
+            } catch (SocketTimeoutException e) {
+                if (expired() || timeout == 0)
+                    throw e;
+            }
         }
     }
 
@@ -104,26 +114,33 @@ public class ControllableInputStream extends FilterInputStream {
     public static ByteBuffer readToByteBuffer(InputStream in, int max) throws IOException {
         Validate.isTrue(max >= 0, "maxSize must be 0 (unlimited) or larger");
         Validate.notNull(in);
-        final boolean localCapped = max > 0; // still possibly capped in total stream
-        final int bufferSize = localCapped && max < DefaultBufferSize ? max : DefaultBufferSize;
-        final byte[] readBuffer = new byte[bufferSize];
-        final ByteArrayOutputStream outStream = new ByteArrayOutputStream(bufferSize);
+        final boolean capped = max > 0;
+        final byte[] readBuf = SimpleBufferedInput.BufferPool.borrow(); // Share the same byte[] pool as SBI
+        final int outSize = capped ? Math.min(max, DefaultBufferSize) : DefaultBufferSize;
+        ByteBuffer outBuf = ByteBuffer.allocate(outSize);
 
-        int read;
-        int remaining = max;
-        while (true) {
-            read = in.read(readBuffer, 0, localCapped ? Math.min(remaining, bufferSize) : bufferSize);
-            if (read == -1) break;
-            if (localCapped) { // this local byteBuffer cap may be smaller than the overall maxSize (like when reading first bytes)
-                if (read >= remaining) {
-                    outStream.write(readBuffer, 0, remaining);
-                    break;
+        try {
+            int remaining = max;
+            int read;
+            while ((read = in.read(readBuf, 0, capped ? Math.min(remaining, DefaultBufferSize) : DefaultBufferSize)) != -1) {
+                if (outBuf.remaining() < read) { // needs to grow
+                    int newCapacity = (int) Math.max(outBuf.capacity() * 1.5, outBuf.capacity() + read);
+                    ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+                    outBuf.flip();
+                    newBuffer.put(outBuf);
+                    outBuf = newBuffer;
                 }
-                remaining -= read;
+                outBuf.put(readBuf, 0, read);
+                if (capped) {
+                    remaining -= read;
+                    if (remaining <= 0) break;
+                }
             }
-            outStream.write(readBuffer, 0, read);
+            outBuf.flip(); // Prepare the buffer for reading
+            return outBuf;
+        } finally {
+            SimpleBufferedInput.BufferPool.release(readBuf);
         }
-        return ByteBuffer.wrap(outStream.toByteArray());
     }
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
@@ -137,6 +154,36 @@ public class ControllableInputStream extends FilterInputStream {
     @Override public void mark(int readlimit) {
         super.mark(readlimit);
         markPos = maxSize - remaining;
+    }
+
+    /**
+     Check if the underlying InputStream has been read fully. There may still content in buffers to be consumed, and
+     read methods may return -1 if hit the read limit.
+     @return true if the underlying inputstream has been read fully.
+     */
+    public boolean baseReadFully() {
+        return buff.baseReadFully();
+    }
+
+    /**
+     Get the max size of this stream (how far at most will be read from the underlying stream)
+     * @return the max size
+     */
+    public int max() {
+        return maxSize;
+    }
+
+    public void max(int newMax) {
+        remaining += newMax - maxSize; // update remaining to reflect the difference in the new maxsize
+        maxSize = newMax;
+    }
+
+    public void allowClose(boolean allowClose) {
+        this.allowClose = allowClose;
+    }
+
+    @Override public void close() throws IOException {
+        if (allowClose) super.close();
     }
 
     public ControllableInputStream timeout(long startTimeNanos, long timeoutMillis) {
@@ -173,6 +220,7 @@ public class ControllableInputStream extends FilterInputStream {
     }
 
     public BufferedInputStream inputStream() {
-        return buff;
+        // called via HttpConnection.Response.bodyStream(), needs an OG BufferedInputStream
+        return new BufferedInputStream(buff);
     }
 }
