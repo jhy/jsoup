@@ -4,13 +4,17 @@
 
 ### Improvements
 
+* Optimized the throughput and memory use throughout the input read and parse flows, with heap allocations and GC 
+  down between -6% and -89%, and throughput improved up to +143% for small inputs. Most inputs sizes will see 
+  throughput increases of ~ 20%. These performance improvements come through recycling the backing byte[] and char[] 
+  arrays used to read and parse the input. [2186](https://github.com/jhy/jsoup/pull/2186) 
+* Speed optimized `html()` and `Entities.escape()` when the input contains UTF characters in a supplementary plane, by
+  around 49%. [2183](https://github.com/jhy/jsoup/pull/2183)
 * The form associated elements returned by `FormElement.elements()` now reflect changes made to the DOM,
   subsequently to the original parse. [2140](https://github.com/jhy/jsoup/issues/2140)
 * In the `TreeBuilder`, the `onNodeInserted()` and `onNodeClosed()` events are now also fired for the outermost /
   root `Document` node. This enables source position tracking on the Document node (which was previously unset). And
   it also enables the node traversor to see the outer Document node. [2182](https://github.com/jhy/jsoup/pull/2182)
-* Speed optimized `html()` and `Entities.escape()` when the input contains UTF characters in a supplementary plane, by
-  around 49%. [2183](https://github.com/jhy/jsoup/pull/2183)
 
 ### Bug Fixes
 
