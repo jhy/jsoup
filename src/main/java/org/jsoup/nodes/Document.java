@@ -62,7 +62,6 @@ public class Document extends Element {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
-        doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -125,7 +124,7 @@ public class Document extends Element {
     /**
      Get this document's {@code head} element.
      <p>
-     As a side-effect, if this Document does not already have a HTML structure, it will be created. If you do not want
+     As a side effect, if this Document does not already have an HTML structure, it will be created. If you do not want
      that, use {@code #selectFirst("head")} instead.
 
      @return {@code head} element.
@@ -144,7 +143,7 @@ public class Document extends Element {
     /**
      Get this document's {@code <body>} or {@code <frameset>} element.
      <p>
-     As a <b>side-effect</b>, if this Document does not already have a HTML structure, it will be created with a {@code
+     As a <b>side-effect</b>, if this Document does not already have an HTML structure, it will be created with a {@code
     <body>} element. If you do not want that, use {@code #selectFirst("body")} instead.
 
      @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} element if the document
@@ -229,7 +228,7 @@ public class Document extends Element {
 
     /**
      Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
-     @param text unencoded text
+     @param text un-encoded text
      @return this document
      */
     @Override

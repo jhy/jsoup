@@ -75,7 +75,7 @@ public abstract class LeafNode extends Node {
 
     @Override
     public String baseUri() {
-        return hasParent() ? parent().baseUri() : "";
+        return parentNode != null ? parentNode.baseUri() : "";
     }
 
     @Override

@@ -119,7 +119,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @return the Attribute for this key, or null if not present.
      @since 1.17.2
      */
-    @Nullable Attribute attribute(String key) {
+    @Nullable public Attribute attribute(String key) {
         int i = indexOfKey(key);
         return i == NotFound ? null : new Attribute(key, checkNotNull(vals[i]), this);
     }
@@ -393,7 +393,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     @Override
     public Iterator<Attribute> iterator() {
         //noinspection ReturnOfInnerClass
-        return new Iterator<>() {
+        return new Iterator<Attribute>() {
             int expectedSize = size;
             int i = 0;
 

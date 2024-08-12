@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.internal.StringUtil;
+
 import java.util.Objects;
 
 import static org.jsoup.internal.SharedConstants.*;
@@ -228,7 +230,11 @@ public class Range {
          {@code line,column:pos-line,column:pos=line,column:pos-line,column:pos} (name start - name end = val start - val end).
          . */
         @Override public String toString() {
-            return nameRange().toString() + "=" + valueRange().toString();
+            StringBuilder sb = StringUtil.borrowBuilder()
+                .append(nameRange)
+                .append('=')
+                .append(valueRange);
+            return StringUtil.releaseBuilder(sb);
         }
 
         @Override public boolean equals(Object o) {

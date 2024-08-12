@@ -24,7 +24,7 @@ public class XmlDeclaration extends LeafNode {
         this.isProcessingInstruction = isProcessingInstruction;
     }
 
-    public String nodeName() {
+    @Override public String nodeName() {
         return "#declaration";
     }
 

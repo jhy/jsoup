@@ -20,7 +20,7 @@ public class TextNode extends LeafNode {
         value = text;
     }
 
-	public String nodeName() {
+	@Override public String nodeName() {
         return "#text";
     }
     

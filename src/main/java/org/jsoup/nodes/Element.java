@@ -288,7 +288,7 @@ public class Element extends Node {
      @return the Attribute for this key, or null if not present.
      @since 1.17.2
      */
-    @Nullable Attribute attribute(String key) {
+    @Nullable public Attribute attribute(String key) {
         return hasAttributes() ? attributes().attribute(key) : null;
     }
 
