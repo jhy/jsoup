@@ -465,7 +465,6 @@ public class HttpConnection implements Connection {
         @Override
         public T addHeader(String name, @Nullable String value) {
             Validate.notEmptyParam(name, "name");
-            //noinspection ConstantConditions
             value = value == null ? "" : value;
 
             List<String> values = headers(name);
