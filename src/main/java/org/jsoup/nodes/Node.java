@@ -942,7 +942,6 @@ public abstract class Node implements Cloneable {
         OuterHtmlVisitor(Appendable accum, Document.OutputSettings out) {
             this.accum = accum;
             this.out = out;
-            out.prepareEncoder();
         }
 
         public void head(Node node, int depth) {

@@ -14,7 +14,6 @@ import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
 import java.util.List;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -395,29 +394,32 @@ public class Document extends Element {
          * The output serialization syntax.
          */
         public enum Syntax {html, xml}
-
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
-        private Charset charset;
-        Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
-        private final ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
-
+        private Charset charset = DataUtil.UTF_8;
         private boolean prettyPrint = true;
         private boolean outline = false;
         private int indentAmount = 1;
         private int maxPaddingWidth = 30;
         private Syntax syntax = Syntax.html;
 
-        public OutputSettings() {
-            charset(DataUtil.UTF_8);
-        }
-        
         /**
-         * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
-         * entities and escapes other characters as numbered entities for maximum compatibility; or <code>extended</code>,
-         * which uses the complete set of HTML named entities.
-         * <p>
-         * The default escape mode is <code>base</code>.
-         * @return the document's current escape mode
+         Create a new OutputSettings object, with the default settings (UTF-8, HTML, EscapeMode.base, pretty-printing,
+         indent amount of 1).
+         */
+        public OutputSettings() {
+        }
+
+        /**
+         Get the document's current entity escape mode:
+         <ul>
+         <li><code>xhtml</code>, the minimal named entities in XHTML / XML</li>
+         <li><code>base</code>, which provides a limited set of named HTML
+         entities and escapes other characters as numbered entities for maximum compatibility</li>
+         <li><code>extended</code>,
+         which uses the complete set of HTML named entities.</li>
+         </ul>
+         <p>The default escape mode is <code>base</code>.
+         @return the document's current escape mode
          */
         public Entities.EscapeMode escapeMode() {
             return escapeMode;
@@ -453,7 +455,6 @@ public class Document extends Element {
          */
         public OutputSettings charset(Charset charset) {
             this.charset = charset;
-            coreCharset = Entities.CoreCharset.byName(charset.name());
             return this;
         }
 
@@ -465,18 +466,6 @@ public class Document extends Element {
         public OutputSettings charset(String charset) {
             charset(Charset.forName(charset));
             return this;
-        }
-
-        CharsetEncoder prepareEncoder() {
-            // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
-            CharsetEncoder encoder = charset.newEncoder();
-            encoderThreadLocal.set(encoder);
-            return encoder;
-        }
-
-        CharsetEncoder encoder() {
-            CharsetEncoder encoder = encoderThreadLocal.get();
-            return encoder != null ? encoder : prepareEncoder();
         }
 
         /**
