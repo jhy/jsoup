@@ -13,7 +13,7 @@ public class DataNode extends LeafNode {
      @param data data contents
      */
     public DataNode(String data) {
-        value = data;
+        super(data);
     }
 
     @Override public String nodeName() {

@@ -16,7 +16,7 @@ public class Comment extends LeafNode {
      @param data The contents of the comment
      */
     public Comment(String data) {
-        value = data;
+        super(data);
     }
 
     @Override public String nodeName() {

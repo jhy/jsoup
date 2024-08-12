@@ -62,7 +62,7 @@ abstract class Token {
 
     static final class Doctype extends Token {
         final StringBuilder name = new StringBuilder();
-        String pubSysKey = null;
+        @Nullable String pubSysKey = null;
         final StringBuilder publicIdentifier = new StringBuilder();
         final StringBuilder systemIdentifier = new StringBuilder();
         boolean forceQuirks = false;
@@ -86,7 +86,7 @@ abstract class Token {
             return name.toString();
         }
 
-        String getPubSysKey() {
+        @Nullable String getPubSysKey() {
             return pubSysKey;
         }
 
