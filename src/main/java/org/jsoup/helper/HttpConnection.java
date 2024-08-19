@@ -2,24 +2,27 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
+import org.jsoup.Progress;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Functions;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.CookieManager;
@@ -40,7 +43,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -49,6 +51,7 @@ import java.util.zip.InflaterInputStream;
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.helper.DataUtil.UTF_8;
 import static org.jsoup.internal.Normalizer.lowerCase;
+import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
  * Implementation of {@link Connection}.
@@ -385,6 +388,11 @@ public class HttpConnection implements Connection {
         return this;
     }
 
+    @Override public Connection onResponseProgress(Progress<Connection.Response> handler) {
+        req.responseProgress = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     private static abstract class Base<T extends Connection.Base<T>> implements Connection.Base<T> {
         private static final URL UnsetUrl; // only used if you created a new Request()
@@ -457,7 +465,6 @@ public class HttpConnection implements Connection {
         @Override
         public T addHeader(String name, @Nullable String value) {
             Validate.notEmptyParam(name, "name");
-            //noinspection ConstantConditions
             value = value == null ? "" : value;
 
             List<String> values = headers(name);
@@ -604,6 +611,8 @@ public class HttpConnection implements Connection {
         private @Nullable SSLSocketFactory sslSocketFactory;
         private CookieManager cookieManager;
         private @Nullable RequestAuthenticator authenticator;
+        private @Nullable Progress<Connection.Response> responseProgress;
+
         private volatile boolean executing = false;
 
         Request() {
@@ -635,6 +644,7 @@ public class HttpConnection implements Connection {
             sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
             cookieManager = copy.cookieManager;
             authenticator = copy.authenticator;
+            responseProgress = copy.responseProgress;
             executing = false;
         }
 
@@ -904,8 +914,11 @@ public class HttpConnection implements Connection {
                         stream = new InflaterInputStream(stream, new Inflater(true));
                     
                     res.bodyStream = ControllableInputStream.wrap(
-                        stream, SharedConstants.DefaultBufferSize, req.maxBodySize())
+                        stream, DefaultBufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout());
+
+                    if (req.responseProgress != null) // set response progress listener
+                        res.bodyStream.onProgress(conn.getContentLength(), req.responseProgress, res);
                 } else {
                     res.byteData = DataUtil.emptyByteBuffer();
                 }
@@ -950,20 +963,45 @@ public class HttpConnection implements Connection {
             return contentType;
         }
 
-        public Document parse() throws IOException {
+        /** Called from parse() or streamParser(), validates and prepares the input stream, and aligns common settings. */
+        private ControllableInputStream prepareParse() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response");
-            InputStream stream = bodyStream;
+            ControllableInputStream stream = bodyStream;
             if (byteData != null) { // bytes have been read in to the buffer, parse that
-                stream = new ByteArrayInputStream(byteData.array());
+                ByteArrayInputStream bytes = new ByteArrayInputStream(byteData.array(), 0, byteData.limit());
+                stream = ControllableInputStream.wrap(bytes, 0); // no max
                 inputStreamRead = false; // ok to reparse if in bytes
             }
             Validate.isFalse(inputStreamRead, "Input stream already read and parsed, cannot re-read.");
+            Validate.notNull(stream);
+            inputStreamRead = true;
+            return stream;
+        }
+
+        @Override public Document parse() throws IOException {
+            ControllableInputStream stream = prepareParse();
             Document doc = DataUtil.parseInputStream(stream, charset, url.toExternalForm(), req.parser());
             doc.connection(new HttpConnection(req, this)); // because we're static, don't have the connection obj. // todo - maybe hold in the req?
             charset = doc.outputSettings().charset().name(); // update charset from meta-equiv, possibly
-            inputStreamRead = true;
             safeClose();
             return doc;
+        }
+
+        @Override public StreamParser streamParser() throws IOException {
+            ControllableInputStream stream = prepareParse();
+            String baseUri = url.toExternalForm();
+            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
+            // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
+
+            // set up the stream parser and rig this connection up to the parsed doc:
+            StreamParser streamer = new StreamParser(req.parser());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charsetDoc.charset));
+            streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+            streamer.document().connection(new HttpConnection(req, this));
+            charset = charsetDoc.charset.name();
+
+            // we don't safeClose() as in parse(); caller must close streamParser to close InputStream stream
+            return streamer;
         }
 
         private void prepareByteData() {
@@ -996,7 +1034,19 @@ public class HttpConnection implements Connection {
         public byte[] bodyAsBytes() {
             prepareByteData();
             Validate.notNull(byteData);
-            return byteData.array();
+            Validate.isTrue(byteData.hasArray()); // we made it, so it should
+
+            byte[] array = byteData.array();
+            int offset = byteData.arrayOffset();
+            int length = byteData.limit();
+
+            if (offset == 0 && length == array.length) { // exact, just return it
+                return array;
+            } else { // trim to size
+                byte[] exactArray = new byte[length];
+                System.arraycopy(array, offset, exactArray, 0, length);
+                return exactArray;
+            }
         }
 
         @Override
@@ -1011,7 +1061,9 @@ public class HttpConnection implements Connection {
 
             // if we have read to bytes (via buffer up), return those as a stream.
             if (byteData != null) {
-                return new BufferedInputStream(new ByteArrayInputStream(byteData.array()), SharedConstants.DefaultBufferSize);
+                return new BufferedInputStream(
+                    new ByteArrayInputStream(byteData.array(), 0, byteData.limit()),
+                    DefaultBufferSize);
             }
 
             Validate.isFalse(inputStreamRead, "Request has already been read");

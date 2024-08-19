@@ -20,6 +20,7 @@ public class FileServlet extends BaseServlet {
     }
     public static final String ContentTypeParam = "contentType";
     public static final String DefaultType = "text/html";
+    public static final String SuppressContentLength = "surpriseMe";
 
     @Override
     protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -33,6 +34,8 @@ public class FileServlet extends BaseServlet {
             res.setContentType(contentType);
             if (file.getName().endsWith("gz"))
                 res.addHeader("Content-Encoding", "gzip");
+            if (req.getParameter(SuppressContentLength) == null)
+                res.setContentLength((int) file.length());
             res.setStatus(HttpServletResponse.SC_OK);
 
             ServletOutputStream out = res.getOutputStream();

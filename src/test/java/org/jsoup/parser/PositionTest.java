@@ -487,6 +487,24 @@ class PositionTest {
         assertEquals("h1:0-9~12-17; id:4-6=7-8; #text:9-12; #text:17-18; h2:18-27~30-35; id:22-24=25-26; #text:27-30; h10:35-40~43-49; #text:40-43; ", track.toString());
     }
 
+    @Test void tracksAfterPSelfClose() {
+        // https://github.com/jhy/jsoup/issues/2175
+        String html = "foo<p/>bar &amp; 2";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.body().forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("body:0-0~18-18; #text:0-3; p:3-7~3-7; #text:7-18; ", track.toString());
+    }
+
+    @Test void tracksFirstTextnode() {
+        // https://github.com/jhy/jsoup/issues/2106
+        String html = "foo<p></p>bar<p></p><div><b>baz</b></div>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.body().forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("body:0-0~41-41; #text:0-3; p:3-6~6-10; #text:10-13; p:13-16~16-20; div:20-25~35-41; b:25-28~31-35; #text:28-31; ", track.toString());
+    }
+
     @Test void updateKeyMaintainsRangeLc() {
         String html = "<p xsi:CLASS=On>One</p>";
         Document doc = Jsoup.parse(html, TrackingHtmlParser);
@@ -499,6 +517,22 @@ class PositionTest {
         attr.setKey("class");
         assertEquals(expectedRange, attr.sourceRange().toString());
         assertEquals("class=\"On\"", attr.html());
+    }
+
+    @Test void tracksDocument() {
+        String html = "<!doctype html><title>Foo</title><p>Bar.";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("#document:0-0~40-40; #doctype:0-15; html:15-15~40-40; head:15-15~33-33; title:15-22~15-33; #text:22-25; body:33-33~40-40; p:33-36~40-40; #text:36-40; ", track.toString());
+    }
+
+    @Test void tracksDocumentXml() {
+        String html = "<!doctype html><title>Foo</title><p>Bar.";
+        Document doc = Jsoup.parse(html, TrackingXmlParser);
+        StringBuilder track = new StringBuilder();
+        doc.forEachNode(node -> accumulatePositions(node, track));
+        assertEquals("#document:0-0~40-40; #doctype:0-15; title:15-22~25-33; #text:22-25; p:33-36~40-40; #text:36-40; ", track.toString());
     }
 
     @Test void updateKeyMaintainsRangeUc() {

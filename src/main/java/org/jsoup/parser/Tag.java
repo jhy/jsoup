@@ -2,9 +2,11 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SharedConstants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -232,15 +234,8 @@ public class Tag implements Cloneable {
 
     @Override
     public int hashCode() {
-        int result = tagName.hashCode();
-        result = 31 * result + (isBlock ? 1 : 0);
-        result = 31 * result + (formatAsBlock ? 1 : 0);
-        result = 31 * result + (empty ? 1 : 0);
-        result = 31 * result + (selfClosing ? 1 : 0);
-        result = 31 * result + (preserveWhitespace ? 1 : 0);
-        result = 31 * result + (formList ? 1 : 0);
-        result = 31 * result + (formSubmit ? 1 : 0);
-        return result;
+        return Objects.hash(tagName, isBlock, formatAsBlock, empty, selfClosing, preserveWhitespace,
+            formList, formSubmit);
     }
 
     @Override
@@ -271,7 +266,7 @@ public class Tag implements Cloneable {
     private static final String[] inlineTags = {
             "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",
             "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "br", "wbr", "map", "q",
-            "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup",
+            "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
             "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
             "data", "bdi", "s", "strike", "nobr",
@@ -286,7 +281,7 @@ public class Tag implements Cloneable {
     // todo - rework this to format contents as inline; and update html emitter in Element. Same output, just neater.
     private static final String[] formatAsInlineTags = {
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
-            "ins", "del", "s"
+            "ins", "del", "s", "button"
     };
     private static final String[] preserveWhitespaceTags = {
             "pre", "plaintext", "title", "textarea"
@@ -296,9 +291,7 @@ public class Tag implements Cloneable {
     private static final String[] formListedTags = {
             "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
-    private static final String[] formSubmitTags = {
-            "input", "keygen", "object", "select", "textarea"
-    };
+    private static final String[] formSubmitTags = SharedConstants.FormSubmitTags;
 
     private static final Map<String, String[]> namespaces = new HashMap<>();
     static {

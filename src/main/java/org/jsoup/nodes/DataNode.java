@@ -13,10 +13,10 @@ public class DataNode extends LeafNode {
      @param data data contents
      */
     public DataNode(String data) {
-        value = data;
+        super(data);
     }
 
-    public String nodeName() {
+    @Override public String nodeName() {
         return "#data";
     }
 
@@ -30,7 +30,7 @@ public class DataNode extends LeafNode {
 
     /**
      * Set the data contents of this node.
-     * @param data unencoded data
+     * @param data un-encoded data
      * @return this node, for chaining
      */
     public DataNode setWholeData(String data) {
@@ -41,7 +41,7 @@ public class DataNode extends LeafNode {
     @Override
     void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         /* For XML output, escape the DataNode in a CData section. The data may contain pseudo-CData content if it was
-        parsed as HTML, so don't double up Cdata. Output in polygot HTML / XHTML / XML format. */
+        parsed as HTML, so don't double up Cdata. Output in polyglot HTML / XHTML / XML format. */
         final String data = getWholeData();
         if (out.syntax() == Document.OutputSettings.Syntax.xml && !data.contains("<![CDATA[")) {
             if (parentNameIs("script"))
@@ -58,11 +58,6 @@ public class DataNode extends LeafNode {
 
     @Override
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
-
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
 
     @Override
     public DataNode clone() {

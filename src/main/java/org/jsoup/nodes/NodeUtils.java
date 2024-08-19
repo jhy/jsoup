@@ -32,7 +32,7 @@ final class NodeUtils {
      */
     static Parser parser(Node node) {
         Document doc = node.ownerDocument();
-        return doc != null && doc.parser() != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
+        return doc != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
     }
 
     /**

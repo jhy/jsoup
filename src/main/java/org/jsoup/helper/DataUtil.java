@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.Connection;
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
@@ -9,20 +10,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jsoup.select.Elements;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedReader;
-import java.io.CharArrayReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
@@ -107,7 +107,7 @@ public final class DataUtil {
      *
      * @param path file to load
      * @param charsetName (optional) character set of input; specify {@code null} to attempt to autodetect. A BOM in
-     *     the file will always override this setting.
+     * the file will always override this setting.
      * @param baseUri base URI of document, to resolve relative links against
      * @param parser alternate {@link Parser#xmlParser() parser} to use.
 
@@ -116,6 +116,37 @@ public final class DataUtil {
      * @since 1.17.2
      */
     public static Document load(Path path, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        return parseInputStream(openStream(path), charsetName, baseUri, parser);
+    }
+
+    /**
+     * Returns a {@link StreamParser} that will parse the supplied file progressively.
+     * Files that are compressed with gzip (and end in {@code .gz} or {@code .z})
+     * are supported in addition to uncompressed files.
+     *
+     * @param path file to load
+     * @param charset (optional) character set of input; specify {@code null} to attempt to autodetect from metadata.
+     * A BOM in the file will always override this setting.
+     * @param baseUri base URI of document, to resolve relative links against
+     * @param parser alternate {@link Parser#xmlParser() parser} to use.
+
+     * @return Document
+     * @throws IOException on IO error
+     * @since 1.18.2
+     * @see Connection.Response#streamParser()
+     */
+    public static StreamParser streamParser(Path path, @Nullable Charset charset, String baseUri, Parser parser) throws IOException {
+        StreamParser streamer = new StreamParser(parser);
+        String charsetName = charset != null? charset.name() : null;
+        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
+        streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+
+        return streamer;
+    }
+
+    /** Open an input stream from a file; if it's a gzip file, returns a GZIPInputStream to unzip it. */
+    private static ControllableInputStream openStream(Path path) throws IOException {
         final SeekableByteChannel byteChannel = Files.newByteChannel(path);
         InputStream stream = Channels.newInputStream(byteChannel);
         String name = Normalizer.lowerCase(path.getFileName().toString());
@@ -126,7 +157,7 @@ public final class DataUtil {
                 stream = new GZIPInputStream(stream);
             }
         }
-        return parseInputStream(stream, charsetName, baseUri, parser);
+        return ControllableInputStream.wrap(stream, 0);
     }
 
     /**
@@ -138,7 +169,7 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
-        return parseInputStream(in, charsetName, baseUri, Parser.htmlParser());
+        return parseInputStream(ControllableInputStream.wrap(in, 0), charsetName, baseUri, Parser.htmlParser());
     }
 
     /**
@@ -151,7 +182,7 @@ public final class DataUtil {
      * @throws IOException on IO error
      */
     public static Document load(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        return parseInputStream(in, charsetName, baseUri, parser);
+        return parseInputStream(ControllableInputStream.wrap(in, 0), charsetName, baseUri, parser);
     }
 
     /**
@@ -168,94 +199,127 @@ public final class DataUtil {
         }
     }
 
-    static Document parseInputStream(@Nullable InputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException  {
-        if (input == null) // empty body
+    /** A struct to return a detected charset, and a document (if fully read). */
+    static class CharsetDoc {
+        Charset charset;
+        InputStream input;
+        @Nullable Document doc;
+
+        CharsetDoc(Charset charset, @Nullable Document doc, InputStream input) {
+            this.charset = charset;
+            this.input = input;
+            this.doc = doc;
+        }
+    }
+
+    static Document parseInputStream(@Nullable ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        if (input == null) // empty body // todo reconsider?
             return new Document(baseUri);
 
-        @Nullable Document doc = null;
+        final Document doc;
+        CharsetDoc charsetDoc = null;
+        try {
+            charsetDoc = detectCharset(input, charsetName, baseUri, parser);
+            doc = parseInputStream(charsetDoc, baseUri, parser);
+        } finally {
+            if (charsetDoc != null)
+                charsetDoc.input.close();
+        }
+        return doc;
+    }
 
-        // read the start of the stream and look for a BOM or meta charset
-        try (InputStream wrappedInputStream = ControllableInputStream.wrap(input, DefaultBufferSize, 0)) {
-            wrappedInputStream.mark(DefaultBufferSize);
-            ByteBuffer firstBytes = readToByteBuffer(wrappedInputStream, firstReadBufferSize - 1); // -1 because we read one more to see if completed. First read is < buffer size, so can't be invalid.
-            boolean fullyRead = (wrappedInputStream.read() == -1);
-            wrappedInputStream.reset();
+    static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        Document doc = null;
+        // read the start of the stream and look for a BOM or meta charset:
+        // look for BOM - overrides any other header or input
+        String bomCharset = detectCharsetFromBom(input); // resets / consumes appropriately
+        if (bomCharset != null)
+            charsetName = bomCharset;
 
-            // look for BOM - overrides any other header or input
-            BomCharset bomCharset = detectCharsetFromBom(firstBytes);
-            if (bomCharset != null)
-                charsetName = bomCharset.charset;
-
-            if (charsetName == null) { // determine from meta. safe first parse as UTF-8
-                try {
-                    CharBuffer defaultDecoded = UTF_8.decode(firstBytes);
-                    if (defaultDecoded.hasArray())
-                        doc = parser.parseInput(new CharArrayReader(defaultDecoded.array(), defaultDecoded.arrayOffset(), defaultDecoded.limit()), baseUri);
-                    else
-                        doc = parser.parseInput(defaultDecoded.toString(), baseUri);
-                } catch (UncheckedIOException e) {
-                    throw e.getCause();
-                }
-
-                // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-                Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
-                String foundCharset = null; // if not found, will keep utf-8 as best attempt
-                for (Element meta : metaElements) {
-                    if (meta.hasAttr("http-equiv"))
-                        foundCharset = getCharsetFromContentType(meta.attr("content"));
-                    if (foundCharset == null && meta.hasAttr("charset"))
-                        foundCharset = meta.attr("charset");
-                    if (foundCharset != null)
-                        break;
-                }
-
-                // look for <?xml encoding='ISO-8859-1'?>
-                if (foundCharset == null && doc.childNodeSize() > 0) {
-                    Node first = doc.childNode(0);
-                    XmlDeclaration decl = null;
-                    if (first instanceof XmlDeclaration)
-                        decl = (XmlDeclaration) first;
-                    else if (first instanceof Comment) {
-                        Comment comment = (Comment) first;
-                        if (comment.isXmlDeclaration())
-                            decl = comment.asXmlDeclaration();
-                    }
-                    if (decl != null && decl.name().equalsIgnoreCase("xml")) {
-                        foundCharset = decl.attr("encoding");
-                    }
-                }
-                foundCharset = validateCharset(foundCharset);
-                if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case insensitive check here to match how validate works)
-                    foundCharset = foundCharset.trim().replaceAll("[\"']", "");
-                    charsetName = foundCharset;
-                    doc = null;
-                } else if (!fullyRead) {
-                    doc = null;
-                }
-            } else { // specified by content type header (or by user on file load)
-                Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+        if (charsetName == null) { // read ahead and determine from meta. safe first parse as UTF-8
+            int origMax = input.max();
+            input.max(firstReadBufferSize);
+            input.mark(firstReadBufferSize);
+            input.allowClose(false); // ignores closes during parse, in case we need to rewind
+            try {
+                Reader reader = new InputStreamReader(input, UTF_8); // input is currently capped to firstReadBufferSize
+                doc = parser.parseInput(reader, baseUri);
+                input.reset();
+                input.max(origMax); // reset for a full read if required
+            } catch (UncheckedIOException e) {
+                throw e.getCause();
+            } finally {
+                input.allowClose(true);
             }
-            if (doc == null) {
-                if (charsetName == null)
-                    charsetName = defaultCharsetName;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(wrappedInputStream, Charset.forName(charsetName)), DefaultBufferSize)) {
-                    if (bomCharset != null && bomCharset.offset) { // creating the buffered reader ignores the input pos, so must skip here
-                        long skipped = reader.skip(1);
-                        Validate.isTrue(skipped == 1); // WTF if this fails.
-                    }
-                    try {
-                        doc = parser.parseInput(reader, baseUri);
-                    } catch (UncheckedIOException e) {
-                        // io exception when parsing (not seen before because reading the stream as we go)
-                        throw e.getCause();
-                    }
-                    Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
-                    doc.outputSettings().charset(charset);
-                    if (!charset.canEncode()) {
-                        // some charsets can read but not encode; switch to an encodable charset and update the meta el
-                        doc.charset(UTF_8);
-                    }
+
+            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+            String foundCharset = null; // if not found, will keep utf-8 as best attempt
+            for (Element meta : metaElements) {
+                if (meta.hasAttr("http-equiv"))
+                    foundCharset = getCharsetFromContentType(meta.attr("content"));
+                if (foundCharset == null && meta.hasAttr("charset"))
+                    foundCharset = meta.attr("charset");
+                if (foundCharset != null)
+                    break;
+            }
+
+            // look for <?xml encoding='ISO-8859-1'?>
+            if (foundCharset == null && doc.childNodeSize() > 0) {
+                Node first = doc.childNode(0);
+                XmlDeclaration decl = null;
+                if (first instanceof XmlDeclaration)
+                    decl = (XmlDeclaration) first;
+                else if (first instanceof Comment) {
+                    Comment comment = (Comment) first;
+                    if (comment.isXmlDeclaration())
+                        decl = comment.asXmlDeclaration();
                 }
+                if (decl != null && decl.name().equalsIgnoreCase("xml")) {
+                    foundCharset = decl.attr("encoding");
+                }
+            }
+            foundCharset = validateCharset(foundCharset);
+            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
+                foundCharset = foundCharset.trim().replaceAll("[\"']", "");
+                charsetName = foundCharset;
+                doc = null;
+            } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
+                input.close(); // the parser tried to close it
+            } else {
+                doc = null;
+            }
+        } else { // specified by content type header (or by user on file load)
+            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+        }
+
+        // finally: prepare the return struct
+        if (charsetName == null)
+            charsetName = defaultCharsetName;
+        Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
+        return new CharsetDoc(charset, doc, input);
+    }
+
+    static Document parseInputStream(CharsetDoc charsetDoc, String baseUri, Parser parser) throws IOException {
+        // if doc != null it was fully parsed during charset detection; so just return that
+        if (charsetDoc.doc != null)
+            return charsetDoc.doc;
+
+        final InputStream input = charsetDoc.input;
+        Validate.notNull(input);
+        final Document doc;
+        final Charset charset = charsetDoc.charset;
+        try (Reader reader = new InputStreamReader(input, charset)) {
+            try {
+                doc = parser.parseInput(reader, baseUri);
+            } catch (UncheckedIOException e) {
+                // io exception when parsing (not seen before because reading the stream as we go)
+                throw e.getCause();
+            }
+            doc.outputSettings().charset(charset);
+            if (!charset.canEncode()) {
+                // some charsets can read but not encode; switch to an encodable charset and update the meta el
+                doc.charset(UTF_8);
             }
         }
         return doc;
@@ -302,7 +366,7 @@ public final class DataUtil {
             cs = cs.toUpperCase(Locale.ENGLISH);
             if (Charset.isSupported(cs)) return cs;
         } catch (IllegalCharsetNameException e) {
-            // if our this charset matching fails.... we just take the default
+            // if all this charset matching fails.... we just take the default
         }
         return null;
     }
@@ -319,34 +383,24 @@ public final class DataUtil {
         return StringUtil.releaseBuilder(mime);
     }
 
-    private static @Nullable BomCharset detectCharsetFromBom(final ByteBuffer byteData) {
-        @SuppressWarnings("UnnecessaryLocalVariable") final Buffer buffer = byteData; // .mark and rewind used to return Buffer, now ByteBuffer, so cast for backward compat
-        buffer.mark();
+    private static @Nullable String detectCharsetFromBom(ControllableInputStream input) throws IOException {
         byte[] bom = new byte[4];
-        if (byteData.remaining() >= bom.length) {
-            byteData.get(bom);
-            buffer.rewind();
-        }
+        input.mark(bom.length);
+        //noinspection ResultOfMethodCallIgnored
+        input.read(bom, 0, 4);
+        input.reset();
+
+        // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
         if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
-            return new BomCharset("UTF-32", false); // and I hope it's on your system
+            return "UTF-32"; // and I hope it's on your system
         } else if (bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF || // BE
             bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE) {
-            return new BomCharset("UTF-16", false); // in all Javas
+            return "UTF-16"; // in all Javas
         } else if (bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF) {
-            return new BomCharset("UTF-8", true); // in all Javas
-            // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
+            input.read(bom, 0, 3); // consume the UTF-8 BOM
+            return "UTF-8"; // in all Javas
         }
         return null;
-    }
-
-    private static class BomCharset {
-        private final String charset;
-        private final boolean offset;
-
-        public BomCharset(String charset, boolean offset) {
-            this.charset = charset;
-            this.offset = offset;
-        }
     }
 }

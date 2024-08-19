@@ -19,12 +19,11 @@ public class XmlDeclaration extends LeafNode {
      * @param isProcessingInstruction is processing instruction
      */
     public XmlDeclaration(String name, boolean isProcessingInstruction) {
-        Validate.notNull(name);
-        value = name;
+        super(name);
         this.isProcessingInstruction = isProcessingInstruction;
     }
 
-    public String nodeName() {
+    @Override public String nodeName() {
         return "#declaration";
     }
 
@@ -60,7 +59,7 @@ public class XmlDeclaration extends LeafNode {
                 accum.append(key);
                 if (!val.isEmpty()) {
                     accum.append("=\"");
-                    Entities.escape(accum, val, out, true, false, false, false);
+                    Entities.escape(accum, val, out, Entities.ForAttribute);
                     accum.append('"');
                 }
             }

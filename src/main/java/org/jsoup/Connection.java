@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.helper.RequestAuthenticator;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.jspecify.annotations.Nullable;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -46,7 +47,17 @@ public interface Connection {
      * GET and POST http methods.
      */
     enum Method {
-        GET(false), POST(true), PUT(true), DELETE(true), PATCH(true), HEAD(false), OPTIONS(false), TRACE(false);
+        GET(false),
+        POST(true),
+        PUT(true),
+        DELETE(true),
+        /**
+         Note that unfortunately, PATCH is not supported in many JDKs.
+         */
+        PATCH(true),
+        HEAD(false),
+        OPTIONS(false),
+        TRACE(false);
 
         private final boolean hasBody;
 
@@ -466,6 +477,18 @@ public interface Connection {
     Connection response(Response response);
 
     /**
+     Set the response progress handler, which will be called periodically as the response body is downloaded. Since
+     documents are parsed as they are downloaded, this is also a good proxy for the parse progress.
+     <p>The Response object is supplied as the progress context, and may be read from to obtain headers etc.</p>
+     @param handler the progress handler
+     @return this Connection, for chaining
+     @since 1.18.1
+     */
+    default Connection onResponseProgress(Progress<Response> handler) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Common methods for Requests and Responses
      * @param <T> Type of Base, either Request or Response
      */
@@ -883,6 +906,15 @@ public interface Connection {
          @return the response body input stream
          */
         BufferedInputStream bodyStream();
+
+        /**
+         Returns a {@link StreamParser} that will parse the Response progressively.
+         * @return a StreamParser, prepared to parse this response.
+         * @throws IOException if an IO exception occurs preparing the parser.
+         */
+        default StreamParser streamParser() throws IOException {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**

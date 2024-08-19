@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.integration.ParseTest;
+import org.jsoup.internal.StringUtil;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class CharacterReaderTest {
-    public final static int maxBufferLen = CharacterReader.maxBufferLen;
+    public final static int maxBufferLen = CharacterReader.BufferSize;
 
     @Test public void consume() {
         CharacterReader r = new CharacterReader("one");
@@ -359,24 +360,23 @@ public class CharacterReaderTest {
 
     @Test
     public void notEmptyAtBufferSplitPoint() {
-        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
-        assertEquals("How", r.consumeTo(' '));
-        assertFalse(r.isEmpty(), "Should not be empty");
+        int len = CharacterReader.BufferSize * 12;
+        StringBuilder builder = StringUtil.borrowBuilder();
+        while (builder.length() <= len) builder.append('!');
+        CharacterReader r = new CharacterReader(builder.toString());
+        StringUtil.releaseBuilder(builder);
 
-        assertEquals(' ', r.consume());
-        assertFalse(r.isEmpty());
-        assertEquals(4, r.pos());
-        assertEquals('a', r.consume());
-        assertEquals(5, r.pos());
-        assertEquals('b', r.consume());
-        assertEquals('o', r.consume());
-        assertEquals('u', r.consume());
-        assertEquals('t', r.consume());
-        assertEquals(' ', r.consume());
-        assertEquals('n', r.consume());
-        assertEquals('o', r.consume());
-        assertEquals('w', r.consume());
+        // consume through
+        for (int pos = 0; pos < len; pos ++) {
+            assertEquals(pos, r.pos());
+            assertFalse(r.isEmpty());
+            assertEquals('!', r.consume());
+            assertEquals(pos + 1, r.pos());
+            assertFalse(r.isEmpty());
+        }
+        assertEquals('!', r.consume());
         assertTrue(r.isEmpty());
+        assertEquals(CharacterReader.EOF, r.consume());
     }
 
     @Test public void bufferUp() {
@@ -437,10 +437,10 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!noTrack.matches("[foo]"))
             noTrack.consumeTo("[foo]");
-        assertEquals(32778, noTrack.pos());
+        assertEquals(2090, noTrack.pos());
         assertEquals(1, noTrack.lineNumber());
         assertEquals(noTrack.pos()+1, noTrack.columnNumber());
-        assertEquals("1:32779", noTrack.posLineCol());
+        assertEquals("1:2091", noTrack.posLineCol());
 
         // and the line numbers: "<foo>\n<bar>\n<qux>\n"
         assertEquals(0, track.pos());
@@ -468,12 +468,12 @@ public class CharacterReaderTest {
         // get over the buffer
         while (!track.matches("[foo]"))
             track.consumeTo("[foo]");
-        assertEquals(32778, track.pos());
+        assertEquals(2090, track.pos());
         assertEquals(4, track.lineNumber());
-        assertEquals(32761, track.columnNumber());
-        assertEquals("4:32761", track.posLineCol());
+        assertEquals(2073, track.columnNumber());
+        assertEquals("4:2073", track.posLineCol());
         track.consumeTo('\n');
-        assertEquals("4:32766", track.posLineCol());
+        assertEquals("4:2078", track.posLineCol());
 
         track.consumeTo("[bar]");
         assertEquals(5, track.lineNumber());
@@ -491,9 +491,11 @@ public class CharacterReaderTest {
         reader.trackNewlines(true);
 
         assertEquals("1:1", reader.posLineCol());
+        StringBuilder seen = new StringBuilder();
         while (!reader.isEmpty())
-            reader.consume();
-        assertEquals(131096, reader.pos());
+            seen.append(reader.consume());
+        assertEquals(content, seen.toString());
+        assertEquals(content.length(), reader.pos());
         assertEquals(reader.pos() + 1, reader.columnNumber());
         assertEquals(1, reader.lineNumber());
     }

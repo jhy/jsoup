@@ -5,8 +5,6 @@ on:
     branches:
       - master
   pull_request:
-  schedule:
-    - cron: '0 5 * * 3'
 
 jobs:
   codeql:
@@ -16,17 +14,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: 'temurin'
           cache: 'maven'
       - name: CodeQL Initialization
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: java
           queries: +security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
       - name: CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3

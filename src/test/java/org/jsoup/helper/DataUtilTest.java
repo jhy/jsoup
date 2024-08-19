@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.integration.ParseTest;
+import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
@@ -37,12 +38,12 @@ public class DataUtilTest {
         assertEquals("UTF-8", DataUtil.getCharsetFromContentType("text/html; charset='UTF-8'"));
     }
 
-    private InputStream stream(String data) {
-        return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+    private ControllableInputStream stream(String data) {
+        return ControllableInputStream.wrap(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), 0);
     }
 
-    private InputStream stream(String data, String charset) {
-        return new ByteArrayInputStream(data.getBytes(Charset.forName(charset)));
+    private ControllableInputStream stream(String data, String charset) {
+        return ControllableInputStream.wrap(new ByteArrayInputStream(data.getBytes(Charset.forName(charset))), 0);
     }
 
     @Test
@@ -143,7 +144,8 @@ public class DataUtilTest {
                 stream(firstPart),
                 stream(secondPart)
         );
-        Document doc = DataUtil.parseInputStream(sequenceStream, null, "", Parser.htmlParser());
+        ControllableInputStream stream = ControllableInputStream.wrap(sequenceStream, 0);
+        Document doc = DataUtil.parseInputStream(stream, null, "", Parser.htmlParser());
         assertEquals(fileContent, doc.outerHtml());
     }
 
@@ -172,6 +174,31 @@ public class DataUtilTest {
     }
 
     @Test
+    public void streamerSupportsBOMinFiles() throws IOException {
+        // test files from http://www.i18nl10n.com/korean/utftest/
+        Path in = getFile("/bomtests/bom_utf16be.html").toPath();
+        Parser parser = Parser.htmlParser();
+        Document doc = DataUtil.streamParser(in, null, "http://example.com", parser).complete();
+        assertTrue(doc.title().contains("UTF-16BE"));
+        assertTrue(doc.text().contains("가각갂갃간갅"));
+
+        in = getFile("/bomtests/bom_utf16le.html").toPath();
+        doc = DataUtil.streamParser(in, null, "http://example.com", parser).complete();
+        assertTrue(doc.title().contains("UTF-16LE"));
+        assertTrue(doc.text().contains("가각갂갃간갅"));
+
+        in = getFile("/bomtests/bom_utf32be.html").toPath();
+        doc = DataUtil.streamParser(in, null, "http://example.com", parser).complete();
+        assertTrue(doc.title().contains("UTF-32BE"));
+        assertTrue(doc.text().contains("가각갂갃간갅"));
+
+        in = getFile("/bomtests/bom_utf32le.html").toPath();
+        doc = DataUtil.streamParser(in, null, "http://example.com", parser).complete();
+        assertTrue(doc.title().contains("UTF-32LE"));
+        assertTrue(doc.text().contains("가각갂갃간갅"));
+    }
+
+    @Test
     public void supportsUTF8BOM() throws IOException {
         File in = getFile("/bomtests/bom_utf8.html");
         Document doc = Jsoup.parse(in, null, "http://example.com");
@@ -190,6 +217,14 @@ public class DataUtilTest {
     public void supportsZippedUTF8BOM() throws IOException {
         File in = getFile("/bomtests/bom_utf8.html.gz");
         Document doc = Jsoup.parse(in, null, "http://example.com");
+        assertEquals("OK", doc.head().select("title").text());
+        assertEquals("There is a UTF8 BOM at the top (before the XML decl). If not read correctly, will look like a non-joining space.", doc.body().text());
+    }
+
+    @Test
+    public void streamerSupportsZippedUTF8BOM() throws IOException {
+        Path in = getFile("/bomtests/bom_utf8.html.gz").toPath();
+        Document doc = DataUtil.streamParser(in, null, "http://example.com", Parser.htmlParser()).complete();
         assertEquals("OK", doc.head().select("title").text());
         assertEquals("There is a UTF8 BOM at the top (before the XML decl). If not read correctly, will look like a non-joining space.", doc.body().text());
     }
@@ -298,7 +333,7 @@ public class DataUtilTest {
         VaryingReadInputStream stream = new VaryingReadInputStream(ParseTest.inputStreamFrom(input));
 
         ByteBuffer byteBuffer = DataUtil.readToByteBuffer(stream, 0);
-        String read = new String(byteBuffer.array());
+        String read = new String(byteBuffer.array(), 0, byteBuffer.limit(), StandardCharsets.UTF_8);
 
         assertEquals(input, read);
     }

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SelectorTest {
 
     /** Test that the selected elements match exactly the specified IDs. */
-    static void assertSelectedIds(Elements els, String... ids) {
+    public static void assertSelectedIds(Elements els, String... ids) {
         assertNotNull(els);
         assertEquals(ids.length, els.size(), "Incorrect number of selected elements");
         for (int i = 0; i < ids.length; i++) {
@@ -175,6 +175,13 @@ public class SelectorTest {
 
         Elements byContains = doc.select("*|def:contains(e)");
         assertSelectedIds(byContains, "1", "2");
+    }
+
+    @Test public void testNamespacedWildcardTag() {
+        // https://github.com/jhy/jsoup/issues/1811
+        Document doc = Jsoup.parse("<p>One</p> <ac:p id=2>Two</ac:p> <ac:img id=3>Three</ac:img>");
+        Elements byNs = doc.select("ac|*");
+        assertSelectedIds(byNs, "2", "3");
     }
 
     @Test public void testWildcardNamespacedXmlTag() {
@@ -591,6 +598,21 @@ public class SelectorTest {
         assertEquals(1, divs.size());
         assertEquals("div", divs.first().tagName());
         assertEquals("Two", divs.first().text());
+    }
+
+    @Test public void testHasSibling() {
+        // https://github.com/jhy/jsoup/issues/2137
+        Document doc = Jsoup.parse("<h1 id=1>One</h1> <h2>Two</h2> <h1>Three</h1>");
+        Elements els = doc.select("h1:has(+h2)");
+        assertSelectedIds(els, "1");
+
+        els = doc.select("h1:has(~h1)");
+        assertSelectedIds(els, "1");
+
+        // nested with sibling
+        doc = Jsoup.parse("<div id=1><p><i>One</i><i>Two</p><p><i>Three</p></div> <div><p><i>Four</div>");
+        els = doc.select("div:has(p:has(i:has(~i)))");
+        assertSelectedIds(els, "1");
     }
 
     @MultiLocaleTest
@@ -1158,6 +1180,26 @@ public class SelectorTest {
 
         assertSelectedIds(empty, "1", "2", "3");
         assertSelectedIds(notEmpty, "4", "5");
+    }
+
+    @Test
+    public void emptyPseudo() {
+        // https://github.com/jhy/jsoup/issues/2130
+        String html = "<ul>" +
+            "  <li id='1'>\n </li>" + // Blank text node only
+            "  <li id='2'></li>" + // No nodes
+            "  <li id='3'><!-- foo --></li>" + // Comment node only
+            "  <li id='4'>One</li>" + // Text node with content
+            "  <li id='5'><span></span></li>" + // Element node
+            "  <li id='6'>\n <span></span></li>" + // Blank text node followed by an element
+            "  <li id='7'><!-- foo --><i></i></li>" + // Comment node with element
+            "</ul>";
+        Document doc = Jsoup.parse(html);
+        Elements empty = doc.select("li:empty");
+        assertSelectedIds(empty, "1", "2", "3");
+
+        Elements notEmpty = doc.select("li:not(:empty)");
+        assertSelectedIds(notEmpty, "4", "5", "6", "7");
     }
 
     @Test public void parentFromSpecifiedDescender() {

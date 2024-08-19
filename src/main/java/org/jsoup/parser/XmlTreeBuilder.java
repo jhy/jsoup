@@ -11,6 +11,7 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -33,7 +34,6 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
-        stack.add(doc); // place the document onto the stack. differs from HtmlTreeBuilder (not on stack). Note not push()ed, so not onNodeInserted.
         doc.outputSettings()
             .syntax(Document.OutputSettings.Syntax.xml)
             .escapeMode(Entities.EscapeMode.xhtml)
@@ -46,6 +46,10 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     Document parse(String input, String baseUri) {
         return parse(new StringReader(input), baseUri, new Parser(this));
+    }
+
+    @Override List<Node> completeParseFragment() {
+        return doc.childNodes();
     }
 
     @Override
@@ -163,14 +167,4 @@ public class XmlTreeBuilder extends TreeBuilder {
         }
     }
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real XML and crafted pain
-
-    List<Node> parseFragment(String inputFragment, String baseUri, Parser parser) {
-        initialiseParse(new StringReader(inputFragment), baseUri, parser);
-        runParser();
-        return doc.childNodes();
-    }
-
-    @Override List<Node> parseFragment(String inputFragment, Element context, String baseUri, Parser parser) {
-        return parseFragment(inputFragment, baseUri, parser);
-    }
 }

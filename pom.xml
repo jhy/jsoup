@@ -5,7 +5,7 @@
 
   <groupId>org.jsoup</groupId>
   <artifactId>jsoup</artifactId>
-  <version>1.18.1-SNAPSHOT</version><!-- remember to update previous version below for japicmp -->
+  <version>1.18.2-SNAPSHOT</version><!-- remember to update previous version below for japicmp -->
   <url>https://jsoup.org/</url>
   <description>jsoup is a Java library that simplifies working with real-world HTML and XML. It offers an easy-to-use API for URL fetching, data parsing, extraction, and manipulation using DOM API methods, CSS, and xpath selectors. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers.</description>
   <inceptionYear>2009</inceptionYear>
@@ -33,7 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.53.v20231009</jetty.version>
+    <jetty.version>9.4.55.v20240627</jetty.version>
   </properties>
 
   <build>
@@ -42,7 +42,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.12.1</version>
+        <version>3.13.0</version>
         <configuration>
           <encoding>UTF-8</encoding>
           <compilerArgs>
@@ -68,7 +68,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.23</version>
+        <version>1.24</version>
         <executions>
           <execution>
             <id>animal-sniffer</id>
@@ -105,6 +105,7 @@
                 <ignore>java.util.Set</ignore> <!-- Set#stream() -->
                 <ignore>java.util.Spliterator</ignore>
                 <ignore>java.util.Spliterators</ignore>
+                <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
 
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
               </ignores>
@@ -117,7 +118,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.6.3</version>
+        <version>3.8.0</version>
         <configuration>
           <doclint>none</doclint>
           <source>8</source>
@@ -135,7 +136,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.1</version>
         <configuration>
           <excludes>
             <exclude>org/jsoup/examples/**</exclude>
@@ -153,7 +154,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.2</version>
         <configuration>
           <archive>
             <manifest>
@@ -186,7 +187,7 @@
           <instructions>
             <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
             <Export-Package>org.jsoup.*</Export-Package>
-            <Import-Package>org.jspecify.annotations;version=!;resolution:=optional,*</Import-Package>
+            <Import-Package>!org.jsoup.*,org.jspecify.annotations;version=!;resolution:=optional,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -197,20 +198,20 @@
       </plugin>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.3</version>
+        <version>3.3.1</version>
         <configuration>
-          <!-- smaller stack to find stack overflows -->
-          <argLine>-Xss256k</argLine>
+          <!-- smaller stack to find stack overflows. Was 256, but Zulu on MacOS ARM needs >= 640 -->
+          <argLine>-Xss640k</argLine>
         </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.2.3</version>
+        <version>3.3.1</version>
         <executions>
           <execution>
             <goals>
@@ -228,14 +229,14 @@
         <!-- API version compat check - https://siom79.github.io/japicmp/ -->
         <groupId>com.github.siom79.japicmp</groupId>
         <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.18.3</version>
+        <version>0.22.0</version>
         <configuration>
           <!-- hard code previous version; can't detect when running stateless on build server -->
           <oldVersion>
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.17.1</version>
+              <version>1.18.1</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
@@ -260,18 +261,6 @@
                 <binaryCompatible>true</binaryCompatible>
                 <sourceCompatible>true</sourceCompatible>
               </overrideCompatibilityChangeParameter>
-
-              <!--
-                One off, getting a spurious ping on adding [<T extends Node> Stream<T> nodeStream(Class<T> class)] to Node.
-                Manually verified binary & source compatibility
-                todo: remove after 1.17.1 release
-               -->
-              <overrideCompatibilityChangeParameter>
-                <compatibilityChange>CLASS_GENERIC_TEMPLATE_CHANGED</compatibilityChange>
-                <binaryCompatible>true</binaryCompatible>
-                <sourceCompatible>true</sourceCompatible>
-              </overrideCompatibilityChangeParameter>
-
             </overrideCompatibilityChangeParameters>
           </parameter>
         </configuration>
@@ -383,7 +372,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.2.3</version>
+            <version>3.3.1</version>
             <executions>
               <execution>
                 <goals>
@@ -404,7 +393,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.10.1</version>
+      <version>5.10.3</version>
       <scope>test</scope>
     </dependency>
 
@@ -412,7 +401,7 @@
       <!-- gson, to fetch entities from w3.org -->
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.10.1</version>
+      <version>2.11.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -444,7 +433,7 @@
       <!-- org.jspecify.annotations.nonnull, with Apache 2 license. Build time only. -->
       <groupId>org.jspecify</groupId>
       <artifactId>jspecify</artifactId>
-      <version>0.3.0</version>
+      <version>1.0.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

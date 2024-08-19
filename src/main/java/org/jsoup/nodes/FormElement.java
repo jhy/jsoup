@@ -4,18 +4,25 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SharedConstants;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
+import org.jsoup.select.QueryParser;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A HTML Form Element provides ready access to the form fields/controls that are associated with it. It also allows a
+ * An HTML Form Element provides ready access to the form fields/controls that are associated with it. It also allows a
  * form to easily be submitted.
  */
 public class FormElement extends Element {
-    private final Elements elements = new Elements();
+    private final Elements linkedEls = new Elements();
+    // contains form submittable elements that were linked during the parse (and due to parse rules, may no longer be a child of this form)
+    private final Evaluator submittable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
 
     /**
      * Create a new, standalone form element.
@@ -24,7 +31,7 @@ public class FormElement extends Element {
      * @param baseUri    the base URI
      * @param attributes initial attributes
      */
-    public FormElement(Tag tag, String baseUri, Attributes attributes) {
+    public FormElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         super(tag, baseUri, attributes);
     }
 
@@ -33,7 +40,15 @@ public class FormElement extends Element {
      * @return form controls associated with this element.
      */
     public Elements elements() {
-        return elements;
+        // As elements may have been added or removed from the DOM after parse, prepare a new list that unions them:
+        Elements els = select(submittable); // current form children
+        for (Element linkedEl : linkedEls) {
+            if (linkedEl.ownerDocument() != null && !els.contains(linkedEl)) {
+                els.add(linkedEl); // adds previously linked elements, that weren't previously removed from the DOM
+            }
+        }
+
+        return els;
     }
 
     /**
@@ -42,14 +57,14 @@ public class FormElement extends Element {
      * @return this form element, for chaining
      */
     public FormElement addElement(Element element) {
-        elements.add(element);
+        linkedEls.add(element);
         return this;
     }
 
     @Override
     protected void removeChild(Node out) {
         super.removeChild(out);
-        elements.remove(out);
+        linkedEls.remove(out);
     }
 
     /**
@@ -84,7 +99,8 @@ public class FormElement extends Element {
         ArrayList<Connection.KeyVal> data = new ArrayList<>();
 
         // iterate the form control elements and accumulate their values
-        for (Element el: elements) {
+        Elements formEls = elements();
+        for (Element el: formEls) {
             if (!el.tag().isFormSubmittable()) continue; // contents are form listable, superset of submitable
             if (el.hasAttr("disabled")) continue; // skip disabled form inputs
             String name = el.attr("name");

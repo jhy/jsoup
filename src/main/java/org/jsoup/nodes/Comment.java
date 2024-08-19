@@ -16,10 +16,10 @@ public class Comment extends LeafNode {
      @param data The contents of the comment
      */
     public Comment(String data) {
-        value = data;
+        super(data);
     }
 
-    public String nodeName() {
+    @Override public String nodeName() {
         return "#comment";
     }
 
@@ -48,11 +48,6 @@ public class Comment extends LeafNode {
 
     @Override
     void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
-
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
 
     @Override
     public Comment clone() {

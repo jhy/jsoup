@@ -16,8 +16,8 @@ public class CDataNode extends TextNode {
     }
 
     /**
-     * Get the unencoded, <b>non-normalized</b> text content of this CDataNode.
-     * @return unencoded, non-normalized text
+     * Get the un-encoded, <b>non-normalized</b> text content of this CDataNode.
+     * @return un-encoded, non-normalized text
      */
     @Override
     public String text() {
