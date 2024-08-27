@@ -387,4 +387,33 @@ public class W3CDomTest {
         assertEquals("Foo", doc.getFirstChild().getTextContent());
     }
 
+    @Test void testHtmlParseAttributesAreCaseInsensitive() throws IOException {
+        // https://github.com/jhy/jsoup/issues/981
+        String html = "<html lang=en>\n" +
+            "<body>\n" +
+            "<img src=\"firstImage.jpg\" alt=\"Alt one\" />\n" +
+            "<IMG SRC=\"secondImage.jpg\" AlT=\"Alt two\" />\n" +
+            "</body>\n" +
+            "</html>";
+        org.jsoup.nodes.Document jsoupDoc;
+        jsoupDoc = Jsoup.parse(html);
+        org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
+        Document doc = jDom.fromJsoup(jsoupDoc);
+        org.w3c.dom.Element body = (org.w3c.dom.Element) doc.getDocumentElement().getElementsByTagName("body").item(0);
+        NodeList imgs = body.getElementsByTagName("img");
+        assertEquals(2, imgs.getLength());
+        org.w3c.dom.Element first = (org.w3c.dom.Element) imgs.item(0);
+        assertEquals(first.getAttributes().getLength(), 2);
+        String img1 = first.getAttribute("src");
+        assertEquals("firstImage.jpg", img1);
+        String alt1 = first.getAttribute("alt");
+        assertEquals("Alt one", alt1);
+        org.w3c.dom.Element second = (org.w3c.dom.Element) imgs.item(1);
+        assertEquals(second.getAttributes().getLength(), 2);
+        String img2 = second.getAttribute("src");
+        assertEquals("secondImage.jpg", img2);
+        String alt2 = second.getAttribute("alt");
+        assertEquals("Alt two", alt2);
+    }
+
 }
