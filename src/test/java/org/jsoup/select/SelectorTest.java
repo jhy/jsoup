@@ -28,7 +28,7 @@ public class SelectorTest {
         }
     }
 
-    static void assertSelectedOwnText(Elements els, String... ownTexts) {
+    public static void assertSelectedOwnText(Elements els, String... ownTexts) {
         assertNotNull(els);
         assertEquals(ownTexts.length, els.size(), "Incorrect number of selected elements");
         for (int i = 0; i < ownTexts.length; i++) {

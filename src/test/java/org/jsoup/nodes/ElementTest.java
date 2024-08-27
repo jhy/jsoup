@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.jsoup.select.SelectorTest.assertSelectedOwnText;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -2636,7 +2637,7 @@ public class ElementTest {
         assertEquals(selected.first(), div);
     }
 
-    @Test void cssSelectorWithAstrix() {
+    @Test void cssSelectorWithAsterisk() {
         // https://github.com/jhy/jsoup/issues/2169
         Document doc = Jsoup.parse("<div class='vds-items_flex-end [&amp;_>_*:first-child]:vds-pt_0'>One</div><div class='vds-items_flex-end'>Two</div>");
         Element div = doc.expectFirst("div");
@@ -2646,6 +2647,16 @@ public class ElementTest {
         Elements selected = doc.select(selector);
         assertEquals(1, selected.size());
         assertEquals(selected.first(), div);
+    }
+
+    @Test void cssSelectorWithPipe() {
+        // https://github.com/jhy/jsoup/issues/1998
+        Document doc = Jsoup.parse("<div><span class='|'>One</div>");
+        Element span = doc.expectFirst("div span");
+        String selector = span.cssSelector();
+        assertEquals("html > body > div > span.\\|", selector);
+        Elements selected = doc.select(selector);
+        assertSelectedOwnText(selected, "One");
     }
 
     @Test void orphanSiblings() {
