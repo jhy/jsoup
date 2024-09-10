@@ -22,6 +22,8 @@
   character. [2169](https://github.com/jhy/jsoup/issues/2169)
 * When tracking source ranges, a text node following an invalid self-closing element may be left
   untracked.[2175](https://github.com/jhy/jsoup/issues/2175)
+* When a document has no doctype, or a doctype not named `html`, it should be parsed in Quirks
+  Mode. [2197](https://github.com/jhy/jsoup/issues/2197)
 
 ## 1.18.1 (2024-Jul-10)
 
