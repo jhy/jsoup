@@ -69,16 +69,15 @@ abstract class StructuralEvaluator extends Evaluator {
                         return true;
                     }
                 }
-            } else {
-                // otherwise we only want to match children (or below), and not the input element. And we want to minimize GCs so reusing the Iterator obj
-                NodeIterator<Element> it = ThreadElementIter.get();
-                it.restart(element);
-                while (it.hasNext()) {
-                    Element el = it.next();
-                    if (el == element) continue; // don't match self, only descendants
-                    if (evaluator.matches(element, el))
-                        return true;
-                }
+            }
+            // otherwise we only want to match children (or below), and not the input element. And we want to minimize GCs so reusing the Iterator obj
+            NodeIterator<Element> it = ThreadElementIter.get();
+            it.restart(element);
+            while (it.hasNext()) {
+                Element el = it.next();
+                if (el == element) continue; // don't match self, only descendants
+                if (evaluator.matches(element, el))
+                    return true;
             }
             return false;
         }

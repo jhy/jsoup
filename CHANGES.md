@@ -24,6 +24,9 @@
   untracked.[2175](https://github.com/jhy/jsoup/issues/2175)
 * When a document has no doctype, or a doctype not named `html`, it should be parsed in Quirks
   Mode. [2197](https://github.com/jhy/jsoup/issues/2197)
+* With a selector like `div:has(span + a)`, the `has()` component was not working correctly, as the inner combining
+  query caused the evaluator to match those against the outer's siblings, not
+  children. [2187](https://github.com/jhy/jsoup/issues/2187)
 
 ## 1.18.1 (2024-Jul-10)
 

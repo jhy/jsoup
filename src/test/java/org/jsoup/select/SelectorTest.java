@@ -1296,4 +1296,32 @@ public class SelectorTest {
         Elements emptyAttr = doc.select("p:not([*])");
         assertSelectedOwnText(emptyAttr, "Three");
     }
+
+    @Test void divHasSpanPreceding() {
+        // https://github.com/jhy/jsoup/issues/2187
+        String html = "<div><span>abc</span><a>def</a></div>";
+        String q = "div:has(span + a)";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select(q);
+        assertEquals(1, els.size());
+        assertEquals("div", els.first().normalName());
+    }
+
+    @Test void divHasDivPreceding() {
+        // https://github.com/jhy/jsoup/issues/2131 , dupe of https://github.com/jhy/jsoup/issues/2187
+        String html = "<div id=1>\n" +
+            "<div 1><span>hello</span></div>\n" +
+            "<div 2><span>there</span></div>\n" +
+            "\n" +
+            "</div>";
+
+        String q = "div:has(>div + div)";
+
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.select(q);
+        assertEquals(1, els.size());
+        assertEquals("div", els.first().normalName());
+        assertEquals("1", els.first().id());
+    }
 }
