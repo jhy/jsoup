@@ -1309,7 +1309,7 @@ public class SelectorTest {
     }
 
     @Test void divHasDivPreceding() {
-        // https://github.com/jhy/jsoup/issues/2131 , dupe of https://github.com/jhy/jsoup/issues/2187
+        // https://github.com/jhy/jsoup/issues/2131
         String html = "<div id=1>\n" +
             "<div 1><span>hello</span></div>\n" +
             "<div 2><span>there</span></div>\n" +
@@ -1323,5 +1323,24 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("div", els.first().normalName());
         assertEquals("1", els.first().id());
+    }
+
+    @Test void nestedMultiHas() {
+        // https://github.com/jhy/jsoup/issues/2131
+        String html =
+            "<html>" +
+                "<head></head>" +
+                "<body>" +
+                "<div id=o>" +
+                "<div id=i1><span id=s1>hello</span></div>" +
+                "<div id=i2><span id=s2>world</span></div>" +
+                "</div>" +
+                "</body></html>";
+        Document document = Jsoup.parse(html);
+
+        String q = "div:has(> div:has(> span) + div:has(> span))";
+        Elements els = document.select(q);
+        assertEquals(1, els.size());
+        assertEquals("o", els.get(0).id());
     }
 }

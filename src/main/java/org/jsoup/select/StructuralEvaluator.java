@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.internal.Functions;
+import org.jsoup.internal.SoftPool;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.NodeIterator;
@@ -51,8 +52,8 @@ abstract class StructuralEvaluator extends Evaluator {
     }
 
     static class Has extends StructuralEvaluator {
-        static final ThreadLocal<NodeIterator<Element>> ThreadElementIter =
-            ThreadLocal.withInitial(() -> new NodeIterator<>(new Element("html"), Element.class));
+        static final SoftPool<NodeIterator<Element>> ElementIterPool =
+            new SoftPool<>(() -> new NodeIterator<>(new Element("html"), Element.class));
         // the element here is just a placeholder so this can be final - gets set in restart()
 
         private final boolean checkSiblings; // evaluating against siblings (or children)
@@ -71,13 +72,18 @@ abstract class StructuralEvaluator extends Evaluator {
                 }
             }
             // otherwise we only want to match children (or below), and not the input element. And we want to minimize GCs so reusing the Iterator obj
-            NodeIterator<Element> it = ThreadElementIter.get();
+            NodeIterator<Element> it = ElementIterPool.borrow();
             it.restart(element);
-            while (it.hasNext()) {
-                Element el = it.next();
-                if (el == element) continue; // don't match self, only descendants
-                if (evaluator.matches(element, el))
-                    return true;
+            try {
+                while (it.hasNext()) {
+                    Element el = it.next();
+                    if (el == element) continue; // don't match self, only descendants
+                    if (evaluator.matches(element, el)) {
+                        return true;
+                    }
+                }
+            } finally {
+                ElementIterPool.release(it);
             }
             return false;
         }
