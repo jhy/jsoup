@@ -4,6 +4,8 @@ import org.jsoup.Connection;
 import org.jsoup.internal.StringUtil;
 
 import java.io.IOException;
+import java.net.CookieManager;
+import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -83,8 +85,21 @@ class CookieUtil {
         }
     }
 
-    static void storeCookies(HttpConnection.Request req, URL url, Map<String, List<String>> resHeaders) throws IOException {
-        req.cookieManager().put(CookieUtil.asUri(url), resHeaders); // stores cookies for session
+    /** Store the Result cookies into the cookie manager, and place relevant cookies into the Response object. */
+    static void storeCookies(HttpConnection.Request req, HttpConnection.Response res, URL url, Map<String, List<String>> resHeaders) throws IOException {
+        CookieManager manager = req.cookieManager();
+        URI uri = CookieUtil.asUri(url);
+        manager.put(uri, resHeaders); // stores cookies for session
 
+        // set up the simple cookie(name, value) map:
+        Map<String, List<String>> cookieMap = manager.get(uri, resHeaders); // get cookies for url; may have been set on this or earlier requests. the headers here are ignored other than a null check
+        for (List<String> values : cookieMap.values()) {
+            for (String headerVal : values) {
+                List<HttpCookie> cookies = HttpCookie.parse(headerVal);
+                for (HttpCookie cookie : cookies) {
+                    res.cookie(cookie.getName(), cookie.getValue());
+                }
+            }
+        }
     }
 }

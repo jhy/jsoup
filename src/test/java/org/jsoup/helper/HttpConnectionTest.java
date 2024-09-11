@@ -155,27 +155,6 @@ public class HttpConnectionTest {
         assertEquals(0, res.cookies().size());
     }
 
-    @Test public void ignoresEmptyCookieNameAndVals() {
-        // prep http response header map
-        Map<String, List<String>> headers = new HashMap<>();
-        List<String> cookieStrings = new ArrayList<>();
-        cookieStrings.add(null);
-        cookieStrings.add("");
-        cookieStrings.add("one");
-        cookieStrings.add("two=");
-        cookieStrings.add("three=;");
-        cookieStrings.add("four=data; Domain=.example.com; Path=/");
-
-        headers.put("Set-Cookie", cookieStrings);
-        HttpConnection.Response res = new HttpConnection.Response();
-        res.processResponseHeaders(headers);
-        assertEquals(4, res.cookies().size());
-        assertEquals("", res.cookie("one"));
-        assertEquals("", res.cookie("two"));
-        assertEquals("", res.cookie("three"));
-        assertEquals("data", res.cookie("four"));
-    }
-
     @Test public void connectWithUrl() throws MalformedURLException {
         Connection con = HttpConnection.connect(new URL("http://example.com"));
         assertEquals("http://example.com", con.request().url().toExternalForm());

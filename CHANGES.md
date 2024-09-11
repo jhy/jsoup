@@ -29,6 +29,8 @@
   children. [2187](https://github.com/jhy/jsoup/issues/2187)
 * A selector query that included multiple `:has()` components in a nested `:has()` might incorrectly
   execute. [2131](https://github.com/jhy/jsoup/issues/2131)
+* Updated the simple view of cookies available via `Connection.Response#cookies()` to reflect the contents of the 
+  current cookie jar for the current URL. [1831](https://github.com/jhy/jsoup/issues/1831)
 
 ## 1.18.1 (2024-Jul-10)
 
