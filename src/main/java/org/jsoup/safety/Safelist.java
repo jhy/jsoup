@@ -12,6 +12,7 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -522,15 +523,12 @@ public class Safelist {
         TagName tag = TagName.valueOf(tagName);
         AttributeKey key = AttributeKey.valueOf(attr.getKey());
 
-        Set<AttributeKey> okSet = attributes.get(tag);
-        if (okSet != null && okSet.contains(key)) {
-            if (protocols.containsKey(tag)) {
-                Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
-                // ok if not defined protocol; otherwise test
-                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
-            } else { // attribute found, no protocols defined, so OK
-                return true;
-            }
+        Set<AttributeKey> okSet = attributes.getOrDefault(tag, Collections.emptySet());
+        if (okSet.contains(key)) {
+            Set<Protocol> protocolSet = protocols.getOrDefault(tag, Collections.emptyMap())
+                    .getOrDefault(key, Collections.emptySet());
+            // ok if not defined protocol; otherwise test
+            return protocolSet.isEmpty() || testValidProtocol(el, attr, protocolSet);
         }
         // might be an enforced attribute?
         Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
@@ -585,12 +583,10 @@ public class Safelist {
      */
     public Attributes getEnforcedAttributes(String tagName) {
         Attributes attrs = new Attributes();
-        TagName tag = TagName.valueOf(tagName);
-        if (enforcedAttributes.containsKey(tag)) {
-            Map<AttributeKey, AttributeValue> keyVals = enforcedAttributes.get(tag);
-            for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
-                attrs.put(entry.getKey().toString(), entry.getValue().toString());
-            }
+        Map<AttributeKey, AttributeValue> keyVals =
+                enforcedAttributes.getOrDefault(TagName.valueOf(tagName), Collections.emptyMap());
+        for (Map.Entry<AttributeKey, AttributeValue> entry : keyVals.entrySet()) {
+            attrs.put(entry.getKey().toString(), entry.getValue().toString());
         }
         return attrs;
     }
