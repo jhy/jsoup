@@ -17,10 +17,10 @@ public class TextNode extends LeafNode {
      @see #createFromEncoded(String)
      */
     public TextNode(String text) {
-        value = text;
+        super(text);
     }
 
-	public String nodeName() {
+	@Override public String nodeName() {
         return "#text";
     }
     

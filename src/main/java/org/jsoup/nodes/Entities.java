@@ -1,14 +1,15 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.helper.DataUtil;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
-import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -136,51 +137,55 @@ public class Entities {
     /**
      HTML escape an input string. That is, {@code <} is returned as {@code &lt;}. The escaped string is suitable for use
      both in attributes and in text data.
-     @param string the un-escaped string to escape
+     @param data the un-escaped string to escape
      @param out the output settings to use. This configures the character set escaped against (that is, if a
      character is supported in the output character set, it doesn't have to be escaped), and also HTML or XML
      settings.
      @return the escaped string
      */
-    public static String escape(String string, OutputSettings out) {
-        if (string == null)
+    public static String escape(String data, OutputSettings out) {
+        return escapeString(data, out.escapeMode(), out.syntax(), out.charset());
+    }
+
+    /**
+     HTML escape an input string, using the default settings (UTF-8, base entities, HTML syntax). That is, {@code <} is
+     returned as {@code &lt;}. The escaped string is suitable for use both in attributes and in text data.
+     @param data the un-escaped string to escape
+     @return the escaped string
+     @see #escape(String, OutputSettings)
+     */
+    public static String escape(String data) {
+        return escapeString(data, base, Syntax.html, DataUtil.UTF_8);
+    }
+
+    private static String escapeString(String data, EscapeMode escapeMode, Syntax syntax, Charset charset) {
+        if (data == null)
             return "";
         StringBuilder accum = StringUtil.borrowBuilder();
         try {
-            escape(accum, string, out, ForText | ForAttribute); // for text and for attribute; preserve whitespaces
+            doEscape(data, accum, escapeMode, syntax, charset, ForText | ForAttribute);
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
         return StringUtil.releaseBuilder(accum);
     }
 
-    /**
-     * HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is returned as
-     * {@code &lt;}. The escaped string is suitable for use both in attributes and in text data.
-     *
-     * @param string the un-escaped string to escape
-     * @return the escaped string
-     * @see #escape(String, OutputSettings)
-     */
-    public static String escape(String string) {
-        if (DefaultOutput == null)
-            DefaultOutput = new OutputSettings();
-        return escape(string, DefaultOutput);
-    }
-    private static @Nullable OutputSettings DefaultOutput; // lazy-init, to break circular dependency with OutputSettings
 
-    static void escape(Appendable accum, String string, OutputSettings out, int options) throws IOException {
-        final EscapeMode escapeMode = out.escapeMode();
-        final CharsetEncoder encoder = out.encoder();
-        final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
-        final int length = string.length();
+    static void escape(Appendable accum, String data, OutputSettings out, int options) throws IOException {
+        doEscape(data, accum, out.escapeMode(), out.syntax(), out.charset(), options);
+    }
+
+    private static void doEscape(String data, Appendable accum, EscapeMode mode, Syntax syntax, Charset charset, int options) throws IOException {
+        final CoreCharset coreCharset = CoreCharset.byName(charset.name());
+        final CharsetEncoder fallback = encoderFor(charset);
+        final int length = data.length();
 
         int codePoint;
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         boolean skipped = false;
         for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
-            codePoint = string.codePointAt(offset);
+            codePoint = data.codePointAt(offset);
 
             if ((options & Normalise) != 0) {
                 if (StringUtil.isWhitespace(codePoint)) {
@@ -202,12 +207,12 @@ public class Entities {
                     }
                 }
             }
-            appendEscaped(accum, out, options, codePoint, escapeMode, encoder, coreCharset);
+            appendEscaped(codePoint, accum, options, mode, syntax, coreCharset, fallback);
         }
     }
 
-    private static void appendEscaped(Appendable accum, OutputSettings out, int options,
-        int codePoint, EscapeMode escapeMode, CharsetEncoder encoder, CoreCharset coreCharset) throws IOException {
+    private static void appendEscaped(int codePoint, Appendable accum, int options, EscapeMode escapeMode,
+        Syntax syntax, CoreCharset coreCharset, CharsetEncoder fallback) throws IOException {
 
         // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
         final char c = (char) codePoint;
@@ -222,7 +227,7 @@ public class Entities {
                     break;
                 case '<':
                     // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
-                    appendLt(accum, options, escapeMode, out);
+                    appendLt(accum, options, escapeMode, syntax);
                     break;
                 case '>':
                     if ((options & ForText) != 0) accum.append("&gt;");
@@ -243,11 +248,11 @@ public class Entities {
                     accum.append(c);
                     break;
                 default:
-                    if (c < 0x20 || !canEncode(coreCharset, c, encoder)) appendEncoded(accum, escapeMode, codePoint);
+                    if (c < 0x20 || !canEncode(coreCharset, c, fallback)) appendEncoded(accum, escapeMode, codePoint);
                     else accum.append(c);
             }
         } else {
-            if (canEncode(coreCharset, c, encoder)) {
+            if (canEncode(coreCharset, c, fallback)) {
                 // reads into charBuf - we go through these steps to avoid GC objects as much as possible (would be a new String and a new char[2] for each character)
                 char[] chars = charBuf.get();
                 int len = Character.toChars(codePoint, chars, 0);
@@ -268,9 +273,9 @@ public class Entities {
         else accum.append("&#xa0;");
     }
 
-    private static void appendLt(Appendable accum, int options, EscapeMode escapeMode, OutputSettings out) throws IOException {
-        if ((options & ForText) != 0 || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml) accum.append("&lt;");
-        else accum.append('<');
+    private static void appendLt(Appendable accum, int options, EscapeMode escapeMode, Syntax syntax) throws IOException {
+        if ((options & ForText) != 0 || escapeMode == EscapeMode.xhtml || syntax == Syntax.xml) accum.append("&lt;");
+        else accum.append('<'); // no need to escape < when in an HTML attribute
     }
 
     private static void appendApos(Appendable accum, int options, EscapeMode escapeMode) throws IOException {
@@ -281,7 +286,6 @@ public class Entities {
             accum.append('\'');
         }
     }
-
 
     private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
         final String name = escapeMode.nameForCodepoint(codePoint);
@@ -347,6 +351,17 @@ public class Entities {
                 return utf;
             return fallback;
         }
+    }
+
+    // cache the last used fallback encoder to save recreating on every use
+    private static final ThreadLocal<CharsetEncoder> LocalEncoder = new ThreadLocal<>();
+    private static CharsetEncoder encoderFor(Charset charset) {
+        CharsetEncoder encoder = LocalEncoder.get();
+        if (encoder == null || !encoder.charset().equals(charset)) {
+            encoder = charset.newEncoder();
+            LocalEncoder.set(encoder);
+        }
+        return encoder;
     }
 
     private static void load(EscapeMode e, String pointsData, int size) {

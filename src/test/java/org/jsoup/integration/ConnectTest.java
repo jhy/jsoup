@@ -19,6 +19,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.StreamParser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -58,6 +59,12 @@ public class ConnectTest {
     public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
+    }
+
+    @BeforeEach
+    public void emptyCookieJar() {
+        // empty the cookie jar, so cookie tests are independent.
+        Jsoup.connect("http://example.com").cookieStore().removeAll();
     }
 
     @Test
@@ -427,7 +434,7 @@ public class ConnectTest {
         // test cookies set by redirect:
         Map<String, String> cookies = res.cookies();
         assertEquals("asdfg123", cookies.get("token"));
-        assertEquals("jhy", cookies.get("uid"));
+        assertEquals("jhy", cookies.get("uid")); // two uids set, order dependent
 
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();

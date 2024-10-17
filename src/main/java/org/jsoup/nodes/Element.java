@@ -107,7 +107,7 @@ public class Element extends Node {
         return childNodes != EmptyNodes;
     }
 
-    protected List<Node> ensureChildNodes() {
+    @Override protected List<Node> ensureChildNodes() {
         if (childNodes == EmptyNodes) {
             childNodes = new NodeList(this, 4);
         }
@@ -261,7 +261,7 @@ public class Element extends Node {
      *
      * @return this element
      */
-    public Element attr(String attributeKey, String attributeValue) {
+    @Override public Element attr(String attributeKey, String attributeValue) {
         super.attr(attributeKey, attributeValue);
         return this;
     }
@@ -288,7 +288,7 @@ public class Element extends Node {
      @return the Attribute for this key, or null if not present.
      @since 1.17.2
      */
-    public Attribute attribute(String key) {
+    @Nullable public Attribute attribute(String key) {
         return hasAttributes() ? attributes().attribute(key) : null;
     }
 
@@ -1245,7 +1245,7 @@ public class Element extends Node {
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
-     * @param regex regular expression to match against attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @param regex regular expression to match against attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as {@code (?i)} and {@code (?m)}) to control regex options.
      * @return elements that have attributes matching this regular expression
      */
     public Elements getElementsByAttributeValueMatching(String key, String regex) {
@@ -1319,7 +1319,7 @@ public class Element extends Node {
 
     /**
      * Find elements whose text matches the supplied regular expression.
-     * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as {@code (?i)} and {@code (?m)}) to control regex options.
      * @return elements matching the supplied regular expression.
      * @see Element#text()
      */
@@ -1345,7 +1345,7 @@ public class Element extends Node {
 
     /**
      * Find elements whose own text matches the supplied regular expression.
-     * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+     * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as {@code (?i)} and {@code (?m)}) to control regex options.
      * @return elements matching the supplied regular expression.
      * @see Element#ownText()
      */
@@ -1397,7 +1397,7 @@ public class Element extends Node {
             this.accum = accum;
         }
 
-        public void head(Node node, int depth) {
+        @Override public void head(Node node, int depth) {
             if (node instanceof TextNode) {
                 TextNode textNode = (TextNode) node;
                 appendNormalisedText(accum, textNode);
@@ -1410,7 +1410,7 @@ public class Element extends Node {
             }
         }
 
-        public void tail(Node node, int depth) {
+        @Override public void tail(Node node, int depth) {
             // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
             if (node instanceof Element) {
                 Element element = (Element) node;
@@ -1907,7 +1907,7 @@ public class Element extends Node {
             this.owner = owner;
         }
 
-        public void onContentsChanged() {
+        @Override public void onContentsChanged() {
             owner.nodelistChanged();
         }
     }

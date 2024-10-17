@@ -33,7 +33,8 @@ public class RedirectServlet extends BaseServlet {
 
         if (req.getParameter(SetCookiesParam) != null) {
             res.addCookie(new Cookie("token", "asdfg123"));
-            res.addCookie(new Cookie("uid", "jhy"));
+            res.addCookie(new Cookie("uid", "foobar"));
+            res.addCookie(new Cookie("uid", "jhy")); // dupe, should use latter
         }
 
         res.setHeader("Location", location);

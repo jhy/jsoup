@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import org.jsoup.helper.Validate;
+
 import java.util.List;
 
 /**
@@ -8,7 +10,16 @@ import java.util.List;
 public abstract class LeafNode extends Node {
     Object value; // either a string value, or an attribute map (in the rare case multiple attributes are set)
 
-    protected final boolean hasAttributes() {
+    public LeafNode() {
+        value = "";
+    }
+
+    protected LeafNode(String coreValue) {
+        Validate.notNull(coreValue);
+        value = coreValue;
+    }
+
+    @Override protected final boolean hasAttributes() {
         return value instanceof Attributes;
     }
 
@@ -19,12 +30,11 @@ public abstract class LeafNode extends Node {
     }
 
     private void ensureAttributes() {
-        if (!hasAttributes()) {
-            Object coreValue = value;
+        if (!hasAttributes()) { // then value is String coreValue
+            String coreValue = (String) value;
             Attributes attributes = new Attributes();
             value = attributes;
-            if (coreValue != null)
-                attributes.put(nodeName(), (String) coreValue);
+            attributes.put(nodeName(), coreValue);
         }
     }
 
@@ -75,7 +85,7 @@ public abstract class LeafNode extends Node {
 
     @Override
     public String baseUri() {
-        return hasParent() ? parent().baseUri() : "";
+        return parentNode != null ? parentNode.baseUri() : "";
     }
 
     @Override

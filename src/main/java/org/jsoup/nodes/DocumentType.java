@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 
@@ -13,10 +14,10 @@ public class DocumentType extends LeafNode {
     // todo needs a bit of a chunky cleanup. this level of detail isn't needed
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
-    private static final String NAME = "name";
-    private static final String PUB_SYS_KEY = "pubSysKey"; // PUBLIC or SYSTEM
-    private static final String PUBLIC_ID = "publicId";
-    private static final String SYSTEM_ID = "systemId";
+    private static final String Name = "#doctype";
+    private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
+    private static final String PublicId = "publicId";
+    private static final String SystemId = "systemId";
     // todo: quirk mode from publicId and systemId
 
     /**
@@ -26,25 +27,25 @@ public class DocumentType extends LeafNode {
      * @param systemId the doctype's system ID
      */
     public DocumentType(String name, String publicId, String systemId) {
-        Validate.notNull(name);
+        super(name);
         Validate.notNull(publicId);
         Validate.notNull(systemId);
-        attr(NAME, name);
-        attr(PUBLIC_ID, publicId);
-        attr(SYSTEM_ID, systemId);
+        attr(Name, name);
+        attr(PublicId, publicId);
+        attr(SystemId, systemId);
         updatePubSyskey();
     }
 
-    public void setPubSysKey(String value) {
+    public void setPubSysKey(@Nullable String value) {
         if (value != null)
-            attr(PUB_SYS_KEY, value);
+            attr(PubSysKey, value);
     }
 
     private void updatePubSyskey() {
-        if (has(PUBLIC_ID)) {
-            attr(PUB_SYS_KEY, PUBLIC_KEY);
-        } else if (has(SYSTEM_ID))
-            attr(PUB_SYS_KEY, SYSTEM_KEY);
+        if (has(PublicId)) {
+            attr(PubSysKey, PUBLIC_KEY);
+        } else if (has(SystemId))
+            attr(PubSysKey, SYSTEM_KEY);
     }
 
     /**
@@ -52,7 +53,7 @@ public class DocumentType extends LeafNode {
      * @return doctype name
      */
     public String name() {
-        return attr(NAME);
+        return attr(Name);
     }
 
     /**
@@ -60,7 +61,7 @@ public class DocumentType extends LeafNode {
      * @return doctype Public ID
      */
     public String publicId() {
-        return attr(PUBLIC_ID);
+        return attr(PublicId);
     }
 
     /**
@@ -68,12 +69,12 @@ public class DocumentType extends LeafNode {
      * @return doctype System ID
      */
     public String systemId() {
-        return attr(SYSTEM_ID);
+        return attr(SystemId);
     }
 
     @Override
     public String nodeName() {
-        return "#doctype";
+        return Name;
     }
 
     @Override
@@ -82,20 +83,20 @@ public class DocumentType extends LeafNode {
         if (siblingIndex > 0 && out.prettyPrint())
             accum.append('\n');
 
-        if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
+        if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
         } else {
             accum.append("<!DOCTYPE");
         }
-        if (has(NAME))
-            accum.append(" ").append(attr(NAME));
-        if (has(PUB_SYS_KEY))
-            accum.append(" ").append(attr(PUB_SYS_KEY));
-        if (has(PUBLIC_ID))
-            accum.append(" \"").append(attr(PUBLIC_ID)).append('"');
-        if (has(SYSTEM_ID))
-            accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
+        if (has(Name))
+            accum.append(" ").append(attr(Name));
+        if (has(PubSysKey))
+            accum.append(" ").append(attr(PubSysKey));
+        if (has(PublicId))
+            accum.append(" \"").append(attr(PublicId)).append('"');
+        if (has(SystemId))
+            accum.append(" \"").append(attr(SystemId)).append('"');
         accum.append('>');
     }
 

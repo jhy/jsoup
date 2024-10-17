@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -57,7 +58,7 @@ public class Parser {
         return treeBuilder.parse(inputHtml, baseUri, this);
     }
 
-    public List<Node> parseFragmentInput(String fragment, Element context, String baseUri) {
+    public List<Node> parseFragmentInput(String fragment, @Nullable Element context, String baseUri) {
         return treeBuilder.parseFragment(fragment, context, baseUri, this);
     }
     // gets & sets

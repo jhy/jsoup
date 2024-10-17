@@ -10,18 +10,19 @@ import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A HTML Form Element provides ready access to the form fields/controls that are associated with it. It also allows a
+ * An HTML Form Element provides ready access to the form fields/controls that are associated with it. It also allows a
  * form to easily be submitted.
  */
 public class FormElement extends Element {
-    private Elements linkedEls = new Elements();
+    private final Elements linkedEls = new Elements();
     // contains form submittable elements that were linked during the parse (and due to parse rules, may no longer be a child of this form)
-    private final Evaluator submitable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
+    private final Evaluator submittable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
 
     /**
      * Create a new, standalone form element.
@@ -30,7 +31,7 @@ public class FormElement extends Element {
      * @param baseUri    the base URI
      * @param attributes initial attributes
      */
-    public FormElement(Tag tag, String baseUri, Attributes attributes) {
+    public FormElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         super(tag, baseUri, attributes);
     }
 
@@ -40,7 +41,7 @@ public class FormElement extends Element {
      */
     public Elements elements() {
         // As elements may have been added or removed from the DOM after parse, prepare a new list that unions them:
-        Elements els = select(submitable); // current form children
+        Elements els = select(submittable); // current form children
         for (Element linkedEl : linkedEls) {
             if (linkedEl.ownerDocument() != null && !els.contains(linkedEl)) {
                 els.add(linkedEl); // adds previously linked elements, that weren't previously removed from the DOM

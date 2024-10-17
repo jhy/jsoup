@@ -58,8 +58,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     // the number of instance fields is kept as low as possible giving an object size of 24 bytes
     private int size = 0; // number of slots used (not total capacity, which is keys.length)
-    String[] keys = new String[InitialCapacity];
-    Object[] vals = new Object[InitialCapacity]; // Genericish: all non-internal attribute values must be Strings and are cast on access.
+    @Nullable String[] keys = new String[InitialCapacity]; // keys is not null, but contents may be. Same for vals
+    @Nullable Object[] vals = new Object[InitialCapacity]; // Genericish: all non-internal attribute values must be Strings and are cast on access.
     // todo - make keys iterable without creating Attribute objects
 
     // check there's room for more
@@ -119,7 +119,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @return the Attribute for this key, or null if not present.
      @since 1.17.2
      */
-    public Attribute attribute(String key) {
+    @Nullable public Attribute attribute(String key) {
         int i = indexOfKey(key);
         return i == NotFound ? null : new Attribute(key, checkNotNull(vals[i]), this);
     }
@@ -182,6 +182,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             //noinspection unchecked
             userData = (Map<String, Object>) vals[i];
         }
+        assert userData != null;
         return userData;
     }
 
@@ -218,7 +219,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         int i = indexOfKeyIgnoreCase(key);
         if (i != NotFound) {
             vals[i] = value;
-            if (!keys[i].equals(key)) // case changed, update
+            String old = keys[i];
+            assert old != null;
+            if (!old.equals(key)) // case changed, update
                 keys[i] = key;
         }
         else
@@ -389,6 +392,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
 
     @Override
     public Iterator<Attribute> iterator() {
+        //noinspection ReturnOfInnerClass
         return new Iterator<Attribute>() {
             int expectedSize = size;
             int i = 0;
@@ -397,7 +401,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             public boolean hasNext() {
                 checkModified();
                 while (i < size) {
-                    if (isInternalKey(keys[i])) // skip over internal keys
+                    String key = keys[i];
+                    assert key != null;
+                    if (isInternalKey(key)) // skip over internal keys
                         i++;
                     else
                         break;
@@ -410,7 +416,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             public Attribute next() {
                 checkModified();
                 if (i >= size) throw new NoSuchElementException();
-                final Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
+                String key = keys[i];
+                assert key != null;
+                final Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
                 i++;
                 return attr;
             }
@@ -434,9 +442,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     public List<Attribute> asList() {
         ArrayList<Attribute> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            if (isInternalKey(keys[i]))
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
                 continue; // skip internal keys
-            Attribute attr = new Attribute(keys[i], (String) vals[i], Attributes.this);
+            Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
             list.add(attr);
         }
         return Collections.unmodifiableList(list);
@@ -468,11 +478,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     final void html(final Appendable accum, final Document.OutputSettings out) throws IOException {
         final int sz = size;
         for (int i = 0; i < sz; i++) {
-            if (isInternalKey(keys[i]))
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
                 continue;
-            final String key = Attribute.getValidKey(keys[i], out.syntax());
-            if (key != null)
-                Attribute.htmlNoValidate(key, (String) vals[i], accum.append(' '), out);
+            final String validated = Attribute.getValidKey(key, out.syntax());
+            if (validated != null)
+                Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
         }
     }
 
@@ -496,6 +508,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (size != that.size) return false;
         for (int i = 0; i < size; i++) {
             String key = keys[i];
+            assert key != null;
             int thatI = that.indexOfKey(key);
             if (thatI == NotFound || !Objects.equals(vals[i], that.vals[thatI]))
                 return false;
@@ -534,8 +547,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      */
     public void normalize() {
         for (int i = 0; i < size; i++) {
-            if (!isInternalKey(keys[i]))
-                keys[i] = lowerCase(keys[i]);
+            assert keys[i] != null;
+            String key = keys[i];
+            assert key != null;
+            if (!isInternalKey(key))
+                keys[i] = lowerCase(key);
         }
     }
 
@@ -549,11 +565,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
-        OUTER: for (int i = 0; i < keys.length; i++) {
-            for (int j = i + 1; j < keys.length; j++) {
-                if (keys[j] == null)
-                    continue OUTER; // keys.length doesn't shrink when removing, so re-test
-                if ((preserve && keys[i].equals(keys[j])) || (!preserve && keys[i].equalsIgnoreCase(keys[j]))) {
+        for (int i = 0; i < size; i++) {
+            String keyI = keys[i];
+            assert keyI != null;
+            for (int j = i + 1; j < size; j++) {
+                if ((preserve && keyI.equals(keys[j])) || (!preserve && keyI.equalsIgnoreCase(keys[j]))) {
                     dupes++;
                     remove(j);
                     j--;
@@ -593,7 +609,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             @Override
             public int size() {
                 int count = 0;
-                Iterator iter = new DatasetIterator();
+                Iterator<Entry<String, String>> iter = new DatasetIterator();
                 while (iter.hasNext())
                     count++;
                 return count;
@@ -601,9 +617,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
 
         private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
-            private Iterator<Attribute> attrIter = attributes.iterator();
+            private final Iterator<Attribute> attrIter = attributes.iterator();
             private Attribute attr;
-            public boolean hasNext() {
+            @Override public boolean hasNext() {
                 while (attrIter.hasNext()) {
                     attr = attrIter.next();
                     if (attr.isDataAttribute()) return true;
@@ -611,11 +627,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 return false;
             }
 
-            public Entry<String, String> next() {
+            @Override public Entry<String, String> next() {
                 return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
             }
 
-            public void remove() {
+            @Override public void remove() {
                 attributes.remove(attr.getKey());
             }
         }
@@ -630,6 +646,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     static boolean isInternalKey(String key) {
-        return key != null && key.length() > 1 && key.charAt(0) == InternalPrefix;
+        return key.length() > 1 && key.charAt(0) == InternalPrefix;
     }
 }

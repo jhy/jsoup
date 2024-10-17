@@ -604,10 +604,6 @@ public interface Connection {
 
         /**
          * Get a cookie value by name from this request/response.
-         * <p>
-         * Response objects have a simplified cookie model. Each cookie set in the response is added to the response
-         * object's cookie key=value map. The cookie's path, domain, and expiry date are ignored.
-         * </p>
          * @param name name of cookie to retrieve.
          * @return value of cookie, or null if not set
          */
@@ -638,6 +634,7 @@ public interface Connection {
         /**
          * Retrieve all of the request/response cookies as a map
          * @return cookies
+         * @see #cookieStore()
          */
         Map<String, String> cookies();
     }
