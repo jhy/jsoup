@@ -415,7 +415,7 @@ public class Safelist {
     /**
      * Add wildcard attributes
      * <p>
-     * The wildcard should be recognized by java.text.Pattern. Multiple calls
+     * The wildcard should be recognized by java.util.regex.Pattern. Multiple calls
      * will result in only the last one being used.
      * </p>
      * <p>
@@ -427,7 +427,7 @@ public class Safelist {
      * </p>
      *
      * @param tag  The tag the attributes are for.
-     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
      * @return this Safelist, for chaining.
      */
     public Safelist addWildcardAttributes(String tag, String... wildcards) {
@@ -447,7 +447,7 @@ public class Safelist {
      * Remove wildcard attributes
      *
      * @param tag  The tag the attributes are for.
-     * @param wildcards wildcards pattern recognized by java.text.Pattern
+     * @param wildcards wildcards pattern recognized by java.util.regex.Pattern
      * @return this Safelist, for chaining.
      */
     public Safelist removeWildcardAttributes(String tag, String... wildcards) {
@@ -471,7 +471,7 @@ public class Safelist {
     /**
      * Add wildcard global attributes
      * <p>
-     * The wildcard should be recognized by java.text.Pattern. Multiple calls
+     * The wildcard should be recognized by java.util.regex.Pattern. Multiple calls
      * will result in only the last pattern being used.
      * </p>
      * <p>
@@ -482,7 +482,7 @@ public class Safelist {
      * </ul>
      * </p>
      *
-     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
      * @return this Safelist, for chaining.
      */
     public Safelist addWildcardGlobalAttributes(String... wildcards) {
@@ -492,7 +492,7 @@ public class Safelist {
     /**
      * Remove wildcard global attributes
      *
-     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
      * @return this Safelist, for chaining.
      */
     public Safelist removeWildcardGlobalAttributes(String wildcards) {
