@@ -63,13 +63,14 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Safelist {
     private static final String All = ":all";
+    private static final TagName AllTagName = new TagName(All);
 
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
-    private Map<String, Map<String, Pattern>> attributeWildcards = new LinkedHashMap<>();
+    private Map<TagName, Map<String, Pattern>> wildcardAttributes = new LinkedHashMap<>();
 
     /**
      This safelist allows only text nodes: any HTML Element or any Node other than a TextNode will be removed.
@@ -237,9 +238,9 @@ public class Safelist {
         preserveRelativeLinks = copy.preserveRelativeLinks;
 
         // create deep-ish copy. (The 'Pattern' is not deep-copied.)
-        attributeWildcards = new LinkedHashMap<>(copy.attributeWildcards.size());
-        for (Map.Entry<String, Map<String, Pattern>> entry : copy.attributeWildcards.entrySet()) {
-            attributeWildcards.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+        wildcardAttributes = new LinkedHashMap<>(copy.wildcardAttributes.size());
+        for (Map.Entry<TagName, Map<String, Pattern>> entry : copy.wildcardAttributes.entrySet()) {
+            wildcardAttributes.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
         }
     }
 
@@ -278,6 +279,7 @@ public class Safelist {
                 attributes.remove(tagName);
                 enforcedAttributes.remove(tagName);
                 protocols.remove(tagName);
+                wildcardAttributes.remove(tagName);
             }
         }
         return this;
@@ -431,12 +433,12 @@ public class Safelist {
      * @return this Safelist, for chaining.
      */
     public Safelist addWildcardAttributes(String tag, String... wildcards) {
-        String ltag = tag.toLowerCase();
+        TagName tagName = TagName.valueOf(tag);
         for (String wildcard : wildcards) {
-            if (!attributeWildcards.containsKey(ltag)) {
-                attributeWildcards.put(ltag, new LinkedHashMap<>());
+            if (!wildcardAttributes.containsKey(tagName)) {
+                wildcardAttributes.put(tagName, new LinkedHashMap<>());
             }
-            attributeWildcards.get(ltag).put(wildcard, Pattern.compile("^" + wildcard + "$",
+            wildcardAttributes.get(tagName).put(wildcard, Pattern.compile("^" + wildcard + "$",
                     Pattern.CASE_INSENSITIVE + Pattern.UNICODE_CASE));
         }
 
@@ -451,16 +453,16 @@ public class Safelist {
      * @return this Safelist, for chaining.
      */
     public Safelist removeWildcardAttributes(String tag, String... wildcards) {
-        String ltag = tag.toLowerCase();
+        TagName tagName = TagName.valueOf(tag);
         for (String wildcard : wildcards) {
-            if (attributeWildcards.containsKey(ltag)) {
-                if (attributeWildcards.get(ltag).containsKey(wildcard)) {
-                    attributeWildcards.remove(wildcard);
+            if (wildcardAttributes.containsKey(tagName)) {
+                if (wildcardAttributes.get(tagName).containsKey(wildcard)) {
+                    wildcardAttributes.get(tagName).remove(wildcard);
                 }
 
                 // remove any empty entries
-                if (attributeWildcards.get(ltag).isEmpty()) {
-                    attributeWildcards.remove(ltag);
+                if (wildcardAttributes.get(tagName).isEmpty()) {
+                    wildcardAttributes.remove(tagName);
                 }
             }
         }
@@ -633,17 +635,16 @@ public class Safelist {
             }
         }
         // might be a wildcard, e.g., "data-.+"?
-        String ltag = tagName.toLowerCase();
-        if (attributeWildcards.containsKey(ltag)) {
-            for (Pattern pattern : attributeWildcards.get(ltag).values()) {
+        if (wildcardAttributes.containsKey(tag)) {
+            for (Pattern pattern : wildcardAttributes.get(tag).values()) {
                 if (pattern.matcher(attr.getKey()).matches()) {
                     return true;
                 }
             }
         }
         // might be a global wildcard, e.g., "data-.+"?
-        if (attributeWildcards.containsKey(All)) {
-            for (Pattern pattern : attributeWildcards.get(All).values()) {
+        if (wildcardAttributes.containsKey(AllTagName)) {
+            for (Pattern pattern : wildcardAttributes.get(AllTagName).values()) {
                 if (pattern.matcher(attr.getKey()).matches()) {
                     return true;
                 }
