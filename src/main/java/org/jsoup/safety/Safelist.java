@@ -12,12 +12,8 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 
@@ -67,11 +63,13 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Safelist {
     private static final String All = ":all";
+
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
+    private Map<String, Map<String, Pattern>> attributeWildcards = new LinkedHashMap<>();
 
     /**
      This safelist allows only text nodes: any HTML Element or any Node other than a TextNode will be removed.
@@ -237,6 +235,12 @@ public class Safelist {
             protocols.put(protocolsEntry.getKey(), attributeProtocolsCopy);
         }
         preserveRelativeLinks = copy.preserveRelativeLinks;
+
+        // create deep-ish copy. (The 'Pattern' is not deep-copied.)
+        attributeWildcards = new LinkedHashMap<>(copy.attributeWildcards.size());
+        for (Map.Entry<String, Map<String, Pattern>> entry : copy.attributeWildcards.entrySet()) {
+            attributeWildcards.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+        }
     }
 
     /**
@@ -409,6 +413,93 @@ public class Safelist {
     }
 
     /**
+     * Add wildcard attributes
+     * <p>
+     * The wildcard should be recognized by java.text.Pattern. Multiple calls
+     * will result in only the last one being used.
+     * </p>
+     * <p>
+     * Examples:
+     * <ul>
+     *    <li><code>data-.+</code> - HTML 5</li>
+     *    <li><code>aria-.+</code> - a widely used library</li>
+     * </ul>
+     * </p>
+     *
+     * @param tag  The tag the attributes are for.
+     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist addWildcardAttributes(String tag, String... wildcards) {
+        String ltag = tag.toLowerCase();
+        for (String wildcard : wildcards) {
+            if (!attributeWildcards.containsKey(ltag)) {
+                attributeWildcards.put(ltag, new LinkedHashMap<>());
+            }
+            attributeWildcards.get(ltag).put(wildcard, Pattern.compile("^" + wildcard + "$",
+                    Pattern.CASE_INSENSITIVE + Pattern.UNICODE_CASE));
+        }
+
+        return this;
+    }
+
+    /**
+     * Remove wildcard attributes
+     *
+     * @param tag  The tag the attributes are for.
+     * @param wildcards wildcards pattern recognized by java.text.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist removeWildcardAttributes(String tag, String... wildcards) {
+        String ltag = tag.toLowerCase();
+        for (String wildcard : wildcards) {
+            if (attributeWildcards.containsKey(ltag)) {
+                if (attributeWildcards.get(ltag).containsKey(wildcard)) {
+                    attributeWildcards.remove(wildcard);
+                }
+
+                // remove any empty entries
+                if (attributeWildcards.get(ltag).isEmpty()) {
+                    attributeWildcards.remove(ltag);
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Add wildcard global attributes
+     * <p>
+     * The wildcard should be recognized by java.text.Pattern. Multiple calls
+     * will result in only the last pattern being used.
+     * </p>
+     * <p>
+     * Examples:
+     * <ul>
+     *    <li><code>data-.+</code> - HTML 5</li>
+     *    <li><code>aria-.+</code> - a widely used library</li>
+     * </ul>
+     * </p>
+     *
+     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist addWildcardGlobalAttributes(String... wildcards) {
+        return addWildcardAttributes(All, wildcards);
+    }
+
+    /**
+     * Remove wildcard global attributes
+     *
+     * @param wildcards wildcard pattern recognized by java.text.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist removeWildcardGlobalAttributes(String wildcards) {
+        return removeWildcardAttributes(All, wildcards);
+    }
+
+    /**
      * Configure this Safelist to preserve relative links in an element's URL attribute, or convert them to absolute
      * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
      * e.g. {@code http://}.
@@ -539,6 +630,23 @@ public class Safelist {
             String attrKey = attr.getKey();
             if (expect.hasKeyIgnoreCase(attrKey)) {
                 return expect.getIgnoreCase(attrKey).equals(attr.getValue());
+            }
+        }
+        // might be a wildcard, e.g., "data-.+"?
+        String ltag = tagName.toLowerCase();
+        if (attributeWildcards.containsKey(ltag)) {
+            for (Pattern pattern : attributeWildcards.get(ltag).values()) {
+                if (pattern.matcher(attr.getKey()).matches()) {
+                    return true;
+                }
+            }
+        }
+        // might be a global wildcard, e.g., "data-.+"?
+        if (attributeWildcards.containsKey(All)) {
+            for (Pattern pattern : attributeWildcards.get(All).values()) {
+                if (pattern.matcher(attr.getKey()).matches()) {
+                    return true;
+                }
             }
         }
         // no attributes defined for tag, try :all tag
