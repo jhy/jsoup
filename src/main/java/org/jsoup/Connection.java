@@ -632,9 +632,12 @@ public interface Connection {
         T removeCookie(String name);
 
         /**
-         * Retrieve all of the request/response cookies as a map
-         * @return cookies
-         * @see #cookieStore()
+         Retrieve the request/response cookies as a map. For response cookies, if duplicate cookie names were sent, the
+         last one set will be the one included. For session management, rather than using these response cookies, prefer
+         to use {@link Jsoup#newSession()} and related methods.
+
+         @return simple cookie map
+         @see #cookieStore()
          */
         Map<String, String> cookies();
     }
