@@ -66,7 +66,7 @@ public abstract class CombiningEvaluator extends Evaluator {
     }
 
     public static final class And extends CombiningEvaluator {
-        And(Collection<Evaluator> evaluators) {
+        public And(Collection<Evaluator> evaluators) {
             super(evaluators);
         }
 
@@ -95,7 +95,7 @@ public abstract class CombiningEvaluator extends Evaluator {
          * Create a new Or evaluator. The initial evaluators are ANDed together and used as the first clause of the OR.
          * @param evaluators initial OR clause (these are wrapped into an AND evaluator).
          */
-        Or(Collection<Evaluator> evaluators) {
+        public Or(Collection<Evaluator> evaluators) {
             super();
             if (num > 1)
                 this.evaluators.add(new And(evaluators));
