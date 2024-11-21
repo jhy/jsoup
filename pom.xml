@@ -83,9 +83,9 @@
                 <version>1.0</version>
               </signature>
               <signature>
-                <groupId>net.sf.androidscents.signature</groupId>
-                <artifactId>android-api-level-10</artifactId>
-                <version>2.3.3_r2</version>
+                <groupId>com.toasttab.android</groupId>
+                <artifactId>gummy-bears-api-21</artifactId>
+                <version>0.8.0</version>
               </signature>
               <ignores>
                 <ignore>java.io.File</ignore> <!-- File#toPath() -->
