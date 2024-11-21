@@ -48,9 +48,12 @@ public class SessionTest {
         Connection con2 = session.newRequest().data(CookieServlet.SetCookiesParam, "1");
         Document doc2 = con2.get();
         assertEquals(0, doc2.select("table tr").size());  // none sent to servlet - we just got them!
-        Map<String, String> cookies = con2.response().cookies(); // simple cookie response, all named "One", so should be first sent
-        assertEquals(1, cookies.size());
-        assertEquals("Root", cookies.get("One"));
+        Map<String, String> cookies = con2.response().cookies(); // simple cookie response, all named "One", so should be last sent
+        assertEquals(2, cookies.size());
+        assertEquals("EchoServlet", cookies.get("One"));
+
+        // test that all response cookies are present, even if would not be sent for this request path (i.e. cookies() res can be set on a req, without using sessions)
+        assertEquals("Override", cookies.get("Two"));
 
         // todo - interrogate cookie-store
 

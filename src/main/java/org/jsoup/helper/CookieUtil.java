@@ -2,6 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.parser.TokenQueue;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -91,13 +92,21 @@ class CookieUtil {
         URI uri = CookieUtil.asUri(url);
         manager.put(uri, resHeaders); // stores cookies for session
 
-        // set up the simple cookie(name, value) map:
-        Map<String, List<String>> cookieMap = manager.get(uri, resHeaders); // get cookies for url; may have been set on this or earlier requests. the headers here are ignored other than a null check
-        for (List<String> values : cookieMap.values()) {
-            for (String headerVal : values) {
-                List<HttpCookie> cookies = HttpCookie.parse(headerVal);
-                for (HttpCookie cookie : cookies) {
-                    res.cookie(cookie.getName(), cookie.getValue());
+        // set up the simple cookies() map
+        // the response may include cookies that are not relevant to this request, but users may require them if they are not using the cookie manager (setting request cookies only from the simple cookies() response):
+        for (Map.Entry<String, List<String>> entry : resHeaders.entrySet()) {
+            String name = entry.getKey();
+            List<String> values = entry.getValue();
+            if (name.equalsIgnoreCase("Set-Cookie")) {
+                for (String value : values) {
+                    if (value == null)
+                        continue;
+                    TokenQueue cd = new TokenQueue(value);
+                    String cookieName = cd.chompTo("=").trim();
+                    String cookieVal = cd.consumeTo(";").trim();
+                    // ignores path, date, domain, validateTLSCertificates et al. full details will be available in cookiestore if required
+                    // name not blank, value not null
+                    res.cookie(cookieName, cookieVal); // if duplicate names, last set will win
                 }
             }
         }
