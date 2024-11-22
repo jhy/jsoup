@@ -228,7 +228,12 @@ final class Tokeniser {
                 reader.rewindToMark();
                 if (looksLegit) // named with semicolon
                     characterReferenceError("invalid named reference [%s]", nameRef);
-                return null;
+                if (inAttribute) return null;
+                // check if there's a base prefix match; consume and use that if so
+                String prefix = Entities.findPrefix(nameRef);
+                if (prefix.isEmpty()) return null;
+                reader.matchConsume(prefix);
+                nameRef = prefix;
             }
             if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
                 // don't want that to match

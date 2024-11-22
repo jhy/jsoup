@@ -11,7 +11,9 @@ import org.jsoup.parser.Parser;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 import static org.jsoup.nodes.Document.OutputSettings.*;
@@ -36,6 +38,9 @@ public class Entities {
     private static final char[] codeDelims = {',', ';'};
     private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
 
+    private static final int BaseCount = 106;
+    private static final ArrayList<String> baseSorted = new ArrayList<>(BaseCount); // names sorted longest first, for prefix matching
+
     public enum EscapeMode {
         /**
          * Restricted entities suitable for XHTML output: lt, gt, amp, and quot only.
@@ -49,6 +54,12 @@ public class Entities {
          * Complete HTML entities.
          */
         extended(EntitiesData.fullPoints, 2125);
+
+        static {
+            // sort the base names by length, for prefix matching
+            Collections.addAll(baseSorted, base.nameKeys);
+            baseSorted.sort((a, b) -> b.length() - a.length());
+        }
 
         // table of named references to their codepoints. sorted so we can binary search. built by BuildEntities.
         private String[] nameKeys;
@@ -132,6 +143,19 @@ public class Entities {
             return 1;
         }
         return 0;
+    }
+
+    /**
+     Finds the longest base named entity that is a prefix of the input. That is, input "notit" would return "not".
+
+     @return longest entity name that is a prefix of the input, or "" if no entity matches
+     */
+    public static String findPrefix(String input) {
+        for (String name : baseSorted) {
+            if (input.startsWith(name)) return name;
+        }
+        return emptyName;
+        // if perf critical, could look at using a Trie vs a scan
     }
 
     /**

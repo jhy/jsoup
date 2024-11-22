@@ -98,6 +98,7 @@
                 <ignore>java.io.UncheckedIOException</ignore>
                 <ignore>java.util.Comparator</ignore> <!-- Comparator.comparingInt() -->
                 <ignore>java.util.List</ignore> <!-- List#stream() -->
+                <ignore>java.util.ArrayList</ignore> <!-- List / ArrayList #sort() -->
                 <ignore>java.util.LinkedHashMap</ignore> <!-- LinkedHashMap#computeIfAbsent() -->
                 <ignore>java.util.Map</ignore> <!-- Map#computeIfAbsent() -->
                 <ignore>java.util.Objects</ignore>

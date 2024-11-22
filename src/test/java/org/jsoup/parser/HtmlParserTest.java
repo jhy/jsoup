@@ -925,9 +925,8 @@ public class HtmlParserTest {
         assertEquals("<html> <head></head> <body> <ol> <li>One</li> </ol> <p>Two</p> </body> </html>", StringUtil.normaliseWhitespace(nodes.get(0).outerHtml()));
     }
 
-    @Test public void doesNotFindShortestMatchingEntity() {
-        // previous behaviour was to identify a possible entity, then chomp down the string until a match was found.
-        // (as defined in html5.) However in practise that lead to spurious matches against the author's intent.
+    @Test public void doesNotFindExtendedPrefixMatchingEntity() {
+        // only base entities, not extended entities, should allow prefix match (i.e., those in the spec named list that don't include a trailing ; - https://html.spec.whatwg.org/multipage/named-characters.html)
         String html = "One &clubsuite; &clubsuit;";
         Document doc = Jsoup.parse(html);
         assertEquals(StringUtil.normaliseWhitespace("One &amp;clubsuite; ♣"), doc.body().html());
@@ -939,6 +938,23 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended).charset("ascii"); // modifies output only to clarify test
         assertEquals("&amp; \" &reg; &amp;icy &amp;hopf &icy; &hopf;", doc.body().html());
+    }
+
+    @Test public void findsBasePrefixEntity() {
+        // https://github.com/jhy/jsoup/issues/2207
+        String html = "a&nbspc&shyc I'm &notit; I tell you. I'm &notin; I tell you.";
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended).charset("ascii");
+        assertEquals("a&nbsp;c&shy;c I'm &not;it; I tell you. I'm &notin; I tell you.", doc.body().html());
+        assertEquals("a cc I'm ¬it; I tell you. I'm ∉ I tell you.", doc.body().text());
+
+        // and in an attribute:
+        html = "<a title=\"&nbspc&shyc I'm &notit; I tell you. I'm &notin; I tell you.\">One</a>";
+        doc = Jsoup.parse(html);
+        doc.outputSettings().escapeMode(Entities.EscapeMode.extended).charset("ascii");
+        Element el = doc.expectFirst("a");
+        assertEquals("<a title=\"&amp;nbspc&amp;shyc I'm &amp;notit; I tell you. I'm &notin; I tell you.\">One</a>", el.outerHtml());
+        assertEquals("&nbspc&shyc I'm &notit; I tell you. I'm ∉ I tell you.", el.attr("title"));
     }
 
     @Test public void handlesXmlDeclarationAsBogusComment() {

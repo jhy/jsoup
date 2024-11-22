@@ -33,6 +33,8 @@
   `Connection.Response#cookies()` will provide the last one set. Generally it is better to use
   the [Jsoup.newSession](https://jsoup.org/cookbook/web/request-session) method to maintain a cookie jar, as that
   applies appropriate path selection on cookies when making requests. [1831](https://github.com/jhy/jsoup/issues/1831)
+* When parsing named HTML entities, base entities should resolve if they are a prefix of the input token (and not in an
+  attribute). [2207](https://github.com/jhy/jsoup/issues/2207)
 
 ## 1.18.1 (2024-Jul-10)
 
