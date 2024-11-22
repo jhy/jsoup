@@ -376,7 +376,7 @@ public interface Connection {
      <code><pre>
      Connection session = Jsoup.newSession()
          .proxy("proxy.example.com", 8080)
-         .auth(auth -> {
+         .auth(auth -&gt; {
              if (auth.isServer()) { // provide credentials for the request url
                  Validate.isTrue(auth.url().getHost().equals("example.com"));
                  // check that we're sending credentials were we expect, and not redirected out
