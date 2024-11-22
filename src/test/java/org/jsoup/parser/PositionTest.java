@@ -1,7 +1,9 @@
 package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.TextUtil;
 import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
@@ -565,6 +567,23 @@ class PositionTest {
         Attribute attr2 = p.attribute("CLASSY");
         assertEquals("CLASSY=\"Tree\"", attr2.html());
         assertEquals(expectedRange, attr2.sourceRange().toString());
+    }
+
+    @Test void movedAttributesHaveRange() {
+        // https://github.com/jhy/jsoup/issues/2204
+        String html = "<span id=1>One</span><html attr=foo><body class=2>Two</body><head title=3><body class=ok data=bar>";
+        // note that the attributes of the head el are not copied into the implicit head created by the span, per spec. html and body els are.
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        StringBuilder elTrack = new StringBuilder();
+        doc.forEachNode(node -> accumulatePositions(node, elTrack));
+
+        StringBuilder atTrack = new StringBuilder();
+        doc.forEachNode(node -> accumulateAttributePositions(node, atTrack));
+
+        assertEquals("#document:0-0~98-98; html:0-0~98-98; head:0-0~0-0; body:0-0~53-60; span:0-11~14-21; #text:11-14; #text:50-53; ", elTrack.toString());
+        assertEquals("attr:27-31=32-35; class:42-47=48-49; data:89-93=94-97; id:6-8=9-10; ", atTrack.toString());
+
+        assertEquals("<html attr=\"foo\"><head></head><body class=\"2\" data=\"bar\"><span id=\"1\">One</span>Two </body></html>", TextUtil.normalizeSpaces(doc.html()));
     }
 
     static void accumulateAttributePositions(Node node, StringBuilder sb) {

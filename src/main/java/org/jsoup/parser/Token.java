@@ -196,16 +196,8 @@ abstract class Token {
                 final boolean preserve = start.treeBuilder.settings.preserveAttributeCase();
 
                 assert attributes != null;
-                //noinspection unchecked
-                Map<String, Range.AttributeRange> attrRanges =
-                    (Map<String, Range.AttributeRange>) attributes.userData(AttrRangeKey);
-                if (attrRanges == null) {
-                    attrRanges = new HashMap<>();
-                    attributes.userData(AttrRangeKey, attrRanges);
-                }
-
                 if (!preserve) name = Normalizer.lowerCase(name);
-                if (attrRanges.containsKey(name)) return; // dedupe ranges as we go; actual attributes get deduped later for error count
+                if (attributes.sourceRange(name).nameRange().isTracked()) return; // dedupe ranges as we go; actual attributes get deduped later for error count
 
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
@@ -218,7 +210,7 @@ abstract class Token {
                         new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
                         new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
                 );
-                attrRanges.put(name, range);
+                attributes.sourceRange(name, range);
             }
         }
 
