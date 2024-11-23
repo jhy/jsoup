@@ -198,13 +198,6 @@ public class TokeniserStateTest {
         }
     }
 
-    @Test public void handlesLessInTagThanAsNewTag() {
-        // out of spec, but clear author intent
-        String html = "<p\n<p<div id=one <span>Two";
-        Document doc = Jsoup.parse(html);
-        assertEquals("<p></p><p></p><div id=\"one\"><span>Two</span></div>", TextUtil.stripNewlines(doc.body().html()));
-    }
-
     @Test
     public void testUnconsumeAtBufferBoundary() {
         String triggeringSnippet = "<a href=\"\"foo";
@@ -248,16 +241,6 @@ public class TokeniserStateTest {
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
 
         assertEquals(7, errorList.get(0).getPosition());
-    }
-
-    @Test
-    public void testOpeningAngleBracketInTagName() {
-        String triggeringSnippet = "<html<";
-        ParseErrorList errorList = ParseErrorList.tracking(1);
-
-        Parser.parseFragment(triggeringSnippet, null, "", errorList);
-
-        assertEquals(5, errorList.get(0).getPosition());
     }
 
     @Test

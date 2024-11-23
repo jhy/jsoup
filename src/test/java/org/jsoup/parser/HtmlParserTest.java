@@ -1649,9 +1649,9 @@ public class HtmlParserTest {
         // when the Element is created, the name got normalized to "template" and so looked like there should be a
         // template on the stack during resetInsertionMode for the select.
         // The issue was that the normalization in Tag.valueOf did a trim which the Token.Tag did not
-        Document doc = Jsoup.parse("<template\u001E<select<input<");
+        Document doc = Jsoup.parse("<template\u001E><select><input>");
         assertNotNull(doc);
-        assertEquals("<template><select></select><input>&lt;</template>",
+        assertEquals("<template><select></select><input></template>",
             TextUtil.stripNewlines(doc.head().html()));
     }
 
@@ -1923,5 +1923,20 @@ public class HtmlParserTest {
             "<p><span></span></p><table><tbody><tr><td><span>Hello table data</span></td></tr></tbody></table><p></p>", // no quirks, p gets closed
             TextUtil.normalizeSpaces(doc.body().html())
         );
+    }
+
+    @Test void gtAfterTagClose() {
+        // https://github.com/jhy/jsoup/issues/2230
+        String html = "<div>Div</div<> <a>One<a<b>Hello</b>";
+        // this gives us an element "a<b", which is gross, but to the spec & browsers
+        Document doc = Jsoup.parse(html);
+        Element body = doc.body();
+        assertEquals("<div> Div <a>One<a<b> Hello </a<b></a></div>", TextUtil.normalizeSpaces(body.html()));
+
+        Elements abs = doc.getElementsByTag("a<b");
+        assertEquals(1, abs.size());
+        Element ab = abs.first();
+        assertEquals("Hello", ab.text());
+        assertEquals("a<b", ab.tag().normalName());
     }
 }

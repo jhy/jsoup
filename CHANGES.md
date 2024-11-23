@@ -35,7 +35,10 @@
   applies appropriate path selection on cookies when making requests. [1831](https://github.com/jhy/jsoup/issues/1831)
 * When parsing named HTML entities, base entities should resolve if they are a prefix of the input token (and not in an
   attribute). [2207](https://github.com/jhy/jsoup/issues/2207)
-* Fixed incorrect tracking of source ranges for attributes merged from late-occurring elements that were implicitly created (`html` or `body`). [2204](https://github.com/jhy/jsoup/issues/2204)
+* Fixed incorrect tracking of source ranges for attributes merged from late-occurring elements that were implicitly
+  created (`html` or `body`). [2204](https://github.com/jhy/jsoup/issues/2204)
+* Follow the current HTML specification in the tokenizer to allow `<` as part of a tag name, instead of emitting it as a
+  character node. [2230](https://github.com/jhy/jsoup/issues/2230)
 
 ## 1.18.1 (2024-Jul-10)
 
