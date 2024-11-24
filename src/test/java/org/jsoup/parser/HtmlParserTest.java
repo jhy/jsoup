@@ -1950,6 +1950,16 @@ public class HtmlParserTest {
         Attribute attribute = el.attribute("<junk");
         assertNotNull(attribute);
         assertEquals("", attribute.getValue());
+    }
 
+    @Test void pseudoAttributeComment() {
+        // https://github.com/jhy/jsoup/issues/1938
+        String html = "  <h1>before</h1> <div <!--=\"\" id=\"hidden\" --=\"\"> <h1>within</h1> </div> <h1>after</h1>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<h1>before</h1><div <!--=\"\" id=\"hidden\" --=\"\"><h1>within</h1></div><h1>after</h1>", TextUtil.normalizeSpaces(doc.body().html()));
+        Element div = doc.expectFirst("div");
+        assertNotNull(div.attribute("<!--"));
+        assertEquals("hidden", div.attr("id"));
+        assertNotNull(div.attribute("--"));
     }
 }
