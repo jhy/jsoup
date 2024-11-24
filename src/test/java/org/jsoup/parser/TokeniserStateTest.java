@@ -230,7 +230,7 @@ public class TokeniserStateTest {
 
         Parser.parseFragment(triggeringSnippet, null, "", errorList);
 
-        assertEquals(6, errorList.get(0).getPosition());
+        assertEquals(7, errorList.get(0).getPosition());
     }
 
     @Test

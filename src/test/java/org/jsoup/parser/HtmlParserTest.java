@@ -79,13 +79,13 @@ public class HtmlParserTest {
 
     @Test public void parsesQuiteRoughAttributes() {
         String html = "<p =a>One<a <p>Something</p>Else";
-        // this (used to; now gets cleaner) gets a <p> with attr '=a' and an <a tag with an attribute named '<p'; and then auto-recreated
+        // this gets a <p> with attr '=a' and an <a tag with an attribute named '<p'; and then auto-recreated
         Document doc = Jsoup.parse(html);
 
-        // NOTE: per spec this should be the test case. but impacts too many ppl
-        // assertEquals("<p =a>One<a <p>Something</a></p>\n<a <p>Else</a>", doc.body().html());
-
-        assertEquals("<p _a>One<a></a></p><p><a>Something</a></p><a>Else</a>", TextUtil.stripNewlines(doc.body().html()));
+        // =a is output as _a
+        assertEquals("<p _a>One<a <p>Something</a></p><a <p>Else</a>", TextUtil.stripNewlines(doc.body().html()));
+        Element p = doc.expectFirst("p");
+        assertNotNull(p.attribute("=a"));
 
         doc = Jsoup.parse("<p .....>");
         assertEquals("<p .....></p>", doc.body().html());
@@ -1938,5 +1938,18 @@ public class HtmlParserTest {
         Element ab = abs.first();
         assertEquals("Hello", ab.text());
         assertEquals("a<b", ab.tag().normalName());
+    }
+
+    @Test void ltInAttrStart() {
+        // https://github.com/jhy/jsoup/issues/1483
+        String html = "<a before='foo' <junk after='bar'>One</a>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<a before=\"foo\" <junk after=\"bar\">One</a>", TextUtil.normalizeSpaces(doc.body().html()));
+
+        Element el = doc.expectFirst("a");
+        Attribute attribute = el.attribute("<junk");
+        assertNotNull(attribute);
+        assertEquals("", attribute.getValue());
+
     }
 }

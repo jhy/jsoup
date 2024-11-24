@@ -39,6 +39,9 @@
   created (`html` or `body`). [2204](https://github.com/jhy/jsoup/issues/2204)
 * Follow the current HTML specification in the tokenizer to allow `<` as part of a tag name, instead of emitting it as a
   character node. [2230](https://github.com/jhy/jsoup/issues/2230)
+* Similarly, allow a `<` as the start of an attribute name, vs creating a new element. The previous behavior was
+  intended to parse closer to what we anticipated the author's intent to be, but that does not align to the spec or to
+  how browsers behave. [1483](https://github.com/jhy/jsoup/issues/1483)
 
 ## 1.18.1 (2024-Jul-10)
 
