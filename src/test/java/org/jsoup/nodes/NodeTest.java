@@ -176,11 +176,8 @@ public class NodeTest {
         assertEquals("One <em>foo</em> three", p.html());
     }
 
-    /**
-     * test case for
-     * <a href="https://github.com/jhy/jsoup/issues/2212">Issue #2212</a>
-     */
     @Test public void testReplaceTwice() {
+        // https://github.com/jhy/jsoup/issues/2212
         Document doc = Jsoup.parse("<p><span>Child One</span><span>Child Two</span><span>Child Three</span><span>Child Four</span></p>");
         Elements children = doc.select("p").first().children();
         // first swap 0 and 1

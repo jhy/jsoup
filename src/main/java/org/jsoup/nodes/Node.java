@@ -509,6 +509,7 @@ public abstract class Node implements Cloneable {
      */
     public void replaceWith(Node in) {
         Validate.notNull(in);
+        if (parentNode == null) parentNode = in.parentNode; // allows old to have been temp removed before replacing
         Validate.notNull(parentNode);
         parentNode.replaceChild(this, in);
     }

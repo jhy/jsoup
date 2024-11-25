@@ -15,6 +15,8 @@
 * In the `TreeBuilder`, the `onNodeInserted()` and `onNodeClosed()` events are now also fired for the outermost /
   root `Document` node. This enables source position tracking on the Document node (which was previously unset). And
   it also enables the node traversor to see the outer Document node. [2182](https://github.com/jhy/jsoup/pull/2182)
+* Selected Elements can now be position swapped inline using
+  `Elements#set()`. [2212](https://github.com/jhy/jsoup/issues/2212)
 
 ### Bug Fixes
 
