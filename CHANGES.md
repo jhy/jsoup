@@ -1,12 +1,12 @@
 # jsoup Changelog
 
-## 1.18.2 (Pending)
+## 1.18.2 (2024-Nov-27)
 
 ### Improvements
 
 * Optimized the throughput and memory use throughout the input read and parse flows, with heap allocations and GC 
   down between -6% and -89%, and throughput improved up to +143% for small inputs. Most inputs sizes will see 
-  throughput increases of ~ 20%. These performance improvements come through recycling the backing byte[] and char[] 
+  throughput increases of ~ 20%. These performance improvements come through recycling the backing `byte[]` and `char[]` 
   arrays used to read and parse the input. [2186](https://github.com/jhy/jsoup/pull/2186) 
 * Speed optimized `html()` and `Entities.escape()` when the input contains UTF characters in a supplementary plane, by
   around 49%. [2183](https://github.com/jhy/jsoup/pull/2183)
