@@ -43,17 +43,34 @@ public class DataNode extends LeafNode {
         /* For XML output, escape the DataNode in a CData section. The data may contain pseudo-CData content if it was
         parsed as HTML, so don't double up Cdata. Output in polyglot HTML / XHTML / XML format. */
         final String data = getWholeData();
-        if (out.syntax() == Document.OutputSettings.Syntax.xml && !data.contains("<![CDATA[")) {
-            if (parentNameIs("script"))
-                accum.append("//<![CDATA[\n").append(data).append("\n//]]>");
-            else if (parentNameIs("style"))
-                accum.append("/*<![CDATA[*/\n").append(data).append("\n/*]]>*/");
-            else
-                accum.append("<![CDATA[").append(data).append("]]>");
+        
+        if (isXmlSyntax(out) && !data.contains("<![CDATA[")) {
+            handleXmlOutput(accum, data);
         } else {
-            // In HTML, data is not escaped in the output of data nodes, so < and & in script, style is OK
-            accum.append(getWholeData());
+            handleHtmlOutput(accum, data);
         }
+    }
+    private boolean isXmlSyntax(Document.OutputSettings out) {
+        return out.syntax() == Document.OutputSettings.Syntax.xml;
+    }
+    
+    private void handleXmlOutput(Appendable accum, String data) throws IOException {
+        if (parentNameIs("script")) {
+            appendCData(accum, data, "//<![CDATA[\n", "\n//]]>");
+        } else if (parentNameIs("style")) {
+            appendCData(accum, data, "/*<![CDATA[*/\n", "\n/*]]>*/");
+        } else {
+            accum.append("<![CDATA[").append(data).append("]]>");
+        }
+    }
+    
+    private void handleHtmlOutput(Appendable accum, String data) throws IOException {
+        // In HTML, data is not escaped in the output of data nodes, so < and & in script, style are OK
+        accum.append(data);
+    }
+    
+    private void appendCData(Appendable accum, String data, String openingTag, String closingTag) throws IOException {
+        accum.append(openingTag).append(data).append(closingTag);
     }
 
     @Override
