@@ -199,13 +199,13 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     private static boolean isValidXmlKey(String key) {
         // =~ [a-zA-Z_:][-a-zA-Z0-9_:.]*
         final int length = key.length();
-        if (length ==0) return false;
+        if (length == 0) return false;
         char c = key.charAt(0);
         if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
             return false;
         for (int i = 1; i < length; i++) {
             c = key.charAt(i);
-            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == ':' || c == '.'))
                 return false;
         }
         return true;
@@ -214,10 +214,10 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     private static boolean isValidHtmlKey(String key) {
         // =~ [\x00-\x1f\x7f-\x9f "'/=]+
         final int length = key.length();
-        if (length ==0) return false;
+        if (length == 0) return false;
         for (int i = 0; i < length; i++) {
             char c = key.charAt(i);
-            if (c <= 0x1f || c >= 0x7f && c <= 0x9f || c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=')
+            if ((c <= 0x1f) || (c >= 0x7f && c <= 0x9f) || c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=')
                 return false;
         }
         return true;

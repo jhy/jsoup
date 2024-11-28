@@ -1,5 +1,12 @@
 # jsoup Changelog
 
+## 1.18.3 (PENDING)
+
+### Bug Fixes
+
+* When serializing to XML, attribute names containing `-`, `.`, or digits were incorrectly marked as invalid and
+  removed. [2235](https://github.com/jhy/jsoup/issues/2235) 
+
 ## 1.18.2 (2024-Nov-27)
 
 ### Improvements
