@@ -83,7 +83,12 @@ public class DocumentType extends LeafNode {
         if (siblingIndex > 0 && out.prettyPrint())
             accum.append('\n');
 
-        if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
+        // simplified 'complex-conditional' statement in if 
+        boolean isHtmlSyntax = out.syntax() == Syntax.html;
+        boolean noPublicId = !has(PublicId);
+        boolean noSystemId = !has(SystemId);
+        
+        if (isHtmlSyntax && noPublicId && noSystemId) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
         } else {
