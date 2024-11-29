@@ -300,12 +300,12 @@ public class XmlTreeBuilderTest {
     }
 
     @Test void xmlValidAttributes() {
-        String xml = "<a bB1-_:.=foo _9!=bar>One</a>";
+        String xml = "<a bB1-_:.=foo _9!=bar xmlns:p1=qux>One</a>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());
         assertEquals(Syntax.xml, doc.outputSettings().syntax());
 
         String out = doc.html();
-        assertEquals("<a bB1-_:.=\"foo\" _9_=\"bar\">One</a>", out); // first is same, second coerced
+        assertEquals("<a bB1-_:.=\"foo\" _9_=\"bar\" xmlns:p1=\"qux\">One</a>", out); // first is same, second coerced
     }
 
     @Test void customTagsAreFlyweights() {
