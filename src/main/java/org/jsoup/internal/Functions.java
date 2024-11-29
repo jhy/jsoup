@@ -14,27 +14,40 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class Functions {
-    private static final Function ListFunction = key -> new ArrayList<>();
-    private static final Function SetFunction = key -> new HashSet<>();
-    private static final Function MapFunction = key -> new HashMap<>();
-    private static final Function IdentityMapFunction = key -> new IdentityHashMap<>();
-
-    private Functions() {
-    }
+    private Functions() {}
 
     public static <T, U> Function<T, List<U>> listFunction() {
-        return (Function<T, List<U>>) ListFunction;
+        return CollectionFunctions.listFunction();
     }
 
     public static <T, U> Function<T, Set<U>> setFunction() {
-        return (Function<T, Set<U>>) SetFunction;
+        return CollectionFunctions.setFunction();
     }
 
     public static <T, K, V> Function<T, Map<K, V>> mapFunction() {
-        return (Function<T, Map<K, V>>) MapFunction;
+        return CollectionFunctions.mapFunction();
     }
 
     public static <T, K, V> Function<T, IdentityHashMap<K, V>> identityMapFunction() {
-        return (Function<T, IdentityHashMap<K, V>>) IdentityMapFunction;
+        return CollectionFunctions.identityMapFunction();
+    }
+}
+final class CollectionFunctions { // No public modifier
+    private CollectionFunctions() {}
+
+    public static <T, U> Function<T, List<U>> listFunction() {
+        return key -> new ArrayList<>();
+    }
+
+    public static <T, U> Function<T, Set<U>> setFunction() {
+        return key -> new HashSet<>();
+    }
+
+    public static <T, K, V> Function<T, Map<K, V>> mapFunction() {
+        return key -> new HashMap<>();
+    }
+
+    public static <T, K, V> Function<T, IdentityHashMap<K, V>> identityMapFunction() {
+        return key -> new IdentityHashMap<>();
     }
 }
