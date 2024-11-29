@@ -870,11 +870,11 @@ public class HtmlParserTest {
 
     @Test public void tracksLimitedErrorsWhenRequested() {
         String html = "<p>One</p href='no'>\n<!DOCTYPE html>\n&arrgh;<font /><br /><foo";
-        Parser parser = Parser.htmlParser().setTrackErrors(3);
+        Parser parser = Parser.htmlParser().setTrackErrors(5);
         Document doc = parser.parseInput(html, "http://example.com");
 
         List<ParseError> errors = parser.getErrors();
-        assertEquals(3, errors.size());
+        assertEquals(5, errors.size());
         assertEquals("<1:21>: Attributes incorrectly present on end tag [/p]", errors.get(0).toString());
         assertEquals("<2:16>: Unexpected Doctype token [<!doctype html>] when in state [InBody]", errors.get(1).toString());
         assertEquals("<3:2>: Invalid character reference: invalid named reference [arrgh]", errors.get(2).toString());
