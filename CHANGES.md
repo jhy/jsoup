@@ -1,12 +1,19 @@
 # jsoup Changelog
 
-## 1.18.2 (Pending)
+## 1.18.3 (PENDING)
+
+### Bug Fixes
+
+* When serializing to XML, attribute names containing `-`, `.`, or digits were incorrectly marked as invalid and
+  removed. [2235](https://github.com/jhy/jsoup/issues/2235) 
+
+## 1.18.2 (2024-Nov-27)
 
 ### Improvements
 
 * Optimized the throughput and memory use throughout the input read and parse flows, with heap allocations and GC 
   down between -6% and -89%, and throughput improved up to +143% for small inputs. Most inputs sizes will see 
-  throughput increases of ~ 20%. These performance improvements come through recycling the backing byte[] and char[] 
+  throughput increases of ~ 20%. These performance improvements come through recycling the backing `byte[]` and `char[]` 
   arrays used to read and parse the input. [2186](https://github.com/jhy/jsoup/pull/2186) 
 * Speed optimized `html()` and `Entities.escape()` when the input contains UTF characters in a supplementary plane, by
   around 49%. [2183](https://github.com/jhy/jsoup/pull/2183)
@@ -15,6 +22,8 @@
 * In the `TreeBuilder`, the `onNodeInserted()` and `onNodeClosed()` events are now also fired for the outermost /
   root `Document` node. This enables source position tracking on the Document node (which was previously unset). And
   it also enables the node traversor to see the outer Document node. [2182](https://github.com/jhy/jsoup/pull/2182)
+* Selected Elements can now be position swapped inline using
+  `Elements#set()`. [2212](https://github.com/jhy/jsoup/issues/2212)
 
 ### Bug Fixes
 
@@ -29,8 +38,19 @@
   children. [2187](https://github.com/jhy/jsoup/issues/2187)
 * A selector query that included multiple `:has()` components in a nested `:has()` might incorrectly
   execute. [2131](https://github.com/jhy/jsoup/issues/2131)
-* Updated the simple view of cookies available via `Connection.Response#cookies()` to reflect the contents of the 
-  current cookie jar for the current URL. [1831](https://github.com/jhy/jsoup/issues/1831)
+* When cookie names in a response are duplicated, the simple view of cookies available via
+  `Connection.Response#cookies()` will provide the last one set. Generally it is better to use
+  the [Jsoup.newSession](https://jsoup.org/cookbook/web/request-session) method to maintain a cookie jar, as that
+  applies appropriate path selection on cookies when making requests. [1831](https://github.com/jhy/jsoup/issues/1831)
+* When parsing named HTML entities, base entities should resolve if they are a prefix of the input token (and not in an
+  attribute). [2207](https://github.com/jhy/jsoup/issues/2207)
+* Fixed incorrect tracking of source ranges for attributes merged from late-occurring elements that were implicitly
+  created (`html` or `body`). [2204](https://github.com/jhy/jsoup/issues/2204)
+* Follow the current HTML specification in the tokenizer to allow `<` as part of a tag name, instead of emitting it as a
+  character node. [2230](https://github.com/jhy/jsoup/issues/2230)
+* Similarly, allow a `<` as the start of an attribute name, vs creating a new element. The previous behavior was
+  intended to parse closer to what we anticipated the author's intent to be, but that does not align to the spec or to
+  how browsers behave. [1483](https://github.com/jhy/jsoup/issues/1483)
 
 ## 1.18.1 (2024-Jul-10)
 

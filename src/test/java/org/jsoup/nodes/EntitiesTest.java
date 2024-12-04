@@ -112,6 +112,13 @@ public class EntitiesTest {
         assertEquals("Hello &= &", Entities.unescape(text, false));
     }
 
+    @Test public void prefixMatch() {
+        // https://github.com/jhy/jsoup/issues/2207
+        // example from https://html.spec.whatwg.org/multipage/parsing.html#character-reference-state
+        String text = "I'm &notit; I tell you. I'm &notin; I tell you.";
+        assertEquals("I'm ¬it; I tell you. I'm ∉ I tell you.", Entities.unescape(text, false));
+        assertEquals("I'm &notit; I tell you. I'm ∉ I tell you.", Entities.unescape(text, true)); // not for attributes
+    }
 
     @Test public void caseSensitive() {
         String unescaped = "Ü ü & &";

@@ -1136,6 +1136,11 @@ public class HttpConnection implements Connection {
             CookieUtil.storeCookies(req, this, url, resHeaders); // add set cookies to cookie store
 
             if (previousResponse != null) { // was redirected
+                // map previous response cookies into this response cookies() object
+                for (Map.Entry<String, String> prevCookie : previousResponse.cookies().entrySet()) {
+                    if (!hasCookie(prevCookie.getKey()))
+                        cookie(prevCookie.getKey(), prevCookie.getValue());
+                }
                 previousResponse.safeClose();
 
                 // enforce too many redirects:

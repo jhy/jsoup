@@ -1026,4 +1026,3 @@ public class ConnectTest {
         assertEquals(LargeDocTextLen, document.text().length());
     }
 }
-

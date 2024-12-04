@@ -376,7 +376,7 @@ public interface Connection {
      <code><pre>
      Connection session = Jsoup.newSession()
          .proxy("proxy.example.com", 8080)
-         .auth(auth -> {
+         .auth(auth -&gt; {
              if (auth.isServer()) { // provide credentials for the request url
                  Validate.isTrue(auth.url().getHost().equals("example.com"));
                  // check that we're sending credentials were we expect, and not redirected out
@@ -632,9 +632,12 @@ public interface Connection {
         T removeCookie(String name);
 
         /**
-         * Retrieve all of the request/response cookies as a map
-         * @return cookies
-         * @see #cookieStore()
+         Retrieve the request/response cookies as a map. For response cookies, if duplicate cookie names were sent, the
+         last one set will be the one included. For session management, rather than using these response cookies, prefer
+         to use {@link Jsoup#newSession()} and related methods.
+
+         @return simple cookie map
+         @see #cookieStore()
          */
         Map<String, String> cookies();
     }

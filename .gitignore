@@ -9,3 +9,4 @@ target/
 *Thrash*
 bin/
 .vscode/
+.java-version

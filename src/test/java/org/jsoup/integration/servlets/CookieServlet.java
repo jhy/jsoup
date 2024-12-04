@@ -61,6 +61,14 @@ public class CookieServlet extends BaseServlet {
         Cookie three = new Cookie("One", "EchoServlet");
         three.setPath("/EchoServlet");
         res.addCookie(three);
+
+        Cookie four = new Cookie("Two", "NoSuchPath");
+        four.setPath("/bogus");
+        res.addCookie(four);
+
+        Cookie five = new Cookie("Two", "Override");
+        five.setPath("/bogus");
+        res.addCookie(five);
     }
 
 }

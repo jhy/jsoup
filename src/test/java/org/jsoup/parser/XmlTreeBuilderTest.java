@@ -299,6 +299,15 @@ public class XmlTreeBuilderTest {
         assertEquals("<body style=\"color: red\" _=\"\" name_=\"\"><div _=\"\"></div></body>", out);
     }
 
+    @Test void xmlValidAttributes() {
+        String xml = "<a bB1-_:.=foo _9!=bar xmlns:p1=qux>One</a>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        assertEquals(Syntax.xml, doc.outputSettings().syntax());
+
+        String out = doc.html();
+        assertEquals("<a bB1-_:.=\"foo\" _9_=\"bar\" xmlns:p1=\"qux\">One</a>", out); // first is same, second coerced
+    }
+
     @Test void customTagsAreFlyweights() {
         String xml = "<foo>Foo</foo><foo>Foo</foo><FOO>FOO</FOO><FOO>FOO</FOO>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());

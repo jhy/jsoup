@@ -389,6 +389,25 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
     }
 
+    /**
+     Set the source ranges (start to end position) from which this attribute's <b>name</b> and <b>value</b> were parsed.
+     @param key the attribute name
+     @param range the range for the attribute's name and value
+     @return these attributes, for chaining
+     @since 1.18.2
+     */
+    public Attributes sourceRange(String key, Range.AttributeRange range) {
+        Validate.notNull(key);
+        Validate.notNull(range);
+        Map<String, Range.AttributeRange> ranges = getRanges();
+        if (ranges == null) {
+            ranges = new HashMap<>();
+            userData(AttrRangeKey, ranges);
+        }
+        ranges.put(key, range);
+        return this;
+    }
+
 
     @Override
     public Iterator<Attribute> iterator() {

@@ -16,9 +16,9 @@ import org.jsoup.nodes.Node;
  <pre><code>
  doc.body().traverse((node, depth) -> {
      switch (node) {
-         case Element el     -> print(el.tag() + ": " + el.ownText());
-         case DataNode data  -> print("Data: " + data.getWholeData());
-         default             -> print(node.nodeName() + " at depth " + depth);
+         case Element el     -&gt; print(el.tag() + ": " + el.ownText());
+         case DataNode data  -&gt; print("Data: " + data.getWholeData());
+         default             -&gt; print(node.nodeName() + " at depth " + depth);
      }
  });
  </code></pre>

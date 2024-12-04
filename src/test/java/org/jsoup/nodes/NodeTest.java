@@ -7,6 +7,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.jsoup.parser.Parser.*;
@@ -173,6 +174,19 @@ public class NodeTest {
         p.childNode(1).replaceWith(insert);
 
         assertEquals("One <em>foo</em> three", p.html());
+    }
+
+    @Test public void testReplaceTwice() {
+        // https://github.com/jhy/jsoup/issues/2212
+        Document doc = Jsoup.parse("<p><span>Child One</span><span>Child Two</span><span>Child Three</span><span>Child Four</span></p>");
+        Elements children = doc.select("p").first().children();
+        // first swap 0 and 1
+        children.set(0,  children.set(1, children.get(0)));
+        // then swap 1 and 2
+        children.set(2, children.set(1, children.get(2)));
+
+        assertEquals("Child TwoChild ThreeChild OneChild Four",
+                TextUtil.stripNewlines(children.html()));
     }
 
     @Test public void ownerDocument() {
