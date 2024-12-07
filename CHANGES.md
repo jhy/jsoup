@@ -1,6 +1,13 @@
 # jsoup Changelog
 
-## 1.18.3 (PENDING)
+## 1.19.1 (PENDING)
+
+### Bug Fixex
+
+* For backwards compatibility, reverted the internal attribute key for doctype names to 
+  "name". [2241](https://github.com/jhy/jsoup/issues/2241)
+
+## 1.18.3 (2024-Dec-02)
 
 ### Bug Fixes
 
