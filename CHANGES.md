@@ -6,6 +6,8 @@
 
 * For backwards compatibility, reverted the internal attribute key for doctype names to 
   "name". [2241](https://github.com/jhy/jsoup/issues/2241)
+* In `Connection`, skip cookies that have no name, rather than throwing a validation
+  exception. [2242](https://github.com/jhy/jsoup/issues/2242)
 
 ## 1.18.3 (2024-Dec-02)
 
