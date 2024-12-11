@@ -278,12 +278,10 @@
     <resources>
       <resource>
         <directory>./</directory>
-        <targetPath>META-INF/</targetPath>
+        <targetPath>META-INF/jsoup/</targetPath>
         <filtering>false</filtering>
         <includes>
           <include>LICENSE</include>
-          <include>README.md</include>
-          <include>CHANGES</include>
         </includes>
       </resource>
     </resources>
