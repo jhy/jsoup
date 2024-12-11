@@ -15,6 +15,9 @@
 
 * When serializing to XML, attribute names containing `-`, `.`, or digits were incorrectly marked as invalid and
   removed. [2235](https://github.com/jhy/jsoup/issues/2235) 
+* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsquent XPath
+  queries could miss that element. Now, the attribute name is more completely
+  normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
 
 ## 1.18.2 (2024-Nov-27)
 

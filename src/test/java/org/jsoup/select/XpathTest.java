@@ -236,6 +236,14 @@ public class XpathTest {
         assertEquals("1568491379", isbn.first().text());
     }
 
+    @Test void withSemiInAttributeName() {
+        // https://github.com/jhy/jsoup/issues/2244
+        String html = "<div grading?&quot;=foo>One</div>";
+        Document doc = Jsoup.parse(html);
+        Elements els = doc.selectXpath("//div");
+        assertEquals(1, els.size());
+    }
+
     // minimal, no-op implementation class to verify users can load a factory to support XPath 2.0 etc
     public static class AlternateXpathFactory extends XPathFactory {
         public AlternateXpathFactory() {
