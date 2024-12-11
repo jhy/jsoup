@@ -237,7 +237,7 @@
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.18.2</version>
+              <version>1.18.3</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
