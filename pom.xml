@@ -71,7 +71,7 @@
         <version>1.24</version>
         <executions>
           <execution>
-            <id>animal-sniffer</id>
+            <id>api-java8</id>
             <phase>compile</phase>
             <goals>
               <goal>check</goal>
@@ -82,10 +82,25 @@
                 <artifactId>java18</artifactId>
                 <version>1.0</version>
               </signature>
+              <ignores>
+                <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
+                <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
+              </ignores>
+            </configuration>
+          </execution>
+          <execution>
+            <id>api-android21</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
               <signature>
-                <groupId>net.sf.androidscents.signature</groupId>
-                <artifactId>android-api-level-10</artifactId>
-                <version>2.3.3_r2</version>
+                <groupId>com.toasttab.android</groupId>
+                <artifactId>gummy-bears-api-21</artifactId>
+                <version>0.10.0</version>
+                <!-- <classifier>coreLib2</classifier> -->
+                <!-- ^^ https://github.com/open-toast/gummy-bears says coreLib2 classifier for desugar should work, but I can't seem to wrangle Animal Sniffer to support that, so reverting to ignores for desugar -->
               </signature>
               <ignores>
                 <ignore>java.io.File</ignore> <!-- File#toPath() -->
@@ -93,7 +108,6 @@
                 <ignore>java.nio.channels.SeekableByteChannel</ignore>
                 <ignore>java.util.function.*</ignore>
                 <ignore>java.util.stream.*</ignore>
-                <ignore>java.lang.Throwable</ignore> <!-- Throwable#addSuppressed(Throwable) -->
                 <ignore>java.lang.ThreadLocal</ignore>
                 <ignore>java.io.UncheckedIOException</ignore>
                 <ignore>java.util.Comparator</ignore> <!-- Comparator.comparingInt() -->
@@ -107,11 +121,9 @@
                 <ignore>java.util.Spliterator</ignore>
                 <ignore>java.util.Spliterators</ignore>
                 <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
-
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
               </ignores>
-              <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring
-               Possibly OK to remove androidscents; keep for now to validate other additions are supported. -->
+              <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring -->
             </configuration>
           </execution>
         </executions>
