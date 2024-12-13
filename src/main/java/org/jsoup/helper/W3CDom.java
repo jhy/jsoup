@@ -425,9 +425,17 @@ public class W3CDom {
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
-                String key = Attribute.getValidKey(attribute.getKey(), syntax);
-                if (key != null) { // null if couldn't be coerced to validity
-                    el.setAttribute(key, attribute.getValue());
+                // the W3C DOM has a different allowed set of characters than HTML5 (that Attribute.getValidKey return, partic does not allow ';'). So if we except when using HTML, go to more restricted XML
+                try {
+                    String key = Attribute.getValidKey(attribute.getKey(), syntax);
+                    if (key != null) // null if couldn't be coerced to validity
+                        el.setAttribute(key, attribute.getValue());
+                } catch (DOMException e) {
+                    if (syntax != Syntax.xml) {
+                        String key = Attribute.getValidKey(attribute.getKey(), Syntax.xml);
+                        if (key != null)
+                            el.setAttribute(key, attribute.getValue()); // otherwise, will skip attribute
+                    }
                 }
             }
         }

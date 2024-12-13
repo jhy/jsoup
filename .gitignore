@@ -10,3 +10,4 @@ target/
 bin/
 .vscode/
 .java-version
+.DS_Store

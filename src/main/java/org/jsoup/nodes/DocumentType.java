@@ -14,7 +14,7 @@ public class DocumentType extends LeafNode {
     // todo needs a bit of a chunky cleanup. this level of detail isn't needed
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
-    private static final String Name = "#doctype";
+    private static final String NameKey = "name";
     private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
@@ -30,7 +30,7 @@ public class DocumentType extends LeafNode {
         super(name);
         Validate.notNull(publicId);
         Validate.notNull(systemId);
-        attr(Name, name);
+        attr(NameKey, name);
         attr(PublicId, publicId);
         attr(SystemId, systemId);
         updatePubSyskey();
@@ -53,7 +53,7 @@ public class DocumentType extends LeafNode {
      * @return doctype name
      */
     public String name() {
-        return attr(Name);
+        return attr(NameKey);
     }
 
     /**
@@ -74,7 +74,7 @@ public class DocumentType extends LeafNode {
 
     @Override
     public String nodeName() {
-        return Name;
+        return "#doctype";
     }
 
     @Override
@@ -89,8 +89,8 @@ public class DocumentType extends LeafNode {
         } else {
             accum.append("<!DOCTYPE");
         }
-        if (has(Name))
-            accum.append(" ").append(attr(Name));
+        if (has(NameKey))
+            accum.append(" ").append(attr(NameKey));
         if (has(PubSysKey))
             accum.append(" ").append(attr(PubSysKey));
         if (has(PublicId))

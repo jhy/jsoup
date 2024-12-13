@@ -1,11 +1,29 @@
 # jsoup Changelog
 
-## 1.18.3 (PENDING)
+## 1.19.1 (PENDING)
+
+### Changes
+
+* Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
+  developers need to enable core library desugaring. The minimum Java version remains Java
+  8. [2173](https://github.com/jhy/jsoup/pull/2173)
+
+### Bug Fixes
+
+* For backwards compatibility, reverted the internal attribute key for doctype names to 
+  "name". [2241](https://github.com/jhy/jsoup/issues/2241)
+* In `Connection`, skip cookies that have no name, rather than throwing a validation
+  exception. [2242](https://github.com/jhy/jsoup/issues/2242)
+
+## 1.18.3 (2024-Dec-02)
 
 ### Bug Fixes
 
 * When serializing to XML, attribute names containing `-`, `.`, or digits were incorrectly marked as invalid and
   removed. [2235](https://github.com/jhy/jsoup/issues/2235) 
+* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsquent XPath
+  queries could miss that element. Now, the attribute name is more completely
+  normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
 
 ## 1.18.2 (2024-Nov-27)
 

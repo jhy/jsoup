@@ -71,4 +71,23 @@ public class DocumentTypeTest {
     private String xmlOutput(String in) {
         return Jsoup.parse(in, "", Parser.xmlParser()).childNode(0).outerHtml();
     }
+
+    @Test void attributes() {
+        Document doc = Jsoup.parse("<!DOCTYPE html>");
+        DocumentType doctype = doc.documentType();
+        assertEquals("#doctype", doctype.nodeName());
+        assertEquals("html", doctype.name());
+        assertEquals("html", doctype.attr("name"));
+        assertEquals("", doctype.publicId());
+        assertEquals("", doctype.systemId());
+
+        doc = Jsoup.parse("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">");
+        doctype = doc.documentType();
+
+        assertEquals("#doctype", doctype.nodeName());
+        assertEquals("nothtml", doctype.name());
+        assertEquals("nothtml", doctype.attr("name"));
+        assertEquals("--public", doctype.publicId());
+        assertEquals("--system", doctype.systemId());
+    }
 }
