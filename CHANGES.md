@@ -2,7 +2,13 @@
 
 ## 1.19.1 (PENDING)
 
-### Bug Fixex
+### Changes
+
+* Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
+  developers need to enable core library desugaring. The minimum Java version remains Java
+  8. [2173](https://github.com/jhy/jsoup/pull/2173)
+
+### Bug Fixes
 
 * For backwards compatibility, reverted the internal attribute key for doctype names to 
   "name". [2241](https://github.com/jhy/jsoup/issues/2241)
