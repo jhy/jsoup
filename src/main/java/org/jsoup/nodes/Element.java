@@ -487,6 +487,39 @@ public class Element extends Node {
     }
 
     /**
+     Selects elements from the given root that match the specified {@link Selector} CSS query, with this element as the
+     starting context, and returns them as a lazy Stream. Matched elements may include this element, or any of its
+     children.
+     <p>
+     Unlike {@link #select(String query)}, which returns a complete list of all matching elements, this method returns a
+     {@link Stream} that processes elements lazily as they are needed. The stream operates in a "pull" model — elements
+     are fetched from the root as the stream is traversed. You can use standard {@code Stream} operations such as
+     {@code filter}, {@code map}, or {@code findFirst} to process elements on demand.
+     </p>
+
+     @param cssQuery a {@link Selector} CSS-like query
+     @return a {@link Stream} containing elements that match the query (empty if none match)
+     @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     @see Selector selector query syntax
+     @see QueryParser#parse(String)
+     @since 1.19.1
+     */
+    public Stream<Element> selectStream(String cssQuery) {
+        return Selector.selectStream(cssQuery, this);
+    }
+
+    /**
+     Find a Stream of elements that match the supplied Evaluator.
+
+     @param evaluator an element Evaluator
+     @return a {@link Stream} containing elements that match the query (empty if none match)
+     @since 1.19.1
+     */
+    public Stream<Element> selectStream(Evaluator evaluator) {
+        return Selector.selectStream(evaluator, this);
+    }
+
+    /**
      * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
      * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
      * execution stops on the first hit.</p>
@@ -1125,12 +1158,7 @@ public class Element extends Node {
      */
     public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
-
-        Elements elements = Collector.collect(new Evaluator.Id(id), this);
-        if (elements.size() > 0)
-            return elements.get(0);
-        else
-            return null;
+        return Collector.findFirst(new Evaluator.Id(id), this);
     }
 
     /**

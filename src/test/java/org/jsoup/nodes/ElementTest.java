@@ -2981,4 +2981,15 @@ public class ElementTest {
         assertEquals("<p CLASS=\"YES\">One</p>", p.outerHtml());
         assertEquals("CLASS=\"YES\"", attr.html());
     }
+
+    @Test void testSelectStream() {
+        Document doc = Jsoup.parse("<div>Hello world</div>");
+        Element div = doc.select("div").stream().findFirst().orElse(null);
+
+        assertEquals("Hello world", div.text());
+
+        div = doc.selectStream("div").findFirst().orElse(null);
+
+        assertEquals("Hello world", div.text());
+    }
 }

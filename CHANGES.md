@@ -5,8 +5,14 @@
 ### Changes
 
 * Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
-  developers need to enable core library desugaring. The minimum Java version remains Java
-  8. [2173](https://github.com/jhy/jsoup/pull/2173)
+  developers need to enable core library desugaring. The minimum Java version remains Java 8.
+  [2173](https://github.com/jhy/jsoup/pull/2173)
+
+### Improvements
+
+* Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator )` methods, that return a `Stream` of
+  matching elements. Elements are evaluated and returned as they are found, and the stream can be
+  terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)
 
 ### Bug Fixes
 

@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.stream.Stream;
 
 /**
  * CSS-like element selector, that finds elements matching a query.
@@ -90,12 +91,12 @@ public class Selector {
     private Selector() {}
 
     /**
-     * Find elements matching selector.
-     *
-     * @param query CSS selector
-     * @param root  root element to descend into
-     * @return matching elements, empty if none
-     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     Find Elements matching the CSS query.
+
+     @param query CSS selector
+     @param root root element to descend into
+     @return matching elements, empty if none
+     @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public static Elements select(String query, Element root) {
         Validate.notEmpty(query);
@@ -103,11 +104,11 @@ public class Selector {
     }
 
     /**
-     * Find elements matching selector.
-     *
-     * @param evaluator CSS selector
-     * @param root root element to descend into
-     * @return matching elements, empty if none
+     Find Elements matching the Evaluator.
+
+     @param evaluator CSS Evaluator
+     @param root root (context) element to start from
+     @return matching elements, empty if none
      */
     public static Elements select(Evaluator evaluator, Element root) {
         Validate.notNull(evaluator);
@@ -116,11 +117,39 @@ public class Selector {
     }
 
     /**
-     * Find elements matching selector.
-     *
-     * @param query CSS selector
-     * @param roots root elements to descend into
-     * @return matching elements, empty if none
+     Finds a Stream of elements matching the CSS query.
+
+     @param query CSS selector
+     @param root root element to descend into
+     @return a Stream of matching elements, empty if none
+     @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     @since 1.19.1
+     */
+    public static Stream<Element> selectStream(String query, Element root) {
+        Validate.notEmpty(query);
+        return selectStream(QueryParser.parse(query), root);
+    }
+
+    /**
+     Finds a Stream of elements matching the evaluator.
+
+     @param evaluator CSS selector
+     @param root root element to descend into
+     @return matching elements, empty if none
+     @since 1.19.1
+     */
+    public static Stream<Element> selectStream(Evaluator evaluator, Element root) {
+        Validate.notNull(evaluator);
+        Validate.notNull(root);
+        return Collector.stream(evaluator, root);
+    }
+
+    /**
+     Find elements matching the query.
+
+     @param query CSS selector
+     @param roots root elements to descend into
+     @return matching elements, empty if none
      */
     public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
@@ -159,10 +188,11 @@ public class Selector {
     }
 
     /**
-     * Find the first element that matches the query.
-     * @param cssQuery CSS selector
-     * @param root root element to descend into
-     * @return the matching element, or <b>null</b> if none.
+     Find the first Element that matches the query.
+
+     @param cssQuery CSS selector
+     @param root root element to descend into
+     @return the matching element, or <b>null</b> if none.
      */
     public static @Nullable Element selectFirst(String cssQuery, Element root) {
         Validate.notEmpty(cssQuery);
