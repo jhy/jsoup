@@ -16,7 +16,7 @@ public class Collector {
     private Collector() {}
 
     /**
-     Build a list of elements, by visiting root and every descendant of root, and testing it against the evaluator.
+     Build a list of elements, by visiting the root and every descendant of root, and testing it against the Evaluator.
      @param eval Evaluator to test elements against
      @param root root of tree to descend
      @return list of matches; empty if none
@@ -26,7 +26,7 @@ public class Collector {
     }
 
     /**
-     * Obtain a stream of elements by visiting root and every descendant of root and testing it
+     * Obtain a Stream of elements by visiting the root and every descendant of root and testing it
      * against the evaluator.
      * @param evaluator Evaluator to test elements against
      * @param root root of tree to descend
@@ -35,8 +35,7 @@ public class Collector {
     public static Stream<Element> stream(Evaluator evaluator, Element root) {
         evaluator.reset();
 
-        return root.stream()
-            .filter(evaluator.asPredicate(root));
+        return root.stream().filter(evaluator.asPredicate(root));
     }
 
     /**

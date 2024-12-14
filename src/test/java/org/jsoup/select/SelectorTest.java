@@ -8,7 +8,9 @@ import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -396,6 +398,19 @@ public class SelectorTest {
         String h = "<div id=1><p>Hello<p><b>there</b></p></div><div id=2><span>Hi</span></div>";
         Document doc = Jsoup.parse(h);
         Elements divChilds = doc.select("div > *");
+        assertEquals(3, divChilds.size());
+        assertEquals("p", divChilds.get(0).tagName());
+        assertEquals("p", divChilds.get(1).tagName());
+        assertEquals("span", divChilds.get(2).tagName());
+    }
+
+    @Test public void streamParentChildStar() {
+        String h = "<div id=1><p>Hello<p><b>there</b></p></div><div id=2><span>Hi</span></div>";
+        Document doc = Jsoup.parse(h);
+
+        List<Element> divChilds = doc.selectStream("div > *")
+            .collect(Collectors.toList());
+
         assertEquals(3, divChilds.size());
         assertEquals("p", divChilds.get(0).tagName());
         assertEquals("p", divChilds.get(1).tagName());

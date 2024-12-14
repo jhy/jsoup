@@ -487,35 +487,33 @@ public class Element extends Node {
     }
 
     /**
-     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
-     * may include this element, or any of its children.
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
-     * <ul>
-     * <li>{@code el.selectStream("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
-     * <li>{@code el.selectStream("a[href*=example.com]")} - finds links pointing to example.com (loosely)
-     * </ul>
-     * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
-     * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
-     *
-     * @param cssQuery a {@link Selector} CSS-like query
-     * @return a {@link Stream} containing elements that match the query (empty if none match)
-     * @see Selector selector query syntax
-     * @see QueryParser#parse(String)
-     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
-     * @since 1.18.1
+     Selects elements from the given root that match the specified {@link Selector} CSS query, with this element as the
+     starting context, and returns them as a lazy Stream. Matched elements may include this element, or any of its
+     children.
+     <p>
+     Unlike {@link #select(String query)}, which returns a complete list of all matching elements, this method returns a
+     {@link Stream} that processes elements lazily as they are needed. The stream operates in a "pull" model — elements
+     are fetched from the root as the stream is traversed. You can use standard {@code Stream} operations such as
+     {@code filter}, {@code map}, or {@code findFirst} to process elements on demand.
+     </p>
+
+     @param cssQuery a {@link Selector} CSS-like query
+     @return a {@link Stream} containing elements that match the query (empty if none match)
+     @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     @see Selector selector query syntax
+     @see QueryParser#parse(String)
+     @since 1.19.1
      */
     public Stream<Element> selectStream(String cssQuery) {
         return Selector.selectStream(cssQuery, this);
     }
 
     /**
-     * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
-     * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
-     * repeatedly parsing the CSS query.
-     * @param evaluator an element evaluator
-     * @return a {@link Stream} containing elements that match the query (empty if none match)
-     * @since 1.18.1
+     Find a Stream of elements that match the supplied Evaluator.
+
+     @param evaluator an element Evaluator
+     @return a {@link Stream} containing elements that match the query (empty if none match)
+     @since 1.19.1
      */
     public Stream<Element> selectStream(Evaluator evaluator) {
         return Selector.selectStream(evaluator, this);
