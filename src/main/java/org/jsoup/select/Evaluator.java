@@ -554,11 +554,11 @@ public abstract class Evaluator {
 
         @Override
         public String toString() {
-            if (a == 0)
-                return String.format(":%s(%d)", getPseudoClass(), b);
-            if (b == 0)
-                return String.format(":%s(%dn)", getPseudoClass(), a);
-            return String.format(":%s(%dn%+d)", getPseudoClass(), a, b);
+            String format =
+                (a == 0) ? ":%s(%3$d)"    // only offset (b)
+                : (b == 0) ? ":%s(%2$dn)" // only step (a)
+                : ":%s(%2$dn%3$+d)";      // step, offset
+            return String.format(format, getPseudoClass(), a, b);
         }
 
         protected abstract String getPseudoClass();
