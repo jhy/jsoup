@@ -26,15 +26,15 @@ public class Collector {
     }
 
     /**
-     * Obtain a Stream of elements by visiting the root and every descendant of root and testing it
-     * against the evaluator.
-     * @param evaluator Evaluator to test elements against
-     * @param root root of tree to descend
-     * @return A {@link Stream} of matches
+     Obtain a Stream of elements by visiting the root and every descendant of root and testing it against the evaluator.
+
+     @param evaluator Evaluator to test elements against
+     @param root root of tree to descend
+     @return A {@link Stream} of matches
+     @since 1.19.1
      */
     public static Stream<Element> stream(Evaluator evaluator, Element root) {
         evaluator.reset();
-
         return root.stream().filter(evaluator.asPredicate(root));
     }
 

@@ -1158,8 +1158,7 @@ public class Element extends Node {
      */
     public @Nullable Element getElementById(String id) {
         Validate.notEmpty(id);
-
-        return selectStream(new Evaluator.Id(id)).findFirst().orElse(null);
+        return Collector.findFirst(new Evaluator.Id(id), this);
     }
 
     /**
