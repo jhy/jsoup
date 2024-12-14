@@ -527,11 +527,14 @@ public abstract class Evaluator {
 
 
     public static abstract class CssNthEvaluator extends Evaluator {
-        protected final int step, offset;
+        /** Step */
+        protected final int a;
+        /** Offset */
+        protected final int b;
 
         public CssNthEvaluator(int step, int offset) {
-            this.step = step;
-            this.offset = offset;
+            this.a = step;
+            this.b = offset;
         }
 
         public CssNthEvaluator(int offset) {
@@ -544,18 +547,18 @@ public abstract class Evaluator {
             if (p == null || (p instanceof Document)) return false;
 
             final int pos = calculatePosition(root, element);
-            if (step == 0) return pos == offset;
+            if (a == 0) return pos == b;
 
-            return (pos - offset) * step >= 0 && (pos - offset) % step == 0;
+            return (pos - b) * a >= 0 && (pos - b) % a == 0;
         }
 
         @Override
         public String toString() {
-            if (step == 0)
-                return String.format(":%s(%d)", getPseudoClass(), offset);
-            if (offset == 0)
-                return String.format(":%s(%dn)", getPseudoClass(), step);
-            return String.format(":%s(%dn%+d)", getPseudoClass(), step, offset);
+            if (a == 0)
+                return String.format(":%s(%d)", getPseudoClass(), b);
+            if (b == 0)
+                return String.format(":%s(%dn)", getPseudoClass(), a);
+            return String.format(":%s(%dn%+d)", getPseudoClass(), a, b);
         }
 
         protected abstract String getPseudoClass();
