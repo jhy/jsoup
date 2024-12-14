@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
+import static org.jsoup.select.Selector.SelectorParseException;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -103,21 +104,41 @@ public class QueryParserTest {
          */
     }
 
-    @Test public void exceptionOnUncloseAttribute() {
-        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("section > a[href=\"]"));
+
+    @Test
+    public void exceptionOnUncloseAttribute() {
+        Selector.SelectorParseException exception =
+            assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("section > a[href=\"]"));
+        assertEquals(
+            "Did not find balanced marker at 'href='",
+            exception.getMessage());
     }
 
-    @Test public void testParsesSingleQuoteInContains() {
-        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("p:contains(One \" One)"));
+    @Test
+    public void testParsesSingleQuoteInContains() {
+        Selector.SelectorParseException exception =
+            assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("p:contains(One \" One)"));
+        assertEquals("Did not find balanced marker at 'One '",
+            exception.getMessage());
     }
 
-
-    @Test public void exceptOnEmptySelector() {
-        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse(""));
+    @Test
+    public void exceptOnEmptySelector() {
+        SelectorParseException exception = assertThrows(SelectorParseException.class, () -> QueryParser.parse(""));
+        assertEquals("String must not be empty", exception.getMessage());
     }
 
-    @Test public void exceptOnNullSelector() {
-        assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse(null));
+    @Test
+    public void exceptOnNullSelector() {
+        SelectorParseException exception = assertThrows(SelectorParseException.class, () -> QueryParser.parse(null));
+        assertEquals("String must not be empty", exception.getMessage());
+    }
+
+    @Test
+    public void exceptOnUnhandledEvaluator() {
+        SelectorParseException exception =
+            assertThrows(SelectorParseException.class, () -> QueryParser.parse("div / foo"));
+        assertEquals("Could not parse query '/': unexpected token at '/'", exception.getMessage());
     }
 
     @Test public void okOnSpacesForeAndAft() {
