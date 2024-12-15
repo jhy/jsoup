@@ -15,6 +15,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 
+import static org.jsoup.internal.SharedConstants.DummyUri;
+
 /**
  The core public access point to the jsoup functionality.
 
@@ -342,6 +344,10 @@ Connection con3 = session.newRequest();
      @see Cleaner#clean(Document)
      */
     public static String clean(String bodyHtml, String baseUri, Safelist safelist) {
+        if (baseUri.isEmpty() && safelist.preserveRelativeLinks()) {
+            baseUri = DummyUri; // set a placeholder URI to allow relative links to pass abs resolution for protocol tests; won't leak to output
+        }
+
         Document dirty = parseBodyFragment(bodyHtml, baseUri);
         Cleaner cleaner = new Cleaner(safelist);
         Document clean = cleaner.clean(dirty);

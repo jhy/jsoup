@@ -117,7 +117,7 @@ public class Safelist {
      </p>
      <p>
      Links (<code>a</code> elements) can point to <code>http, https, ftp, mailto</code>, and have an enforced
-     <code>rel=nofollow</code> attribute.
+     <code>rel=nofollow</code> attribute if they link offsite (as indicated by the specified base URI).
      </p>
      <p>
      Does not allow images.
@@ -140,7 +140,7 @@ public class Safelist {
                 .addProtocols("blockquote", "cite", "http", "https")
                 .addProtocols("cite", "cite", "http", "https")
 
-                .addEnforcedAttribute("a", "rel", "nofollow")
+                .addEnforcedAttribute("a", "rel", "nofollow") // has special handling for external links, in Cleaner
                 ;
 
     }
@@ -412,12 +412,6 @@ public class Safelist {
      * Configure this Safelist to preserve relative links in an element's URL attribute, or convert them to absolute
      * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
      * e.g. {@code http://}.
-     * <p>
-     * Note that when handling relative links, the input document must have an appropriate {@code base URI} set when
-     * parsing, so that the link's protocol can be confirmed. Regardless of the setting of the {@code preserve relative
-     * links} option, the link must be resolvable against the base URI to an allowed protocol; otherwise the attribute
-     * will be removed.
-     * </p>
      *
      * @param preserve {@code true} to allow relative links, {@code false} (default) to deny
      * @return this Safelist, for chaining.
@@ -426,6 +420,14 @@ public class Safelist {
     public Safelist preserveRelativeLinks(boolean preserve) {
         preserveRelativeLinks = preserve;
         return this;
+    }
+
+    /**
+     * Get the current setting for preserving relative links.
+     * @return {@code true} if relative links are preserved, {@code false} if they are converted to absolute.
+     */
+    public boolean preserveRelativeLinks() {
+        return preserveRelativeLinks;
     }
 
     /**
