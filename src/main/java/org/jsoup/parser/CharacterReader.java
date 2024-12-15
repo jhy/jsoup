@@ -1,11 +1,11 @@
 package org.jsoup.parser;
 
-import org.jsoup.UncheckedIOException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.SoftPool;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;

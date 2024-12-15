@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -230,7 +231,7 @@ class NodeIteratorTest {
         assertContents(doc, "#root;html;head;body;div#1;p;One++;p;Two++;div#2;p;Three++;p;Four++;");
     }
 
-    static <T extends Node> void assertIterates(NodeIterator<T> it, String expected) {
+    static <T extends Node> void assertIterates(Iterator<T> it, String expected) {
         Node previous = null;
         StringBuilder actual = new StringBuilder();
         while (it.hasNext()) {

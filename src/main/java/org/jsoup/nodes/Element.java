@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
  <p>
  From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
 */
-public class Element extends Node {
+public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
     private static final String BaseUriKey = Attributes.internalKey("baseUri");
@@ -1911,15 +1912,20 @@ public class Element extends Node {
      Perform the supplied action on this Element and each of its descendant Elements, during a depth-first traversal.
      Elements may be inspected, changed, added, replaced, or removed.
      @param action the function to perform on the element
-     @return this Element, for chaining
      @see Node#forEachNode(Consumer)
-     @deprecated use {@link #stream()}.{@link Stream#forEach(Consumer) forEach(Consumer)} instead. (Removing this method
-     so Element can implement Iterable, which this signature conflicts with due to the non-void return.)
      */
-    @Deprecated
-    public Element forEach(Consumer<? super Element> action) {
+    @Override
+    public void forEach(Consumer<? super Element> action) {
         stream().forEach(action);
-        return this;
+    }
+
+    /**
+     Returns an Iterator that iterates this Element and each of its descendant Elements, in document order.
+     @return an Iterator
+     */
+    @Override
+    public Iterator<Element> iterator() {
+        return new NodeIterator<>(this, Element.class);
     }
 
     @Override
