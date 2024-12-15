@@ -240,6 +240,70 @@ public class Safelist {
     }
 
     /**
+     * Add HTML5 tags
+     */
+    public Safelist addHtml5() {
+        // structural
+        // note: <summary> must be the first child of <details>
+        addTags("article", "aside", "details", "figcaption", "figure", "footer",
+                "header", "hgroup", "main", "nav", "section", "summary");
+        addAttributes("details", "open");
+
+        // form tags
+        addTags("datalist", "keygen", "output", "progress");
+        addAttributes("keygen", "autofocus", "challenge", "disabled",
+                "form", "keytype", "name");
+        addAttributes("output", "for", "form", "name");
+        addAttributes("progress", "max", "value");
+
+        // graphics tags - path? mask?
+        addTags("canvas", "svg");
+        addAttributes("canvas", "height", "width");
+        addAttributes("svg", "height", "viewbox", "width");
+
+        // svg elements (need to verify...)
+        addTags("circle", "g", "mask", "path", "rect");
+        addAttributes("circle", "cx", "cy", "r", "stroke", "stroke-width");
+        addAttributes("path", "d", "fill", "stroke", "stroke-width");
+        addAttributes("rect", "fill", "height", "stroke", "stroke-width", "width", "x", "y");
+
+        // media tags
+        addTags("audio", "embed", "source", "track", "video");
+        addAttributes("audio", "autoplay", "controls", "loop", "muted", "preload", "src");
+        addAttributes("embed", "height", "src", "type", "width");
+        addAttributes("source", "src", "media", "type");
+        addAttributes("track", "src", "default", "kind", "label", "srclang");
+        addAttributes("video", "autoplay", "controls", "height", "loop", "muted", "poster",
+                "preload", "src", "width");
+
+        addProtocols("audio", "src", "http", "https");
+        addProtocols("embed", "src", "http", "https");
+        addProtocols("source", "src", "http", "https");
+        addProtocols("track", "src", "http", "https");
+        addProtocols("video", "src", "http", "https");
+        addProtocols("video", "poster", "http", "https");
+
+        // text-level elements
+        addTags("bdi", "bdo", "mark", "meter", "time", "wbr");
+        addAttributes("bdo", "dir");
+        addAttributes("meter", "value", "form", "high", "low", "max", "min", "optimum");
+        addAttributes("time", "datetime");
+
+        // ruby elements (support for Eastern Asia languages)
+        addTags("ruby", "rp", "rt");
+
+        // other
+        // note: <menu> was introduced in HTML 2 but we should be include it if we include the child <menuitem>
+        addTags("menu", "menuitem");
+        addAttributes("menu", "label", "type");
+        addAttributes("menuitem", "label", "checked", "command", "default", "disabled",
+                "icon", "radiogroup", "type");
+        addProtocols("menuitem", "icon", "http", "https");
+
+        return this;
+    }
+
+    /**
      Add a list of allowed elements to a safelist. (If a tag is not allowed, it will be removed from the HTML.)
 
      @param tags tag names to allow
