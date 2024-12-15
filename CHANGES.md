@@ -8,7 +8,8 @@
   developers need to enable core library desugaring. The minimum Java version remains Java 8.
   [2173](https://github.com/jhy/jsoup/pull/2173)
 * Removed previously deprecated class: `org.jsoup.UncheckedIOException` (replace with `java.io.UncheckedIOException`);
-  method `Element Element#forEach(Consumer)` to `void Element#forEach(Consumer())`.
+  method `Element Element#forEach(Consumer)` to
+  `void Element#forEach(Consumer())`. [2246](https://github.com/jhy/jsoup/pull/2246)
 
 ### Improvements
 
