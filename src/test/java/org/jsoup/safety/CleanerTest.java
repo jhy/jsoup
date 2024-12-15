@@ -227,19 +227,26 @@ public class CleanerTest {
     @Test public void resolvesRelativeLinks() {
         String html = "<a href='/foo'>Link</a><img src='/bar'>";
         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages());
-        assertEquals("<a href=\"http://example.com/foo\" rel=\"nofollow\">Link</a><img src=\"http://example.com/bar\">", clean);
+        assertEquals("<a href=\"http://example.com/foo\">Link</a><img src=\"http://example.com/bar\">", clean);
     }
 
     @Test public void preservesRelativeLinksIfConfigured() {
         String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages().preserveRelativeLinks(true));
-        assertEquals("<a href=\"/foo\" rel=\"nofollow\">Link</a><img src=\"/bar\"> <img>", clean);
+        assertEquals("<a href=\"/foo\">Link</a><img src=\"/bar\"> <img>", clean);
     }
 
-    @Test public void dropsUnresolvableRelativeLinks() {
+    @Test public void dropsUnresolvableRelativeLinks() { // when not preserving
         String html = "<a href='/foo'>Link</a>";
         String clean = Jsoup.clean(html, Safelist.basic());
         assertEquals("<a rel=\"nofollow\">Link</a>", clean);
+    }
+
+    @Test void dropsJavascriptWhenRelativeLinks() {
+        String html ="<a href='javascript:alert()'>One</a>";
+        Safelist safelist = Safelist.basic().preserveRelativeLinks(true);
+        assertEquals("<a rel=\"nofollow\">One</a>", Jsoup.clean(html, safelist));
+        assertFalse(Jsoup.isValid(html, safelist));
     }
 
     @Test void dropsConcealedJavascriptProtocolWhenRelativesLinksEnabled() {
@@ -247,10 +254,12 @@ public class CleanerTest {
         String html = "<a href=\"&#0013;ja&Tab;va&Tab;script&#0010;:alert(1)\">Link</a>";
         String clean = Jsoup.clean(html, "https://", safelist);
         assertEquals("<a rel=\"nofollow\">Link</a>", clean);
+        assertFalse(Jsoup.isValid(html, safelist));
 
         String colon = "<a href=\"ja&Tab;va&Tab;script&colon;alert(1)\">Link</a>";
         String cleanColon = Jsoup.clean(colon, "https://", safelist);
         assertEquals("<a rel=\"nofollow\">Link</a>", cleanColon);
+        assertFalse(Jsoup.isValid(colon, safelist));
     }
 
     @Test void dropsConcealedJavascriptProtocolWhenRelativesLinksDisabled() {
@@ -258,6 +267,7 @@ public class CleanerTest {
         String html = "<a href=\"ja&Tab;vas&#0013;cript:alert(1)\">Link</a>";
         String clean = Jsoup.clean(html, "https://", safelist);
         assertEquals("<a rel=\"nofollow\">Link</a>", clean);
+        assertFalse(Jsoup.isValid(html, safelist));
     }
 
     @Test public void handlesCustomProtocols() {
@@ -434,6 +444,32 @@ public class CleanerTest {
             " </feMerge>\n" +
             "</svg>";
         assertEquals(expected, clean);
+    }
+
+    @Test void nofollowOnlyOnExternalLinks() {
+        // We want to add nofollow to external links, but not to for relative links or those on the same site
+        String html = "<a href='http://external.com/'>One</a> <a href='/relative/'>Two</a> <a href='../other/'>Three</a> <a href='http://example.com/bar'>Four</a>";
+
+        Safelist basic = Safelist.basic().preserveRelativeLinks(true);
+        String clean = Jsoup.clean(html, "http://example.com/", basic);
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\">Four</a>", clean);
+
+        // If we don't pass in a base URI, still want to preserve the relative links.
+        String clean2 = Jsoup.clean(html, basic);
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean2);
+        // Four gets nofollowed because we didn't specify the base URI, so must assume it is external
+
+        // Want it to be valid with relative links (and no base uri required / provided):
+        assertTrue(Jsoup.isValid(html, basic));
+
+        // test that it works in safelist.relaxed as well, which doesn't by default have rel=nofollow
+        Safelist relaxed = Safelist.relaxed().preserveRelativeLinks(true).addEnforcedAttribute("a", "rel", "nofollow");
+        String clean3 = Jsoup.clean(html, "http://example.com/", relaxed);
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\">Four</a>", clean3);
+        assertTrue(Jsoup.isValid(html, relaxed));
+
+        String clean4 = Jsoup.clean(html, relaxed);
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
     }
 
 }

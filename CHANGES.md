@@ -10,6 +10,9 @@
 
 ### Improvements
 
+* When cleaning HTML with a `Safelist` that preserves relative links, the `isValid()` method will now consider these
+  links valid. Additionally, the enforced attribute `rel=nofollow` will only be added to external links when configured
+  in the safelist. [2245](https://github.com/jhy/jsoup/pull/2245)
 * Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator )` methods, that return a `Stream` of
   matching elements. Elements are evaluated and returned as they are found, and the stream can be
   terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)

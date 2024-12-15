@@ -15,6 +15,8 @@ import org.jsoup.select.NodeVisitor;
 
 import java.util.List;
 
+import static org.jsoup.internal.SharedConstants.DummyUri;
+
 /**
  The safelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
@@ -112,10 +114,11 @@ public class Cleaner {
      @return true if no tags or attributes need to be removed; false if they do
      */
     public boolean isValidBodyHtml(String bodyHtml) {
-        Document clean = Document.createShell("");
-        Document dirty = Document.createShell("");
+        String baseUri = (safelist.preserveRelativeLinks()) ? DummyUri : ""; // fake base URI to allow relative URLs to remain valid
+        Document clean = Document.createShell(baseUri);
+        Document dirty = Document.createShell(baseUri);
         ParseErrorList errorList = ParseErrorList.tracking(1);
-        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), "", errorList);
+        List<Node> nodes = Parser.parseFragment(bodyHtml, dirty.body(), baseUri, errorList);
         dirty.body().insertChildren(0, nodes);
         int numDiscarded = copySafeNodes(dirty.body(), clean.body());
         return numDiscarded == 0 && errorList.isEmpty();
@@ -188,7 +191,18 @@ public class Cleaner {
             else
                 numDiscarded++;
         }
+
+
         Attributes enforcedAttrs = safelist.getEnforcedAttributes(sourceTag);
+        // special case for <a href rel=nofollow>, only apply to external links:
+        if (sourceEl.nameIs("a") && enforcedAttrs.get("rel").equals("nofollow")) {
+            String href = sourceEl.absUrl("href");
+            String sourceBase = sourceEl.baseUri();
+            if (!href.isEmpty() && !sourceBase.isEmpty() && href.startsWith(sourceBase)) { // same site, so don't set the nofollow
+                enforcedAttrs.remove("rel");
+            }
+        }
+
         destAttrs.addAll(enforcedAttrs);
         dest.attributes().addAll(destAttrs); // re-attach, if removed in clear
         return new ElementMeta(dest, numDiscarded);
