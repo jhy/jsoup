@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.jsoup.nodes.NodeIteratorTest.assertIterates;
+import static org.jsoup.nodes.NodeIteratorTest.trackSeen;
 import static org.jsoup.select.SelectorTest.assertSelectedOwnText;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -2991,5 +2994,23 @@ public class ElementTest {
         div = doc.selectStream("div").findFirst().orElse(null);
 
         assertEquals("Hello world", div.text());
+    }
+
+    @Test void elementIsIterable() {
+        Document doc = Jsoup.parse("<div><a id=1>One</a> Two <a id=2>Three<b>Four</a><a id=3>Five</a></div>");
+        String expect = "div;a#1;a#2;b;b;a#3;"; // elements only, in doc order
+        Element div = doc.expectFirst("div");
+
+        // for each pattern
+        StringBuilder seen = new StringBuilder();
+        for (Element el: div) {
+            trackSeen(el, seen);
+        }
+        assertEquals(expect, seen.toString());
+
+        // iterator
+        seen = new StringBuilder();
+        Iterator<Element> iterator = div.iterator();
+        assertIterates(iterator, expect);
     }
 }

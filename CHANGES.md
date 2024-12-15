@@ -7,6 +7,9 @@
 * Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
   developers need to enable core library desugaring. The minimum Java version remains Java 8.
   [2173](https://github.com/jhy/jsoup/pull/2173)
+* Removed previously deprecated class: `org.jsoup.UncheckedIOException` (replace with `java.io.UncheckedIOException`);
+  method `Element Element#forEach(Consumer)` to
+  `void Element#forEach(Consumer())`. [2246](https://github.com/jhy/jsoup/pull/2246)
 
 ### Improvements
 
@@ -16,6 +19,7 @@
 * Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator )` methods, that return a `Stream` of
   matching elements. Elements are evaluated and returned as they are found, and the stream can be
   terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)
+* `Element` objects now implement `Iterable`, enabling them to be used in enhanced for loops.
 
 ### Bug Fixes
 
