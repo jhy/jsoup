@@ -567,10 +567,7 @@ public class Elements extends ArrayList<Element> {
             do {
                 Element sib = next ? e.nextElementSibling() : e.previousElementSibling();
                 if (sib == null) break;
-                if (eval == null)
-                    els.add(sib);
-                else if (sib.is(eval))
-                    els.add(sib);
+                if (eval == null || sib.is(eval)) els.add(sib);
                 e = sib;
             } while (all);
         }
