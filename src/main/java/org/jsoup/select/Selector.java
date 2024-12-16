@@ -5,7 +5,7 @@ import org.jsoup.nodes.Element;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.IdentityHashMap;
+import java.util.HashSet;
 import java.util.stream.Stream;
 
 /**
@@ -145,7 +145,8 @@ public class Selector {
     }
 
     /**
-     Find elements matching the query.
+     Find elements matching the query, across multiple roots. Elements will be deduplicated (in the case of
+     overlapping hierarchies).
 
      @param query CSS selector
      @param roots root elements to descend into
@@ -156,17 +157,14 @@ public class Selector {
         Validate.notNull(roots);
         Evaluator evaluator = QueryParser.parse(query);
         Elements elements = new Elements();
-        IdentityHashMap<Element, Boolean> seenElements = new IdentityHashMap<>();
-        // dedupe elements by identity, not equality
+        HashSet<Element> seenElements = new HashSet<>(); // dedupe elements by identity, as .equals is ==
 
         for (Element root : roots) {
-            final Elements found = select(evaluator, root);
-            for (Element el : found) {
-                if (seenElements.put(el, Boolean.TRUE) == null) {
-                    elements.add(el);
-                }
-            }
+            selectStream(evaluator, root)
+                .filter(seenElements::add)
+                .forEach(elements::add);
         }
+
         return elements;
     }
 
