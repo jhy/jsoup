@@ -2,7 +2,6 @@ package org.jsoup.internal;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayDeque;
-import java.util.Stack;
 import java.util.function.Supplier;
 
 /**

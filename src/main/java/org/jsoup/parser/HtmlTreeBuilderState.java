@@ -108,6 +108,7 @@ enum HtmlTreeBuilderState {
                 tb.insertCharacterNode(t.asCharacter()); // out of spec - include whitespace
                 return true;
             }
+            final String name;
             switch (t.type) {
                 case Comment:
                     tb.insertCommentNode(t.asComment());
@@ -117,7 +118,7 @@ enum HtmlTreeBuilderState {
                     return false;
                 case StartTag:
                     Token.StartTag start = t.asStartTag();
-                    String name = start.normalName();
+                    name = start.normalName();
                     if (name.equals("html")) {
                         return InBody.process(t, tb);
                     } else if (inSorted(name, InHeadEmpty)) {
@@ -1236,10 +1237,12 @@ enum HtmlTreeBuilderState {
     },
     InTableBody {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
+            final String name;
+
             switch (t.type) {
                 case StartTag:
                     Token.StartTag startTag = t.asStartTag();
-                    String name = startTag.normalName();
+                    name = startTag.normalName();
                     if (name.equals("tr")) {
                         tb.clearStackToTableBodyContext();
                         tb.insertElementFor(startTag);
@@ -1425,6 +1428,8 @@ enum HtmlTreeBuilderState {
     },
     InSelect {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
+            final String name;
+
             switch (t.type) {
                 case Character:
                     Token.Character c = t.asCharacter();
@@ -1443,7 +1448,7 @@ enum HtmlTreeBuilderState {
                     return false;
                 case StartTag:
                     Token.StartTag start = t.asStartTag();
-                    String name = start.normalName();
+                    name = start.normalName();
                     if (name.equals("html"))
                         return tb.process(start, InBody);
                     else if (name.equals("option")) {
