@@ -178,10 +178,41 @@
             </manifestEntries>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
-          <excludes>
-            <exclude>org/jsoup/examples/**</exclude>
-          </excludes>
         </configuration>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <excludes>
+                <exclude>org/jsoup/examples/**</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jar-examples</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <classifier>examples</classifier>
+              <includes>
+                <include>org/jsoup/**</include>
+                <include>org/jsoup/examples/**</include>
+              </includes>
+              <archive>
+                <manifest>
+                  <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                  <mainClass>org.jsoup.examples.HtmlToPlainText</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>

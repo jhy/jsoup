@@ -25,6 +25,7 @@
 * `Element` objects now implement `Iterable`, enabling them to be used in enhanced for loops.
 * Added support for fragment parsing from a `Reader` via
   `Parser#parseFragmentInput(Reader, Element, String)`. [1177](https://github.com/jhy/jsoup/issues/1177)
+* Reintroduced CLI executable examples, in `jsoup-examples.jar`. [1702](https://github.com/jhy/jsoup/issues/1702)
 
 ### Bug Fixes
 
