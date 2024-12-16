@@ -1,6 +1,7 @@
 package org.jsoup.internal;
 
 import java.lang.ref.SoftReference;
+import java.util.ArrayDeque;
 import java.util.Stack;
 import java.util.function.Supplier;
 
@@ -13,7 +14,7 @@ import java.util.function.Supplier;
  @since 1.18.2
  */
 public class SoftPool<T> {
-    final ThreadLocal<SoftReference<Stack<T>>> threadLocalStack;
+    final ThreadLocal<SoftReference<ArrayDeque<T>>> threadLocalStack;
     private final Supplier<T> initializer;
     /**
      How many total uses of the creating object might be instantiated on the same thread at once. More than this and
@@ -27,7 +28,7 @@ public class SoftPool<T> {
      */
     public SoftPool(Supplier<T> initializer) {
         this.initializer = initializer;
-        this.threadLocalStack = ThreadLocal.withInitial(() -> new SoftReference<>(new Stack<>()));
+        this.threadLocalStack = ThreadLocal.withInitial(() -> new SoftReference<>(new ArrayDeque<>()));
     }
 
     /**
@@ -36,7 +37,7 @@ public class SoftPool<T> {
      @return an object from the pool, as defined by the initializer.
      */
     public T borrow() {
-        Stack<T> stack = getStack();
+        ArrayDeque<T> stack = getStack();
         if (!stack.isEmpty()) {
             return stack.pop();
         }
@@ -49,16 +50,16 @@ public class SoftPool<T> {
      @param value the object to release back to the pool.
      */
     public void release(T value) {
-        Stack<T> stack = getStack();
+        ArrayDeque<T> stack = getStack();
         if (stack.size() < MaxIdle) {
             stack.push(value);
         }
     }
 
-    Stack<T> getStack() {
-        Stack<T> stack = threadLocalStack.get().get();
+    ArrayDeque<T> getStack() {
+        ArrayDeque<T> stack = threadLocalStack.get().get();
         if (stack == null) {
-            stack = new Stack<>();
+            stack = new ArrayDeque<>();
             threadLocalStack.set(new SoftReference<>(stack));
         }
         return stack;

@@ -2,11 +2,11 @@ package org.jsoup.internal;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -133,7 +133,7 @@ public class SoftPoolTest {
         }
 
         // Ensure the pool size does not exceed MaxIdle
-        Stack<char[]> stack = softLocalPool.getStack();
+        ArrayDeque<char[]> stack = softLocalPool.getStack();
         assertTrue(stack.size() <= SoftPool.MaxIdle, "Pool size exceeded MaxIdle limit");
     }
 }
