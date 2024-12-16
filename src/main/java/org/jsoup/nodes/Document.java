@@ -28,7 +28,6 @@ public class Document extends Element {
     private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
-    private boolean updateMetaCharset = false;
 
     /**
      Create a new, empty Document, in the specified namespace.
@@ -241,76 +240,54 @@ public class Document extends Element {
     public String nodeName() {
         return "#document";
     }
-    
+
     /**
-     * Sets the charset used in this document. This method is equivalent
-     * to {@link OutputSettings#charset(java.nio.charset.Charset)
-     * OutputSettings.charset(Charset)} but in addition it updates the
-     * charset / encoding element within the document.
-     * 
-     * <p>This enables
-     * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
-     * 
-     * <p>If there's no element with charset / encoding information yet it will
-     * be created. Obsolete charset / encoding definitions are removed!</p>
-     * 
-     * <p><b>Elements used:</b></p>
-     * 
-     * <ul>
-     * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
-     * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
-     * </ul>
-     * 
-     * @param charset Charset
-     * 
-     * @see #updateMetaCharsetElement(boolean) 
-     * @see OutputSettings#charset(java.nio.charset.Charset) 
+     Set the output character set of this Document. This method is equivalent to
+     {@link OutputSettings#charset(java.nio.charset.Charset) OutputSettings.charset(Charset)}, but additionally adds or
+     updates the charset / encoding element within the Document.
+
+     <p>If there's no existing element with charset / encoding information yet, one will
+     be created. Obsolete charset / encoding definitions are removed.</p>
+
+     <p><b>Elements used:</b></p>
+
+     <ul>
+     <li><b>HTML:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
+     <li><b>XML:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
+     </ul>
+
+     @param charset Charset
+     @see OutputSettings#charset(java.nio.charset.Charset)
      */
     public void charset(Charset charset) {
-        updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
-    
+
     /**
-     * Returns the charset used in this document. This method is equivalent
-     * to {@link OutputSettings#charset()}.
-     * 
-     * @return Current Charset
-     * 
-     * @see OutputSettings#charset() 
+     Get the output character set of this Document. This method is equivalent to {@link OutputSettings#charset()}.
+
+     @return the current Charset
+     @see OutputSettings#charset()
      */
     public Charset charset() {
         return outputSettings.charset();
     }
-    
+
     /**
-     * Sets whether the element with charset information in this document is
-     * updated on changes through {@link #charset(java.nio.charset.Charset)
-     * Document.charset(Charset)} or not.
-     * 
-     * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
-     * modified.</p>
-     * 
-     * @param update If <tt>true</tt> the element updated on charset
-     * changes, <tt>false</tt> if not
-     * 
-     * @see #charset(java.nio.charset.Charset) 
+     @deprecated this setting has no effect; the meta charset element is always updated when
+     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
      */
-    public void updateMetaCharsetElement(boolean update) {
-        this.updateMetaCharset = update;
-    }
-    
+    @Deprecated
+    public void updateMetaCharsetElement(boolean noop) {}
+
     /**
-     * Returns whether the element with charset information in this document is
-     * updated on changes through {@link #charset(java.nio.charset.Charset)
-     * Document.charset(Charset)} or not.
-     * 
-     * @return Returns <tt>true</tt> if the element is updated on charset
-     * changes, <tt>false</tt> if not
+     @deprecated this setting has no effect; the meta charset element is always updated when
+     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
      */
+    @Deprecated
     public boolean updateMetaCharsetElement() {
-        return updateMetaCharset;
+        return true;
     }
 
     @Override
@@ -329,61 +306,36 @@ public class Document extends Element {
         return clone;
     }
     
-    /**
-     * Ensures a meta charset (html) or xml declaration (xml) with the current
-     * encoding used. This only applies with
-     * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
-     * <tt>true</tt>, otherwise this method does nothing.
-     * 
-     * <ul>
-     * <li>An existing element gets updated with the current charset</li>
-     * <li>If there's no element yet it will be inserted</li>
-     * <li>Obsolete elements are removed</li>
-     * </ul>
-     * 
-     * <p><b>Elements used:</b></p>
-     * 
-     * <ul>
-     * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
-     * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
-     * </ul>
-     */
-    private void ensureMetaCharsetElement() {
-        if (updateMetaCharset) {
-            OutputSettings.Syntax syntax = outputSettings().syntax();
 
-            if (syntax == OutputSettings.Syntax.html) {
-                Element metaCharset = selectFirst("meta[charset]");
-                if (metaCharset != null) {
-                    metaCharset.attr("charset", charset().displayName());
-                } else {
-                    head().appendElement("meta").attr("charset", charset().displayName());
-                }
-                select("meta[name=charset]").remove(); // Remove obsolete elements
-            } else if (syntax == OutputSettings.Syntax.xml) {
-                Node node = ensureChildNodes().get(0);
-                if (node instanceof XmlDeclaration) {
-                    XmlDeclaration decl = (XmlDeclaration) node;
-                    if (decl.name().equals("xml")) {
-                        decl.attr("encoding", charset().displayName());
-                        if (decl.hasAttr("version"))
-                            decl.attr("version", "1.0");
-                    } else {
-                        decl = new XmlDeclaration("xml", false);
-                        decl.attr("version", "1.0");
-                        decl.attr("encoding", charset().displayName());
-                        prependChild(decl);
-                    }
-                } else {
-                    XmlDeclaration decl = new XmlDeclaration("xml", false);
-                    decl.attr("version", "1.0");
-                    decl.attr("encoding", charset().displayName());
-                    prependChild(decl);
-                }
+    private void ensureMetaCharsetElement() {
+        OutputSettings.Syntax syntax = outputSettings().syntax();
+
+        if (syntax == OutputSettings.Syntax.html) {
+            Element metaCharset = selectFirst("meta[charset]");
+            if (metaCharset != null) {
+                metaCharset.attr("charset", charset().displayName());
+            } else {
+                head().appendElement("meta").attr("charset", charset().displayName());
             }
+            select("meta[name=charset]").remove(); // Remove obsolete elements
+        } else if (syntax == OutputSettings.Syntax.xml) {
+            XmlDeclaration decl = ensureXmlDecl();
+            decl.attr("version", "1.0");
+            decl.attr("encoding", charset().displayName());
         }
     }
-    
+
+    private XmlDeclaration ensureXmlDecl() {
+        Node node = ensureChildNodes().get(0);
+        if (node instanceof XmlDeclaration) {
+            XmlDeclaration decl = (XmlDeclaration) node;
+            if (decl.name().equals("xml")) return decl;
+        }
+        XmlDeclaration decl = new XmlDeclaration("xml", false);
+        prependChild(decl);
+        return decl;
+    }
+
 
     /**
      * A Document's output settings control the form of the text() and html() methods.

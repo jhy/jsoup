@@ -259,7 +259,9 @@
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
             <excludes>
-              <exclude>@java.lang.Deprecated</exclude>
+              <!-- <exclude>@java.lang.Deprecated</exclude> -->
+              <exclude>org.jsoup.UncheckedIOException</exclude>
+              <exlude>org.jsoup.nodes.Element</exlude> <!-- forEach previously deprecated -->
             </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
