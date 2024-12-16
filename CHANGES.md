@@ -12,7 +12,7 @@
   `void Element#forEach(Consumer())`. [2246](https://github.com/jhy/jsoup/pull/2246)
 * Deprecated the methods `Document#updateMetaCharsetElement(bool)` and `#Document#updateMetaCharsetElement()`, as the
   setting had no effect. When `Document#charset(Charset)` is called, the document's meta charset or XML encoding
-  instruction is always set.
+  instruction is always set. [2247](https://github.com/jhy/jsoup/pull/2247)
 
 ### Improvements
 

@@ -257,13 +257,11 @@ public class Document extends Element {
      </ul>
 
      @param charset Charset
-     @return this Document, for chaining
      @see OutputSettings#charset(java.nio.charset.Charset)
      */
-    public Document charset(Charset charset) {
+    public void charset(Charset charset) {
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
-        return this;
     }
 
     /**
