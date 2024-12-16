@@ -23,6 +23,8 @@
   matching elements. Elements are evaluated and returned as they are found, and the stream can be
   terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)
 * `Element` objects now implement `Iterable`, enabling them to be used in enhanced for loops.
+* Added support for fragment parsing from a `Reader` via
+  `Parser#parseFragmentInput(Reader, Element, String)`. [1177](https://github.com/jhy/jsoup/issues/1177)
 
 ### Bug Fixes
 

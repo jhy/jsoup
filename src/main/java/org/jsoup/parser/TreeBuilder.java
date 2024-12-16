@@ -77,8 +77,8 @@ abstract class TreeBuilder {
         return doc;
     }
 
-    List<Node> parseFragment(String inputFragment, @Nullable Element context, String baseUri, Parser parser) {
-        initialiseParse(new StringReader(inputFragment), baseUri, parser);
+    List<Node> parseFragment(Reader inputFragment, @Nullable Element context, String baseUri, Parser parser) {
+        initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
         return completeParseFragment();
