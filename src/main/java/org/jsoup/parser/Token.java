@@ -6,12 +6,6 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.jsoup.internal.SharedConstants.*;
-
-
 /**
  * Parse tokens for the Tokeniser.
  */

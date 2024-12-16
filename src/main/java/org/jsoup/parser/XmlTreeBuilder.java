@@ -11,7 +11,6 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
-import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;

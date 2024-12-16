@@ -332,13 +332,6 @@ final class Tokeniser {
             errors.add(new ParseError(reader, errorMsg, args));
     }
 
-    static boolean currentNodeInHtmlNS() {
-        // todo: implement namespaces correctly
-        return true;
-        // Element currentNode = currentNode();
-        // return currentNode != null && currentNode.namespace().equals("HTML");
-    }
-
     /**
      * Utility method to consume reader and unescape entities found within.
      * @param inAttribute if the text to be unescaped is in an attribute

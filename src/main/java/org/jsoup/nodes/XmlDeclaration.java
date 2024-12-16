@@ -2,7 +2,6 @@ package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
 import org.jsoup.internal.StringUtil;
-import org.jsoup.helper.Validate;
 
 import java.io.IOException;
 

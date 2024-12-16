@@ -576,7 +576,7 @@ public class Safelist {
         return false;
     }
 
-    private boolean isValidAnchor(String value) {
+    private static boolean isValidAnchor(String value) {
         return value.startsWith("#") && !value.matches(".*\\s.*");
     }
 

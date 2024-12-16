@@ -858,10 +858,12 @@ public class HttpConnection implements Connection {
             try {
                 conn.connect();
                 if (conn.getDoOutput()) {
-                    OutputStream out = conn.getOutputStream();
-                    try { writePost(req, out, mimeBoundary); }
-                    catch (IOException e) { conn.disconnect(); throw e; }
-                    finally { out.close(); }
+                    try (OutputStream out = conn.getOutputStream()) {
+                        writePost(req, out, mimeBoundary);
+                    } catch (IOException e) {
+                        conn.disconnect();
+                        throw e;
+                    }
                 }
 
                 int status = conn.getResponseCode();
@@ -1389,6 +1391,7 @@ public class HttpConnection implements Connection {
             return value;
         }
 
+        @Override
         public KeyVal inputStream(InputStream inputStream) {
             Validate.notNullParam(value, "inputStream");
             this.stream = inputStream;
