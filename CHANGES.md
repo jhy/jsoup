@@ -34,7 +34,7 @@
 * In `Connection`, skip cookies that have no name, rather than throwing a validation
   exception. [2242](https://github.com/jhy/jsoup/issues/2242)
 * When running on JDK 1.8, the error `java.lang.NoSuchMethodError: java.nio.ByteBuffer.flip()Ljava/nio/ByteBuffer;`
-  could be thrown when parsing from a URL and the buffer size was
+  could be thrown when calling `Response#body()` after parsing from a URL and the buffer size was
   exceeded. [2250](https://github.com/jhy/jsoup/pull/2250)
 
 ## 1.18.3 (2024-Dec-02)
