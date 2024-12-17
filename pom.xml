@@ -38,29 +38,27 @@
 
   <build>
     <plugins>
-      <!-- Compile -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
           <encoding>UTF-8</encoding>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
           <compilerArgs>
-            <!-- saves output for package-info.java, so mvn sees it has completed it, so incremental compile works -->
             <arg>-Xpkginfo:always</arg>
           </compilerArgs>
-          <!-- this means incremental = true... -->
-          <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
         <executions>
+          <!-- Disable the default compile, so the profiles activated below execute -->
           <execution>
-            <id>compile-java-8</id>
-            <configuration>
-              <source>1.8</source>
-              <target>1.8</target>
-            </configuration>
+            <id>default-compile</id>
+            <phase>none</phase>
           </execution>
-          <!-- There is a JDK 9+ profile execution below, which adds multi-release=true and compiles module-info -->
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
         </executions>
       </plugin>
 
@@ -83,7 +81,6 @@
                 <version>1.0</version>
               </signature>
               <ignores>
-                <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
               </ignores>
             </configuration>
@@ -292,7 +289,7 @@
             <excludes>
               <!-- <exclude>@java.lang.Deprecated</exclude> -->
               <exclude>org.jsoup.UncheckedIOException</exclude>
-              <exlude>org.jsoup.nodes.Element</exlude> <!-- forEach previously deprecated -->
+              <exclude>org.jsoup.nodes.Element</exclude> <!-- forEach previously deprecated -->
             </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
@@ -345,6 +342,36 @@
   </distributionManagement>
 
   <profiles>
+    <!-- Profile for Java 8 -->
+    <profile>
+      <id>java-8</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>compile</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                  <goal>testCompile</goal>
+                </goals>
+                <configuration>
+                  <source>1.8</source>
+                  <target>1.8</target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <!-- Compiles the multi-release jar when executed on JDK9+ -->
     <profile>
       <id>compile-multi-release</id>
@@ -357,12 +384,19 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
             <executions>
+
               <execution>
                 <id>compile-java-8</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>compile</goal>
+                  <goal>testCompile</goal>
+                </goals>
                 <configuration>
                   <release>8</release>
                 </configuration>
               </execution>
+
               <execution>
                 <id>compile-java-9</id>
                 <phase>compile</phase>
@@ -377,6 +411,7 @@
                   <multiReleaseOutput>true</multiReleaseOutput>
                 </configuration>
               </execution>
+
             </executions>
           </plugin>
         </plugins>
