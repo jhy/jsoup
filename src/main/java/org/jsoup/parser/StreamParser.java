@@ -45,9 +45,6 @@ import java.util.stream.StreamSupport;
  New parsers should be used in each thread.</p>
  <p>If created via {@link Connection.Response#streamParser()}, or another Reader that is I/O backed, the iterator and
  stream consumers will throw an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
- <p>The StreamParser interface is currently in <b>beta</b> and may change in subsequent releases. Feedback on the
- feature and how you're using it is very welcome via the <a href="https://jsoup.org/discussion">jsoup
- discussions</a>.</p>
  @since 1.18.1
  */
 public class StreamParser implements Closeable {
@@ -376,6 +373,3 @@ public class StreamParser implements Closeable {
         }
     }
 }
-
-
-
