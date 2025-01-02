@@ -36,6 +36,8 @@
 * When running on JDK 1.8, the error `java.lang.NoSuchMethodError: java.nio.ByteBuffer.flip()Ljava/nio/ByteBuffer;`
   could be thrown when calling `Response#body()` after parsing from a URL and the buffer size was
   exceeded. [2250](https://github.com/jhy/jsoup/pull/2250)
+* For backwards compatibility, allow `null` InputStream inputs to `Jsoup.parse(InputStream stream, ...)`, by returning
+  an empty `Document`. [2252](https://github.com/jhy/jsoup/issues/2252)
 
 ## 1.18.3 (2024-Dec-02)
 
