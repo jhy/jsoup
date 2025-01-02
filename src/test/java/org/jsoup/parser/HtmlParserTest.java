@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -1961,5 +1962,14 @@ public class HtmlParserTest {
         assertNotNull(div.attribute("<!--"));
         assertEquals("hidden", div.attr("id"));
         assertNotNull(div.attribute("--"));
+    }
+
+    @Test void nullStreamReturnsEmptyDoc() throws IOException {
+        // https://github.com/jhy/jsoup/issues/2252
+        InputStream stream = null;
+        Document doc = Jsoup.parse(stream, null, "");
+        // don't want to mark parse(stream) as @Nullable, as it's more useful to show the warning. But support it, for backwards compat
+        assertNotNull(doc);
+        assertEquals("", doc.title());
     }
 }

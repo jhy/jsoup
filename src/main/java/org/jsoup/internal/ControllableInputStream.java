@@ -46,11 +46,11 @@ public class ControllableInputStream extends FilterInputStream {
 
     /**
      * If this InputStream is not already a ControllableInputStream, let it be one.
-     * @param in the input stream to (maybe) wrap
+     * @param in the input stream to (maybe) wrap. A {@code null} input will create an empty wrapped stream.
      * @param maxSize the maximum size to allow to be read. 0 == infinite.
      * @return a controllable input stream
      */
-    public static ControllableInputStream wrap(InputStream in, int maxSize) {
+    public static ControllableInputStream wrap(@Nullable InputStream in, int maxSize) {
         // bufferSize currently unused; consider implementing as a min size in the SoftPool recycler
         if (in instanceof ControllableInputStream)
             return (ControllableInputStream) in;

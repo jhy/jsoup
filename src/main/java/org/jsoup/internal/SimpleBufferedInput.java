@@ -24,8 +24,9 @@ class SimpleBufferedInput extends FilterInputStream {
     private int bufMark = -1;
     private boolean inReadFully = false; // true when the underlying inputstream has been read fully
 
-    SimpleBufferedInput(InputStream in) {
+    SimpleBufferedInput(@Nullable InputStream in) {
         super(in);
+        if (in == null) inReadFully = true; // effectively an empty stream
     }
 
     @Override
@@ -148,7 +149,7 @@ class SimpleBufferedInput extends FilterInputStream {
 
     @Override
     public void close() throws IOException {
-        super.close();
+        if (in != null) super.close();
         if (byteBuf == null) return; // already closed, or never allocated
         BufferPool.release(byteBuf); // return the buffer to the pool
         byteBuf = null; // NPE further attempts to read

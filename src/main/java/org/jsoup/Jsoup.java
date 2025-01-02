@@ -261,7 +261,7 @@ Connection con3 = session.newRequest();
      @param baseUri     The URL where the HTML was retrieved from, to resolve relative links against.
      @return sane HTML
 
-     @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
+     @throws IOException if the stream could not be read, or if the charsetName is invalid.
      */
     public static Document parse(InputStream in, @Nullable String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
@@ -278,7 +278,7 @@ Connection con3 = session.newRequest();
      @param parser alternate {@link Parser#xmlParser() parser} to use.
      @return sane HTML
 
-     @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
+     @throws IOException if the stream could not be read, or if the charsetName is invalid.
      */
     public static Document parse(InputStream in, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         return DataUtil.load(in, charsetName, baseUri, parser);

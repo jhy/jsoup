@@ -337,4 +337,11 @@ public class DataUtilTest {
 
         assertEquals(input, read);
     }
+
+    @Test void controllableInputStreamAllowsNull() throws IOException {
+        ControllableInputStream is = ControllableInputStream.wrap(null, 0);
+        assertNotNull(is);
+        assertTrue(is.baseReadFully());
+        is.close();
+    }
 }
