@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
+import static org.jsoup.select.EvaluatorDebug.asElement;
 import static org.jsoup.select.EvaluatorDebug.sexpr;
 import static org.jsoup.select.Selector.SelectorParseException;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,7 +48,7 @@ public class QueryParserTest {
         // top level or, three child ands
         String query = "a b, c d, e f";
         String parsed = sexpr(query);
-        assertEquals("(Or (And (Tag 'b')(Parent (Tag 'a')))(And (Tag 'd')(Parent (Tag 'c')))(And (Tag 'f')(Parent (Tag 'e'))))", parsed);
+        assertEquals("(Or (And (Tag 'b')(Ancestor (Tag 'a')))(And (Tag 'd')(Ancestor (Tag 'c')))(And (Tag 'f')(Ancestor (Tag 'e'))))", parsed);
 
         /*
         <Or css="a b, c d, e f" cost="9">
@@ -104,6 +105,23 @@ public class QueryParserTest {
          */
     }
 
+    @Test void idDescenderClassOrder() {
+        // https://github.com/jhy/jsoup/issues/2254
+        // '#id .class' cost
+        String query = "#id .class";
+        String parsed = sexpr(query);
+        assertEquals("(And (Class '.class')(Ancestor (Id '#id')))", parsed);
+
+        /*
+        <And css="#id .class" cost="22">
+         <Class css=".class" cost="6"></Class>
+         <Ancestor css="#id " cost="16">
+          <Id css="#id" cost="2"></Id>
+         </Ancestor>
+        </And>
+         */
+    }
+
 
     @Test
     public void exceptionOnUncloseAttribute() {
@@ -151,17 +169,17 @@ public class QueryParserTest {
         Evaluator parse = QueryParser.parse(q);
         assertEquals(q, parse.toString());
         String parsed = sexpr(q);
-        assertEquals("(And (Tag 'g')(PreviousSibling (And (Tag 'f')(ImmediatePreviousSibling (ImmediateParentRun (And (Tag 'd')(Parent (And (Tag 'b')(Parent (And (Tag 'a')(Not (Has (And (Tag 'span')(Class '.foo')))))))))(Tag 'e'))))))", parsed);
+        assertEquals("(And (Tag 'g')(PreviousSibling (And (Tag 'f')(ImmediatePreviousSibling (ImmediateParentRun (And (Tag 'd')(Ancestor (And (Tag 'b')(Ancestor (And (Tag 'a')(Not (Has (And (Tag 'span')(Class '.foo')))))))))(Tag 'e'))))))", parsed);
     }
 
     @Test public void parsesOrAfterAttribute() {
         // https://github.com/jhy/jsoup/issues/2073
         String q = "#parent [class*=child], .some-other-selector .nested";
         String parsed = sexpr(q);
-        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", parsed);
+        assertEquals("(Or (And (AttributeWithValueContaining '[class*=child]')(Ancestor (Id '#parent')))(And (Class '.nested')(Ancestor (Class '.some-other-selector'))))", parsed);
 
-        assertEquals("(Or (Class '.some-other-selector')(And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]')))", sexpr("#parent [class*=child], .some-other-selector"));
-        assertEquals("(Or (Class '.some-other-selector')(And (Id '#el')(AttributeWithValueContaining '[class*=child]')))", sexpr("#el[class*=child], .some-other-selector"));
-        assertEquals("(Or (And (Parent (Id '#parent'))(AttributeWithValueContaining '[class*=child]'))(And (Class '.nested')(Parent (Class '.some-other-selector'))))", sexpr("#parent [class*=child], .some-other-selector .nested"));
+        assertEquals("(Or (Class '.some-other-selector')(And (AttributeWithValueContaining '[class*=child]')(Ancestor (Id '#parent'))))", sexpr("#parent [class*=child], .some-other-selector"));
+        assertEquals("(Or (And (Id '#el')(AttributeWithValueContaining '[class*=child]'))(Class '.some-other-selector'))", sexpr("#el[class*=child], .some-other-selector"));
+        assertEquals("(Or (And (AttributeWithValueContaining '[class*=child]')(Ancestor (Id '#parent')))(And (Class '.nested')(Ancestor (Class '.some-other-selector'))))", sexpr("#parent [class*=child], .some-other-selector .nested"));
     }
 }

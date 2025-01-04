@@ -170,7 +170,7 @@ public abstract class Evaluator {
         }
 
         @Override protected int cost() {
-            return 6; // does whitespace scanning
+            return 8; // does whitespace scanning; more than .contains()
         }
 
         @Override

@@ -26,6 +26,9 @@
 * Added support for fragment parsing from a `Reader` via
   `Parser#parseFragmentInput(Reader, Element, String)`. [1177](https://github.com/jhy/jsoup/issues/1177)
 * Reintroduced CLI executable examples, in `jsoup-examples.jar`. [1702](https://github.com/jhy/jsoup/issues/1702)
+* Optimized performance of selectors like `#id .class` (and other similar descendant queries) by around 4.6x, by better
+  balancing the Ancestor evaluator's cost function in the query
+  planner. [2254](https://github.com/jhy/jsoup/issues/2254)
 
 ### Bug Fixes
 

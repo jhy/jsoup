@@ -114,7 +114,7 @@ public class QueryParser {
                 currentEval = run;
                 break;
             case ' ':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Parent(currentEval), newEval);
+                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Ancestor(currentEval), newEval);
                 break;
             case '+':
                 currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
