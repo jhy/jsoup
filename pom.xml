@@ -82,6 +82,7 @@
               </signature>
               <ignores>
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
+                <ignore>java.net.http.*</ignore><!-- HttpClient in Java 11; only used in multirelease 11+ version -->
               </ignores>
             </configuration>
           </execution>
@@ -119,6 +120,10 @@
                 <ignore>java.util.Spliterators</ignore>
                 <ignore>java.nio.ByteBuffer</ignore> <!-- .flip(); added in API1; possibly due to .flip previously returning Buffer, later ByteBuffer; return unused -->
                 <ignore>java.net.HttpURLConnection</ignore><!-- .setAuthenticator(java.net.Authenticator) in Java 9; only used in multirelease 9+ version -->
+                <!-- HttpClient and following in Java 11; only used in multirelease 11+ version, guarded and not on Android -->
+                <ignore>java.net.http.*</ignore>
+                <ignore>java.time.Duration</ignore>
+                <ignore>java.util.OptionalLong</ignore>
               </ignores>
               <!-- ^ Provided by https://developer.android.com/studio/write/java8-support#library-desugaring -->
             </configuration>
@@ -372,11 +377,11 @@
       </build>
     </profile>
 
-    <!-- Compiles the multi-release jar when executed on JDK9+ -->
+    <!-- Compiles the multi-release jar when executed on JDK11+ -->
     <profile>
       <id>compile-multi-release</id>
       <activation>
-        <jdk>[9,2000)</jdk>
+        <jdk>[11,2000)</jdk>
       </activation>
       <build>
         <plugins>
@@ -398,22 +403,51 @@
               </execution>
 
               <execution>
-                <id>compile-java-9</id>
+                <id>compile-java-11</id>
                 <phase>compile</phase>
                 <goals>
                   <goal>compile</goal>
                 </goals>
                 <configuration>
-                  <release>9</release>
+                  <release>11</release>
                   <compileSourceRoots>
-                    <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+                    <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
                   </compileSourceRoots>
                   <multiReleaseOutput>true</multiReleaseOutput>
                 </configuration>
               </execution>
 
+              <!-- Tests for multi-release jar on 11: mark tests to be compiled; then and add to class path -->
+              <execution>
+                <id>testcompile-java-11</id>
+                <phase>test-compile</phase>
+                <goals>
+                  <goal>testCompile</goal>
+                </goals>
+                <configuration>
+                  <release>11</release>
+
+                  <compileSourceRoots>
+                    <compileSourceRoot>${project.basedir}/src/test/java11</compileSourceRoot>
+                  </compileSourceRoots>
+                </configuration>
+              </execution>
+
             </executions>
           </plugin>
+
+          <!-- Add the Java 11-specific test directory to the test runtime classpath -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <additionalClasspathElements>
+                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/11</additionalClasspathElement>
+              </additionalClasspathElements>
+              <useModulePath>false</useModulePath>  <!-- tests use classpath -->
+            </configuration>
+          </plugin>
+
         </plugins>
       </build>
     </profile>

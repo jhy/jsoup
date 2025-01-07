@@ -182,7 +182,6 @@ public class TestServer {
         TrustManager[] managers = trustManagerFactory.getTrustManagers();
         SSLContext tls = SSLContext.getInstance("TLS");
         tls.init(null, managers, null);
-        SSLSocketFactory socketFactory = tls.getSocketFactory();
-        HttpsURLConnection.setDefaultSSLSocketFactory(socketFactory);
+        SSLContext.setDefault(tls);
     }
 }

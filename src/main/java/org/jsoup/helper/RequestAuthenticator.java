@@ -38,7 +38,7 @@ public interface RequestAuthenticator {
         }
 
         /**
-         Get he URL that is being requested.
+         Get the URL that is being requested.
          * @return URL
          */
         public URL url() {
