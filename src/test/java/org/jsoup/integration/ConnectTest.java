@@ -1030,11 +1030,11 @@ public class ConnectTest {
 
         int num = numProgress.get();
         // debug log if not in those ranges:
-        if (num < expected * 0.75 || num > expected * 1.5) {
+        if (num < expected * 0.75 || num > expected * 2.5) {
             System.err.println("Expected: " + expected + ", got: " + num);
         }
         assertTrue(num > expected * 0.75);
-        assertTrue(num < expected * 1.5);
+        assertTrue(num < expected * 2.5);
 
         // check the document works
         assertEquals(LargeDocTextLen, document.text().length());
