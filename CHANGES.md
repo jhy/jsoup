@@ -4,6 +4,11 @@
 
 ### Changes
 
+* Added support for **http/2** requests in `Jsoup.connect()`, when running on Java 11+. In this version, this is not
+  enabled by default: use `System.setProperty("jsoup.useHttpClient", "true");` to enable. If you are repackaging the
+  jsoup jar in your deployment (i.e. creating a shaded- or a fat-jar), make sure to specify that as a Multi-Release
+  JAR. If the `HttpClient` impl is not available in your JRE, requests will continue to be made via
+  `HttpURLConnection` (in `http/1.1` mode). [2257](https://github.com/jhy/jsoup/pull/2257)
 * Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
   developers need to enable core library desugaring. The minimum Java version remains Java 8.
   [2173](https://github.com/jhy/jsoup/pull/2173)
