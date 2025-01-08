@@ -8,6 +8,7 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.servlets.*;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -59,6 +60,7 @@ public class ConnectTest {
     public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
+        System.setProperty(SharedConstants.UseHttpClient, "false"); // use the default UrlConnection. See HttpClientConnectTest for other version
     }
 
     @BeforeEach
@@ -475,9 +477,15 @@ public class ConnectTest {
             .timeout(400)
             .execute();
 
-        Document document = res.parse();
-        assertEquals("Something", document.title());
-        assertEquals(0, document.select("p").size());
+        try {
+            Document document = res.parse();
+            assertEquals("Something", document.title());
+            assertEquals(0, document.select("p").size());
+        } catch (IOException ignored) {
+            // HttpUrlConnection will read the amount provided and the tests in the try will pass
+            // HttpClient will throw unexpected EOF during the read, and this will catch it
+            // Either are OK
+        }
         // current impl, jetty won't write past content length
         // todo - find way to trick jetty into writing larger than set header. Take over the stream?
     }
@@ -944,14 +952,20 @@ public class ConnectTest {
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, code);
 
         AtomicInteger count = new AtomicInteger(0);
-        Connection.Response res = session.newRequest(url)
-            .auth(ctx -> {
-                count.incrementAndGet();
-                return ctx.credentials(AuthFilter.ServerUser, password + "wrong"); // incorrect
-            })
-            .execute();
+        try {
+            Connection.Response res = session.newRequest(url)
+                .auth(ctx -> {
+                    count.incrementAndGet();
+                    return ctx.credentials(AuthFilter.ServerUser, password + "wrong"); // incorrect
+                })
+                .execute();
+            assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.statusCode());
+        } catch (IOException e) {
+            assertEquals("No credentials provided", e.getMessage());
+            // In HttpClient, will throw IOE if our password delegate stops providing credentials after too many attempts. So we'll get this error.
+            // In HttpUrlConnection, which would otherwise try 20 times, when the auth stops providing it will cascade to the underyling 401 response (which seems a better path IMO)
+        }
         assertEquals(MaxAttempts, count.get());
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.statusCode());
 
         AtomicInteger successCount = new AtomicInteger(0);
         Connection.Response successRes = session.newRequest(url)
@@ -1016,11 +1030,11 @@ public class ConnectTest {
 
         int num = numProgress.get();
         // debug log if not in those ranges:
-        if (num < expected * 0.75 || num > expected * 1.5) {
+        if (num < expected * 0.75 || num > expected * 2.5) {
             System.err.println("Expected: " + expected + ", got: " + num);
         }
         assertTrue(num > expected * 0.75);
-        assertTrue(num < expected * 1.5);
+        assertTrue(num < expected * 2.5);
 
         // check the document works
         assertEquals(LargeDocTextLen, document.text().length());

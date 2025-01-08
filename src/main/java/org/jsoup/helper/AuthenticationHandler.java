@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.net.Authenticator;
-import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 
 /**
@@ -13,7 +12,7 @@ import java.net.PasswordAuthentication;
  ThreadLocal.
  */
 class AuthenticationHandler extends Authenticator {
-    static final int MaxAttempts = 5; // max authentication attempts per request. allows for multiple auths (e.g. proxy and server) in one request, but saves otherwise 20 requests if credentials are incorrect.
+    static final int MaxAttempts = 3; // max authentication attempts per request. allows for multiple auths (e.g. proxy and server) in one request, but saves otherwise 20 requests if credentials are incorrect.
     static AuthShim handler;
 
     static {
@@ -50,7 +49,7 @@ class AuthenticationHandler extends Authenticator {
         // it may be an interactive prompt, and the user could eventually get it right). But in Jsoup's context, the
         // auth will either be correct or not, so just abandon
         if (delegate.attemptCount > MaxAttempts)
-            return null;
+            return null; // When using HttpClient, this will manifest as "No credentials provided" IOException; not ideal; would be clearer if we could then detach the authenticator which would bubble the 401, but there's no path for that
         if (delegate.auth == null)
             return null; // detached - would have been the Global Authenticator (not a delegate)
 
@@ -60,7 +59,7 @@ class AuthenticationHandler extends Authenticator {
     }
 
     interface AuthShim {
-        void enable(RequestAuthenticator auth, HttpURLConnection con);
+        void enable(RequestAuthenticator auth, Object connOrHttp);
 
         void remove();
 
@@ -76,7 +75,7 @@ class AuthenticationHandler extends Authenticator {
             Authenticator.setDefault(new AuthenticationHandler());
         }
 
-        @Override public void enable(RequestAuthenticator auth, HttpURLConnection con) {
+        @Override public void enable(RequestAuthenticator auth, Object ignored) {
             authenticators.set(new AuthenticationHandler(auth));
         }
 

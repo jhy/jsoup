@@ -7,7 +7,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.CookieManager;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +18,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
  Helper functions to support the Cookie Manager / Cookie Storage in HttpConnection.
@@ -35,7 +35,7 @@ class CookieUtil {
      Pre-request, get any applicable headers out of the Request cookies and the Cookie Store, and add them to the request
      headers. If the Cookie Store duplicates any Request cookies (same name and value), they will be discarded.
      */
-    static void applyCookiesToRequest(HttpConnection.Request req, HttpURLConnection con) throws IOException {
+    static void applyCookiesToRequest(HttpConnection.Request req, BiConsumer<String, String> setter) throws IOException {
         // Request key/val cookies. LinkedHashSet used to preserve order, as cookie store will return most specific path first
         Set<String> cookieSet = requestCookieSet(req);
         Set<String> cookies2 = null;
@@ -62,9 +62,9 @@ class CookieUtil {
         }
 
         if (cookieSet.size() > 0)
-            con.addRequestProperty(CookieName, StringUtil.join(cookieSet, Sep));
+            setter.accept(CookieName, StringUtil.join(cookieSet, Sep));
         if (cookies2 != null && cookies2.size() > 0)
-            con.addRequestProperty(Cookie2Name, StringUtil.join(cookies2, Sep));
+            setter.accept(Cookie2Name, StringUtil.join(cookies2, Sep));
     }
 
     private static LinkedHashSet<String> requestCookieSet(Connection.Request req) {
