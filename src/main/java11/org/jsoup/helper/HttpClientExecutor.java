@@ -17,8 +17,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.jsoup.helper.HttpConnection.Response;
 import static org.jsoup.helper.HttpConnection.Response.writePost;
@@ -28,6 +28,11 @@ import static org.jsoup.helper.HttpConnection.Response.writePost;
  property {@code jsoup.useHttpClient} to {@code true}.
  */
 class HttpClientExecutor extends RequestExecutor {
+    // HttpClient expects proxy settings per client; we do per request, so held as a thread local. Can't do same for
+    // auth because that callback is on a worker thread, so can only do auth per Connection. So we create a new client
+    // if the authenticator is different between requests
+    static ThreadLocal<Proxy> perRequestProxy = new ThreadLocal<>();
+
     @Nullable
     HttpResponse<InputStream> hRes;
 
@@ -35,21 +40,31 @@ class HttpClientExecutor extends RequestExecutor {
         super(request, previousResponse);
     }
 
+    /**
+     Retrieve the HttpClient from the Connection, or create a new one. Allows for connection pooling of requests in the
+     same Connection (session).
+     */
+    HttpClient client() {
+        // we try to reuse the same Client across requests in a given Connection; but if the request auth has changed, we need to create a new client
+        RequestAuthenticator prevAuth = req.connection.lastAuth;
+        req.connection.lastAuth = req.authenticator;
+        if (req.connection.client != null && prevAuth == req.authenticator) { // might both be null
+            return (HttpClient) req.connection.client;
+        }
+
+        HttpClient.Builder builder = HttpClient.newBuilder();
+        builder.followRedirects(HttpClient.Redirect.NEVER); // customized redirects
+        builder.proxy(new ProxyWrap()); // thread local impl for per request; called on executing thread
+        if (req.authenticator != null) builder.authenticator(new AuthenticationHandler(req.authenticator));
+
+        HttpClient client = builder.build();
+        req.connection.client = client;
+        return client;
+    }
+
     @Override
     HttpConnection.Response execute() throws IOException {
         try {
-            HttpClient.Builder builder = HttpClient.newBuilder();
-            Proxy proxy = req.proxy();
-            if (proxy != null) builder.proxy(new ProxyWrap(proxy));
-            builder.followRedirects(HttpClient.Redirect.NEVER); // customized redirects
-            //builder.connectTimeout(Duration.ofMillis(req.timeout()/2)); // jsoup timeout is total connect + all reads
-            // todo - how to handle socketfactory? HttpClient wants SSLContext...
-            if (req.authenticator != null) {
-                AuthenticationHandler.AuthShim handler = new RequestAuthHandler();
-                handler.enable(req.authenticator, builder);
-            }
-            HttpClient client = builder.build();
-
             HttpRequest.Builder reqBuilder =
                 HttpRequest.newBuilder(req.url.toURI()).method(req.method.name(), requestBody(req));
             if (req.timeout() > 0) reqBuilder.timeout(
@@ -57,13 +72,13 @@ class HttpClientExecutor extends RequestExecutor {
             CookieUtil.applyCookiesToRequest(req, reqBuilder::header);
 
             // headers:
-            for (Map.Entry<String, List<String>> header : req.multiHeaders().entrySet()) {
-                for (String value : header.getValue()) {
-                    reqBuilder.header(header.getKey(), value);
-                }
-            }
+            req.multiHeaders().forEach((key, values) -> {
+                values.forEach(value -> reqBuilder.header(key, value));
+            });
 
+            if (req.proxy() != null) perRequestProxy.set(req.proxy()); // set up per request proxy
             HttpRequest hReq = reqBuilder.build();
+            HttpClient client = client();
             hRes = client.send(hReq, HttpResponse.BodyHandlers.ofInputStream());
             HttpHeaders headers = hRes.headers();
 
@@ -84,9 +99,13 @@ class HttpClientExecutor extends RequestExecutor {
             throw e;
         } catch (InterruptedException e) {
             safeClose();
+            Thread.currentThread().interrupt();
             throw new IOException(e);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Malformed URL: " + req.url, e);
+        } finally {
+            // detach per request proxy
+            perRequestProxy.remove();
         }
     }
 
@@ -99,8 +118,12 @@ class HttpClientExecutor extends RequestExecutor {
     @Override
     void safeClose() {
         if (hRes != null) {
-            // no real closer
-            // todo - review
+            InputStream body = hRes.body();
+            if (body != null) {
+                try {
+                    body.close();
+                } catch (IOException ignored) {}
+            }
             hRes = null;
         }
     }
@@ -116,16 +139,13 @@ class HttpClientExecutor extends RequestExecutor {
     }
 
     static class ProxyWrap extends ProxySelector {
-        final List<Proxy> proxies;
-
-        public ProxyWrap(Proxy proxy) {
-            this.proxies = new ArrayList<>(1);
-            proxies.add(proxy);
-        }
+        // empty list for no proxy:
+        static final List<Proxy> NoProxy = new ArrayList<>(0);
 
         @Override
         public List<Proxy> select(URI uri) {
-            return proxies;
+            Proxy proxy = perRequestProxy.get();
+            return proxy != null ? Collections.singletonList(proxy) : NoProxy;
         }
 
         @Override
