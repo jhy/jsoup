@@ -39,6 +39,9 @@
 
 ### Bug Fixes
 
+* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsquent XPath
+  queries could miss that element. Now, the attribute name is more completely
+  normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
 * For backwards compatibility, reverted the internal attribute key for doctype names to 
   "name". [2241](https://github.com/jhy/jsoup/issues/2241)
 * In `Connection`, skip cookies that have no name, rather than throwing a validation
@@ -50,17 +53,14 @@
   an empty `Document`. [2252](https://github.com/jhy/jsoup/issues/2252)
 * A `template` tag containing an `li` within an open `li` would be parsed incorrectly, as it was not recognized as a
   "special" tag (which have additional processing rules). Also, added the SVG and MathML namespace tags to the list of
-  special tags.
+  special tags. [2258](https://github.com/jhy/jsoup/issues/2258)
 
 ## 1.18.3 (2024-Dec-02)
 
 ### Bug Fixes
 
 * When serializing to XML, attribute names containing `-`, `.`, or digits were incorrectly marked as invalid and
-  removed. [2235](https://github.com/jhy/jsoup/issues/2235) 
-* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsquent XPath
-  queries could miss that element. Now, the attribute name is more completely
-  normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
+  removed. [2235](https://github.com/jhy/jsoup/issues/2235)
 
 ## 1.18.2 (2024-Nov-27)
 
