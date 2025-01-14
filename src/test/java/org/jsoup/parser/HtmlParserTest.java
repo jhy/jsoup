@@ -1656,6 +1656,14 @@ public class HtmlParserTest {
             TextUtil.stripNewlines(doc.head().html()));
     }
 
+    @Test void templateInLi() {
+        // https://github.com/jhy/jsoup/issues/2258
+        String html = "<ul><li>L1</li><li>L2 <template><li>T1</li><li>T2</template></li><li>L3</ul>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<ul><li>L1</li><li>L2 <template><li>T1</li><li>T2</li></template></li><li>L3</li></ul>",
+            TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test void errorsBeforeHtml() {
         Parser parser = Parser.htmlParser();
         parser.setTrackErrors(10);

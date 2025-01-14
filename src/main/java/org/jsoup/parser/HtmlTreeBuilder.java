@@ -35,14 +35,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
     static final String[] TagSearchSelectScope = new String[]{"optgroup", "option"};
     static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"};
     static final String[] TagThoroughSearchEndTags = new String[]{"caption", "colgroup", "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
-    static final String[] TagSearchSpecial = new String[]{"address", "applet", "area", "article", "aside", "base", "basefont", "bgsound",
-        "blockquote", "body", "br", "button", "caption", "center", "col", "colgroup", "command", "dd",
-        "details", "dir", "div", "dl", "dt", "embed", "fieldset", "figcaption", "figure", "footer", "form",
-        "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
-        "iframe", "img", "input", "isindex", "li", "link", "listing", "marquee", "menu", "meta", "nav",
-        "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext", "pre", "script",
-        "section", "select", "style", "summary", "table", "tbody", "td", "textarea", "tfoot", "th", "thead",
-        "title", "tr", "ul", "wbr", "xmp"};
+    static final String[] TagSearchSpecial = new String[]{
+        "address", "applet", "area", "article", "aside", "base", "basefont", "bgsound", "blockquote", "body", "br",
+        "button", "caption", "center", "col", "colgroup", "dd", "details", "dir", "div", "dl", "dt", "embed",
+        "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6",
+        "head", "header", "hgroup", "hr", "html", "iframe", "img", "input", "keygen", "li", "link", "listing", "main",
+        "marquee", "menu", "meta", "nav", "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext",
+        "pre", "script", "search", "section", "select", "source", "style", "summary", "table", "tbody", "td",
+        "template", "textarea", "tfoot", "th", "thead", "title", "tr", "track", "ul", "wbr", "xmp"};
+    static String[] TagSearchSpecialMath = {"annotation-xml", "mi", "mn", "mo", "ms", "mtext"}; // differs to MathML text integration point; adds annotation-xml
     static final String[] TagMathMlTextIntegration = new String[]{"mi", "mn", "mo", "ms", "mtext"};
     static final String[] TagSvgHtmlIntegration = new String[]{"desc", "foreignObject", "title"};
 
@@ -818,10 +819,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     static boolean isSpecial(Element el) {
-        // todo: mathml's mi, mo, mn
-        // todo: svg's foreigObject, desc, title
+        String namespace = el.tag().namespace();
         String name = el.normalName();
-        return inSorted(name, TagSearchSpecial);
+        switch (namespace) {
+            case NamespaceHtml:
+                return inSorted(name, TagSearchSpecial);
+            case Parser.NamespaceMathml:
+                return inSorted(name, TagSearchSpecialMath);
+            case Parser.NamespaceSvg:
+                return inSorted(name, TagSvgHtmlIntegration);
+            default:
+                return false;
+        }
     }
 
     Element lastFormattingElement() {
