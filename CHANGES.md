@@ -54,6 +54,8 @@
 * A `template` tag containing an `li` within an open `li` would be parsed incorrectly, as it was not recognized as a
   "special" tag (which have additional processing rules). Also, added the SVG and MathML namespace tags to the list of
   special tags. [2258](https://github.com/jhy/jsoup/issues/2258)
+* An `:nth-child` selector with a negative digit-less step, such as `:nth-child(-n+2)`, would be parsed incorrectly as a
+  positive step, and so would not match as expected. [1147](https://github.com/jhy/jsoup/issues/1147)
 
 ## 1.18.3 (2024-Dec-02)
 

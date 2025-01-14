@@ -318,44 +318,39 @@ public class QueryParser {
     }
 
     //pseudo selectors :first-child, :last-child, :nth-child, ...
-    private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
-    private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
+    private static final Pattern NthStepOffset = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NthOffset = Pattern.compile("([+-])?(\\d+)");
 
-	private Evaluator cssNthChild(boolean backwards, boolean ofType) {
-		String arg = normalize(consumeParens());
-		Matcher mAB = NTH_AB.matcher(arg);
-		Matcher mB = NTH_B.matcher(arg);
-		final int a, b;
-		if ("odd".equals(arg)) {
-			a = 2;
-			b = 1;
-		} else if ("even".equals(arg)) {
-			a = 2;
-			b = 0;
-		} else if (mAB.matches()) {
-			a = mAB.group(3) != null ? Integer.parseInt(mAB.group(1).replaceFirst("^\\+", "")) : 1;
-			b = mAB.group(4) != null ? Integer.parseInt(mAB.group(4).replaceFirst("^\\+", "")) : 0;
-		} else if (mB.matches()) {
-			a = 0;
-			b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
-		} else {
-			throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", arg);
-		}
+    private Evaluator cssNthChild(boolean last, boolean ofType) {
+        String arg = normalize(consumeParens()); // arg is like "odd", or "-n+2", within nth-child(odd)
+        final int step, offset;
+        if ("odd".equals(arg)) {
+            step = 2;
+            offset = 1;
+        } else if ("even".equals(arg)) {
+            step = 2;
+            offset = 0;
+        } else {
+            Matcher stepOffsetM, stepM;
+            if ((stepOffsetM = NthStepOffset.matcher(arg)).matches()) {
+                if (stepOffsetM.group(3) != null) // has digits, like 3n+2 or -3n+2
+                    step = Integer.parseInt(stepOffsetM.group(1).replaceFirst("^\\+", ""));
+                else // no digits, might be like n+2, or -n+2. if group(2) == "-", it’s -1;
+                    step = "-".equals(stepOffsetM.group(2)) ? -1 : 1;
+                offset =
+                    stepOffsetM.group(4) != null ? Integer.parseInt(stepOffsetM.group(4).replaceFirst("^\\+", "")) : 0;
+            } else if ((stepM = NthOffset.matcher(arg)).matches()) {
+                step = 0;
+                offset = Integer.parseInt(stepM.group().replaceFirst("^\\+", ""));
+            } else {
+                throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", arg);
+            }
+        }
 
-        final Evaluator eval;
-		if (ofType)
-			if (backwards)
-				eval = new Evaluator.IsNthLastOfType(a, b);
-			else
-				eval = new Evaluator.IsNthOfType(a, b);
-		else {
-			if (backwards)
-				eval = (new Evaluator.IsNthLastChild(a, b));
-			else
-				eval = new Evaluator.IsNthChild(a, b);
-		}
-        return eval;
-	}
+        return ofType
+            ? (last ? new Evaluator.IsNthLastOfType(step, offset) : new Evaluator.IsNthOfType(step, offset))
+            : (last ? new Evaluator.IsNthLastChild(step, offset) : new Evaluator.IsNthChild(step, offset));
+    }
 
     private String consumeParens() {
         return tq.chompBalanced('(', ')');

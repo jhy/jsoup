@@ -1358,4 +1358,27 @@ public class SelectorTest {
         assertEquals(1, els.size());
         assertEquals("o", els.get(0).id());
     }
+
+    @Test void negativeNthChild() {
+        // https://github.com/jhy/jsoup/issues/1147
+        String html = "<p>1</p> <p>2</p> <p>3</p> <p>4</p>";
+        Document doc = Jsoup.parse(html);
+
+        // Digitless
+        Elements pos = doc.select("p:nth-child(n+2)");
+        assertSelectedOwnText(pos, "2", "3", "4");
+
+        Elements neg = doc.select("p:nth-child(-n+2)");
+        assertSelectedOwnText(neg, "1", "2");
+
+        Elements combo = doc.select("p:nth-child(n+2):nth-child(-n+2)");
+        assertSelectedOwnText(combo, "2");
+
+        // Digitful, 2n+2 or -1n+2
+        Elements pos2 = doc.select("p:nth-child(2n+2)");
+        assertSelectedOwnText(pos2, "2", "4");
+
+        Elements neg2 = doc.select("p:nth-child(-1n+2)");
+        assertSelectedOwnText(neg2, "1", "2");
+    }
 }
