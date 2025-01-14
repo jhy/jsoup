@@ -34,6 +34,8 @@
 * Optimized performance of selectors like `#id .class` (and other similar descendant queries) by around 4.6x, by better
   balancing the Ancestor evaluator's cost function in the query
   planner. [2254](https://github.com/jhy/jsoup/issues/2254)
+* Removed the legacy parsing rules for `<isindex>` tags, which would autovivify a `form` element with labels. This is no
+  longer in the spec.
 
 ### Bug Fixes
 
@@ -46,7 +48,9 @@
   exceeded. [2250](https://github.com/jhy/jsoup/pull/2250)
 * For backwards compatibility, allow `null` InputStream inputs to `Jsoup.parse(InputStream stream, ...)`, by returning
   an empty `Document`. [2252](https://github.com/jhy/jsoup/issues/2252)
-* A `template` tag containing an `li` within an open `li` would be parsed incorrectly, as it was not recognized as a "special" tag (which have additional processing rules). Also, added the SVG and MathML namespace tags to the list of special tags.
+* A `template` tag containing an `li` within an open `li` would be parsed incorrectly, as it was not recognized as a "
+  special" tag (which have additional processing rules). Also, added the SVG and MathML namespace tags to the list of
+  special tags.
 
 ## 1.18.3 (2024-Dec-02)
 

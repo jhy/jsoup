@@ -474,43 +474,6 @@ enum HtmlTreeBuilderState {
                     else
                         tb.insertElementFor(startTag);
                     break;
-                case "isindex":
-                    // how much do we care about the early 90s?
-                    tb.error(this);
-                    if (tb.getFormElement() != null)
-                        return false;
-
-                    tb.processStartTag("form");
-                    if (startTag.hasAttribute("action")) {
-                        Element form = tb.getFormElement();
-                        if (form != null && startTag.hasAttribute("action")) {
-                            String action = startTag.attributes.get("action");
-                            form.attributes().put("action", action); // always LC, so don't need to scan up for ownerdoc
-                        }
-                    }
-                    tb.processStartTag("hr");
-                    tb.processStartTag("label");
-                    // hope you like english.
-                    String prompt = startTag.hasAttribute("prompt") ?
-                        startTag.attributes.get("prompt") :
-                        "This is a searchable index. Enter search keywords: ";
-
-                    tb.process(new Token.Character().data(prompt));
-
-                    // input
-                    Attributes inputAttribs = new Attributes();
-                    if (startTag.hasAttributes()) {
-                        for (Attribute attr : startTag.attributes) {
-                            if (!inSorted(attr.getKey(), Constants.InBodyStartInputAttribs))
-                                inputAttribs.put(attr);
-                        }
-                    }
-                    inputAttribs.put("name", "isindex");
-                    tb.processStartTag("input", inputAttribs);
-                    tb.processEndTag("label");
-                    tb.processStartTag("hr");
-                    tb.processEndTag("form");
-                    break;
                 case "textarea":
                     tb.insertElementFor(startTag);
                     if (!startTag.isSelfClosing()) {

@@ -460,10 +460,7 @@ public class HtmlParserTest {
 
     @Test public void parseBodyIsIndexNoAttributes() {
         // https://github.com/jhy/jsoup/issues/1404
-        String expectedHtml = "<form>\n" +
-            " <hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label>\n" +
-            " <hr>\n" +
-            "</form>";
+        String expectedHtml = "<isindex></isindex>";
         Document doc = Jsoup.parse("<isindex>");
         assertEquals(expectedHtml, doc.body().html());
 
@@ -1068,8 +1065,8 @@ public class HtmlParserTest {
 
     @Test public void testNormalisesIsIndex() {
         Document doc = Jsoup.parse("<body><isindex action='/submit'></body>");
-        String html = doc.outerHtml();
-        assertEquals("<form action=\"/submit\"> <hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label> <hr> </form>",
+        // There used to be rules so this became: <form action="/submit"> <hr><label>This is a searchable index. Enter search keywords: <input name="isindex"></label> <hr> </form>
+        assertEquals("<isindex action=\"/submit\"></isindex>",
             StringUtil.normaliseWhitespace(doc.body().html()));
     }
 
@@ -1640,7 +1637,7 @@ public class HtmlParserTest {
         // https://github.com/jhy/jsoup/issues/1637 | https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=38987
         Document doc = Jsoup.parse("<template><isindex action>");
         assertNotNull(doc);
-        assertEquals("<template><form><hr><label>This is a searchable index. Enter search keywords: <input name=\"isindex\"></label><hr></form></template>",
+        assertEquals("<template><isindex action></isindex></template>",
             TextUtil.stripNewlines(doc.head().html()));
     }
 
