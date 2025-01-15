@@ -95,8 +95,8 @@ public class SessionIT {
                 }
             });
             thread.setName("Runner-" + threadNum);
-            thread.start();
             thread.setUncaughtExceptionHandler(catcher);
+            thread.start();
             threads[threadNum] = thread;
         }
 
@@ -111,7 +111,7 @@ public class SessionIT {
 
         /* The checks above work when all 20 threads are executed within 10 seconds. However, depending on how cloudy it
          is when the CI jobs are run, they may not all complete in time. As of writing that appears most commonly on the
-         maxOS runners, which appear overtaxed. That makes this test flaky. So we relax the test conditions, and make
+         macOS runners, which appear overtaxed. That makes this test flaky. So we relax the test conditions, and make
          sure at least just one passed and one failed. That's OK in prod as well, because we are only concerned about
          concurrent execution, which the impl does detect correctly. */
         assertTrue(successful.get() > 0);
@@ -155,8 +155,8 @@ public class SessionIT {
                 }
             });
             thread.setName("Runner-" + threadNum);
-            thread.start();
             thread.setUncaughtExceptionHandler(catcher);
+            thread.start();
             threads[threadNum] = thread;
         }
 
@@ -177,7 +177,7 @@ public class SessionIT {
 
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            if (e instanceof IllegalArgumentException && e.getMessage().contains("Multiple threads"))
+            if (e.getMessage().contains("Multiple threads"))
                 multiThreadExceptions.incrementAndGet();
             else
                 e.printStackTrace();
