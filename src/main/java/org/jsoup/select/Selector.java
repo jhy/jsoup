@@ -197,6 +197,28 @@ public class Selector {
         return Collector.findFirst(QueryParser.parse(cssQuery), root);
     }
 
+    /**
+     Find the first element matching the query, across multiple roots.
+
+     @param query CSS selector
+     @param roots root elements to descend into
+     @return matching elements, empty if none
+     */
+    public static @Nullable Element selectFirst(String query, Iterable<Element> roots) {
+        Validate.notEmpty(query);
+        Validate.notNull(roots);
+        Evaluator evaluator = QueryParser.parse(query);
+
+        for (Element root : roots) {
+          var first = Collector.findFirst(evaluator, root);
+          if (first != null) {
+            return first;
+          }
+        }
+
+        return null;
+    }
+
     public static class SelectorParseException extends IllegalStateException {
         public SelectorParseException(String msg) {
             super(msg);

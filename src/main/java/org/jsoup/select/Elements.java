@@ -453,6 +453,32 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
+     * Find the first Element that matches the {@link Selector} CSS query within this element list.
+     * <p>This is effectively the same as calling {@code elements.select(query).first()}, but is more efficient as query
+     * execution stops on the first hit.</p>
+     * @param query A {@link Selector} query
+     * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     * @see #expectFirst(String)
+     */
+    public @Nullable Element selectFirst(String query) {
+        return Selector.selectFirst(query, this);
+    }
+
+    /**
+     * Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}.
+     * @param query A {@link Selector} query
+     * @return the first matching element
+     * @throws IllegalArgumentException if no match is found
+     */
+    public Element expectFirst(String query) {
+        return (Element) Validate.ensureNotNull(
+            Selector.selectFirst(query, this),
+                "No elements matched the query '%s'."
+            , query
+        );
+    }
+
+    /**
      * Remove elements from this list that match the {@link Selector} query.
      * <p>
      * E.g. HTML: {@code <div class=logo>One</div> <div>Two</div>}<br>
