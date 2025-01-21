@@ -210,7 +210,7 @@ public class Selector {
         Evaluator evaluator = QueryParser.parse(query);
 
         for (Element root : roots) {
-          var first = Collector.findFirst(evaluator, root);
+          Element first = Collector.findFirst(evaluator, root);
           if (first != null) {
             return first;
           }
