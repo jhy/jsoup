@@ -200,20 +200,19 @@ public class Selector {
     /**
      Find the first element matching the query, across multiple roots.
 
-     @param query CSS selector
+     @param cssQuery CSS selector
      @param roots root elements to descend into
-     @return matching elements, empty if none
+     @return the first matching element, or {@code null} if none
+     @since 1.19.1
      */
-    public static @Nullable Element selectFirst(String query, Iterable<Element> roots) {
-        Validate.notEmpty(query);
+    public static @Nullable Element selectFirst(String cssQuery, Iterable<Element> roots) {
+        Validate.notEmpty(cssQuery);
         Validate.notNull(roots);
-        Evaluator evaluator = QueryParser.parse(query);
+        Evaluator evaluator = QueryParser.parse(cssQuery);
 
         for (Element root : roots) {
-          Element first = Collector.findFirst(evaluator, root);
-          if (first != null) {
-            return first;
-          }
+            Element first = Collector.findFirst(evaluator, root);
+            if (first != null) return first;
         }
 
         return null;

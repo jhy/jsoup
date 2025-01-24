@@ -600,27 +600,27 @@ public class ElementsTest {
         assertEquals("<div> One</div><div> Two</div><div> Three</div><div> Four</div>", TextUtil.normalizeSpaces(doc.body().html()));
     }
 
-    @Test public void selectFirst() {
+    @Test void selectFirst() {
         Document doc = Jsoup.parse("<p>One</p><p>Two <span>Jsoup</span></p><p><span>Three</span></p>");
         Element span = doc.children().selectFirst("span");
         assertNotNull(span);
         assertEquals("Jsoup", span.text());
     }
 
-    @Test public void selectFirstNullOnNoMatch() {
+    @Test void selectFirstNullOnNoMatch() {
         Document doc = Jsoup.parse("<p>One</p><p>Two</p><p>Three</p>");
         Element span = doc.children().selectFirst("span");
         assertNull(span);
     }
 
-    @Test public void expectFirst() {
+    @Test void expectFirst() {
         Document doc = Jsoup.parse("<p>One</p><p>Two <span>Jsoup</span></p><p><span>Three</span></p>");
         Element span = doc.children().expectFirst("span");
         assertNotNull(span);
         assertEquals("Jsoup", span.text());
     }
 
-    @Test public void expectFirstThrowsOnNoMatch() {
+    @Test void expectFirstThrowsOnNoMatch() {
         Document doc = Jsoup.parse("<p>One</p><p>Two</p><p>Three</p>");
 
         boolean threw = false;
@@ -628,8 +628,25 @@ public class ElementsTest {
             Element span = doc.children().expectFirst("span");
         } catch (IllegalArgumentException e) {
             threw = true;
-            assertEquals("No elements matched the query 'span'.", e.getMessage());
+            assertEquals("No elements matched the query 'span'. in the elements", e.getMessage());
         }
         assertTrue(threw);
+    }
+
+    @Test void selectFirstFromPreviousSelect() {
+        Document doc = Jsoup.parse("<div><p>One</p></div><div><p><span>Two</span></p></div><div><p><span>Three</span></p></div>");
+        Elements divs = doc.select("div");
+        assertEquals(3, divs.size());
+
+        Element span = divs.selectFirst("p span");
+        assertNotNull(span);
+        assertEquals("Two", span.text());
+
+        // test roots
+        assertNotNull(span.selectFirst("span")); // reselect self
+        assertNull(span.selectFirst(">span")); // no span>span
+
+        assertNotNull(divs.selectFirst("div")); // reselect self, similar to element.select
+        assertNull(divs.selectFirst(">div")); // no div>div
     }
 }
