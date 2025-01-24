@@ -628,7 +628,7 @@ public class ElementsTest {
             Element span = doc.children().expectFirst("span");
         } catch (IllegalArgumentException e) {
             threw = true;
-            assertEquals("No elements matched the query 'span'. in the elements", e.getMessage());
+            assertEquals("No elements matched the query 'span' in the elements.", e.getMessage());
         }
         assertTrue(threw);
     }
