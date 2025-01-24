@@ -36,6 +36,8 @@
   planner. [2254](https://github.com/jhy/jsoup/issues/2254)
 * Removed the legacy parsing rules for `<isindex>` tags, which would autovivify a `form` element with labels. This is no
   longer in the spec.
+* Added `Elements.selectFirst(String cssQuery)` and `Elements.expectFirst(String cssQuery)`, to select the first
+  matching element from an `Elements` list.  [2263](https://github.com/jhy/jsoup/pull/2263/)
 
 ### Bug Fixes
 
