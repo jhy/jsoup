@@ -53,7 +53,7 @@ public class Document extends Element {
     }
 
     /**
-     Create a valid, empty shell of a document, suitable for adding more elements to.
+     Create a valid, empty shell of an HTML document, suitable for adding more elements to.
      @param baseUri baseUri of document
      @return document with html, head, and body elements.
      */
@@ -326,7 +326,7 @@ public class Document extends Element {
     }
 
     private XmlDeclaration ensureXmlDecl() {
-        Node node = ensureChildNodes().get(0);
+        Node node = firstChild();
         if (node instanceof XmlDeclaration) {
             XmlDeclaration decl = (XmlDeclaration) node;
             if (decl.name().equals("xml")) return decl;

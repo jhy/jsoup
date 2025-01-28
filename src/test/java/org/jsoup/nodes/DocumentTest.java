@@ -434,6 +434,17 @@ public class DocumentTest {
         return doc;
     }
 
+    @Test void charsetOnEmptyDoc() {
+        Document xml = new Document(Parser.NamespaceXml, "https://example.com"); // no nodes
+        xml.outputSettings().syntax(Syntax.xml);
+        xml.charset(StandardCharsets.UTF_8);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", xml.html());
+
+        Document html = new Document("https://example.com");
+        html.charset(StandardCharsets.UTF_8);
+        assertEquals("<html><head><meta charset=\"UTF-8\"></head></html>", TextUtil.stripNewlines(html.html()));
+    }
+
     @Test
     public void testShiftJisRoundtrip() throws Exception {
         String input =
