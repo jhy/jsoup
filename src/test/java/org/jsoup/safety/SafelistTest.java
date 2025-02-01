@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SafelistTest {
     private static final String TEST_TAG = "testTag";
     private static final String TEST_ATTRIBUTE = "testAttribute";
+    private static final String TEST_DATA_ATTRIBUTE = "data-" + TEST_ATTRIBUTE;
     private static final String TEST_SCHEME = "valid-scheme";
     private static final String TEST_VALUE = TEST_SCHEME + "://testValue";
 
@@ -75,5 +76,25 @@ public class SafelistTest {
         assertNull(safelist);
     }
 
+    @Test
+    public void testAttributeWildcard() {
+        Safelist safelist1 = Safelist.none();
+        Safelist safelist2 = new Safelist(safelist1).addWildcardAttributes(TEST_TAG, "data-.+");
+        Attribute attr = new Attribute(TEST_DATA_ATTRIBUTE, TEST_VALUE);
 
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG, null, attr));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, null, attr));
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG + "1", null, attr));
+    }
+
+    @Test
+    public void test8GlobalAttributeWildcard() {
+        Safelist safelist1 = Safelist.none();
+        Safelist safelist2 = new Safelist(safelist1).addWildcardGlobalAttributes("data-.+");
+        Attribute attr = new Attribute(TEST_DATA_ATTRIBUTE, TEST_VALUE);
+
+        assertFalse(safelist1.isSafeAttribute(TEST_TAG, null, attr));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG, null, attr));
+        assertTrue(safelist2.isSafeAttribute(TEST_TAG + "1", null, attr));
+    }
 }

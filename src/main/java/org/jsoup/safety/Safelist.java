@@ -12,12 +12,8 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 
@@ -67,11 +63,14 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Safelist {
     private static final String All = ":all";
+    private static final TagName AllTagName = new TagName(All);
+
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
     private final Map<TagName, Map<AttributeKey, Set<Protocol>>> protocols; // allowed URL protocols for attributes
     private boolean preserveRelativeLinks; // option to preserve relative links
+    private Map<TagName, Map<String, Pattern>> wildcardAttributes = new LinkedHashMap<>();
 
     /**
      This safelist allows only text nodes: any HTML Element or any Node other than a TextNode will be removed.
@@ -237,6 +236,12 @@ public class Safelist {
             protocols.put(protocolsEntry.getKey(), attributeProtocolsCopy);
         }
         preserveRelativeLinks = copy.preserveRelativeLinks;
+
+        // create deep-ish copy. (The 'Pattern' is not deep-copied.)
+        wildcardAttributes = new LinkedHashMap<>(copy.wildcardAttributes.size());
+        for (Map.Entry<TagName, Map<String, Pattern>> entry : copy.wildcardAttributes.entrySet()) {
+            wildcardAttributes.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+        }
     }
 
     /**
@@ -274,6 +279,7 @@ public class Safelist {
                 attributes.remove(tagName);
                 enforcedAttributes.remove(tagName);
                 protocols.remove(tagName);
+                wildcardAttributes.remove(tagName);
             }
         }
         return this;
@@ -409,6 +415,93 @@ public class Safelist {
     }
 
     /**
+     * Add wildcard attributes
+     * <p>
+     * The wildcard should be recognized by java.util.regex.Pattern. Multiple calls
+     * will result in only the last one being used.
+     * </p>
+     * <p>
+     * Examples:
+     * <ul>
+     *    <li><code>data-.+</code> - HTML 5</li>
+     *    <li><code>aria-.+</code> - a widely used library</li>
+     * </ul>
+     * </p>
+     *
+     * @param tag  The tag the attributes are for.
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist addWildcardAttributes(String tag, String... wildcards) {
+        TagName tagName = TagName.valueOf(tag);
+        for (String wildcard : wildcards) {
+            if (!wildcardAttributes.containsKey(tagName)) {
+                wildcardAttributes.put(tagName, new LinkedHashMap<>());
+            }
+            wildcardAttributes.get(tagName).put(wildcard, Pattern.compile("^" + wildcard + "$",
+                    Pattern.CASE_INSENSITIVE + Pattern.UNICODE_CASE));
+        }
+
+        return this;
+    }
+
+    /**
+     * Remove wildcard attributes
+     *
+     * @param tag  The tag the attributes are for.
+     * @param wildcards wildcards pattern recognized by java.util.regex.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist removeWildcardAttributes(String tag, String... wildcards) {
+        TagName tagName = TagName.valueOf(tag);
+        for (String wildcard : wildcards) {
+            if (wildcardAttributes.containsKey(tagName)) {
+                if (wildcardAttributes.get(tagName).containsKey(wildcard)) {
+                    wildcardAttributes.get(tagName).remove(wildcard);
+                }
+
+                // remove any empty entries
+                if (wildcardAttributes.get(tagName).isEmpty()) {
+                    wildcardAttributes.remove(tagName);
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Add wildcard global attributes
+     * <p>
+     * The wildcard should be recognized by java.util.regex.Pattern. Multiple calls
+     * will result in only the last pattern being used.
+     * </p>
+     * <p>
+     * Examples:
+     * <ul>
+     *    <li><code>data-.+</code> - HTML 5</li>
+     *    <li><code>aria-.+</code> - a widely used library</li>
+     * </ul>
+     * </p>
+     *
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist addWildcardGlobalAttributes(String... wildcards) {
+        return addWildcardAttributes(All, wildcards);
+    }
+
+    /**
+     * Remove wildcard global attributes
+     *
+     * @param wildcards wildcard pattern recognized by java.util.regex.Pattern
+     * @return this Safelist, for chaining.
+     */
+    public Safelist removeWildcardGlobalAttributes(String wildcards) {
+        return removeWildcardAttributes(All, wildcards);
+    }
+
+    /**
      * Configure this Safelist to preserve relative links in an element's URL attribute, or convert them to absolute
      * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
      * e.g. {@code http://}.
@@ -541,6 +634,22 @@ public class Safelist {
             String attrKey = attr.getKey();
             if (expect.hasKeyIgnoreCase(attrKey)) {
                 return expect.getIgnoreCase(attrKey).equals(attr.getValue());
+            }
+        }
+        // might be a wildcard, e.g., "data-.+"?
+        if (wildcardAttributes.containsKey(tag)) {
+            for (Pattern pattern : wildcardAttributes.get(tag).values()) {
+                if (pattern.matcher(attr.getKey()).matches()) {
+                    return true;
+                }
+            }
+        }
+        // might be a global wildcard, e.g., "data-.+"?
+        if (wildcardAttributes.containsKey(AllTagName)) {
+            for (Pattern pattern : wildcardAttributes.get(AllTagName).values()) {
+                if (pattern.matcher(attr.getKey()).matches()) {
+                    return true;
+                }
             }
         }
         // no attributes defined for tag, try :all tag
