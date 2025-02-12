@@ -3,6 +3,8 @@ package org.jsoup.nodes;
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
@@ -59,23 +61,37 @@ public class EntitiesTest {
         assertEquals(un, Entities.unescape(escaped));
     }
 
-    @Test public void xhtml() {
-        assertEquals(38, xhtml.codepointForName("amp"));
-        assertEquals(62, xhtml.codepointForName("gt"));
-        assertEquals(60, xhtml.codepointForName("lt"));
-        assertEquals(34, xhtml.codepointForName("quot"));
-
-        assertEquals("amp", xhtml.nameForCodepoint(38));
-        assertEquals("gt", xhtml.nameForCodepoint(62));
-        assertEquals("lt", xhtml.nameForCodepoint(60));
-        assertEquals("quot", xhtml.nameForCodepoint(34));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "38, amp",
+            "62, gt",
+            "60, lt",
+            "34, quot"
+    })
+    public void xhtmlCodepointForName(int expectedCodepoint, String name) {
+        assertEquals(expectedCodepoint, xhtml.codepointForName(name));
     }
 
-    @Test public void getByName() {
-        assertEquals("≫⃒", Entities.getByName("nGt"));
-        assertEquals("fj", Entities.getByName("fjlig"));
-        assertEquals("≫", Entities.getByName("gg"));
-        assertEquals("©", Entities.getByName("copy"));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "amp, 38",
+            "gt, 62",
+            "lt, 60",
+            "quot, 34"
+    })
+    public void xhtmlNameForCodepoint(String expectedName, int codepoint) {
+        assertEquals(expectedName, xhtml.nameForCodepoint(codepoint));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "≫⃒, nGt",
+            "fj, fjlig",
+            "≫, gg",
+            "©, copy"
+    })
+    public void getByName(String expected, String name) {
+        assertEquals(expected, Entities.getByName(name));
     }
 
     @Test public void escapeSupplementaryCharacter() {
