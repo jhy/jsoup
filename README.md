@@ -50,3 +50,22 @@ The [colophon](https://jsoup.org/colophon) talks about the history of and tools 
 
 ## Status
 jsoup is in general, stable release.
+
+## Author
+jsoup was created and is maintained by [Jonathan Hedley](//jhedley.com), its primary author.
+
+jsoup is an open-source project, and many contributors have helped improve it over the years. You can see their contributions and join the development on [GitHub](https://github.com/jhy/jsoup/graphs/contributors).
+
+## Citing jsoup
+If you use jsoup in research or technical documentation, you can cite it as:
+
+> **Jonathan Hedley & jsoup contributors. jsoup: Java HTML Parser (2009–present).** Available at: https://jsoup.org
+
+```plaintext
+@misc{jsoup,
+  author = {Jonathan Hedley and jsoup contributors},
+  title = {jsoup: Java HTML Parser},
+  year = {2025},
+  url = {https://jsoup.org}
+}
+```
