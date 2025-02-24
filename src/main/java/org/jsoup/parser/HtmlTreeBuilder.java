@@ -21,14 +21,17 @@ import java.util.List;
 import static org.jsoup.internal.StringUtil.inSorted;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InTableFoster;
 import static org.jsoup.parser.HtmlTreeBuilderState.ForeignContent;
-import static org.jsoup.parser.Parser.NamespaceHtml;
+import static org.jsoup.parser.Parser.*;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches. must be sorted, used in inSorted. HtmlTreeBuilderTest validates they're sorted.
-    static final String[] TagsSearchInScope = new String[]{"applet", "caption", "html", "marquee", "object", "table", "td", "th"};
+    // todo - tag search in scope might need to be properly namespace aware - https://html.spec.whatwg.org/#has-an-element-in-scope
+    static final String[] TagsSearchInScope = new String[]{
+        "annotation-xml", "applet", "caption", "desc", "foreignObject", "html", "marquee", "mi", "mn", "mo", "ms", "mtext", "object", "table", "td", "template", "th", "title" // <- svg title
+    };
     static final String[] TagSearchList = new String[]{"ol", "ul"};
     static final String[] TagSearchButton = new String[]{"button"};
     static final String[] TagSearchTableScope = new String[]{"html", "table"};
@@ -669,11 +672,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final int bottom = stack.size() -1;
         final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
         // don't walk too far up the tree
-
         for (int pos = bottom; pos >= top; pos--) {
             Element el = stack.get(pos);
-            if (!el.tag().namespace().equals(NamespaceHtml)) continue;
-
             final String elName = el.normalName();
             if (inSorted(elName, targetNames))
                 return true;

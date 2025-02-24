@@ -1661,6 +1661,13 @@ public class HtmlParserTest {
             TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test void templateInButton() {
+        // https://github.com/jhy/jsoup/issues/2271
+        String html = "<button><template><button></button></template></button>";
+        Document doc = Jsoup.parse(html);
+        assertEquals(html, TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test void errorsBeforeHtml() {
         Parser parser = Parser.htmlParser();
         parser.setTrackErrors(10);
