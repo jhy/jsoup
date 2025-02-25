@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.jspecify.annotations.Nullable;
 
@@ -40,20 +41,24 @@ final class Tokeniser {
     private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
     final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
 
+    final Document.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
     final Token.StartTag startPending;
     final Token.EndTag endPending;
     Token.Tag tagPending; // tag we are building up: start or end pending
     final Token.Character charPending = new Token.Character();
     final Token.Doctype doctypePending = new Token.Doctype(); // doctype building up
     final Token.Comment commentPending = new Token.Comment(); // comment building up
+    final Token.XmlDecl xmlDeclPending; // xml decl building up
     @Nullable private String lastStartTag; // the last start tag emitted, to test appropriate end tag
     @Nullable private String lastStartCloseSeq; // "</" + lastStartTag, so we can quickly check for that in RCData
 
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
+        syntax = treeBuilder instanceof XmlTreeBuilder ? Document.OutputSettings.Syntax.xml : Document.OutputSettings.Syntax.html;
         tagPending = startPending  = new Token.StartTag(treeBuilder);
         endPending = new Token.EndTag(treeBuilder);
+        xmlDeclPending = new Token.XmlDecl(treeBuilder);
         this.reader = treeBuilder.reader;
         this.errors = treeBuilder.parser.getErrors();
     }
@@ -260,6 +265,13 @@ final class Tokeniser {
     Token.Tag createTagPending(boolean start) {
         tagPending = start ? startPending.reset() : endPending.reset();
         return tagPending;
+    }
+
+    Token.XmlDecl createXmlDeclPending(boolean isDeclaration) {
+        Token.XmlDecl decl = xmlDeclPending.reset();
+        decl.isDeclaration = isDeclaration;
+        tagPending = decl;
+        return decl;
     }
 
     void emitTagPending() {

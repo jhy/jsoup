@@ -2,6 +2,8 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
 
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
+
 /**
  * States and transition activations for the Tokeniser.
  */
@@ -105,8 +107,12 @@ enum TokeniserState {
                     t.advanceTransition(EndTagOpen);
                     break;
                 case '?':
-                    t.createBogusCommentPending();
-                    t.transition(BogusComment);
+                    if (t.syntax == xml) {
+                        t.advanceTransition(MarkupProcessingOpen);
+                    } else {
+                        t.createBogusCommentPending();
+                        t.transition(BogusComment);
+                    }
                     break;
                 default:
                     if (r.matchesAsciiAlpha()) {
@@ -590,6 +596,10 @@ enum TokeniserState {
                     t.tagPending.appendAttributeName(c, r.pos()-1, r.pos());
                     t.transition(AttributeName);
                     break;
+                case '?': // Handle trailing ? in <?xml...?>
+                    if (t.tagPending instanceof Token.XmlDecl)
+                        break;
+                    // otherwise fall through to default
                 default: // A-Z, anything else
                     t.tagPending.newAttribute();
                     r.unconsume();
@@ -634,6 +644,11 @@ enum TokeniserState {
                     t.error(this);
                     t.tagPending.appendAttributeName(c, pos, r.pos());
                     break;
+                case '?':
+                    if (t.syntax == xml && t.tagPending instanceof Token.XmlDecl) {
+                        t.transition(AfterAttributeName);
+                        break;
+                    } // otherwise default - take it
                 default: // buffer underrun
                     t.tagPending.appendAttributeName(c, pos, r.pos());
             }
@@ -917,7 +932,7 @@ enum TokeniserState {
             }
         }
     },
-    MarkupDeclarationOpen {
+    MarkupDeclarationOpen { // from <!
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matchConsume("--")) {
                 t.createCommentPending();
@@ -931,8 +946,26 @@ enum TokeniserState {
                 t.createTempBuffer();
                 t.transition(CdataSection);
             } else {
+                if (t.syntax == xml && r.matchesAsciiAlpha()) {
+                    t.createXmlDeclPending(true);
+                    t.transition(TagName); // treat <!ENTITY as XML Declaration, with tag-like handling
+                } else {
+                    t.error(this);
+                    t.createBogusCommentPending();
+                    t.transition(BogusComment);
+                }
+            }
+        }
+    },
+    MarkupProcessingOpen { // From <? in syntax XML
+        @Override void read(Tokeniser t, CharacterReader r) {
+            if (r.matchesAsciiAlpha()) {
+                t.createXmlDeclPending(false);
+                t.transition(TagName); // treat <?xml... as XML Declaration (processing instruction), with tag-like handling
+            } else {
                 t.error(this);
                 t.createBogusCommentPending();
+                t.commentPending.append('?'); // push the ? to the start of the comment
                 t.transition(BogusComment);
             }
         }
@@ -1623,7 +1656,7 @@ enum TokeniserState {
 
     static final char nullChar = '\u0000';
     // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
-    static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>'};
+    static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>', '?'};
     static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
 
     private static final char replacementChar = Tokeniser.replacementChar;
