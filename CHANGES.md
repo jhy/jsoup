@@ -40,7 +40,7 @@
   matching element from an `Elements` list.  [2263](https://github.com/jhy/jsoup/pull/2263/)
 * When parsing with the XML parser, XML Declarations and Processing Instructions are directly handled, vs bouncing
   through the HTML parser's bogus comment handler. Serialization for non-doctype declarations no longer end with a
-  spurious `!`.
+  spurious `!`. [2275](https://github.com/jhy/jsoup/pull/2275)
 
 ### Bug Fixes
 
