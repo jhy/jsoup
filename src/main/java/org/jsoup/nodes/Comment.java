@@ -55,8 +55,11 @@ public class Comment extends LeafNode {
     }
 
     /**
-     * Check if this comment looks like an XML Declaration.
+     * Check if this comment looks like an XML Declaration. This is the case when the HTML parser sees an XML
+     * declaration or processing instruction. Other than doctypes, those aren't part of HTML, and will be parsed as a
+     * bogus comment.
      * @return true if it looks like, maybe, it's an XML Declaration.
+     * @see #asXmlDeclaration()
      */
     public boolean isXmlDeclaration() {
         String data = getData();
@@ -70,6 +73,7 @@ public class Comment extends LeafNode {
     /**
      * Attempt to cast this comment to an XML Declaration node.
      * @return an XML declaration if it could be parsed as one, null otherwise.
+     * @see #isXmlDeclaration()
      */
     public @Nullable XmlDeclaration asXmlDeclaration() {
         String data = getData();
