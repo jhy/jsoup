@@ -317,6 +317,8 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                     // stop parsing
                     break;
+                default:
+                    Validate.wtf("Unexpected state: " + t.type); // XmlDecl only in XmlTreeBuilder
             }
             return true;
         }
@@ -1572,6 +1574,8 @@ enum HtmlTreeBuilderState {
                     if (tb.state() != InTemplate && tb.templateModeSize() < 12)
                         return tb.process(t);
                     else return true;
+                default:
+                    Validate.wtf("Unexpected state: " + t.type); // XmlDecl only in XmlTreeBuilder
             }
             return true;
         }
@@ -1791,6 +1795,8 @@ enum HtmlTreeBuilderState {
                 case EOF:
                     // won't come through here, but for completion:
                     break;
+                default:
+                    Validate.wtf("Unexpected state: " + t.type); // XmlDecl only in XmlTreeBuilder
             }
             return true;
         }
