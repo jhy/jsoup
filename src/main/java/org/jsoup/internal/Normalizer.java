@@ -21,4 +21,10 @@ public final class Normalizer {
     public static String normalize(final String input, boolean isStringLiteral) {
         return isStringLiteral ? lowerCase(input) : normalize(input);
     }
+
+    /** Minimal helper to get an otherwise OK HTML name like "foo<bar" to "foo_bar". */
+    public static String xmlSafeTagName(final String tagname) {
+        // todo - if required we could make a fuller version of this as in Attribute.getValidKey(syntax) in Element. for now, just minimal based on what HtmlTreeBuilder produces
+        return tagname.replace('<', '_');
+    }
 }

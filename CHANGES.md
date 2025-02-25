@@ -41,6 +41,9 @@
 * When parsing with the XML parser, XML Declarations and Processing Instructions are directly handled, vs bouncing
   through the HTML parser's bogus comment handler. Serialization for non-doctype declarations no longer end with a
   spurious `!`. [2275](https://github.com/jhy/jsoup/pull/2275)
+* When converting parsed HTML to XML or the W3C DOM, element names containing `<` are normalized to `_` to ensure valid
+  XML. For example, `<foo<bar>` becomes `<foo_bar>`, as XML does not allow `<` in element names, but HTML5
+  does. [2276](https://github.com/jhy/jsoup/pull/2276)
 
 ### Bug Fixes
 

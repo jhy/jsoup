@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -36,6 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
+import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
@@ -1792,12 +1795,12 @@ public class Element extends Node implements Iterable<Element> {
                 indent(accum, depth, out);
             }
         }
-        accum.append('<').append(tagName());
+        accum.append('<').append(safeTagName(out.syntax()));
         if (attributes != null) attributes.html(accum, out);
 
         // selfclosing includes unknown tags, isEmpty defines tags that are always empty
         if (childNodes.isEmpty() && tag.isSelfClosing()) {
-            if (out.syntax() == Document.OutputSettings.Syntax.html && tag.isEmpty())
+            if (out.syntax() == html && tag.isEmpty())
                 accum.append('>');
             else
                 accum.append(" />"); // <img> in html, <img /> in xml
@@ -1814,8 +1817,13 @@ public class Element extends Node implements Iterable<Element> {
                     (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
             )))
                 indent(accum, depth, out);
-            accum.append("</").append(tagName()).append('>');
+            accum.append("</").append(safeTagName(out.syntax())).append('>');
         }
+    }
+
+    /* If XML syntax, normalizes < to _ in tag name. */
+    private String safeTagName(Document.OutputSettings.Syntax syntax) {
+        return syntax == xml ? Normalizer.xmlSafeTagName(tagName()) : tagName();
     }
 
     /**

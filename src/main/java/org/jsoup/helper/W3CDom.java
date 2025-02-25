@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -377,12 +378,7 @@ public class W3CDom {
 
                 String prefix = updateNamespaces(sourceEl);
                 String namespace = namespaceAware ? namespacesStack.peek().get(prefix) : null;
-                String tagName = sourceEl.tagName();
-
-                /* Tag names in XML are quite permissive, but less permissive than HTML. Rather than reimplement the validation,
-                we just try to use it as-is. If it fails, insert as a text node instead. We don't try to normalize the
-                tagname to something safe, because that isn't going to be meaningful downstream. This seems(?) to be
-                how browsers handle the situation, also. https://github.com/jhy/jsoup/issues/1093 */
+                String tagName = Normalizer.xmlSafeTagName(sourceEl.tagName());
                 try {
                     // use an empty namespace if none is present but the tag name has a prefix
                     String imputedNamespace = namespace == null && tagName.contains(":") ? "" : namespace;
@@ -393,6 +389,7 @@ public class W3CDom {
                         doc.setUserData(ContextNodeProperty, el, null);
                     dest = el; // descend
                 } catch (DOMException e) {
+                    // If the Normalize didn't get it XML / W3C safe, inserts as plain text
                     append(doc.createTextNode("<" + tagName + ">"), sourceEl);
                 }
             } else if (source instanceof org.jsoup.nodes.TextNode) {
