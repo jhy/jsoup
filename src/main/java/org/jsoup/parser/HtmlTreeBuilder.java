@@ -59,7 +59,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private @Nullable Element headElement; // the current head element
     private @Nullable FormElement formElement; // the current form element
     private @Nullable Element contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
-    private ArrayList<Element> formattingElements; // active (open) formatting elements
+    ArrayList<Element> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
     private List<Token.Character> pendingTableCharacters; // chars in table to be shifted out
     private Token.EndTag emptyEnd; // reused empty end tag
@@ -539,6 +539,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
+    /**
+     Gets the Element immediately above the supplied element on the stack. Which due to adoption, may not necessarily be
+     its parent.
+
+     @param el
+     @return the Element immediately above the supplied element, or null if there is no such element.
+     */
     @Nullable Element aboveOnStack(Element el) {
         assert onStack(el);
         for (int pos = stack.size() -1; pos >= 0; pos--) {

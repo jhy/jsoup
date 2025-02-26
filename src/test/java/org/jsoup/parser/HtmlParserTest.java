@@ -673,8 +673,10 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesMisnestedAInDivs() {
-        String h = "<a href='#1'><div><div><a href='#2'>child</a></div</div></a>";
-        String w = "<a href=\"#1\"></a> <div> <a href=\"#1\"></a> <div> <a href=\"#1\"></a><a href=\"#2\">child</a> </div> </div>";
+        String h = "<a 1><div 2><div 3><a 4>child</a></div></div></a>";
+        String w = "<a 1></a> <div 2> <a 1=\"\"></a> <div 3> <a 1=\"\"></a><a 4>child</a> </div> </div>"; // chrome checked
+        // todo - come back to how we copy the attributes, to keep boolean setting (not ="")
+
         Document doc = Jsoup.parse(h);
         assertEquals(
             StringUtil.normaliseWhitespace(w),
@@ -1507,6 +1509,13 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html);
         assertNotNull(doc);
         assertEquals("<a> <b> </b></a><b><div><a> </a><a>test</a></div></b>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test public void adoption() throws IOException {
+        // https://github.com/jhy/jsoup/issues/2267
+        File input = ParseTest.getFile("/htmltests/adopt-1.html");
+        Document doc = Jsoup.parse(input);
+        assertEquals("TEXT-AAA TEXT-BBB TEXT-CCC TEXT-DDD", doc.text());
     }
 
     @Test public void tagsMustStartWithAscii() {

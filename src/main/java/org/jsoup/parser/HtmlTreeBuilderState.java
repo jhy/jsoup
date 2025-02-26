@@ -7,11 +7,13 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
 
 import java.util.ArrayList;
 
 import static org.jsoup.internal.StringUtil.inSorted;
+import static org.jsoup.parser.HtmlTreeBuilder.isSpecial;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.*;
 
 /**
@@ -360,7 +362,7 @@ enum HtmlTreeBuilderState {
                             tb.processEndTag("li");
                             break;
                         }
-                        if (HtmlTreeBuilder.isSpecial(el) && !inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
+                        if (isSpecial(el) && !inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
                             break;
                     }
                     if (tb.inButtonScope("p")) {
@@ -560,7 +562,7 @@ enum HtmlTreeBuilderState {
                             tb.processEndTag(el.normalName());
                             break;
                         }
-                        if (HtmlTreeBuilder.isSpecial(el) && !inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
+                        if (isSpecial(el) && !inSorted(el.normalName(), Constants.InBodyStartLiBreakers))
                             break;
                     }
                     if (tb.inButtonScope("p")) {
@@ -821,7 +823,7 @@ enum HtmlTreeBuilderState {
                     tb.popStackToClose(name);
                     break;
                 } else {
-                    if (HtmlTreeBuilder.isSpecial(node)) {
+                    if (isSpecial(node)) {
                         tb.error(this);
                         return false;
                     }
@@ -830,104 +832,157 @@ enum HtmlTreeBuilderState {
             return true;
         }
 
-        // Adoption Agency Algorithm.
         private boolean inBodyEndTagAdoption(Token t, HtmlTreeBuilder tb) {
+            // https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
+            // JH: Including the spec notes here to simplify tracking / correcting. It's a bit gnarly and there may still be some nuances I haven't caught. But test cases and comparisons to browsers check out.
+
+            // The adoption agency algorithm, which takes as its only argument a token token for which the algorithm is being run, consists of the following steps:
             final Token.EndTag endTag = t.asEndTag();
-            final String name = endTag.normalName();
+            final String subject = endTag.normalName; // 1. Let subject be token's tag name.
 
-            final ArrayList<Element> stack = tb.getStack();
-            Element el;
-            for (int i = 0; i < 8; i++) {
-                Element formatEl = tb.getActiveFormattingElement(name);
-                if (formatEl == null)
-                    return anyOtherEndTag(t, tb);
-                else if (!tb.onStack(formatEl)) {
-                    tb.error(this);
-                    tb.removeFromActiveFormattingElements(formatEl);
+            // 2. If the [current node] is an [HTML element] whose tag name is subject, and the [current node] is not in the [list of active formatting elements], then pop the [current node] off the [stack of open elements] and return.
+            if (tb.currentElement().normalName().equals(subject) && !tb.isInActiveFormattingElements(tb.currentElement())) {
+                tb.pop();
+                return true;
+            }
+            int outer = 0; // 3. Let outerLoopCounter be 0.
+            while (true) { // 4. While true:
+                if (outer >= 8) { // 1. If outerLoopCounter is greater than or equal to 8, then return.
                     return true;
-                } else if (!tb.inScope(formatEl.normalName())) {
-                    tb.error(this);
-                    return false;
-                } else if (tb.currentElement() != formatEl)
-                    tb.error(this);
+                }
+                outer++; // 2. Increment outerLoopCounter by 1.
 
-                Element furthestBlock = null;
-                Element commonAncestor = null;
-                boolean seenFormattingElement = false;
-                // the spec doesn't limit to < 64, but in degenerate cases (9000+ stack depth) this prevents run-aways
-                final int stackSize = stack.size();
-                int bookmark = -1;
-                for (int si = 1; si < stackSize && si < 64; si++) {
-                    // TODO: this no longer matches the current spec at https://html.spec.whatwg.org/#adoption-agency-algorithm and should be updated
-                    el = stack.get(si);
-                    if (el == formatEl) {
-                        commonAncestor = stack.get(si - 1);
-                        seenFormattingElement = true;
-                        // Let a bookmark note the position of the formatting element in the list of active formatting elements relative to the elements on either side of it in the list.
-                        bookmark = tb.positionOfElement(el);
-                    } else if (seenFormattingElement && HtmlTreeBuilder.isSpecial(el)) {
-                        furthestBlock = el;
+                // 3. Let formattingElement be the last element in the [list of active formatting elements] that:
+                //  - is between the end of the list and the last [marker] in the list, if any, or the start of the list otherwise, and
+                //  - has the tag name subject.
+                //  If there is no such element, then return and instead act as described in the "any other end tag" entry above.
+                Element formatEl = null;
+                for (int i = tb.formattingElements.size() - 1; i >= 0; i--) {
+                    Element next = tb.formattingElements.get(i);
+                    if (next == null) // marker
+                        break;
+                    if (next.normalName().equals(subject)) {
+                        formatEl = next;
                         break;
                     }
                 }
-                if (furthestBlock == null) {
-                    tb.popStackToClose(formatEl.normalName());
+                if (formatEl == null) {
+                    return anyOtherEndTag(t, tb);
+                }
+
+                // 4. If formattingElement is not in the [stack of open elements], then this is a [parse error]; remove the element from the list, and return.
+                if (!tb.onStack(formatEl)) {
+                    tb.error(this);
                     tb.removeFromActiveFormattingElements(formatEl);
                     return true;
                 }
 
-                Element node = furthestBlock;
+                //  5. If formattingElement is in the [stack of open elements], but the element is not [in scope], then this is a [parse error]; return.
+                if (!tb.inScope(formatEl.normalName())) {
+                    tb.error(this);
+                    return false;
+                } else if (tb.currentElement() != formatEl) { //  6. If formattingElement is not the [current node], this is a [parse error].
+                    tb.error(this);
+                }
+
+                //  7. Let furthestBlock be the topmost node in the [stack of open elements] that is lower in the stack than formattingElement, and is an element in the [special]category. There might not be one.
+                Element furthestBlock = null;
+                ArrayList<Element> stack = tb.getStack();
+                int fei = stack.lastIndexOf(formatEl);
+                if (fei != -1) { // look down the stack
+                    for (int i = fei + 1; i < stack.size(); i++) {
+                        Element el = stack.get(i);
+                        if (isSpecial(el)) {
+                            furthestBlock = el;
+                            break;
+                        }
+                    }
+                }
+
+                //  8. If there is no furthestBlock, then the UA must first pop all the nodes from the bottom of the [stack of open elements], from the [current node] up to and including formattingElement, then remove formattingElement from the [list of active formatting elements], and finally return.
+                if (furthestBlock == null) {
+                    while (tb.currentElement() != formatEl) {
+                        tb.pop();
+                    }
+                    tb.pop();
+                    tb.removeFromActiveFormattingElements(formatEl);
+                    return true;
+                }
+
+                Element commonAncestor = tb.aboveOnStack(formatEl); // 9. Let commonAncestor be the element immediately above formattingElement in the [stack of open elements].
+                if (commonAncestor == null) { tb.error(this); return true; } // Would be a WTF
+
+                // 10. Let a bookmark note the position of formattingElement in the [list of active formatting elements] relative to the elements on either side of it in the list.
+                // JH - I think this means its index? Or do we need a linked list?
+                int bookmark = tb.positionOfElement(formatEl);
+
+                Element node = furthestBlock; //  11. Let node and lastNode be furthestBlock.
                 Element lastNode = furthestBlock;
-                for (int j = 0; j < 3; j++) {
-                    if (tb.onStack(node))
+                int inner = 0; // 12. Let innerLoopCounter be 0.
+
+                while (true) { // 13. While true:
+                    inner++; // 1. Increment innerLoopCounter by 1.
+                    // 2. Let node be the element immediately above node in the [stack of open elements], or if node is no longer in the [stack of open elements] , the element that was immediately above node in the [stack of open elements] before node was removed.
+                    if (!tb.onStack(node)) {
+                        // if node was removed from stack, use the element that was above it
+                        node = node.parent(); // JH - is there a situation where it's not the parent?
+                    } else {
                         node = tb.aboveOnStack(node);
-                    if (!tb.isInActiveFormattingElements(node)) { // note no bookmark check
+                    }
+                    if (node == null) {
+                        tb.error(this); // shouldn't be able to hit
+                        break;
+                    }
+                    //  3. If node is formattingElement, then [break].
+                    if (node == formatEl) {
+                        break;
+                    }
+
+                    //  4. If innerLoopCounter is greater than 3 and node is in the [list of active formatting elements], then remove node from the [list of active formatting elements].
+                    if (inner > 3 && tb.isInActiveFormattingElements(node)) {
+                        tb.removeFromActiveFormattingElements(node);
+                        break;
+                    }
+                    // 5. If node is not in the [list of active formatting elements], then remove node from the [stack of open elements] and [continue].
+                    if (!tb.isInActiveFormattingElements(node)) {
                         tb.removeFromStack(node);
                         continue;
-                    } else if (node == formatEl)
-                        break;
+                    }
 
+                    //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
                     Element replacement = new Element(tb.tagFor(node.nodeName(), ParseSettings.preserveCase), tb.getBaseUri());
-                    // case will follow the original node (so honours ParseSettings)
                     tb.replaceActiveFormattingElement(node, replacement);
                     tb.replaceOnStack(node, replacement);
                     node = replacement;
 
+                    //  7. If lastNode is furthestBlock, then move the aforementioned bookmark to be immediately after the new node in the [list of active formatting elements].
                     if (lastNode == furthestBlock) {
-                        // move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
-                        // not getting how this bookmark both straddles the element above, but is inbetween here...
                         bookmark = tb.positionOfElement(node) + 1;
                     }
-                    if (lastNode.parent() != null)
-                        lastNode.remove();
-                    node.appendChild(lastNode);
+                    node.appendChild(lastNode); // 8. [Append] lastNode to node.
+                    lastNode = node; // 9. Set lastNode to node.
+                } // end inner loop # 13
 
-                    lastNode = node;
+                // 14. Insert whatever lastNode ended up being in the previous step at the [appropriate place for inserting a node], but using commonAncestor as the _override target_.
+                // todo - impl https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node fostering
+                // just use commonAncestor as target:
+                commonAncestor.appendChild(lastNode);
+                // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
+                Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
+                adoptor.attributes().addAll(formatEl.attributes()); // also attributes
+                // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
+                for (Node child : furthestBlock.childNodes()) {
+                    adoptor.appendChild(child);
                 }
 
-                if (commonAncestor != null) { // safety check, but would be an error if null
-                    if (inSorted(commonAncestor.normalName(), Constants.InBodyEndTableFosters)) {
-                        if (lastNode.parent() != null)
-                            lastNode.remove();
-                        tb.insertInFosterParent(lastNode);
-                    } else {
-                        if (lastNode.parent() != null)
-                            lastNode.remove();
-                        commonAncestor.appendChild(lastNode);
-                    }
-                }
-
-                Element adopter = new Element(formatEl.tag(), tb.getBaseUri());
-                adopter.attributes().addAll(formatEl.attributes());
-                adopter.appendChildren(furthestBlock.childNodes());
-                furthestBlock.appendChild(adopter);
+                furthestBlock.appendChild(adoptor); // 17. Append that new element to furthestBlock.
+                // 18. Remove formattingElement from the [list of active formatting elements], and insert the new element into the [list of active formatting elements] at the position of the aforementioned bookmark.
                 tb.removeFromActiveFormattingElements(formatEl);
-                // insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
-                tb.pushWithBookmark(adopter, bookmark);
+                tb.pushWithBookmark(adoptor, bookmark);
+                // 19. Remove formattingElement from the [stack of open elements], and insert the new element into the [stack of open elements] immediately below the position of furthestBlock in that stack.
                 tb.removeFromStack(formatEl);
-                tb.insertOnStackAfter(furthestBlock, adopter);
-            }
-            return true;
+                tb.insertOnStackAfter(furthestBlock, adoptor);
+            } // end of outer loop # 4
         }
     },
     Text {
