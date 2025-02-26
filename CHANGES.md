@@ -44,6 +44,7 @@
 * When converting parsed HTML to XML or the W3C DOM, element names containing `<` are normalized to `_` to ensure valid
   XML. For example, `<foo<bar>` becomes `<foo_bar>`, as XML does not allow `<` in element names, but HTML5
   does. [2276](https://github.com/jhy/jsoup/pull/2276)
+* Reimplemented the HTML5 Adoption Agency Algorithm to the current spec. This handles mis-nested formating / structural elements. [2278](https://github.com/jhy/jsoup/pull/2278)
 
 ### Bug Fixes
 
