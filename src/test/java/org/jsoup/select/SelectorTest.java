@@ -1381,4 +1381,73 @@ public class SelectorTest {
         Elements neg2 = doc.select("p:nth-child(-1n+2)");
         assertSelectedOwnText(neg2, "1", "2");
     }
+
+    // Tests that nested structural and combining evaluators get reset
+    private static class ResetTracker extends Evaluator {
+        boolean resetCalled = false;
+        @Override
+        public boolean matches(Element root, Element element) {
+            return true;
+        }
+
+        @Override
+        protected void reset() {
+            resetCalled = true;
+            super.reset();
+        }
+    }
+
+    @Test void notResetCascades() {
+        ResetTracker track = new ResetTracker();
+        StructuralEvaluator.Not structEval = new StructuralEvaluator.Not(track);
+
+        Document doc = Jsoup.parse("<div><p>Test</p></div>");
+        Element p = doc.expectFirst("p");
+        structEval.matches(doc, p);
+
+        assertFalse(structEval.threadMemo.get().isEmpty());
+        assertFalse(track.resetCalled);
+
+        structEval.reset();
+        assertTrue(structEval.threadMemo.get().isEmpty());
+        assertTrue(track.resetCalled);
+    }
+
+    @Test void testImmediateParentRunCascades() {
+        ResetTracker child = new ResetTracker();
+        ResetTracker parent = new ResetTracker();
+
+        StructuralEvaluator.ImmediateParentRun run = new StructuralEvaluator.ImmediateParentRun(child);
+        run.add(parent);
+
+        Document doc = Jsoup.parse("<div><p><span>Test</span></p></div>");
+        Element span = doc.expectFirst("span");
+        assertTrue(run.matches(doc, span));
+
+        run.reset();
+        assertTrue(child.resetCalled);
+        assertTrue(parent.resetCalled);
+    }
+
+    @Test
+    public void testAncestorChain() {
+        ResetTracker grandParent = new ResetTracker();
+        ResetTracker parent = new ResetTracker();
+        ResetTracker child = new ResetTracker();
+
+        StructuralEvaluator.Ancestor b_needs_a = new StructuralEvaluator.Ancestor(grandParent);
+        StructuralEvaluator.Ancestor c_needs_b = new StructuralEvaluator.Ancestor(parent);
+        CombiningEvaluator.And chain = new CombiningEvaluator.And(child, c_needs_b, b_needs_a);
+
+        Document doc = Jsoup.parse("<div class='A'><p class='B'><span class='C'>Test</span></p></div>");
+        Element span = doc.expectFirst("span");
+        assertTrue(chain.matches(doc, span), "Should match span in correct ancestor chain");
+
+        chain.reset();
+        assertTrue(grandParent.resetCalled);
+        assertTrue(parent.resetCalled);
+        assertTrue(child.resetCalled);
+        assertTrue(b_needs_a.threadMemo.get().isEmpty());
+        assertTrue(c_needs_b.threadMemo.get().isEmpty());
+    }
 }

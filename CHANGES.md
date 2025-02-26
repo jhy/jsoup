@@ -70,6 +70,8 @@
   positive step, and so would not match as expected. [1147](https://github.com/jhy/jsoup/issues/1147)
 * Calling `doc.charset(charset)` on an empty XML document would throw an
   `IndexOutOfBoundsException`. [2266](https://github.com/jhy/jsoup/issues/2266)
+* Fixed a memory leak when reusing a nested `StructuralEvaluator` (e.g., a selector ancestor chain like `A B C`) by
+  ensuring cache reset calls cascade to inner members. [2277](https://github.com/jhy/jsoup/issues/2277)
 
 ## 1.18.3 (2024-Dec-02)
 

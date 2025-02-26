@@ -33,6 +33,7 @@ abstract class StructuralEvaluator extends Evaluator {
 
     @Override protected void reset() {
         threadMemo.get().clear();
+        evaluator.reset();
         super.reset();
     }
 
@@ -219,6 +220,14 @@ abstract class StructuralEvaluator extends Evaluator {
 
         @Override protected int cost() {
             return cost;
+        }
+
+        @Override
+        protected void reset() {
+            for (Evaluator evaluator : evaluators) {
+                evaluator.reset();
+            }
+            super.reset();
         }
 
         @Override
