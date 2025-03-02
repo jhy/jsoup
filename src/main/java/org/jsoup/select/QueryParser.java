@@ -35,7 +35,8 @@ public class QueryParser {
     }
 
     /**
-     * Parse a CSS query into an Evaluator.
+     * Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to
+     * parse it once and reuse the Evaluator.
      * @param query CSS query
      * @return Evaluator
      * @see Selector selector query syntax

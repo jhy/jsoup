@@ -29,9 +29,9 @@ import java.util.stream.StreamSupport;
  A StreamParser provides a progressive parse of its input. As each Element is completed, it is emitted via a Stream or
  Iterator interface. Elements returned will be complete with all their children, and an (empty) next sibling, if
  applicable.
- <p>Elements (or their children) may be removed from the DOM during the parse, for e.g. to conserve memory, providing a
- mechanism to parse an input document that would otherwise be too large to fit into memory, yet still providing a DOM
- interface to the document and its elements.</p>
+ <p>To conserve memory, you can {@link Node#remove() remove()} Elements (or their children) from the DOM during the
+ parse. This provides a mechanism to parse an input document that would otherwise be too large to fit into memory, yet
+ still providing a DOM interface to the document and its elements.</p>
  <p>
  Additionally, the parser provides a {@link #selectFirst(String query)} / {@link #selectNext(String query)}, which will
  run the parser until a hit is found, at which point the parse is suspended. It can be resumed via another
@@ -45,6 +45,8 @@ import java.util.stream.StreamSupport;
  New parsers should be used in each thread.</p>
  <p>If created via {@link Connection.Response#streamParser()}, or another Reader that is I/O backed, the iterator and
  stream consumers will throw an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
+ <p>For examples, see the jsoup
+ <a href="https://jsoup.org/cookbook/input/streamparser-dom-sax">StreamParser cookbook.</a></p>
  @since 1.18.1
  */
 public class StreamParser implements Closeable {
@@ -204,6 +206,7 @@ public class StreamParser implements Closeable {
      @param query the {@link org.jsoup.select.Selector} query.
      @return the first matching {@link Element}, or {@code null} if there's no match
      @throws IOException if an I/O error occurs
+     @see #selectFirst(Evaluator)
      */
     public @Nullable Element selectFirst(String query) throws IOException {
         return selectFirst(QueryParser.parse(query));
@@ -228,9 +231,12 @@ public class StreamParser implements Closeable {
     /**
      Finds the first Element that matches the provided query. If the parsed Document does not already have a match, the
      input will be parsed until the first match is found, or the input is completely read.
+     <p>By providing a compiled evaluator vs a CSS selector, this method may be more efficient when executing the same
+     query against multiple documents.</p>
      @param eval the {@link org.jsoup.select.Selector} evaluator.
      @return the first matching {@link Element}, or {@code null} if there's no match
      @throws IOException if an I/O error occurs
+     @see QueryParser#parse(String)
      */
     public @Nullable Element selectFirst(Evaluator eval) throws IOException {
         final Document doc = document();
@@ -248,6 +254,7 @@ public class StreamParser implements Closeable {
      @param query the {@link org.jsoup.select.Selector} query.
      @return the next matching {@link Element}, or {@code null} if there's no match
      @throws IOException if an I/O error occurs
+     @see #selectNext(Evaluator)
      */
     public @Nullable Element selectNext(String query) throws IOException {
         return selectNext(QueryParser.parse(query));
@@ -272,9 +279,12 @@ public class StreamParser implements Closeable {
     /**
      Finds the next Element that matches the provided query. The input will be parsed until the next match is found, or
      the input is completely read.
+     <p>By providing a compiled evaluator vs a CSS selector, this method may be more efficient when executing the same
+     query against multiple documents.</p>
      @param eval the {@link org.jsoup.select.Selector} evaluator.
      @return the next matching {@link Element}, or {@code null} if there's no match
      @throws IOException if an I/O error occurs
+     @see QueryParser#parse(String)
      */
     public @Nullable Element selectNext(Evaluator eval) throws IOException {
         try {

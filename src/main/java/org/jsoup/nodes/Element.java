@@ -472,7 +472,7 @@ public class Element extends Node implements Iterable<Element> {
      * @param cssQuery a {@link Selector} CSS-like query
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
      * @see Selector selector query syntax
-     * @see QueryParser#parse(String)
+     * @see #select(Evaluator)
      * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     public Elements select(String cssQuery) {
@@ -485,6 +485,7 @@ public class Element extends Node implements Iterable<Element> {
      * repeatedly parsing the CSS query.
      * @param evaluator an element evaluator
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
+     * @see QueryParser#parse(String)
      */
     public Elements select(Evaluator evaluator) {
         return Selector.select(evaluator, this);

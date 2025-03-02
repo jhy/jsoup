@@ -128,7 +128,7 @@ public final class DataUtil {
      * @param charset (optional) character set of input; specify {@code null} to attempt to autodetect from metadata.
      * A BOM in the file will always override this setting.
      * @param baseUri base URI of document, to resolve relative links against
-     * @param parser alternate {@link Parser#xmlParser() parser} to use.
+     * @param parser underlying HTML or XML parser to use.
 
      * @return Document
      * @throws IOException on IO error
