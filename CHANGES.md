@@ -48,7 +48,7 @@
 
 ### Bug Fixes
 
-* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsquent XPath
+* If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsequent XPath
   queries could miss that element. Now, the attribute name is more completely
   normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
 * For backwards compatibility, reverted the internal attribute key for doctype names to 
@@ -72,6 +72,7 @@
   `IndexOutOfBoundsException`. [2266](https://github.com/jhy/jsoup/issues/2266)
 * Fixed a memory leak when reusing a nested `StructuralEvaluator` (e.g., a selector ancestor chain like `A B C`) by
   ensuring cache reset calls cascade to inner members. [2277](https://github.com/jhy/jsoup/issues/2277)
+* Concurrent calls to `doc.clone().append(html)` were not supported. When a document was cloned, its `Parser` was not cloned but was a shallow copy of the original parser. [2281](https://github.com/jhy/jsoup/issues/2281)
 
 ## 1.18.3 (2024-Dec-02)
 
