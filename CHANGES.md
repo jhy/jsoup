@@ -13,7 +13,7 @@
   developers need to enable core library desugaring. The minimum Java version remains Java 8.
   [2173](https://github.com/jhy/jsoup/pull/2173)
 * Removed previously deprecated class: `org.jsoup.UncheckedIOException` (replace with `java.io.UncheckedIOException`);
-  method `Element Element#forEach(Consumer)` to
+  moved previously deprecated method `Element Element#forEach(Consumer)` to
   `void Element#forEach(Consumer())`. [2246](https://github.com/jhy/jsoup/pull/2246)
 * Deprecated the methods `Document#updateMetaCharsetElement(bool)` and `#Document#updateMetaCharsetElement()`, as the
   setting had no effect. When `Document#charset(Charset)` is called, the document's meta charset or XML encoding
@@ -24,7 +24,7 @@
 * When cleaning HTML with a `Safelist` that preserves relative links, the `isValid()` method will now consider these
   links valid. Additionally, the enforced attribute `rel=nofollow` will only be added to external links when configured
   in the safelist. [2245](https://github.com/jhy/jsoup/pull/2245)
-* Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator )` methods, that return a `Stream` of
+* Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator)` methods, that return a `Stream` of
   matching elements. Elements are evaluated and returned as they are found, and the stream can be
   terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)
 * `Element` objects now implement `Iterable`, enabling them to be used in enhanced for loops.
