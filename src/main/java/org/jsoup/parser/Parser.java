@@ -14,7 +14,7 @@ import java.util.List;
  {@link org.jsoup.Jsoup}.
  <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
  environment, use {@link #newInstance()} to make copies. */
-public class Parser {
+public class Parser implements Cloneable {
     public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
     public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
     public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
@@ -40,6 +40,12 @@ public class Parser {
      @return a copied parser
      */
     public Parser newInstance() {
+        return new Parser(this);
+    }
+
+    @SuppressWarnings("MethodDoesntCallSuperMethod") // because we use the copy constructor instead
+    @Override
+    public Parser clone() {
         return new Parser(this);
     }
 

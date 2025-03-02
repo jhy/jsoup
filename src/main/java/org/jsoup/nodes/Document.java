@@ -294,6 +294,7 @@ public class Document extends Element {
     public Document clone() {
         Document clone = (Document) super.clone();
         clone.outputSettings = this.outputSettings.clone();
+        clone.parser = this.parser.clone();
         return clone;
     }
 

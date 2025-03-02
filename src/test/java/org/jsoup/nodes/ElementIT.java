@@ -134,4 +134,53 @@ public class ElementIT {
         assertTrue(html.startsWith("<div>"));
         assertEquals(num + 3, el.parents().size());
     }
+
+    @Test
+    public void testConcurrentMerge() throws Exception {
+        // https://github.com/jhy/jsoup/discussions/2280 / https://github.com/jhy/jsoup/issues/2281
+        // This was failing because the template.clone().append(html) was reusing the same underlying parser object.
+        // Document#clone now correctly clones its parser.
+
+        class TemplateMerger {
+            private final Document templateDoc;
+
+            public TemplateMerger(Document template) {
+                this.templateDoc = template;
+            }
+
+            public Document mergeWith(Document inputDoc) {
+                Document merged = templateDoc.clone();
+                Element content = merged.getElementById("content");
+                content.append(inputDoc.html());
+                return merged;
+            }
+        }
+
+        String templateHtml = "<html><body><div id='content'></div></body></html>";
+        Document templateDoc = Jsoup.parse(templateHtml);
+        TemplateMerger merger = new TemplateMerger(templateDoc);
+
+        Runnable mergeTask = () -> {
+            try {
+                for (int i = 0; i < 1000; i++) {
+                    String inputHtml = "<html><body><p>Some content</p></body></html>";
+                    Document inputDoc = Jsoup.parse(inputHtml);
+                    Document merged = merger.mergeWith(inputDoc);
+                    assertNotNull(merged);
+                }
+            } catch (Exception e) {
+                fail(e);
+            }
+        };
+
+        int threadCount = 10;
+        Thread[] threads = new Thread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            threads[i] = new Thread(mergeTask);
+            threads[i].start();
+        }
+        for (Thread t : threads) {
+            t.join();
+        }
+    }
 }

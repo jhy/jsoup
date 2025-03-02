@@ -109,9 +109,14 @@ public class DocumentTest {
     @Test public void testClone() {
         Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
         Document clone = doc.clone();
+        assertNotSame(doc, clone);
+        assertTrue(doc.hasSameValue(clone));
+        assertNotSame(doc.parser(), clone.parser());
+        assertNotSame(doc.outputSettings(), clone.outputSettings());
 
         assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
         clone.title("Hello there");
+        assertFalse(doc.hasSameValue(clone));
         clone.expectFirst("p").text("One more").attr("id", "1");
         assertEquals("<html><head><title>Hello there</title></head><body><p id=\"1\">One more</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
         assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
