@@ -138,10 +138,14 @@ public final class DataUtil {
     public static StreamParser streamParser(Path path, @Nullable Charset charset, String baseUri, Parser parser) throws IOException {
         StreamParser streamer = new StreamParser(parser);
         String charsetName = charset != null? charset.name() : null;
-        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
-        streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
-
+        try {
+            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
+            streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
+        } catch (IOException e) {
+            streamer.close();
+            throw e;
+        }
         return streamer;
     }
 
@@ -151,10 +155,13 @@ public final class DataUtil {
         InputStream stream = Channels.newInputStream(byteChannel);
         String name = Normalizer.lowerCase(path.getFileName().toString());
         if (name.endsWith(".gz") || name.endsWith(".z")) {
-            final boolean zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
-            byteChannel.position(0); // reset to start of file
-            if (zipped) {
-                stream = new GZIPInputStream(stream);
+            try {
+                final boolean zipped = (stream.read() == 0x1f && stream.read() == 0x8b); // gzip magic bytes
+                byteChannel.position(0); // reset to start of file
+                if (zipped) stream = new GZIPInputStream(stream);
+            } catch (IOException e) {
+                stream.close(); // error during our first read; close the stream and cascade close byteChannel
+                throw e;
             }
         }
         return ControllableInputStream.wrap(stream, 0);
