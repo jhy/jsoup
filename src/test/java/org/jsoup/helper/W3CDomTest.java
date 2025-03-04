@@ -5,7 +5,11 @@ import org.jsoup.TextUtil;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -26,6 +30,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.jsoup.TextUtil.normalizeSpaces;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
@@ -452,6 +457,42 @@ public class W3CDomTest {
         assertEquals("secondImage.jpg", img2);
         String alt2 = second.getAttribute("alt");
         assertEquals("Alt two", alt2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("parserProvider")
+    void doesNotExpandEntities(Parser parser) {
+        // Tests that the billion laughs attack doesn't expand entities; also for XXE
+        // Not impacted because jsoup doesn't parse the entities within the doctype, and so won't get to the w3c.
+        // Added to confirm, and catch if that ever changes
+        String billionLaughs = "<?xml version=\"1.0\"?>\n" +
+            "<!DOCTYPE lolz [\n" +
+            " <!ENTITY lol \"lol\">\n" +
+            " <!ENTITY lol1 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n" +
+            "]>\n" +
+            "<html><body><p>&lol1;</p></body></html>";
+
+        org.jsoup.nodes.Document jsoupDoc = Jsoup.parse(billionLaughs, parser);
+        W3CDom w3cDom = new W3CDom();
+
+        org.w3c.dom.Document w3cDoc = w3cDom.fromJsoup(jsoupDoc);
+        assertNotNull(w3cDoc);
+        // select the p and make sure it's unexpanded
+        NodeList p = w3cDoc.getElementsByTagName("p");
+        assertEquals(1, p.getLength());
+        assertEquals("&lol1;", p.item(0).getTextContent());
+
+        // Check the string
+        String string = W3CDom.asString(w3cDoc, W3CDom.OutputXml());
+        assertFalse(string.contains("lololol"));
+        assertTrue(string.contains("&amp;lol1;"));
+    }
+
+    private static Stream<Arguments> parserProvider() {
+        return Stream.of(
+            Arguments.of(Parser.htmlParser()),
+            Arguments.of(Parser.xmlParser())
+        );
     }
 
 }

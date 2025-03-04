@@ -115,7 +115,6 @@ public class W3CDom {
      * @see OutputKeys#ENCODING
      * @see OutputKeys#OMIT_XML_DECLARATION
      * @see OutputKeys#STANDALONE
-     * @see OutputKeys#STANDALONE
      * @see OutputKeys#DOCTYPE_PUBLIC
      * @see OutputKeys#CDATA_SECTION_ELEMENTS
      * @see OutputKeys#INDENT
