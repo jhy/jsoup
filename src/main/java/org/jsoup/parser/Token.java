@@ -258,7 +258,9 @@ abstract class Token {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName = tagName == null ? append : tagName.concat(append);
-            normalName = ParseSettings.normalName(tagName);
+            // perf: normalize just the appended content
+            String normalAppend = ParseSettings.normalName(append);
+            normalName = normalName == null ? normalAppend : normalName.concat(normalAppend);
         }
 
         final void appendTagName(char append) {
