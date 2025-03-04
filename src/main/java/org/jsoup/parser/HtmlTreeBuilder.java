@@ -28,10 +28,17 @@ import static org.jsoup.parser.Parser.*;
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches. must be sorted, used in inSorted. HtmlTreeBuilderTest validates they're sorted.
-    // todo - tag search in scope might need to be properly namespace aware - https://html.spec.whatwg.org/#has-an-element-in-scope
-    static final String[] TagsSearchInScope = new String[]{
-        "annotation-xml", "applet", "caption", "desc", "foreignObject", "html", "marquee", "mi", "mn", "mo", "ms", "mtext", "object", "table", "td", "template", "th", "title" // <- svg title
+    static final String[] TagsSearchInScope = new String[]{ // a particular element in scope
+        "applet", "caption", "html", "marquee", "object", "table", "td", "template", "th"
     };
+    // math and svg namespaces for particular element in scope
+    static final String[]TagSearchInScopeMath = new String[] {
+        "annotation-xml",  "mi", "mn", "mo", "ms", "mtext"
+    };
+    static final String[]TagSearchInScopeSvg = new String[] {
+        "desc", "foreignObject", "title"
+    };
+
     static final String[] TagSearchList = new String[]{"ol", "ul"};
     static final String[] TagSearchButton = new String[]{"button"};
     static final String[] TagSearchTableScope = new String[]{"html", "table"};
@@ -681,13 +688,22 @@ public class HtmlTreeBuilder extends TreeBuilder {
         // don't walk too far up the tree
         for (int pos = bottom; pos >= top; pos--) {
             Element el = stack.get(pos);
-            final String elName = el.normalName();
-            if (inSorted(elName, targetNames))
-                return true;
-            if (inSorted(elName, baseTypes))
-                return false;
-            if (extraTypes != null && inSorted(elName, extraTypes))
-                return false;
+            String elName = el.normalName();
+            // namespace checks - arguments provided are always in html ns, with this bolt-on for math and svg:
+            String ns = el.tag().namespace();
+            if (ns.equals(NamespaceHtml)) {
+                if (inSorted(elName, targetNames))
+                    return true;
+                if (inSorted(elName, baseTypes))
+                    return false;
+                if (extraTypes != null && inSorted(elName, extraTypes))
+                    return false;
+            } else if (baseTypes == TagsSearchInScope) {
+                if (ns.equals(NamespaceMathml) && inSorted(elName, TagSearchInScopeMath))
+                    return false;
+                if (ns.equals(NamespaceSvg) && inSorted(elName, TagSearchInScopeSvg))
+                    return false;
+            }
         }
         //Validate.fail("Should not be reachable"); // would end up false because hitting 'html' at root (basetypes)
         return false;

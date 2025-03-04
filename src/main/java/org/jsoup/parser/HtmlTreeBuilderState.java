@@ -1323,7 +1323,7 @@ enum HtmlTreeBuilderState {
                 Token.StartTag startTag = t.asStartTag();
                 String name = startTag.normalName();
 
-                if (inSorted(name, InCellNames)) { // th, th
+                if (inSorted(name, InCellNames)) { // td, th
                     tb.clearStackToTableRowContext();
                     tb.insertElementFor(startTag);
                     tb.transition(InCell);
@@ -1396,7 +1396,7 @@ enum HtmlTreeBuilderState {
                 Token.EndTag endTag = t.asEndTag();
                 String name = endTag.normalName();
 
-                if (inSorted(name, Constants.InCellNames)) {
+                if (inSorted(name, Constants.InCellNames)) { // td, th
                     if (!tb.inTableScope(name)) {
                         tb.error(this);
                         tb.transition(InRow); // might not be in scope if empty: <td /> and processing fake end tag
