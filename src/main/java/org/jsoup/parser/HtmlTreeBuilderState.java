@@ -916,57 +916,57 @@ enum HtmlTreeBuilderState {
                 // JH - I think this means its index? Or do we need a linked list?
                 int bookmark = tb.positionOfElement(formatEl);
 
-                Element node = furthestBlock; //  11. Let node and lastNode be furthestBlock.
-                Element lastNode = furthestBlock;
+                Element el = furthestBlock; //  11. Let node and lastNode be furthestBlock.
+                Element lastEl = furthestBlock;
                 int inner = 0; // 12. Let innerLoopCounter be 0.
 
                 while (true) { // 13. While true:
                     inner++; // 1. Increment innerLoopCounter by 1.
                     // 2. Let node be the element immediately above node in the [stack of open elements], or if node is no longer in the [stack of open elements] , the element that was immediately above node in the [stack of open elements] before node was removed.
-                    if (!tb.onStack(node)) {
+                    if (!tb.onStack(el)) {
                         // if node was removed from stack, use the element that was above it
-                        node = node.parent(); // JH - is there a situation where it's not the parent?
+                        el = el.parent(); // JH - is there a situation where it's not the parent?
                     } else {
-                        node = tb.aboveOnStack(node);
+                        el = tb.aboveOnStack(el);
                     }
-                    if (node == null) {
+                    if (el == null) {
                         tb.error(this); // shouldn't be able to hit
                         break;
                     }
                     //  3. If node is formattingElement, then [break].
-                    if (node == formatEl) {
+                    if (el == formatEl) {
                         break;
                     }
 
                     //  4. If innerLoopCounter is greater than 3 and node is in the [list of active formatting elements], then remove node from the [list of active formatting elements].
-                    if (inner > 3 && tb.isInActiveFormattingElements(node)) {
-                        tb.removeFromActiveFormattingElements(node);
+                    if (inner > 3 && tb.isInActiveFormattingElements(el)) {
+                        tb.removeFromActiveFormattingElements(el);
                         break;
                     }
                     // 5. If node is not in the [list of active formatting elements], then remove node from the [stack of open elements] and [continue].
-                    if (!tb.isInActiveFormattingElements(node)) {
-                        tb.removeFromStack(node);
+                    if (!tb.isInActiveFormattingElements(el)) {
+                        tb.removeFromStack(el);
                         continue;
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
-                    Element replacement = new Element(tb.tagFor(node.nodeName(), node.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
-                    tb.replaceActiveFormattingElement(node, replacement);
-                    tb.replaceOnStack(node, replacement);
-                    node = replacement;
+                    Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
+                    tb.replaceActiveFormattingElement(el, replacement);
+                    tb.replaceOnStack(el, replacement);
+                    el = replacement;
 
                     //  7. If lastNode is furthestBlock, then move the aforementioned bookmark to be immediately after the new node in the [list of active formatting elements].
-                    if (lastNode == furthestBlock) {
-                        bookmark = tb.positionOfElement(node) + 1;
+                    if (lastEl == furthestBlock) {
+                        bookmark = tb.positionOfElement(el) + 1;
                     }
-                    node.appendChild(lastNode); // 8. [Append] lastNode to node.
-                    lastNode = node; // 9. Set lastNode to node.
+                    el.appendChild(lastEl); // 8. [Append] lastNode to node.
+                    lastEl = el; // 9. Set lastNode to node.
                 } // end inner loop # 13
 
                 // 14. Insert whatever lastNode ended up being in the previous step at the [appropriate place for inserting a node], but using commonAncestor as the _override target_.
                 // todo - impl https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node fostering
                 // just use commonAncestor as target:
-                commonAncestor.appendChild(lastNode);
+                commonAncestor.appendChild(lastEl);
                 // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
                 Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
