@@ -1,78 +1,84 @@
 # jsoup Changelog
 
-## 1.19.1 (PENDING)
+## 1.19.1 (2025-03-04)
 
 ### Changes
 
-* Added support for **http/2** requests in `Jsoup.connect()`, when running on Java 11+. In this version, this is not
-  enabled by default: use `System.setProperty("jsoup.useHttpClient", "true");` to enable. If you are repackaging the
-  jsoup jar in your deployment (i.e. creating a shaded- or a fat-jar), make sure to specify that as a Multi-Release
-  JAR. If the `HttpClient` impl is not available in your JRE, requests will continue to be made via
-  `HttpURLConnection` (in `http/1.1` mode). [2257](https://github.com/jhy/jsoup/pull/2257)
+* Added support for **http/2** requests in `Jsoup.connect()`, when running on Java 11+, via the Java HttpClient
+  implementation. [#2257](https://github.com/jhy/jsoup/pull/2257).
+  * In this version of jsoup, the default is to make requests via the HttpUrlConnection implementation: use
+    **`System.setProperty("jsoup.useHttpClient", "true");`** to enable making requests via the HttpClient instead ,
+    which will enable http/2 support, if available. This will become the default in a later version of jsoup, so now is
+    a good time to validate it.
+  * If you are repackaging the jsoup jar in your deployment (i.e. creating a shaded- or a fat-jar), make sure to specify
+    that as a Multi-Release
+    JAR.
+  * If the `HttpClient` impl is not available in your JRE, requests will continue to be made via
+    `HttpURLConnection` (in `http/1.1` mode).
 * Updated the minimum Android API Level validation from 10 to **21**. As with previous jsoup versions, Android
   developers need to enable core library desugaring. The minimum Java version remains Java 8.
-  [2173](https://github.com/jhy/jsoup/pull/2173)
+  [#2173](https://github.com/jhy/jsoup/pull/2173)
 * Removed previously deprecated class: `org.jsoup.UncheckedIOException` (replace with `java.io.UncheckedIOException`);
   moved previously deprecated method `Element Element#forEach(Consumer)` to
-  `void Element#forEach(Consumer())`. [2246](https://github.com/jhy/jsoup/pull/2246)
+  `void Element#forEach(Consumer())`. [#2246](https://github.com/jhy/jsoup/pull/2246)
 * Deprecated the methods `Document#updateMetaCharsetElement(bool)` and `#Document#updateMetaCharsetElement()`, as the
   setting had no effect. When `Document#charset(Charset)` is called, the document's meta charset or XML encoding
-  instruction is always set. [2247](https://github.com/jhy/jsoup/pull/2247)
+  instruction is always set. [#2247](https://github.com/jhy/jsoup/pull/2247)
 
 ### Improvements
 
 * When cleaning HTML with a `Safelist` that preserves relative links, the `isValid()` method will now consider these
   links valid. Additionally, the enforced attribute `rel=nofollow` will only be added to external links when configured
-  in the safelist. [2245](https://github.com/jhy/jsoup/pull/2245)
+  in the safelist. [#2245](https://github.com/jhy/jsoup/pull/2245)
 * Added `Element#selectStream(String query)` and `Element#selectStream(Evaluator)` methods, that return a `Stream` of
   matching elements. Elements are evaluated and returned as they are found, and the stream can be
-  terminated early. [2092](https://github.com/jhy/jsoup/pull/2092)
+  terminated early. [#2092](https://github.com/jhy/jsoup/pull/2092)
 * `Element` objects now implement `Iterable`, enabling them to be used in enhanced for loops.
 * Added support for fragment parsing from a `Reader` via
-  `Parser#parseFragmentInput(Reader, Element, String)`. [1177](https://github.com/jhy/jsoup/issues/1177)
-* Reintroduced CLI executable examples, in `jsoup-examples.jar`. [1702](https://github.com/jhy/jsoup/issues/1702)
+  `Parser#parseFragmentInput(Reader, Element, String)`. [#1177](https://github.com/jhy/jsoup/issues/1177)
+* Reintroduced CLI executable examples, in `jsoup-examples.jar`. [#1702](https://github.com/jhy/jsoup/issues/1702)
 * Optimized performance of selectors like `#id .class` (and other similar descendant queries) by around 4.6x, by better
   balancing the Ancestor evaluator's cost function in the query
-  planner. [2254](https://github.com/jhy/jsoup/issues/2254)
+  planner. [#2254](https://github.com/jhy/jsoup/issues/2254)
 * Removed the legacy parsing rules for `<isindex>` tags, which would autovivify a `form` element with labels. This is no
   longer in the spec.
 * Added `Elements.selectFirst(String cssQuery)` and `Elements.expectFirst(String cssQuery)`, to select the first
-  matching element from an `Elements` list.  [2263](https://github.com/jhy/jsoup/pull/2263/)
+  matching element from an `Elements` list.  [#2263](https://github.com/jhy/jsoup/pull/2263/)
 * When parsing with the XML parser, XML Declarations and Processing Instructions are directly handled, vs bouncing
   through the HTML parser's bogus comment handler. Serialization for non-doctype declarations no longer end with a
-  spurious `!`. [2275](https://github.com/jhy/jsoup/pull/2275)
+  spurious `!`. [#2275](https://github.com/jhy/jsoup/pull/2275)
 * When converting parsed HTML to XML or the W3C DOM, element names containing `<` are normalized to `_` to ensure valid
   XML. For example, `<foo<bar>` becomes `<foo_bar>`, as XML does not allow `<` in element names, but HTML5
-  does. [2276](https://github.com/jhy/jsoup/pull/2276)
-* Reimplemented the HTML5 Adoption Agency Algorithm to the current spec. This handles mis-nested formating / structural elements. [2278](https://github.com/jhy/jsoup/pull/2278)
+  does. [#2276](https://github.com/jhy/jsoup/pull/2276)
+* Reimplemented the HTML5 Adoption Agency Algorithm to the current spec. This handles mis-nested formating / structural elements. [#2278](https://github.com/jhy/jsoup/pull/2278)
 
 ### Bug Fixes
 
 * If an element has an `;` in an attribute name, it could not be converted to a W3C DOM element, and so subsequent XPath
   queries could miss that element. Now, the attribute name is more completely
-  normalized. [2244](https://github.com/jhy/jsoup/issues/2244)
+  normalized. [#2244](https://github.com/jhy/jsoup/issues/2244)
 * For backwards compatibility, reverted the internal attribute key for doctype names to 
-  "name". [2241](https://github.com/jhy/jsoup/issues/2241)
+  "name". [#2241](https://github.com/jhy/jsoup/issues/2241)
 * In `Connection`, skip cookies that have no name, rather than throwing a validation
-  exception. [2242](https://github.com/jhy/jsoup/issues/2242)
+  exception. [#2242](https://github.com/jhy/jsoup/issues/2242)
 * When running on JDK 1.8, the error `java.lang.NoSuchMethodError: java.nio.ByteBuffer.flip()Ljava/nio/ByteBuffer;`
   could be thrown when calling `Response#body()` after parsing from a URL and the buffer size was
-  exceeded. [2250](https://github.com/jhy/jsoup/pull/2250)
+  exceeded. [#2250](https://github.com/jhy/jsoup/pull/2250)
 * For backwards compatibility, allow `null` InputStream inputs to `Jsoup.parse(InputStream stream, ...)`, by returning
-  an empty `Document`. [2252](https://github.com/jhy/jsoup/issues/2252)
+  an empty `Document`. [#2252](https://github.com/jhy/jsoup/issues/2252)
 * A `template` tag containing an `li` within an open `li` would be parsed incorrectly, as it was not recognized as a
   "special" tag (which have additional processing rules). Also, added the SVG and MathML namespace tags to the list of
-  special tags. [2258](https://github.com/jhy/jsoup/issues/2258)
+  special tags. [#2258](https://github.com/jhy/jsoup/issues/2258)
 * A `template` tag containing a `button` within an open `button` would be parsed incorrectly, as the "in button scope"
   check was not aware of the `template` element. Corrected other instances including MathML and SVG elements,
-  also. [2271](https://github.com/jhy/jsoup/issues/2271)
+  also. [#2271](https://github.com/jhy/jsoup/issues/2271)
 * An `:nth-child` selector with a negative digit-less step, such as `:nth-child(-n+2)`, would be parsed incorrectly as a
-  positive step, and so would not match as expected. [1147](https://github.com/jhy/jsoup/issues/1147)
+  positive step, and so would not match as expected. [#1147](https://github.com/jhy/jsoup/issues/1147)
 * Calling `doc.charset(charset)` on an empty XML document would throw an
-  `IndexOutOfBoundsException`. [2266](https://github.com/jhy/jsoup/issues/2266)
+  `IndexOutOfBoundsException`. [#2266](https://github.com/jhy/jsoup/issues/2266)
 * Fixed a memory leak when reusing a nested `StructuralEvaluator` (e.g., a selector ancestor chain like `A B C`) by
-  ensuring cache reset calls cascade to inner members. [2277](https://github.com/jhy/jsoup/issues/2277)
-* Concurrent calls to `doc.clone().append(html)` were not supported. When a document was cloned, its `Parser` was not cloned but was a shallow copy of the original parser. [2281](https://github.com/jhy/jsoup/issues/2281)
+  ensuring cache reset calls cascade to inner members. [#2277](https://github.com/jhy/jsoup/issues/2277)
+* Concurrent calls to `doc.clone().append(html)` were not supported. When a document was cloned, its `Parser` was not cloned but was a shallow copy of the original parser. [#2281](https://github.com/jhy/jsoup/issues/2281)
 
 ## 1.18.3 (2024-Dec-02)
 
