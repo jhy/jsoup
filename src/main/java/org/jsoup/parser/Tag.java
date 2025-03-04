@@ -28,9 +28,9 @@ public class Tag implements Cloneable {
     private boolean formList = false; // a control that appears in forms: input, textarea, output etc
     private boolean formSubmit = false; // a control that can be submitted in a form: input etc
 
-    private Tag(String tagName, String namespace) {
+    private Tag(String tagName, String normalName, String namespace) {
         this.tagName = tagName;
-        normalName = Normalizer.lowerCase(tagName);
+        this.normalName = normalName;
         this.namespace = namespace;
     }
 
@@ -67,15 +67,20 @@ public class Tag implements Cloneable {
      * @return The tag, either defined or new generic.
      */
     public static Tag valueOf(String tagName, String namespace, ParseSettings settings) {
+        return valueOf(tagName, ParseSettings.normalName(tagName), namespace, settings);
+    }
+
+    /** Tag.valueOf with the normalName via the token.normalName, to save redundant lower-casing passes. */
+    static Tag valueOf(String tagName, String normalName, String namespace, ParseSettings settings) {
+        Validate.notNull(tagName);
+        tagName = tagName.trim();
         Validate.notEmpty(tagName);
         Validate.notNull(namespace);
         Tag tag = Tags.get(tagName);
         if (tag != null && tag.namespace.equals(namespace))
             return tag;
 
-        tagName = settings.normalizeTag(tagName); // the name we'll use
-        Validate.notEmpty(tagName);
-        String normalName = Normalizer.lowerCase(tagName); // the lower-case name to get tag settings off
+        tagName = settings.preserveTagCase() ? tagName : normalName;
         tag = Tags.get(normalName);
         if (tag != null && tag.namespace.equals(namespace)) {
             if (settings.preserveTagCase() && !tagName.equals(normalName)) {
@@ -86,11 +91,12 @@ public class Tag implements Cloneable {
         }
 
         // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
-        tag = new Tag(tagName, namespace);
+        tag = new Tag(tagName, normalName, namespace);
         tag.isBlock = false;
 
         return tag;
     }
+
 
     /**
      * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
@@ -304,7 +310,7 @@ public class Tag implements Cloneable {
         for (String tagName : tagNames) {
             Tag tag = Tags.get(tagName);
             if (tag == null) {
-                tag = new Tag(tagName, Parser.NamespaceHtml);
+                tag = new Tag(tagName, tagName, Parser.NamespaceHtml);
                 Tags.put(tag.tagName, tag);
             }
             tagModifier.accept(tag);

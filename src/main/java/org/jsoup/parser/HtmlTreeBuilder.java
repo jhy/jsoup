@@ -111,7 +111,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         if (context != null) {
             final String contextName = context.normalName();
-            contextElement = new Element(tagFor(contextName, settings), baseUri);
+            contextElement = new Element(tagFor(contextName, contextName, defaultNamespace(), settings), baseUri);
             if (context.ownerDocument() != null) // quirks setup:
                 doc.quirksMode(context.ownerDocument().quirksMode());
 
@@ -318,7 +318,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             }
         }
 
-        Tag tag = tagFor(startTag.tagName, namespace,
+        Tag tag = tagFor(startTag.tagName, startTag.normalName, namespace,
             forcePreserveCase ? ParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
@@ -948,7 +948,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
-            Element newEl = new Element(tagFor(entry.normalName(), settings), null, entry.attributes().clone());
+            Element newEl = new Element(tagFor(entry.nodeName(), entry.normalName(), defaultNamespace(), settings), null, entry.attributes().clone());
             doInsertElement(newEl, null);
 
             // 10. replace entry with new entry

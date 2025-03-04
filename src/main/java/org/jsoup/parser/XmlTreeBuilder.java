@@ -93,7 +93,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertElementFor(Token.StartTag startTag) {
-        Tag tag = tagFor(startTag.name(), settings);
+        Tag tag = tagFor(startTag.name(), startTag.normalName(), defaultNamespace(), settings);
         if (startTag.attributes != null)
             startTag.attributes.deduplicate(settings);
 
