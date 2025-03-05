@@ -385,4 +385,13 @@ public class XmlTreeBuilderTest {
             "<!ELEMENT footnote (#PCDATA|a)*>", doc.outerHtml());
     }
 
+    @Test void declarationWithGt() {
+        // https://github.com/jhy/jsoup/issues/1947
+        String xml = "<x><?xmlDeclaration att1=\"value1\" att2=\"&lt;val2>\"?></x>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        assertEquals(xml, doc.html());
+        XmlDeclaration decl = (XmlDeclaration) doc.expectFirst("x").childNode(0);
+        assertEquals("<val2>", decl.attr("att2"));
+    }
+
 }
