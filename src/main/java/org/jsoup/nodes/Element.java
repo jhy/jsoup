@@ -937,6 +937,25 @@ public class Element extends Node implements Iterable<Element> {
         return (Element) super.wrap(html);
     }
 
+    private String idAsCssSelector() {
+        String result = "";
+
+        if (!id().isEmpty()) {
+            // prefer to return the ID - but check that it's actually unique first!
+            String idSel = "#" + escapeCssIdentifier(id());
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Elements els = doc.select(idSel);
+                if (els.size() == 1 && els.get(0) == this) // otherwise, continue to the nth-child impl
+                    result = idSel;
+            } else {
+                result = idSel; // no ownerdoc, return the ID selector
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Get a CSS selector that will uniquely select this element.
      * <p>
@@ -948,22 +967,18 @@ public class Element extends Node implements Iterable<Element> {
      * @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        if (id().length() > 0) {
-            // prefer to return the ID - but check that it's actually unique first!
-            String idSel = "#" + escapeCssIdentifier(id());
-            Document doc = ownerDocument();
-            if (doc != null) {
-                Elements els = doc.select(idSel);
-                if (els.size() == 1 && els.get(0) == this) // otherwise, continue to the nth-child impl
-                    return idSel;
-            } else {
-                return idSel; // no ownerdoc, return the ID selector
-            }
-        }
+        String idAsCssSelector = idAsCssSelector();
+        if (!idAsCssSelector.isEmpty())
+            return idAsCssSelector;
 
         StringBuilder selector = StringUtil.borrowBuilder();
         Element el = this;
         while (el != null && !(el instanceof Document)) {
+            idAsCssSelector = el.idAsCssSelector();
+            if (!idAsCssSelector.isEmpty()) {
+                selector.insert(0, idAsCssSelector);
+                break;
+            }
             selector.insert(0, el.cssSelectorComponent());
             el = el.parent();
         }

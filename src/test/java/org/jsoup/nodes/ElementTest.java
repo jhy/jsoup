@@ -2592,6 +2592,17 @@ public class ElementTest {
         assertEquals("div", el.cssSelector());
     }
 
+    @Test void cssSelectorParentWithId() {
+        // https://github.com/jhy/jsoup/issues/2282
+        Document doc = Jsoup.parse("<div><div id=\"id1\"><p>A</p></div><div><p>B</p></div><div class=\"c1 c2\"><p>C</p></div></div>");
+        Element divA = doc.select("div div p").get(0);
+        Element divB = doc.select("div div p").get(1);
+        Element divC = doc.select("div div p").get(2);
+        assertEquals("#id1 > p", divA.cssSelector());
+        assertEquals("html > body > div > div:nth-child(2) > p", divB.cssSelector());
+        assertEquals("html > body > div > div.c1.c2 > p", divC.cssSelector());
+    }
+
     @Test void cssSelectorDoesntStackOverflow() {
         // https://github.com/jhy/jsoup/issues/2001
         Element element = new Element("element");
