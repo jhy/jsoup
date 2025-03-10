@@ -1838,7 +1838,7 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /* If XML syntax, normalizes < to _ in tag name. */
-    private String safeTagName(Document.OutputSettings.Syntax syntax) {
+    @Nullable private String safeTagName(Document.OutputSettings.Syntax syntax) {
         return syntax == xml ? Normalizer.xmlSafeTagName(tagName()) : tagName();
     }
 

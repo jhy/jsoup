@@ -5,7 +5,14 @@
 ### Changes
 
 ### Improvements
-* `Element.cssSelector()` will prefer to return shorter selectors by using ancestor IDs when available and unique. E.g. `#id > div > p` instead of  `html > body > div > div > p` [#2283](https://github.com/jhy/jsoup/pull/2283).
+
+* `Element.cssSelector()` will prefer to return shorter selectors by using ancestor IDs when available and unique. E.g.
+  `#id > div > p` instead of  `html > body > div > div > p` [#2283](https://github.com/jhy/jsoup/pull/2283).
+
+### Bug Fixes
+
+* When serializing a Document to XML, element names with characters that are invalid in XML are now
+  normalized. [#1496].(https://github.com/jhy/jsoup/issues/1496)
 
 ## 1.19.1 (2025-03-04)
 

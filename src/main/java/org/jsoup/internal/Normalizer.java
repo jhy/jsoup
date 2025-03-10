@@ -1,5 +1,9 @@
 package org.jsoup.internal;
 
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Document;
+import org.jspecify.annotations.Nullable;
+
 import java.util.Locale;
 
 /**
@@ -23,8 +27,7 @@ public final class Normalizer {
     }
 
     /** Minimal helper to get an otherwise OK HTML name like "foo<bar" to "foo_bar". */
-    public static String xmlSafeTagName(final String tagname) {
-        // todo - if required we could make a fuller version of this as in Attribute.getValidKey(syntax) in Element. for now, just minimal based on what HtmlTreeBuilder produces
-        return tagname.replace('<', '_');
+    @Nullable public static String xmlSafeTagName(final String tagname) {
+        return Attribute.getValidKey(tagname, Document.OutputSettings.Syntax.xml); // Reuses the Attribute key normal, which is same for xml tag names
     }
 }

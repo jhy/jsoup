@@ -3035,4 +3035,16 @@ public class ElementTest {
         Iterator<Element> iterator = div.iterator();
         assertIterates(iterator, expect);
     }
+
+    @Test void htmlToXmlNormalizes() {
+        // https://github.com/jhy/jsoup/issues/1496
+        String in = "<p\u226F\u0322>One</p\u226F\u0322>";
+        Document doc = Jsoup.parse(in);
+        doc.outputSettings().prettyPrint(false);
+        String html = doc.body().html();
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        String xml = doc.body().html();
+        assertEquals("<p≯̢>One</p≯̢>", html);
+        assertEquals("<p_>One</p_>", xml);
+    }
 }
