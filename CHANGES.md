@@ -15,6 +15,9 @@
   normalized. [#1496].(https://github.com/jhy/jsoup/issues/1496)
 * When serializing to XML, characters that are invalid in XML 1.0 should be removed (not
   encoded). [#1743](https://github.com/jhy/jsoup/issues/1743).
+* When converting a Document to the W3C DOM in `W3CDom`, an element with an attribute in an undeclared namespace now
+  gets a declaration of `xmlns:prefix="undefined"`. This allows subsequent serializations to XML via `W3CDom.asString()`
+  to succeed. [#2087](https://github.com/jhy/jsoup/issues/2087).
 
 ## 1.19.1 (2025-03-04)
 

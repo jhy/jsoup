@@ -330,7 +330,8 @@ public class W3CDom {
     }
 
     /**
-     * Serialize a W3C document to a String. The output format will be XML or HTML depending on the content of the doc.
+     * Serialize a W3C document that was created by {@link #fromJsoup(org.jsoup.nodes.Element)} to a String.
+     * The output format will be XML or HTML depending on the content of the doc.
      *
      * @param doc Document
      * @return Document as string
@@ -423,20 +424,41 @@ public class W3CDom {
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
             for (Attribute attribute : source.attributes()) {
-                // the W3C DOM has a different allowed set of characters than HTML5 (that Attribute.getValidKey return, partic does not allow ';'). So if we except when using HTML, go to more restricted XML
                 try {
                     String key = Attribute.getValidKey(attribute.getKey(), syntax);
-                    if (key != null) // null if couldn't be coerced to validity
+                    if (key != null) {
                         el.setAttribute(key, attribute.getValue());
+                        addUndeclaredAttrNs(key, el);
+                    }
                 } catch (DOMException e) {
                     if (syntax != Syntax.xml) {
                         String key = Attribute.getValidKey(attribute.getKey(), Syntax.xml);
-                        if (key != null)
-                            el.setAttribute(key, attribute.getValue()); // otherwise, will skip attribute
+                        if (key != null) {
+                            el.setAttribute(key, attribute.getValue());
+                            addUndeclaredAttrNs(key, el);
+                        }
                     }
                 }
             }
         }
+
+        /**
+         Add a namespace declaration for an attribute with a prefix if it is not already present. Ensures that attributes
+         with prefixes have the corresponding namespace declared, E.g. attribute "v-bind:foo" gets another attribute
+         "xmlns:v-bind='undefined'. So that the asString() transformation pass is valid.
+         */
+        private void addUndeclaredAttrNs(String attrKey, Element wEl) {
+            if (!namespaceAware) return;
+            int pos = attrKey.indexOf(':');
+            if (pos > 0) {
+                String prefix = attrKey.substring(0, pos);
+                if (!namespacesStack.peek().containsKey(prefix)) {
+                    wEl.setAttribute("xmlns:" + prefix, undefinedNs);
+                    namespacesStack.peek().put(prefix, undefinedNs);
+                }
+            }
+        }
+        private static final String undefinedNs = "undefined";
 
         /**
          * Finds any namespaces defined in this element. Returns any tag prefix.

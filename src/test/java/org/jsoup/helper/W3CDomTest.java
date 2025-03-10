@@ -488,6 +488,37 @@ public class W3CDomTest {
         assertTrue(string.contains("&amp;lol1;"));
     }
 
+    @Test void undeclaredAttrNamespaceAsString() {
+        // https://github.com/jhy/jsoup/issues/2087
+        W3CDom w3CDom = new W3CDom();
+        String html = "<html><body><div v-bind:class='test'></div></body></html>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+
+        String xml = w3CDom.asString(w3CDoc);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><div xmlns:v-bind=\"undefined\" v-bind:class=\"test\"/></body></html>", xml);
+    }
+
+    @Test void declaredNamespaceIsUsed() {
+        W3CDom w3CDom = new W3CDom();
+        String html = "<html xmlns:v-bind=\"http://example.com\"><body><div v-bind:class='test'></div></body></html>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+
+        String xml = w3CDom.asString(w3CDoc);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:v-bind=\"http://example.com\"><head/><body><div v-bind:class=\"test\"/></body></html>", xml);
+    }
+
+    @Test void nestedElementsWithUndeclaredNamespace() {
+        W3CDom w3CDom = new W3CDom();
+        String html = "<html><body><div v-bind:class='test'><span v-bind:style='color:red'></span></div></body></html>";
+        org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
+        org.w3c.dom.Document w3CDoc = w3CDom.fromJsoup(jdoc);
+
+        String xml = w3CDom.asString(w3CDoc);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><div xmlns:v-bind=\"undefined\" v-bind:class=\"test\"><span v-bind:style=\"color:red\"/></div></body></html>", xml);
+    }
+
     private static Stream<Arguments> parserProvider() {
         return Stream.of(
             Arguments.of(Parser.htmlParser()),
