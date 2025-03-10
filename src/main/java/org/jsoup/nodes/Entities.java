@@ -237,6 +237,10 @@ public class Entities {
 
     private static void appendEscaped(int codePoint, Appendable accum, int options, EscapeMode escapeMode,
         Syntax syntax, CoreCharset coreCharset, CharsetEncoder fallback) throws IOException {
+        // specific character range for xml 1.0; drop (not encode) if so
+        if (EscapeMode.xhtml == escapeMode && !isValidXmlChar(codePoint)) {
+            return;
+        }
 
         // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
         final char c = (char) codePoint;
@@ -363,6 +367,13 @@ public class Entities {
             default:
                 return fallback.canEncode(c);
         }
+    }
+
+    private static boolean isValidXmlChar(int codePoint) {
+        // https://www.w3.org/TR/2006/REC-xml-20060816/Overview.html#charsets
+        // Char	   ::=   	#x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]	any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
+        return (codePoint == 0x9 || codePoint == 0xA || codePoint == 0xD || (codePoint >= 0x20 && codePoint <= 0xD7FF)
+            || (codePoint >= 0xE000 && codePoint <= 0xFFFD) || (codePoint >= 0x10000 && codePoint <= 0x10FFFF));
     }
 
     enum CoreCharset {

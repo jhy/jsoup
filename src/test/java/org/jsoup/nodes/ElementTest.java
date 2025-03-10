@@ -3047,4 +3047,18 @@ public class ElementTest {
         assertEquals("<p≯̢>One</p≯̢>", html);
         assertEquals("<p_>One</p_>", xml);
     }
+
+    @Test
+    public void invalidCharactersDiscardedInXml() {
+        // https://github.com/jhy/jsoup/issues/1743
+        String invalid = "AAA&#xc;BBB\fCCC\uFFFE\uFFFFDDD";
+        Document doc = Jsoup.parseBodyFragment(invalid);
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml).prettyPrint(false);
+        String cleaned = doc.body().html();
+        assertFalse(cleaned.contains("\f"));
+        assertFalse(cleaned.contains("&#xc;"));
+        assertFalse(cleaned.contains("\uFFFE"));
+        assertFalse(cleaned.contains("\uFFFF"));
+        assertTrue(cleaned.matches("AAA *BBB *CCC *DDD"));
+    }
 }

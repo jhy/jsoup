@@ -13,6 +13,8 @@
 
 * When serializing a Document to XML, element names with characters that are invalid in XML are now
   normalized. [#1496].(https://github.com/jhy/jsoup/issues/1496)
+* When serializing to XML, characters that are invalid in XML 1.0 should be removed (not
+  encoded). [#1743](https://github.com/jhy/jsoup/issues/1743).
 
 ## 1.19.1 (2025-03-04)
 

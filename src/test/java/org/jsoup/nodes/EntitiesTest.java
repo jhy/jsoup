@@ -169,14 +169,13 @@ public class EntitiesTest {
 
     @Test public void controlCharactersAreEscaped() {
         // https://github.com/jhy/jsoup/issues/1556
-        // we escape ascii control characters in both HTML and XML for compatibility. Required in XML and probably
-        // easier to read in HTML
+        // escape in HTML for legibility; remove from xml
         String input = "<a foo=\"&#x1b;esc&#x7;bell\">Text &#x1b; &#x7;</a>";
         Document doc = Jsoup.parse(input);
         assertEquals(input, doc.body().html());
 
         Document xml = Jsoup.parse(input, "", Parser.xmlParser());
-        assertEquals(input, xml.html());
+        assertEquals("<a foo=\"escbell\">Text  </a>", xml.html());
     }
     
     @Test public void escapeByClonedOutputSettings() {
