@@ -937,47 +937,47 @@ public class Element extends Node implements Iterable<Element> {
         return (Element) super.wrap(html);
     }
 
-    private String idAsCssSelector() {
-        String result = "";
+    /**
+     Gets an #id selector for this element, if it has a unique ID. Otherwise, returns an empty string.
 
-        if (!id().isEmpty()) {
-            // prefer to return the ID - but check that it's actually unique first!
-            String idSel = "#" + escapeCssIdentifier(id());
-            Document doc = ownerDocument();
-            if (doc != null) {
-                Elements els = doc.select(idSel);
-                if (els.size() == 1 && els.get(0) == this) // otherwise, continue to the nth-child impl
-                    result = idSel;
+     @param ownerDoc the document that owns this element, if there is one
+     */
+    private String uniqueIdSelector(@Nullable Document ownerDoc) {
+        String id = id();
+        if (!id.isEmpty()) { // check if the ID is unique and matches this
+            String idSel = "#" + escapeCssIdentifier(id);
+            if (ownerDoc != null) {
+                Elements els = ownerDoc.select(idSel);
+                if (els.size() == 1 && els.get(0) == this) return idSel;
             } else {
-                result = idSel; // no ownerdoc, return the ID selector
+                return idSel;
             }
         }
-
-        return result;
+        return EmptyString;
     }
 
     /**
-     * Get a CSS selector that will uniquely select this element.
-     * <p>
-     * If the element has an ID, returns #id;
-     * otherwise returns the parent (if any) CSS selector, followed by {@literal '>'},
-     * followed by a unique selector for the element (tag.class.class:nth-child(n)).
-     * </p>
-     *
-     * @return the CSS Path that can be used to retrieve the element in a selector.
+     Get a CSS selector that will uniquely select this element.
+     <p>
+     If the element has an ID, returns #id; otherwise returns the parent (if any) CSS selector, followed by
+     {@literal '>'}, followed by a unique selector for the element (tag.class.class:nth-child(n)).
+     </p>
+
+     @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        String idAsCssSelector = idAsCssSelector();
-        if (!idAsCssSelector.isEmpty())
-            return idAsCssSelector;
+        Document ownerDoc = ownerDocument();
+        String idSel = uniqueIdSelector(ownerDoc);
+        if (!idSel.isEmpty()) return idSel;
 
+        // No unique ID, work up the parent stack and find either a unique ID to hang from, or just a GP > Parent > Child chain
         StringBuilder selector = StringUtil.borrowBuilder();
         Element el = this;
         while (el != null && !(el instanceof Document)) {
-            idAsCssSelector = el.idAsCssSelector();
-            if (!idAsCssSelector.isEmpty()) {
-                selector.insert(0, idAsCssSelector);
-                break;
+            idSel = el.uniqueIdSelector(ownerDoc);
+            if (!idSel.isEmpty()) {
+                selector.insert(0, idSel);
+                break; // found a unique ID to use as ancestor; stop
             }
             selector.insert(0, el.cssSelectorComponent());
             el = el.parent();

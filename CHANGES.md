@@ -1,5 +1,12 @@
 # jsoup Changelog
 
+## 1.19.2 (PENDING)
+
+### Changes
+
+### Improvements
+* `Element.cssSelector()` will prefer to return shorter selectors by using ancestor IDs when available and unique. E.g. `#id > div > p` instead of  `html > body > div > div > p` [#2283](https://github.com/jhy/jsoup/pull/2283).
+
 ## 1.19.1 (2025-03-04)
 
 ### Changes
