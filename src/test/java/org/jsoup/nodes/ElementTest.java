@@ -2592,6 +2592,28 @@ public class ElementTest {
         assertEquals("div", el.cssSelector());
     }
 
+    @Test void cssSelectorParentWithId() {
+        // https://github.com/jhy/jsoup/issues/2282
+        Document doc = Jsoup.parse("<div><div id=id1><p>A</p></div><div><p>B</p></div><div class='c1 c2'><p>C</p></div></div>");
+        Elements els = doc.select("p");
+        Element pA = els.get(0);
+        Element pB = els.get(1);
+        Element pC = els.get(2);
+        assertEquals("#id1 > p", pA.cssSelector());
+        assertEquals("html > body > div > div:nth-child(2) > p", pB.cssSelector());
+        assertEquals("html > body > div > div.c1.c2 > p", pC.cssSelector());
+    }
+
+    @Test void cssSelectorWithNonUniqueId() {
+        Document doc = Jsoup.parse("<main id=out><div><div id=in>One</div><div id=in>Two</div></div></main>");
+        Element two = doc.expectFirst("div:containsOwn(Two)");
+        String selector = two.cssSelector();
+        assertEquals("#out > div > div:nth-child(2)", selector);
+        Elements found = doc.select(selector);
+        assertEquals(1, found.size());
+        assertEquals(two, found.first());
+    }
+
     @Test void cssSelectorDoesntStackOverflow() {
         // https://github.com/jhy/jsoup/issues/2001
         Element element = new Element("element");
