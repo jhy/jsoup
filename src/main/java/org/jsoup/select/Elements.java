@@ -52,16 +52,14 @@ public class Elements extends ArrayList<Element> {
      * @return a deep copy
      */
     @Override
-	public Elements clone() {
+    public Elements clone() {
         Elements clone = new Elements(size());
+        for (Element e : this)
+            clone.add(e.clone());
+        return clone;
+    }
 
-        for(Element e : this)
-    		clone.add(e.clone());
-    	
-    	return clone;
-	}
-
-	// attribute methods
+    // attribute methods
     /**
      Get an attribute value from the first matched element that has the attribute.
      @param attributeKey The attribute key.
