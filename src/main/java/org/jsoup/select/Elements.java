@@ -59,6 +59,20 @@ public class Elements extends ArrayList<Element> {
         return clone;
     }
 
+    /**
+     Convenience method to get the Elements as a plain ArrayList. This allows modification to the list of elements
+     without modifying the source Document. I.e. whereas calling {@code elements.remove(0)} will remove the element from
+     both the Elements and the DOM, {@code elements.asList().remove(0)} will remove the element from the list only.
+     <p>Each Element is still the same DOM connected Element.</p>
+
+     @return a new ArrayList containing the elements in this list
+     @since 1.19.2
+     @see #Elements(List)
+     */
+    public ArrayList<Element> asList() {
+        return new ArrayList<>(this);
+    }
+
     // attribute methods
     /**
      Get an attribute value from the first matched element that has the attribute.
@@ -729,7 +743,7 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     Remove the specified Element from this list, and from th DOM
+     Remove the specified Element from this list, and from the DOM.
      * @param o element to be removed from this list, if present
      * @return if this list contained the Element
      * @since 1.17.1
@@ -742,6 +756,26 @@ public class Elements extends ArrayList<Element> {
             remove(index);
             return true;
         }
+    }
+
+    /**
+     * Remove the Element at the specified index in this list, but not from the DOM.
+     * @param index the index of the element to be removed
+     * @return the old element at this index
+     * @since 1.19.2
+     */
+    public Element deselect(int index) {
+        return super.remove(index);
+    }
+
+    /**
+     * Remove the specified Element from this list, but not from the DOM.
+     * @param o element to be removed from this list, if present
+     * @return if this list contained the Element
+     * @since 1.19.2
+     */
+    public boolean deselect(Object o) {
+        return super.remove(o);
     }
 
     /**

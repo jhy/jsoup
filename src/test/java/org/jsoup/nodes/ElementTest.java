@@ -3061,4 +3061,40 @@ public class ElementTest {
         assertFalse(cleaned.contains("\uFFFF"));
         assertTrue(cleaned.matches("AAA *BBB *CCC *DDD"));
     }
+
+    @Test
+    public void asList() {
+        // supports https://github.com/jhy/jsoup/issues/2100
+        Document doc = Jsoup.parse("<p id=1>One</p><p>Two</p><p>Three</p>");
+        Elements els = doc.select("p");
+        ArrayList<Element> list = els.asList();
+        assertEquals(els.size(), list.size());
+
+        // does not modify backing DOM
+        list.remove(0);
+        assertEquals(3, els.size());
+        assertEquals(2, list.size());
+
+        Element el = doc.expectFirst("#1");
+        assertSame(doc, el.ownerDocument());
+    }
+
+    @Test
+    public void deselect() {
+        // supports https://github.com/jhy/jsoup/issues/2100
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</p></div>");
+        Elements els = doc.select("p");
+        Element parent = doc.expectFirst("div");
+
+        Element removedByIndex = els.deselect(1);
+        assertEquals("Two", removedByIndex.text());
+        assertEquals(2, els.size());
+        assertEquals(3, parent.childrenSize());
+
+        Element toRemove = doc.expectFirst("p:contains(Three)");
+        boolean removedByObject = els.deselect(toRemove);
+        assertTrue(removedByObject);
+        assertEquals(1, els.size());
+        assertEquals(3, parent.childrenSize());
+    }
 }
