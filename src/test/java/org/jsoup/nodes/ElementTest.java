@@ -3097,4 +3097,15 @@ public class ElementTest {
         assertEquals(1, els.size());
         assertEquals(3, parent.childrenSize());
     }
+
+    @Test
+    public void deselectAll() {
+        Document doc = Jsoup.parse("<div><p>One</p><p>Two</p><p>Three</p></div>");
+        Elements els = doc.select("p");
+        Element parent = doc.expectFirst("div");
+
+        els.deselectAll();
+        assertEquals(0, els.size());
+        assertEquals(3, parent.childrenSize());
+    }
 }

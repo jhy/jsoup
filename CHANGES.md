@@ -8,7 +8,8 @@
 
 * `Element.cssSelector()` will prefer to return shorter selectors by using ancestor IDs when available and unique. E.g.
   `#id > div > p` instead of  `html > body > div > div > p` [#2283](https://github.com/jhy/jsoup/pull/2283).
-* Added `Elements.deselect(int index)` and `Elements.deselect(Object o)` methods to remove elements from the `Elements`
+* Added `Elements.deselect(int index)`, `Elements.deselect(Object o)`, and `Elements.deselectAll()` methods to remove
+  elements from the `Elements`
   list without affecting the DOM. And added `Elements.asList()` method to get a modifiable list of elements without
   affecting the DOM. (Each Element is still connected to the DOM.) [#2100](https://github.com/jhy/jsoup/issues/2100).
 

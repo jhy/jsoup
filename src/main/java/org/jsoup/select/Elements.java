@@ -732,9 +732,10 @@ public class Elements extends ArrayList<Element> {
 
     /**
      Remove the Element at the specified index in this ist, and from the DOM.
-     * @param index the index of the element to be removed
-     * @return the old element at this index
-     * @since 1.17.1
+     @param index the index of the element to be removed
+     @return the old element at this index
+     @see #deselect(int)
+     @since 1.17.1
      */
     @Override public Element remove(int index) {
         Element old = super.remove(index);
@@ -744,9 +745,10 @@ public class Elements extends ArrayList<Element> {
 
     /**
      Remove the specified Element from this list, and from the DOM.
-     * @param o element to be removed from this list, if present
-     * @return if this list contained the Element
-     * @since 1.17.1
+     @param o element to be removed from this list, if present
+     @return if this list contained the Element
+     @see #deselect(Object)
+     @since 1.17.1
      */
     @Override public boolean remove(Object o) {
         int index = super.indexOf(o);
@@ -759,20 +761,22 @@ public class Elements extends ArrayList<Element> {
     }
 
     /**
-     * Remove the Element at the specified index in this list, but not from the DOM.
-     * @param index the index of the element to be removed
-     * @return the old element at this index
-     * @since 1.19.2
+     Remove the Element at the specified index in this list, but not from the DOM.
+     @param index the index of the element to be removed
+     @return the old element at this index
+     @see #remove(int) 
+     @since 1.19.2
      */
     public Element deselect(int index) {
         return super.remove(index);
     }
 
     /**
-     * Remove the specified Element from this list, but not from the DOM.
-     * @param o element to be removed from this list, if present
-     * @return if this list contained the Element
-     * @since 1.19.2
+     Remove the specified Element from this list, but not from the DOM.
+     @param o element to be removed from this list, if present
+     @return if this list contained the Element
+     @see #remove(Object) 
+     @since 1.19.2
      */
     public boolean deselect(Object o) {
         return super.remove(o);
@@ -780,11 +784,20 @@ public class Elements extends ArrayList<Element> {
 
     /**
      Removes all the elements from this list, and each of them from the DOM.
-     * @since 1.17.1
-     * @see #remove()
+     @since 1.17.1
+     @see #deselectAll()
      */
     @Override public void clear() {
         remove();
+        super.clear();
+    }
+
+    /**
+     Like {@link #clear()}, removes all the elements from this list, but not from the DOM.
+     @see #clear()
+     @since 1.19.2
+     */
+    public void deselectAll() {
         super.clear();
     }
 
