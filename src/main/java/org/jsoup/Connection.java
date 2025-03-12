@@ -352,8 +352,8 @@ public interface Connection {
     Connection parser(Parser parser);
 
     /**
-     * Set the character-set used to encode for x-www-form-urlencoded post data. Defaults to {@code UTF-8}.
-     * @param charset character set to encode post data
+     * Set the character-set used to encode the request body. Defaults to {@code UTF-8}.
+     * @param charset character set to encode the request body
      * @return this Connection, for chaining
      */
     Connection postDataCharset(String charset);
