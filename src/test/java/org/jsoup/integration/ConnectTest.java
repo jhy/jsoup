@@ -48,7 +48,6 @@ import java.util.stream.Stream;
 import static org.jsoup.helper.AuthenticationHandlerTest.MaxAttempts;
 import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
 import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
-import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -168,7 +167,6 @@ public class ConnectTest {
     public void doesPostMultipartWithoutInputstream() throws IOException {
         Document doc = Jsoup.connect(echoUrl)
                 .header(CONTENT_TYPE, MULTIPART_FORM_DATA)
-                .userAgent(browserUa)
                 .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
                 .post();
 
@@ -214,7 +212,6 @@ public class ConnectTest {
         Document doc = Jsoup.connect(echoUrl)
             .requestBody(body)
             .header("Content-Type", "application/json")
-            .userAgent(browserUa)
             .data("foo", "true")
             .post();
         assertEquals("POST", ihVal("Method", doc));
@@ -229,7 +226,6 @@ public class ConnectTest {
         Document doc = Jsoup.connect(echoUrl)
             .requestBody(body)
             .header("Content-Type", "application/json")
-            .userAgent(browserUa)
             .post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("application/json", ihVal("Content-Type", doc));
@@ -242,7 +238,6 @@ public class ConnectTest {
         Document doc = Jsoup.connect(echoUrl)
             .requestBody(body)
             .header("Content-Type", "text/plain")
-            .userAgent(browserUa)
             .post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("text/plain", ihVal("Content-Type", doc));
@@ -256,7 +251,6 @@ public class ConnectTest {
             .requestBody(body)
             .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
             .header("Content-Type", "text/plain") // todo - if user sets content-type, we should append postcharset
-            .userAgent(browserUa)
             .post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("uname=Jsoup&uname=Jonathan&%E7%99%BE=%E5%BA%A6%E4%B8%80%E4%B8%8B", ihVal("Query String", doc));
@@ -270,7 +264,6 @@ public class ConnectTest {
         Document doc = Jsoup.connect(echoUrl)
             .requestBodyStream(stream)
             .header("Content-Type", "application/json")
-            .userAgent(browserUa)
             .data("foo", "true")
             .post();
         assertEquals("POST", ihVal("Method", doc));

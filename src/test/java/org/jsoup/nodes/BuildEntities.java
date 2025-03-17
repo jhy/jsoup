@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.integration.UrlConnectTest;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -24,7 +23,6 @@ class BuildEntities {
         String url = "https://www.w3.org/TR/2012/WD-html5-20121025/entities.json";
         Connection.Response res = Jsoup.connect(url)
             .ignoreContentType(true)
-            .userAgent(UrlConnectTest.browserUa)
             .execute();
 
         Gson gson = new Gson();
