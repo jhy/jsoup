@@ -14,7 +14,7 @@ import org.jsoup.nodes.Node;
  </p>
  <p><b>Example:</b></p>
  <pre><code>
- doc.body().traverse((node, depth) -> {
+ doc.body().traverse((node, depth) -&gt; {
      switch (node) {
          case Element el     -&gt; print(el.tag() + ": " + el.ownText());
          case DataNode data  -&gt; print("Data: " + data.getWholeData());

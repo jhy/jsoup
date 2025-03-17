@@ -12,6 +12,8 @@ import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.log.StdErrLog;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.jsoup.integration.servlets.AuthFilter;
 import org.jsoup.integration.servlets.BaseServlet;
@@ -50,6 +52,11 @@ public class TestServer {
     private static final ProxySettings ProxySettings = new ProxySettings();
 
     private static Server newServer() {
+        // logs to stdout, so not highlighted as errors in Maven test runs
+        StdErrLog logger = new StdErrLog();
+        logger.setStdErrStream(System.out);
+        Log.setLog(logger);
+
         return new Server(new InetSocketAddress(Localhost, 0));
     }
 
