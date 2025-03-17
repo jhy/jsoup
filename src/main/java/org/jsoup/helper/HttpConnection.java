@@ -282,6 +282,12 @@ public class HttpConnection implements Connection {
     }
 
     @Override
+    public Connection requestBodyStream(InputStream stream) {
+        req.requestBodyStream(stream);
+        return this;
+    }
+
+    @Override
     public Connection header(String name, String value) {
         req.header(name, value);
         return this;
@@ -603,6 +609,7 @@ public class HttpConnection implements Connection {
         private boolean followRedirects;
         private final Collection<Connection.KeyVal> data;
         private @Nullable String body = null;
+        private @Nullable InputStream bodyStream = null;
         @Nullable String mimeBoundary;
         private boolean ignoreHttpErrors = false;
         private boolean ignoreContentType = false;
@@ -749,12 +756,20 @@ public class HttpConnection implements Connection {
         @Override
         public Connection.Request requestBody(@Nullable String body) {
             this.body = body;
+            bodyStream = null; // one or the other
             return this;
         }
 
         @Override @Nullable
         public String requestBody() {
             return body;
+        }
+
+        @Override
+        public Connection.Request requestBodyStream(InputStream stream) {
+            bodyStream = stream;
+            body = null;
+            return this;
         }
 
         @Override
@@ -845,7 +860,7 @@ public class HttpConnection implements Connection {
             if (!protocol.equals("http") && !protocol.equals("https"))
                 throw new MalformedURLException("Only http & https protocols supported");
             final boolean supportsBody = req.method().hasBody();
-            final boolean hasBody = req.requestBody() != null;
+            final boolean hasBody = req.body != null || req.bodyStream != null;
             if (!supportsBody)
                 Validate.isFalse(hasBody, "Cannot set a request body for HTTP method " + req.method());
 
@@ -1225,7 +1240,7 @@ public class HttpConnection implements Connection {
                         String contentType = keyVal.contentType();
                         w.write(contentType != null ? contentType : DefaultUploadType);
                         w.write("\r\n\r\n");
-                        w.flush(); // flush
+                        w.flush();
                         DataUtil.crossStreams(input, outputStream);
                         outputStream.flush();
                     } else {
@@ -1238,12 +1253,13 @@ public class HttpConnection implements Connection {
                 w.write(boundary);
                 w.write("--");
             } else {
-                String body = req.requestBody();
-                if (body != null) {
+                if (req.body != null) {
                     // data will be in query string, we're sending a plaintext body
-                    w.write(body);
-                }
-                else {
+                    w.write(req.body);
+                } else if (req.bodyStream != null) {
+                    DataUtil.crossStreams(req.bodyStream, outputStream);
+                    outputStream.flush();
+                } else {
                     // regular form data (application/x-www-form-urlencoded)
                     boolean first = true;
                     for (Connection.KeyVal keyVal : data) {

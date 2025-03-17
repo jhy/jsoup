@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.19.2 (PENDING)
+## 1.20.1 (PENDING)
 
 ### Changes
 
@@ -12,6 +12,7 @@
   elements from the `Elements`
   list without affecting the DOM. And added `Elements.asList()` method to get a modifiable list of elements without
   affecting the DOM. (Each Element is still connected to the DOM.) [#2100](https://github.com/jhy/jsoup/issues/2100).
+* Added support for sending a request body from an InputStream with `Connection.requestBodyStream(InputStream stream)`.
 
 ### Bug Fixes
 

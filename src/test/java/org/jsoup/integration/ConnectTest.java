@@ -27,13 +27,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -257,6 +260,22 @@ public class ConnectTest {
             .post();
         assertEquals("POST", ihVal("Method", doc));
         assertEquals("uname=Jsoup&uname=Jonathan&%E7%99%BE=%E5%BA%A6%E4%B8%80%E4%B8%8B", ihVal("Query String", doc));
+        assertEquals(body, ihVal("Post Data", doc));
+    }
+
+    @Test void sendsRequestBodyStream() throws IOException {
+        final String body = "{key:value}";
+        InputStream stream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
+
+        Document doc = Jsoup.connect(echoUrl)
+            .requestBodyStream(stream)
+            .header("Content-Type", "application/json")
+            .userAgent(browserUa)
+            .data("foo", "true")
+            .post();
+        assertEquals("POST", ihVal("Method", doc));
+        assertEquals("application/json", ihVal("Content-Type", doc));
+        assertEquals("foo=true", ihVal("Query String", doc));
         assertEquals(body, ihVal("Post Data", doc));
     }
 

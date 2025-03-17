@@ -289,9 +289,30 @@ public interface Connection {
      * .header("Content-Type", "application/json")
      * .post();</pre></code>
      * If any data key/vals are supplied, they will be sent as URL query params.
+     * @see #requestBodyStream(InputStream)
      * @return this Request, for chaining
      */
     Connection requestBody(String body);
+
+    /**
+     Set the request body. Useful for posting data such as byte arrays or files, and the server expects a single request
+     body (and not a multipart upload). E.g.:
+     <code><pre> Jsoup.connect(url)
+     .requestBody(new ByteArrayInputStream(bytes))
+     .header("Content-Type", "application/octet-stream")
+     .post();
+     </pre></code>
+     <p>Or, use a FileInputStream to data from disk.</p>
+     <p>You should close the stream in a finally block.</p>
+
+     @param stream the input stream to send.
+     @return this Request, for chaining
+     @see #requestBody(String)
+     @since 1.20.1
+     */
+    default Connection requestBodyStream(InputStream stream) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Set a request header. Replaces any existing header with the same case-insensitive name.
@@ -767,9 +788,10 @@ public interface Connection {
          * .requestBody(json)
          * .header("Content-Type", "application/json")
          * .post();</pre></code>
-         * If any data key/vals are supplied, they will be sent as URL query params.
+         * <p>If any data key/vals are supplied, they will be sent as URL query params.</p>
          * @param body to use as the request body. Set to null to clear a previously set body.
          * @return this Request, for chaining
+         * @see #requestBodyStream(InputStream)
          */
         Request requestBody(@Nullable String body);
 
@@ -778,6 +800,26 @@ public interface Connection {
          * @return null if not set.
          */
         @Nullable String requestBody();
+
+        /**
+         Set the request body. Useful for posting data such as byte arrays or files, and the server expects a single
+         request body (and not a multipart upload). E.g.:
+         <code><pre> Jsoup.connect(url)
+         .requestBody(new ByteArrayInputStream(bytes))
+         .header("Content-Type", "application/octet-stream")
+         .post();
+         </pre></code>
+         <p>Or, use a FileInputStream to data from disk.</p>
+         <p>You should close the stream in a finally block.</p>
+
+         @param stream the input stream to send.
+         @return this Request, for chaining
+         @see #requestBody(String)
+         @since 1.20.1
+         */
+        default Request requestBodyStream(InputStream stream) {
+            throw new UnsupportedOperationException();
+        }
 
         /**
          * Specify the parser to use when parsing the document.
