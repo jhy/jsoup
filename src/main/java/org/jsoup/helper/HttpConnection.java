@@ -1217,7 +1217,8 @@ public class HttpConnection implements Connection {
 
         static void writePost(final HttpConnection.Request req, final OutputStream outputStream) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
-            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, Charset.forName(req.postDataCharset())));
+            final Charset charset = Charset.forName(req.postDataCharset());
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, charset));
             final String boundary = req.mimeBoundary;
 
             if (boundary != null) { // a multipart post
@@ -1260,14 +1261,12 @@ public class HttpConnection implements Connection {
             } else { // regular form data (application/x-www-form-urlencoded)
                 boolean first = true;
                 for (Connection.KeyVal keyVal : data) {
-                    if (!first)
-                        w.append('&');
-                    else
-                        first = false;
+                    if (!first) w.append('&');
+                    else first = false;
 
-                    w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
+                    w.write(URLEncoder.encode(keyVal.key(), charset));
                     w.write('=');
-                    w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
+                    w.write(URLEncoder.encode(keyVal.value(), charset));
                 }
             }
             w.close();
