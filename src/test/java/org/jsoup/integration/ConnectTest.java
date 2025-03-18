@@ -4,6 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Method;
+import org.jsoup.TextUtil;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.helper.W3CDom;
@@ -21,6 +22,7 @@ import org.jsoup.parser.StreamParser;
 import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -607,6 +609,26 @@ public class ConnectTest {
         assertEquals("application/rss+xml", con.response().contentType());
         assertTrue(doc.parser().getTreeBuilder() instanceof XmlTreeBuilder);
         assertEquals(Document.OutputSettings.Syntax.xml, doc.outputSettings().syntax());
+    }
+
+    @Test
+    public void testSupplyParserToConnection() throws IOException {
+        String xmlUrl = FileServlet.urlTo("/htmltests/xml-test.xml");
+
+        // parse with both xml and html parser, ensure different
+        Document xmlDoc = Jsoup.connect(xmlUrl).parser(Parser.xmlParser()).get();
+        Document htmlDoc = Jsoup.connect(xmlUrl).parser(Parser.htmlParser()).get();
+        Document autoXmlDoc = Jsoup.connect(xmlUrl).get(); // check connection auto detects xml, uses xml parser
+
+        assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
+            TextUtil.stripNewlines(xmlDoc.html()));
+        assertNotEquals(htmlDoc, xmlDoc);
+        assertFalse(htmlDoc.hasSameValue(xmlDoc));
+        assertTrue(xmlDoc.hasSameValue(autoXmlDoc));
+
+        assertEquals(1, htmlDoc.select("head").size()); // html parser normalises
+        assertEquals(0, xmlDoc.select("head").size()); // xml parser does not
+        assertEquals(0, autoXmlDoc.select("head").size()); // xml parser does not
     }
 
     @Test public void imageXmlMimeType() throws IOException {

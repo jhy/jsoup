@@ -61,25 +61,6 @@ public class XmlTreeBuilderTest {
                 TextUtil.stripNewlines(doc.html()));
     }
 
-    @Disabled
-    @Test
-    public void testSupplyParserToConnection() throws IOException {
-        String xmlUrl = "http://direct.infohound.net/tools/jsoup-xml-test.xml";
-
-        // parse with both xml and html parser, ensure different
-        Document xmlDoc = Jsoup.connect(xmlUrl).parser(Parser.xmlParser()).get();
-        Document htmlDoc = Jsoup.connect(xmlUrl).parser(Parser.htmlParser()).get();
-        Document autoXmlDoc = Jsoup.connect(xmlUrl).get(); // check connection auto detects xml, uses xml parser
-
-        assertEquals("<doc><val>One<val>Two</val>Three</val></doc>",
-                TextUtil.stripNewlines(xmlDoc.html()));
-        assertNotEquals(htmlDoc, xmlDoc);
-        assertEquals(xmlDoc, autoXmlDoc);
-        assertEquals(1, htmlDoc.select("head").size()); // html parser normalises
-        assertEquals(0, xmlDoc.select("head").size()); // xml parser does not
-        assertEquals(0, autoXmlDoc.select("head").size()); // xml parser does not
-    }
-
     @Test
     public void testSupplyParserToDataStream() throws IOException, URISyntaxException {
         File xmlFile = new File(XmlTreeBuilder.class.getResource("/htmltests/xml-test.xml").toURI());

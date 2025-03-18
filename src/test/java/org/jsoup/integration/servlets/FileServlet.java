@@ -19,14 +19,17 @@ public class FileServlet extends BaseServlet {
         TlsUrl = urls.tlsUrl;
     }
     public static final String ContentTypeParam = "contentType";
-    public static final String DefaultType = "text/html";
+    public static final String HtmlType = "text/html";
+    static final String XmlType = "text/xml";
     public static final String SuppressContentLength = "surpriseMe";
 
     @Override
     protected void doIt(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String contentType = req.getParameter(ContentTypeParam);
-        if (contentType == null)
-            contentType = DefaultType;
+        if (contentType == null) {
+            contentType = HtmlType;
+            if (req.getPathInfo().contains(".xml")) contentType = XmlType;
+        }
         String location = req.getPathInfo();
 
         File file = ParseTest.getFile(location);
