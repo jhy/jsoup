@@ -1,60 +1,157 @@
 package org.jsoup.examples;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
- Example program to list links from a URL.
- <p>To invoke from the command line, assuming you've downloaded the jsoup-examples
- jar to your current directory:</p>
- <p><code>java -cp jsoup-examples.jar org.jsoup.examples.ListLinks url</code></p>
- where <i>url</i> is the URL to fetch.
- */
+ * Example program to list links from a URL.
+ */ //(false negative)(Deficient encapsulation)(design smell) (move method, extract class, replace conditional, with polymorphism)
 public class ListLinks {
+    private static final Logger logger = Logger.getLogger(ListLinks.class.getName());
+
     public static void main(String[] args) throws IOException {
-        Validate.isTrue(args.length == 1, "usage: supply url to fetch");
+        if (args.length != 1) {
+            logger.log(Level.SEVERE, "Usage: supply a URL to fetch");
+            return;
+        }
+
         String url = args[0];
-        print("Fetching %s...", url);
+        logger.log(Level.INFO, "Fetching {0}...", url);
 
-        Document doc = Jsoup.connect(url).get();
-        Elements links = doc.select("a[href]");
-        Elements media = doc.select("[src]");
-        Elements imports = doc.select("link[href]");
+        // Extract links using LinkExtractor class
+        LinkExtractor extractor = new LinkExtractor(url);
+        extractor.fetch();
 
-        print("\nMedia: (%d)", media.size());
-        for (Element src : media) {
-            if (src.nameIs("img"))
-                print(" * %s: <%s> %sx%s (%s)",
-                        src.tagName(), src.attr("abs:src"), src.attr("width"), src.attr("height"),
-                        trim(src.attr("alt"), 20));
-            else
-                print(" * %s: <%s>", src.tagName(), src.attr("abs:src"));
-        }
-
-        print("\nImports: (%d)", imports.size());
-        for (Element link : imports) {
-            print(" * %s <%s> (%s)", link.tagName(),link.attr("abs:href"), link.attr("rel"));
-        }
-
-        print("\nLinks: (%d)", links.size());
-        for (Element link : links) {
-            print(" * a: <%s>  (%s)", link.attr("abs:href"), trim(link.text(), 35));
-        }
+        printLinks("Media", extractor.getMedia());
+        printLinks("Imports", extractor.getImports());
+        printLinks("Links", extractor.getHrefLinks());
     }
 
-    private static void print(String msg, Object... args) {
-        System.out.println(String.format(msg, args));
-    }
-
-    private static String trim(String s, int width) {
-        if (s.length() > width)
-            return s.substring(0, width-1) + ".";
-        else
-            return s;
+    private static void printLinks(String category, List<LinkType> links) {
+        logger.log(Level.INFO, "\n{0}: ({1})", new Object[]{category, links.size()});
+        for (LinkType link : links) {
+            logger.log(Level.INFO, " * {0}", link.getFormattedOutput());
+        }
     }
 }
+
+/**
+ * Extract class - Handles fetching and processing links.
+ */
+class LinkExtractor {
+    private final String url;
+    private Document doc;
+
+    public LinkExtractor(String url) {
+        this.url = url;
+    }
+
+    public void fetch() throws IOException {
+        this.doc = Jsoup.connect(url).get();
+    }
+
+    public List<LinkType> getMedia() {
+        return extractLinks(doc.select("[src]"), MediaLink::new);
+    }
+
+    public List<LinkType> getImports() {
+        return extractLinks(doc.select("link[href]"), ImportLink::new);
+    }
+
+    public List<LinkType> getHrefLinks() {
+        return extractLinks(doc.select("a[href]"), HrefLink::new);
+    }
+
+    private List<LinkType> extractLinks(Elements elements, LinkFactory factory) {
+        List<LinkType> links = new ArrayList<>();
+        for (Element element : elements) {
+            links.add(factory.create(element));
+        }
+        return links;
+    }
+}
+
+/**
+ * Interface for different link types - Used for Replace Conditional with Polymorphism.
+ */
+interface LinkType {
+    String getFormattedOutput();
+}
+
+/**
+ * Factory interface to create LinkType instances.
+ */
+interface LinkFactory {
+    LinkType create(Element element);
+}
+
+/**
+ * Represents Media links (images, videos, etc.).
+ */
+class MediaLink implements LinkType {
+    private static final int MAX_ALT_TEXT_WIDTH = 20;
+    private final Element element;
+
+    public MediaLink(Element element) {
+        this.element = element;
+    }
+
+    @Override
+    public String getFormattedOutput() {
+        if (element.tagName().equals("img")) {
+            return String.format(" * %s: <%s> %sx%s (%s)", element.tagName(), element.attr("abs:src"),
+                    element.attr("width"), element.attr("height"), trim(element.attr("alt"), MAX_ALT_TEXT_WIDTH));
+        } else {
+            return String.format(" * %s: <%s>", element.tagName(), element.attr("abs:src"));
+        }
+    }
+
+    private String trim(String s, int width) {
+        return (s.length() > width) ? s.substring(0, width - 1) + "." : s;
+    }
+}
+
+/**
+ * Represents Import links (CSS, external resources).
+ */
+class ImportLink implements LinkType {
+    private final Element element;
+
+    public ImportLink(Element element) {
+        this.element = element;
+    }
+
+    @Override
+    public String getFormattedOutput() {
+        return String.format(" * %s <%s> (%s)", element.tagName(), element.attr("abs:href"), element.attr("rel"));
+    }
+}
+
+/**
+ * Represents Hyperlink references.
+ */
+class HrefLink implements LinkType {
+    private static final int MAX_TEXT_WIDTH = 35;
+    private final Element element;
+
+    public HrefLink(Element element) {
+        this.element = element;
+    }
+
+    @Override
+    public String getFormattedOutput() {
+        return String.format(" * a: <%s>  (%s)", element.attr("abs:href"), trim(element.text(), MAX_TEXT_WIDTH));
+    }
+
+    private String trim(String s, int width) {
+        return (s.length() > width) ? s.substring(0, width - 1) + "." : s;
+    }
+}
+
