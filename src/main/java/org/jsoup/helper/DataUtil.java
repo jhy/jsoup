@@ -234,76 +234,121 @@ public final class DataUtil {
         }
         return doc;
     }
-
+    static final String CHARSET_ERROR_MESSAGE =
+            "Charset argument must be set to the file's character set.";
+//(Complex Method and Long Statement)(True Positive)(Implementation smell)(Done)(Decompose conditional
+//Introduce explaining variable)
     static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         Document doc = null;
-        // read the start of the stream and look for a BOM or meta charset:
-        // look for BOM - overrides any other header or input
-        String bomCharset = detectCharsetFromBom(input); // resets / consumes appropriately
-        if (bomCharset != null)
-            charsetName = bomCharset;
 
-        if (charsetName == null) { // read ahead and determine from meta. safe first parse as UTF-8
-            int origMax = input.max();
-            input.max(firstReadBufferSize);
-            input.mark(firstReadBufferSize);
-            input.allowClose(false); // ignores closes during parse, in case we need to rewind
-            try {
-                Reader reader = new InputStreamReader(input, UTF_8); // input is currently capped to firstReadBufferSize
-                doc = parser.parseInput(reader, baseUri);
-                input.reset();
-                input.max(origMax); // reset for a full read if required
-            } catch (UncheckedIOException e) {
-                throw e.getCause();
-            } finally {
-                input.allowClose(true);
-            }
+        charsetName = getCharsetFromBom(input, charsetName);
 
-            // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
-            String foundCharset = null; // if not found, will keep utf-8 as best attempt
-            for (Element meta : metaElements) {
-                if (meta.hasAttr("http-equiv"))
-                    foundCharset = getCharsetFromContentType(meta.attr("content"));
-                if (foundCharset == null && meta.hasAttr("charset"))
-                    foundCharset = meta.attr("charset");
-                if (foundCharset != null)
-                    break;
-            }
-
-            // look for <?xml encoding='ISO-8859-1'?>
-            if (foundCharset == null && doc.childNodeSize() > 0) {
-                Node first = doc.childNode(0);
-                XmlDeclaration decl = null;
-                if (first instanceof XmlDeclaration)
-                    decl = (XmlDeclaration) first;
-                else if (first instanceof Comment) {
-                    Comment comment = (Comment) first;
-                    if (comment.isXmlDeclaration())
-                        decl = comment.asXmlDeclaration();
-                }
-                if (decl != null && decl.name().equalsIgnoreCase("xml")) {
-                    foundCharset = decl.attr("encoding");
-                }
-            }
-            foundCharset = validateCharset(foundCharset);
-            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
-                foundCharset = foundCharset.trim().replaceAll("[\"']", "");
-                charsetName = foundCharset;
-                doc = null;
-            } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
-                input.close(); // the parser tried to close it
-            } else {
-                doc = null;
-            }
-        } else { // specified by content type header (or by user on file load)
-            Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+        if (charsetName == null) {
+            doc = parseInitialDocument(input, baseUri, parser);
+            charsetName = detectCharsetFromDocument(doc);
+        } else {
+            Validate.notEmpty(charsetName, CHARSET_ERROR_MESSAGE);
         }
 
-        // finally: prepare the return struct
-        if (charsetName == null)
+        return prepareCharsetDoc(charsetName, doc, input);
+    }
+
+
+    /**
+     * Checks BOM encoding first.
+     */
+    private static String getCharsetFromBom(ControllableInputStream input, String charsetName) throws IOException {
+        String bomCharset = detectCharsetFromBom(input);
+        return (bomCharset != null) ? bomCharset : charsetName;
+    }
+
+    /**
+     * Reads a limited portion of the stream and attempts an initial document parse.
+     */
+    private static Document parseInitialDocument(ControllableInputStream input, String baseUri, Parser parser) throws IOException {
+        int origMax = input.max();
+        input.max(firstReadBufferSize);
+        input.mark(firstReadBufferSize);
+        input.allowClose(false);
+
+        Document doc = null;
+        try {
+            Reader reader = new InputStreamReader(input, UTF_8);
+            doc = parser.parseInput(reader, baseUri);
+            input.reset();
+            input.max(origMax);
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        } finally {
+            input.allowClose(true);
+        }
+        return doc;
+    }
+
+    /**
+     * Extracts charset from the parsed document.
+     */
+    private static String detectCharsetFromDocument(Document doc) {
+        if (doc == null) return null;
+
+        String foundCharset = findCharsetInMeta(doc);
+        if (foundCharset == null) {
+            foundCharset = findCharsetInXmlDeclaration(doc);
+        }
+
+        return validateCharset(foundCharset);
+    }
+
+    /**
+     * Searches for charset in meta tags.
+     */
+    private static String findCharsetInMeta(Document doc) {
+        Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+        for (Element meta : metaElements) {
+            String foundCharset = meta.hasAttr("http-equiv") ? getCharsetFromContentType(meta.attr("content")) : null;
+            if (foundCharset == null && meta.hasAttr("charset")) {
+                foundCharset = meta.attr("charset");
+            }
+            if (foundCharset != null) return foundCharset;
+        }
+        return null;
+    }
+
+    /**
+     * Searches for charset in XML declaration.
+     */
+    private static String findCharsetInXmlDeclaration(Document doc) {
+        if (doc.childNodeSize() == 0) return null;
+
+        Node first = doc.childNode(0);
+        XmlDeclaration decl = null;
+
+        if (first instanceof XmlDeclaration) {
+            decl = (XmlDeclaration) first;
+        } else if (first instanceof Comment) {
+            Comment comment = (Comment) first;
+            if (comment.isXmlDeclaration()) {
+                decl = comment.asXmlDeclaration();
+            }
+        }
+
+        return (decl != null && decl.name().equalsIgnoreCase("xml")) ? decl.attr("encoding") : null;
+    }
+
+    /**
+     * Finalizes CharsetDoc object.
+     */
+    private static CharsetDoc prepareCharsetDoc(String charsetName, Document doc, ControllableInputStream input) throws IOException {
+        if (charsetName == null) {
             charsetName = defaultCharsetName;
+        }
+
         Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
+
+        if (doc == null && input.baseReadFully()) {
+            input.close();
+        }
+
         return new CharsetDoc(charset, doc, input);
     }
 
