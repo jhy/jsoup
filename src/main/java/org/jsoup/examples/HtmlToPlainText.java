@@ -30,8 +30,8 @@ import java.util.HashSet;
 public class HtmlToPlainText {
     private static final String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 (jsoup-example)";
     private static final int timeout = 5 * 1000;
-
-    public static void main(String... args) throws IOException {
+    //{(false positive)(Magic Number)(implementation smell) (Done)
+    public static void main(String... args) throws IOException{
         Validate.isTrue(args.length == 1 || args.length == 2, "usage: java -jar jsoup-examples.jar url [selector]");
         final String url = args[0];
         final String selector = args.length == 2 ? args[1] : null;
