@@ -11,8 +11,9 @@ import java.net.PasswordAuthentication;
  per-request Authenticators are supported (Java 9+), or installs a system-wide Authenticator that delegates to a request
  ThreadLocal.
  */
+//{(Complex method False negative(Implementation smell)) (Used Extract Method in this (Done))
 class AuthenticationHandler extends Authenticator {
-    static final int MaxAttempts = 3; // max authentication attempts per request. allows for multiple auths (e.g. proxy and server) in one request, but saves otherwise 20 requests if credentials are incorrect.
+    static final int MaxAttempts = 3; // Renamed for clarity
     static AuthShim handler;
 
     static {
@@ -38,25 +39,37 @@ class AuthenticationHandler extends Authenticator {
     }
 
     /**
-     Authentication callback, called by HttpURLConnection - either as system-wide default (Java 8) or per HttpURLConnection (Java 9+)
-     * @return credentials, or null if not attempting to auth.
+     * Authentication callback, called by HttpURLConnection - either as system-wide default (Java 8) or per HttpURLConnection (Java 9+)
+     * @return credentials, or null if not attempting to authenticate.
      */
-    @Nullable @Override public final PasswordAuthentication getPasswordAuthentication() {
+    @Nullable
+    @Override
+    public final PasswordAuthentication getPasswordAuthentication() {
         AuthenticationHandler delegate = handler.get(this);
-        if (delegate == null) return null; // this request has no auth handler
-        delegate.attemptCount++;
-        // if the password returned fails, Java will repeatedly retry the request with a new password auth hit (because
-        // it may be an interactive prompt, and the user could eventually get it right). But in Jsoup's context, the
-        // auth will either be correct or not, so just abandon
-        if (delegate.attemptCount > MaxAttempts)
-            return null; // When using HttpClient, this will manifest as "No credentials provided" IOException; not ideal; would be clearer if we could then detach the authenticator which would bubble the 401, but there's no path for that
-        if (delegate.auth == null)
-            return null; // detached - would have been the Global Authenticator (not a delegate)
+        if (delegate == null) return null;
+
+        if (!shouldAuthenticate(delegate)) {
+            return null;
+        }
 
         RequestAuthenticator.Context ctx = new RequestAuthenticator.Context(
-            this.getRequestingURL(), this.getRequestorType(), this.getRequestingPrompt());
+                this.getRequestingURL(), this.getRequestorType(), this.getRequestingPrompt());
         return delegate.auth.authenticate(ctx);
     }
+
+    /**
+     * Extracted method to check authentication conditions.
+     */
+    private boolean shouldAuthenticate(AuthenticationHandler delegate) {
+        delegate.attemptCount++;
+        if (delegate.attemptCount > MaxAttempts) {
+            return false;
+        }
+        return delegate.auth != null;
+    }
+}
+
+
 
     interface AuthShim {
         void enable(RequestAuthenticator auth, Object connOrHttp);
@@ -69,7 +82,7 @@ class AuthenticationHandler extends Authenticator {
     /**
      On Java 8 we install a system-wide Authenticator, which pulls the delegating Auth from a ThreadLocal pool.
      */
-    static class GlobalHandler implements AuthShim {
+    class GlobalHandler implements AuthShim {
         static ThreadLocal<AuthenticationHandler> authenticators = new ThreadLocal<>();
         static {
             Authenticator.setDefault(new AuthenticationHandler());
@@ -87,4 +100,4 @@ class AuthenticationHandler extends Authenticator {
             return authenticators.get();
         }
     }
-}
+
