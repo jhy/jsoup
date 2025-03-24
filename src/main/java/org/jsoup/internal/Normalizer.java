@@ -1,15 +1,14 @@
 package org.jsoup.internal;
 
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Document;
-import org.jspecify.annotations.Nullable;
-
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Util methods for normalizing strings. Jsoup internal use only, please don't depend on this API.
  */
+//(Design smell)(Change bidirectional association to unidirectional (true positive))(cyclically-dependent)
 public final class Normalizer {
+    private static final Pattern INVALID_XML_CHARACTERS = Pattern.compile("[^a-zA-Z0-9-_]");
 
     /** Drops the input string to lower case. */
     public static String lowerCase(final String input) {
@@ -26,8 +25,11 @@ public final class Normalizer {
         return isStringLiteral ? lowerCase(input) : normalize(input);
     }
 
-    /** Minimal helper to get an otherwise OK HTML name like "foo<bar" to "foo_bar". */
-    @Nullable public static String xmlSafeTagName(final String tagname) {
-        return Attribute.getValidKey(tagname, Document.OutputSettings.Syntax.xml); // Reuses the Attribute key normal, which is same for xml tag names
+    /** Converts an HTML tag name into an XML-safe tag name by replacing invalid characters. */
+    public static String xmlSafeTagName(final String tagName) {
+        if (tagName == null || tagName.isEmpty()) {
+            return "defaultTag"; // Fallback for empty tag names
+        }
+        return INVALID_XML_CHARACTERS.matcher(tagName).replaceAll("_"); // Replace invalid chars with "_"
     }
 }
