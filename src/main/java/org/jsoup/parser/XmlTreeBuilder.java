@@ -114,16 +114,7 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     void insertCommentFor(Token.Comment commentToken) {
         Comment comment = new Comment(commentToken.getData());
-        LeafNode insert = comment;
-        if (commentToken.bogus && comment.isXmlDeclaration()) {
-            // xml declarations are emitted as bogus comments (which is right for html, but not xml)
-            // so we do a bit of a hack and parse the data as an element to pull the attributes out
-            // todo - refactor this to parse more appropriately
-            XmlDeclaration decl = comment.asXmlDeclaration(); // else, we couldn't parse it as a decl, so leave as a comment
-            if (decl != null)
-                insert = decl;
-        }
-        insertLeafNode(insert);
+        insertLeafNode(comment);
     }
 
     void insertCharacterFor(Token.Character token) {
