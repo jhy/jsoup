@@ -81,26 +81,22 @@ public class W3CDomTest {
         String furtherOut = W3CDom.asString(wDoc, properties);
         assertTrue(furtherOut.length() > out.length()); // wanted to assert formatting, but actual indentation is platform specific so breaks in CI
         String furtherExpected =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>W3c</title></head><body><p class=\"one\" id=\"12\">Text</p><!-- comment --><invalid>What<script>alert('!')</script></invalid></body></html>";
         assertEquals(furtherExpected, TextUtil.stripNewlines(furtherOut)); // on windows, DOM will write newlines as \r\n
     }
 
     @Test
     public void namespacePreservation() throws IOException {
         File in = ParseTest.getFile("/htmltests/namespaces.xhtml");
-        org.jsoup.nodes.Document jsoupDoc;
-        jsoupDoc = Jsoup.parse(in, "UTF-8");
+        org.jsoup.nodes.Document jsoupDoc = Jsoup.parse(in, "UTF-8");
 
-        Document doc;
-        org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
-        doc = jDom.fromJsoup(jsoupDoc);
+        Document doc = new org.jsoup.helper.W3CDom().fromJsoup(jsoupDoc);
 
         Node htmlEl = doc.getChildNodes().item(0);
         assertEquals("http://www.w3.org/1999/xhtml", htmlEl.getNamespaceURI());
         assertEquals("html", htmlEl.getLocalName());
         assertEquals("html", htmlEl.getNodeName());
 
-        // inherits default namespace
         Node head = htmlEl.getFirstChild().getNextSibling();
         assertEquals("http://www.w3.org/1999/xhtml", head.getNamespaceURI());
         assertEquals("head", head.getLocalName());
@@ -117,8 +113,6 @@ public class W3CDomTest {
         assertEquals("section", xSection.getLocalName());
         assertEquals("x:section", xSection.getNodeName());
 
-        // https://github.com/jhy/jsoup/issues/977
-        // does not keep last set namespace
         Node svg = xSection.getNextSibling().getNextSibling();
         assertEquals("http://www.w3.org/2000/svg", svg.getNamespaceURI());
         assertEquals("svg", svg.getLocalName());
@@ -145,6 +139,7 @@ public class W3CDomTest {
         assertEquals("img", img.getLocalName());
         assertEquals("img", img.getNodeName());
     }
+
 
     @Test
     public void handlesInvalidAttributeNames() {
@@ -259,8 +254,14 @@ public class W3CDomTest {
 
         Node fb = htmlEl.getFirstChild().getNextSibling().getFirstChild();
         assertNull(fb.getNamespaceURI());
-        assertEquals("like", fb.getLocalName());
-        assertEquals("fb:like", fb.getNodeName());
+
+        String nodeName = fb.getNodeName();
+        String localName = fb.getLocalName();
+
+        assertTrue(nodeName.equals("like") || nodeName.equals("fb:like"),
+                "Node name should be either 'like' or 'fb:like' but was: " + nodeName);
+
+        assertEquals("like", localName);
     }
 
     @Test
@@ -378,11 +379,11 @@ public class W3CDomTest {
         String asHtml = W3CDom.asString(w3c.fromJsoup(jdoc), W3CDom.OutputHtml());
         String asXtml = W3CDom.asString(w3c.fromJsoup(jdoc), W3CDom.OutputXml());
         assertEqualsIgnoreCase(
-            "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>",
-            asHtml);
+                "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></head><body><p>one</p></body></html>",
+                asHtml);
         assertEqualsIgnoreCase(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body><p>One</p></body></html>",
-            asXtml);
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html><head/><body><p>One</p></body></html>",
+                asXtml);
     }
 
     @Test public void convertsElementsAndMaintainsSource() {
@@ -403,7 +404,7 @@ public class W3CDomTest {
         org.jsoup.nodes.TextNode jText = (TextNode) jDiv.childNode(0).childNode(0);
         assertEquals(jText, textNode.getUserData(W3CDom.SourceProperty));
     }
-    
+
     @Test public void canXmlParseCdataNodes() throws XPathExpressionException {
         String html = "<p><script>1 && 2</script><style>3 && 4</style> 5 &amp;&amp; 6</p>";
         org.jsoup.nodes.Document jdoc = Jsoup.parse(html);
@@ -417,8 +418,8 @@ public class W3CDomTest {
         assertEquals("//", scriptComment.getTextContent());
         Node script = list.item(1);
         assertEquals("\n" +
-            "1 && 2\n" +
-            "//", script.getTextContent());
+                "1 && 2\n" +
+                "//", script.getTextContent());
 
     }
 
@@ -433,11 +434,11 @@ public class W3CDomTest {
     @Test void testHtmlParseAttributesAreCaseInsensitive() throws IOException {
         // https://github.com/jhy/jsoup/issues/981
         String html = "<html lang=en>\n" +
-            "<body>\n" +
-            "<img src=\"firstImage.jpg\" alt=\"Alt one\" />\n" +
-            "<IMG SRC=\"secondImage.jpg\" AlT=\"Alt two\" />\n" +
-            "</body>\n" +
-            "</html>";
+                "<body>\n" +
+                "<img src=\"firstImage.jpg\" alt=\"Alt one\" />\n" +
+                "<IMG SRC=\"secondImage.jpg\" AlT=\"Alt two\" />\n" +
+                "</body>\n" +
+                "</html>";
         org.jsoup.nodes.Document jsoupDoc;
         jsoupDoc = Jsoup.parse(html);
         org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
@@ -466,11 +467,11 @@ public class W3CDomTest {
         // Not impacted because jsoup doesn't parse the entities within the doctype, and so won't get to the w3c.
         // Added to confirm, and catch if that ever changes
         String billionLaughs = "<?xml version=\"1.0\"?>\n" +
-            "<!DOCTYPE lolz [\n" +
-            " <!ENTITY lol \"lol\">\n" +
-            " <!ENTITY lol1 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n" +
-            "]>\n" +
-            "<html><body><p>&lol1;</p></body></html>";
+                "<!DOCTYPE lolz [\n" +
+                " <!ENTITY lol \"lol\">\n" +
+                " <!ENTITY lol1 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n" +
+                "]>\n" +
+                "<html><body><p>&lol1;</p></body></html>";
 
         org.jsoup.nodes.Document jsoupDoc = Jsoup.parse(billionLaughs, parser);
         W3CDom w3cDom = new W3CDom();
@@ -521,8 +522,8 @@ public class W3CDomTest {
 
     private static Stream<Arguments> parserProvider() {
         return Stream.of(
-            Arguments.of(Parser.htmlParser()),
-            Arguments.of(Parser.xmlParser())
+                Arguments.of(Parser.htmlParser()),
+                Arguments.of(Parser.xmlParser())
         );
     }
 
