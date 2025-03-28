@@ -434,4 +434,8 @@ Connection con3 = session.newRequest();
     public static boolean isValid(String bodyHtml, Safelist safelist) {
         return new Cleaner(safelist).isValidBodyHtml(bodyHtml);
     }
+
+    public static Object parser() {
+        return null;
+    }
 }
