@@ -5,9 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -38,21 +36,27 @@ public final class StringUtil {
      * @param sep string to place between strings
      * @return joined string
      */
+
+    // Remove the entire StringJoiner class
+    //(True Positive) (Design smell)(Unnecassry Abstraction) (Used Pull down method for refactor)
     public static String join(Iterator<?> strings, String sep) {
         if (!strings.hasNext())
             return "";
 
         String start = strings.next().toString();
-        if (!strings.hasNext()) // only one, avoid builder
+        if (!strings.hasNext())
             return start;
 
-        StringJoiner j = new StringJoiner(sep);
-        j.add(start);
+        StringBuilder sb = borrowBuilder();
+        sb.append(start);
         while (strings.hasNext()) {
-            j.add(strings.next());
+            sb.append(sep);
+            sb.append(strings.next());
         }
-        return j.complete();
+        return releaseBuilder(sb);
     }
+
+
 
     /**
      * Join an array of strings by a separator
@@ -68,51 +72,7 @@ public final class StringUtil {
      A StringJoiner allows incremental / filtered joining of a set of stringable objects.
      @since 1.14.1
      */
-    public static class StringJoiner {
-        @Nullable StringBuilder sb = borrowBuilder(); // sets null on builder release so can't accidentally be reused
-        final String separator;
-        boolean first = true;
 
-        /**
-         Create a new joiner, that uses the specified separator. MUST call {@link #complete()} or will leak a thread
-         local string builder.
-
-         @param separator the token to insert between strings
-         */
-        public StringJoiner(String separator) {
-            this.separator = separator;
-        }
-
-        /**
-         Add another item to the joiner, will be separated
-         */
-        public StringJoiner add(Object stringy) {
-            Validate.notNull(sb); // don't reuse
-            if (!first)
-                sb.append(separator);
-            sb.append(stringy);
-            first = false;
-            return this;
-        }
-
-        /**
-         Append content to the current item; not separated
-         */
-        public StringJoiner append(Object stringy) {
-            Validate.notNull(sb); // don't reuse
-            sb.append(stringy);
-            return this;
-        }
-
-        /**
-         Return the joined string, and release the builder back to the pool. This joiner cannot be reused.
-         */
-        public String complete() {
-            String string = releaseBuilder(sb);
-            sb = null;
-            return string;
-        }
-    }
 
     /**
      * Returns space padding (up to the default max of 30). Use {@link #padding(int, int)} to specify a different limit.
@@ -379,13 +339,23 @@ public final class StringUtil {
      * @return A {@code Collector} which concatenates CharSequence elements, separated by the specified delimiter
      */
     public static Collector<CharSequence, ?, String> joining(String delimiter) {
-        return Collector.of(() -> new StringJoiner(delimiter),
-            StringJoiner::add,
-            (j1, j2) -> {
-                j1.append(j2.complete());
-                return j1;
-            },
-            StringJoiner::complete);
-    }
+        return Collector.of(
+                () -> new ArrayList<String>(),  // Supplier - temporary storage
+                (list, element) -> list.add(element.toString()),  // Accumulator
+                (list1, list2) -> {
+                    list1.addAll(list2);
+                    return list1;
+                },  // Combiner
+                list -> {  // Finisher
+                    if (list.isEmpty()) return "";
+                    StringBuilder sb = borrowBuilder();
+                    sb.append(list.get(0));
+                    for (int i = 1; i < list.size(); i++) {
+                        sb.append(delimiter).append(list.get(i));
+                    }
+                    return releaseBuilder(sb);
+                }
+        );
 
-}
+    }
+    }
