@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 /**
  * Example program to list links from a URL.
- */ //(false negative)(Deficient encapsulation)(design smell) (move method, extract class, replace conditional, with polymorphism)
+ */ //(false negative)(Deficient encapsulation)(design smell) (move method, extract class, replace conditional with polymorphism)
 public class ListLinks {
     private static final Logger logger = Logger.getLogger(ListLinks.class.getName());
 
@@ -25,7 +25,6 @@ public class ListLinks {
         String url = args[0];
         logger.log(Level.INFO, "Fetching {0}...", url);
 
-        // Extract links using LinkExtractor class
         LinkExtractor extractor = new LinkExtractor(url);
         extractor.fetch();
 
@@ -42,9 +41,7 @@ public class ListLinks {
     }
 }
 
-/**
- * Extract class - Handles fetching and processing links.
- */
+
 class LinkExtractor {
     private final String url;
     private Document doc;
@@ -78,23 +75,17 @@ class LinkExtractor {
     }
 }
 
-/**
- * Interface for different link types - Used for Replace Conditional with Polymorphism.
- */
+
 interface LinkType {
     String getFormattedOutput();
 }
 
-/**
- * Factory interface to create LinkType instances.
- */
+
 interface LinkFactory {
     LinkType create(Element element);
 }
 
-/**
- * Represents Media links (images, videos, etc.).
- */
+
 class MediaLink implements LinkType {
     private static final int MAX_ALT_TEXT_WIDTH = 20;
     private final Element element;
@@ -118,9 +109,7 @@ class MediaLink implements LinkType {
     }
 }
 
-/**
- * Represents Import links (CSS, external resources).
- */
+
 class ImportLink implements LinkType {
     private final Element element;
 
@@ -134,9 +123,7 @@ class ImportLink implements LinkType {
     }
 }
 
-/**
- * Represents Hyperlink references.
- */
+
 class HrefLink implements LinkType {
     private static final int MAX_TEXT_WIDTH = 35;
     private final Element element;
