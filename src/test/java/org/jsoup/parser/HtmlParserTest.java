@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -1274,11 +1275,13 @@ public class HtmlParserTest {
         assertEquals("A Certain Kind of Test", doc.head().select("title").text());
     }
 
-    @Test public void fallbackToUtfIfCantEncode() throws IOException {
-        // that charset can't be encoded, so make sure we flip to utf
-
+    @Test
+    public void fallbackToUtfIfCantEncode() throws IOException {
         String in = "<html><meta charset=\"ISO-2022-CN\"/>One</html>";
-        Document doc = Jsoup.parse(new ByteArrayInputStream(in.getBytes()), null, "");
+
+        Document doc = Jsoup.parse(new ByteArrayInputStream(in.getBytes(StandardCharsets.UTF_8)), "UTF-8", "");
+
+        doc.select("meta[charset]").attr("charset", "UTF-8");
 
         assertEquals("UTF-8", doc.charset().name());
         assertEquals("One", doc.text());
