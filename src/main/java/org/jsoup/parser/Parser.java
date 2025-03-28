@@ -277,6 +277,7 @@ public class Parser implements Cloneable {
     /**
      * Create a new XML parser. This parser assumes no knowledge of the incoming tags and does not treat it as HTML,
      * rather creates a simple tree directly from the input.
+     *
      * @return a new simple XML parser.
      */
     public static Parser xmlParser() {
