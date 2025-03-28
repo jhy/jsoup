@@ -212,16 +212,22 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     private static boolean isValidHtmlKey(String key) {
-        // =~ [\x00-\x1f\x7f-\x9f "'/=]+
-        final int length = key.length();
-        if (length == 0) return false;
-        for (int i = 0; i < length; i++) {
-            char c = key.charAt(i);
-            if ((c <= 0x1f) || (c >= 0x7f && c <= 0x9f) || c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=')
-                return false;
+        if (key.isEmpty()) return false;
+
+        for (char c : key.toCharArray()) {
+            if (isInvalidCharacter(c)) return false;
         }
+
         return true;
     }
+//(True Positive)(Implmentation smell)(Complex conditional)(Use Decompose conditional, Extract method, Introduce Explaining Variable)
+    private static boolean isInvalidCharacter(char c) {
+        boolean isControlChar = (c <= 0x1f) || (c >= 0x7f && c <= 0x9f);
+        boolean isSpecialChar = (c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=');
+
+        return isControlChar || isSpecialChar;
+    }
+
 
     /**
      Get the string representation of this attribute, implemented as {@link #html()}.
