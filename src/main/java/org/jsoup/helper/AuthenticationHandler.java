@@ -11,9 +11,9 @@ import java.net.PasswordAuthentication;
  per-request Authenticators are supported (Java 9+), or installs a system-wide Authenticator that delegates to a request
  ThreadLocal.
  */
-//{(Complex method False negative(Implementation smell)) (Used Extract Method in this (Done))
+//{(Complex method False negative(Implementation smell)) (Used Extract Method for Refactor)
 class AuthenticationHandler extends Authenticator {
-    static final int MaxAttempts = 3; // Renamed for clarity
+    static final int MaxAttempts = 3;
     static AuthShim handler;
 
     static {
