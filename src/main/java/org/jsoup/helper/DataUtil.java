@@ -236,35 +236,39 @@ public final class DataUtil {
     }
     static final String CHARSET_ERROR_MESSAGE =
             "Charset argument must be set to the file's character set.";
-//(Complex Method and Long Statement)(True Positive)(Implementation smell)(Done)(Decompose conditional
-//Introduce explaining variable)
-    static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        Document doc = null;
+//(Complex Method and Long Statement)(True Positive)(Implementation smell)(Decompose conditional
+//and Introduce explaining variable for refactor)
+static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+    Document doc = null;
 
-        charsetName = getCharsetFromBom(input, charsetName);
+    charsetName = getCharsetFromBom(input, charsetName);
 
-        if (charsetName == null) {
-            doc = parseInitialDocument(input, baseUri, parser);
-            charsetName = detectCharsetFromDocument(doc);
+    if (charsetName == null) {
+        doc = parseInitialDocument(input, baseUri, parser);
+        charsetName = detectCharsetFromDocument(doc);
+        if (charsetName != null && !charsetName.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
+            charsetName = charsetName.trim().replaceAll("[\"']", "");
+            doc = null;
+        } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
+            input.close(); // the parser tried to close it
         } else {
-            Validate.notEmpty(charsetName, CHARSET_ERROR_MESSAGE);
+            doc = null;
         }
-
-        return prepareCharsetDoc(charsetName, doc, input);
+    } else {
+        Validate.notEmpty(charsetName, CHARSET_ERROR_MESSAGE);
     }
 
+    return prepareCharsetDoc(charsetName, doc, input);
+}
 
-    /**
-     * Checks BOM encoding first.
-     */
+
+
     private static String getCharsetFromBom(ControllableInputStream input, String charsetName) throws IOException {
         String bomCharset = detectCharsetFromBom(input);
         return (bomCharset != null) ? bomCharset : charsetName;
     }
 
-    /**
-     * Reads a limited portion of the stream and attempts an initial document parse.
-     */
+
     private static Document parseInitialDocument(ControllableInputStream input, String baseUri, Parser parser) throws IOException {
         int origMax = input.max();
         input.max(firstReadBufferSize);
@@ -285,9 +289,7 @@ public final class DataUtil {
         return doc;
     }
 
-    /**
-     * Extracts charset from the parsed document.
-     */
+
     private static String detectCharsetFromDocument(Document doc) {
         if (doc == null) return null;
 
@@ -299,9 +301,7 @@ public final class DataUtil {
         return validateCharset(foundCharset);
     }
 
-    /**
-     * Searches for charset in meta tags.
-     */
+
     private static String findCharsetInMeta(Document doc) {
         Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
         for (Element meta : metaElements) {
@@ -314,9 +314,7 @@ public final class DataUtil {
         return null;
     }
 
-    /**
-     * Searches for charset in XML declaration.
-     */
+
     private static String findCharsetInXmlDeclaration(Document doc) {
         if (doc.childNodeSize() == 0) return null;
 
@@ -335,9 +333,7 @@ public final class DataUtil {
         return (decl != null && decl.name().equalsIgnoreCase("xml")) ? decl.attr("encoding") : null;
     }
 
-    /**
-     * Finalizes CharsetDoc object.
-     */
+
     private static CharsetDoc prepareCharsetDoc(String charsetName, Document doc, ControllableInputStream input) throws IOException {
         if (charsetName == null) {
             charsetName = defaultCharsetName;
