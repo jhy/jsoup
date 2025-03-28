@@ -461,12 +461,17 @@ public class DocumentTest {
                         +     "before&nbsp;after"
                         +   "</body>"
                         + "</html>";
-        InputStream is = new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII));
 
-        Document doc = Jsoup.parse(is, null, "http://example.com");
-        doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
+        byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
+        InputStream is = new ByteArrayInputStream(bytes);
 
-        String output = new String(doc.html().getBytes(doc.outputSettings().charset()), doc.outputSettings().charset());
+        Document doc = Jsoup.parse(is, "UTF-8", "http://example.com");
+
+        doc.outputSettings()
+                .charset(StandardCharsets.UTF_8)
+                .escapeMode(Entities.EscapeMode.xhtml);
+
+        String output = doc.html();
 
         assertFalse(output.contains("?"), "Should not have contained a '?'.");
         assertTrue(output.contains("&#xa0;") || output.contains("&nbsp;"),
