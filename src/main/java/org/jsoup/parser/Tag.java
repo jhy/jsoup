@@ -23,7 +23,7 @@ public class Tag implements Cloneable {
     public static int FormatAsBlock = 1 << 8;
     public static int FormListed = 1 << 9;
 
-    String namespace;
+    final String namespace;
     String tagName;
     final String normalName; // always the lower case version of this tag, regardless of case preservation mode
     int options = 0;

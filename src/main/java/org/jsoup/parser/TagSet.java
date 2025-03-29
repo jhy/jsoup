@@ -5,6 +5,7 @@ import org.jsoup.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -20,7 +21,7 @@ import static org.jsoup.parser.Parser.NamespaceSvg;
  */
 public class TagSet {
     static final TagSet HtmlTagSet = initHtmlDefault();
-    final HashMap<String, HashMap<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
+    final Map<String, HashMap<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
 
     /**
      Returns a mutable copy of the default HTML tag set.
