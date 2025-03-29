@@ -61,6 +61,11 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
+    TagSet defaultTagSet() {
+        return new TagSet(); // an empty tagset
+    }
+
+    @Override
     protected boolean process(Token token) {
         currentToken = token;
 

@@ -7,6 +7,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
+import org.jsoup.parser.TagSet;
 import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -72,7 +73,7 @@ public class Element extends Node implements Iterable<Element> {
      * @see #Element(String tag, String namespace)
      */
     public Element(String tag) {
-        this(Tag.valueOf(tag, Parser.NamespaceHtml, ParseSettings.preserveCase), "", null);
+        this(tag, Parser.NamespaceHtml);
     }
 
     /**
@@ -216,7 +217,8 @@ public class Element extends Node implements Iterable<Element> {
     public Element tagName(String tagName, String namespace) {
         Validate.notEmptyParam(tagName, "tagName");
         Validate.notEmptyParam(namespace, "namespace");
-        tag = Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
+        Parser parser = NodeUtils.parser(this);
+        tag = parser.tagSet().valueOf(tagName, namespace, parser.settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -227,6 +229,18 @@ public class Element extends Node implements Iterable<Element> {
      */
     public Tag tag() {
         return tag;
+    }
+
+    /**
+     Change the Tag of this element.
+     @param tag the new tag
+     @return this element, for chaining
+     @since 1.20.1
+     */
+    public Element tag(Tag tag) {
+        Validate.notNull(tag);
+        this.tag = tag;
+        return this;
     }
 
     /**
@@ -784,7 +798,8 @@ public class Element extends Node implements Iterable<Element> {
      * @return the new element, in the specified namespace
      */
     public Element appendElement(String tagName, String namespace) {
-        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
+        Parser parser = NodeUtils.parser(this);
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -808,7 +823,8 @@ public class Element extends Node implements Iterable<Element> {
      * @return the new element, in the specified namespace
      */
     public Element prependElement(String tagName, String namespace) {
-        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
+        Parser parser = NodeUtils.parser(this);
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         prependChild(child);
         return child;
     }

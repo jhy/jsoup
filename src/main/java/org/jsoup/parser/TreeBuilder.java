@@ -31,7 +31,7 @@ abstract class TreeBuilder {
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
-    Map<String, Tag> seenTags; // tags we've used in this parse; saves tag GC for custom tags.
+    TagSet tagSet; // the tags we're using in this parse
     @Nullable NodeVisitor nodeListener; // optional listener for node add / removes
 
     private Token.StartTag start; // start tag to process
@@ -54,7 +54,7 @@ abstract class TreeBuilder {
         reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
         tokeniser = new Tokeniser(this);
         stack = new ArrayList<>(32);
-        seenTags = new HashMap<>();
+        tagSet = parser.tagSet();
         start = new Token.StartTag(this);
         currentToken = start; // init current token to the virtual start token.
         this.baseUri = baseUri;
@@ -68,7 +68,6 @@ abstract class TreeBuilder {
         reader = null;
         tokeniser = null;
         stack = null;
-        seenTags = null;
     }
 
     Document parse(Reader input, String baseUri, Parser parser) {
@@ -239,14 +238,7 @@ abstract class TreeBuilder {
     }
 
     Tag tagFor(String tagName, String normalName, String namespace, ParseSettings settings) {
-        Tag cached = seenTags.get(tagName); // note that we don't normalize the cache key. But tag via valueOf may be normalized.
-        if (cached == null || !cached.namespace().equals(namespace)) {
-            // only return from cache if the namespace is the same. not running nested cache to save double hit on the common flow
-            Tag tag = Tag.valueOf(tagName, normalName, namespace, settings);
-            seenTags.put(tagName, tag);
-            return tag;
-        }
-        return cached;
+        return tagSet.valueOf(tagName, normalName, namespace, settings.preserveTagCase());
     }
 
     /**
@@ -255,6 +247,10 @@ abstract class TreeBuilder {
      */
     String defaultNamespace() {
         return NamespaceHtml;
+    }
+
+    TagSet defaultTagSet() {
+        return TagSet.Html();
     }
 
     /**

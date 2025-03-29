@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import static org.jsoup.nodes.NodeIteratorTest.assertIterates;
 import static org.jsoup.nodes.NodeIteratorTest.trackSeen;
+import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.select.SelectorTest.assertSelectedOwnText;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -1040,6 +1041,13 @@ public class ElementTest {
         assertEquals(0, doc.select("i").size());
         assertEquals(1, doc.select("em").size());
         assertEquals("<em>Hello</em>", doc.select("div").first().html());
+    }
+
+    @Test void testSetTag() {
+        Document doc = Jsoup.parse("<div><em>Hello</em></div>");
+        Element el = doc.expectFirst("em");
+        el.tag(new Tag("I", NamespaceHtml).clear(Tag.FormatAsBlock));
+        assertEquals("<I>Hello</I>", el.outerHtml()); // case-sensitive path
     }
 
     @Test

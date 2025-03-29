@@ -37,7 +37,7 @@ public class Document extends Element {
      @see #createShell
      */
     public Document(String namespace, String baseUri) {
-        super(Tag.valueOf("#root", namespace, ParseSettings.htmlDefault), baseUri);
+        super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
         this.parser = Parser.htmlParser(); // default, but overridable
     }
@@ -217,7 +217,7 @@ public class Document extends Element {
      @return new element
      */
     public Element createElement(String tagName) {
-        return new Element(Tag.valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase), this.baseUri());
+        return new Element(parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase), this.baseUri());
     }
 
     @Override

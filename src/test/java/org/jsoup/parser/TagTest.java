@@ -23,7 +23,12 @@ public class TagTest {
 
         Tag script1 = Tag.valueOf("script", ParseSettings.htmlDefault);
         Tag script2 = Tag.valueOf("SCRIPT", ParseSettings.htmlDefault);
-        assertSame(script1, script2);
+        assertEquals(script1, script2);
+
+        TagSet htmlTags = TagSet.Html();
+        Tag script3 = htmlTags.valueOf("script", ParseSettings.htmlDefault);
+        Tag script4 = htmlTags.valueOf("SCRIPT", ParseSettings.htmlDefault);
+        assertSame(script3, script4);
     }
 
     @Test public void trims() {
@@ -36,7 +41,23 @@ public class TagTest {
         Tag p1 = Tag.valueOf("p");
         Tag p2 = Tag.valueOf("p");
         assertEquals(p1, p2);
-        assertSame(p1, p2);
+        assertNotSame(p1, p2); // not same because Tag.valueOf creates new clone of the TagSet.Html, so changes don't clobber all
+
+        TagSet html1 = TagSet.Html();
+        TagSet html2 = TagSet.Html();
+        assertEquals(html1, html2);
+        assertNotSame(html1, html2);
+
+        Tag p3 = html1.valueOf("p");
+        Tag p4 = html1.valueOf("p");
+        Tag p5 = html2.valueOf("p");
+        Tag p6 = html2.valueOf("p");
+        assertEquals(p1, p3);
+        assertEquals(p3, p4);
+        assertEquals(p4, p5);
+        assertSame(p3, p4);
+        assertSame(p5, p6);
+        assertNotSame(p3, p5);
     }
 
     @Test public void divSemantics() {
@@ -89,8 +110,8 @@ public class TagTest {
         assertEquals(Parser.NamespaceHtml, svgHtml.namespace());
         assertEquals(Parser.NamespaceSvg, svg.namespace());
 
-        assertFalse(svgHtml.isBlock()); // generated
-        assertTrue(svg.isBlock()); // known
+        assertFalse(svgHtml.isKnownTag()); // generated
+        assertTrue(svg.isKnownTag()); // known
     }
 
     @Test public void unknownTagNamespace() {
@@ -100,7 +121,7 @@ public class TagTest {
         assertEquals(Parser.NamespaceHtml, fooHtml.namespace());
         assertEquals(Parser.NamespaceSvg, foo.namespace());
 
-        assertFalse(fooHtml.isBlock()); // generated
-        assertFalse(foo.isBlock()); // generated
+        assertFalse(fooHtml.isKnownTag()); // generated
+        assertFalse(foo.isKnownTag()); // generated
     }
 }
