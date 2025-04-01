@@ -478,15 +478,7 @@ enum HtmlTreeBuilderState {
                     else
                         tb.insertElementFor(startTag);
                     break;
-                case "textarea":
-                    tb.insertElementFor(startTag);
-                    if (!startTag.isSelfClosing()) {
-                        tb.tokeniser.transition(TokeniserState.Rcdata);
-                        tb.markInsertionMode();
-                        tb.framesetOk(false);
-                        tb.transition(Text);
-                    }
-                    break;
+                // "textarea" below as default tag.isRcData
                 case "xmp":
                     if (tb.inButtonScope("p")) {
                         tb.processEndTag("p");
@@ -628,8 +620,16 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 default:
-                    // todo - bring scan groups in if desired
-                    if (!Tag.isKnownTag(name)) { // no special rules for custom tags
+                    if (tb.tagFor(startTag).is(Tag.RcData)) { // "title" or custom rcdata
+                        tb.insertElementFor(startTag);
+                        if (!startTag.isSelfClosing()) {
+                            tb.tokeniser.transition(TokeniserState.Rcdata);
+                            tb.markInsertionMode();
+                            tb.framesetOk(false);
+                            tb.transition(Text);
+                        }
+                    }
+                    else if (!Tag.isKnownTag(name)) { // no special rules for custom tags
                         tb.insertElementFor(startTag);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) {

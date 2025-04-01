@@ -117,10 +117,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // initialise the tokeniser state:
             switch (contextName) {
-                case "title":
-                case "textarea":
-                    tokeniser.transition(TokeniserState.Rcdata);
-                    break;
                 case "iframe":
                 case "noembed":
                 case "noframes":
@@ -139,7 +135,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     pushTemplateMode(HtmlTreeBuilderState.InTemplate);
                     break;
                 default:
-                    tokeniser.transition(TokeniserState.Data);
+                    if (contextElement.tag().is(Tag.RcData)) // title, textarea, or custom
+                        tokeniser.transition(TokeniserState.Rcdata);
+                    else
+                        tokeniser.transition(TokeniserState.Data);
             }
             doc.appendChild(contextElement);
             push(contextElement);

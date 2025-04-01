@@ -11,6 +11,7 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -37,6 +38,12 @@ public class XmlTreeBuilder extends TreeBuilder {
             .syntax(Document.OutputSettings.Syntax.xml)
             .escapeMode(Entities.EscapeMode.xhtml)
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
+    }
+
+    @Override
+    void initialiseParseFragment(@Nullable Element context) {
+        super.initialiseParseFragment(context);
+        if (context != null && context.tag().is(Tag.RcData)) tokeniser.transition(TokeniserState.Rcdata);
     }
 
     Document parse(Reader input, String baseUri) {
@@ -98,7 +105,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertElementFor(Token.StartTag startTag) {
-        Tag tag = tagFor(startTag.name(), startTag.normalName(), defaultNamespace(), settings);
+        Tag tag = tagFor(startTag);
         if (startTag.attributes != null)
             startTag.attributes.deduplicate(settings);
 
@@ -109,6 +116,8 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (startTag.isSelfClosing()) {
             tag.setSelfClosing();
             pop(); // push & pop ensures onNodeInserted & onNodeClosed
+        } else if (tag.is(Tag.RcData)) {
+            tokeniser.transition(TokeniserState.Rcdata);
         }
     }
 

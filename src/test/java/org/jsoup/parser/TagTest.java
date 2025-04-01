@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
+import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -21,13 +22,13 @@ public class TagTest {
     public void canBeInsensitive(Locale locale) {
         Locale.setDefault(locale);
 
-        Tag script1 = Tag.valueOf("script", ParseSettings.htmlDefault);
-        Tag script2 = Tag.valueOf("SCRIPT", ParseSettings.htmlDefault);
+        Tag script1 = Tag.valueOf("script", NamespaceHtml, ParseSettings.htmlDefault);
+        Tag script2 = Tag.valueOf("SCRIPT", NamespaceHtml, ParseSettings.htmlDefault);
         assertEquals(script1, script2);
 
         TagSet htmlTags = TagSet.Html();
-        Tag script3 = htmlTags.valueOf("script", ParseSettings.htmlDefault);
-        Tag script4 = htmlTags.valueOf("SCRIPT", ParseSettings.htmlDefault);
+        Tag script3 = htmlTags.valueOf("script", NamespaceHtml, ParseSettings.htmlDefault);
+        Tag script4 = htmlTags.valueOf("SCRIPT", NamespaceHtml, ParseSettings.htmlDefault);
         assertSame(script3, script4);
     }
 
@@ -48,10 +49,10 @@ public class TagTest {
         assertEquals(html1, html2);
         assertNotSame(html1, html2);
 
-        Tag p3 = html1.valueOf("p");
-        Tag p4 = html1.valueOf("p");
-        Tag p5 = html2.valueOf("p");
-        Tag p6 = html2.valueOf("p");
+        Tag p3 = html1.valueOf("p", NamespaceHtml);
+        Tag p4 = html1.valueOf("p", NamespaceHtml);
+        Tag p5 = html2.valueOf("p", NamespaceHtml);
+        Tag p6 = html2.valueOf("p", NamespaceHtml);
         assertEquals(p1, p3);
         assertEquals(p3, p4);
         assertEquals(p4, p5);
@@ -107,7 +108,7 @@ public class TagTest {
         Tag svgHtml = Tag.valueOf("svg"); // no namespace specified, defaults to html, so not the known tag
         Tag svg = Tag.valueOf("svg", Parser.NamespaceSvg, ParseSettings.htmlDefault);
 
-        assertEquals(Parser.NamespaceHtml, svgHtml.namespace());
+        assertEquals(NamespaceHtml, svgHtml.namespace());
         assertEquals(Parser.NamespaceSvg, svg.namespace());
 
         assertFalse(svgHtml.isKnownTag()); // generated
@@ -118,10 +119,18 @@ public class TagTest {
         Tag fooHtml = Tag.valueOf("foo"); // no namespace specified, defaults to html
         Tag foo = Tag.valueOf("foo", Parser.NamespaceSvg, ParseSettings.htmlDefault);
 
-        assertEquals(Parser.NamespaceHtml, fooHtml.namespace());
+        assertEquals(NamespaceHtml, fooHtml.namespace());
         assertEquals(Parser.NamespaceSvg, foo.namespace());
 
         assertFalse(fooHtml.isKnownTag()); // generated
         assertFalse(foo.isKnownTag()); // generated
+    }
+
+    @Test void canSetOptions() {
+        Tag tag = new Tag("foo", NamespaceHtml);
+        assertFalse(tag.isKnownTag());
+        assertFalse(tag.isEmpty());
+        tag.set(Tag.Void);
+        assertTrue(tag.isEmpty());
     }
 }

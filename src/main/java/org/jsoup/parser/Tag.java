@@ -17,7 +17,7 @@ public class Tag implements Cloneable {
     public static int SelfClose = 1 << 3; // can self close (e.g. <foo />)
     public static int SeenSelfClose = 1 << 4; // seen self close in this parse (e.g. <foo />)
     public static int PreserveWhitespace = 1 << 5; // preserve whitespace (e.g. <pre>)
-    public static int Data = 1 << 6; // data tag (e.g. <script>)
+    public static int RcData = 1 << 6; // RCDATA elements can have text and character references. E.g. title, textarea.
     public static int FormSubmittable = 1 << 7; // form submittable (e.g. <input>)
     // todo remove after refactor:
     public static int FormatAsBlock = 1 << 8;
@@ -92,6 +92,18 @@ public class Tag implements Cloneable {
         options |= option;
         return this;
     }
+
+    /**
+     Test if an option is set on this tag.
+
+     @param option the option to test
+     @return true if the option is set
+     @since 1.20.1
+     */
+    public boolean is(int option) {
+        return (options & option) != 0;
+    }
+
 
     /**
      Clear (unset) an option from this tag.

@@ -241,6 +241,10 @@ abstract class TreeBuilder {
         return tagSet.valueOf(tagName, normalName, namespace, settings.preserveTagCase());
     }
 
+    Tag tagFor(Token.Tag token) {
+        return tagSet.valueOf(token.tagName, token.normalName, defaultNamespace(), settings.preserveTagCase());
+    }
+
     /**
      Gets the default namespace for this TreeBuilder
      * @return the default namespace

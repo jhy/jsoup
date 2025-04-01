@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
+import static org.jsoup.parser.Parser.NamespaceXml;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -308,7 +309,7 @@ public class XmlTreeBuilderTest {
         ParseSettings settings = doc.parser().settings();
         assertTrue(settings.preserveTagCase());
         assertTrue(settings.preserveAttributeCase());
-        assertEquals(Parser.NamespaceXml, doc.parser().defaultNamespace());
+        assertEquals(NamespaceXml, doc.parser().defaultNamespace());
     }
 
     @Test void xmlNamespace() {
@@ -330,7 +331,7 @@ public class XmlTreeBuilderTest {
     }
 
     private static void assertXmlNamespace(Element el) {
-        assertEquals(Parser.NamespaceXml, el.tag().namespace(), String.format("Element %s not in XML namespace", el.tagName()));
+        assertEquals(NamespaceXml, el.tag().namespace(), String.format("Element %s not in XML namespace", el.tagName()));
     }
 
     @Test void declarations() {
@@ -373,6 +374,31 @@ public class XmlTreeBuilderTest {
         assertEquals(xml, doc.html());
         XmlDeclaration decl = (XmlDeclaration) doc.expectFirst("x").childNode(0);
         assertEquals("<val2>", decl.attr("att2"));
+    }
+
+    @Test void canSetCustomRcdataTag() {
+        String inner = "Blah\nblah\n<foo></foo>&quot;";
+        String innerText = "Blah\nblah\n<foo></foo>\"";
+
+        String xml = "<x><y><z>" + inner + "</z></y></x><x><z id=2></z>";
+        TagSet custom = new TagSet();
+        Tag z = custom.valueOf("z", NamespaceXml, ParseSettings.preserveCase);
+        z.set(Tag.RcData);
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().tagSet(custom));
+        Element zEl = doc.expectFirst("z");
+        assertNotSame(z, zEl.tag()); // not same because we copy the tagset
+        assertEquals(z, zEl.tag());
+
+        assertEquals(1, zEl.childNodeSize());
+        Node child = zEl.childNode(0);
+        assertTrue(child instanceof TextNode);
+        assertEquals(innerText, ((TextNode) child).getWholeText());
+
+        // test fragment context parse - should parse <foo> as text
+        Element z2 = doc.expectFirst("#2");
+        z2.html(inner);
+        assertEquals(innerText, z2.wholeText());
     }
 
 }

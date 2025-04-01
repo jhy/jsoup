@@ -118,37 +118,12 @@ public class TagSet {
      <p>New tags will be added to this TagSet.</p>
 
      @param tagName Name of tag, e.g. "p". <b>Case-sensitive</b>.
-     @return The tag, either defined or new generic.
-     @see #valueOf(String tagName, String namespace, ParseSettings settings)
-     */
-    public Tag valueOf(String tagName) {
-        return valueOf(tagName, NamespaceHtml, ParseSettings.preserveCase);
-    }
-
-    /**
-     Get a Tag by name from this TagSet. If not previously defined (unknown), returns a new tag.
-     <p>New tags will be added to this TagSet.</p>
-
-     @param tagName Name of tag, e.g. "p". <b>Case-sensitive</b>.
      @param namespace the namespace for the tag.
      @return The tag, either defined or new generic.
      @see #valueOf(String tagName, String namespace, ParseSettings settings)
      */
     public Tag valueOf(String tagName, String namespace) {
         return valueOf(tagName, namespace, ParseSettings.preserveCase);
-    }
-
-    /**
-     Get a Tag by name. If not previously defined (unknown), returns a new generic tag.
-     <p>New tags will be added to this TagSet.</p>
-
-     @param tagName Name of tag, e.g. "p".
-     @param settings used to control tag name sensitivity
-     @return The tag, either defined or new generic.
-     @see #valueOf(String tagName, String namespace, ParseSettings settings)
-     */
-    public Tag valueOf(String tagName, ParseSettings settings) {
-        return valueOf(tagName, NamespaceHtml, settings);
     }
 
     @Override
@@ -201,6 +176,7 @@ public class TagSet {
             "pre", "plaintext", "title", "textarea"
             // script is not here as it is a data node, which always preserve whitespace
         };
+        String[] rcdataTags = { "title", "textarea" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
         String[] formListedTags = {
             "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
@@ -216,6 +192,7 @@ public class TagSet {
             .setupTags(NamespaceHtml, formatAsInlineTags, tag -> tag.clear(Tag.FormatAsBlock))
             .setupTags(NamespaceHtml, voidTags, tag -> tag.set(Tag.Void))
             .setupTags(NamespaceHtml, preserveWhitespaceTags, tag -> tag.set(Tag.PreserveWhitespace))
+            .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
             .setupTags(NamespaceHtml, formListedTags, tag -> tag.set(Tag.FormListed))
             .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.FormatAsBlock))
