@@ -1925,7 +1925,6 @@ enum HtmlTreeBuilderState {
             "nav", "ol", "pre", "section", "summary", "ul"};
         static final String[] InBodyEndOtherErrors = new String[] {"body", "dd", "dt", "html", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
-        static final String[] InBodyEndTableFosters = new String[]{"table", "tbody", "tfoot", "thead", "tr"};
         static final String[] InTableToBody = new String[]{"tbody", "tfoot", "thead"};
         static final String[] InTableAddBody = new String[]{"td", "th", "tr"};
         static final String[] InTableToHead = new String[]{"script", "style", "template"};
