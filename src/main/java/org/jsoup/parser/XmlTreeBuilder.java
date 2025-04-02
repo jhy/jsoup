@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
@@ -43,7 +44,11 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     void initialiseParseFragment(@Nullable Element context) {
         super.initialiseParseFragment(context);
-        if (context != null && context.tag().is(Tag.RcData)) tokeniser.transition(TokeniserState.Rcdata);
+        if (context != null) {
+            TokeniserState textState = context.tag().textState();
+            if (textState != null) tokeniser.transition(textState);
+        }
+
     }
 
     Document parse(Reader input, String baseUri) {
@@ -116,8 +121,9 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (startTag.isSelfClosing()) {
             tag.setSelfClosing();
             pop(); // push & pop ensures onNodeInserted & onNodeClosed
-        } else if (tag.is(Tag.RcData)) {
-            tokeniser.transition(TokeniserState.Rcdata);
+        } else {
+            TokeniserState textState = tag.textState();
+            if (textState != null) tokeniser.transition(textState);
         }
     }
 
@@ -133,7 +139,11 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     void insertCharacterFor(Token.Character token) {
         final String data = token.getData();
-        insertLeafNode(token.isCData() ? new CDataNode(data) : new TextNode(data));
+        LeafNode node;
+        if      (token.isCData())                       node = new CDataNode(data);
+        else if (currentElement().tag().is(Tag.Data))   node = new DataNode(data);
+        else                                            node = new TextNode(data);
+        insertLeafNode(node);
     }
 
     void insertDoctypeFor(Token.Doctype token) {

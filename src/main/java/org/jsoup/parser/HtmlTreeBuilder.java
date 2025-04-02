@@ -117,13 +117,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // initialise the tokeniser state:
             switch (contextName) {
-                case "iframe":
-                case "noembed":
-                case "noframes":
-                case "style":
-                case "xmp":
-                    tokeniser.transition(TokeniserState.Rawtext);
-                    break;
                 case "script":
                     tokeniser.transition(TokeniserState.ScriptData);
                     break;
@@ -135,8 +128,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     pushTemplateMode(HtmlTreeBuilderState.InTemplate);
                     break;
                 default:
-                    if (contextElement.tag().is(Tag.RcData)) // title, textarea, or custom
-                        tokeniser.transition(TokeniserState.Rcdata);
+                    Tag tag = contextElement.tag();
+                    TokeniserState textState = tag.textState();
+                    if (textState != null)
+                        tokeniser.transition(textState); // style, xmp, title, textarea, etc; or custom
                     else
                         tokeniser.transition(TokeniserState.Data);
             }
@@ -422,12 +417,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts the provided character token into the provided element. */
     void insertCharacterToElement(Token.Character characterToken, Element el) {
         final Node node;
-        final String tagName = el.normalName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
             node = new CDataNode(data);
-        else if (isContentForTagData(tagName))
+        else if (el.tag().is(Tag.Data))
             node = new DataNode(data);
         else
             node = new TextNode(data);
@@ -1054,7 +1048,4 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 '}';
     }
 
-    @Override protected boolean isContentForTagData(final String normalName) {
-        return (normalName.equals("script") || normalName.equals("style"));
-    }
 }

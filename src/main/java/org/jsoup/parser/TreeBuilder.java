@@ -229,14 +229,6 @@ abstract class TreeBuilder {
             errors.add(new ParseError(reader, msg, args));
     }
 
-    /**
-     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
-     Data Nodes).
-     */
-    boolean isContentForTagData(String normalName) {
-        return false;
-    }
-
     Tag tagFor(String tagName, String normalName, String namespace, ParseSettings settings) {
         return tagSet.valueOf(tagName, normalName, namespace, settings.preserveTagCase());
     }

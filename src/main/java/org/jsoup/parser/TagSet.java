@@ -177,6 +177,7 @@ public class TagSet {
             // script is not here as it is a data node, which always preserve whitespace
         };
         String[] rcdataTags = { "title", "textarea" };
+        String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
         String[] formListedTags = {
             "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
@@ -193,6 +194,7 @@ public class TagSet {
             .setupTags(NamespaceHtml, voidTags, tag -> tag.set(Tag.Void))
             .setupTags(NamespaceHtml, preserveWhitespaceTags, tag -> tag.set(Tag.PreserveWhitespace))
             .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
+            .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
             .setupTags(NamespaceHtml, formListedTags, tag -> tag.set(Tag.FormListed))
             .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.FormatAsBlock))

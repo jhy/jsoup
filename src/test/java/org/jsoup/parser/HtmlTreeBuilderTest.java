@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jspecify.annotations.NullMarked;
@@ -81,5 +82,23 @@ public class HtmlTreeBuilderTest {
         Element x2 = doc.expectFirst("#2");
         x2.html(inner); // <foo> will be text not el, via custom fragment context element
         assertEquals(innerText, x2.wholeText());
+    }
+
+    @Test void customDataTag() {
+        String inner = "Blah\nblah\n<foo>Foo</foo>\n&quot;"; // no character refs, will be as-is
+        String html = "<div><x>" + inner + "</x></div><div><x id=2></x></div>";
+        TagSet custom = TagSet.Html();
+        Tag x = custom.valueOf("x", NamespaceHtml);
+        x.set(Tag.Data);
+
+        Document doc = Jsoup.parse(html, Parser.htmlParser().tagSet(custom));
+        Element xEl = doc.expectFirst("x");
+        assertEquals(x, xEl.tag());
+        assertEquals(inner, xEl.data());
+
+        // fragment parse context
+        Element x2 = doc.expectFirst("#2");
+        x2.html(inner); // <foo> will be text not el, via custom fragment context element
+        assertEquals(inner, xEl.data());
     }
 }

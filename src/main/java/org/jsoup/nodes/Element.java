@@ -7,7 +7,6 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.parser.TagSet;
 import org.jsoup.parser.TokenQueue;
 import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
@@ -1580,10 +1579,8 @@ public class Element extends Node implements Iterable<Element> {
     public Element text(String text) {
         Validate.notNull(text);
         empty();
-        // special case for script/style in HTML: should be data node
-        Document owner = ownerDocument();
-        // an alternate impl would be to run through the parser
-        if (owner != null && owner.parser().isContentForTagData(normalName()))
+        // special case for script/style in HTML (or customs): should be data node
+        if (tag().is(Tag.Data))
             appendChild(new DataNode(text));
         else
             appendChild(new TextNode(text));

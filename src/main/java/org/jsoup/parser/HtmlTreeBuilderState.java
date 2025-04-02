@@ -132,9 +132,9 @@ enum HtmlTreeBuilderState {
                         tb.insertEmptyElementFor(start);
                         // todo: charset switches
                     } else if (name.equals("title")) {
-                        handleRcData(start, tb);
+                        HandleTextState(start, tb, TokeniserState.Rcdata);
                     } else if (inSorted(name, InHeadRaw)) {
-                        handleRawtext(start, tb);
+                        HandleTextState(start, tb, TokeniserState.Rawtext);
                     } else if (name.equals("noscript")) {
                         // else if noscript && scripting flag = true: rawtext (jsoup doesn't run script, to handle as noscript)
                         tb.insertElementFor(start);
@@ -478,22 +478,25 @@ enum HtmlTreeBuilderState {
                     else
                         tb.insertElementFor(startTag);
                     break;
-                // "textarea" below as default tag.isRcData
+                case "textarea":
+                    tb.framesetOk(false);
+                    HandleTextState(startTag, tb, TokeniserState.Rcdata);
+                    break;
                 case "xmp":
                     if (tb.inButtonScope("p")) {
                         tb.processEndTag("p");
                     }
                     tb.reconstructFormattingElements();
                     tb.framesetOk(false);
-                    handleRawtext(startTag, tb);
+                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
                     break;
                 case "iframe":
                     tb.framesetOk(false);
-                    handleRawtext(startTag, tb);
+                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
                     break;
                 case "noembed":
                     // also handle noscript if script enabled
-                    handleRawtext(startTag, tb);
+                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
                     break;
                 case "select":
                     tb.reconstructFormattingElements();
@@ -620,21 +623,14 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 default:
-                    if (tb.tagFor(startTag).is(Tag.RcData)) { // "title" or custom rcdata
-                        tb.insertElementFor(startTag);
-                        if (!startTag.isSelfClosing()) {
-                            tb.tokeniser.transition(TokeniserState.Rcdata);
-                            tb.markInsertionMode();
-                            tb.framesetOk(false);
-                            tb.transition(Text);
-                        }
-                    }
-                    else if (!Tag.isKnownTag(name)) { // no special rules for custom tags
+                    Tag tag = tb.tagFor(startTag);
+                    TokeniserState textState = tag.textState();
+                    // custom rcdata or rawtext (if we were in head, will have auto-transitioned here)
+                    if (textState != null) HandleTextState(startTag, tb, textState);
+                    else if (!tag.isKnownTag()) { // no other special rules for custom tags
                         tb.insertElementFor(startTag);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
-                        if (tb.inButtonScope("p")) {
-                            tb.processEndTag("p");
-                        }
+                        if (tb.inButtonScope("p")) tb.processEndTag("p");
                         tb.insertElementFor(startTag);
                     } else if (inSorted(name, Constants.InBodyStartToHead)) {
                         return tb.process(t, InHead);
@@ -1887,15 +1883,8 @@ enum HtmlTreeBuilderState {
         return false;
     }
 
-    private static void handleRcData(Token.StartTag startTag, HtmlTreeBuilder tb) {
-        tb.tokeniser.transition(TokeniserState.Rcdata);
-        tb.markInsertionMode();
-        tb.transition(Text);
-        tb.insertElementFor(startTag);
-    }
-
-    private static void handleRawtext(Token.StartTag startTag, HtmlTreeBuilder tb) {
-        tb.tokeniser.transition(TokeniserState.Rawtext);
+    private static void HandleTextState(Token.StartTag startTag, HtmlTreeBuilder tb, TokeniserState state) {
+        tb.tokeniser.transition(state);
         tb.markInsertionMode();
         tb.transition(Text);
         tb.insertElementFor(startTag);

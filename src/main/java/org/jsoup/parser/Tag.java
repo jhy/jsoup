@@ -1,5 +1,7 @@
 package org.jsoup.parser;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -18,10 +20,11 @@ public class Tag implements Cloneable {
     public static int SeenSelfClose = 1 << 4; // seen self close in this parse (e.g. <foo />)
     public static int PreserveWhitespace = 1 << 5; // preserve whitespace (e.g. <pre>)
     public static int RcData = 1 << 6; // RCDATA elements can have text and character references. E.g. title, textarea.
-    public static int FormSubmittable = 1 << 7; // form submittable (e.g. <input>)
+    public static int Data = 1 << 7; // Data elements can have text (and not character references). E.g. style, script.
+    public static int FormSubmittable = 1 << 8; // form submittable (e.g. <input>)
     // todo remove after refactor:
-    public static int FormatAsBlock = 1 << 8;
-    public static int FormListed = 1 << 9;
+    public static int FormatAsBlock = 1 << 9;
+    public static int FormListed = 1 << 10;
 
     final String namespace;
     String tagName;
@@ -253,6 +256,15 @@ public class Tag implements Cloneable {
     Tag setSelfClosing() {
         set(SelfClose);
         return this;
+    }
+
+    /**
+     If this Tag uses a specific text TokeniserState for its content, returns that; otherwise null.
+     */
+    @Nullable TokeniserState textState() {
+        if (is(RcData)) return TokeniserState.Rcdata;
+        if (is(Data))   return TokeniserState.Rawtext;
+        else            return null;
     }
 
     @Override

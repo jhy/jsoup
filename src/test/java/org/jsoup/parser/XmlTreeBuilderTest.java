@@ -401,4 +401,30 @@ public class XmlTreeBuilderTest {
         assertEquals(innerText, z2.wholeText());
     }
 
+    @Test void canSetCustomDataTag() {
+        String inner = "Blah\nblah\n<foo></foo>&quot;"; // no character refs, will be as-is
+
+        String xml = "<x><y><z>" + inner + "</z></y></x><x><z id=2></z>";
+        TagSet custom = new TagSet();
+        Tag z = custom.valueOf("z", NamespaceXml, ParseSettings.preserveCase);
+        z.set(Tag.Data);
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().tagSet(custom));
+        Element zEl = doc.expectFirst("z");
+        assertNotSame(z, zEl.tag()); // not same because we copy the tagset
+        assertEquals(z, zEl.tag());
+
+        assertEquals(1, zEl.childNodeSize());
+        Node child = zEl.childNode(0);
+        assertTrue(child instanceof DataNode);
+        assertEquals(inner, ((DataNode) child).getWholeData());
+        assertEquals(inner, zEl.data());
+
+        // test fragment context parse - should parse <foo> as data
+        Element z2 = doc.expectFirst("#2");
+        z2.html(inner);
+        assertEquals(inner, ((DataNode) child).getWholeData());
+        assertEquals(inner, zEl.data());
+    }
+
 }

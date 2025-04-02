@@ -188,10 +188,10 @@ public class Parser implements Cloneable {
     /**
      (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
      Data Nodes).
+     @deprecated internal method, no longer used, and will be removed in 1.12.1.
      */
-    public boolean isContentForTagData(String normalName) {
-        // todo migrate to tagset
-        return getTreeBuilder().isContentForTagData(normalName);
+    @Deprecated public boolean isContentForTagData(String normalName) {
+        return tagSet().valueOf(normalName, defaultNamespace()).is(Tag.Data);
     }
 
     public String defaultNamespace() {
