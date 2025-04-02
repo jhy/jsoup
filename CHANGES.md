@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.19.2 (PENDING)
+## 1.20.1 (PENDING)
 
 ### Changes
 
@@ -22,6 +22,7 @@
 * When converting a Document to the W3C DOM in `W3CDom`, an element with an attribute in an undeclared namespace now
   gets a declaration of `xmlns:prefix="undefined"`. This allows subsequent serializations to XML via `W3CDom.asString()`
   to succeed. [#2087](https://github.com/jhy/jsoup/issues/2087).
+* The `StreamParser` could emit the final elements of a document twice, due to how `onNodeCompleted` was fired when closing out the stack. [#2295](https://github.com/jhy/jsoup/issues/2295).
 
 ## 1.19.1 (2025-03-04)
 
