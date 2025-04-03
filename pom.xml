@@ -249,7 +249,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>3.5.3</version>
         <configuration>
           <!-- smaller stack to find stack overflows. Was 256, but Zulu on MacOS ARM needs >= 640 -->
           <argLine>-Xss640k</argLine>
@@ -257,7 +257,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>3.5.3</version>
         <executions>
           <execution>
             <goals>
@@ -484,7 +484,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.5.2</version>
+            <version>3.5.3</version>
             <executions>
               <execution>
                 <goals>
@@ -505,7 +505,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.12.0</version>
+      <version>5.12.1</version>
       <scope>test</scope>
     </dependency>
 

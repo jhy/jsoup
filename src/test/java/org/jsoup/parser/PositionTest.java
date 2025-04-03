@@ -220,6 +220,23 @@ class PositionTest {
         assertEquals("2,9:15-4,8:33", data.sourceRange().toString());
     }
 
+    @Test void tracksExplicitAndImplicitBodyHtml() {
+        // Tests that </body></html> tokens are tracked when present
+        String htmlSans = "<body><a>Link</a>";
+        String htmlWith = "<html><head></head><body><a>Link</a></body></html>";
+
+        Document docSans = Jsoup.parse(htmlSans, TrackingHtmlParser);
+        Document docWith = Jsoup.parse(htmlWith, TrackingHtmlParser);
+
+        StringBuilder trackSans = new StringBuilder();
+        StringBuilder trackWith = new StringBuilder();
+        docSans.forEachNode(node -> accumulatePositions(node, trackSans));
+        docWith.forEachNode(node -> accumulatePositions(node, trackWith));
+
+        assertEquals("#document:0-0~17-17; html:0-0~17-17; head:0-0~0-0; body:0-6~17-17; a:6-9~13-17; #text:9-13; ", trackSans.toString());
+        assertEquals("#document:0-0~50-50; html:0-6~43-50; head:6-12~12-19; body:19-25~36-43; a:25-28~32-36; #text:28-32; ", trackWith.toString());
+    }
+
     @Test void tracksXml() {
         String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!doctype html>\n<rss url=foo>\nXML\n</rss>\n<!-- comment -->";
         Document doc = Jsoup.parse(xml, TrackingXmlParser);
