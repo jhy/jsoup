@@ -56,6 +56,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     static String[] TagSearchSpecialMath = {"annotation-xml", "mi", "mn", "mo", "ms", "mtext"}; // differs to MathML text integration point; adds annotation-xml
     static final String[] TagMathMlTextIntegration = new String[]{"mi", "mn", "mo", "ms", "mtext"};
     static final String[] TagSvgHtmlIntegration = new String[]{"desc", "foreignObject", "title"};
+    static final String[] TagFormListed = {
+        "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
+    };
 
     public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
 
@@ -387,7 +390,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      * @param token the token this element was parsed from. If null, uses a zero-width current token as intrinsic insert
      */
     private void doInsertElement(Element el, @Nullable Token token) {
-        if (el.tag().isFormListed() && formElement != null)
+        if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
 
         // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to

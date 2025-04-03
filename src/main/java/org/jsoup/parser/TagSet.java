@@ -179,9 +179,6 @@ public class TagSet {
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
-        String[] formListedTags = {
-            "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
-        };
         String[] blockMathTags = {"math"};
         String[] inlineMathTags = {"mi", "mo", "msup", "mn", "mtext"};
         String[] blockSvgTags = {"svg"};
@@ -196,7 +193,6 @@ public class TagSet {
             .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
             .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
-            .setupTags(NamespaceHtml, formListedTags, tag -> tag.set(Tag.FormListed))
             .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.FormatAsBlock))
             .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(Tag.Inline))
             .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.FormatAsBlock))

@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -24,7 +25,6 @@ public class Tag implements Cloneable {
     public static int FormSubmittable = 1 << 8; // form submittable (e.g. <input>)
     // todo remove after refactor:
     public static int FormatAsBlock = 1 << 9;
-    public static int FormListed = 1 << 10;
 
     final String namespace;
     String tagName;
@@ -240,9 +240,10 @@ public class Tag implements Cloneable {
     /**
      * Get if this tag represents a control associated with a form. E.g. input, textarea, output
      * @return if associated with a form
+     * @deprecated this method is internal to HtmlTreeBuilder only, and will be removed in 1.21.1.
      */
-    public boolean isFormListed() {
-        return (options & FormListed) != 0;
+    @Deprecated public boolean isFormListed() {
+        return namespace.equals(NamespaceHtml) && StringUtil.inSorted(normalName, HtmlTreeBuilder.TagFormListed);
     }
 
     /**
