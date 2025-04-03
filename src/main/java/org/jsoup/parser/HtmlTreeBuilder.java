@@ -1048,4 +1048,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 '}';
     }
 
+    /** @deprecated this unused internal method will be removed. */
+    @Deprecated
+    protected boolean isContentForTagData(final String normalName) {
+        return (normalName.equals("script") || normalName.equals("style"));
+    }
+
 }
