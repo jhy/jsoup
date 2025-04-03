@@ -1815,15 +1815,7 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
-        if (shouldIndent(out)) {
-            if (accum instanceof StringBuilder) {
-                if (((StringBuilder) accum).length() > 0)
-                    indent(accum, depth, out);
-            } else {
-                indent(accum, depth, out);
-            }
-        }
+    void outerHtmlHead(final Appendable accum, Document.OutputSettings out) throws IOException {
         accum.append('<').append(safeTagName(out.syntax()));
         if (attributes != null) attributes.html(accum, out);
 
@@ -1839,13 +1831,8 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
-            if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                (tag.formatAsBlock() && !preserveWhitespace(parentNode)) ||
-                    (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
-            )))
-                indent(accum, depth, out);
             accum.append("</").append(safeTagName(out.syntax())).append('>');
         }
     }

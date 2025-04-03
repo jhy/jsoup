@@ -70,7 +70,7 @@ public class XmlDeclaration extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
         accum
             .append("<")
             .append(isDeclaration ? "!" : "?")
@@ -82,7 +82,7 @@ public class XmlDeclaration extends LeafNode {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+    void outerHtmlTail(Appendable accum, Document.OutputSettings out) {
     }
 
     @Override
