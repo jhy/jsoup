@@ -326,7 +326,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts an HTML element for the given tag) */
     Element insertElementFor(final Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
 
         // handle self-closing tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
@@ -353,7 +353,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
         Element el = createElementFor(startTag, namespace, true);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
 
         if (startTag.isSelfClosing()) {
             el.tag().setSelfClosing(); // remember this is self-closing for output
@@ -365,7 +365,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     Element insertEmptyElementFor(Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
         pop();
         return el;
     }
@@ -379,7 +379,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         } else
             setFormElement(el);
 
-        doInsertElement(el, startTag);
+        doInsertElement(el);
         if (!onStack) pop();
         return el;
     }
@@ -387,9 +387,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts the Element onto the stack. All element inserts must run through this method. Performs any general
      tests on the Element before insertion.
      * @param el the Element to insert and make the current element
-     * @param token the token this element was parsed from. If null, uses a zero-width current token as intrinsic insert
      */
-    private void doInsertElement(Element el, @Nullable Token token) {
+    private void doInsertElement(Element el) {
         if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
 
@@ -945,7 +944,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
             Element newEl = new Element(tagFor(entry.nodeName(), entry.normalName(), defaultNamespace(), settings), null, entry.attributes().clone());
-            doInsertElement(newEl, null);
+            doInsertElement(newEl);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);
