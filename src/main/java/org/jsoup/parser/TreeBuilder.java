@@ -279,7 +279,7 @@ abstract class TreeBuilder {
             nodeListener.tail(node, stack.size());
     }
 
-    private void trackNodePosition(Node node, boolean isStart) {
+    void trackNodePosition(Node node, boolean isStart) {
         if (!trackSourceRange) return;
 
         final Token token = currentToken;

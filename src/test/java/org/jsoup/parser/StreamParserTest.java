@@ -10,6 +10,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -460,6 +462,25 @@ class StreamParserTest {
             List<Node> nodes = parser.completeFragment();
             assertEquals(3, nodes.size());
             assertEquals("tr", nodes.get(0).nodeName());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "<html><body><a>Link</a></body></html>",
+        "<html><body><a>Link</a>",
+        "<a>Link</a></body></html>",
+        "<a>Link</a>",
+        "<a>Link",
+        "<a>Link</body>",
+    })
+    void emitsOnlyOnce(String html) {
+        try (StreamParser parser = new StreamParser(Parser.htmlParser()).parse(html, "")) {
+            // https://github.com/jhy/jsoup/issues/2295
+            // When there was a /body or /html, those were being emitted twice, due to firing a fake onNodeClosed to track their source positions
+            StringBuilder seen = new StringBuilder();
+            parser.stream().forEach(el -> trackSeen(el, seen));
+            assertEquals("head+;a[Link];body;html;#root;", seen.toString());
         }
     }
 

@@ -687,7 +687,7 @@ enum HtmlTreeBuilderState {
                     } else {
                         if (tb.onStackNot(InBodyEndOtherErrors))
                             tb.error(this);
-                        tb.onNodeClosed(tb.getFromStack("body")); // track source position of close; everything is still on stack in case of trailers
+                        tb.trackNodePosition(tb.getFromStack("body"), false); // track source position of close; body is left on stack, in case of trailers
                         tb.transition(AfterBody);
                     }
                     break;
@@ -1656,7 +1656,7 @@ enum HtmlTreeBuilderState {
                     tb.error(this);
                     return false;
                 } else {
-                    if (html != null) tb.onNodeClosed(html); // track source position of close; everything is still on stack in case of trailers
+                    if (html != null) tb.trackNodePosition(html, false); // track source position of close; html is left on stack, in case of trailers
                     tb.transition(AfterAfterBody);
                 }
             } else if (t.isEOF()) {
