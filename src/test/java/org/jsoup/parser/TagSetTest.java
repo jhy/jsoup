@@ -72,4 +72,28 @@ public class TagSetTest {
             " Bar" +
             "</custom>", custom.outerHtml());
     }
+
+    @Test void knownTags() {
+        // tests that tags explicitly inserted via .add are 'known'; those that come implicitly via valueOf are not
+        TagSet tags = TagSet.Html();
+        Tag custom = new Tag("custom");
+        assertEquals("custom", custom.name());
+        assertEquals(NamespaceHtml, custom.namespace());
+        assertFalse(custom.isKnownTag()); // not yet
+
+        Tag br = tags.get("br", NamespaceHtml);
+        assertNotNull(br);
+        assertTrue(br.isKnownTag());
+        assertSame(br, tags.valueOf("br", NamespaceHtml));
+
+        Tag foo = tags.valueOf("foo", NamespaceHtml);
+        assertFalse(foo.isKnownTag());
+
+        tags.add(custom);
+        assertTrue(custom.isKnownTag());
+        assertSame(custom, tags.get("custom", NamespaceHtml));
+        assertSame(custom, tags.valueOf("custom", NamespaceHtml));
+        Tag capCustom = tags.valueOf("Custom", NamespaceHtml);
+        assertTrue(capCustom.isKnownTag()); // cloned from a known tag, so is still known
+    }
 }

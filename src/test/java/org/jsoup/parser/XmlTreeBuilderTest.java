@@ -427,4 +427,37 @@ public class XmlTreeBuilderTest {
         assertEquals(inner, zEl.data());
     }
 
+    @Test void prettyFormatsTextInline() {
+        // https://github.com/jhy/jsoup/issues/2141
+        String xml = "<package><metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n" +
+            "<dc:identifier id=\"pub-id\">id</dc:identifier>\n" +
+            "<dc:title>title</dc:title>\n" +
+            "<dc:language>ja</dc:language>\n" +
+            "<dc:description>desc</dc:description>\n" +
+            "</metadata></package>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        doc.outputSettings().prettyPrint(true);
+        assertEquals("<package>\n" +
+            " <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n" +
+            "  <dc:identifier id=\"pub-id\">id</dc:identifier><dc:title>title</dc:title> <dc:language>ja</dc:language> <dc:description>desc</dc:description>\n" +
+            " </metadata>\n" +
+            "</package>", doc.html());
+
+        // can customize
+        Element meta = doc.expectFirst("metadata");
+        Tag metaTag = meta.tag();
+        metaTag.set(Tag.Block);
+        // set all the inner els of meta to be blocks
+        for (Element inner : meta) inner.tag().set(Tag.Block);
+
+        assertEquals("<package>\n" +
+            " <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n" +
+            "  <dc:identifier id=\"pub-id\">id</dc:identifier>\n" +
+            "  <dc:title>title</dc:title>\n" +
+            "  <dc:language>ja</dc:language>\n" +
+            "  <dc:description>desc</dc:description>\n" +
+            " </metadata>\n" +
+            "</package>", doc.html());
+    }
+
 }

@@ -37,22 +37,29 @@ public class TagSet {
     public TagSet(TagSet original) {
         for (HashMap<String, Tag> nsTags : original.tags.values()) {
             for (Tag tag : nsTags.values()) {
-                this.add(tag.clone());
+                this.doAdd(tag.clone());
             }
         }
     }
 
     /**
      Insert a tag into this TagSet. If the tag already exists, it is replaced.
+     <p>Tags explicitly added like this are considered to be known tags (vs those that are dynamically created via
+     .valueOf() if not already in the set.</p>
 
      @param tag the tag to add
      @return this TagSet
      */
     public TagSet add(Tag tag) {
+        tag.set(Tag.Defined);
+        doAdd(tag);
+        return this;
+    }
+
+    /** Adds the tag, but does not set defined. Used in .valueOf */
+    private void doAdd(Tag tag) {
         tags.computeIfAbsent(tag.namespace, ns -> new HashMap<>())
             .put(tag.tagName, tag);
-
-        return this;
     }
 
     /**
@@ -88,14 +95,14 @@ public class TagSet {
             if (preserveTagCase && !tagName.equals(normalName)) {
                 tag = tag.clone(); // copy so that the name update doesn't reset all instances
                 tag.tagName = tagName;
-                add(tag);
+                doAdd(tag);
             }
             return tag;
         }
 
         // not defined: return a new one
         tag = new Tag(tagName, normalName, namespace);
-        add(tag);
+        doAdd(tag);
 
         return tag;
     }

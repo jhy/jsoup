@@ -15,7 +15,7 @@ import static org.jsoup.parser.Parser.NamespaceHtml;
  @see Parser#tagSet(TagSet) */
 public class Tag implements Cloneable {
     // tag option constants
-    public static int Defined               = 1; // tag was defined by the TagSet // todo impl set when via .add, but not value of
+    public static int Defined               = 1; // tag was defined by the TagSet
     public static int Void                  = 1 << 1; // void tag (e.g. <img>)
     public static int Block                 = 1 << 2; // block tag (e.g. <div>, <p>). Can't be both block and inline, but could be neither (unknown, inferred)
     public static int InlineContainer       = 1 << 3; // block tags which will only hold inline tags (e.g. p); formatting
@@ -41,6 +41,17 @@ public class Tag implements Cloneable {
      */
     public Tag(String tagName, String namespace) {
         this(tagName, ParseSettings.normalName(tagName), namespace);
+    }
+
+    /**
+     Create a new Tag, with the given name, in the HTML namespace.
+     <p>The tag is not implicitly added to any TagSet.</p>
+     @param tagName the name of the tag. Case-sensitive.
+     @see TagSet#valueOf(String, String)
+     @since 1.20.1
+     */
+    public Tag(String tagName) {
+        this(tagName, NamespaceHtml);
     }
 
     /** Path for TagSet defaults, no options set; normal name is already LC. */
