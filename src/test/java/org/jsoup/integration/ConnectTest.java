@@ -742,12 +742,12 @@ public class ConnectTest {
     public void fetchHandlesXmlAsHtmlWhenParserSet() throws IOException {
         // should auto-detect xml and use XML parser, unless explicitly requested the html parser
         String xmlUrl = FileServlet.urlTo("/htmltests/xml-test.xml");
-        Connection con = Jsoup.connect(xmlUrl).parser(Parser.htmlParser());
+        Connection con = Jsoup.connect(xmlUrl).parser(Parser.htmlParser()); // which will also use the pretty printer by default
         con.data(FileServlet.ContentTypeParam, "application/xml");
         Document doc = con.get();
         Connection.Request req = con.request();
         assertTrue(req.parser().getTreeBuilder() instanceof HtmlTreeBuilder);
-        assertEquals("<html> <head></head> <body> <doc> <val> One <val> Two </val>Three </val> </doc> </body> </html>", StringUtil.normaliseWhitespace(doc.outerHtml()));
+        assertEquals("<html>\n <head></head>\n <body>\n  <doc>\n   <val>\n    One<val>Two</val>Three\n   </val>\n  </doc>\n </body>\n</html>", doc.outerHtml());
     }
 
     @Test

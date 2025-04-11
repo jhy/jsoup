@@ -8,23 +8,23 @@ import java.util.Objects;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 
 /**
- * Tag capabilities.
- *
- * @author Jonathan Hedley, jonathan@hedley.net
- */
+ A Tag represents an Element's name and configured options, common throughout the Document. Options may affect the parse
+ and output.
+
+ @see TagSet
+ @see Parser#tagSet(TagSet) */
 public class Tag implements Cloneable {
     // tag option constants
-    public static int Defined = 1 << 0; // tag was defined by the TagSet
-    public static int Void = 1 << 1; // void tag (e.g. <img>)
-    public static int Inline = 1 << 2; // inline tag (e.g. <b>), will not indent self (vs Block, which will) // todo consider having both isBlock and isInline separate- both off means we infer (and get rid of FormatAsBlock)
-    public static int SelfClose = 1 << 3; // can self close (e.g. <foo />)
-    public static int SeenSelfClose = 1 << 4; // seen self close in this parse (e.g. <foo />)
-    public static int PreserveWhitespace = 1 << 5; // preserve whitespace (e.g. <pre>)
-    public static int RcData = 1 << 6; // RCDATA elements can have text and character references. E.g. title, textarea.
-    public static int Data = 1 << 7; // Data elements can have text (and not character references). E.g. style, script.
-    public static int FormSubmittable = 1 << 8; // form submittable (e.g. <input>)
-    // todo remove after refactor:
-    public static int FormatAsBlock = 1 << 9;
+    public static int Defined               = 1; // tag was defined by the TagSet // todo impl set when via .add, but not value of
+    public static int Void                  = 1 << 1; // void tag (e.g. <img>)
+    public static int Block                 = 1 << 2; // block tag (e.g. <div>, <p>). Can't be both block and inline, but could be neither (unknown, inferred)
+    public static int InlineContainer       = 1 << 3; // block tags which will only hold inline tags (e.g. p); formatting
+    public static int SelfClose             = 1 << 4; // can self close (e.g. <foo />)
+    public static int SeenSelfClose         = 1 << 5; // seen self close in this parse (e.g. <foo />)
+    public static int PreserveWhitespace    = 1 << 6; // preserve whitespace (e.g. <pre>)
+    public static int RcData                = 1 << 7; // RCDATA elements can have text and character references. E.g. title, textarea.
+    public static int Data                  = 1 << 8; // Data elements can have text (and not character references). E.g. style, script.
+    public static int FormSubmittable       = 1 << 9; // form submittable (e.g. <input>)
 
     final String namespace;
     String tagName;
@@ -48,8 +48,6 @@ public class Tag implements Cloneable {
         this.tagName = tagName;
         this.normalName = normalName;
         this.namespace = namespace;
-        set(Tag.Inline);
-        set(Tag.FormatAsBlock); // todo cleanup printer
     }
 
     /**
@@ -106,7 +104,6 @@ public class Tag implements Cloneable {
     public boolean is(int option) {
         return (options & option) != 0;
     }
-
 
     /**
      Clear (unset) an option from this tag.
@@ -170,25 +167,26 @@ public class Tag implements Cloneable {
      * @return if block tag
      */
     public boolean isBlock() {
-        return (options & Inline) == 0;
+        return (options & Block) != 0;
     }
 
     /**
      * Gets if this tag should be formatted as a block (or as inline)
      *
      * @return if should be formatted as block or inline
+     * @deprecated no longer different to isBlock. Will be removed in 1.21.1.
      */
-    public boolean formatAsBlock() {
-        return (options & FormatAsBlock) != 0;
+    @Deprecated public boolean formatAsBlock() {
+        return (options & InlineContainer) != 0;
     }
 
     /**
-     * Gets if this tag is an inline tag.
+     * Gets if this tag is an inline tag. Just the opposite of isBlock.
      *
      * @return if this tag is an inline tag.
      */
     public boolean isInline() {
-        return (options & Inline) != 0;
+        return (options & Block) == 0;
     }
 
     /**

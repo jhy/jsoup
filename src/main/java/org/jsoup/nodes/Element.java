@@ -52,7 +52,7 @@ public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
     private static final String BaseUriKey = Attributes.internalKey("baseUri");
-    private Tag tag;
+    Tag tag;
     private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
@@ -1478,7 +1478,7 @@ public class Element extends Node implements Iterable<Element> {
             if (node instanceof Element) {
                 Element element = (Element) node;
                 Node next = node.nextSibling();
-                if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
+                if (!element.tag.isInline() && (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) && !lastCharIsWhitespace(accum))
                     accum.append(' ');
             }
 
@@ -1810,10 +1810,6 @@ public class Element extends Node implements Iterable<Element> {
         return Range.of(this, false);
     }
 
-    boolean shouldIndent(final Document.OutputSettings out) {
-        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out) && !preserveWhitespace(parentNode);
-    }
-
     @Override
     void outerHtmlHead(final Appendable accum, Document.OutputSettings out) throws IOException {
         accum.append('<').append(safeTagName(out.syntax()));
@@ -1857,12 +1853,16 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    public <T extends Appendable> T html(T appendable) {
-        final int size = childNodes.size();
-        for (int i = 0; i < size; i++)
-            childNodes.get(i).outerHtml(appendable);
-
-        return appendable;
+    public <T extends Appendable> T html(T accum) {
+        Node child = firstChild();
+        if (child != null) {
+            Printer printer = Printer.printerFor(child, accum);
+            while (child != null) {
+                NodeTraversor.traverse(printer, child);
+                child = child.nextSibling();
+            }
+        }
+        return accum;
     }
 
     /**
@@ -1968,18 +1968,5 @@ public class Element extends Node implements Iterable<Element> {
         @Override public void onContentsChanged() {
             owner.nodelistChanged();
         }
-    }
-
-    private boolean isFormatAsBlock(Document.OutputSettings out) {
-        return tag.isBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
-    }
-
-    private boolean isInlineable(Document.OutputSettings out) {
-        if (!tag.isInline())
-            return false;
-        return (parent() == null || parent().isBlock())
-            && !isEffectivelyFirst()
-            && !out.outline()
-            && !nameIs("br");
     }
 }

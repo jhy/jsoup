@@ -59,16 +59,17 @@ public class TagSetTest {
 
     @Test void supplyCustomTagSet() {
         TagSet tags = TagSet.Html();
-        tags.valueOf("custom", NamespaceHtml).set(Tag.PreserveWhitespace);
+        tags.valueOf("custom", NamespaceHtml).set(Tag.PreserveWhitespace).set(Tag.Block);
         Parser parser = Parser.htmlParser().tagSet(tags);
 
         Document doc = Jsoup.parse("<body><custom>\n\nFoo\n Bar</custom></body>", parser);
         Element custom = doc.expectFirst("custom");
         assertTrue(custom.tag().preserveWhitespace());
+        assertTrue(custom.tag().isBlock());
         assertEquals("<custom>\n" +
             "\n" +
             "Foo\n" +
-            " Bar\n" +
+            " Bar" +
             "</custom>", custom.outerHtml());
     }
 }

@@ -17,6 +17,7 @@ import static org.jsoup.parser.Parser.NamespaceSvg;
  A TagSet controls the {@link Tag} configuration for a Document's parse, and its serialization. It contains the initial
  defaults, and after the parse, any additionally discovered tags.
 
+ @see Parser#tagSet(TagSet)
  @since 1.20.1
  */
 public class TagSet {
@@ -87,7 +88,6 @@ public class TagSet {
             if (preserveTagCase && !tagName.equals(normalName)) {
                 tag = tag.clone(); // copy so that the name update doesn't reset all instances
                 tag.tagName = tagName;
-                tag.clear(Tag.Defined);
                 add(tag);
             }
             return tag;
@@ -147,16 +147,17 @@ public class TagSet {
         String[] blockTags = {
             "html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame",
             "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5",
-            "h6",
+            "h6", "br", "button",
             "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
             "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
             "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main",
             "center", "template",
-            "dir", "applet", "marquee", "listing" // deprecated but still known / special handling
+            "dir", "applet", "marquee", "listing", // deprecated but still known / special handling
+            "#root" // the outer Document
         };
         String[] inlineTags = {
             "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",
-            "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "br", "wbr", "map",
+            "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "wbr", "map",
             "q",
             "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
@@ -164,7 +165,7 @@ public class TagSet {
             "data", "bdi", "s", "strike", "nobr",
             "rb", // deprecated but still known / special handling
         };
-        String[] formatAsInlineTags = {
+        String[] inlineContainers = { // can only contain inline; aka phrasing content
             "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
             "ins", "del", "s", "button"
         };
@@ -173,30 +174,29 @@ public class TagSet {
             "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
         };
         String[] preserveWhitespaceTags = {
-            "pre", "plaintext", "title", "textarea"
-            // script is not here as it is a data node, which always preserve whitespace
+            "pre", "plaintext", "title", "textarea", "script"
         };
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
         String[] blockMathTags = {"math"};
         String[] inlineMathTags = {"mi", "mo", "msup", "mn", "mtext"};
-        String[] blockSvgTags = {"svg"};
+        String[] blockSvgTags = {"svg", "femerge", "femergenode"}; // note these are LC versions, but actually preserve case
         String[] inlineSvgTags = {"text"};
 
         return new TagSet()
-            .setupTags(NamespaceHtml, blockTags, tag -> tag.set(Tag.FormatAsBlock)) // block is by default, adding formatAsBlock (temp)
-            .setupTags(NamespaceHtml, inlineTags, tag -> tag.set(Tag.Inline))
-            .setupTags(NamespaceHtml, formatAsInlineTags, tag -> tag.clear(Tag.FormatAsBlock))
+            .setupTags(NamespaceHtml, blockTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceHtml, inlineTags, tag -> tag.set(0))
+            .setupTags(NamespaceHtml, inlineContainers, tag -> tag.set(Tag.InlineContainer))
             .setupTags(NamespaceHtml, voidTags, tag -> tag.set(Tag.Void))
             .setupTags(NamespaceHtml, preserveWhitespaceTags, tag -> tag.set(Tag.PreserveWhitespace))
             .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
             .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
-            .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.FormatAsBlock))
-            .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(Tag.Inline))
-            .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.FormatAsBlock))
-            .setupTags(NamespaceSvg, inlineSvgTags, tag -> tag.set(Tag.Inline))
+            .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
+            .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceSvg, inlineSvgTags, tag -> tag.set(0))
             ;
     }
 
@@ -206,7 +206,7 @@ public class TagSet {
             if (tag == null) {
                 tag = new Tag(tagName, tagName, namespace); // normal name is already normal here
                 tag.options = 0; // clear defaults
-                tag.set(Tag.Defined);
+                tag.set(Tag.Defined); // todo move to add but not via valueof
                 add(tag);
             }
             tagModifier.accept(tag);

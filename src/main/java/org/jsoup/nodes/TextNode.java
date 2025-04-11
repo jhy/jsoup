@@ -85,7 +85,6 @@ public class TextNode extends LeafNode {
         Entities.escape(accum, coreValue(), out, Entities.ForText);
     }
 
-
     @Override
     public String toString() {
         return outerHtml();

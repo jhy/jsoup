@@ -766,7 +766,7 @@ public abstract class Node implements Cloneable {
     }
 
     protected void outerHtml(Appendable accum) {
-        Printer printer = Printer.printerFor(accum, NodeUtils.outputSettings(this));
+        Printer printer = Printer.printerFor(this, accum);
         NodeTraversor.traverse(printer, this);
     }
 

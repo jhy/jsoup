@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- Some formatting tests -->
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>HTML output test</title>
+    <!-- Another comment -->
+</head>
+
+
+<body>
+
+<header>
+    <h1>H1 text</h1> other text <a href="/foo/">link</a> text
+    <div>&nbsp;</div>
+</header>
+
+<section><header><h1>Header</h1></header>Text after header.</section>
+
+  <div>Standalone text in block</div>
+<div><span>content</span></div>
+<div><span></span></div>
+  <div>Text with <b>inline</b> <b>elements</b> in a div.</div>
+  <div>
+      <p>In a para</p>
+      <p>
+          Other in a para.
+      </p>
+      <!-- comment in a div -->
+
+  </div>
+
+<p>
+    Some text.
+</p>
+
+<p>Some text with a<br>line break.</p>
+<p>Some text with a couple<br>
+    <br>line breaks.</p>
+<p>Some text with a couple<br><br>line breaks.</p>
+
+<a><p>A becomes block</p><div>If it has block children.</div></a>
+
+<div>
+    <p><a href="/example"><b>A bold link.</b></a></p>
+    <p>Something <unknown>custom</unknown>.</p>
+</div>
+
+<script>
+    let foo = 2;
+    foo++;
+</script>
+
+<div>
+    <pre>        Some preformatted text.
+
+        <span>
+            A span in pre.
+            <pre>                Deeper.
+                Still.
+
+            </pre>
+
+        </span>
+    </pre>
+
+</div>
+
+<div>This is some <span>spanned</span> text. <p>Then in a P.</p>And out.</div>
+
+</body>
+</html>

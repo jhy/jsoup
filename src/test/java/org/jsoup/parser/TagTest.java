@@ -65,14 +65,15 @@ public class TagTest {
         Tag div = Tag.valueOf("div");
 
         assertTrue(div.isBlock());
-        assertTrue(div.formatAsBlock());
+        assertFalse(div.isInline());
+        assertTrue(div.isKnownTag());
     }
 
     @Test public void pSemantics() {
         Tag p = Tag.valueOf("p");
-
+        assertTrue(p.isKnownTag());
         assertTrue(p.isBlock());
-        assertFalse(p.formatAsBlock());
+        assertFalse(p.isInline());
     }
 
     @Test public void imgSemantics() {
@@ -87,8 +88,11 @@ public class TagTest {
         Tag foo2 = Tag.valueOf("FOO");
 
         assertEquals(foo, foo2);
+        assertFalse(foo.isKnownTag());
         assertTrue(foo.isInline());
-        assertTrue(foo.formatAsBlock());
+        assertFalse(foo.isBlock());
+        assertFalse(foo.is(Tag.InlineContainer));
+        assertFalse(foo.preserveWhitespace());
     }
 
     @Test public void valueOfChecksNotNull() {

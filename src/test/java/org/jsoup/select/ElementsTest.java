@@ -518,7 +518,7 @@ public class ElementsTest {
         assertFalse(ps.removeAll(divs));
         assertEquals(2, ps.size());
 
-        assertEquals("<p>One</p>\n<p>Four</p>\n<div>\n Div\n</div>", doc.body().html());
+        assertEquals("<p>One</p>\n<p>Four</p>\n<div>Div</div>", doc.body().html());
     }
 
     @Test public void retainAll() {
@@ -533,12 +533,12 @@ public class ElementsTest {
         assertTrue(removed);
         assertEquals(2, midPs.size());
 
-        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>\n Div\n</div>", doc.body().html());
+        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>Div</div>", doc.body().html());
 
         Elements psAgain = doc.select("p");
         assertFalse(midPs.retainAll(psAgain));
 
-        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>\n Div\n</div>", doc.body().html());
+        assertEquals("<p>Two</p>\n<p>Three</p>\n<div>Div</div>", doc.body().html());
     }
 
     @Test public void iteratorRemovesFromDom() {
@@ -597,7 +597,7 @@ public class ElementsTest {
         }
 
         // check dom
-        assertEquals("<div> One</div><div> Two</div><div> Three</div><div> Four</div>", TextUtil.normalizeSpaces(doc.body().html()));
+        assertEquals("<div>One</div><div>Two</div><div>Three</div><div>Four</div>", TextUtil.normalizeSpaces(doc.body().html()));
     }
 
     @Test void selectFirst() {

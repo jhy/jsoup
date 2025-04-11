@@ -97,7 +97,7 @@ public class TraversorTest {
                 return ("b".equals(node.nodeName())) ? FilterResult.REMOVE : FilterResult.CONTINUE;
             }
         }, doc.select("div"));
-        assertEquals("<div></div>\n<div>\n There be\n</div>", doc.select("body").html());
+        assertEquals("<div></div>\n<div>There be</div>", doc.select("body").html());
     }
 
     @Test
