@@ -490,6 +490,13 @@ public class ElementTest {
         assertEquals("<p>Hello</p>", doc.getElementsByTag("div").get(0).html());
     }
 
+    @Test void formatNoTrailingSpace() {
+        // https://github.com/jhy/jsoup/issues/2215
+        String html = "<html>\n <head></head>\n <body>\n  a\n  <div>\n  </div>\n </body>\n</html>";
+        Document doc = Jsoup.parse(html);
+        assertEquals("<html>\n <head></head>\n <body>\n  a\n  <div></div>\n </body>\n</html>", doc.html());
+    }
+
     @Test
     public void testFormatHtml() {
         Document doc = Jsoup.parse("<title>Format test</title><div><p>Hello <span>jsoup <span>users</span></span></p><p>Good.</p></div>");
