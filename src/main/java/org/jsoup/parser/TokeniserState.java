@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.XmlDeclaration;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 
@@ -891,6 +892,10 @@ enum TokeniserState {
                     t.eofError(this);
                     t.transition(Data);
                     break;
+                case '?': // Handle trailing ? in <?xml...?>
+                    if (t.tagPending instanceof Token.XmlDecl)
+                        break;
+                    // otherwise fall through to default
                 default:
                     r.unconsume();
                     t.error(this);

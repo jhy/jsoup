@@ -394,4 +394,19 @@ public class XmlTreeBuilderTest {
         assertEquals("<val2>", decl.attr("att2"));
     }
 
+    @Test void xmlHeaderIsValid() {
+        // https://github.com/jhy/jsoup/issues/2298
+        String xml = "<?xml version=\"1.0\"?>\n<root></root>";
+        String expect = xml;
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().setTrackErrors(10));
+        assertEquals(0, doc.parser().getErrors().size());
+        assertEquals(expect, doc.html());
+
+        xml =  "<?xml version=\"1.0\" ?>\n<root></root>";
+        doc = Jsoup.parse(xml, Parser.xmlParser().setTrackErrors(10));
+        assertEquals(0, doc.parser().getErrors().size());
+        assertEquals(expect, doc.html());
+    }
+
 }
