@@ -145,8 +145,10 @@ public class TagTest {
     @Test void updateNameAndNamespace() {
         Tag tag = new Tag("foo", NamespaceHtml);
         tag.name("bar").namespace(NamespaceSvg);
+        tag.set(Tag.Block);
         assertEquals("bar", tag.name());
         assertEquals(NamespaceSvg, tag.namespace());
+        assertTrue(tag.isBlock()); // properties are unchanged
 
         // test in a doc
         Document doc = Jsoup.parse("<foo>One</foo><foo>Two</foo>");
