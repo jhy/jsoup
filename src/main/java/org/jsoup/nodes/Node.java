@@ -1,6 +1,5 @@
 package org.jsoup.nodes;
 
-import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
@@ -767,17 +766,20 @@ public abstract class Node implements Cloneable {
     }
 
     protected void outerHtml(Appendable accum) {
-        NodeTraversor.traverse(new OuterHtmlVisitor(accum, NodeUtils.outputSettings(this)), this);
+        Printer printer = Printer.printerFor(this, accum);
+        NodeTraversor.traverse(printer, this);
     }
 
     /**
      Get the outer HTML of this node.
+
      @param accum accumulator to place HTML into
+     @param out
      @throws IOException if appending to the given accumulator fails.
      */
-    abstract void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
+    abstract void outerHtmlHead(final Appendable accum, final Document.OutputSettings out) throws IOException;
 
-    abstract void outerHtmlTail(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException;
+    abstract void outerHtmlTail(final Appendable accum, final Document.OutputSettings out) throws IOException;
 
     /**
      * Write this node and its children to the given {@link Appendable}.
@@ -934,33 +936,5 @@ public abstract class Node implements Cloneable {
         }
 
         return clone;
-    }
-
-    private static class OuterHtmlVisitor implements NodeVisitor {
-        private final Appendable accum;
-        private final Document.OutputSettings out;
-
-        OuterHtmlVisitor(Appendable accum, Document.OutputSettings out) {
-            this.accum = accum;
-            this.out = out;
-        }
-
-        @Override public void head(Node node, int depth) {
-            try {
-				node.outerHtmlHead(accum, depth, out);
-			} catch (IOException exception) {
-				throw new SerializationException(exception);
-			}
-        }
-
-        @Override public void tail(Node node, int depth) {
-            if (!node.nodeName().equals("#text")) { // saves a void hit.
-				try {
-					node.outerHtmlTail(accum, depth, out);
-				} catch (IOException exception) {
-					throw new SerializationException(exception);
-				}
-            }
-        }
     }
 }

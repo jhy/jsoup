@@ -78,11 +78,7 @@ public class DocumentType extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        // add a newline if the doctype has a preceding node (which must be a comment)
-        if (siblingIndex > 0 && out.prettyPrint())
-            accum.append('\n');
-
+    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
         if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
@@ -100,9 +96,6 @@ public class DocumentType extends LeafNode {
         accum.append('>');
     }
 
-    @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
-    }
 
     private boolean has(final String attribute) {
         return !StringUtil.isBlank(attr(attribute));

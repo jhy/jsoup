@@ -52,7 +52,7 @@ public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
     private static final String BaseUriKey = Attributes.internalKey("baseUri");
-    private Tag tag;
+    Tag tag;
     private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
     List<Node> childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
@@ -72,7 +72,7 @@ public class Element extends Node implements Iterable<Element> {
      * @see #Element(String tag, String namespace)
      */
     public Element(String tag) {
-        this(Tag.valueOf(tag, Parser.NamespaceHtml, ParseSettings.preserveCase), "", null);
+        this(tag, Parser.NamespaceHtml);
     }
 
     /**
@@ -216,7 +216,8 @@ public class Element extends Node implements Iterable<Element> {
     public Element tagName(String tagName, String namespace) {
         Validate.notEmptyParam(tagName, "tagName");
         Validate.notEmptyParam(namespace, "namespace");
-        tag = Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
+        Parser parser = NodeUtils.parser(this);
+        tag = parser.tagSet().valueOf(tagName, namespace, parser.settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -227,6 +228,18 @@ public class Element extends Node implements Iterable<Element> {
      */
     public Tag tag() {
         return tag;
+    }
+
+    /**
+     Change the Tag of this element.
+     @param tag the new tag
+     @return this element, for chaining
+     @since 1.20.1
+     */
+    public Element tag(Tag tag) {
+        Validate.notNull(tag);
+        this.tag = tag;
+        return this;
     }
 
     /**
@@ -784,7 +797,8 @@ public class Element extends Node implements Iterable<Element> {
      * @return the new element, in the specified namespace
      */
     public Element appendElement(String tagName, String namespace) {
-        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
+        Parser parser = NodeUtils.parser(this);
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -808,7 +822,8 @@ public class Element extends Node implements Iterable<Element> {
      * @return the new element, in the specified namespace
      */
     public Element prependElement(String tagName, String namespace) {
-        Element child = new Element(Tag.valueOf(tagName, namespace, NodeUtils.parser(this).settings()), baseUri());
+        Parser parser = NodeUtils.parser(this);
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         prependChild(child);
         return child;
     }
@@ -1463,7 +1478,7 @@ public class Element extends Node implements Iterable<Element> {
             if (node instanceof Element) {
                 Element element = (Element) node;
                 Node next = node.nextSibling();
-                if (element.isBlock() && (next instanceof TextNode || next instanceof Element && !((Element) next).tag.formatAsBlock()) && !lastCharIsWhitespace(accum))
+                if (!element.tag.isInline() && (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) && !lastCharIsWhitespace(accum))
                     accum.append(' ');
             }
 
@@ -1564,10 +1579,8 @@ public class Element extends Node implements Iterable<Element> {
     public Element text(String text) {
         Validate.notNull(text);
         empty();
-        // special case for script/style in HTML: should be data node
-        Document owner = ownerDocument();
-        // an alternate impl would be to run through the parser
-        if (owner != null && owner.parser().isContentForTagData(normalName()))
+        // special case for script/style in HTML (or customs): should be data node
+        if (tag().is(Tag.Data))
             appendChild(new DataNode(text));
         else
             appendChild(new TextNode(text));
@@ -1797,20 +1810,8 @@ public class Element extends Node implements Iterable<Element> {
         return Range.of(this, false);
     }
 
-    boolean shouldIndent(final Document.OutputSettings out) {
-        return out.prettyPrint() && isFormatAsBlock(out) && !isInlineable(out) && !preserveWhitespace(parentNode);
-    }
-
     @Override
-    void outerHtmlHead(final Appendable accum, int depth, final Document.OutputSettings out) throws IOException {
-        if (shouldIndent(out)) {
-            if (accum instanceof StringBuilder) {
-                if (((StringBuilder) accum).length() > 0)
-                    indent(accum, depth, out);
-            } else {
-                indent(accum, depth, out);
-            }
-        }
+    void outerHtmlHead(final Appendable accum, Document.OutputSettings out) throws IOException {
         accum.append('<').append(safeTagName(out.syntax()));
         if (attributes != null) attributes.html(accum, out);
 
@@ -1826,13 +1827,8 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {
         if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
-            if (out.prettyPrint() && (!childNodes.isEmpty() && (
-                (tag.formatAsBlock() && !preserveWhitespace(parentNode)) ||
-                    (out.outline() && (childNodes.size()>1 || (childNodes.size()==1 && (childNodes.get(0) instanceof Element))))
-            )))
-                indent(accum, depth, out);
             accum.append("</").append(safeTagName(out.syntax())).append('>');
         }
     }
@@ -1857,12 +1853,16 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    public <T extends Appendable> T html(T appendable) {
-        final int size = childNodes.size();
-        for (int i = 0; i < size; i++)
-            childNodes.get(i).outerHtml(appendable);
-
-        return appendable;
+    public <T extends Appendable> T html(T accum) {
+        Node child = firstChild();
+        if (child != null) {
+            Printer printer = Printer.printerFor(child, accum);
+            while (child != null) {
+                NodeTraversor.traverse(printer, child);
+                child = child.nextSibling();
+            }
+        }
+        return accum;
     }
 
     /**
@@ -1968,18 +1968,5 @@ public class Element extends Node implements Iterable<Element> {
         @Override public void onContentsChanged() {
             owner.nodelistChanged();
         }
-    }
-
-    private boolean isFormatAsBlock(Document.OutputSettings out) {
-        return tag.isBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
-    }
-
-    private boolean isInlineable(Document.OutputSettings out) {
-        if (!tag.isInline())
-            return false;
-        return (parent() == null || parent().isBlock())
-            && !isEffectivelyFirst()
-            && !out.outline()
-            && !nameIs("br");
     }
 }

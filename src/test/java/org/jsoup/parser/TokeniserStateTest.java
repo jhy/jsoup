@@ -258,7 +258,7 @@ public class TokeniserStateTest {
     @Test
     public void nullInTag() {
         Document doc = Jsoup.parse("<di\0v>One</di\0v>Two");
-        assertEquals("<di�v>\n One\n</di�v>Two", doc.body().html());
+        assertEquals("<di�v>One</di�v>Two", doc.body().html());
     }
 
     @Test

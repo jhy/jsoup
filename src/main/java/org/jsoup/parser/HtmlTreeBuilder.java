@@ -56,6 +56,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     static String[] TagSearchSpecialMath = {"annotation-xml", "mi", "mn", "mo", "ms", "mtext"}; // differs to MathML text integration point; adds annotation-xml
     static final String[] TagMathMlTextIntegration = new String[]{"mi", "mn", "mo", "ms", "mtext"};
     static final String[] TagSvgHtmlIntegration = new String[]{"desc", "foreignObject", "title"};
+    static final String[] TagFormListed = {
+        "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
+    };
 
     public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
 
@@ -117,17 +120,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
             // initialise the tokeniser state:
             switch (contextName) {
-                case "title":
-                case "textarea":
-                    tokeniser.transition(TokeniserState.Rcdata);
-                    break;
-                case "iframe":
-                case "noembed":
-                case "noframes":
-                case "style":
-                case "xmp":
-                    tokeniser.transition(TokeniserState.Rawtext);
-                    break;
                 case "script":
                     tokeniser.transition(TokeniserState.ScriptData);
                     break;
@@ -139,7 +131,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
                     pushTemplateMode(HtmlTreeBuilderState.InTemplate);
                     break;
                 default:
-                    tokeniser.transition(TokeniserState.Data);
+                    Tag tag = contextElement.tag();
+                    TokeniserState textState = tag.textState();
+                    if (textState != null)
+                        tokeniser.transition(textState); // style, xmp, title, textarea, etc; or custom
+                    else
+                        tokeniser.transition(TokeniserState.Data);
             }
             doc.appendChild(contextElement);
             push(contextElement);
@@ -329,7 +326,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts an HTML element for the given tag) */
     Element insertElementFor(final Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
 
         // handle self-closing tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
@@ -356,7 +353,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      */
     Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
         Element el = createElementFor(startTag, namespace, true);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
 
         if (startTag.isSelfClosing()) {
             el.tag().setSelfClosing(); // remember this is self-closing for output
@@ -368,7 +365,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     Element insertEmptyElementFor(Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
-        doInsertElement(el, startTag);
+        doInsertElement(el);
         pop();
         return el;
     }
@@ -382,7 +379,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         } else
             setFormElement(el);
 
-        doInsertElement(el, startTag);
+        doInsertElement(el);
         if (!onStack) pop();
         return el;
     }
@@ -390,10 +387,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts the Element onto the stack. All element inserts must run through this method. Performs any general
      tests on the Element before insertion.
      * @param el the Element to insert and make the current element
-     * @param token the token this element was parsed from. If null, uses a zero-width current token as intrinsic insert
      */
-    private void doInsertElement(Element el, @Nullable Token token) {
-        if (el.tag().isFormListed() && formElement != null)
+    private void doInsertElement(Element el) {
+        if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
 
         // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
@@ -423,12 +419,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /** Inserts the provided character token into the provided element. */
     void insertCharacterToElement(Token.Character characterToken, Element el) {
         final Node node;
-        final String tagName = el.normalName();
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
             node = new CDataNode(data);
-        else if (isContentForTagData(tagName))
+        else if (el.tag().is(Tag.Data))
             node = new DataNode(data);
         else
             node = new TextNode(data);
@@ -949,7 +944,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // 8. create new element from element, 9 insert into current node, onto stack
             skip = false; // can only skip increment from 4.
             Element newEl = new Element(tagFor(entry.nodeName(), entry.normalName(), defaultNamespace(), settings), null, entry.attributes().clone());
-            doInsertElement(newEl, null);
+            doInsertElement(newEl);
 
             // 10. replace entry with new entry
             formattingElements.set(pos, newEl);
@@ -1055,7 +1050,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 '}';
     }
 
-    @Override protected boolean isContentForTagData(final String normalName) {
+    /** @deprecated this unused internal method will be removed. */
+    @Deprecated
+    protected boolean isContentForTagData(final String normalName) {
         return (normalName.equals("script") || normalName.equals("style"));
     }
+
 }

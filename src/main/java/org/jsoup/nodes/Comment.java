@@ -37,17 +37,12 @@ public class Comment extends LeafNode {
     }
 
     @Override
-	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        if (out.prettyPrint() && ((isEffectivelyFirst() && parentNode instanceof Element && ((Element) parentNode).tag().formatAsBlock()) || (out.outline() )))
-            indent(accum, depth, out);
+    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
         accum
-                .append("<!--")
-                .append(getData())
-                .append("-->");
+            .append("<!--")
+            .append(getData())
+            .append("-->");
     }
-
-    @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public Comment clone() {

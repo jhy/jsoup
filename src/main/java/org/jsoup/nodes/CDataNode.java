@@ -25,15 +25,11 @@ public class CDataNode extends TextNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
         accum
             .append("<![CDATA[")
-            .append(getWholeText());
-    }
-
-    @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
-        accum.append("]]>");
+            .append(getWholeText())
+            .append("]]>");
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -107,6 +108,9 @@ public abstract class LeafNode extends Node {
     protected List<Node> ensureChildNodes() {
         return EmptyNodes;
     }
+
+    @Override
+    void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {}
 
     @Override
     protected LeafNode doClone(Node parent) {

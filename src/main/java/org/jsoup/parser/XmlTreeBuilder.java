@@ -3,6 +3,7 @@ package org.jsoup.parser;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
@@ -11,6 +12,7 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -39,6 +41,16 @@ public class XmlTreeBuilder extends TreeBuilder {
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
     }
 
+    @Override
+    void initialiseParseFragment(@Nullable Element context) {
+        super.initialiseParseFragment(context);
+        if (context != null) {
+            TokeniserState textState = context.tag().textState();
+            if (textState != null) tokeniser.transition(textState);
+        }
+
+    }
+
     Document parse(Reader input, String baseUri) {
         return parse(input, baseUri, new Parser(this));
     }
@@ -58,6 +70,11 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     @Override public String defaultNamespace() {
         return NamespaceXml;
+    }
+
+    @Override
+    TagSet defaultTagSet() {
+        return new TagSet(); // an empty tagset
     }
 
     @Override
@@ -93,7 +110,7 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertElementFor(Token.StartTag startTag) {
-        Tag tag = tagFor(startTag.name(), startTag.normalName(), defaultNamespace(), settings);
+        Tag tag = tagFor(startTag);
         if (startTag.attributes != null)
             startTag.attributes.deduplicate(settings);
 
@@ -104,6 +121,9 @@ public class XmlTreeBuilder extends TreeBuilder {
         if (startTag.isSelfClosing()) {
             tag.setSelfClosing();
             pop(); // push & pop ensures onNodeInserted & onNodeClosed
+        } else {
+            TokeniserState textState = tag.textState();
+            if (textState != null) tokeniser.transition(textState);
         }
     }
 
@@ -119,7 +139,11 @@ public class XmlTreeBuilder extends TreeBuilder {
 
     void insertCharacterFor(Token.Character token) {
         final String data = token.getData();
-        insertLeafNode(token.isCData() ? new CDataNode(data) : new TextNode(data));
+        LeafNode node;
+        if      (token.isCData())                       node = new CDataNode(data);
+        else if (currentElement().tag().is(Tag.Data))   node = new DataNode(data);
+        else                                            node = new TextNode(data);
+        insertLeafNode(node);
     }
 
     void insertDoctypeFor(Token.Doctype token) {

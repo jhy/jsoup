@@ -39,7 +39,7 @@ enum TokeniserState {
             readCharRef(t, Data);
         }
     },
-    Rcdata {
+    Rcdata { // Rcdata has text with character references
         /// handles data in title, textarea etc
         @Override void read(Tokeniser t, CharacterReader r) {
             switch (r.current()) {

@@ -123,9 +123,11 @@ public class DocumentTest {
     }
 
     @Test void testBasicIndent() {
-        Document doc = Jsoup.parse("<title>Hello</title> <p>One<p>Two");
+        Document doc = Jsoup.parse("<title>Hello</title> <p>One\n<p>Two\n");
         String expect = "<html>\n <head>\n  <title>Hello</title>\n </head>\n <body>\n  <p>One</p>\n  <p>Two</p>\n </body>\n</html>";
-        assertEquals(expect, doc.html());
+        String html = doc.html();
+        System.out.println(html);
+        assertEquals(expect, html);
     }
 
     @Test public void testClonesDeclarations() {
@@ -347,10 +349,8 @@ public class DocumentTest {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
         doc.charset(Charset.forName(charsetUtf8));
 
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
-                                        "<root>\n" +
-                                        " node\n" +
-                                        "</root>";
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<root>node</root>";
         assertEquals(xmlCharsetUTF8, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
@@ -364,10 +364,8 @@ public class DocumentTest {
         final Document doc = createXmlDocument("1.0", "changeThis", true);
         doc.charset(Charset.forName(charsetIso8859));
 
-        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"" + charsetIso8859 + "\"?>\n" +
-                                        "<root>\n" +
-                                        " node\n" +
-                                        "</root>";
+        final String xmlCharsetISO = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" +
+            "<root>node</root>";
         assertEquals(xmlCharsetISO, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
@@ -381,10 +379,8 @@ public class DocumentTest {
         final Document doc = createXmlDocument("1.0", "none", false);
         doc.charset(Charset.forName(charsetUtf8));
 
-        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"" + charsetUtf8 + "\"?>\n" +
-                                        "<root>\n" +
-                                        " node\n" +
-                                        "</root>";
+        final String xmlCharsetUTF8 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<root>node</root>";
         assertEquals(xmlCharsetUTF8, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);
@@ -395,9 +391,7 @@ public class DocumentTest {
     public void testMetaCharsetUpdateXmlDisabled() {
         final Document doc = createXmlDocument("none", "none", false);
 
-        final String xmlNoCharset = "<root>\n" +
-                                    " node\n" +
-                                    "</root>";
+        final String xmlNoCharset = "<root>node</root>";
         assertEquals(xmlNoCharset, doc.toString());
     }
 
@@ -406,9 +400,7 @@ public class DocumentTest {
         final Document doc = createXmlDocument("dontTouch", "dontTouch", true);
 
         final String xmlCharset = "<?xml version=\"dontTouch\" encoding=\"dontTouch\"?>\n" +
-                                    "<root>\n" +
-                                    " node\n" +
-                                    "</root>";
+            "<root>node</root>";
         assertEquals(xmlCharset, doc.toString());
 
         XmlDeclaration selectedNode = (XmlDeclaration) doc.childNode(0);

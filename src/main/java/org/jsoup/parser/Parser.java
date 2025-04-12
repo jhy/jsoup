@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -24,6 +25,7 @@ public class Parser implements Cloneable {
     private ParseErrorList errors;
     private ParseSettings settings;
     private boolean trackPosition = false;
+    @Nullable TagSet tagSet;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -158,11 +160,38 @@ public class Parser implements Cloneable {
     }
 
     /**
+     Set a custom TagSet to use for this Parser. This allows you to define your own tags, and control how they are
+     parsed. For example, you can set a tag to preserve whitespace, or to be treated as a block tag.
+     <p>You can start with the {@link TagSet#Html()} defaults and customize, or a new empty TagSet.</p>
+
+     @param tagSet the TagSet to use. This gets copied, so that changes that the parse makes (tags found in the document will be added) do not clobber the original TagSet.
+     @return this Parser
+     @since 1.20.1
+     */
+    public Parser tagSet(TagSet tagSet) {
+        Validate.notNull(tagSet);
+        this.tagSet = new TagSet(tagSet); // copy it as we are going to mutate it
+        return this;
+    }
+
+    /**
+     Get the current TagSet for this Parser, which will be either this parser's default, or one that you have set.
+     @return the current TagSet. After the parse, this will contain any new tags that were found in the document.
+     @since 1.20.1
+     */
+    public TagSet tagSet() {
+        if (tagSet == null)
+            tagSet = treeBuilder.defaultTagSet();
+        return tagSet;
+    }
+
+    /**
      (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
      Data Nodes).
+     @deprecated internal method, no longer used, and will be removed in 1.12.1.
      */
-    public boolean isContentForTagData(String normalName) {
-        return getTreeBuilder().isContentForTagData(normalName);
+    @Deprecated public boolean isContentForTagData(String normalName) {
+        return tagSet().valueOf(normalName, defaultNamespace()).is(Tag.Data);
     }
 
     public String defaultNamespace() {

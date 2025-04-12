@@ -397,7 +397,7 @@ public class CleanerTest {
 
         Document result = new Cleaner(safelist).clean(orig);
         assertEquals(Document.OutputSettings.Syntax.xml, result.outputSettings().syntax());
-        assertEquals("<p>test<br /></p>", result.body().html());
+        assertEquals("<p>test\n <br /></p>", result.body().html());
     }
 
     @Test void preservesSourcePositionViaUserData() {

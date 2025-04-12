@@ -39,7 +39,7 @@ public class DataNode extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
         /* For XML output, escape the DataNode in a CData section. The data may contain pseudo-CData content if it was
         parsed as HTML, so don't double up Cdata. Output in polyglot HTML / XHTML / XML format. */
         final String data = getWholeData();
@@ -52,12 +52,9 @@ public class DataNode extends LeafNode {
                 accum.append("<![CDATA[").append(data).append("]]>");
         } else {
             // In HTML, data is not escaped in the output of data nodes, so < and & in script, style is OK
-            accum.append(getWholeData());
+            accum.append(data);
         }
     }
-
-    @Override
-    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
 
     @Override
     public DataNode clone() {
