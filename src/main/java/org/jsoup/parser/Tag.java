@@ -96,12 +96,14 @@ public class Tag implements Cloneable {
 
     /**
      Set an option on this tag.
+     <p>Once a tag has a setting applied, it will be considered a known tag.</p>
      @param option the option to set
      @return this tag
      @since 1.20.1
      */
     public Tag set(int option) {
         options |= option;
+        options |= Tag.Defined; // considered known if touched
         return this;
     }
 
@@ -124,6 +126,8 @@ public class Tag implements Cloneable {
      */
     public Tag clear(int option) {
         options &= ~option;
+        // considered known if touched, unless explicitly clearing known
+        if (option != Tag.Defined) options |= Tag.Defined;
         return this;
     }
 
@@ -264,7 +268,7 @@ public class Tag implements Cloneable {
     }
 
     Tag setSelfClosing() {
-        set(SelfClose);
+        options |= Tag.SelfClose; // does not change known status. // todo will refactor how self-closing is handled in TreeBuilder
         return this;
     }
 

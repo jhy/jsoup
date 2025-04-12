@@ -95,5 +95,15 @@ public class TagSetTest {
         assertSame(custom, tags.valueOf("custom", NamespaceHtml));
         Tag capCustom = tags.valueOf("Custom", NamespaceHtml);
         assertTrue(capCustom.isKnownTag()); // cloned from a known tag, so is still known
+
+        // known if set or clear called
+        Tag c1 = new Tag("bar");
+        assertFalse(c1.isKnownTag());
+        c1.set(Tag.Block);
+        assertTrue(c1.isKnownTag());
+        c1.clear(Tag.Block);
+        assertTrue(c1.isKnownTag());
+        c1.clear(Tag.Defined);
+        assertFalse(c1.isKnownTag());
     }
 }

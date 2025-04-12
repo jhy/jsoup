@@ -213,7 +213,6 @@ public class TagSet {
             if (tag == null) {
                 tag = new Tag(tagName, tagName, namespace); // normal name is already normal here
                 tag.options = 0; // clear defaults
-                tag.set(Tag.Defined); // todo move to add but not via valueof
                 add(tag);
             }
             tagModifier.accept(tag);
