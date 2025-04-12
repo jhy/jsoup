@@ -36,9 +36,9 @@ public class Tag implements Cloneable {
     /** Tag option: the tag's value will be included when submitting a form (e.g. {@code <input>}). */
     public static int FormSubmittable = 1 << 9;
 
-    final String namespace;
+    String namespace;
     String tagName;
-    final String normalName; // always the lower case version of this tag, regardless of case preservation mode
+    String normalName; // always the lower case version of this tag, regardless of case preservation mode
     int options = 0;
 
     /**
@@ -61,7 +61,7 @@ public class Tag implements Cloneable {
      @since 1.20.1
      */
     public Tag(String tagName) {
-        this(tagName, NamespaceHtml);
+        this(tagName, ParseSettings.normalName(tagName), NamespaceHtml);
     }
 
     /** Path for TagSet defaults, no options set; normal name is already LC. */
@@ -86,6 +86,29 @@ public class Tag implements Cloneable {
      */
     public String name() {
         return tagName;
+    }
+
+    /**
+     Change the tag's name. As Tags are reused throughout a Document, this will change the name for all uses of this tag.
+     @param tagName the new name of the tag. Case-sensitive.
+     @return this tag
+     @since 1.21.1
+     */
+    public Tag name(String tagName) {
+        this.tagName = tagName;
+        this.normalName = ParseSettings.normalName(tagName);
+        return this;
+    }
+
+    /**
+     Set the tag's namespace. As Tags are reused throughout a Document, this will change the namespace for all uses of this tag.
+     @param namespace the new namespace of the tag.
+     @return this tag
+     @since 1.21.1
+     */
+    public Tag namespace(String namespace) {
+        this.namespace = namespace;
+        return this;
     }
 
     /**
@@ -196,10 +219,10 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Gets if this tag should be formatted as a block (or as inline)
-     *
-     * @return if should be formatted as block or inline
-     * @deprecated no longer different to isBlock. Will be removed in 1.21.1.
+     Get if this is an InlineContainer tag.
+
+     @return true if an InlineContainer (which formats children as inline).
+     @deprecated setting is only used within the Printer. Will be removed in 1.21.
      */
     @Deprecated public boolean formatAsBlock() {
         return (options & InlineContainer) != 0;
@@ -215,9 +238,9 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Get if this is an empty tag
-     *
-     * @return if this is an empty tag
+     Get if this is void (aka empty) tag.
+
+     @return true if this is a void tag
      */
     public boolean isEmpty() {
         return (options & Void) != 0;

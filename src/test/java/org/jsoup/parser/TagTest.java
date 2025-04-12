@@ -1,11 +1,14 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
+import static org.jsoup.parser.Parser.NamespaceSvg;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -136,5 +139,19 @@ public class TagTest {
         assertFalse(tag.isEmpty());
         tag.set(Tag.Void);
         assertTrue(tag.isEmpty());
+        assertTrue(tag.isKnownTag());
+    }
+
+    @Test void updateNameAndNamespace() {
+        Tag tag = new Tag("foo", NamespaceHtml);
+        tag.name("bar").namespace(NamespaceSvg);
+        assertEquals("bar", tag.name());
+        assertEquals(NamespaceSvg, tag.namespace());
+
+        // test in a doc
+        Document doc = Jsoup.parse("<foo>One</foo><foo>Two</foo>");
+        Tag foo = doc.expectFirst("foo").tag();
+        foo.name("BAR");
+        assertEquals("<BAR>One</BAR><BAR>Two</BAR>", doc.body().html()); // is case-sensitive
     }
 }
