@@ -5,7 +5,6 @@ import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
-import static org.jsoup.parser.Parser.NamespaceXml;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TagSetTest {
@@ -103,7 +102,7 @@ public class TagSetTest {
         assertTrue(c1.isKnownTag());
         c1.clear(Tag.Block);
         assertTrue(c1.isKnownTag());
-        c1.clear(Tag.Defined);
+        c1.clear(Tag.Known);
         assertFalse(c1.isKnownTag());
     }
 }

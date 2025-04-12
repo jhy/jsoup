@@ -51,7 +51,7 @@ public class TagSet {
      @return this TagSet
      */
     public TagSet add(Tag tag) {
-        tag.set(Tag.Defined);
+        tag.set(Tag.Known);
         doAdd(tag);
         return this;
     }
