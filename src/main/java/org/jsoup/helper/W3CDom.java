@@ -5,7 +5,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.parser.HtmlTreeBuilder;
-import org.jsoup.parser.Parser;
+import org.jsoup.parser.XmlTreeBuilder;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
@@ -35,7 +35,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathFactoryConfigurationException;
 import java.io.StringWriter;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -345,39 +344,23 @@ public class W3CDom {
      * Implements the conversion by walking the input.
      */
     protected static class W3CBuilder implements NodeVisitor {
-        // TODO: move the namespace handling stuff into XmlTreeBuilder / HtmlTreeBuilder, now that Tags have namespaces
-        private static final String xmlnsKey = "xmlns";
-        private static final String xmlnsPrefix = "xmlns:";
-
         private final Document doc;
         private boolean namespaceAware = true;
-        private final ArrayDeque<HashMap<String, String>> namespacesStack = new ArrayDeque<>(); // stack of namespaces, prefix => urn
         private Node dest;
         private Syntax syntax = Syntax.xml; // the syntax (to coerce attributes to). From the input doc if available.
         /*@Nullable*/ private final org.jsoup.nodes.Element contextElement; // todo - unsure why this can't be marked nullable?
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
-            namespacesStack.push(new HashMap<>());
             dest = doc;
             contextElement = (org.jsoup.nodes.Element) doc.getUserData(ContextProperty); // Track the context jsoup Element, so we can save the corresponding w3c element
-            if (contextElement != null) {
-                final org.jsoup.nodes.Document inDoc = contextElement.ownerDocument();
-                if ( namespaceAware && inDoc != null && inDoc.parser().getTreeBuilder() instanceof HtmlTreeBuilder ) {
-                    // as per the WHATWG HTML5 spec § 2.1.3, elements are in the HTML namespace by default
-                    namespacesStack.peek().put("", Parser.NamespaceHtml);
-                }
-            }
         }
 
         @Override
         public void head(org.jsoup.nodes.Node source, int depth) {
-            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
             if (source instanceof org.jsoup.nodes.Element) {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
-
-                String prefix = updateNamespaces(sourceEl);
-                String namespace = namespaceAware ? namespacesStack.peek().get(prefix) : null;
+                String namespace = namespaceAware ? sourceEl.tag().namespace() : null;
                 String tagName = Normalizer.xmlSafeTagName(sourceEl.tagName());
                 try {
                     // use an empty namespace if none is present but the tag name has a prefix
@@ -419,26 +402,28 @@ public class W3CDom {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
                 dest = dest.getParentNode(); // undescend
             }
-            namespacesStack.pop();
         }
 
-        private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
-            for (Attribute attribute : source.attributes()) {
+        private void copyAttributes(org.jsoup.nodes.Element jEl, Element wEl) {
+            for (Attribute attribute : jEl.attributes()) {
                 try {
-                    String key = Attribute.getValidKey(attribute.getKey(), syntax);
-                    if (key != null) {
-                        el.setAttribute(key, attribute.getValue());
-                        addUndeclaredAttrNs(key, el);
-                    }
+                    setAttribute(jEl, wEl, attribute, syntax);
                 } catch (DOMException e) {
-                    if (syntax != Syntax.xml) {
-                        String key = Attribute.getValidKey(attribute.getKey(), Syntax.xml);
-                        if (key != null) {
-                            el.setAttribute(key, attribute.getValue());
-                            addUndeclaredAttrNs(key, el);
-                        }
-                    }
+                    if (syntax != Syntax.xml)
+                        setAttribute(jEl, wEl, attribute, Syntax.xml);
                 }
+            }
+        }
+
+        private void setAttribute(org.jsoup.nodes.Element jEl, Element wEl, Attribute attribute, Syntax syntax) throws DOMException {
+            String key = Attribute.getValidKey(attribute.getKey(), syntax);
+            if (key != null) {
+                String namespace = attribute.namespace();
+                if (namespaceAware && !namespace.isEmpty())
+                    wEl.setAttributeNS(namespace, key, attribute.getValue());
+                else
+                    wEl.setAttribute(key, attribute.getValue());
+                maybeAddUndeclaredNs(namespace, key, jEl, wEl);
             }
         }
 
@@ -446,44 +431,34 @@ public class W3CDom {
          Add a namespace declaration for an attribute with a prefix if it is not already present. Ensures that attributes
          with prefixes have the corresponding namespace declared, E.g. attribute "v-bind:foo" gets another attribute
          "xmlns:v-bind='undefined'. So that the asString() transformation pass is valid.
+         If the parser was HTML we don't have a discovered namespace but we are trying to coerce it, so walk up the
+         element stack and find it.
          */
-        private void addUndeclaredAttrNs(String attrKey, Element wEl) {
-            if (!namespaceAware) return;
+        private void maybeAddUndeclaredNs(String namespace, String attrKey, org.jsoup.nodes.Element jEl, Element wEl) {
+            if (!namespaceAware || !namespace.isEmpty()) return;
             int pos = attrKey.indexOf(':');
-            if (pos > 0) {
+            if (pos != -1) { // prefixed but no namespace defined during parse, add a fake so that w3c serialization doesn't blow up
                 String prefix = attrKey.substring(0, pos);
-                if (!namespacesStack.peek().containsKey(prefix)) {
-                    wEl.setAttribute("xmlns:" + prefix, undefinedNs);
-                    namespacesStack.peek().put(prefix, undefinedNs);
+                if (prefix.equals("xmlns")) return;
+                org.jsoup.nodes.Document doc = jEl.ownerDocument();
+                if (doc != null && doc.parser().getTreeBuilder() instanceof HtmlTreeBuilder) {
+                    // try walking up the stack and seeing if there is a namespace declared for this prefix (and that we didn't parse because HTML)
+                    for (org.jsoup.nodes.Element el = jEl; el != null; el = el.parent()) {
+                        String ns = el.attr("xmlns:" + prefix);
+                        if (!ns.isEmpty()) {
+                            namespace = ns;
+                            // found it, set it
+                            wEl.setAttributeNS(namespace, attrKey, jEl.attr(attrKey));
+                            return;
+                        }
+                    }
                 }
+
+                // otherwise, put in a fake one
+                wEl.setAttribute("xmlns:" + prefix, undefinedNs);
             }
         }
         private static final String undefinedNs = "undefined";
-
-        /**
-         * Finds any namespaces defined in this element. Returns any tag prefix.
-         */
-        private String updateNamespaces(org.jsoup.nodes.Element el) {
-            // scan the element for namespace declarations
-            // like: xmlns="blah" or xmlns:prefix="blah"
-            Attributes attributes = el.attributes();
-            for (Attribute attr : attributes) {
-                String key = attr.getKey();
-                String prefix;
-                if (key.equals(xmlnsKey)) {
-                    prefix = "";
-                } else if (key.startsWith(xmlnsPrefix)) {
-                    prefix = key.substring(xmlnsPrefix.length());
-                } else {
-                    continue;
-                }
-                namespacesStack.peek().put(prefix, attr.getValue());
-            }
-
-            // get the element prefix if any
-            int pos = el.tagName().indexOf(':');
-            return pos > 0 ? el.tagName().substring(0, pos) : "";
-        }
-
     }
+
 }

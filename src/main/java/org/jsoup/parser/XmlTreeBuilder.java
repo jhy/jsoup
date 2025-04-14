@@ -1,6 +1,9 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.SharedConstants;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -16,7 +19,10 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.jsoup.parser.Parser.NamespaceXml;
 
@@ -28,6 +34,10 @@ import static org.jsoup.parser.Parser.NamespaceXml;
  * @author Jonathan Hedley
  */
 public class XmlTreeBuilder extends TreeBuilder {
+    static final String XmlnsKey = "xmlns";
+    static final String XmlnsPrefix = "xmlns:";
+    private final ArrayDeque<HashMap<String, String>> namespacesStack = new ArrayDeque<>(); // stack of namespaces, prefix => urn
+
     @Override ParseSettings defaultSettings() {
         return ParseSettings.preserveCase;
     }
@@ -39,6 +49,12 @@ public class XmlTreeBuilder extends TreeBuilder {
             .syntax(Document.OutputSettings.Syntax.xml)
             .escapeMode(Entities.EscapeMode.xhtml)
             .prettyPrint(false); // as XML, we don't understand what whitespace is significant or not
+
+        namespacesStack.clear();
+        HashMap<String, String> ns = new HashMap<>();
+        ns.put("xml", NamespaceXml);
+        ns.put("", NamespaceXml);
+        namespacesStack.push(ns);
     }
 
     @Override
@@ -110,10 +126,17 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertElementFor(Token.StartTag startTag) {
-        Tag tag = tagFor(startTag);
-        if (startTag.attributes != null)
-            startTag.attributes.deduplicate(settings);
+        // handle namespace for tag
+        HashMap<String, String> namespaces = new HashMap<>(namespacesStack.peek());
+        namespacesStack.push(namespaces);
 
+        if (startTag.attributes != null) {
+            startTag.attributes.deduplicate(settings);
+            processNamespaces(startTag.attributes, namespaces);
+        }
+
+        String ns = resolveNamespace(startTag.tagName, namespaces);
+        Tag tag = tagFor(startTag.tagName, startTag.normalName, ns, settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
         currentElement().appendChild(el);
         push(el);
@@ -125,6 +148,43 @@ public class XmlTreeBuilder extends TreeBuilder {
             TokeniserState textState = tag.textState();
             if (textState != null) tokeniser.transition(textState);
         }
+    }
+
+    private static void processNamespaces(Attributes attributes, HashMap<String, String> namespaces) {
+        // process attributes for namespaces (xmlns, xmlns:)
+        for (Attribute attr : attributes) {
+            String key = attr.getKey();
+            String value = attr.getValue();
+            if (key.equals(XmlnsKey)) {
+                namespaces.put("", value); // new default for this level
+            } else if (key.startsWith(XmlnsPrefix)) {
+                String nsPrefix = key.substring(XmlnsPrefix.length());
+                namespaces.put(nsPrefix, value);
+            }
+        }
+        // second pass, apply namespace to attributes. Collects them first then adds (as userData is an attribute)
+        Map<String, String> attrPrefix = new HashMap<>();
+        for (Attribute attr: attributes) {
+            String prefix = attr.prefix();
+            if (!prefix.isEmpty()) {
+                if (prefix.equals(XmlnsKey)) continue;
+                String ns = namespaces.get(prefix);
+                if (ns != null) attrPrefix.put(SharedConstants.XmlnsAttr + prefix, ns);
+            }
+        }
+        for (Map.Entry<String, String> entry : attrPrefix.entrySet())
+            attributes.userData(entry.getKey(), entry.getValue());
+    }
+
+    private static String resolveNamespace(String tagName, HashMap<String, String> namespaces) {
+        String ns = namespaces.get("");
+        int pos = tagName.indexOf(':');
+        if (pos > 0) {
+            String prefix = tagName.substring(0, pos);
+            if (namespaces.containsKey(prefix))
+                ns = namespaces.get(prefix);
+        }
+        return ns;
     }
 
     void insertLeafNode(LeafNode node) {
@@ -156,6 +216,12 @@ public class XmlTreeBuilder extends TreeBuilder {
         XmlDeclaration decl = new XmlDeclaration(token.name(), token.isDeclaration);
         if (token.attributes != null) decl.attributes().addAll(token.attributes);
         insertLeafNode(decl);
+    }
+
+    @Override
+    Element pop() {
+        namespacesStack.pop();
+        return super.pop();
     }
 
     /**

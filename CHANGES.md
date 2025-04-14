@@ -14,6 +14,9 @@
   affecting the DOM. (Each Element is still connected to the DOM.) [#2100](https://github.com/jhy/jsoup/issues/2100).
 * Added support for sending a request body from an InputStream with
   `Connection.requestBodyStream(InputStream stream)`. [#1122](https://github.com/jhy/jsoup/issues/1122).
+* The XML parser now supports scoped xmlns: prefix namespace declarations, and applies the correct namespace to Tags and
+  Attributes. Also, added `Tag#prefix()`, `Tag#localName()`, `Attribute#prefix()`, `Attribute#localName()`, and
+  `Attribute#namespace()` to retrieve these. [#2299](https://github.com/jhy/jsoup/issues/2299).
 
 ### Bug Fixes
 

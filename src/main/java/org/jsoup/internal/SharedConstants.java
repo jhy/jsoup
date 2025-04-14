@@ -9,6 +9,7 @@ public final class SharedConstants {
     public final static String AttrRangeKey = "jsoup.attrs";
     public static final String RangeKey = "jsoup.start";
     public static final String EndRangeKey = "jsoup.end";
+    public static final String XmlnsAttr = "jsoup.xmlns-";
 
     public static final int DefaultBufferSize = 8 * 1024;
 

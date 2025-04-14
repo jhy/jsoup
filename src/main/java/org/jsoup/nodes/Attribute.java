@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jspecify.annotations.Nullable;
@@ -54,7 +55,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
     }
 
     /**
-     Get the attribute key.
+     Get the attribute's key (aka name).
      @return the attribute key
      */
     @Override
@@ -120,6 +121,48 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         }
         this.val = val;
         return Attributes.checkNotNull(oldVal);
+    }
+
+    /**
+     Get this attribute's key prefix, if it has one; else the empty string.
+     <p>For example, the attribute {@code og:title} has prefix {@code og}, and local {@code title}.</p>
+
+     @return the tag's prefix
+     @since 1.20.1
+     */
+    public String prefix() {
+        int pos = key.indexOf(':');
+        if (pos == -1) return "";
+        else return key.substring(0, pos);
+    }
+
+    /**
+     Get this attribute's local name. The local name is the name without the prefix (if any).
+     <p>For example, the attribute key {@code og:title} has local name {@code title}.</p>
+
+     @return the tag's local name
+     @since 1.20.1
+     */
+    public String localName() {
+        int pos = key.indexOf(':');
+        if (pos == -1) return key;
+        else return key.substring(pos + 1);
+    }
+
+    /**
+     Get this attribute's namespace URI, if the attribute was prefixed with a defined namespace name. Otherwise, returns
+     the empty string. These will only be defined if using the XML parser.
+     @return the tag's namespace URI, or empty string if not defined
+     @since 1.20.1
+     */
+    public String namespace() {
+        // set as el.attributes.userData(SharedConstants.XmlnsAttr + prefix, ns)
+        if (parent != null) {
+            String ns = (String) parent.userData(SharedConstants.XmlnsAttr + prefix());
+            if (ns != null)
+                return ns;
+        }
+        return "";
     }
 
     /**

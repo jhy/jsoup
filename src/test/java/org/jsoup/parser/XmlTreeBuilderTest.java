@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax;
+import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.parser.Parser.NamespaceXml;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -473,6 +474,105 @@ public class XmlTreeBuilderTest {
             "  <dc:description>desc</dc:description>\n" +
             " </metadata>\n" +
             "</package>", doc.html());
+    }
+
+    // namespace tests
+    @Test void xmlns() {
+        // example from the xml namespace spec https://www.w3.org/TR/xml-names/
+        String xml = "<?xml version=\"1.0\"?>\n" +
+            "<!-- both namespace prefixes are available throughout -->\n" +
+            "<bk:book xmlns:bk=\"urn:loc.gov:books\" xmlns:isbn=\"urn:ISBN:0-395-36341-6\">\n" +
+            "    <bk:title>Cheaper by the Dozen</bk:title>\n" +
+            "    <isbn:number>1568491379</isbn:number>\n" +
+            "</bk:book>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        Element book = doc.expectFirst("bk|book");
+        assertEquals("bk:book", book.tag().name());
+        assertEquals("bk", book.tag().prefix());
+        assertEquals("book", book.tag().localName());
+        assertEquals("urn:loc.gov:books", book.tag().namespace());
+
+        Element title = doc.expectFirst("bk|title");
+        assertEquals("bk:title", title.tag().name());
+        assertEquals("urn:loc.gov:books", title.tag().namespace());
+
+        Element number = doc.expectFirst("isbn|number");
+        assertEquals("isbn:number", number.tag().name());
+        assertEquals("urn:ISBN:0-395-36341-6", number.tag().namespace());
+
+        // and we didn't modify the dom
+        assertEquals(xml, doc.html());
+    }
+
+    @Test void unprefixedDefaults() {
+        String xml = "<?xml version=\"1.0\"?>\n" +
+            "<!-- elements are in the HTML namespace, in this case by default -->\n" +
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+            "  <head><title>Frobnostication</title></head>\n" +
+            "  <body><p>Moved to \n" +
+            "    <a href=\"http://frob.example.com\">here</a>.</p></body>\n" +
+            "</html>";
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        Element html = doc.expectFirst("html");
+        assertEquals(NamespaceHtml, html.tag().namespace());
+        Element a = doc.expectFirst("a");
+        assertEquals(NamespaceHtml, a.tag().namespace());
+    }
+
+    @Test void emptyDefault() {
+        String xml = "<?xml version='1.0'?>\n" +
+            "<Beers>\n" +
+            "  <!-- the default namespace inside tables is that of HTML -->\n" +
+            "  <table xmlns='http://www.w3.org/1999/xhtml'>\n" +
+            "   <th><td>Name</td><td>Origin</td><td>Description</td></th>\n" +
+            "   <tr> \n" +
+            "     <!-- no default namespace inside table cells -->\n" +
+            "     <td><brandName xmlns=\"\">Huntsman</brandName></td>\n" +
+            "     <td><origin xmlns=\"\">Bath, UK</origin></td>\n" +
+            "     <td>\n" +
+            "       <details xmlns=\"\"><class>Bitter</class><hop>Fuggles</hop>\n" +
+            "         <pro>Wonderful hop, light alcohol, good summer beer</pro>\n" +
+            "         <con>Fragile; excessive variance pub to pub</con>\n" +
+            "         </details>\n" +
+            "        </td>\n" +
+            "      </tr>\n" +
+            "    </table>\n" +
+            "  </Beers>";
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        Element beers = doc.expectFirst("Beers");
+        assertEquals(NamespaceXml, beers.tag().namespace());
+        Element td = doc.expectFirst("td");
+        assertEquals(NamespaceHtml, td.tag().namespace());
+        Element origin = doc.expectFirst("origin");
+        assertEquals("", origin.tag().namespace());
+        Element pro = doc.expectFirst("pro");
+        assertEquals("", pro.tag().namespace());
+    }
+
+    @Test void namespacedAttribute() {
+        String xml = "<x xmlns:edi='http://ecommerce.example.org/schema'>\n" +
+            "  <!-- the 'taxClass' attribute's namespace is http://ecommerce.example.org/schema -->\n" +
+            "  <lineItem edi:taxClass=\"exempt\" other=foo>Baby food</lineItem>\n" +
+            "</x>";
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+        Element lineItem = doc.expectFirst("lineItem");
+
+        Attribute taxClass = lineItem.attribute("edi:taxClass");
+        assertNotNull(taxClass);
+        assertEquals("edi", taxClass.prefix());
+        assertEquals("taxClass", taxClass.localName());
+        assertEquals("http://ecommerce.example.org/schema", taxClass.namespace());
+
+        Attribute other = lineItem.attribute("other");
+        assertNotNull(other);
+        assertEquals("foo", other.getValue());
+        assertEquals("", other.prefix());
+        assertEquals("other", other.localName());
+        assertEquals("", other.namespace());
     }
 
 }

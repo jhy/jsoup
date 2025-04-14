@@ -92,7 +92,7 @@ public class Tag implements Cloneable {
      Change the tag's name. As Tags are reused throughout a Document, this will change the name for all uses of this tag.
      @param tagName the new name of the tag. Case-sensitive.
      @return this tag
-     @since 1.21.1
+     @since 1.20.1
      */
     public Tag name(String tagName) {
         this.tagName = tagName;
@@ -101,14 +101,27 @@ public class Tag implements Cloneable {
     }
 
     /**
-     Set the tag's namespace. As Tags are reused throughout a Document, this will change the namespace for all uses of this tag.
-     @param namespace the new namespace of the tag.
-     @return this tag
-     @since 1.21.1
+     Get this tag's prefix, if it has one; else the empty string.
+     <p>For example, {@code <book:title>} has prefix {@code book}, and tag name {@code book:title}.</p>
+     @return the tag's prefix
+     @since 1.20.1
      */
-    public Tag namespace(String namespace) {
-        this.namespace = namespace;
-        return this;
+    public String prefix() {
+        int pos = tagName.indexOf(':');
+        if (pos == -1) return "";
+        else return tagName.substring(0, pos);
+    }
+
+    /**
+     Get this tag's local name. The local name is the name without the prefix (if any).
+     <p>For exmaple, {@code <book:title>} has local name {@code title}, and tag name {@code book:title}.</p>
+     @return the tag's local name
+     @since 1.20.1
+     */
+    public String localName() {
+        int pos = tagName.indexOf(':');
+        if (pos == -1) return tagName;
+        else return tagName.substring(pos + 1);
     }
 
     /**
@@ -125,6 +138,17 @@ public class Tag implements Cloneable {
      */
     public String namespace() {
         return namespace;
+    }
+
+    /**
+     Set the tag's namespace. As Tags are reused throughout a Document, this will change the namespace for all uses of this tag.
+     @param namespace the new namespace of the tag.
+     @return this tag
+     @since 1.20.1
+     */
+    public Tag namespace(String namespace) {
+        this.namespace = namespace;
+        return this;
     }
 
     /**

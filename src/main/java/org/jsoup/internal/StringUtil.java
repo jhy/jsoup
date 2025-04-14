@@ -387,5 +387,4 @@ public final class StringUtil {
             },
             StringJoiner::complete);
     }
-
 }

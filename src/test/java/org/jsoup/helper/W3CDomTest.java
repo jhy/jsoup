@@ -89,7 +89,7 @@ public class W3CDomTest {
     public void namespacePreservation() throws IOException {
         File in = ParseTest.getFile("/htmltests/namespaces.xhtml");
         org.jsoup.nodes.Document jsoupDoc;
-        jsoupDoc = Jsoup.parse(in, "UTF-8");
+        jsoupDoc = Jsoup.parse(in, "UTF-8", "", Parser.xmlParser());
 
         Document doc;
         org.jsoup.helper.W3CDom jDom = new org.jsoup.helper.W3CDom();
@@ -242,7 +242,7 @@ public class W3CDomTest {
         w3cDom.convert(document, customDocumentResult);
 
         String html = W3CDom.asString(customDocumentResult, W3CDom.OutputHtml());
-        assertEquals("<html><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><div></div></body></html>", html);
+        assertEquals("<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><div></div></body></html>", html);
     }
 
     @Test
@@ -258,7 +258,7 @@ public class W3CDomTest {
         assertEquals("html", htmlEl.getNodeName());
 
         Node fb = htmlEl.getFirstChild().getNextSibling().getFirstChild();
-        assertNull(fb.getNamespaceURI());
+        assertEquals("http://www.w3.org/1999/xhtml", fb.getNamespaceURI());
         assertEquals("like", fb.getLocalName());
         assertEquals("fb:like", fb.getNodeName());
     }

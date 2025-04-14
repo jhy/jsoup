@@ -157,7 +157,7 @@ abstract class TreeBuilder {
      Removes the last Element from the stack, hits onNodeClosed, and then returns it.
      * @return
      */
-    final Element pop() {
+    Element pop() {
         int size = stack.size();
         Element removed = stack.remove(size - 1);
         onNodeClosed(removed);
