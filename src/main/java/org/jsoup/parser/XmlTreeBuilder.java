@@ -15,6 +15,7 @@ import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
+import org.jsoup.select.Elements;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -60,11 +61,23 @@ public class XmlTreeBuilder extends TreeBuilder {
     @Override
     void initialiseParseFragment(@Nullable Element context) {
         super.initialiseParseFragment(context);
-        if (context != null) {
-            TokeniserState textState = context.tag().textState();
-            if (textState != null) tokeniser.transition(textState);
-        }
+        if (context == null) return;
 
+        // transition to the tag's text state if available
+        TokeniserState textState = context.tag().textState();
+        if (textState != null) tokeniser.transition(textState);
+
+        // reconstitute the namespace stack by traversing the element and its parents (top down)
+        Elements chain = context.parents();
+        chain.add(0, context);
+        for (int i = chain.size() - 1; i >= 0; i--) {
+            Element el = chain.get(i);
+            HashMap<String, String> namespaces = new HashMap<>(namespacesStack.peek());
+            namespacesStack.push(namespaces);
+            if (el.attributesSize() > 0) {
+                processNamespaces(el.attributes(), namespaces);
+            }
+        }
     }
 
     Document parse(Reader input, String baseUri) {
@@ -130,14 +143,16 @@ public class XmlTreeBuilder extends TreeBuilder {
         HashMap<String, String> namespaces = new HashMap<>(namespacesStack.peek());
         namespacesStack.push(namespaces);
 
-        if (startTag.attributes != null) {
-            startTag.attributes.deduplicate(settings);
-            processNamespaces(startTag.attributes, namespaces);
+        Attributes attributes = startTag.attributes;
+        if (attributes != null) {
+            attributes.deduplicate(settings);
+            processNamespaces(attributes, namespaces);
+            applyNamespacesToAttributes(attributes, namespaces);
         }
 
         String ns = resolveNamespace(startTag.tagName, namespaces);
         Tag tag = tagFor(startTag.tagName, startTag.normalName, ns, settings);
-        Element el = new Element(tag, null, settings.normalizeAttributes(startTag.attributes));
+        Element el = new Element(tag, null, settings.normalizeAttributes(attributes));
         currentElement().appendChild(el);
         push(el);
 
@@ -162,6 +177,9 @@ public class XmlTreeBuilder extends TreeBuilder {
                 namespaces.put(nsPrefix, value);
             }
         }
+    }
+
+    private static void applyNamespacesToAttributes(Attributes attributes, HashMap<String, String> namespaces) {
         // second pass, apply namespace to attributes. Collects them first then adds (as userData is an attribute)
         Map<String, String> attrPrefix = new HashMap<>();
         for (Attribute attr: attributes) {
