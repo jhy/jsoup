@@ -1812,25 +1812,29 @@ public class Element extends Node implements Iterable<Element> {
 
     @Override
     void outerHtmlHead(final Appendable accum, Document.OutputSettings out) throws IOException {
-        accum.append('<').append(safeTagName(out.syntax()));
+        String tagName = safeTagName(out.syntax());
+        accum.append('<').append(tagName);
         if (attributes != null) attributes.html(accum, out);
 
-        // selfclosing includes unknown tags, isEmpty defines tags that are always empty
-        if (childNodes.isEmpty() && tag.isSelfClosing()) {
-            if (out.syntax() == html && tag.isEmpty())
+        if (childNodes.isEmpty()) {
+            boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
+            if (xmlMode && (tag.is(Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
+                accum.append(" />");
+            } else if (!xmlMode && tag.isEmpty()) { // html void element
                 accum.append('>');
-            else
-                accum.append(" />"); // <img> in html, <img /> in xml
-        }
-        else
+            } else {
+                accum.append("></").append(tagName).append('>');
+            }
+        } else {
             accum.append('>');
+        }
     }
 
     @Override
     void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {
-        if (!(childNodes.isEmpty() && tag.isSelfClosing())) {
+        if (!childNodes.isEmpty())
             accum.append("</").append(safeTagName(out.syntax())).append('>');
-        }
+        // if empty, we have already closed in htmlHead
     }
 
     /* If XML syntax, normalizes < to _ in tag name. */

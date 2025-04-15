@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -158,14 +159,16 @@ public class DocumentTest {
 
     @Test public void testHtmlAndXmlSyntax() {
         String h = "<!DOCTYPE html><body><img async checked='checked' src='&<>\"'>&lt;&gt;&amp;&quot;<foo />bar";
-        Document doc = Jsoup.parse(h);
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("foo", Parser.NamespaceHtml).set(Tag.SelfClose); // customize foo to allow self close
+        Document doc = Jsoup.parse(h, parser);
 
         doc.outputSettings().syntax(Syntax.html);
         assertEquals("<!doctype html>\n" +
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"<foo />bar\n" +
+                "  <img async checked src=\"&amp;<>&quot;\">&lt;&gt;&amp;\"<foo></foo>bar\n" + // html won't include self-closing
                 " </body>\n" +
                 "</html>", doc.html());
 
@@ -174,7 +177,7 @@ public class DocumentTest {
                 "<html>\n" +
                 " <head></head>\n" +
                 " <body>\n" +
-                "  <img async=\"\" checked=\"checked\" src=\"&amp;&lt;>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" +
+                "  <img async=\"\" checked=\"checked\" src=\"&amp;&lt;>&quot;\" />&lt;&gt;&amp;\"<foo />bar\n" + // xml will
                 " </body>\n" +
                 "</html>", doc.html());
     }

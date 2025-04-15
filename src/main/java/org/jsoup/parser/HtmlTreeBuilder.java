@@ -328,21 +328,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
         Element el = createElementFor(startTag, NamespaceHtml, false);
         doInsertElement(el);
 
-        // handle self-closing tags. when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+        // handle self-closing tags. when the spec expects an empty (void) tag, will directly hit insertEmpty, so won't generate this fake end tag.
         if (startTag.isSelfClosing()) {
             Tag tag = el.tag();
-            if (tag.isKnownTag()) {
-                if (!tag.isEmpty())
-                    tokeniser.error("Tag [%s] cannot be self closing; not a void tag", tag.normalName());
-                // else: ok
+            tag.setSeenSelfClose(); // can infer output if in xml syntax
+            if (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())) {
+                // ok, allow it. effectively a pop, but fiddles with the state. handles empty style, title etc which would otherwise leave us in data state
+                tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
+                tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
+            } else {
+                // error it, and leave the inserted element on
+                tokeniser.error("Tag [%s] cannot be self-closing; not a void tag", tag.normalName());
             }
-            else { // unknown tag: remember this is self-closing, for output
-                tag.setSelfClosing();
-            }
-
-            // effectively a pop, but fiddles with the state. handles empty style, title etc which would otherwise leave us in data state
-            tokeniser.transition(TokeniserState.Data); // handles <script />, otherwise needs breakout steps from script data
-            tokeniser.emit(emptyEnd.reset().name(el.tagName()));  // ensure we get out of whatever state we are in. emitted for yielded processing
         }
 
         return el;
@@ -355,8 +352,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         Element el = createElementFor(startTag, namespace, true);
         doInsertElement(el);
 
-        if (startTag.isSelfClosing()) {
-            el.tag().setSelfClosing(); // remember this is self-closing for output
+        if (startTag.isSelfClosing()) { // foreign els are OK to self-close
+            el.tag().setSeenSelfClose(); // remember this is self-closing for output
             pop();
         }
 

@@ -52,6 +52,7 @@ abstract class TreeBuilder {
         reader = new CharacterReader(input);
         trackSourceRange = parser.isTrackPosition();
         reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
+        if (parser.isTrackErrors()) parser.getErrors().clear();
         tokeniser = new Tokeniser(this);
         stack = new ArrayList<>(32);
         tagSet = parser.tagSet();

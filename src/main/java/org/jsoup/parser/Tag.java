@@ -324,9 +324,8 @@ public class Tag implements Cloneable {
         return (options &= FormSubmittable) != 0;
     }
 
-    Tag setSelfClosing() {
-        options |= Tag.SelfClose; // does not change known status. // todo will refactor how self-closing is handled in TreeBuilder
-        return this;
+    void setSeenSelfClose() {
+        options |= Tag.SeenSelfClose; // does not change known status
     }
 
     /**

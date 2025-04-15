@@ -472,40 +472,51 @@ public class HtmlParserTest {
     }
 
     @Test public void handlesUnknownNamespaceTags() {
-        // note that the first foo:bar should not really be allowed to be self closing, if parsed in html mode.
         String h = "<foo:bar id='1' /><abc:def id=2>Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>";
-        Document doc = Jsoup.parse(h);
-        assertEquals("<foo:bar id=\"1\" /><abc:def id=\"2\">Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>", TextUtil.stripNewlines(doc.body().html()));
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("foo:bar", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(h, parser);
+        assertEquals("<foo:bar id=\"1\"></foo:bar><abc:def id=\"2\">Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    // we used to allow self-closing for any tag in html, but spec no longer allows
     @Test public void handlesKnownEmptyBlocks() {
-        // if a known tag, allow self closing outside of spec, but force an end tag. unknown tags can be self closing.
-        String h = "<div id='1' /><script src='/foo' /><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
+        // by default, self-closing flag has no impact (see detailed tests for self-closing below)
+        String h = "<div id='1' /><script src='/foo'></script><div id=2><img /><img></div><a id=3 /><i /><foo /><foo>One</foo> <hr /> hr text <hr> hr text two";
         Document doc = Jsoup.parse(h);
-        assertEquals("<div id=\"1\"></div><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"></a><i></i><foo /><foo>One</foo><hr>hr text<hr>hr text two", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div id=\"1\"><script src=\"/foo\"></script><div id=\"2\"><img><img></div><a id=\"3\"><i><foo><foo>One</foo><hr>hr text<hr>hr text two</foo></i></a></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
-    @Test public void handlesKnownEmptyNoFrames() {
+    @Test public void handlesEmptyNoFrames() {
+        // can modify parser to allow self closing
         String h = "<html><head><noframes /><meta name=foo></head><body>One</body></html>";
-        Document doc = Jsoup.parse(h);
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("noframes", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(h, parser);
         assertEquals("<html><head><noframes></noframes><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void handlesKnownEmptyStyle() {
         String h = "<html><head><style /><meta name=foo></head><body>One</body></html>";
-        Document doc = Jsoup.parse(h);
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("style", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(h, parser);
         assertEquals("<html><head><style></style><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void handlesKnownEmptyTitle() {
         String h = "<html><head><title /><meta name=foo></head><body>One</body></html>";
-        Document doc = Jsoup.parse(h);
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("title", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(h, parser);
         assertEquals("<html><head><title></title><meta name=\"foo\"></head><body>One</body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
     @Test public void handlesKnownEmptyIframe() {
         String h = "<p>One</p><iframe id=1 /><p>Two";
-        Document doc = Jsoup.parse(h);
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("iframe", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(h, parser);
         assertEquals("<html><head></head><body><p>One</p><iframe id=\"1\"></iframe><p>Two</p></body></html>", TextUtil.stripNewlines(doc.html()));
     }
 
@@ -856,16 +867,17 @@ public class HtmlParserTest {
         Document doc = Jsoup.parse(html, "http://example.com", parser);
 
         List<ParseError> errors = parser.getErrors();
-        assertEquals(9, errors.size());
+        assertEquals(10, errors.size());
         assertEquals("<1:21>: Attributes incorrectly present on end tag [/p]", errors.get(0).toString());
         assertEquals("<2:16>: Unexpected Doctype token [<!doctype html>] when in state [InBody]", errors.get(1).toString());
         assertEquals("<3:2>: Invalid character reference: invalid named reference [arrgh]", errors.get(2).toString());
-        assertEquals("<3:16>: Tag [font] cannot be self closing; not a void tag", errors.get(3).toString());
+        assertEquals("<3:16>: Tag [font] cannot be self-closing; not a void tag", errors.get(3).toString());
         assertEquals("<3:20>: Invalid character reference: missing semicolon on [&#33]", errors.get(4).toString());
         assertEquals("<3:25>: Invalid character reference: missing semicolon on [&amp]", errors.get(5).toString());
         assertEquals("<3:36>: Invalid character reference: character [1114112] outside of valid range", errors.get(6).toString());
         assertEquals("<3:48>: Unexpected EndTag token [</div>] when in state [InBody]", errors.get(7).toString());
         assertEquals("<3:53>: Unexpectedly reached end of file (EOF) in input state [TagName]", errors.get(8).toString());
+        assertEquals("<3:53>: Unexpected EOF token [] when in state [InBody]", errors.get(9).toString());
     }
 
     @Test public void tracksLimitedErrorsWhenRequested() {
@@ -1217,12 +1229,11 @@ public class HtmlParserTest {
         String html = "<p>test</p>\n\n<div /><div>Two</div>";
         Parser parser = Parser.htmlParser().setTrackErrors(5);
         parser.parseInput(html, "");
-        assertEquals(1, parser.getErrors().size());
-        assertEquals("<3:8>: Tag [div] cannot be self closing; not a void tag", parser.getErrors().get(0).toString());
+        assertErrorsContain("<3:8>: Tag [div] cannot be self-closing; not a void tag", parser.getErrors());
 
         assertFalse(Jsoup.isValid(html, Safelist.relaxed()));
         String clean = Jsoup.clean(html, Safelist.relaxed());
-        assertEquals("<p>test</p> <div></div> <div>Two</div>", StringUtil.normaliseWhitespace(clean));
+        assertEquals("<p>test</p> <div> <div>Two</div> </div>", StringUtil.normaliseWhitespace(clean)); // did not close
     }
 
     @Test public void testTemplateInsideTable() throws IOException {
@@ -1314,7 +1325,11 @@ public class HtmlParserTest {
     @Test
     public void selfClosingTextAreaDoesntLeaveDroppings() {
         // https://github.com/jhy/jsoup/issues/1220
-        Document doc = Jsoup.parse("<div><div><textarea/></div></div>");
+        // must be configured to allow self closing
+        String html = "<div><div><textarea/></div></div>";
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().valueOf("textarea", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(html, parser);
         assertFalse(doc.body().html().contains("&lt;"));
         assertFalse(doc.body().html().contains("&gt;"));
         assertEquals("<div><div><textarea></textarea></div></div>", TextUtil.stripNewlines(doc.body().html()));
@@ -1998,5 +2013,80 @@ public class HtmlParserTest {
         // don't want to mark parse(stream) as @Nullable, as it's more useful to show the warning. But support it, for backwards compat
         assertNotNull(doc);
         assertEquals("", doc.title());
+    }
+
+    static void assertErrorsContain(String msg, ParseErrorList errors) {
+        assertFalse(errors.isEmpty());
+        for (ParseError error : errors) {
+            if (error.toString().contains(msg)) {
+                return;
+            }
+        }
+        fail("Expected to find error message [" + msg + "] in " + errors);
+    }
+
+    static void assertErrorsDoNotContain(String msg, ParseErrorList errors) {
+        for (ParseError error : errors) {
+            if (error.toString().contains(msg)) {
+                fail("Did not expect to find error message [" + msg + "] in " + errors);
+            }
+        }
+    }
+
+    @Test void selfClosing() {
+        // in HTML spec by default: void tags can be marked self-closing; foreign elements can self close; other instances are errors and the self-close is ignored
+        // voids are not serialized as self-closing
+        Parser parser = Parser.htmlParser().setTrackErrors(10);
+        String html = "<div id=1 /><p>Foo";
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertErrorsContain("<1:13>: Tag [div] cannot be self-closing; not a void tag", errors);
+        assertEquals("<div id=\"1\"><p>Foo</p></div>", TextUtil.stripNewlines(doc.body().html()));
+
+        // voids are OK to be self close, but we don't emit them
+        html = "<img /><input />";
+        doc = Jsoup.parse(html, parser);
+        errors = parser.getErrors();
+        assertErrorsDoNotContain("cannot be self-closing", errors);
+        assertEquals("<img><input>", TextUtil.stripNewlines(doc.body().html()));
+
+        // unknown tags won't be self-closing by default
+        html = "<unknown />Foo";
+        doc = Jsoup.parse(html, parser);
+        errors = parser.getErrors();
+        assertErrorsContain("Tag [unknown] cannot be self-closing;", errors);
+        assertEquals("<unknown>Foo</unknown>", TextUtil.stripNewlines(doc.body().html()));
+
+        // foreign elements can self close
+        html = "<svg /><svg><femerge /><foo /></svg>"; // femerge is known to tagset, foo is not
+        doc = Jsoup.parse(html, parser);
+        errors = parser.getErrors();
+        assertEquals(0, errors.size());
+        assertEquals("<svg /><svg><femerge /><foo /></svg>", TextUtil.stripNewlines(doc.body().html()));
+        // check namespace of foo
+        Element foo = doc.expectFirst("foo");
+        assertEquals(Parser.NamespaceSvg, foo.tag().namespace());
+    }
+
+    @Test void canControlSelfClosing() {
+        // by supplying a customized tagset, can allow both known and custom tags to self close during parse
+        // to be valid HTML, the emit will not include the self-closing, but user can switch to xml
+        Parser parser = Parser.htmlParser().setTrackErrors(10).tagSet(TagSet.Html());
+        TagSet tags = parser.tagSet();
+        Tag custom = tags.valueOf("custom", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Tag div = tags.valueOf("div", Parser.NamespaceHtml).set(Tag.SelfClose);
+
+        String html = "<div /><custom /><custom>Foo</custom>";
+        Document doc = Jsoup.parse(html, parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(0, errors.size());
+        assertEquals("<div></div><custom></custom><custom>Foo</custom>", TextUtil.stripNewlines(doc.body().html()));
+
+        assertTrue(custom.is(Tag.SeenSelfClose));
+        assertTrue(div.is(Tag.SeenSelfClose));
+
+        // in xml syntax will allow those self closes (with customized tagset)
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<div /><custom /><custom>Foo</custom>", TextUtil.stripNewlines(doc.body().html()));
     }
 }

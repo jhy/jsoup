@@ -157,7 +157,7 @@ public class XmlTreeBuilder extends TreeBuilder {
         push(el);
 
         if (startTag.isSelfClosing()) {
-            tag.setSelfClosing();
+            tag.setSeenSelfClose();
             pop(); // push & pop ensures onNodeInserted & onNodeClosed
         } else {
             TokeniserState textState = tag.textState();

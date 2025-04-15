@@ -602,4 +602,15 @@ public class XmlTreeBuilderTest {
         assertEquals("/out", data.tag().namespace());
     }
 
+    @Test void selfClosingOK() {
+        // In XML, all tags can be self-closing regardless of tag type
+        Parser parser = Parser.xmlParser().setTrackErrors(10);
+        String xml = "<div id='1'/><p/><div>Foo</div><div></div><foo></foo>";
+        Document doc = Jsoup.parse(xml, "", parser);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(0, errors.size());
+        assertEquals("<div id=\"1\" /><p /><div>Foo</div><div /><foo></foo>", TextUtil.stripNewlines(doc.outerHtml()));
+        // we infer that empty els can be represented with self-closing if seen in parse
+    }
+
 }

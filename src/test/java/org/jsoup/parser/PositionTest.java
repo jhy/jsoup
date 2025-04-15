@@ -509,7 +509,11 @@ class PositionTest {
     @Test void tracksAfterPSelfClose() {
         // https://github.com/jhy/jsoup/issues/2175
         String html = "foo<p/>bar &amp; 2";
-        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+
+        // force allow self-closing p
+        Parser parser = TrackingHtmlParser.clone();
+        parser.tagSet().valueOf("p", Parser.NamespaceHtml).set(Tag.SelfClose);
+        Document doc = Jsoup.parse(html, parser);
         StringBuilder track = new StringBuilder();
         doc.body().forEachNode(node -> accumulatePositions(node, track));
         assertEquals("body:0-0~18-18; #text:0-3; p:3-7~3-7; #text:7-18; ", track.toString());
