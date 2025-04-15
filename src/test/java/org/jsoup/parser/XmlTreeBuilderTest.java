@@ -443,6 +443,46 @@ public class XmlTreeBuilderTest {
         assertEquals(inner, zEl.data());
     }
 
+    @Test void canSetCustomVoid() {
+        String ns = "custom";
+        String xml = "<x xmlns=custom><foo><link><meta>";
+        TagSet custom = new TagSet();
+        custom.valueOf("link", ns).set(Tag.Void);
+        custom.valueOf("meta", ns).set(Tag.Void);
+        custom.valueOf("foo", "other").set(Tag.Void); // ns doesn't match, won't impact
+
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().tagSet(custom));
+        String expect = "<x xmlns=\"custom\"><foo><link /><meta /></foo></x>";
+        assertEquals(expect, doc.html());
+    }
+
+    @Test void canSupplyWithHtmlTagSet() {
+        // use the properties of html tag set but without HtmlTreeBuilder rules
+        String xml = "<html xmlns=" + NamespaceHtml + "><div><script>a<b</script><img><p>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser().tagSet(TagSet.Html()));
+        doc.outputSettings().prettyPrint(true);
+        String expect = "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+            " <div>\n" +
+            "  <script>//<![CDATA[\n" +
+            "a<b\n" +
+            "//]]></script>\n" +
+            "  <img />\n" +
+            "  <p></p>\n" +
+            " </div>\n" +
+            "</html>";
+        assertEquals(expect, doc.html());
+
+        doc.outputSettings().syntax(Syntax.html);
+        expect = "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
+            " <div>\n" +
+            "  <script>a<b</script>\n" +
+            "  <img>\n" +
+            "  <p></p>\n" +
+            " </div>\n" +
+            "</html>";
+        assertEquals(expect, doc.html());
+    }
+
     @Test void prettyFormatsTextInline() {
         // https://github.com/jhy/jsoup/issues/2141
         String xml = "<package><metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n" +
@@ -612,5 +652,4 @@ public class XmlTreeBuilderTest {
         assertEquals("<div id=\"1\" /><p /><div>Foo</div><div /><foo></foo>", TextUtil.stripNewlines(doc.outerHtml()));
         // we infer that empty els can be represented with self-closing if seen in parse
     }
-
 }
