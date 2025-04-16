@@ -258,7 +258,7 @@ public class TokenQueue extends CharacterReader {
      * @return String of word characters from queue, or empty string if none.
      @deprecated will be removed in 1.21.1
      */
-    @Deprecated String consumeWord() {
+    @Deprecated public String consumeWord() {
         return consumeMatching(Character::isLetterOrDigit);
     }
 
