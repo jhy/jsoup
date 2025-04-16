@@ -26,6 +26,8 @@
 * The XML parser now supports scoped xmlns: prefix namespace declarations, and applies the correct namespace to Tags and
   Attributes. Also, added `Tag#prefix()`, `Tag#localName()`, `Attribute#prefix()`, `Attribute#localName()`, and
   `Attribute#namespace()` to retrieve these. [#2299](https://github.com/jhy/jsoup/issues/2299).
+* The `Selector` now correctly supports hex digit escaped CSS
+  identifiers. [#2297](https://github.com/jhy/jsoup/pull/2297). 
 
 ### Bug Fixes
 
