@@ -5,14 +5,15 @@ import org.jsoup.helper.Validate;
 
 /**
  * A character queue with parsing helpers.
- *
- * @author Jonathan Hedley
  */
 public class TokenQueue {
     private String queue;
     private int pos = 0;
     
-    private static final char ESC = '\\'; // escape char for chomp balanced.
+    private static final char Esc = '\\'; // escape char for chomp balanced.
+    private static final char Hyphen_Minus = '-';
+    private static final char Unicode_Null = '\u0000';
+    private static final char Replacement = '\uFFFD';
 
     /**
      Create a new TokenQueue.
@@ -114,6 +115,10 @@ public class TokenQueue {
      */
     public void advance() {
         if (!isEmpty()) pos++;
+    }
+
+    private char current() {
+        return queue.charAt(pos);
     }
 
     /**
@@ -238,7 +243,7 @@ public class TokenQueue {
         do {
             if (isEmpty()) break;
             char c = consume();
-            if (last != ESC) {
+            if (last != Esc) {
                 if (c == '\'' && c != open && !inDoubleQuote)
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
@@ -281,8 +286,8 @@ public class TokenQueue {
         StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
-            if (c == ESC) {
-                if (last == ESC) {
+            if (c == Esc) {
+                if (last == Esc) {
                     out.append(c);
                     c = 0;
                 }
@@ -305,7 +310,7 @@ public class TokenQueue {
             if (q.matchesCssIdentifier(CssIdentifierChars)) {
                 out.append(q.consume());
             } else {
-                out.append(ESC).append(q.consume());
+                out.append(Esc).append(q.consume());
             }
         }
         return StringUtil.releaseBuilder(out);
@@ -335,7 +340,6 @@ public class TokenQueue {
         return queue.substring(start, pos);
     }
 
-    
     /**
      * Consume a CSS element selector (tag name, but | instead of : for namespaces (or *| for wildcard namespace), to not conflict with :pseudo selects).
      * 
@@ -347,13 +351,149 @@ public class TokenQueue {
     private static final String[] ElementSelectorChars = {"*", "|", "_", "-"};
 
     /**
-     Consume a CSS identifier (ID or class) off the queue (letter, digit, -, _)
-     http://www.w3.org/TR/CSS2/syndata.html#value-def-identifier
-     @return identifier
+     Consume a CSS identifier (ID or class) off the queue.
+     <p>Note: For backwards compatibility this method supports improperly formatted CSS identifiers, e.g. {@code 1} instead
+     of {@code \31}.</p>
+
+     @return The unescaped identifier.
+     @throws IllegalArgumentException if an invalid escape sequence was found. Afterward, the state of the TokenQueue
+     is undefined.
+     @see <a href="https://www.w3.org/TR/css-syntax-3/#consume-name">CSS Syntax Module Level 3, Consume an ident sequence</a>
+     @see <a href="https://www.w3.org/TR/css-syntax-3/#typedef-ident-token">CSS Syntax Module Level 3, ident-token</a>
      */
     public String consumeCssIdentifier() {
-        return consumeEscapedCssIdentifier(CssIdentifierChars);
+        if (isEmpty()) throw new IllegalArgumentException("CSS identifier expected, but end of input found");
+        int start = pos;
+
+        // Fast path for CSS identifiers that don't contain escape sequences.
+        while (!isEmpty()) {
+            char c = current();
+            if (isIdent(c)) {
+                advance();
+            } else if (c == Esc || c == Unicode_Null) {
+                // Exit fast path when an escape sequence or U+0000 is found.
+                break;
+            } else {
+                // End of identifier reached without encountering a sequence that requires special handling. The CSS
+                // identifier is a substring of the input.
+                return queue.substring(start, pos);
+            }
+        }
+
+        // An escape sequence was found. Use a StringBuilder to store the decoded CSS identifier.
+        StringBuilder out = StringUtil.borrowBuilder();
+
+        if (start < pos) {
+            // Copy the CSS identifier up to the first escape sequence.
+            out.append(queue, start, pos);
+        }
+
+        while (!isEmpty()) {
+            char c = current();
+            if (isIdent(c)) {
+                out.append(consume());
+            } else if (c == Unicode_Null) {
+                // https://www.w3.org/TR/css-syntax-3/#input-preprocessing
+                advance();
+                out.append(Replacement);
+            } else if (c == Esc) {
+                advance();
+                if (!isEmpty() && isNewline(current())) {
+                    // Not a valid escape sequence. This is treated as the end of the CSS identifier.
+                    pos--;
+                    break;
+                } else {
+                    consumeCssEscapeSequenceInto(out);
+                }
+            } else {
+                break;
+            }
+        }
+        return StringUtil.releaseBuilder(out);
     }
+
+    private void consumeCssEscapeSequenceInto(StringBuilder out) {
+        if (isEmpty()) {
+            out.append(Replacement);
+            return;
+        }
+        int start = pos;
+        char firstEscaped = consume();
+        if (!isHexDigit(firstEscaped)) {
+            out.append(firstEscaped);
+        } else {
+            for (int i = 0; i < 5 && !isEmpty(); i++) {
+                char escapedChar = current();
+                if (isHexDigit(escapedChar)) advance();
+                else break;
+            }
+            String hexString = queue.substring(start, pos);
+            int codePoint;
+            try {
+                codePoint = Integer.parseInt(hexString, 16);
+            } catch (NumberFormatException e) { // Won't happen as we confirmed hex above; just mollifying scanners
+                throw new IllegalArgumentException("Invalid escape sequence: " + hexString, e);
+            }
+            if (isValidCodePoint(codePoint)) {
+                out.appendCodePoint(codePoint);
+            } else {
+                out.append(Replacement);
+            }
+
+            if (!isEmpty()) {
+                char c = current();
+                if (c == '\r') {
+                    // Since there's currently no input preprocessing, check for CRLF here.
+                    // https://www.w3.org/TR/css-syntax-3/#input-preprocessing
+                    advance();
+                    if (!isEmpty() && current() == '\n') advance();
+                } else if (c == ' ' || c == '\t' || isNewline(c)) {
+                    advance();
+                }
+            }
+        }
+    }
+
+    // statics below specifically for CSS identifiers:
+
+    private static boolean isLetter(char c) {
+        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+    }
+
+    private static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private static boolean isHexDigit(char c) {
+        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#non-ascii-code-point
+    private static boolean isNonAscii(char c) {
+        return c >= '\u0080';
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#ident-start-code-point
+    private static boolean isIdentStart(char c) {
+        return c == '_' || isLetter(c) || isNonAscii(c);
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#ident-code-point
+    private static boolean isIdent(char c) {
+        return c == Hyphen_Minus || isDigit(c) || isIdentStart(c);
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#newline
+    // Note: currently there's no preprocessing happening.
+    private static boolean isNewline(char c) {
+        return c == '\n' || c == '\r' || c == '\f';
+    }
+
+    // https://www.w3.org/TR/css-syntax-3/#consume-an-escaped-code-point
+    private static boolean isValidCodePoint(int codePoint) {
+        return codePoint != 0 && Character.isValidCodePoint(codePoint) && !Character.isSurrogate((char) codePoint);
+    }
+
     private static final String[] CssIdentifierChars = {"-", "_"};
 
 
@@ -361,7 +501,7 @@ public class TokenQueue {
         int start = pos;
         boolean escaped = false;
         while (!isEmpty()) {
-            if (queue.charAt(pos) == ESC && remainingLength() >1 ) {
+            if (queue.charAt(pos) == Esc && remainingLength() >1 ) {
                 escaped = true;
                 pos+=2; // skip the escape and the escaped
             } else if (matchesCssIdentifier(matches)) {

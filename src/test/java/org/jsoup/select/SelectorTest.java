@@ -1450,4 +1450,15 @@ public class SelectorTest {
         assertTrue(b_needs_a.threadMemo.get().isEmpty());
         assertTrue(c_needs_b.threadMemo.get().isEmpty());
     }
+
+    @Test void hexDigitUnescape() {
+        // tests the select component of https://github.com/jhy/jsoup/pull/2297, with per-spec escapes
+        // literal is: #\30 \%\ Platform\ Image
+        String html = "<img id='0% Platform Image'>";
+        String q = "#\\30 \\%\\ Platform\\ Image";
+
+        Document doc = Jsoup.parse(html);
+        Element img = doc.expectFirst(q);
+        assertEquals("img", img.tagName());
+    }
 }
