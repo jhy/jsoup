@@ -16,7 +16,7 @@ import java.util.Locale;
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
-public final class CharacterReader {
+public class CharacterReader {
     static final char EOF = (char) -1;
     private static final int MaxStringCacheLen = 12;
     private static final int StringCacheSize = 512;
@@ -276,7 +276,11 @@ public final class CharacterReader {
         return isEmptyNoBufferUp() ? EOF : charBuf[bufPos];
     }
 
-    char consume() {
+    /**
+     Consume one character off the queue.
+     @return first character on queue, or EOF if the queue is empty.
+     */
+    public char consume() {
         bufferUp();
         char val = isEmptyNoBufferUp() ? EOF : charBuf[bufPos];
         bufPos++;
@@ -356,7 +360,14 @@ public final class CharacterReader {
         }
     }
 
-    String consumeTo(String seq) {
+    /**
+     Reads the characters up to (but not including) the specified case-sensitive string.
+     <p>If the sequence is not found in the buffer, will return the remainder of the current buffered amount, less the
+     length of the sequence, such that this call may be repeated.
+     @param seq the delimiter
+     @return the chars read
+     */
+    public String consumeTo(String seq) {
         int offset = nextIndexOf(seq);
         if (offset != -1) {
             String consumed = cacheString(charBuf, stringCache, bufPos, offset);
@@ -376,128 +387,71 @@ public final class CharacterReader {
     }
 
     /**
+     Read characters while the input predicate returns true.
+     @return characters read
+     */
+    String consumeMatching(CharPredicate func) {
+        return consumeMatching(func, -1);
+    }
+
+    /**
+     Read characters while the input predicate returns true, up to a maximum length.
+     @param func predicate to test
+     @param maxLength maximum length to read. -1 indicates no maximum
+     @return characters read
+     */
+    String consumeMatching(CharPredicate func, int maxLength) {
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        while (pos < remaining && (maxLength == -1 || pos - start < maxLength) && func.test(val[pos])) {
+            pos++;
+        }
+
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+
+    /**
      * Read characters until the first of any delimiters is found.
      * @param chars delimiters to scan for
      * @return characters read up to the matched delimiter.
      */
     public String consumeToAny(final char... chars) {
-        bufferUp();
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-        final int charLen = chars.length;
-        int i;
-
-        OUTER: while (pos < remaining) {
-            for (i = 0; i < charLen; i++) {
-                if (val[pos] == chars[i])
-                    break OUTER;
-            }
-            pos++;
-        }
-
-        bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return consumeMatching(c -> { // seeks until we see one of the terminating chars
+            for (char seek : chars)
+                if (c == seek) return false;
+            return true;
+        });
     }
 
     String consumeToAnySorted(final char... chars) {
-        bufferUp();
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-
-        while (pos < remaining) {
-            if (Arrays.binarySearch(chars, val[pos]) >= 0)
-                break;
-            pos++;
-        }
-        bufPos = pos;
-        return bufPos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return consumeMatching(c -> Arrays.binarySearch(chars, c) < 0); // matches until a hit
     }
 
     String consumeData() {
-        // &, <, null
-        //bufferUp(); // no need to bufferUp, just called consume()
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-
-        OUTER: while (pos < remaining) {
-            switch (val[pos]) {
-                case '&':
-                case '<':
-                case TokeniserState.nullChar:
-                    break OUTER;
-                default:
-                    pos++;
-            }
-        }
-        bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        // consumes until &, <, null
+        return consumeMatching(c -> c != '&' && c != '<' && c != TokeniserState.nullChar);
     }
 
     String consumeAttributeQuoted(final boolean single) {
         // null, " or ', &
-        //bufferUp(); // no need to bufferUp, just called consume()
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-
-        OUTER: while (pos < remaining) {
-            switch (val[pos]) {
-                case '&':
-                case TokeniserState.nullChar:
-                    break OUTER;
-                case '\'':
-                    if (single) break OUTER;
-                    break;
-                case '"':
-                    if (!single) break OUTER;
-                    break;
-            }
-            pos++;
-        }
-        bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return consumeMatching(c -> c != TokeniserState.nullChar && c != '&' && (single ? c != '\'' : c != '"'));
     }
-
 
     String consumeRawData() {
         // <, null
-        //bufferUp(); // no need to bufferUp, just called consume()
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-
-        OUTER: while (pos < remaining) {
-            switch (val[pos]) {
-                case '<':
-                case TokeniserState.nullChar:
-                    break OUTER;
-                default:
-                    pos++;
-            }
-        }
-        bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+        return consumeMatching(c -> c != '<' && c != TokeniserState.nullChar);
     }
 
     String consumeTagName() {
         // '\t', '\n', '\r', '\f', ' ', '/', '>'
         // NOTE: out of spec; does not stop and append on nullChar but eats
-        bufferUp();
-        int pos = bufPos;
-        final int start = pos;
-        final int remaining = bufLength;
-        final char[] val = charBuf;
-
-        OUTER: while (pos < remaining) {
-            switch (val[pos]) {
+        return consumeMatching(c -> {
+            switch (c) {
                 case '\t':
                 case '\n':
                 case '\r':
@@ -505,13 +459,10 @@ public final class CharacterReader {
                 case ' ':
                 case '/':
                 case '>':
-                    break OUTER;
+                    return false;
             }
-            pos++;
-        }
-
-        bufPos = pos;
-        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+            return true;
+        });
     }
 
     String consumeToEnd() {
@@ -522,17 +473,7 @@ public final class CharacterReader {
     }
 
     String consumeLetterSequence() {
-        bufferUp();
-        int start = bufPos;
-        while (bufPos < bufLength) {
-            char c = charBuf[bufPos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c))
-                bufPos++;
-            else
-                break;
-        }
-
-        return cacheString(charBuf, stringCache, start, bufPos - start);
+        return consumeMatching(c -> (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c));
     }
 
     String consumeLetterThenDigitSequence() {
@@ -557,34 +498,15 @@ public final class CharacterReader {
     }
 
     String consumeHexSequence() {
-        bufferUp();
-        int start = bufPos;
-        while (bufPos < bufLength) {
-            char c = charBuf[bufPos];
-            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
-                bufPos++;
-            else
-                break;
-        }
-        return cacheString(charBuf, stringCache, start, bufPos - start);
+        return consumeMatching(c -> (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
     }
 
     String consumeDigitSequence() {
-        bufferUp();
-        int start = bufPos;
-        while (bufPos < bufLength) {
-            char c = charBuf[bufPos];
-            if (c >= '0' && c <= '9')
-                bufPos++;
-            else
-                break;
-        }
-        return cacheString(charBuf, stringCache, start, bufPos - start);
+        return consumeMatching(c -> c >= '0' && c <= '9');
     }
 
     boolean matches(char c) {
         return !isEmpty() && charBuf[bufPos] == c;
-
     }
 
     boolean matches(String seq) {
@@ -606,15 +528,23 @@ public final class CharacterReader {
             return false;
 
         for (int offset = 0; offset < scanLength; offset++) {
-            char upScan = Character.toUpperCase(seq.charAt(offset));
-            char upTarget = Character.toUpperCase(charBuf[bufPos + offset]);
-            if (upScan != upTarget)
-                return false;
+            char scan = seq.charAt(offset);
+            char target = charBuf[bufPos + offset];
+            if (scan == target) continue;
+
+            scan = Character.toUpperCase(scan);
+            target = Character.toUpperCase(target);
+            if (scan != target) return false;
         }
         return true;
     }
 
-    boolean matchesAny(char... seq) {
+    /**
+     Tests if the next character in the queue matches any of the characters in the sequence, case sensitively..
+     @param seq list of characters to check for
+     @return true if any matched, false if none did
+     */
+    public boolean matchesAny(char... seq) {
         if (isEmpty())
             return false;
 
@@ -763,5 +693,10 @@ public final class CharacterReader {
     // just used for testing
     boolean rangeEquals(final int start, final int count, final String cached) {
         return rangeEquals(charBuf, start, count, cached);
+    }
+
+    @FunctionalInterface
+    interface CharPredicate {
+        boolean test(char c);
     }
 }
