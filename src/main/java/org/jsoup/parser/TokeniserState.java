@@ -1,7 +1,6 @@
 package org.jsoup.parser;
 
 import org.jsoup.nodes.DocumentType;
-import org.jsoup.nodes.XmlDeclaration;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 
@@ -196,7 +195,7 @@ enum TokeniserState {
                 t.emitTagPending();
                 t.transition(TagOpen); // straight into TagOpen, as we came from < and looks like we're on a start tag
             } else {
-                t.emit("<");
+                t.emit('<');
                 t.transition(Rcdata);
             }
         }
@@ -256,7 +255,7 @@ enum TokeniserState {
 
         private void anythingElse(Tokeniser t, CharacterReader r) {
             t.emit("</");
-            t.emit(t.dataBuffer);
+            t.emit(t.dataBuffer.value());
             r.unconsume();
             t.transition(Rcdata);
         }
@@ -294,12 +293,12 @@ enum TokeniserState {
                     t.transition(ScriptDataEscapeStart);
                     break;
                 case eof:
-                    t.emit("<");
+                    t.emit('<');
                     t.eofError(this);
                     t.transition(Data);
                     break;
                 default:
-                    t.emit("<");
+                    t.emit('<');
                     r.unconsume();
                     t.transition(ScriptData);
             }
@@ -426,7 +425,7 @@ enum TokeniserState {
             if (r.matchesAsciiAlpha()) {
                 t.createTempBuffer();
                 t.dataBuffer.append(r.current());
-                t.emit("<");
+                t.emit('<');
                 t.emit(r.current());
                 t.advanceTransition(ScriptDataDoubleEscapeStart);
             } else if (r.matches('/')) {
@@ -1650,7 +1649,7 @@ enum TokeniserState {
             String data = r.consumeTo("]]>");
             t.dataBuffer.append(data);
             if (r.matchConsume("]]>") || r.isEmpty()) {
-                t.emit(new Token.CData(t.dataBuffer.toString()));
+                t.emit(new Token.CData(t.dataBuffer.value()));
                 t.transition(Data);
             }// otherwise, buffer underrun, stay in data section
         }
@@ -1708,7 +1707,7 @@ enum TokeniserState {
 
         if (needsExitTransition) {
             t.emit("</");
-            t.emit(t.dataBuffer);
+            t.emit(t.dataBuffer.value());
             t.transition(elseTransition);
         }
     }
@@ -1769,7 +1768,7 @@ enum TokeniserState {
             case ' ':
             case '/':
             case '>':
-                if (t.dataBuffer.toString().equals("script"))
+                if (t.dataBuffer.value().equals("script"))
                     t.transition(primary);
                 else
                     t.transition(fallback);

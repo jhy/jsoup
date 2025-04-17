@@ -315,7 +315,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             }
         }
 
-        Tag tag = tagFor(startTag.tagName, startTag.normalName, namespace,
+        Tag tag = tagFor(startTag.name(), startTag.normalName, namespace,
             forcePreserveCase ? ParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
@@ -787,9 +787,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void addPendingTableCharacters(Token.Character c) {
-        // make a clone of the token to maintain its state (as Tokens are otherwise reset)
-        Token.Character clone = c.clone();
-        pendingTableCharacters.add(clone);
+        // make a copy of the token to maintain its state (as Tokens are otherwise reset)
+        Token.Character copy = new Token.Character(c);
+        pendingTableCharacters.add(copy);
     }
 
     /**

@@ -37,9 +37,7 @@ final class Tokeniser {
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
-    @Nullable private String charsString = null; // characters pending an emit. Will fall to charsBuilder if more than one
-    private final StringBuilder charsBuilder = new StringBuilder(1024); // buffers characters to output as one token, if more than one emit per read
-    final StringBuilder dataBuffer = new StringBuilder(1024); // buffers data looking for </script>
+    final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
     final Document.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
     final Token.StartTag startPending;
@@ -69,17 +67,8 @@ final class Tokeniser {
         }
 
         // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
-        final StringBuilder cb = this.charsBuilder;
-        if (cb.length() != 0) {
-            String str = cb.toString();
-            cb.delete(0, cb.length());
-            Token token = charPending.data(str);
-            charsString = null;
-            return token;
-        } else if (charsString != null) {
-            Token token = charPending.data(charsString);
-            charsString = null;
-            return token;
+        if (charPending.data.hasData()) {
+            return charPending;
         } else {
             isEmitPending = false;
             assert emitPending != null;
@@ -98,7 +87,7 @@ final class Tokeniser {
 
         if (token.type == Token.TokenType.StartTag) {
             Token.StartTag startTag = (Token.StartTag) token;
-            lastStartTag = startTag.tagName;
+            lastStartTag = startTag.name();
             lastStartCloseSeq = null; // only lazy inits
         } else if (token.type == Token.TokenType.EndTag) {
             Token.EndTag endTag = (Token.EndTag) token;
@@ -110,55 +99,21 @@ final class Tokeniser {
     void emit(final String str) {
         // buffer strings up until last string token found, to emit only one token for a run of character refs etc.
         // does not set isEmitPending; read checks that
-        if (charsString == null) {
-            charsString = str;
-        } else {
-            if (charsBuilder.length() == 0) { // switching to string builder as more than one emit before read
-                charsBuilder.append(charsString);
-            }
-            charsBuilder.append(str);
-        }
-        charPending.startPos(charStartPos);
-        charPending.endPos(reader.pos());
-    }
-
-    // variations to limit need to create temp strings
-    void emit(final StringBuilder str) {
-        if (charsString == null) {
-            charsString = str.toString();
-        } else {
-            if (charsBuilder.length() == 0) {
-                charsBuilder.append(charsString);
-            }
-            charsBuilder.append(str);
-        }
+        // todo move "<" to '<'...
+        charPending.append(str);
         charPending.startPos(charStartPos);
         charPending.endPos(reader.pos());
     }
 
     void emit(char c) {
-        if (charsString == null) {
-            charsString = String.valueOf(c);
-        } else {
-            if (charsBuilder.length() == 0) {
-                charsBuilder.append(charsString);
-            }
-            charsBuilder.append(c);
-        }
+        charPending.data.append(c);
         charPending.startPos(charStartPos);
         charPending.endPos(reader.pos());
     }
 
-    void emit(char[] chars) {
-        emit(String.valueOf(chars));
-    }
-
     void emit(int[] codepoints) {
+        // todo review
         emit(new String(codepoints, 0, codepoints.length));
-    }
-
-    TokeniserState getState() {
-        return state;
     }
 
     void transition(TokeniserState newState) {
@@ -176,7 +131,9 @@ final class Tokeniser {
 
     final private int[] codepointHolder = new int[1]; // holder to not have to keep creating arrays
     final private int[] multipointHolder = new int[2];
-    @Nullable int[] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
+
+    /** Tries to consume a character reference, and returns: null if nothing, int[1], or int[2]. */
+    int @Nullable [] consumeCharacterReference(@Nullable Character additionalAllowedCharacter, boolean inAttribute) {
         if (reader.isEmpty())
             return null;
         if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current())
@@ -189,7 +146,7 @@ final class Tokeniser {
         if (reader.matchConsume("#")) { // numbered
             boolean isHexMode = reader.matchConsumeIgnoreCase("X");
             String numRef = isHexMode ? reader.consumeHexSequence() : reader.consumeDigitSequence();
-            if (numRef.length() == 0) { // didn't match anything
+            if (numRef.isEmpty()) { // didn't match anything
                 characterReferenceError("numeric reference with no numerals");
                 reader.rewindToMark();
                 return null;
@@ -301,7 +258,7 @@ final class Tokeniser {
     }
 
     void createTempBuffer() {
-        Token.reset(dataBuffer);
+        dataBuffer.reset();
     }
 
     boolean isAppropriateEndTagToken() {

@@ -361,14 +361,21 @@ public final class StringUtil {
     public static String releaseBuilder(StringBuilder sb) {
         Validate.notNull(sb);
         String string = sb.toString();
+        releaseBuilderVoid(sb);
+        return string;
+    }
 
+    /**
+     Releases a borrowed builder, but does not call .toString() on it. Useful in case you already have that string.
+     @param sb the StringBuilder to release.
+     @see #releaseBuilder(StringBuilder)
+     */
+    public static void releaseBuilderVoid(StringBuilder sb) {
         // if it hasn't grown too big, reset it and return it to the pool:
         if (sb.length() <= MaxBuilderSize) {
             sb.delete(0, sb.length()); // make sure it's emptied on release
             BuilderPool.release(sb);
         }
-
-        return string;
     }
 
     /**

@@ -10,9 +10,9 @@ import org.jspecify.annotations.Nullable;
  * Parse tokens for the Tokeniser.
  */
 abstract class Token {
+    static final int UnsetPos = -1;
     final TokenType type; // used in switches in TreeBuilder vs .getClass()
-    static final int Unset = -1;
-    private int startPos, endPos = Unset; // position in CharacterReader this token was read from
+    int startPos, endPos = UnsetPos; // position in CharacterReader this token was read from
 
     private Token(TokenType type) {
         this.type = type;
@@ -27,8 +27,8 @@ abstract class Token {
      * piece of data, which immediately get GCed.
      */
     Token reset() {
-        startPos = Unset;
-        endPos = Unset;
+        startPos = UnsetPos;
+        endPos = UnsetPos;
         return this;
     }
 
@@ -48,17 +48,11 @@ abstract class Token {
         endPos = pos;
     }
 
-    static void reset(StringBuilder sb) {
-        if (sb != null) {
-            sb.delete(0, sb.length());
-        }
-    }
-
     static final class Doctype extends Token {
-        final StringBuilder name = new StringBuilder();
+        final TokenData name = new TokenData();
         @Nullable String pubSysKey = null;
-        final StringBuilder publicIdentifier = new StringBuilder();
-        final StringBuilder systemIdentifier = new StringBuilder();
+        final TokenData publicIdentifier = new TokenData();
+        final TokenData systemIdentifier = new TokenData();
         boolean forceQuirks = false;
 
         Doctype() {
@@ -68,16 +62,16 @@ abstract class Token {
         @Override
         Token reset() {
             super.reset();
-            reset(name);
+            name.reset();
             pubSysKey = null;
-            reset(publicIdentifier);
-            reset(systemIdentifier);
+            publicIdentifier.reset();
+            systemIdentifier.reset();
             forceQuirks = false;
             return this;
         }
 
         String getName() {
-            return name.toString();
+            return name.value();
         }
 
         @Nullable String getPubSysKey() {
@@ -85,11 +79,11 @@ abstract class Token {
         }
 
         String getPublicIdentifier() {
-            return publicIdentifier.toString();
+            return publicIdentifier.value();
         }
 
         public String getSystemIdentifier() {
-            return systemIdentifier.toString();
+            return systemIdentifier.value();
         }
 
         public boolean isForceQuirks() {
@@ -103,18 +97,13 @@ abstract class Token {
     }
 
     static abstract class Tag extends Token {
-        @Nullable protected String tagName;
+        protected TokenData tagName = new TokenData();
         @Nullable protected String normalName; // lc version of tag name, for case-insensitive tree build
         boolean selfClosing = false;
         @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
-        @Nullable private String attrName; // try to get attr names and vals in one shot, vs Builder
-        private final StringBuilder attrNameSb = new StringBuilder();
-        private boolean hasAttrName = false;
-
-        @Nullable private String attrValue;
-        private final StringBuilder attrValueSb = new StringBuilder();
-        private boolean hasAttrValue = false;
+        final private TokenData attrName = new TokenData();
+        final private TokenData attrValue = new TokenData();
         private boolean hasEmptyAttrValue = false; // distinguish boolean attribute from empty string value
 
         // attribute source range tracking
@@ -131,7 +120,7 @@ abstract class Token {
         @Override
         Tag reset() {
             super.reset();
-            tagName = null;
+            tagName.reset();
             normalName = null;
             selfClosing = false;
             attributes = null;
@@ -140,17 +129,12 @@ abstract class Token {
         }
 
         private void resetPendingAttr() {
-            reset(attrNameSb);
-            attrName = null;
-            hasAttrName = false;
-
-            reset(attrValueSb);
-            attrValue = null;
+            attrName.reset();
+            attrValue.reset();
             hasEmptyAttrValue = false;
-            hasAttrValue = false;
 
             if (trackSource)
-                attrNameStart = attrNameEnd = attrValStart = attrValEnd = Unset;
+                attrNameStart = attrNameEnd = attrValStart = attrValEnd = UnsetPos;
         }
 
         /* Limits runaway crafted HTML from spewing attributes and getting a little sluggish in ensureCapacity.
@@ -162,14 +146,14 @@ abstract class Token {
             if (attributes == null)
                 attributes = new Attributes();
 
-            if (hasAttrName && attributes.size() < MaxAttributes) {
+            if (attrName.hasData() && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
-                String name = attrNameSb.length() > 0 ? attrNameSb.toString() : attrName;
+                String name = attrName.value();
                 name = name.trim();
-                if (name.length() > 0) {
+                if (!name.isEmpty()) {
                     String value;
-                    if (hasAttrValue)
-                        value = attrValueSb.length() > 0 ? attrValueSb.toString() : attrValue;
+                    if (attrValue.hasData())
+                        value = attrValue.value();
                     else if (hasEmptyAttrValue)
                         value = "";
                     else
@@ -194,7 +178,7 @@ abstract class Token {
                 if (attributes.sourceRange(name).nameRange().isTracked()) return; // dedupe ranges as we go; actual attributes get deduped later for error count
 
                 // if there's no value (e.g. boolean), make it an implicit range at current
-                if (!hasAttrValue) attrValStart = attrValEnd = attrNameEnd;
+                if (!attrValue.hasData()) attrValStart = attrValEnd = attrNameEnd;
 
                 Range.AttributeRange range = new Range.AttributeRange(
                     new Range(
@@ -212,40 +196,36 @@ abstract class Token {
             return attributes != null;
         }
 
-        /** Case-sensitive check */
-        final boolean hasAttribute(String key) {
-            return attributes != null && attributes.hasKey(key);
-        }
-
         final boolean hasAttributeIgnoreCase(String key) {
             return attributes != null && attributes.hasKeyIgnoreCase(key);
         }
 
         final void finaliseTag() {
             // finalises for emit
-            if (hasAttrName) {
+            if (attrName.hasData()) {
                 newAttribute();
             }
         }
 
         /** Preserves case */
         final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
-            Validate.isFalse(tagName == null || tagName.length() == 0);
-            return tagName;
+            return tagName.value();
         }
 
         /** Lower case */
         final String normalName() { // lower case, used in tree building for working out where in tree it should go
+            Validate.isFalse(normalName == null || normalName.isEmpty());
             return normalName;
         }
 
         final String toStringName() {
-            return tagName != null ? tagName : "[unset]";
+            String name = tagName.value();
+            return (name.isEmpty()) ? "[unset]" : name;
         }
 
         final Tag name(String name) {
-            tagName = name;
-            normalName = ParseSettings.normalName(tagName);
+            tagName.set(name);
+            normalName = ParseSettings.normalName(tagName.value());
             return this;
         }
 
@@ -257,80 +237,57 @@ abstract class Token {
         final void appendTagName(String append) {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
-            tagName = tagName == null ? append : tagName.concat(append);
-            // perf: normalize just the appended content
-            String normalAppend = ParseSettings.normalName(append);
-            normalName = normalName == null ? normalAppend : normalName.concat(normalAppend);
+            tagName.append(append);
+            normalName = ParseSettings.normalName(tagName.value());
         }
 
         final void appendTagName(char append) {
-            appendTagName(String.valueOf(append));
+            appendTagName(String.valueOf(append)); // so that normalname gets updated too
         }
 
         final void appendAttributeName(String append, int startPos, int endPos) {
             // might have null chars because we eat in one pass - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
-
-            ensureAttrName(startPos, endPos);
-            if (attrNameSb.length() == 0) {
-                attrName = append;
-            } else {
-                attrNameSb.append(append);
-            }
+            attrName.append(append);
+            attrNamePos(startPos, endPos);
         }
 
         final void appendAttributeName(char append, int startPos, int endPos) {
-            ensureAttrName(startPos, endPos);
-            attrNameSb.append(append);
+            attrName.append(append);
+            attrNamePos(startPos, endPos);
         }
 
         final void appendAttributeValue(String append, int startPos, int endPos) {
-            ensureAttrValue(startPos, endPos);
-            if (attrValueSb.length() == 0) {
-                attrValue = append;
-            } else {
-                attrValueSb.append(append);
-            }
+            attrValue.append(append);
+            attrValPos(startPos, endPos);
         }
 
         final void appendAttributeValue(char append, int startPos, int endPos) {
-            ensureAttrValue(startPos, endPos);
-            attrValueSb.append(append);
+            attrValue.append(append);
+            attrValPos(startPos, endPos);
         }
 
         final void appendAttributeValue(int[] appendCodepoints, int startPos, int endPos) {
-            ensureAttrValue(startPos, endPos);
             for (int codepoint : appendCodepoints) {
-                attrValueSb.appendCodePoint(codepoint);
+                attrValue.appendCodePoint(codepoint);
             }
+            attrValPos(startPos, endPos);
         }
         
         final void setEmptyAttributeValue() {
             hasEmptyAttrValue = true;
         }
 
-        private void ensureAttrName(int startPos, int endPos) {
-            hasAttrName = true;
-            // if on second hit, we'll need to move to the builder
-            if (attrName != null) {
-                attrNameSb.append(attrName);
-                attrName = null;
-            }
+        private void attrNamePos(int startPos, int endPos) {
             if (trackSource) {
-                attrNameStart = attrNameStart > Unset ? attrNameStart : startPos; // latches to first
+                attrNameStart = attrNameStart > UnsetPos ? attrNameStart : startPos; // latches to first
                 attrNameEnd = endPos;
             }
         }
 
-        private void ensureAttrValue(int startPos, int endPos) {
-            hasAttrValue = true;
-            // if on second hit, we'll need to move to the builder
-            if (attrValue != null) {
-                attrValueSb.append(attrValue);
-                attrValue = null;
-            }
+        private void attrValPos(int startPos, int endPos) {
             if (trackSource) {
-                attrValStart = attrValStart > Unset ? attrValStart : startPos; // latches to first
+                attrValStart = attrValStart > UnsetPos ? attrValStart : startPos; // latches to first
                 attrValEnd = endPos;
             }
         }
@@ -354,9 +311,9 @@ abstract class Token {
         }
 
         StartTag nameAttr(String name, Attributes attributes) {
-            this.tagName = name;
+            this.tagName.set(name);
             this.attributes = attributes;
-            normalName = ParseSettings.normalName(tagName);
+            normalName = ParseSettings.normalName(name);
             return this;
         }
 
@@ -382,15 +339,13 @@ abstract class Token {
     }
 
     final static class Comment extends Token {
-        private final StringBuilder data = new StringBuilder();
-        private String dataS; // try to get in one shot
+        private final TokenData data = new TokenData();
         boolean bogus = false;
 
         @Override
         Token reset() {
             super.reset();
-            reset(data);
-            dataS = null;
+            data.reset();
             bogus = false;
             return this;
         }
@@ -400,31 +355,17 @@ abstract class Token {
         }
 
         String getData() {
-            return dataS != null ? dataS : data.toString();
+            return data.value();
         }
 
         Comment append(String append) {
-            ensureData();
-            if (data.length() == 0) {
-                dataS = append;
-            } else {
-                data.append(append);
-            }
-            return this;
-        }
-
-        Comment append(char append) {
-            ensureData();
             data.append(append);
             return this;
         }
 
-        private void ensureData() {
-            // if on second hit, we'll need to move to the builder
-            if (dataS != null) {
-                data.append(dataS);
-                dataS = null;
-            }
+        Comment append(char append) {
+            data.append(append);
+            return this;
         }
 
         @Override
@@ -433,27 +374,40 @@ abstract class Token {
         }
     }
 
-    static class Character extends Token implements Cloneable {
-        private String data;
+    static class Character extends Token {
+        final TokenData data = new TokenData();
 
         Character() {
             super(TokenType.Character);
         }
 
+        /** Deep copy */
+        Character(Character source) {
+            super(TokenType.Character);
+            this.startPos = source.startPos;
+            this.endPos = source.endPos;
+            this.data.set(source.data.value());
+        }
+
         @Override
         Token reset() {
             super.reset();
-            data = null;
+            data.reset();
             return this;
         }
 
-        Character data(String data) {
-            this.data = data;
+        Character data(String str) {
+            data.set(str);
+            return this;
+        }
+
+        Character append(String str) {
+            data.append(str);
             return this;
         }
 
         String getData() {
-            return data;
+            return data.value();
         }
 
         @Override
@@ -461,13 +415,6 @@ abstract class Token {
             return getData();
         }
 
-        @Override protected Token.Character clone() {
-            try {
-                return (Token.Character) super.clone();
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     final static class CData extends Character {

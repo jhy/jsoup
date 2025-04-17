@@ -235,7 +235,7 @@ abstract class TreeBuilder {
     }
 
     Tag tagFor(Token.Tag token) {
-        return tagSet.valueOf(token.tagName, token.normalName, defaultNamespace(), settings.preserveTagCase());
+        return tagSet.valueOf(token.name(), token.normalName, defaultNamespace(), settings.preserveTagCase());
     }
 
     /**
