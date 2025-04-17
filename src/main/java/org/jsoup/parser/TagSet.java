@@ -22,7 +22,9 @@ import static org.jsoup.parser.Parser.NamespaceSvg;
  */
 public class TagSet {
     static final TagSet HtmlTagSet = initHtmlDefault();
-    final Map<String, HashMap<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
+
+    final Map<String, Map<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
+    final @Nullable TagSet source; // source to pull tags from on demand
 
     /**
      Returns a mutable copy of the default HTML tag set.
@@ -32,14 +34,11 @@ public class TagSet {
     }
 
     public TagSet() {
+        source = null;
     }
 
     public TagSet(TagSet original) {
-        for (HashMap<String, Tag> nsTags : original.tags.values()) {
-            for (Tag tag : nsTags.values()) {
-                this.doAdd(tag.clone());
-            }
-        }
+        this.source = original;
     }
 
     /**
@@ -74,9 +73,26 @@ public class TagSet {
         Validate.notNull(tagName);
         Validate.notNull(namespace);
 
-        HashMap<String, Tag> nsTags = tags.get(namespace);
-        if (nsTags == null) return null;
-        return nsTags.get(tagName);
+        // get from our tags
+        Map<String, Tag> nsTags = tags.get(namespace);
+        if (nsTags != null) {
+            Tag tag = nsTags.get(tagName);
+            if (tag != null) {
+                return tag;
+            }
+        }
+
+        // not found; clone on demand from source if exists
+        if (source != null) {
+            Tag tag = source.get(tagName, namespace);
+            if (tag != null) {
+                Tag copy = tag.clone();
+                doAdd(copy);
+                return copy;
+            }
+        }
+
+        return null;
     }
 
     /** Tag.valueOf with the normalName via the token.normalName, to save redundant lower-casing passes. */
