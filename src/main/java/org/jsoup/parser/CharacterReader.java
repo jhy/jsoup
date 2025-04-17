@@ -473,32 +473,26 @@ public class CharacterReader {
     }
 
     String consumeLetterSequence() {
-        return consumeMatching(c -> (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c));
+        return consumeMatching(Character::isLetter);
     }
 
     String consumeLetterThenDigitSequence() {
         bufferUp();
         int start = bufPos;
         while (bufPos < bufLength) {
-            char c = charBuf[bufPos];
-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c))
-                bufPos++;
-            else
-                break;
+            if (Character.isLetter(charBuf[bufPos])) bufPos++;
+            else break;
         }
         while (!isEmptyNoBufferUp()) {
-            char c = charBuf[bufPos];
-            if (c >= '0' && c <= '9')
-                bufPos++;
-            else
-                break;
+            if (isDigit(charBuf[bufPos])) bufPos++;
+            else break;
         }
 
         return cacheString(charBuf, stringCache, start, bufPos - start);
     }
 
     String consumeHexSequence() {
-        return consumeMatching(c -> (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
+        return consumeMatching(CharacterReader::isHexDigit);
     }
 
     String consumeDigitSequence() {
@@ -540,11 +534,11 @@ public class CharacterReader {
     }
 
     /**
-     Tests if the next character in the queue matches any of the characters in the sequence, case sensitively..
+     Tests if the next character in the queue matches any of the characters in the sequence, case sensitively.
      @param seq list of characters to check for
      @return true if any matched, false if none did
      */
-    public boolean matchesAny(char... seq) {
+    boolean matchesAny(char... seq) {
         if (isEmpty())
             return false;
 
@@ -563,10 +557,8 @@ public class CharacterReader {
     }
 
     boolean matchesLetter() {
-        if (isEmpty())
-            return false;
-        char c = charBuf[bufPos];
-        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || Character.isLetter(c);
+        if (isEmpty()) return false;
+        return Character.isLetter(charBuf[bufPos]);
     }
 
     /**
@@ -574,17 +566,13 @@ public class CharacterReader {
      @return if it matches or not
      */
     boolean matchesAsciiAlpha() {
-        if (isEmpty())
-            return false;
-        char c = charBuf[bufPos];
-        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+        if (isEmpty()) return false;
+        return isAsciiLetter(charBuf[bufPos]);
     }
 
     boolean matchesDigit() {
-        if (isEmpty())
-            return false;
-        char c = charBuf[bufPos];
-        return (c >= '0' && c <= '9');
+        if (isEmpty()) return false;
+        return isDigit(charBuf[bufPos]);
     }
 
     boolean matchConsume(String seq) {
@@ -635,8 +623,7 @@ public class CharacterReader {
 
     @Override
     public String toString() {
-        if (bufLength - bufPos < 0)
-            return "";
+        if (bufLength - bufPos < 0) return "";
         return new String(charBuf, bufPos, bufLength - bufPos);
     }
 
@@ -698,5 +685,18 @@ public class CharacterReader {
     @FunctionalInterface
     interface CharPredicate {
         boolean test(char c);
+    }
+
+    // char predicate functions
+    static boolean isAsciiLetter(char c) {
+        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+    }
+
+    static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    static boolean isHexDigit(char c) {
+        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
     }
 }

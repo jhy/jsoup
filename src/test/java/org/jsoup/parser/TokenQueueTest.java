@@ -137,6 +137,12 @@ public class TokenQueueTest {
         assertTrue(q.isEmpty());
     }
 
+    @Test void escapeAtEof() {
+        TokenQueue q = new TokenQueue("Foo\\");
+        String s = q.consumeElementSelector();
+        assertEquals("Foo", s); // no escape, no eof. Just straight up Foo.
+    }
+
     @ParameterizedTest
     @MethodSource("cssIdentifiers")
     @MethodSource("cssAdditionalIdentifiers")

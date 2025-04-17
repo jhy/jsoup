@@ -7,18 +7,47 @@ import org.jsoup.helper.Validate;
  A character reader with helpers focusing on parsing CSS selectors. Used internally by jsoup. API subject to changes.
  */
 
-public class TokenQueue extends CharacterReader {
+public class TokenQueue {
     private static final char Esc = '\\'; // escape char for chomp balanced.
     private static final char Hyphen_Minus = '-';
     private static final char Unicode_Null = '\u0000';
     private static final char Replacement = '\uFFFD';
+
+    private final CharacterReader reader;
 
     /**
      Create a new TokenQueue.
      @param data string of data to back queue.
      */
     public TokenQueue(String data) {
-        super(data);
+        reader = new CharacterReader(data);
+    }
+
+    /**
+     Is the queue empty?
+     @return true if no data left in queue.
+     */
+    public boolean isEmpty() {
+        return reader.isEmpty();
+    }
+
+    /**
+     Consume one character off queue.
+     @return first character on queue.
+     */
+    public char consume() {
+        return reader.consume();
+    }
+
+    /**
+     Drops the next character off the queue.
+     */
+    public void advance() {
+        if (!isEmpty()) reader.advance();
+    }
+
+    char current() {
+        return reader.current();
     }
 
     /**
@@ -36,17 +65,14 @@ public class TokenQueue extends CharacterReader {
      @param seq String to check queue for.
      @return true if the next characters match.
      */
-    @Override
     public boolean matches(String seq) {
-        return matchesIgnoreCase(seq);
+        return reader.matchesIgnoreCase(seq);
     }
 
     /**
-     Tests if the next characters match any of the sequences, case-insensitively.
-     @param seq list of strings to case insensitively check for
-     @return true of any matched, false if none did
+     @deprecated will be removed in 1.21.1.
      */
-    public boolean matchesAny(String... seq) {
+    @Deprecated public boolean matchesAny(String... seq) {
         for (String s : seq) {
             if (matches(s))
                 return true;
@@ -55,12 +81,21 @@ public class TokenQueue extends CharacterReader {
     }
 
     /**
+     Tests if the next characters match any of the sequences, case-<b>sensitively</b>.
+     @param seq list of chars to case-sensitively check for
+     @return true of any matched, false if none did
+     */
+    public boolean matchesAny(char... seq) {
+        return reader.matchesAny(seq);
+    }
+
+    /**
      If the queue case-insensitively matches the supplied string, consume it off the queue.
      @param seq String to search for, and if found, remove from queue.
      @return true if found and removed, false if not found.
      */
     public boolean matchChomp(String seq) {
-        return super.matchConsumeIgnoreCase(seq);
+        return reader.matchConsumeIgnoreCase(seq);
     }
 
     /**
@@ -68,7 +103,7 @@ public class TokenQueue extends CharacterReader {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return StringUtil.isWhitespace(current());
+        return StringUtil.isWhitespace(reader.current());
     }
 
     /**
@@ -76,7 +111,7 @@ public class TokenQueue extends CharacterReader {
      @return if matches a word character
      */
     public boolean matchesWord() {
-        return Character.isLetterOrDigit(current());
+        return Character.isLetterOrDigit(reader.current());
     }
 
     /**
@@ -86,13 +121,25 @@ public class TokenQueue extends CharacterReader {
      @param seq sequence to remove from head of queue.
      */
     public void consume(String seq) {
-        boolean found = matchConsumeIgnoreCase(seq);
+        boolean found = reader.matchConsumeIgnoreCase(seq);
         if (!found) throw new IllegalStateException("Queue did not match expected sequence");
     }
 
-    public String consumeToIgnoreCase(String seq) {
+    /**
+     Pulls a string off the queue, up to but exclusive of the match sequence, or to the queue running out.
+     @param seq String to end on (and not include in return, but leave on queue). <b>Case-sensitive.</b>
+     @return The matched data consumed from queue.
+     */
+    public String consumeTo(String seq) {
+        return reader.consumeTo(seq);
+    }
+
+    /*
+     @deprecated will be removed in 1.21.1
+     */
+    @Deprecated public String consumeToIgnoreCase(String seq) {
         StringBuilder sb = StringUtil.borrowBuilder();
-        while (!isEmpty() && !matchesIgnoreCase(seq)) {
+        while (!isEmpty() && !reader.matchesIgnoreCase(seq)) {
             sb.append(consume());
         }
         return StringUtil.releaseBuilder(sb);
@@ -107,7 +154,7 @@ public class TokenQueue extends CharacterReader {
         StringBuilder sb = StringUtil.borrowBuilder();
         OUT: while (!isEmpty()) {
             for (String s : seq) {
-                if (matchesIgnoreCase(s)) break OUT;
+                if (reader.matchesIgnoreCase(s)) break OUT;
             }
             sb.append(consume());
         }
@@ -121,9 +168,10 @@ public class TokenQueue extends CharacterReader {
      * isEmpty() == true).
      * @param seq String to match up to, and not include in return, and to pull off queue. <b>Case-sensitive.</b>
      * @return Data matched from queue.
+     * @deprecated will be removed in 1.21.1
      */
-    public String chompTo(String seq) {
-        String data = consumeTo(seq);
+    @Deprecated public String chompTo(String seq) {
+        String data = reader.consumeTo(seq);
         matchChomp(seq);
         return data;
     }
@@ -154,7 +202,7 @@ public class TokenQueue extends CharacterReader {
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
         boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
-        mark(); // mark the initial position to restore if needed
+        reader.mark(); // mark the initial position to restore if needed
 
         do {
             if (isEmpty()) break;
@@ -195,7 +243,7 @@ public class TokenQueue extends CharacterReader {
 
         String out = StringUtil.releaseBuilder(accum);
         if (depth > 0) {// ran out of queue before seeing enough )
-            rewindToMark(); // restore position if we don't have a balanced string
+            reader.rewindToMark(); // restore position if we don't have a balanced string
             Validate.fail("Did not find balanced marker at '" + out + "'");
         }
         return out;
@@ -207,6 +255,8 @@ public class TokenQueue extends CharacterReader {
      * @return unescaped string
      */
     public static String unescape(String in) {
+        if (in.indexOf(Esc) == -1) return in;
+
         StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
@@ -259,7 +309,7 @@ public class TokenQueue extends CharacterReader {
      @deprecated will be removed in 1.21.1
      */
     @Deprecated public String consumeWord() {
-        return consumeMatching(Character::isLetterOrDigit);
+        return reader.consumeMatching(Character::isLetterOrDigit);
     }
 
     /**
@@ -287,7 +337,7 @@ public class TokenQueue extends CharacterReader {
         if (isEmpty()) throw new IllegalArgumentException("CSS identifier expected, but end of input found");
 
         // Fast path for CSS identifiers that don't contain escape sequences.
-        String identifier = consumeMatching(TokenQueue::isIdent);
+        String identifier = reader.consumeMatching(TokenQueue::isIdent);
         char c = current();
         if (c != Esc && c != Unicode_Null) {
             // If we didn't end on an Esc or a Null, we consumed the whole identifier
@@ -313,7 +363,7 @@ public class TokenQueue extends CharacterReader {
                 advance();
                 if (!isEmpty() && isNewline(current())) {
                     // Not a valid escape sequence. This is treated as the end of the CSS identifier.
-                    unconsume();
+                    reader.unconsume();
                     break;
                 } else {
                     consumeCssEscapeSequenceInto(out);
@@ -332,11 +382,11 @@ public class TokenQueue extends CharacterReader {
         }
 
         char firstEscaped = consume();
-        if (!isHexDigit(firstEscaped)) {
+        if (!CharacterReader.isHexDigit(firstEscaped)) {
             out.append(firstEscaped);
         } else {
-            unconsume(); // put back the first hex digit
-            String hexString = consumeMatching(TokenQueue::isHexDigit, 6); // consume up to 6 hex digits
+            reader.unconsume(); // put back the first hex digit
+            String hexString = reader.consumeMatching(CharacterReader::isHexDigit, 6); // consume up to 6 hex digits
             int codePoint;
             try {
                 codePoint = Integer.parseInt(hexString, 16);
@@ -365,18 +415,6 @@ public class TokenQueue extends CharacterReader {
 
     // statics below specifically for CSS identifiers:
 
-    private static boolean isLetter(char c) {
-        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
-    }
-
-    private static boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    private static boolean isHexDigit(char c) {
-        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-    }
-
     // https://www.w3.org/TR/css-syntax-3/#non-ascii-code-point
     private static boolean isNonAscii(char c) {
         return c >= '\u0080';
@@ -384,12 +422,12 @@ public class TokenQueue extends CharacterReader {
 
     // https://www.w3.org/TR/css-syntax-3/#ident-start-code-point
     private static boolean isIdentStart(char c) {
-        return c == '_' || isLetter(c) || isNonAscii(c);
+        return c == '_' || CharacterReader.isAsciiLetter(c) || isNonAscii(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#ident-code-point
     private static boolean isIdent(char c) {
-        return c == Hyphen_Minus || isDigit(c) || isIdentStart(c);
+        return c == Hyphen_Minus || CharacterReader.isDigit(c) || isIdentStart(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#newline
@@ -411,7 +449,8 @@ public class TokenQueue extends CharacterReader {
             char c = current();
             if (c == Esc) {
                 advance();
-                sb.append(consume());
+                if (!isEmpty()) sb.append(consume());
+                else break;
             } else if (matchesCssIdentifier(matches)) {
                 sb.append(c);
                 advance();
@@ -419,11 +458,11 @@ public class TokenQueue extends CharacterReader {
                 break;
             }
         }
-       return StringUtil.releaseBuilder(sb);
+        return StringUtil.releaseBuilder(sb);
     }
 
     private boolean matchesCssIdentifier(char... matches) {
-        return matchesWord() || matchesAny(matches);
+        return matchesWord() || reader.matchesAny(matches);
     }
 
     /**
@@ -431,6 +470,11 @@ public class TokenQueue extends CharacterReader {
      @return remainder of queue.
      */
     public String remainder() {
-        return consumeToEnd();
+        return reader.consumeToEnd();
+    }
+
+    @Override
+    public String toString() {
+        return reader.toString();
     }
 }
