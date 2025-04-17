@@ -16,7 +16,7 @@ import java.util.Locale;
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
  */
-public class CharacterReader {
+public final class CharacterReader {
     static final char EOF = (char) -1;
     private static final int MaxStringCacheLen = 12;
     private static final int StringCacheSize = 512;
