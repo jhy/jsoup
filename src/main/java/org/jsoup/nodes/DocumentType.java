@@ -30,9 +30,10 @@ public class DocumentType extends LeafNode {
         super(name);
         Validate.notNull(publicId);
         Validate.notNull(systemId);
-        attr(NameKey, name);
-        attr(PublicId, publicId);
-        attr(SystemId, systemId);
+        attributes()
+            .add(NameKey, name)
+            .add(PublicId, publicId)
+            .add(SystemId, systemId);
         updatePubSyskey();
     }
 
@@ -43,9 +44,9 @@ public class DocumentType extends LeafNode {
 
     private void updatePubSyskey() {
         if (has(PublicId)) {
-            attr(PubSysKey, PUBLIC_KEY);
+            attributes().add(PubSysKey, PUBLIC_KEY);
         } else if (has(SystemId))
-            attr(PubSysKey, SYSTEM_KEY);
+            attributes().add(PubSysKey, SYSTEM_KEY);
     }
 
     /**

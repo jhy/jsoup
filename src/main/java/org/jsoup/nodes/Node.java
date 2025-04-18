@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
@@ -148,7 +149,9 @@ public abstract class Node implements Cloneable {
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        attributeKey = NodeUtils.parser(this).settings().normalizeAttribute(attributeKey);
+        Document doc = ownerDocument();
+        ParseSettings settings = doc != null ? doc.parser().settings() : ParseSettings.htmlDefault;
+        attributeKey = settings.normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
         return this;
     }
