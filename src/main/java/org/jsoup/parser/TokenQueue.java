@@ -4,63 +4,75 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 /**
- * A character queue with parsing helpers.
+ A character reader with helpers focusing on parsing CSS selectors. Used internally by jsoup. API subject to changes.
  */
+
 public class TokenQueue {
-    private String queue;
-    private int pos = 0;
-    
     private static final char Esc = '\\'; // escape char for chomp balanced.
     private static final char Hyphen_Minus = '-';
     private static final char Unicode_Null = '\u0000';
     private static final char Replacement = '\uFFFD';
+
+    private final CharacterReader reader;
 
     /**
      Create a new TokenQueue.
      @param data string of data to back queue.
      */
     public TokenQueue(String data) {
-        Validate.notNull(data);
-        queue = data;
+        reader = new CharacterReader(data);
     }
 
     /**
-     * Is the queue empty?
-     * @return true if no data left in queue.
+     Is the queue empty?
+     @return true if no data left in queue.
      */
     public boolean isEmpty() {
-        return remainingLength() == 0;
-    }
-    
-    private int remainingLength() {
-        return queue.length() - pos;
+        return reader.isEmpty();
     }
 
     /**
-     Add a string to the start of the queue.
-     @param seq string to add.
+     Consume one character off queue.
+     @return first character on queue.
      */
-    public void addFirst(String seq) {
-        // not very performant, but an edge case
-        queue = seq + queue.substring(pos);
-        pos = 0;
+    public char consume() {
+        return reader.consume();
     }
 
     /**
-     * Tests if the next characters on the queue match the sequence. Case insensitive.
-     * @param seq String to check queue for.
-     * @return true if the next characters match.
+     Drops the next character off the queue.
+     */
+    public void advance() {
+        if (!isEmpty()) reader.advance();
+    }
+
+    char current() {
+        return reader.current();
+    }
+
+    /**
+     Internal method, no longer supported.
+     @deprecated will be removed in 1.21.1.
+     */
+    @Deprecated public void addFirst(String seq) {
+        // only left in for API compat; could not find any public uses
+        // not very performant, but an edge case
+        throw new UnsupportedOperationException("addFirst() not supported");
+    }
+
+    /**
+     Tests if the next characters on the queue match the sequence, case-insensitively.
+     @param seq String to check queue for.
+     @return true if the next characters match.
      */
     public boolean matches(String seq) {
-        return queue.regionMatches(true, pos, seq, 0, seq.length());
+        return reader.matchesIgnoreCase(seq);
     }
 
     /**
-     Tests if the next characters match any of the sequences. Case insensitive.
-     @param seq list of strings to case insensitively check for
-     @return true of any matched, false if none did
+     @deprecated will be removed in 1.21.1.
      */
-    public boolean matchesAny(String... seq) {
+    @Deprecated public boolean matchesAny(String... seq) {
         for (String s : seq) {
             if (matches(s))
                 return true;
@@ -68,30 +80,22 @@ public class TokenQueue {
         return false;
     }
 
+    /**
+     Tests if the next characters match any of the sequences, case-<b>sensitively</b>.
+     @param seq list of chars to case-sensitively check for
+     @return true of any matched, false if none did
+     */
     public boolean matchesAny(char... seq) {
-        if (isEmpty())
-            return false;
-
-        for (char c: seq) {
-            if (queue.charAt(pos) == c)
-                return true;
-        }
-        return false;
+        return reader.matchesAny(seq);
     }
 
     /**
-     * Tests if the queue matches the sequence (as with match), and if they do, removes the matched string from the
-     * queue.
-     * @param seq String to search for, and if found, remove from queue.
-     * @return true if found and removed, false if not found.
+     If the queue case-insensitively matches the supplied string, consume it off the queue.
+     @param seq String to search for, and if found, remove from queue.
+     @return true if found and removed, false if not found.
      */
     public boolean matchChomp(String seq) {
-        if (matches(seq)) {
-            pos += seq.length();
-            return true;
-        } else {
-            return false;
-        }
+        return reader.matchConsumeIgnoreCase(seq);
     }
 
     /**
@@ -99,107 +103,62 @@ public class TokenQueue {
      @return if starts with whitespace
      */
     public boolean matchesWhitespace() {
-        return !isEmpty() && StringUtil.isWhitespace(queue.charAt(pos));
+        return StringUtil.isWhitespace(reader.current());
     }
 
     /**
-     Test if the queue matches a word character (letter or digit).
+     Test if the queue matches a tag word character (letter or digit).
      @return if matches a word character
      */
     public boolean matchesWord() {
-        return !isEmpty() && Character.isLetterOrDigit(queue.charAt(pos));
+        return Character.isLetterOrDigit(reader.current());
     }
 
     /**
-     * Drops the next character off the queue.
-     */
-    public void advance() {
-        if (!isEmpty()) pos++;
-    }
+     Consumes the supplied sequence of the queue, case-insensitively. If the queue does not start with the supplied
+     sequence, will throw an illegal state exception -- but you should be running match() against that condition.
 
-    private char current() {
-        return queue.charAt(pos);
-    }
-
-    /**
-     * Consume one character off queue.
-     * @return first character on queue.
-     */
-    public char consume() {
-        return queue.charAt(pos++);
-    }
-
-    /**
-     * Consumes the supplied sequence of the queue. If the queue does not start with the supplied sequence, will
-     * throw an illegal state exception -- but you should be running match() against that condition.
-     <p>
-     Case insensitive.
-     * @param seq sequence to remove from head of queue.
+     @param seq sequence to remove from head of queue.
      */
     public void consume(String seq) {
-        if (!matches(seq))
-            throw new IllegalStateException("Queue did not match expected sequence");
-        int len = seq.length();
-        if (len > remainingLength())
-            throw new IllegalStateException("Queue not long enough to consume sequence");
-        
-        pos += len;
+        boolean found = reader.matchConsumeIgnoreCase(seq);
+        if (!found) throw new IllegalStateException("Queue did not match expected sequence");
     }
 
     /**
-     * Pulls a string off the queue, up to but exclusive of the match sequence, or to the queue running out.
-     * @param seq String to end on (and not include in return, but leave on queue). <b>Case sensitive.</b>
-     * @return The matched data consumed from queue.
+     Pulls a string off the queue, up to but exclusive of the match sequence, or to the queue running out.
+     @param seq String to end on (and not include in return, but leave on queue). <b>Case-sensitive.</b>
+     @return The matched data consumed from queue.
      */
     public String consumeTo(String seq) {
-        int offset = queue.indexOf(seq, pos);
-        if (offset != -1) {
-            String consumed = queue.substring(pos, offset);
-            pos += consumed.length();
-            return consumed;
-        } else {
-            return remainder();
-        }
+        return reader.consumeTo(seq);
     }
-    
-    public String consumeToIgnoreCase(String seq) {
-        int start = pos;
-        String first = seq.substring(0, 1);
-        boolean canScan = first.toLowerCase().equals(first.toUpperCase()); // if first is not cased, use index of
-        while (!isEmpty()) {
-            if (matches(seq))
-                break;
-            
-            if (canScan) {
-                int skip = queue.indexOf(first, pos) - pos;
-                if (skip == 0) // this char is the skip char, but not match, so force advance of pos
-                    pos++;
-                else if (skip < 0) // no chance of finding, grab to end
-                    pos = queue.length();
-                else
-                    pos += skip;
-            }
-            else
-                pos++;
-        }
 
-        return queue.substring(start, pos);
+    /*
+     @deprecated will be removed in 1.21.1
+     */
+    @Deprecated public String consumeToIgnoreCase(String seq) {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        while (!isEmpty() && !reader.matchesIgnoreCase(seq)) {
+            sb.append(consume());
+        }
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
      Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
-     @param seq any number of terminators to consume to. <b>Case insensitive.</b>
-     @return consumed string   
+     @param seq any number of terminators to consume to. <b>Case-insensitive.</b>
+     @return consumed string
      */
-    // todo: method name. not good that consumeTo cares for case, and consume to any doesn't. And the only use for this
-    // is a case sensitive time...
     public String consumeToAny(String... seq) {
-        int start = pos;
-        while (!isEmpty() && !matchesAny(seq)) {
-            pos++;
+        StringBuilder sb = StringUtil.borrowBuilder();
+        OUT: while (!isEmpty()) {
+            for (String s : seq) {
+                if (reader.matchesIgnoreCase(s)) break OUT;
+            }
+            sb.append(consume());
         }
-
-        return queue.substring(start, pos);
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
@@ -207,38 +166,43 @@ public class TokenQueue {
      * <p>
      * If the queue runs out of characters before finding the seq, will return as much as it can (and queue will go
      * isEmpty() == true).
-     * @param seq String to match up to, and not include in return, and to pull off queue. <b>Case sensitive.</b>
+     * @param seq String to match up to, and not include in return, and to pull off queue. <b>Case-sensitive.</b>
      * @return Data matched from queue.
+     * @deprecated will be removed in 1.21.1
      */
-    public String chompTo(String seq) {
-        String data = consumeTo(seq);
+    @Deprecated public String chompTo(String seq) {
+        String data = reader.consumeTo(seq);
         matchChomp(seq);
         return data;
     }
-    
-    public String chompToIgnoreCase(String seq) {
+
+    /**
+     @deprecated will be removed in 1.21.1.
+     */
+    @Deprecated public String chompToIgnoreCase(String seq) {
         String data = consumeToIgnoreCase(seq); // case insensitive scan
         matchChomp(seq);
         return data;
     }
 
     /**
-     * Pulls a balanced string off the queue. E.g. if queue is "(one (two) three) four", (,) will return "one (two) three",
-     * and leave " four" on the queue. Unbalanced openers and closers can be quoted (with ' or ") or escaped (with \). Those escapes will be left
-     * in the returned string, which is suitable for regexes (where we need to preserve the escape), but unsuitable for
-     * contains text strings; use unescape for that.
-     * @param open opener
-     * @param close closer
-     * @return data matched from the queue
+     Pulls a balanced string off the queue. E.g. if queue is "(one (two) three) four", (,) will return "one (two) three",
+     and leave " four" on the queue. Unbalanced openers and closers can be quoted (with ' or ") or escaped (with \).
+     Those escapes will be left in the returned string, which is suitable for regexes (where we need to preserve the
+     escape), but unsuitable for contains text strings; use unescape for that.
+
+     @param open opener
+     @param close closer
+     @return data matched from the queue
      */
     public String chompBalanced(char open, char close) {
-        int start = -1;
-        int end = -1;
+        StringBuilder accum = StringUtil.borrowBuilder();
         int depth = 0;
         char last = 0;
         boolean inSingleQuote = false;
         boolean inDoubleQuote = false;
         boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
+        reader.mark(); // mark the initial position to restore if needed
 
         do {
             if (isEmpty()) break;
@@ -248,30 +212,38 @@ public class TokenQueue {
                     inSingleQuote = !inSingleQuote;
                 else if (c == '"' && c != open && !inSingleQuote)
                     inDoubleQuote = !inDoubleQuote;
-                if (inSingleQuote || inDoubleQuote || inRegexQE){
+                if (inSingleQuote || inDoubleQuote || inRegexQE) {
+                    accum.append(c);
                     last = c;
                     continue;
                 }
 
                 if (c == open) {
                     depth++;
-                    if (start == -1)
-                        start = pos;
+                    if (depth > 1) accum.append(c); // don't include the outer match pair in the return
                 }
-                else if (c == close)
+                else if (c == close) {
                     depth--;
+                    if (depth > 0) accum.append(c); // don't include the outer match pair in the return
+                } else {
+                    accum.append(c);
+                }
             } else if (c == 'Q') {
                 inRegexQE = true;
+                accum.append(c);
             } else if (c == 'E') {
                 inRegexQE = false;
+                accum.append(c);
+            } else {
+                accum.append(c);
             }
 
-            if (depth > 0 && last != 0)
-                end = pos; // don't include the outer match pair in the return
             last = c;
         } while (depth > 0);
-        final String out = (end >= 0) ? queue.substring(start, end) : "";
+
+        String out = StringUtil.releaseBuilder(accum);
         if (depth > 0) {// ran out of queue before seeing enough )
+            reader.rewindToMark(); // restore position if we don't have a balanced string
             Validate.fail("Did not find balanced marker at '" + out + "'");
         }
         return out;
@@ -283,6 +255,8 @@ public class TokenQueue {
      * @return unescaped string
      */
     public static String unescape(String in) {
+        if (in.indexOf(Esc) == -1) return in;
+
         StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
@@ -323,7 +297,7 @@ public class TokenQueue {
     public boolean consumeWhitespace() {
         boolean seen = false;
         while (matchesWhitespace()) {
-            pos++;
+            advance();
             seen = true;
         }
         return seen;
@@ -332,12 +306,10 @@ public class TokenQueue {
     /**
      * Retrieves the next run of word type (letter or digit) off the queue.
      * @return String of word characters from queue, or empty string if none.
+     @deprecated will be removed in 1.21.1
      */
-    public String consumeWord() {
-        int start = pos;
-        while (matchesWord())
-            pos++;
-        return queue.substring(start, pos);
+    @Deprecated public String consumeWord() {
+        return reader.consumeMatching(Character::isLetterOrDigit);
     }
 
     /**
@@ -348,7 +320,7 @@ public class TokenQueue {
     public String consumeElementSelector() {
         return consumeEscapedCssIdentifier(ElementSelectorChars);
     }
-    private static final String[] ElementSelectorChars = {"*", "|", "_", "-"};
+    private static final char[] ElementSelectorChars = {'*', '|', '_', '-'};
 
     /**
      Consume a CSS identifier (ID or class) off the queue.
@@ -363,33 +335,24 @@ public class TokenQueue {
      */
     public String consumeCssIdentifier() {
         if (isEmpty()) throw new IllegalArgumentException("CSS identifier expected, but end of input found");
-        int start = pos;
 
         // Fast path for CSS identifiers that don't contain escape sequences.
-        while (!isEmpty()) {
-            char c = current();
-            if (isIdent(c)) {
-                advance();
-            } else if (c == Esc || c == Unicode_Null) {
-                // Exit fast path when an escape sequence or U+0000 is found.
-                break;
-            } else {
-                // End of identifier reached without encountering a sequence that requires special handling. The CSS
-                // identifier is a substring of the input.
-                return queue.substring(start, pos);
-            }
+        String identifier = reader.consumeMatching(TokenQueue::isIdent);
+        char c = current();
+        if (c != Esc && c != Unicode_Null) {
+            // If we didn't end on an Esc or a Null, we consumed the whole identifier
+            return identifier;
         }
 
         // An escape sequence was found. Use a StringBuilder to store the decoded CSS identifier.
         StringBuilder out = StringUtil.borrowBuilder();
-
-        if (start < pos) {
+        if (!identifier.isEmpty()) {
             // Copy the CSS identifier up to the first escape sequence.
-            out.append(queue, start, pos);
+            out.append(identifier);
         }
 
         while (!isEmpty()) {
-            char c = current();
+            c = current();
             if (isIdent(c)) {
                 out.append(consume());
             } else if (c == Unicode_Null) {
@@ -400,7 +363,7 @@ public class TokenQueue {
                 advance();
                 if (!isEmpty() && isNewline(current())) {
                     // Not a valid escape sequence. This is treated as the end of the CSS identifier.
-                    pos--;
+                    reader.unconsume();
                     break;
                 } else {
                     consumeCssEscapeSequenceInto(out);
@@ -417,21 +380,17 @@ public class TokenQueue {
             out.append(Replacement);
             return;
         }
-        int start = pos;
+
         char firstEscaped = consume();
-        if (!isHexDigit(firstEscaped)) {
+        if (!CharacterReader.isHexDigit(firstEscaped)) {
             out.append(firstEscaped);
         } else {
-            for (int i = 0; i < 5 && !isEmpty(); i++) {
-                char escapedChar = current();
-                if (isHexDigit(escapedChar)) advance();
-                else break;
-            }
-            String hexString = queue.substring(start, pos);
+            reader.unconsume(); // put back the first hex digit
+            String hexString = reader.consumeMatching(CharacterReader::isHexDigit, 6); // consume up to 6 hex digits
             int codePoint;
             try {
                 codePoint = Integer.parseInt(hexString, 16);
-            } catch (NumberFormatException e) { // Won't happen as we confirmed hex above; just mollifying scanners
+            } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid escape sequence: " + hexString, e);
             }
             if (isValidCodePoint(codePoint)) {
@@ -456,18 +415,6 @@ public class TokenQueue {
 
     // statics below specifically for CSS identifiers:
 
-    private static boolean isLetter(char c) {
-        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
-    }
-
-    private static boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    private static boolean isHexDigit(char c) {
-        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
-    }
-
     // https://www.w3.org/TR/css-syntax-3/#non-ascii-code-point
     private static boolean isNonAscii(char c) {
         return c >= '\u0080';
@@ -475,12 +422,12 @@ public class TokenQueue {
 
     // https://www.w3.org/TR/css-syntax-3/#ident-start-code-point
     private static boolean isIdentStart(char c) {
-        return c == '_' || isLetter(c) || isNonAscii(c);
+        return c == '_' || CharacterReader.isAsciiLetter(c) || isNonAscii(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#ident-code-point
     private static boolean isIdent(char c) {
-        return c == Hyphen_Minus || isDigit(c) || isIdentStart(c);
+        return c == Hyphen_Minus || CharacterReader.isDigit(c) || isIdentStart(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#newline
@@ -494,43 +441,40 @@ public class TokenQueue {
         return codePoint != 0 && Character.isValidCodePoint(codePoint) && !Character.isSurrogate((char) codePoint);
     }
 
-    private static final String[] CssIdentifierChars = {"-", "_"};
+    private static final char[] CssIdentifierChars = {'-', '_'};
 
-
-    private String consumeEscapedCssIdentifier(String... matches) {
-        int start = pos;
-        boolean escaped = false;
+    private String consumeEscapedCssIdentifier(char... matches) {
+        StringBuilder sb = StringUtil.borrowBuilder();
         while (!isEmpty()) {
-            if (queue.charAt(pos) == Esc && remainingLength() >1 ) {
-                escaped = true;
-                pos+=2; // skip the escape and the escaped
+            char c = current();
+            if (c == Esc) {
+                advance();
+                if (!isEmpty()) sb.append(consume());
+                else break;
             } else if (matchesCssIdentifier(matches)) {
-                pos++;
+                sb.append(c);
+                advance();
             } else {
                 break;
             }
         }
-
-        String consumed = queue.substring(start, pos);
-        return escaped ? unescape(consumed) : consumed;
+        return StringUtil.releaseBuilder(sb);
     }
 
-    private boolean matchesCssIdentifier(String... matches) {
-        return matchesWord() || matchesAny(matches);
+    private boolean matchesCssIdentifier(char... matches) {
+        return matchesWord() || reader.matchesAny(matches);
     }
 
     /**
      Consume and return whatever is left on the queue.
-     @return remained of queue.
+     @return remainder of queue.
      */
     public String remainder() {
-        final String remainder = queue.substring(pos);
-        pos = queue.length();
-        return remainder;
+        return reader.consumeToEnd();
     }
-    
+
     @Override
     public String toString() {
-        return queue.substring(pos);
+        return reader.toString();
     }
 }

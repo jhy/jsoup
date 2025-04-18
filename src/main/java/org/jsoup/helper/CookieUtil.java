@@ -2,7 +2,7 @@ package org.jsoup.helper;
 
 import org.jsoup.Connection;
 import org.jsoup.internal.StringUtil;
-import org.jsoup.parser.TokenQueue;
+import org.jsoup.parser.CharacterReader;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -107,9 +107,10 @@ class CookieUtil {
 
     static void parseCookie(@Nullable String value, HttpConnection.Response res) {
         if (value == null) return;
-        TokenQueue cd = new TokenQueue(value);
-        String cookieName = cd.chompTo("=").trim();
-        String cookieVal = cd.consumeTo(";").trim();
+        CharacterReader reader = new CharacterReader(value);
+        String cookieName = reader.consumeTo('=').trim();
+        reader.advance();
+        String cookieVal = reader.consumeTo(';').trim();
         // ignores path, date, domain, validateTLSCertificates et al. full details will be available in cookiestore if required
         // name not blank, value not null
         if (!cookieName.isEmpty())

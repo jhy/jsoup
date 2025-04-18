@@ -69,13 +69,6 @@ public class TokenQueueTest {
         assertEquals("<textarea> one two < three </oops>", data);
     }
 
-    @Test public void addFirst() {
-        TokenQueue tq = new TokenQueue("One Two");
-        tq.consumeWord();
-        tq.addFirst("Three");
-        assertEquals("Three Two", tq.remainder());
-    }
-
 
     @Test public void consumeToIgnoreSecondCallTest() {
         String t = "<textarea>one < two </TEXTarea> third </TEXTarea>";
@@ -142,6 +135,12 @@ public class TokenQueueTest {
 
         assertEquals("i\\d", q.consumeCssIdentifier());
         assertTrue(q.isEmpty());
+    }
+
+    @Test void escapeAtEof() {
+        TokenQueue q = new TokenQueue("Foo\\");
+        String s = q.consumeElementSelector();
+        assertEquals("Foo", s); // no escape, no eof. Just straight up Foo.
     }
 
     @ParameterizedTest

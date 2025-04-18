@@ -128,7 +128,7 @@ public class QueryParserTest {
         Selector.SelectorParseException exception =
             assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("section > a[href=\"]"));
         assertEquals(
-            "Did not find balanced marker at 'href='",
+            "Did not find balanced marker at 'href=\"]'",
             exception.getMessage());
     }
 
@@ -136,7 +136,7 @@ public class QueryParserTest {
     public void testParsesSingleQuoteInContains() {
         Selector.SelectorParseException exception =
             assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("p:contains(One \" One)"));
-        assertEquals("Did not find balanced marker at 'One '",
+        assertEquals("Did not find balanced marker at 'One \" One)'",
             exception.getMessage());
     }
 
