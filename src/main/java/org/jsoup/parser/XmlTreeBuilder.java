@@ -150,8 +150,9 @@ public class XmlTreeBuilder extends TreeBuilder {
             applyNamespacesToAttributes(attributes, namespaces);
         }
 
-        String ns = resolveNamespace(startTag.tagName, namespaces);
-        Tag tag = tagFor(startTag.tagName, startTag.normalName, ns, settings);
+        String tagName = startTag.tagName.value();
+        String ns = resolveNamespace(tagName, namespaces);
+        Tag tag = tagFor(tagName, startTag.normalName, ns, settings);
         Element el = new Element(tag, null, settings.normalizeAttributes(attributes));
         currentElement().appendChild(el);
         push(el);
@@ -252,7 +253,7 @@ public class XmlTreeBuilder extends TreeBuilder {
      */
     protected void popStackToClose(Token.EndTag endTag) {
         // like in HtmlTreeBuilder - don't scan up forever for very (artificially) deeply nested stacks
-        String elName = settings.normalizeTag(endTag.tagName);
+        String elName = settings.normalizeTag(endTag.name());
         Element firstFound = null;
 
         final int bottom = stack.size() - 1;
