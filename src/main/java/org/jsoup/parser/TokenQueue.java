@@ -273,21 +273,72 @@ public class TokenQueue {
         return StringUtil.releaseBuilder(out);
     }
 
-    /*
-    Given a CSS identifier (such as a tag, ID, or class), escape any CSS special characters that would otherwise not be
-    valid in a selector.
+    /**
+     Given a CSS identifier (such as a tag, ID, or class), escape any CSS special characters that would otherwise not be
+     valid in a selector.
+
+     @see <a href="https://www.w3.org/TR/cssom-1/#serialize-an-identifier">CSS Object Model, serialize an identifier</a>
      */
     public static String escapeCssIdentifier(String in) {
+        if (in.isEmpty()) return in;
+
         StringBuilder out = StringUtil.borrowBuilder();
         TokenQueue q = new TokenQueue(in);
-        while (!q.isEmpty()) {
-            if (q.matchesCssIdentifier(CssIdentifierChars)) {
-                out.append(q.consume());
+
+        char firstChar = q.current();
+        if (firstChar == Hyphen_Minus) {
+            q.advance();
+            if (q.isEmpty()) {
+                // If the character is the first character and is a "-" (U+002D), and there is no second character, then
+                // the escaped character.
+                appendEscaped(out, Hyphen_Minus);
             } else {
-                out.append(Esc).append(q.consume());
+                out.append(Hyphen_Minus);
+
+                char secondChar = q.current();
+                if (CharacterReader.isDigit(secondChar)) {
+                    // If the character is the second character and is in the range [0-9] (U+0030 to U+0039) and the
+                    // first character is a "-" (U+002D), then the character escaped as code point.
+                    appendEscapedCodepoint(out, q.consume());
+                }
+            }
+        } else if (CharacterReader.isDigit(firstChar)) {
+            // If the character is the first character and is in the range [0-9] (U+0030 to U+0039), then the character
+            // escaped as code point.
+            appendEscapedCodepoint(out, q.consume());
+        }
+
+        while (!q.isEmpty()) {
+            // Note: It's fine to iterate on chars because non-ASCII characters are never escaped. So surrogate pairs
+            // are kept intact.
+            char c = q.consume();
+            if (c == Unicode_Null) {
+                // If the character is NULL (U+0000), then the REPLACEMENT CHARACTER (U+FFFD).
+                out.append(Replacement);
+            } else if (c <= '\u001F' || c == '\u007F') {
+                // If the character is in the range [\1-\1f] (U+0001 to U+001F) or is U+007F, then the character
+                // escaped as code point.
+                appendEscapedCodepoint(out, c);
+            } else if (isIdent(c)) {
+                // If the character is not handled by one of the above rules and is greater than or equal to U+0080,
+                // is "-" (U+002D) or "_" (U+005F), or is in one of the ranges [0-9] (U+0030 to U+0039),
+                // [A-Z] (U+0041 to U+005A), or [a-z] (U+0061 to U+007A), then the character itself.
+                out.append(c);
+            } else {
+                // Otherwise, the escaped character.
+                appendEscaped(out, c);
             }
         }
+
         return StringUtil.releaseBuilder(out);
+    }
+
+    private static void appendEscaped(StringBuilder out, char c) {
+        out.append(Esc).append(c);
+    }
+
+    private static void appendEscapedCodepoint(StringBuilder out, char c) {
+        out.append(Esc).append(Integer.toHexString(c)).append(' ');
     }
 
     /**
