@@ -33,7 +33,7 @@ public class ProxyServlet extends AsyncProxyServlet {
         proxyHandler.addFilterWithMapping(new FilterHolder(authFilter), "/*", FilterMapping.ALL); // auth for HTTP proxy
         ServletHolder proxyServletHolder = new ServletHolder(ProxyServlet.class); // Holder wraps as it requires maxThreads initialization
         proxyServletHolder.setAsyncSupported(true);
-        proxyServletHolder.setInitParameter("maxThreads", "8");
+        proxyServletHolder.setInitParameter("maxThreads", "200");
         proxyHandler.addServletWithMapping(proxyServletHolder, "/*");
         connectHandler.setHandler(proxyHandler);
 
