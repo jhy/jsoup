@@ -5,8 +5,9 @@ import java.util.Collection;
 
 /**
  * Implementation of ArrayList that watches out for changes to the contents.
+ @deprecated this class is no longer used and will be removed in jsoup 1.21.1.
  */
-public abstract class ChangeNotifyingArrayList<E> extends ArrayList<E> {
+@Deprecated public abstract class ChangeNotifyingArrayList<E> extends ArrayList<E> {
     public ChangeNotifyingArrayList(int initialCapacity) {
         super(initialCapacity);
     }
