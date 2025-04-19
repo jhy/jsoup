@@ -1,6 +1,5 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.internal.Normalizer.normalize;
-import static org.jsoup.nodes.Document.OutputSettings.Syntax.html;
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -50,11 +48,11 @@ import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
 */
 public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
+    private static final NodeList EmptyNodeList = new NodeList(0);
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
     private static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
-    private @Nullable WeakReference<List<Element>> shadowChildrenRef; // points to child elements shadowed from node children
-    List<Node> childNodes;
+    NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
     /**
@@ -86,7 +84,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public Element(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         Validate.notNull(tag);
-        childNodes = EmptyNodes;
+        childNodes = EmptyNodeList;
         this.attributes = attributes;
         this.tag = tag;
         if (baseUri != null)
@@ -108,12 +106,12 @@ public class Element extends Node implements Iterable<Element> {
      Internal test to check if a nodelist object has been created.
      */
     protected boolean hasChildNodes() {
-        return childNodes != EmptyNodes;
+        return childNodes != EmptyNodeList;
     }
 
     @Override protected List<Node> ensureChildNodes() {
-        if (childNodes == EmptyNodes) {
-            childNodes = new NodeList(this, 4);
+        if (childNodes == EmptyNodeList) {
+            childNodes = new NodeList(4);
         }
         return childNodes;
     }
@@ -393,31 +391,40 @@ public class Element extends Node implements Iterable<Element> {
      * @return a list of child elements
      */
     List<Element> childElementsList() {
-        if (childNodeSize() == 0)
-            return EmptyChildren; // short circuit creating empty
-
-        List<Element> children;
-        if (shadowChildrenRef == null || (children = shadowChildrenRef.get()) == null) {
-            final int size = childNodes.size();
-            children = new ArrayList<>(size);
-            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
-            for (int i = 0; i < size; i++) {
-                final Node node = childNodes.get(i);
-                if (node instanceof Element)
-                    children.add((Element) node);
-            }
-            shadowChildrenRef = new WeakReference<>(children);
+        if (childNodeSize() == 0) return EmptyChildren; // short circuit creating empty
+        List<Element> children = cachedChildren();
+        if (children == null) {
+            children = filterNodes(Element.class);
+            stashChildren(children);
         }
         return children;
     }
 
-    /**
-     * Clears the cached shadow child elements.
-     */
-    @Override
-    void nodelistChanged() {
-        super.nodelistChanged();
-        shadowChildrenRef = null;
+    private static final String childElsKey = "jsoup.childEls";
+    private static final String childElsMod = "jsoup.childElsMod";
+
+    /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
+    private @Nullable List<Element> cachedChildren() {
+        Map<String, Object> userData = attributes().userData();
+        //noinspection unchecked
+        WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
+        if (ref != null) {
+            List<Element> els = ref.get();
+            if (els != null) {
+                Integer modCount = (Integer) userData.get(childElsMod);
+                if (modCount != null && modCount == childNodes.modCount())
+                    return els;
+            }
+        }
+        return null;
+    }
+
+    /** caches the child els into the Attribute user data. */
+    private void stashChildren(List<Element> els) {
+        Map<String, Object> userData = attributes().userData();
+        WeakReference<List<Element>> ref = new WeakReference<>(els);
+        userData.put(childElsKey, ref);
+        userData.put(childElsMod, childNodes.modCount());
     }
 
     /**
@@ -1898,7 +1905,7 @@ public class Element extends Node implements Iterable<Element> {
     protected Element doClone(@Nullable Node parent) {
         Element clone = (Element) super.doClone(parent);
         clone.attributes = attributes != null ? attributes.clone() : null;
-        clone.childNodes = new NodeList(clone, childNodes.size());
+        clone.childNodes = new NodeList(childNodes.size());
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
 
         return clone;
@@ -1961,16 +1968,13 @@ public class Element extends Node implements Iterable<Element> {
         return  (Element) super.filter(nodeFilter);
     }
 
-    private static final class NodeList extends ChangeNotifyingArrayList<Node> {
-        private final Element owner;
-
-        NodeList(Element owner, int initialCapacity) {
-            super(initialCapacity);
-            this.owner = owner;
+    static final class NodeList extends ArrayList<Node> {
+        public NodeList(int size) {
+            super(size);
         }
 
-        @Override public void onContentsChanged() {
-            owner.nodelistChanged();
+        int modCount() {
+            return this.modCount;
         }
     }
 }

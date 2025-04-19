@@ -501,10 +501,6 @@ public abstract class Node implements Cloneable {
         return el;
     }
 
-    void nodelistChanged() {
-        // Element overrides this to clear its shadow children elements
-    }
-
     /**
      * Replace this node in the DOM with the supplied node.
      * @param in the node that will replace the existing node.
