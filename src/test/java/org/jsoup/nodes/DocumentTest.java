@@ -127,7 +127,6 @@ public class DocumentTest {
         Document doc = Jsoup.parse("<title>Hello</title> <p>One\n<p>Two\n");
         String expect = "<html>\n <head>\n  <title>Hello</title>\n </head>\n <body>\n  <p>One</p>\n  <p>Two</p>\n </body>\n</html>";
         String html = doc.html();
-        System.out.println(html);
         assertEquals(expect, html);
     }
 
