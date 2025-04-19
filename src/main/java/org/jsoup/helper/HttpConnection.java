@@ -33,6 +33,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1133,14 +1134,18 @@ public class HttpConnection implements Connection {
         }
 
         /**
-         Servers may encode response headers in UTF-8 instead of RFC defined 8859. This method attempts to detect that
-         and re-decode the string as UTF-8.
+         Servers may encode response headers in UTF-8 instead of RFC defined 8859. The JVM decodes the headers (before we see them) as 8859, which can lead to mojibake data.
+         <p>This method attempts to detect that and re-decode the string as UTF-8.</p>
+         <p>However on Android, the headers will be decoded as UTF8, so we can detect and pass those directly.</p>
          * @param val a header value string that may have been incorrectly decoded as 8859.
          * @return a potentially re-decoded string.
          */
         @Nullable
         static String fixHeaderEncoding(@Nullable String val) {
             if (val == null) return val;
+            // If we can't encode the string as 8859, then it couldn't have been decoded as 8859
+            if (!StandardCharsets.ISO_8859_1.newEncoder().canEncode(val))
+                return val;
             byte[] bytes = val.getBytes(ISO_8859_1);
             if (looksLikeUtf8(bytes))
                 return new String(bytes, UTF_8);

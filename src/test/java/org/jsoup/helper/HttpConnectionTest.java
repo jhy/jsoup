@@ -401,7 +401,7 @@ public class HttpConnectionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"search.php?moji=我的", "latin=café", "🍕"})
+    @ValueSource(strings = {"search.php?moji=我的", "latin=café", "🍕", "ascii"})
     void fixesHeaderEncodingIfRequired(String input) {
         // if the input was mojibaked, we fix it; otherwise is passed
         // https://github.com/jhy/jsoup/issues/2011
