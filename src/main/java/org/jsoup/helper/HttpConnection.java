@@ -1139,7 +1139,7 @@ public class HttpConnection implements Connection {
          * @return a potentially re-decoded string.
          */
         @Nullable
-        private static String fixHeaderEncoding(@Nullable String val) {
+        static String fixHeaderEncoding(@Nullable String val) {
             if (val == null) return val;
             byte[] bytes = val.getBytes(ISO_8859_1);
             if (looksLikeUtf8(bytes))
