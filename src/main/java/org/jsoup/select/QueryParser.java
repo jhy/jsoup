@@ -160,8 +160,7 @@ public class QueryParser {
             else if (tq.matches("["))
                 sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
             else if (tq.matches("\\")) { // bounce over escapes
-                sq.append(tq.consume());
-                if (!tq.isEmpty()) sq.append(tq.consume());
+                sq.append(TokenQueue.escapeCssIdentifier(tq.consumeCssIdentifier()));
             } else
                 sq.append(tq.consume());
         }
