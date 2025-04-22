@@ -26,8 +26,9 @@
 * The XML parser now supports scoped xmlns: prefix namespace declarations, and applies the correct namespace to Tags and
   Attributes. Also, added `Tag#prefix()`, `Tag#localName()`, `Attribute#prefix()`, `Attribute#localName()`, and
   `Attribute#namespace()` to retrieve these. [#2299](https://github.com/jhy/jsoup/issues/2299).
-* The `Selector` now correctly supports hex digit escaped CSS
-  identifiers. [#2297](https://github.com/jhy/jsoup/pull/2297). 
+* CSS identifiers are now escaped and unescaped correctly to the CSS spec. `Element#cssSelector()` will emit
+  appropriately escaped selectors, and the QueryParser supports those. Added `Selector.escapeCssIdentifier()` and `
+  Selector.unescapeCssIdentifier(). [#2297](https://github.com/jhy/jsoup/pull/2297), [#2305](https://github.com/jhy/jsoup/pull/2305)
 
 ### Bug Fixes
 
@@ -41,6 +42,7 @@
 * The `StreamParser` could emit the final elements of a document twice, due to how `onNodeCompleted` was fired when closing out the stack. [#2295](https://github.com/jhy/jsoup/issues/2295).
 * When parsing with the XML parser and error tracking enabled, the trailing `?` in `<?xml version="1.0"?>` would
   incorrectly emit an error. [#2298](https://github.com/jhy/jsoup/issues/2298).
+* Calling `Element#cssSelector()` on an element with combining characters in the class or ID now produces the correct output. [#1984](https://github.com/jhy/jsoup/issues/1984). 
 
 ## 1.19.1 (2025-03-04)
 
