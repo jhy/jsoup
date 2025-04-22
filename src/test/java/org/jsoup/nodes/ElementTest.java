@@ -2697,6 +2697,26 @@ public class ElementTest {
         assertSelectedOwnText(selected, "One");
     }
 
+    @Test void cssSelectorCombined() {
+        // https://github.com/jhy/jsoup/issues/1984
+        Document doc = Jsoup.parse("<img class='e\u0301'><p class=👨‍👨‍👧‍👧></p><a class='\uD83D\uDC68\u200D\uD83D\uDC68\u200D\uD83D\uDC67\u200D\uD83D\uDC67'></a>");
+        Element img = doc.expectFirst("img");
+        Element p = doc.expectFirst("p");
+        Element a = doc.expectFirst("a");
+
+        String imgQ = img.cssSelector();
+        String pQ = p.cssSelector();
+        String aQ = a.cssSelector();
+
+        assertEquals("html > body > img.é", imgQ); // previously was img.e\́; chrome gives literal body > img.e\\u0301
+        assertEquals("html > body > p.👨‍👨‍👧‍👧", pQ); // chrome gives body > p.👨‍👨‍👧‍👧
+        assertEquals("html > body > a.👨‍👨‍👧‍👧", aQ); // body > a.👨‍👨‍👧‍👧
+
+        assertSame(img, doc.expectFirst(imgQ));
+        assertSame(p, doc.expectFirst(pQ));
+        assertSame(a, doc.expectFirst(aQ));
+    }
+
     @Test void orphanSiblings() {
         Element el = new Element("div");
         assertEquals(0, el.siblingElements().size());

@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
@@ -216,6 +217,33 @@ public class Selector {
         }
 
         return null;
+    }
+
+    /**
+     Given a CSS identifier (such as a tag, ID, or class), escape any CSS special characters that would otherwise not be
+     valid in a selector.
+
+     @see <a href="https://www.w3.org/TR/cssom-1/#serialize-an-identifier">CSS Object Model, serialize an identifier</a>
+     @since 1.20.1
+     */
+    public static String escapeCssIdentifier(String in) {
+        return TokenQueue.escapeCssIdentifier(in);
+    }
+
+    /**
+     Consume a CSS identifier (ID or class) off the queue.
+     <p>Note: For backwards compatibility this method supports improperly formatted CSS identifiers, e.g. {@code 1} instead
+     of {@code \31}.</p>
+
+     @return The unescaped identifier.
+     @throws IllegalArgumentException if an invalid escape sequence was found.
+     @see <a href="https://www.w3.org/TR/css-syntax-3/#consume-name">CSS Syntax Module Level 3, Consume an ident sequence</a>
+     @see <a href="https://www.w3.org/TR/css-syntax-3/#typedef-ident-token">CSS Syntax Module Level 3, ident-token</a>
+     @since 1.20.1
+     */
+    public static String unescapeCssIdentifier(String in) {
+        TokenQueue tq = new TokenQueue(in);
+        return tq.consumeCssIdentifier();
     }
 
     public static class SelectorParseException extends IllegalStateException {

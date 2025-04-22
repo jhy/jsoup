@@ -1461,4 +1461,17 @@ public class SelectorTest {
         Element img = doc.expectFirst(q);
         assertEquals("img", img.tagName());
     }
+
+    @Test void escapeCssIdentifier() {
+        // thorough tests are in TokenQueue
+        assertEquals("-\\30 a", Selector.escapeCssIdentifier("-0a"));
+        assertEquals("a0b", Selector.escapeCssIdentifier("a0b"));
+    }
+
+    @Test void unescapeCssIdentifier() {
+        // thorough tests are in TokenQueue
+        assertEquals("-0a", Selector.unescapeCssIdentifier("-\\30 a"));
+        assertEquals("a0b", Selector.unescapeCssIdentifier("a0b"));
+    }
+
 }
