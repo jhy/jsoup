@@ -31,6 +31,11 @@ public abstract class CombiningEvaluator extends Evaluator {
         updateEvaluators();
     }
 
+    public void add(Evaluator e) {
+        evaluators.add(e);
+        updateEvaluators();
+    }
+
     @Override protected void reset() {
         for (Evaluator evaluator : evaluators) {
             evaluator.reset();
@@ -108,11 +113,6 @@ public abstract class CombiningEvaluator extends Evaluator {
 
         Or() {
             super();
-        }
-
-        public void add(Evaluator e) {
-            evaluators.add(e);
-            updateEvaluators();
         }
 
         @Override

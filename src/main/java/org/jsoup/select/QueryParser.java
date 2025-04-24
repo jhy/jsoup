@@ -3,9 +3,8 @@ package org.jsoup.select;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
+import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,12 +15,11 @@ import static org.jsoup.internal.Normalizer.normalize;
  * Parses a CSS selector into an Evaluator tree.
  */
 public class QueryParser {
-    private final static char[] Combinators = {',', '>', '+', '~', ' '};
+    private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
     private final static String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
 
     private final TokenQueue tq;
     private final String query;
-    private final List<Evaluator> evals = new ArrayList<>();
 
     /**
      * Create a new QueryParser.
@@ -35,153 +33,140 @@ public class QueryParser {
     }
 
     /**
-     * Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to
-     * parse it once and reuse the Evaluator.
-     * @param query CSS query
-     * @return Evaluator
-     * @see Selector selector query syntax
+     Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to
+     parse it once and reuse the Evaluator.
+
+     @param query CSS query
+     @return Evaluator
+     @see Selector selector query syntax
      */
     public static Evaluator parse(String query) {
         try {
             QueryParser p = new QueryParser(query);
-            return p.parse();
+            return p.parseSelectorGroup();
         } catch (IllegalArgumentException e) {
             throw new Selector.SelectorParseException(e.getMessage());
         }
     }
 
     /**
-     * Parse the query
-     * @return Evaluator
+     Parse the query. We use this simplified expression of the grammar:
+     <pre>
+     SelectorGroup   ::= Selector (',' Selector)*
+     Selector        ::= SimpleSequence ( Combinator SimpleSequence )*
+     SimpleSequence  ::= [ TypeSelector ] ( ID | Class | Attribute | Pseudo )*
+     Pseudo           ::= ':' Name [ '(' SelectorGroup ')' ]
+     Combinator      ::= S+         // descendant (whitespace)
+     | '>'       // child
+     | '+'       // adjacent sibling
+     | '~'       // general sibling
+     </pre>
+
+     See <a href="https://www.w3.org/TR/selectors-4/#grammar">selectors-4</a> for the real thing
      */
-    Evaluator parse() {
-        tq.consumeWhitespace();
-
-        if (tq.matchesAny(Combinators)) { // if starts with a combinator, use root as elements
-            evals.add(new StructuralEvaluator.Root());
-            combinator(tq.consume());
-        } else {
-            evals.add(consumeEvaluator());
+    Evaluator parseSelectorGroup() {
+        // SelectorGroup. Into an Or if > 1 Selector
+        Evaluator left = parseSelector();
+        while (tq.matchChomp(',')) {
+            Evaluator right = parseSelector();
+            left = or(left, right);
         }
-
-        while (!tq.isEmpty()) {
-            // hierarchy and extras
-            boolean seenWhite = tq.consumeWhitespace();
-
-            if (tq.matchesAny(Combinators)) {
-                combinator(tq.consume());
-            } else if (seenWhite) {
-                combinator(' ');
-            } else { // E.class, E#id, E[attr] etc. AND
-                evals.add(consumeEvaluator()); // take next el, #. etc off queue
-            }
-        }
-
-        if (evals.size() == 1)
-            return evals.get(0);
-
-        return new CombiningEvaluator.And(evals);
+        return left;
     }
 
-    private void combinator(char combinator) {
-        tq.consumeWhitespace();
-        String subQuery = consumeSubQuery(); // support multi > childs
+    Evaluator parseSelector() {
+        // SimpleSequence ( Combinator SimpleSequence )*
+        Evaluator left = parseSimpleSequence();
 
-        Evaluator rootEval; // the new topmost evaluator
-        Evaluator currentEval; // the evaluator the new eval will be combined to. could be root, or rightmost or.
-        Evaluator newEval = parse(subQuery); // the evaluator to add into target evaluator
-        boolean replaceRightMost = false;
+        while (true) {
+            char combinator = 0;
+            if (tq.consumeWhitespace())
+                combinator = ' ';            // maybe descendant?
+            if (tq.matchesAny(Combinators)) // no, explicit
+                combinator = tq.consume();
+            else if (tq.matches(',')) // space after simple like "foo , bar"
+                break;
 
-        if (evals.size() == 1) {
-            rootEval = currentEval = evals.get(0);
-            // make sure OR (,) has precedence:
-            if (rootEval instanceof CombiningEvaluator.Or && combinator != ',') {
-                currentEval = ((CombiningEvaluator.Or) currentEval).rightMostEvaluator();
-                assert currentEval != null; // rightMost signature can return null (if none set), but always will have one by this point
-                replaceRightMost = true;
+            if (combinator != 0) {
+                Evaluator right = parseSimpleSequence();
+                left = combinator(left, combinator, right);
+            } else {
+                break;
             }
         }
-        else {
-            rootEval = currentEval = new CombiningEvaluator.And(evals);
-        }
-        evals.clear();
+        return left;
+    }
 
-        // for most combinators: change the current eval into an AND of the current eval and the new eval
+    Evaluator parseSimpleSequence() {
+        // SimpleSequence ::= TypeSelector? ( Hash | Class | Pseudo )*
+        Evaluator left = null;
+        tq.consumeWhitespace();
+
+        // one optional type selector
+        if (tq.matchesWord() || tq.matches("*|"))
+            left = byTag();
+        else if (tq.matchChomp('*'))
+            left = new Evaluator.AllElements();
+        else if (tq.matchesAny(Combinators))  // e.g. query is "> div"; type is root element
+            left = new StructuralEvaluator.Root();
+
+        // zero or more subclasses (#, ., [)
+        while(true) {
+            Evaluator right = parseSubclass();
+            if (right != null)
+                left = and(left, right);
+            else break; // no more simple tokens
+        }
+
+        if (left == null)
+            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+        return left;
+    }
+
+    static Evaluator combinator(Evaluator left, char combinator, Evaluator right) {
         switch (combinator) {
             case '>':
-                ImmediateParentRun run = currentEval instanceof ImmediateParentRun ?
-                        (ImmediateParentRun) currentEval : new ImmediateParentRun(currentEval);
-                run.add(newEval);
-                currentEval = run;
-                break;
+                ImmediateParentRun run = left instanceof ImmediateParentRun ?
+                    (ImmediateParentRun) left : new ImmediateParentRun(left);
+                run.add(right);
+                return run;
             case ' ':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.Ancestor(currentEval), newEval);
-                break;
+                return and(new StructuralEvaluator.Ancestor(left), right);
             case '+':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.ImmediatePreviousSibling(currentEval), newEval);
-                break;
+                return and(new StructuralEvaluator.ImmediatePreviousSibling(left), right);
             case '~':
-                currentEval = new CombiningEvaluator.And(new StructuralEvaluator.PreviousSibling(currentEval), newEval);
-                break;
-            case ',':
-                CombiningEvaluator.Or or;
-                if (currentEval instanceof CombiningEvaluator.Or) {
-                    or = (CombiningEvaluator.Or) currentEval;
-                } else {
-                    or = new CombiningEvaluator.Or();
-                    or.add(currentEval);
-                }
-                or.add(newEval);
-                currentEval = or;
-                break;
+                return and(new StructuralEvaluator.PreviousSibling(left), right);
             default:
                 throw new Selector.SelectorParseException("Unknown combinator '%s'", combinator);
         }
-
-        if (replaceRightMost)
-            ((CombiningEvaluator.Or) rootEval).replaceRightMostEvaluator(currentEval);
-        else rootEval = currentEval;
-        evals.add(rootEval);
     }
 
-    private String consumeSubQuery() {
-        StringBuilder sq = StringUtil.borrowBuilder();
-        boolean seenClause = false; // eat until we hit a combinator after eating something else
-        while (!tq.isEmpty()) {
-            if (tq.matchesAny(Combinators)) {
-                if (seenClause)
-                    break;
-                sq.append(tq.consume());
-                continue;
-            }
-            seenClause = true;
-            if (tq.matches("("))
-                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
-            else if (tq.matches("["))
-                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
-            else if (tq.matches("\\")) { // bounce over escapes
-                sq.append(TokenQueue.escapeCssIdentifier(tq.consumeCssIdentifier()));
-            } else
-                sq.append(tq.consume());
+    @Nullable Evaluator parseSubclass() {
+        //  Subclass: ID | Class | Attribute | Pseudo
+        if      (tq.matchChomp('#'))    return byId();
+        else if (tq.matchChomp('.'))    return byClass();
+        else if (tq.matches('['))       return byAttribute();
+        else if (tq.matchChomp(':'))    return parsePseudoSelector();
+        else                            return null;
+    }
+
+    /** Merge two evals into an Or. */
+    static Evaluator or(Evaluator left, Evaluator right) {
+        if (left instanceof CombiningEvaluator.Or) {
+            ((CombiningEvaluator.Or) left).add(right);
+            return left;
         }
-        return StringUtil.releaseBuilder(sq);
+        return new CombiningEvaluator.Or(left, right);
     }
 
-    private Evaluator consumeEvaluator() {
-        if (tq.matchChomp("#"))
-            return byId();
-        else if (tq.matchChomp("."))
-            return byClass();
-        else if (tq.matchesWord() || tq.matches("*|"))
-            return byTag();
-        else if (tq.matches("["))
-            return byAttribute();
-        else if (tq.matchChomp("*"))
-            return new Evaluator.AllElements();
-        else if (tq.matchChomp(":"))
-            return parsePseudoSelector();
-		else // unhandled
-            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+    /** Merge two evals into an And. */
+    static Evaluator and(@Nullable Evaluator left, Evaluator right) {
+        if (left == null) return right;
+        if (left instanceof CombiningEvaluator.And) {
+            ((CombiningEvaluator.And) left).add(right);
+            return left;
+        }
+        return new CombiningEvaluator.And(left, right);
     }
 
     private Evaluator parsePseudoSelector() {
@@ -299,7 +284,7 @@ public class QueryParser {
             else
                 eval = new Evaluator.Attribute(key);
         } else {
-            if (cq.matchChomp("="))
+            if (cq.matchChomp('='))
                 eval = new Evaluator.AttributeWithValue(key, cq.remainder());
             else if (cq.matchChomp("!="))
                 eval = new Evaluator.AttributeWithValueNot(key, cq.remainder());
