@@ -1197,7 +1197,7 @@ enum TokeniserState {
     },
     DoctypeName {
         @Override void read(Tokeniser t, CharacterReader r) {
-            if (r.matchesLetter()) {
+            if (r.matchesAsciiAlpha()) {
                 String name = r.consumeLetterSequence();
                 t.doctypePending.name.append(name);
                 return;
@@ -1672,7 +1672,7 @@ enum TokeniserState {
      * different else exit transitions.
      */
     private static void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
-        if (r.matchesLetter()) {
+        if (r.matchesAsciiAlpha()) {
             String name = r.consumeLetterSequence();
             t.tagPending.appendTagName(name);
             t.dataBuffer.append(name);
@@ -1752,7 +1752,7 @@ enum TokeniserState {
     }
 
     private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
-        if (r.matchesLetter()) {
+        if (r.matchesAsciiAlpha()) {
             String name = r.consumeLetterSequence();
             t.dataBuffer.append(name);
             t.emit(name);

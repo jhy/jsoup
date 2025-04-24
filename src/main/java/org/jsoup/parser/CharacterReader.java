@@ -481,7 +481,7 @@ public final class CharacterReader {
         bufferUp();
         int start = bufPos;
         while (bufPos < bufLength) {
-            if (Character.isLetter(charBuf[bufPos])) bufPos++;
+            if (StringUtil.isAsciiLetter(charBuf[bufPos])) bufPos++;
             else break;
         }
         while (!isEmptyNoBufferUp()) {
@@ -555,11 +555,6 @@ public final class CharacterReader {
     boolean matchesAnySorted(char[] seq) {
         bufferUp();
         return !isEmpty() && Arrays.binarySearch(seq, charBuf[bufPos]) >= 0;
-    }
-
-    boolean matchesLetter() {
-        if (isEmpty()) return false;
-        return Character.isLetter(charBuf[bufPos]);
     }
 
     /**
