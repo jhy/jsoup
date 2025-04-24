@@ -55,7 +55,7 @@ public class QueryParser {
      Parse the query. We use this simplified expression of the grammar:
      <pre>
      SelectorGroup   ::= Selector (',' Selector)*
-     Selector        ::= SimpleSequence ( Combinator SimpleSequence )*
+     Selector        ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
      SimpleSequence  ::= [ TypeSelector ] ( ID | Class | Attribute | Pseudo )*
      Pseudo           ::= ':' Name [ '(' SelectorGroup ')' ]
      Combinator      ::= S+         // descendant (whitespace)
@@ -85,8 +85,16 @@ public class QueryParser {
     }
 
     Evaluator parseSelector() {
-        // SimpleSequence ( Combinator SimpleSequence )*
-        Evaluator left = parseSimpleSequence();
+        // Selector ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
+        tq.consumeWhitespace();
+
+        Evaluator left;
+        if (tq.matchesAny(Combinators)) {
+            // e.g. query is "> div"; left side is root element
+            left = new StructuralEvaluator.Root();
+        } else {
+            left = parseSimpleSequence();
+        }
 
         while (true) {
             char combinator = 0;
@@ -117,8 +125,6 @@ public class QueryParser {
             left = byTag();
         else if (tq.matchChomp('*'))
             left = new Evaluator.AllElements();
-        else if (tq.matchesAny(Combinators))  // e.g. query is "> div"; type is root element
-            left = new StructuralEvaluator.Root();
 
         // zero or more subclasses (#, ., [)
         while(true) {
