@@ -172,7 +172,7 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a string is numeric, i.e. contains only digit characters
+     * Tests if a string is numeric, i.e. contains only ASCII digit characters
      * @param string string to test
      * @return true if only digit chars, false if empty or null or contains non-digit chars
      */
@@ -182,7 +182,7 @@ public final class StringUtil {
 
         int l = string.length();
         for (int i = 0; i < l; i++) {
-            if (!Character.isDigit(string.codePointAt(i)))
+            if (!isDigit(string.charAt(i)))
                 return false;
         }
         return true;
