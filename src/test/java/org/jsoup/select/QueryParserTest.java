@@ -214,4 +214,18 @@ public class QueryParserTest {
             assertThrows(SelectorParseException.class, () -> QueryParser.parse("div:has(p))"));
         assertEquals("Could not parse query 'div:has(p))': unexpected token at ')'", exception.getMessage());
     }
+
+    @Test void consecutiveCombinators() {
+        Selector.SelectorParseException exception1 =
+                assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("div>>p"));
+        assertEquals(
+                "Could not parse query 'div>>p': unexpected token at '>p'",
+                exception1.getMessage());
+
+        Selector.SelectorParseException exception2 =
+                assertThrows(Selector.SelectorParseException.class, () -> QueryParser.parse("+ + div"));
+        assertEquals(
+                "Could not parse query '+ + div': unexpected token at '+ div'",
+                exception2.getMessage());
+    }
 }
