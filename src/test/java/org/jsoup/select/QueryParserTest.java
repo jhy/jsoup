@@ -208,4 +208,10 @@ public class QueryParserTest {
         assertEquals("(ImmediateParentRun (Tag 'html')(Tag 'body')(And (Tag 'div')(Class '.-4a')))", sexpr(genClassQ));
         assertEquals("(ImmediateParentRun (Tag 'html')(Tag 'body')(Id '#-4a'))", sexpr(deepIdQ));
     }
+
+    @Test void trailingParens() {
+        SelectorParseException exception =
+            assertThrows(SelectorParseException.class, () -> QueryParser.parse("div:has(p))"));
+        assertEquals("Could not parse query 'div:has(p))': unexpected token at ')'", exception.getMessage());
+    }
 }

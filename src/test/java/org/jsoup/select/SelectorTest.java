@@ -1473,5 +1473,4 @@ public class SelectorTest {
         assertEquals("-0a", Selector.unescapeCssIdentifier("-\\30 a"));
         assertEquals("a0b", Selector.unescapeCssIdentifier("a0b"));
     }
-
 }

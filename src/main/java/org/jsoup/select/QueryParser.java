@@ -5,6 +5,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +18,7 @@ import static org.jsoup.internal.Normalizer.normalize;
 public class QueryParser {
     private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
     private final static String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
+    private final static char[] SequenceEnders = {',', ')'};
 
     private final TokenQueue tq;
     private final String query;
@@ -43,7 +45,7 @@ public class QueryParser {
     public static Evaluator parse(String query) {
         try {
             QueryParser p = new QueryParser(query);
-            return p.parseSelectorGroup();
+            return p.parse();
         } catch (IllegalArgumentException e) {
             throw new Selector.SelectorParseException(e.getMessage());
         }
@@ -64,6 +66,14 @@ public class QueryParser {
 
      See <a href="https://www.w3.org/TR/selectors-4/#grammar">selectors-4</a> for the real thing
      */
+    Evaluator parse() {
+        Evaluator eval = parseSelectorGroup();
+        tq.consumeWhitespace();
+        if (!tq.isEmpty())
+            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+        return eval;
+    }
+
     Evaluator parseSelectorGroup() {
         // SelectorGroup. Into an Or if > 1 Selector
         Evaluator left = parseSelector();
@@ -84,7 +94,7 @@ public class QueryParser {
                 combinator = ' ';            // maybe descendant?
             if (tq.matchesAny(Combinators)) // no, explicit
                 combinator = tq.consume();
-            else if (tq.matches(',')) // space after simple like "foo , bar"
+            else if (tq.matchesAny(SequenceEnders)) // , - space after simple like "foo , bar"; ) - close of :has()
                 break;
 
             if (combinator != 0) {
@@ -349,16 +359,19 @@ public class QueryParser {
 
     // pseudo selector :has(el)
     private Evaluator has() {
-        String subQuery = consumeParens();
-        Validate.notEmpty(subQuery, ":has(selector) sub-select must not be empty");
-        return new StructuralEvaluator.Has(parse(subQuery));
+        return parseNested(StructuralEvaluator.Has::new, ":has() must have a selector");
     }
 
-    // psuedo selector :is()
+    // pseudo selector :is()
     private Evaluator is() {
-        String subQuery = consumeParens();
-        Validate.notEmpty(subQuery, ":is(selector) sub-select must not be empty");
-        return new StructuralEvaluator.Is(parse(subQuery));
+        return parseNested(StructuralEvaluator.Is::new, ":is() must have a selector");
+    }
+
+    private Evaluator parseNested(Function<Evaluator, Evaluator> func, String err) {
+        Validate.isTrue(tq.matchChomp('('), err);
+        Evaluator eval = parseSelectorGroup();
+        Validate.isTrue(tq.matchChomp(')'), err);
+        return func.apply(eval);
     }
 
     // pseudo selector :contains(text), containsOwn(text)

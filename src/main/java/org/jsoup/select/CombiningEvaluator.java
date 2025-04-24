@@ -47,15 +47,6 @@ public abstract class CombiningEvaluator extends Evaluator {
         return cost;
     }
 
-    @Nullable Evaluator rightMostEvaluator() {
-        return num > 0 ? evaluators.get(num - 1) : null;
-    }
-    
-    void replaceRightMostEvaluator(Evaluator replacement) {
-        evaluators.set(num - 1, replacement);
-        updateEvaluators();
-    }
-
     void updateEvaluators() {
         // used so we don't need to bash on size() for every match test
         num = evaluators.size();
