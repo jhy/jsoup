@@ -23,6 +23,7 @@ public class QueryParserTest {
                 "<p><strong>yes</strong></p>" +
                 "</body></html>");
         assertEquals("l1 yes", doc.body().select(">p>strong,>li>strong").text()); // selecting immediate from body
+        assertEquals("l1 yes", doc.body().select(" > p > strong , > li > strong").text()); // space variants
         assertEquals("l2 yes", doc.select("body>p>strong,body>*>li>strong").text());
         assertEquals("l2 yes", doc.select("body>*>li>strong,body>p>strong").text());
         assertEquals("l2 yes", doc.select("body>p>strong,body>*>li>strong").text());
@@ -157,7 +158,7 @@ public class QueryParserTest {
     public void exceptOnUnhandledEvaluator() {
         SelectorParseException exception =
             assertThrows(SelectorParseException.class, () -> QueryParser.parse("div / foo"));
-        assertEquals("Could not parse query '/': unexpected token at '/'", exception.getMessage());
+        assertEquals("Could not parse query 'div / foo': unexpected token at '/ foo'", exception.getMessage());
     }
 
     @Test public void okOnSpacesForeAndAft() {
@@ -206,5 +207,11 @@ public class QueryParserTest {
 
         assertEquals("(ImmediateParentRun (Tag 'html')(Tag 'body')(And (Tag 'div')(Class '.-4a')))", sexpr(genClassQ));
         assertEquals("(ImmediateParentRun (Tag 'html')(Tag 'body')(Id '#-4a'))", sexpr(deepIdQ));
+    }
+
+    @Test void trailingParens() {
+        SelectorParseException exception =
+            assertThrows(SelectorParseException.class, () -> QueryParser.parse("div:has(p))"));
+        assertEquals("Could not parse query 'div:has(p))': unexpected token at ')'", exception.getMessage());
     }
 }

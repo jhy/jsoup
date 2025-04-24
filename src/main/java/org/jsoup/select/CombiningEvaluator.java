@@ -31,6 +31,11 @@ public abstract class CombiningEvaluator extends Evaluator {
         updateEvaluators();
     }
 
+    public void add(Evaluator e) {
+        evaluators.add(e);
+        updateEvaluators();
+    }
+
     @Override protected void reset() {
         for (Evaluator evaluator : evaluators) {
             evaluator.reset();
@@ -40,15 +45,6 @@ public abstract class CombiningEvaluator extends Evaluator {
 
     @Override protected int cost() {
         return cost;
-    }
-
-    @Nullable Evaluator rightMostEvaluator() {
-        return num > 0 ? evaluators.get(num - 1) : null;
-    }
-    
-    void replaceRightMostEvaluator(Evaluator replacement) {
-        evaluators.set(num - 1, replacement);
-        updateEvaluators();
     }
 
     void updateEvaluators() {
@@ -108,11 +104,6 @@ public abstract class CombiningEvaluator extends Evaluator {
 
         Or() {
             super();
-        }
-
-        public void add(Evaluator e) {
-            evaluators.add(e);
-            updateEvaluators();
         }
 
         @Override

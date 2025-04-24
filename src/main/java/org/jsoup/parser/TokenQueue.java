@@ -69,6 +69,11 @@ public class TokenQueue {
         return reader.matchesIgnoreCase(seq);
     }
 
+    /** Tests if the next character on the queue matches the character, case-sensitively. */
+    public boolean matches(char c) {
+        return reader.matches(c);
+    }
+
     /**
      @deprecated will be removed in 1.21.1.
      */
@@ -96,6 +101,15 @@ public class TokenQueue {
      */
     public boolean matchChomp(String seq) {
         return reader.matchConsumeIgnoreCase(seq);
+    }
+
+    /** If the queue matches the supplied (case-sensitive) character, consume it off the queue. */
+    public boolean matchChomp(char c) {
+        if (reader.matches(c)) {
+            consume();
+            return true;
+        }
+        return false;
     }
 
     /**
