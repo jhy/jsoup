@@ -2,6 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.SoftPool;
+import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -484,7 +485,7 @@ public final class CharacterReader {
             else break;
         }
         while (!isEmptyNoBufferUp()) {
-            if (isDigit(charBuf[bufPos])) bufPos++;
+            if (StringUtil.isDigit(charBuf[bufPos])) bufPos++;
             else break;
         }
 
@@ -492,7 +493,7 @@ public final class CharacterReader {
     }
 
     String consumeHexSequence() {
-        return consumeMatching(CharacterReader::isHexDigit);
+        return consumeMatching(StringUtil::isHexDigit);
     }
 
     String consumeDigitSequence() {
@@ -567,12 +568,12 @@ public final class CharacterReader {
      */
     boolean matchesAsciiAlpha() {
         if (isEmpty()) return false;
-        return isAsciiLetter(charBuf[bufPos]);
+        return StringUtil.isAsciiLetter(charBuf[bufPos]);
     }
 
     boolean matchesDigit() {
         if (isEmpty()) return false;
-        return isDigit(charBuf[bufPos]);
+        return StringUtil.isDigit(charBuf[bufPos]);
     }
 
     boolean matchConsume(String seq) {
@@ -685,18 +686,5 @@ public final class CharacterReader {
     @FunctionalInterface
     interface CharPredicate {
         boolean test(char c);
-    }
-
-    // char predicate functions
-    static boolean isAsciiLetter(char c) {
-        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
-    }
-
-    static boolean isDigit(char c) {
-        return c >= '0' && c <= '9';
-    }
-
-    static boolean isHexDigit(char c) {
-        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
     }
 }
