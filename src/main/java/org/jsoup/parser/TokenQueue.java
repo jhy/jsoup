@@ -310,13 +310,13 @@ public class TokenQueue {
                 out.append(Hyphen_Minus);
 
                 char secondChar = q.current();
-                if (CharacterReader.isDigit(secondChar)) {
+                if (StringUtil.isDigit(secondChar)) {
                     // If the character is the second character and is in the range [0-9] (U+0030 to U+0039) and the
                     // first character is a "-" (U+002D), then the character escaped as code point.
                     appendEscapedCodepoint(out, q.consume());
                 }
             }
-        } else if (CharacterReader.isDigit(firstChar)) {
+        } else if (StringUtil.isDigit(firstChar)) {
             // If the character is the first character and is in the range [0-9] (U+0030 to U+0039), then the character
             // escaped as code point.
             appendEscapedCodepoint(out, q.consume());
@@ -447,11 +447,11 @@ public class TokenQueue {
         }
 
         char firstEscaped = consume();
-        if (!CharacterReader.isHexDigit(firstEscaped)) {
+        if (!StringUtil.isHexDigit(firstEscaped)) {
             out.append(firstEscaped);
         } else {
             reader.unconsume(); // put back the first hex digit
-            String hexString = reader.consumeMatching(CharacterReader::isHexDigit, 6); // consume up to 6 hex digits
+            String hexString = reader.consumeMatching(StringUtil::isHexDigit, 6); // consume up to 6 hex digits
             int codePoint;
             try {
                 codePoint = Integer.parseInt(hexString, 16);
@@ -487,12 +487,12 @@ public class TokenQueue {
 
     // https://www.w3.org/TR/css-syntax-3/#ident-start-code-point
     private static boolean isIdentStart(char c) {
-        return c == '_' || CharacterReader.isAsciiLetter(c) || isNonAscii(c);
+        return c == '_' || StringUtil.isAsciiLetter(c) || isNonAscii(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#ident-code-point
     private static boolean isIdent(char c) {
-        return c == Hyphen_Minus || CharacterReader.isDigit(c) || isIdentStart(c);
+        return c == Hyphen_Minus || StringUtil.isDigit(c) || isIdentStart(c);
     }
 
     // https://www.w3.org/TR/css-syntax-3/#newline

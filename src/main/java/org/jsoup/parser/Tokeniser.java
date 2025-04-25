@@ -197,7 +197,7 @@ final class Tokeniser {
                 reader.matchConsume(prefix);
                 nameRef = prefix;
             }
-            if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
+            if (inAttribute && (reader.matchesAsciiAlpha() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
                 // don't want that to match
                 reader.rewindToMark();
                 return null;
