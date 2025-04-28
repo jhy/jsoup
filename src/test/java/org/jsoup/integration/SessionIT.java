@@ -75,15 +75,28 @@ public class SessionIT {
     // test that we throw a nice clear exception if you try to multi-thread by forget .newRequest()
     @Test
     public void multiThreadWithoutNewRequestBlowsUp() throws InterruptedException {
-        int numThreads = 20;
-        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=10000"; // this makes sure that the first req is still executing whilst the others run
+        int numThreads = 5;
+        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=20000"; // this makes sure that the first req is still executing whilst the others run
         String title = "Slow Rider";
 
         ThreadCatcher catcher = new ThreadCatcher();
         Connection session = Jsoup.newSession();
 
-        Thread[] threads = new Thread[numThreads];
+        // run first slow request
         AtomicInteger successful = new AtomicInteger();
+        Thread slow = new Thread(() -> {
+            try {
+                Document doc = session.url(url).get();
+                assertEquals(title, doc.title());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+        slow.start();
+        Thread.sleep(100); // yield so that thread can start before the next do
+
+        // spawn others, should fail
+        Thread[] threads = new Thread[numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             Thread thread = new Thread(() -> {
                 try {
@@ -104,6 +117,8 @@ public class SessionIT {
         for (Thread thread : threads) {
             thread.join();
         }
+        // cancel the slow runner so we can wrap up the test quicker
+        slow.interrupt();
 
         // only one should have passed, rest should have blown up (assuming the started whilst other was running)
         //assertEquals(numThreads - 1, catcher.multiThreadExceptions.get());
@@ -114,7 +129,7 @@ public class SessionIT {
          macOS runners, which appear overtaxed. That makes this test flaky. So we relax the test conditions, and make
          sure at least just one passed and one failed. That's OK in prod as well, because we are only concerned about
          concurrent execution, which the impl does detect correctly. */
-        assertTrue(successful.get() > 0);
+        assertEquals(0, successful.get());
         assertTrue(catcher.multiThreadExceptions.get() > 0);
         assertEquals(catcher.multiThreadExceptions.get(), catcher.exceptionCount.get()); // all exceptions are multi-threaded
     }
