@@ -112,7 +112,7 @@ public class DocumentTest {
         Document clone = doc.clone();
         assertNotSame(doc, clone);
         assertTrue(doc.hasSameValue(clone));
-        assertNotSame(doc.parser(), clone.parser());
+        assertSame(doc.parser(), clone.parser());
         assertNotSame(doc.outputSettings(), clone.outputSettings());
 
         assertEquals("<html><head><title>Hello</title></head><body><p>One</p><p>Two</p></body></html>", TextUtil.stripNewlines(clone.html()));
