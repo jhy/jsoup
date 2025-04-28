@@ -867,15 +867,20 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Create a stand-alone, deep copy of this node, and all of its children. The cloned node will have no siblings or
-     * parent node. As a stand-alone object, any changes made to the clone or any of its children will not impact the
-     * original node.
-     * <p>
-     * The cloned node may be adopted into another Document or node structure using {@link Element#appendChild(Node)}.
-     * @return a stand-alone cloned node, including clones of any children
-     * @see #shallowClone()
+     Create a stand-alone, deep copy of this node, and all of its children. The cloned node will have no siblings.
+     <p><ul>
+     <li>If this node is a {@link LeafNode}, the clone will have no parent.</li>
+     <li>If this node is an {@link Element}, the clone will have a simple owning {@link Document} to retain the
+     configured output settings and parser.</li>
+     </ul></p>
+     <p>The cloned node may be adopted into another Document or node structure using
+     {@link Element#appendChild(Node)}.</p>
+
+     @return a stand-alone cloned node, including clones of any children
+     @see #shallowClone()
      */
-    @SuppressWarnings("MethodDoesntCallSuperMethod") // because it does call super.clone in doClone - analysis just isn't following
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    // because it does call super.clone in doClone - analysis just isn't following
     @Override
     public Node clone() {
         Node thisClone = doClone(null); // splits for orphan

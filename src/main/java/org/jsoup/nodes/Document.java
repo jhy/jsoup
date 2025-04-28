@@ -37,9 +37,13 @@ public class Document extends Element {
      @see #createShell
      */
     public Document(String namespace, String baseUri) {
+        this(namespace, baseUri, Parser.htmlParser()); // default HTML parser, but overridable
+    }
+
+    private Document(String namespace, String baseUri, Parser parser) {
         super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
-        this.parser = Parser.htmlParser(); // default, but overridable
+        this.parser = parser;
     }
 
     /**
@@ -293,16 +297,16 @@ public class Document extends Element {
     @Override
     public Document clone() {
         Document clone = (Document) super.clone();
+        if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
-        clone.parser = this.parser.clone();
+        // parser is pointer copy
         return clone;
     }
 
     @Override
     public Document shallowClone() {
-        Document clone = new Document(this.tag().namespace(), baseUri());
-        if (attributes != null)
-            clone.attributes = attributes.clone();
+        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+        if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }
