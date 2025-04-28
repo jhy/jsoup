@@ -1035,6 +1035,29 @@ public class ElementTest {
         assertEquals(base, d2.baseUri());
     }
 
+    @Test void cloneRetainsParser() {
+        Document htmlDoc = Jsoup.parse("<div><script></script></div>", Parser.htmlParser());
+        Document xmlDoc = Jsoup.parse("<div><script></script></div>", Parser.xmlParser());
+
+        Element hEl = htmlDoc.expectFirst("script");
+        Element hEl2 = hEl.clone();
+        assertNotSame(hEl, hEl2);
+        assertNotSame(hEl.ownerDocument(), hEl2.ownerDocument());
+        assertSame(hEl.ownerDocument().parser(), hEl2.ownerDocument().parser());
+
+        Document doc2 = htmlDoc.clone();
+        assertNotSame(htmlDoc, doc2);
+        assertSame(htmlDoc.parser(), doc2.parser());
+
+        hEl2.append("<foo></foo>"); // we are inside a script, should be parsed as data
+        assertEquals("<foo></foo>", hEl2.data());
+
+        Element xEl = xmlDoc.expectFirst("script");
+        Element xEl2 = xEl.clone();
+        xEl2.append("<foo></foo>"); // in XML, script doesn't mean anything, and so will be parsed as xml
+        assertEquals("<script><foo></foo></script>", xEl2.outerHtml());
+    }
+
     @Test
     public void testTagNameSet() {
         Document doc = Jsoup.parse("<div><i>Hello</i>");

@@ -9,12 +9,15 @@ import org.jspecify.annotations.Nullable;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
  {@link org.jsoup.Jsoup}.
- <p>Note that a Parser instance object is not threadsafe. To reuse a Parser configuration in a multi-threaded
- environment, use {@link #newInstance()} to make copies. */
+ <p>Note that a given Parser instance object is threadsafe, but not concurrent. (Concurrent parse calls will
+ synchronize.) To reuse a Parser configuration in a multithreaded environment, use {@link #newInstance()} to make
+ copies.</p>
+ */
 public class Parser implements Cloneable {
     public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
     public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
@@ -25,7 +28,8 @@ public class Parser implements Cloneable {
     private ParseErrorList errors;
     private ParseSettings settings;
     private boolean trackPosition = false;
-    @Nullable TagSet tagSet;
+    private @Nullable TagSet tagSet;
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -63,7 +67,12 @@ public class Parser implements Cloneable {
     }
 
     public Document parseInput(Reader inputHtml, String baseUri) {
-        return treeBuilder.parse(inputHtml, baseUri, this);
+        try {
+            lock.lock(); // using a lock vs synchronized to support loom threads
+            return treeBuilder.parse(inputHtml, baseUri, this);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public List<Node> parseFragmentInput(String fragment, @Nullable Element context, String baseUri) {
@@ -71,7 +80,12 @@ public class Parser implements Cloneable {
     }
 
     public List<Node> parseFragmentInput(Reader fragment, @Nullable Element context, String baseUri) {
-        return treeBuilder.parseFragment(fragment, context, baseUri, this);
+        try {
+            lock.lock();
+            return treeBuilder.parseFragment(fragment, context, baseUri, this);
+        } finally {
+            lock.unlock();
+        }
     }
 
     // gets & sets
@@ -87,8 +101,9 @@ public class Parser implements Cloneable {
      * Update the TreeBuilder used when parsing content.
      * @param treeBuilder new TreeBuilder
      * @return this, for chaining
+     * @deprecated unused method, will be removed in 1.21.1
      */
-    public Parser setTreeBuilder(TreeBuilder treeBuilder) {
+    @Deprecated public Parser setTreeBuilder(TreeBuilder treeBuilder) {
         this.treeBuilder = treeBuilder;
         treeBuilder.parser = this;
         return this;
