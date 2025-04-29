@@ -194,7 +194,7 @@ public class SessionIT {
         public void uncaughtException(Thread t, Throwable e) {
             if (e.getMessage().contains("Multiple threads"))
                 multiThreadExceptions.incrementAndGet();
-            else
+            else if (!(e instanceof InterruptedException))
                 e.printStackTrace();
             exceptionCount.incrementAndGet();
         }
