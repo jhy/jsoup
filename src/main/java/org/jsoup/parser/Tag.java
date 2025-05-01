@@ -308,15 +308,6 @@ public class Tag implements Cloneable {
     }
 
     /**
-     * Get if this tag represents a control associated with a form. E.g. input, textarea, output
-     * @return if associated with a form
-     * @deprecated this method is internal to HtmlTreeBuilder only, and will be removed in 1.21.1.
-     */
-    @Deprecated public boolean isFormListed() {
-        return namespace.equals(NamespaceHtml) && StringUtil.inSorted(normalName, HtmlTreeBuilder.TagFormListed);
-    }
-
-    /**
      * Get if this tag represents an element that should be submitted with a form. E.g. input, option
      * @return if submittable with a form
      */
