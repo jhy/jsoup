@@ -51,16 +51,6 @@ public class TokenQueue {
     }
 
     /**
-     Internal method, no longer supported.
-     @deprecated will be removed in 1.21.1.
-     */
-    @Deprecated public void addFirst(String seq) {
-        // only left in for API compat; could not find any public uses
-        // not very performant, but an edge case
-        throw new UnsupportedOperationException("addFirst() not supported");
-    }
-
-    /**
      Tests if the next characters on the queue match the sequence, case-insensitively.
      @param seq String to check queue for.
      @return true if the next characters match.
@@ -72,17 +62,6 @@ public class TokenQueue {
     /** Tests if the next character on the queue matches the character, case-sensitively. */
     public boolean matches(char c) {
         return reader.matches(c);
-    }
-
-    /**
-     @deprecated will be removed in 1.21.1.
-     */
-    @Deprecated public boolean matchesAny(String... seq) {
-        for (String s : seq) {
-            if (matches(s))
-                return true;
-        }
-        return false;
     }
 
     /**
@@ -148,17 +127,6 @@ public class TokenQueue {
         return reader.consumeTo(seq);
     }
 
-    /*
-     @deprecated will be removed in 1.21.1
-     */
-    @Deprecated public String consumeToIgnoreCase(String seq) {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        while (!isEmpty() && !reader.matchesIgnoreCase(seq)) {
-            sb.append(consume());
-        }
-        return StringUtil.releaseBuilder(sb);
-    }
-
     /**
      Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
      @param seq any number of terminators to consume to. <b>Case-insensitive.</b>
@@ -173,30 +141,6 @@ public class TokenQueue {
             sb.append(consume());
         }
         return StringUtil.releaseBuilder(sb);
-    }
-
-    /**
-     * Pulls a string off the queue (like consumeTo), and then pulls off the matched string (but does not return it).
-     * <p>
-     * If the queue runs out of characters before finding the seq, will return as much as it can (and queue will go
-     * isEmpty() == true).
-     * @param seq String to match up to, and not include in return, and to pull off queue. <b>Case-sensitive.</b>
-     * @return Data matched from queue.
-     * @deprecated will be removed in 1.21.1
-     */
-    @Deprecated public String chompTo(String seq) {
-        String data = reader.consumeTo(seq);
-        matchChomp(seq);
-        return data;
-    }
-
-    /**
-     @deprecated will be removed in 1.21.1.
-     */
-    @Deprecated public String chompToIgnoreCase(String seq) {
-        String data = consumeToIgnoreCase(seq); // case insensitive scan
-        matchChomp(seq);
-        return data;
     }
 
     /**
@@ -366,15 +310,6 @@ public class TokenQueue {
             seen = true;
         }
         return seen;
-    }
-
-    /**
-     * Retrieves the next run of word type (letter or digit) off the queue.
-     * @return String of word characters from queue, or empty string if none.
-     @deprecated will be removed in 1.21.1
-     */
-    @Deprecated public String consumeWord() {
-        return reader.consumeMatching(Character::isLetterOrDigit);
     }
 
     /**

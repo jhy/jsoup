@@ -1,5 +1,11 @@
 # jsoup Changelog
 
+## 1.21.1 (PENDING)
+
+### Changes
+
+* Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
+
 ## 1.20.1 (2025-04-29)
 
 ### Changes

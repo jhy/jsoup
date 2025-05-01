@@ -149,28 +149,6 @@ public class TokenQueueTest {
         );
     }
 
-    @Test public void chompToIgnoreCase() {
-        String t = "<textarea>one < two </TEXTarea>";
-        TokenQueue tq = new TokenQueue(t);
-        String data = tq.chompToIgnoreCase("</textarea");
-        assertEquals("<textarea>one < two ", data);
-
-        tq = new TokenQueue("<textarea> one two < three </oops>");
-        data = tq.chompToIgnoreCase("</textarea");
-        assertEquals("<textarea> one two < three </oops>", data);
-    }
-
-
-    @Test public void consumeToIgnoreSecondCallTest() {
-        String t = "<textarea>one < two </TEXTarea> third </TEXTarea>";
-        TokenQueue tq = new TokenQueue(t);
-        String data = tq.chompToIgnoreCase("</textarea>");
-        assertEquals("<textarea>one < two ", data);
-
-        data = tq.chompToIgnoreCase("</textarea>");
-        assertEquals(" third ", data);
-    }
-
     @Test public void testNestedQuotes() {
         validateNestedQuotes("<html><body><a id=\"identifier\" onclick=\"func('arg')\" /></body></html>", "a[onclick*=\"('arg\"]");
         validateNestedQuotes("<html><body><a id=\"identifier\" onclick=func('arg') /></body></html>", "a[onclick*=\"('arg\"]");

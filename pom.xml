@@ -282,7 +282,7 @@
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.19.1</version>
+              <version>1.20.1</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
@@ -292,9 +292,7 @@
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
             <excludes>
-              <!-- <exclude>@java.lang.Deprecated</exclude> -->
-              <exclude>org.jsoup.UncheckedIOException</exclude>
-              <exclude>org.jsoup.nodes.Element</exclude> <!-- forEach previously deprecated -->
+              <exclude>@java.lang.Deprecated</exclude>
             </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->

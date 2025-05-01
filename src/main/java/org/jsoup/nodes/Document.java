@@ -278,22 +278,6 @@ public class Document extends Element {
         return outputSettings.charset();
     }
 
-    /**
-     @deprecated this setting has no effect; the meta charset element is always updated when
-     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
-     */
-    @Deprecated
-    public void updateMetaCharsetElement(boolean noop) {}
-
-    /**
-     @deprecated this setting has no effect; the meta charset element is always updated when
-     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
-     */
-    @Deprecated
-    public boolean updateMetaCharsetElement() {
-        return true;
-    }
-
     @Override
     public Document clone() {
         Document clone = (Document) super.clone();

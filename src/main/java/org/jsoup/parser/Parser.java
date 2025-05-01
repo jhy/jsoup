@@ -24,7 +24,7 @@ public class Parser implements Cloneable {
     public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
     public static final String NamespaceSvg = "http://www.w3.org/2000/svg";
 
-    private TreeBuilder treeBuilder;
+    private final TreeBuilder treeBuilder;
     private ParseErrorList errors;
     private ParseSettings settings;
     private boolean trackPosition = false;
@@ -95,18 +95,6 @@ public class Parser implements Cloneable {
      */
     public TreeBuilder getTreeBuilder() {
         return treeBuilder;
-    }
-
-    /**
-     * Update the TreeBuilder used when parsing content.
-     * @param treeBuilder new TreeBuilder
-     * @return this, for chaining
-     * @deprecated unused method, will be removed in 1.21.1
-     */
-    @Deprecated public Parser setTreeBuilder(TreeBuilder treeBuilder) {
-        this.treeBuilder = treeBuilder;
-        treeBuilder.parser = this;
-        return this;
     }
 
     /**
@@ -198,15 +186,6 @@ public class Parser implements Cloneable {
         if (tagSet == null)
             tagSet = treeBuilder.defaultTagSet();
         return tagSet;
-    }
-
-    /**
-     (An internal method, visible for Element. For HTML parse, signals that script and style text should be treated as
-     Data Nodes).
-     @deprecated internal method, no longer used, and will be removed in 1.12.1.
-     */
-    @Deprecated public boolean isContentForTagData(String normalName) {
-        return tagSet().valueOf(normalName, defaultNamespace()).is(Tag.Data);
     }
 
     public String defaultNamespace() {
