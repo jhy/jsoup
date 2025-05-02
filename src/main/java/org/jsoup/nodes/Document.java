@@ -107,7 +107,6 @@ public class Document extends Element {
                 break;
         }
         return null;
-        // todo - add a set document type?
     }
 
     /**

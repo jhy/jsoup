@@ -387,7 +387,6 @@ public class Element extends Node implements Iterable<Element> {
 
     /**
      * Maintains a shadow copy of this element's child elements. If the nodelist is changed, this cache is invalidated.
-     * TODO - think about pulling this out as a helper as there are other shadow lists (like in Attributes) kept around.
      * @return a list of child elements
      */
     List<Element> childElementsList() {

@@ -27,7 +27,6 @@ public class ConnectIT {
     // Slow Rider tests.
     @Test
     public void canInterruptBodyStringRead() throws InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {
             try {
@@ -53,7 +52,6 @@ public class ConnectIT {
 
     @Test
     public void canInterruptDocumentRead() throws InterruptedException {
-        // todo - implement in interruptable channels, so it's immediate
         long start = System.currentTimeMillis();
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {

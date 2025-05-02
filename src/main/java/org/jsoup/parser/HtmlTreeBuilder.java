@@ -711,8 +711,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     boolean inScope(String targetName, String[] extras) {
         return inSpecificScope(targetName, TagsSearchInScope, extras);
-        // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
-        // todo: in svg namespace: forignOjbect, desc, title
     }
 
     boolean inListItemScope(String targetName) {

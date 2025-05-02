@@ -112,7 +112,6 @@ final class Tokeniser {
     }
 
     void emit(int[] codepoints) {
-        // todo review
         emit(new String(codepoints, 0, codepoints.length));
     }
 
