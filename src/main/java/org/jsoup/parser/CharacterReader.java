@@ -58,6 +58,7 @@ public final class CharacterReader implements AutoCloseable {
         this(new StringReader(input));
     }
 
+    @Override
     public void close() {
         if (reader == null)
             return;
