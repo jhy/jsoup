@@ -406,8 +406,7 @@ public class Entities {
         e.nameVals = new String[size];
 
         int i = 0;
-        CharacterReader reader = new CharacterReader(pointsData);
-        try {
+        try (CharacterReader reader = new CharacterReader(pointsData)) {
             while (!reader.isEmpty()) {
                 // NotNestedLessLess=10913,824;1887&
 
@@ -439,8 +438,6 @@ public class Entities {
             }
 
             Validate.isTrue(i == size, "Unexpected count of entities loaded");
-        } finally {
-            reader.close();
         }
     }
 }

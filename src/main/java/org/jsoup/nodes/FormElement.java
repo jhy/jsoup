@@ -22,7 +22,7 @@ import java.util.List;
 public class FormElement extends Element {
     private final Elements linkedEls = new Elements();
     // contains form submittable elements that were linked during the parse (and due to parse rules, may no longer be a child of this form)
-    private final Evaluator submittable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
+    private static final Evaluator submittable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
 
     /**
      * Create a new, standalone form element.

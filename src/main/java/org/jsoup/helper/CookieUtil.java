@@ -115,5 +115,6 @@ class CookieUtil {
         // name not blank, value not null
         if (!cookieName.isEmpty())
             res.cookie(cookieName, cookieVal); // if duplicate names, last set will win
+        reader.close();
     }
 }

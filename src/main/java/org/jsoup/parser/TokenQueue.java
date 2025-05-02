@@ -7,7 +7,7 @@ import org.jsoup.helper.Validate;
  A character reader with helpers focusing on parsing CSS selectors. Used internally by jsoup. API subject to changes.
  */
 
-public class TokenQueue {
+public class TokenQueue implements AutoCloseable {
     private static final char Esc = '\\'; // escape char for chomp balanced.
     private static final char Hyphen_Minus = '-';
     private static final char Unicode_Null = '\u0000';
@@ -288,6 +288,7 @@ public class TokenQueue {
             }
         }
 
+        q.close();
         return StringUtil.releaseBuilder(out);
     }
 
@@ -476,5 +477,10 @@ public class TokenQueue {
     @Override
     public String toString() {
         return reader.toString();
+    }
+
+    @Override
+    public void close() {
+        reader.close(); // releases buffer back to pool
     }
 }

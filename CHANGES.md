@@ -6,6 +6,9 @@
 
 * Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
 
+### Improvements
+* Made `TokenQueue` and `CharacterReader` autocloseable, to ensure that they will release their buffers back to the buffer pool, for later reuse.
+
 ## 1.20.1 (2025-04-29)
 
 ### Changes

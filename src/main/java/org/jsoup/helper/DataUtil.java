@@ -12,6 +12,8 @@ import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.StreamParser;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
+import org.jsoup.select.QueryParser;
 import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedReader;
@@ -235,6 +237,8 @@ public final class DataUtil {
         return doc;
     }
 
+    private static final Evaluator metaCharset = QueryParser.parse("meta[http-equiv=content-type], meta[charset]");
+
     static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         Document doc = null;
         // read the start of the stream and look for a BOM or meta charset:
@@ -260,7 +264,7 @@ public final class DataUtil {
             }
 
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-            Elements metaElements = doc.select("meta[http-equiv=content-type], meta[charset]");
+            Elements metaElements = doc.select(metaCharset);
             String foundCharset = null; // if not found, will keep utf-8 as best attempt
             for (Element meta : metaElements) {
                 if (meta.hasAttr("http-equiv"))
