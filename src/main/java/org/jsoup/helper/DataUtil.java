@@ -221,8 +221,7 @@ public final class DataUtil {
     }
 
     static Document parseInputStream(@Nullable ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        if (input == null) // empty body // todo reconsider?
-            return new Document(baseUri);
+        if (input == null) return new Document(baseUri); // empty body
 
         final Document doc;
         CharsetDoc charsetDoc = null;
