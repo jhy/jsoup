@@ -156,47 +156,36 @@ public class TokenQueue implements AutoCloseable {
     public String chompBalanced(char open, char close) {
         StringBuilder accum = StringUtil.borrowBuilder();
         int depth = 0;
-        char last = 0;
-        boolean inSingleQuote = false;
-        boolean inDoubleQuote = false;
+        char prev = 0;
+        boolean inSingle = false;
+        boolean inDouble = false;
         boolean inRegexQE = false; // regex \Q .. \E escapes from Pattern.quote()
         reader.mark(); // mark the initial position to restore if needed
 
         do {
             if (isEmpty()) break;
             char c = consume();
-            if (last != Esc) {
-                if (c == '\'' && c != open && !inDoubleQuote)
-                    inSingleQuote = !inSingleQuote;
-                else if (c == '"' && c != open && !inSingleQuote)
-                    inDoubleQuote = !inDoubleQuote;
-                if (inSingleQuote || inDoubleQuote || inRegexQE) {
-                    accum.append(c);
-                    last = c;
-                    continue;
-                }
+            if (prev == Esc) {
+                if      (c == 'Q') inRegexQE = true;
+                else if (c == 'E') inRegexQE = false;
+                accum.append(c);
+            } else {
+                if      (c == '\'' && c != open && !inDouble) inSingle = !inSingle;
+                else if (c == '"'  && c != open && !inSingle) inDouble = !inDouble;
 
-                if (c == open) {
+                if (inSingle || inDouble || inRegexQE) {
+                    accum.append(c);
+                } else if (c == open) {
                     depth++;
                     if (depth > 1) accum.append(c); // don't include the outer match pair in the return
-                }
-                else if (c == close) {
+                } else if (c == close) {
                     depth--;
-                    if (depth > 0) accum.append(c); // don't include the outer match pair in the return
+                    if (depth > 0) accum.append(c);
                 } else {
                     accum.append(c);
                 }
-            } else if (c == 'Q') {
-                inRegexQE = true;
-                accum.append(c);
-            } else if (c == 'E') {
-                inRegexQE = false;
-                accum.append(c);
-            } else {
-                accum.append(c);
             }
-
-            last = c;
+            prev = c;
         } while (depth > 0);
 
         String out = StringUtil.releaseBuilder(accum);
