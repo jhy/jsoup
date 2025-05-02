@@ -3,6 +3,7 @@ package org.jsoup.helper;
 import org.jsoup.Connection;
 import org.jsoup.internal.ControllableInputStream;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.SimpleStreamReader;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -16,11 +17,9 @@ import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
 import org.jspecify.annotations.Nullable;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UncheckedIOException;
@@ -142,7 +141,7 @@ public final class DataUtil {
         String charsetName = charset != null? charset.name() : null;
         try {
             DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset), DefaultBufferSize);
+            Reader reader = new SimpleStreamReader(charsetDoc.input, charsetDoc.charset);
             streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
         } catch (IOException e) {
             streamer.close();
@@ -252,8 +251,7 @@ public final class DataUtil {
             input.max(firstReadBufferSize);
             input.mark(firstReadBufferSize);
             input.allowClose(false); // ignores closes during parse, in case we need to rewind
-            try {
-                Reader reader = new InputStreamReader(input, UTF_8); // input is currently capped to firstReadBufferSize
+            try (Reader reader = new SimpleStreamReader(input, UTF_8)) { // input is currently capped to firstReadBufferSize
                 doc = parser.parseInput(reader, baseUri);
                 input.reset();
                 input.max(origMax); // reset for a full read if required
@@ -320,7 +318,7 @@ public final class DataUtil {
         Validate.notNull(input);
         final Document doc;
         final Charset charset = charsetDoc.charset;
-        try (Reader reader = new InputStreamReader(input, charset)) {
+        try (Reader reader = new SimpleStreamReader(input, charset)) {
             try {
                 doc = parser.parseInput(reader, baseUri);
             } catch (UncheckedIOException e) {

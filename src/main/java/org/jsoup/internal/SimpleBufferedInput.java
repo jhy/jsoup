@@ -10,7 +10,7 @@ import java.io.InputStream;
 import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 
 /**
- A simple implemented of a buffered input stream, in which we can control the byte[] buffer to recycle it. Not safe for
+ A simple implementation of a buffered input stream, in which we can control the byte[] buffer to recycle it. Not safe for
  use between threads; no sync or locks. The buffer is borrowed on initial demand in fill.
  @since 1.18.2
  */
