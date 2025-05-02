@@ -42,8 +42,8 @@
   Attributes. Also, added `Tag#prefix()`, `Tag#localName()`, `Attribute#prefix()`, `Attribute#localName()`, and
   `Attribute#namespace()` to retrieve these. [#2299](https://github.com/jhy/jsoup/issues/2299).
 * CSS identifiers are now escaped and unescaped correctly to the CSS spec. `Element#cssSelector()` will emit
-  appropriately escaped selectors, and the QueryParser supports those. Added `Selector.escapeCssIdentifier()` and `
-  Selector.unescapeCssIdentifier(). [#2297](https://github.com/jhy/jsoup/pull/2297), [#2305](https://github.com/jhy/jsoup/pull/2305)
+  appropriately escaped selectors, and the QueryParser supports those. Added `Selector.escapeCssIdentifier()` and
+  `Selector.unescapeCssIdentifier()`. [#2297](https://github.com/jhy/jsoup/pull/2297), [#2305](https://github.com/jhy/jsoup/pull/2305)
 
 ### Structure and Performance Improvements
 
