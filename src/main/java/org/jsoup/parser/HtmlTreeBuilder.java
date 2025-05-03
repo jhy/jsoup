@@ -711,8 +711,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     boolean inScope(String targetName, String[] extras) {
         return inSpecificScope(targetName, TagsSearchInScope, extras);
-        // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
-        // todo: in svg namespace: forignOjbect, desc, title
     }
 
     boolean inListItemScope(String targetName) {
@@ -1045,12 +1043,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 ", state=" + state +
                 ", currentElement=" + currentElement() +
                 '}';
-    }
-
-    /** @deprecated this unused internal method will be removed. */
-    @Deprecated
-    protected boolean isContentForTagData(final String normalName) {
-        return (normalName.equals("script") || normalName.equals("style"));
     }
 
 }

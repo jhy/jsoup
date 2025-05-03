@@ -387,7 +387,6 @@ public class Element extends Node implements Iterable<Element> {
 
     /**
      * Maintains a shadow copy of this element's child elements. If the nodelist is changed, this cache is invalidated.
-     * TODO - think about pulling this out as a helper as there are other shadow lists (like in Attributes) kept around.
      * @return a list of child elements
      */
     List<Element> childElementsList() {
@@ -479,12 +478,15 @@ public class Element extends Node implements Iterable<Element> {
 
     /**
      * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
-     * may include this element, or any of its children.
+     * may include this element, or any of its descendents.
+     * <p>If the query starts with a combinator (e.g. {@code *} or {@code >}), that will combine to this element.</p>
      * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
      * multiple filters can be combined, e.g.:</p>
      * <ul>
-     * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
-     * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
+     * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)</li>
+     * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)</li>
+     * <li>{@code el.select("* div")} - finds all divs that descend from this element (and excludes this element)</li>
+     * <li>{@code el.select("> div")} - finds all divs that are direct children of this element (and excludes this element)</li>
      * </ul>
      * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
      * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>

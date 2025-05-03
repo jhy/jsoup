@@ -18,7 +18,6 @@ public class DocumentType extends LeafNode {
     private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
-    // todo: quirk mode from publicId and systemId
 
     /**
      * Create a new doctype element.

@@ -331,8 +331,7 @@ public class W3CDomTest {
 
     @Test
     public void testRoundTripDoctype() {
-        // TODO - not super happy with this output - but plain DOM doesn't let it out, and don't want to rebuild the writer
-        // because we have Saxon on the test classpath, the transformer will change to that, and so case may change (e.g. Java base in META, Saxon is meta for HTML)
+        // because we have Saxon on the test classpath, the transformer will change to that, and so case may change (e.g. Java base is META, Saxon is meta for HTML)
         String base = "<!DOCTYPE html><p>One</p>";
         assertEqualsIgnoreCase("<!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body><p>One</p></body></html>", output(base, true));
         assertEqualsIgnoreCase("<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE html SYSTEM \"about:legacy-compat\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head/><body><p>One</p></body></html>", output(base, false));

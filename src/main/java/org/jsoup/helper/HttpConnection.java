@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
@@ -621,7 +622,7 @@ public class HttpConnection implements Connection {
         @Nullable RequestAuthenticator authenticator;
         private @Nullable Progress<Connection.Response> responseProgress;
 
-        private volatile boolean executing = false;
+        private final ReentrantLock executing = new ReentrantLock(); // detects and warns if same request used concurrently
 
         Request() {
             super();
@@ -654,7 +655,6 @@ public class HttpConnection implements Connection {
             cookieManager = copy.cookieManager;
             authenticator = copy.authenticator;
             responseProgress = copy.responseProgress;
-            executing = false;
         }
 
         @Override @Nullable
@@ -847,10 +847,7 @@ public class HttpConnection implements Connection {
         }
 
         static Response execute(HttpConnection.Request req, @Nullable Response prevRes) throws IOException {
-            synchronized (req) {
-                Validate.isFalse(req.executing, "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
-                req.executing = true;
-            }
+            Validate.isTrue(req.executing.tryLock(), "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
             Validate.notNullParam(req, "req");
             URL url = req.url();
             Validate.notNull(url, "URL must be specified to connect");
@@ -890,7 +887,6 @@ public class HttpConnection implements Connection {
                     URL redir = StringUtil.resolve(req.url(), location);
                     req.url(redir);
 
-                    req.executing = false;
                     return execute(req, res);
                 }
                 if ((res.statusCode < 200 || res.statusCode >= 400) && !req.ignoreHttpErrors())
@@ -932,7 +928,7 @@ public class HttpConnection implements Connection {
                 if (res != null) res.safeClose(); // will be non-null if got to conn
                 throw e;
             } finally {
-                req.executing = false;
+                req.executing.unlock();
 
                 // detach any thread local auth delegate
                 if (req.authenticator != null)

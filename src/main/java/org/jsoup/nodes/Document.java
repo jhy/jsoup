@@ -37,9 +37,13 @@ public class Document extends Element {
      @see #createShell
      */
     public Document(String namespace, String baseUri) {
+        this(namespace, baseUri, Parser.htmlParser()); // default HTML parser, but overridable
+    }
+
+    private Document(String namespace, String baseUri, Parser parser) {
         super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
-        this.parser = Parser.htmlParser(); // default, but overridable
+        this.parser = parser;
     }
 
     /**
@@ -103,7 +107,6 @@ public class Document extends Element {
                 break;
         }
         return null;
-        // todo - add a set document type?
     }
 
     /**
@@ -274,35 +277,19 @@ public class Document extends Element {
         return outputSettings.charset();
     }
 
-    /**
-     @deprecated this setting has no effect; the meta charset element is always updated when
-     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
-     */
-    @Deprecated
-    public void updateMetaCharsetElement(boolean noop) {}
-
-    /**
-     @deprecated this setting has no effect; the meta charset element is always updated when
-     {@link Document#charset(Charset)} is called. This method will be removed in jsoup 1.20.1.
-     */
-    @Deprecated
-    public boolean updateMetaCharsetElement() {
-        return true;
-    }
-
     @Override
     public Document clone() {
         Document clone = (Document) super.clone();
+        if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
-        clone.parser = this.parser.clone();
+        // parser is pointer copy
         return clone;
     }
 
     @Override
     public Document shallowClone() {
-        Document clone = new Document(this.tag().namespace(), baseUri());
-        if (attributes != null)
-            clone.attributes = attributes.clone();
+        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+        if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
         return clone;
     }

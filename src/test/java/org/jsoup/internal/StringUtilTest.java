@@ -165,4 +165,71 @@ public class StringUtilTest {
         assertFalse(StringUtil.isAscii("测试"));
         assertFalse(StringUtil.isAscii("测试.com"));
     }
+
+    @Test void isAsciiLetter() {
+        assertTrue(StringUtil.isAsciiLetter('a'));
+        assertTrue(StringUtil.isAsciiLetter('n'));
+        assertTrue(StringUtil.isAsciiLetter('z'));
+        assertTrue(StringUtil.isAsciiLetter('A'));
+        assertTrue(StringUtil.isAsciiLetter('N'));
+        assertTrue(StringUtil.isAsciiLetter('Z'));
+
+        assertFalse(StringUtil.isAsciiLetter(' '));
+        assertFalse(StringUtil.isAsciiLetter('-'));
+        assertFalse(StringUtil.isAsciiLetter('0'));
+        assertFalse(StringUtil.isAsciiLetter('ß'));
+        assertFalse(StringUtil.isAsciiLetter('Ě'));
+    }
+
+    @Test void isDigit() {
+        assertTrue(StringUtil.isDigit('0'));
+        assertTrue(StringUtil.isDigit('1'));
+        assertTrue(StringUtil.isDigit('2'));
+        assertTrue(StringUtil.isDigit('3'));
+        assertTrue(StringUtil.isDigit('4'));
+        assertTrue(StringUtil.isDigit('5'));
+        assertTrue(StringUtil.isDigit('6'));
+        assertTrue(StringUtil.isDigit('7'));
+        assertTrue(StringUtil.isDigit('8'));
+        assertTrue(StringUtil.isDigit('9'));
+
+        assertFalse(StringUtil.isDigit('a'));
+        assertFalse(StringUtil.isDigit('A'));
+        assertFalse(StringUtil.isDigit('ä'));
+        assertFalse(StringUtil.isDigit('Ä'));
+        assertFalse(StringUtil.isDigit('١'));
+        assertFalse(StringUtil.isDigit('୳'));
+    }
+
+    @Test void isHexDigit() {
+        assertTrue(StringUtil.isHexDigit('0'));
+        assertTrue(StringUtil.isHexDigit('1'));
+        assertTrue(StringUtil.isHexDigit('2'));
+        assertTrue(StringUtil.isHexDigit('3'));
+        assertTrue(StringUtil.isHexDigit('4'));
+        assertTrue(StringUtil.isHexDigit('5'));
+        assertTrue(StringUtil.isHexDigit('6'));
+        assertTrue(StringUtil.isHexDigit('7'));
+        assertTrue(StringUtil.isHexDigit('8'));
+        assertTrue(StringUtil.isHexDigit('9'));
+        assertTrue(StringUtil.isHexDigit('a'));
+        assertTrue(StringUtil.isHexDigit('b'));
+        assertTrue(StringUtil.isHexDigit('c'));
+        assertTrue(StringUtil.isHexDigit('d'));
+        assertTrue(StringUtil.isHexDigit('e'));
+        assertTrue(StringUtil.isHexDigit('f'));
+        assertTrue(StringUtil.isHexDigit('A'));
+        assertTrue(StringUtil.isHexDigit('B'));
+        assertTrue(StringUtil.isHexDigit('C'));
+        assertTrue(StringUtil.isHexDigit('D'));
+        assertTrue(StringUtil.isHexDigit('E'));
+        assertTrue(StringUtil.isHexDigit('F'));
+
+        assertFalse(StringUtil.isHexDigit('g'));
+        assertFalse(StringUtil.isHexDigit('G'));
+        assertFalse(StringUtil.isHexDigit('ä'));
+        assertFalse(StringUtil.isHexDigit('Ä'));
+        assertFalse(StringUtil.isHexDigit('١'));
+        assertFalse(StringUtil.isHexDigit('୳'));
+    }
 }

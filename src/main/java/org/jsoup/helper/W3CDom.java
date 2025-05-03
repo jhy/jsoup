@@ -135,7 +135,7 @@ public class W3CDom {
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
                 if (!StringUtil.isBlank(doctype.getSystemId()))
                     transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-                    // handle <!doctype html> for legacy dom. TODO: nicer if <!doctype html>
+                    // handle <!doctype html> for legacy dom.
                 else if (doctype.getName().equalsIgnoreCase("html")
                     && StringUtil.isBlank(doctype.getPublicId())
                     && StringUtil.isBlank(doctype.getSystemId()))

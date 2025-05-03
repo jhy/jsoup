@@ -130,7 +130,6 @@ enum HtmlTreeBuilderState {
                             tb.maybeSetBaseUri(el);
                     } else if (name.equals("meta")) {
                         tb.insertEmptyElementFor(start);
-                        // todo: charset switches
                     } else if (name.equals("title")) {
                         HandleTextState(start, tb, TokeniserState.Rcdata);
                     } else if (inSorted(name, InHeadRaw)) {
@@ -287,7 +286,6 @@ enum HtmlTreeBuilderState {
                 case Character: {
                     Token.Character c = t.asCharacter();
                     if (c.getData().equals(nullString)) {
-                        // todo confirm that check
                         tb.error(this);
                         return false;
                     } else if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed

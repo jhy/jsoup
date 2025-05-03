@@ -15,7 +15,7 @@ import static org.jsoup.internal.Normalizer.normalize;
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
-public class QueryParser {
+public class QueryParser implements AutoCloseable {
     private final static char[] Combinators = {'>', '+', '~'}; // ' ' is also a combinator, but found implicitly
     private final static String[] AttributeEvals = new String[]{"=", "!=", "^=", "$=", "*=", "~="};
     private final static char[] SequenceEnders = {',', ')'};
@@ -43,8 +43,7 @@ public class QueryParser {
      @see Selector selector query syntax
      */
     public static Evaluator parse(String query) {
-        try {
-            QueryParser p = new QueryParser(query);
+        try (QueryParser p = new QueryParser(query)) {
             return p.parse();
         } catch (IllegalArgumentException e) {
             throw new Selector.SelectorParseException(e.getMessage());
@@ -55,7 +54,7 @@ public class QueryParser {
      Parse the query. We use this simplified expression of the grammar:
      <pre>
      SelectorGroup   ::= Selector (',' Selector)*
-     Selector        ::= SimpleSequence ( Combinator SimpleSequence )*
+     Selector        ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
      SimpleSequence  ::= [ TypeSelector ] ( ID | Class | Attribute | Pseudo )*
      Pseudo           ::= ':' Name [ '(' SelectorGroup ')' ]
      Combinator      ::= S+         // descendant (whitespace)
@@ -85,8 +84,16 @@ public class QueryParser {
     }
 
     Evaluator parseSelector() {
-        // SimpleSequence ( Combinator SimpleSequence )*
-        Evaluator left = parseSimpleSequence();
+        // Selector ::= [ Combinator ] SimpleSequence ( Combinator SimpleSequence )*
+        tq.consumeWhitespace();
+
+        Evaluator left;
+        if (tq.matchesAny(Combinators)) {
+            // e.g. query is "> div"; left side is root element
+            left = new StructuralEvaluator.Root();
+        } else {
+            left = parseSimpleSequence();
+        }
 
         while (true) {
             char combinator = 0;
@@ -117,8 +124,6 @@ public class QueryParser {
             left = byTag();
         else if (tq.matchChomp('*'))
             left = new Evaluator.AllElements();
-        else if (tq.matchesAny(Combinators))  // e.g. query is "> div"; type is root element
-            left = new StructuralEvaluator.Root();
 
         // zero or more subclasses (#, ., [)
         while(true) {
@@ -280,7 +285,12 @@ public class QueryParser {
     }
 
     private Evaluator byAttribute() {
-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+        try (TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']'))) {
+            return evaluatorForAttribute(cq);
+        }
+    }
+
+    private Evaluator evaluatorForAttribute(TokenQueue cq) {
         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key);
         cq.consumeWhitespace();
@@ -307,7 +317,8 @@ public class QueryParser {
             else if (cq.matchChomp("~="))
                 eval = new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder()));
             else
-                throw new Selector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+                throw new Selector.SelectorParseException(
+                    "Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
         }
         return eval;
     }
@@ -433,5 +444,10 @@ public class QueryParser {
     @Override
     public String toString() {
         return query;
+    }
+
+    @Override
+    public void close() {
+        tq.close();
     }
 }

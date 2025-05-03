@@ -85,7 +85,7 @@ public class ElementIT {
         Document doc = new Document("https://example.com/");
         Element el = doc.body();
         for (int i = 0; i <= 50000; i++) {
-            el = el.appendElement("p");
+            el = el.appendChild(doc.createElement("p")).firstElementChild();
         }
         assertFalse(doc.hasText());
         el.text("Hello");
@@ -98,7 +98,7 @@ public class ElementIT {
         Document doc = new Document("https://example.com/");
         Element el = doc.body();
         for (int i = 0; i <= 50000; i++) {
-            el = el.appendElement("p");
+            el = el.appendChild(doc.createElement("p")).firstElementChild();
         }
         Element script = el.appendElement("script");
         script.text("script"); // holds data nodes, so inserts as data, not text
@@ -113,7 +113,7 @@ public class ElementIT {
         Element el = doc.body();
         int num = 50000;
         for (int i = 0; i <= num; i++) {
-            el = el.appendElement("p");
+            el = el.appendChild(doc.createElement("p")).firstElementChild();
         }
         Elements parents = el.parents();
         assertEquals(num+2, parents.size()); // +2 for html and body

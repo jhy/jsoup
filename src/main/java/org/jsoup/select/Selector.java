@@ -242,8 +242,9 @@ public class Selector {
      @since 1.20.1
      */
     public static String unescapeCssIdentifier(String in) {
-        TokenQueue tq = new TokenQueue(in);
-        return tq.consumeCssIdentifier();
+        try (TokenQueue tq = new TokenQueue(in)) {
+            return tq.consumeCssIdentifier();
+        }
     }
 
     public static class SelectorParseException extends IllegalStateException {

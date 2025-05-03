@@ -15,7 +15,6 @@ class NodeIteratorTest {
         Document doc = Jsoup.parse(html);
         NodeIterator<Node> it = NodeIterator.from(doc);
         assertIterates(it, "#root;html;head;body;div#1;p;One;p;Two;div#2;p;Three;p;Four;");
-        // todo - need to review that the Document object #root holds the html element as child. Why not have document root == html element?
         assertFalse(it.hasNext());
 
         boolean threw = false;
