@@ -8,6 +8,7 @@
 
 ### Improvements
 * Made `TokenQueue` and `CharacterReader` autocloseable, to ensure that they will release their buffers back to the buffer pool, for later reuse.
+* Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
 
 ## 1.20.1 (2025-04-29)
 

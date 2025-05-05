@@ -9,7 +9,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
-import org.jsoup.select.QueryParser;
+import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.List;
 public class FormElement extends Element {
     private final Elements linkedEls = new Elements();
     // contains form submittable elements that were linked during the parse (and due to parse rules, may no longer be a child of this form)
-    private static final Evaluator submittable = QueryParser.parse(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
+    private static final Evaluator submittable = Selector.evaluatorOf(StringUtil.join(SharedConstants.FormSubmitTags, ", "));
 
     /**
      * Create a new, standalone form element.

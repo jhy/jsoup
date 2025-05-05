@@ -1473,4 +1473,9 @@ public class SelectorTest {
         assertEquals("-0a", Selector.unescapeCssIdentifier("-\\30 a"));
         assertEquals("a0b", Selector.unescapeCssIdentifier("a0b"));
     }
+
+    @Test void evaluatorOf() {
+        Evaluator eval = Selector.evaluatorOf("div > p");
+        assertEquals("div > p", eval.toString());
+    }
 }

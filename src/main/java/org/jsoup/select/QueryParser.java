@@ -41,6 +41,7 @@ public class QueryParser implements AutoCloseable {
      @param query CSS query
      @return Evaluator
      @see Selector selector query syntax
+     @throws Selector.SelectorParseException if the CSS query is invalid
      */
     public static Evaluator parse(String query) {
         try (QueryParser p = new QueryParser(query)) {

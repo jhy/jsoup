@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  *
  * <h2>Selector syntax</h2>
  * <p>
- * A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case insensitive</b> (including against
+ * A selector is a chain of simple selectors, separated by combinators. Selectors are <b>case-insensitive</b> (including against
  * elements, attributes, and attribute values).
  * </p>
  * <p>
@@ -84,6 +84,7 @@ import java.util.stream.Stream;
  * <p><b>Escaping special characters:</b> to match a tag, ID, or other selector that does not follow the regular CSS syntax, the query must be escaped with the <code>\</code> character. For example, to match by ID {@code <p id="i.d">}, use {@code document.select("#i\\.d")}.</p>
  *
  * @see Element#select(String css)
+ * @see Element#select(Evaluator eval)
  * @see Elements#select(String css)
  * @see Element#selectXpath(String xpath)
  */
@@ -101,7 +102,7 @@ public class Selector {
      */
     public static Elements select(String query, Element root) {
         Validate.notEmpty(query);
-        return select(QueryParser.parse(query), root);
+        return select(evaluatorOf(query), root);
     }
 
     /**
@@ -128,7 +129,7 @@ public class Selector {
      */
     public static Stream<Element> selectStream(String query, Element root) {
         Validate.notEmpty(query);
-        return selectStream(QueryParser.parse(query), root);
+        return selectStream(evaluatorOf(query), root);
     }
 
     /**
@@ -156,7 +157,7 @@ public class Selector {
     public static Elements select(String query, Iterable<Element> roots) {
         Validate.notEmpty(query);
         Validate.notNull(roots);
-        Evaluator evaluator = QueryParser.parse(query);
+        Evaluator evaluator = evaluatorOf(query);
         Elements elements = new Elements();
         HashSet<Element> seenElements = new HashSet<>(); // dedupe elements by identity, as .equals is ==
 
@@ -195,7 +196,7 @@ public class Selector {
      */
     public static @Nullable Element selectFirst(String cssQuery, Element root) {
         Validate.notEmpty(cssQuery);
-        return Collector.findFirst(QueryParser.parse(cssQuery), root);
+        return Collector.findFirst(evaluatorOf(cssQuery), root);
     }
 
     /**
@@ -209,7 +210,7 @@ public class Selector {
     public static @Nullable Element selectFirst(String cssQuery, Iterable<Element> roots) {
         Validate.notEmpty(cssQuery);
         Validate.notNull(roots);
-        Evaluator evaluator = QueryParser.parse(cssQuery);
+        Evaluator evaluator = evaluatorOf(cssQuery);
 
         for (Element root : roots) {
             Element first = Collector.findFirst(evaluator, root);
@@ -245,6 +246,20 @@ public class Selector {
         try (TokenQueue tq = new TokenQueue(in)) {
             return tq.consumeCssIdentifier();
         }
+    }
+
+    /**
+     Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to
+     parse it once and reuse the Evaluator.
+
+     @param css CSS query
+     @return Evaluator
+     @see Selector selector query syntax
+     @throws Selector.SelectorParseException if the CSS query is invalid
+     @since 1.21.1
+     */
+    public static Evaluator evaluatorOf(String css) {
+        return QueryParser.parse(css);
     }
 
     public static class SelectorParseException extends IllegalStateException {

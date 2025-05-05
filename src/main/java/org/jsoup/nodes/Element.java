@@ -13,7 +13,6 @@ import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.QueryParser;
 import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
@@ -40,6 +39,7 @@ import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
 import static org.jsoup.nodes.TextNode.lastCharIsWhitespace;
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.jsoup.parser.TokenQueue.escapeCssIdentifier;
+import static org.jsoup.select.Selector.evaluatorOf;
 
 /**
  An HTML Element consists of a tag name, attributes, and child nodes (including text nodes and other elements).
@@ -507,7 +507,7 @@ public class Element extends Node implements Iterable<Element> {
      * repeatedly parsing the CSS query.
      * @param evaluator an element evaluator
      * @return an {@link Elements} list containing elements that match the query (empty if none match)
-     * @see QueryParser#parse(String)
+     * @see Selector#evaluatorOf(String css)
      */
     public Elements select(Evaluator evaluator) {
         return Selector.select(evaluator, this);
@@ -528,7 +528,7 @@ public class Element extends Node implements Iterable<Element> {
      @return a {@link Stream} containing elements that match the query (empty if none match)
      @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
      @see Selector selector query syntax
-     @see QueryParser#parse(String)
+     @see #selectStream(Evaluator eval)
      @since 1.19.1
      */
     public Stream<Element> selectStream(String cssQuery) {
@@ -540,6 +540,7 @@ public class Element extends Node implements Iterable<Element> {
 
      @param evaluator an element Evaluator
      @return a {@link Stream} containing elements that match the query (empty if none match)
+     @see Selector#evaluatorOf(String css)
      @since 1.19.1
      */
     public Stream<Element> selectStream(Evaluator evaluator) {
@@ -597,7 +598,7 @@ public class Element extends Node implements Iterable<Element> {
      * @return if this element matches the query
      */
     public boolean is(String cssQuery) {
-        return is(QueryParser.parse(cssQuery));
+        return is(evaluatorOf(cssQuery));
     }
 
     /**
@@ -617,7 +618,7 @@ public class Element extends Node implements Iterable<Element> {
      * found.
      */
     public @Nullable Element closest(String cssQuery) {
-        return closest(QueryParser.parse(cssQuery));
+        return closest(evaluatorOf(cssQuery));
     }
 
     /**

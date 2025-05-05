@@ -14,7 +14,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.StreamParser;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
-import org.jsoup.select.QueryParser;
+import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
 import java.io.File;
@@ -235,7 +235,7 @@ public final class DataUtil {
         return doc;
     }
 
-    private static final Evaluator metaCharset = QueryParser.parse("meta[http-equiv=content-type], meta[charset]");
+    private static final Evaluator metaCharset = Selector.evaluatorOf("meta[http-equiv=content-type], meta[charset]");
 
     static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
         Document doc = null;
