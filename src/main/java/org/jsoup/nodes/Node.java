@@ -806,16 +806,6 @@ public abstract class Node implements Cloneable {
         return Range.of(this, true);
     }
 
-    /** Test if this node is the first child, or first following blank text. */
-    final boolean isEffectivelyFirst() {
-        if (siblingIndex == 0) return true;
-        if (siblingIndex == 1) {
-            final Node prev = previousSibling();
-            return prev instanceof TextNode && (((TextNode) prev).isBlank());
-        }
-        return false;
-    }
-
     /**
      * Gets this node's outer HTML.
      * @return outer HTML.
