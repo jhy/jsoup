@@ -6,6 +6,7 @@ import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AttributeTest {
     @Test
@@ -55,6 +56,21 @@ public class AttributeTest {
         assertNull(attr.parent);
     }
 
+    @Test void settersAfterParentRemoval() {
+        // tests key and value set on a retained attribute after disconnected from parent
+        Attributes attrs = new Attributes();
+        attrs.put("foo", "bar");
+        Attribute attr = attrs.attribute("foo");
+        assertNotNull(attr);
+        attrs.remove("foo");
+        assertEquals("foo", attr.getKey());
+        assertEquals("bar", attr.getValue());
+        attr.setKey("new");
+        attr.setValue("newer");
+        assertEquals("new", attr.getKey());
+        assertEquals("newer", attr.getValue());
+    }
+
     @Test public void hasValue() {
         Attribute a1 = new Attribute("one", "");
         Attribute a2 = new Attribute("two", null);
@@ -88,5 +104,10 @@ public class AttributeTest {
 
         Document doc2 = Jsoup.parse(html, Parser.htmlParser().settings(ParseSettings.preserveCase));
         assertEquals("<a href=\"autofocus\" REQUIRED>One</a>", doc2.selectFirst("a").outerHtml());
+    }
+
+    @Test void orphanNamespace() {
+        Attribute attr = new Attribute("one", "two");
+        assertEquals("", attr.namespace());
     }
 }
