@@ -1,5 +1,6 @@
 package org.jsoup.nodes;
 
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.parser.Tag;
 
 /**
@@ -13,10 +14,10 @@ public class PseudoTextElement extends Element {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, Document.OutputSettings out) {
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {
     }
 }

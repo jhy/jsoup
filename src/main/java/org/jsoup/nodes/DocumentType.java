@@ -1,11 +1,11 @@
 package org.jsoup.nodes;
 
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 
 /**
  * A {@code <!DOCTYPE>} node.
@@ -78,7 +78,7 @@ public class DocumentType extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
             // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");

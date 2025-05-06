@@ -1,9 +1,9 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 
-import java.io.IOException;
 
 /**
  A text node.
@@ -81,7 +81,7 @@ public class TextNode extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         Entities.escape(accum, coreValue(), out, Entities.ForText);
     }
 

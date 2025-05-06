@@ -1,6 +1,6 @@
 package org.jsoup.nodes;
 
-import java.io.IOException;
+import org.jsoup.internal.QuietAppendable;
 
 /**
  A data node, for contents of style, script tags etc, where contents should not show in text().
@@ -39,7 +39,7 @@ public class DataNode extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         /* For XML output, escape the DataNode in a CData section. The data may contain pseudo-CData content if it was
         parsed as HTML, so don't double up Cdata. Output in polyglot HTML / XHTML / XML format. */
         final String data = getWholeData();

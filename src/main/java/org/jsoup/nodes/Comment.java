@@ -1,10 +1,9 @@
 package org.jsoup.nodes;
 
-import org.jsoup.parser.ParseSettings;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.parser.Parser;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ public class Comment extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         accum
             .append("<!--")
             .append(getData())

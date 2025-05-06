@@ -1,9 +1,8 @@
 package org.jsoup.nodes;
 
-import org.jsoup.SerializationException;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 
-import java.io.IOException;
 
 /**
  * An XML Declaration. Includes support for treating the declaration contents as pseudo attributes.
@@ -44,15 +43,11 @@ public class XmlDeclaration extends LeafNode {
      */
     public String getWholeDeclaration() {
         StringBuilder sb = StringUtil.borrowBuilder();
-        try {
-            getWholeDeclaration(sb, new Document.OutputSettings());
-        } catch (IOException e) {
-            throw new SerializationException(e);
-        }
+        getWholeDeclaration(QuietAppendable.wrap(sb), new Document.OutputSettings());
         return StringUtil.releaseBuilder(sb).trim();
     }
 
-    private void getWholeDeclaration(Appendable accum, Document.OutputSettings out) throws IOException {
+    private void getWholeDeclaration(QuietAppendable accum, Document.OutputSettings out) {
         for (Attribute attribute : attributes()) {
             String key = attribute.getKey();
             String val = attribute.getValue();
@@ -70,7 +65,7 @@ public class XmlDeclaration extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         accum
             .append("<")
             .append(isDeclaration ? "!" : "?")
@@ -82,7 +77,7 @@ public class XmlDeclaration extends LeafNode {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, Document.OutputSettings out) {
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {
     }
 
     @Override

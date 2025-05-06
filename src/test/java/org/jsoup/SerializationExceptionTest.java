@@ -45,6 +45,16 @@ public class SerializationExceptionTest {
     @Test void appendThrowsSerializationException() {
         Document doc = Jsoup.parse("<div>");
         Appendable brokenWriter = brokenAppender();
-        assertThrows(SerializationException.class, () -> doc.html(brokenWriter));
+        boolean threw = false;
+        try {
+            doc.html(brokenWriter);
+        } catch (SerializationException e) {
+            threw = true;
+            Throwable cause = e.getCause();
+            assertEquals("broken", cause.getMessage());
+            assertInstanceOf(IOException.class, cause);
+        }
+        assertTrue(threw);
+
     }
 }

@@ -1,8 +1,8 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.QuietAppendable;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -110,7 +110,7 @@ public abstract class LeafNode extends Node {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {}
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {}
 
     @Override
     protected LeafNode doClone(Node parent) {
