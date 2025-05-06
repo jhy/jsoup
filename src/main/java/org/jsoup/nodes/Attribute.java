@@ -1,8 +1,8 @@
 package org.jsoup.nodes;
 
-import org.jsoup.SerializationException;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document.OutputSettings.Syntax;
@@ -171,12 +171,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      */
     public String html() {
         StringBuilder sb = StringUtil.borrowBuilder();
-        
-        try {
-        	html(sb, (new Document("")).outputSettings());
-        } catch(IOException exception) {
-        	throw new SerializationException(exception);
-        }
+        html(QuietAppendable.wrap(sb), new Document.OutputSettings());
         return StringUtil.releaseBuilder(sb);
     }
 
@@ -197,17 +192,27 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return parent.sourceRange(key);
     }
 
-    protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
+    void html(QuietAppendable accum, Document.OutputSettings out) {
         html(key, val, accum, out);
     }
 
-    protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+    static void html(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
         key = getValidKey(key, out.syntax());
         if (key == null) return; // can't write it :(
         htmlNoValidate(key, val, accum, out);
     }
 
-    static void htmlNoValidate(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+    /** @deprecated internal method and will be removed */ // todo @Deprecate
+    protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
+        html(key, val, accum, out);
+    }
+
+    /** @deprecated internal method and will be removed */ // todo @Deprecate
+    protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+        html(key, val, QuietAppendable.wrap(accum), out);
+    }
+
+    static void htmlNoValidate(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
         // structured like this so that Attributes can check we can write first, so it can add whitespace correctly
         accum.append(key);
         if (!shouldCollapseAttribute(key, val, out)) {

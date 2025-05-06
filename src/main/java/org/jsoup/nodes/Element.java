@@ -2,6 +2,7 @@ package org.jsoup.nodes;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -16,7 +17,6 @@ import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1821,7 +1821,7 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    void outerHtmlHead(final Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlHead(final QuietAppendable accum, Document.OutputSettings out) {
         String tagName = safeTagName(out.syntax());
         accum.append('<').append(tagName);
         if (attributes != null) attributes.html(accum, out);
@@ -1841,7 +1841,7 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     @Override
-    void outerHtmlTail(Appendable accum, Document.OutputSettings out) throws IOException {
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {
         if (!childNodes.isEmpty())
             accum.append("</").append(safeTagName(out.syntax())).append('>');
         // if empty, we have already closed in htmlHead
@@ -1860,9 +1860,9 @@ public class Element extends Node implements Iterable<Element> {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder accum = StringUtil.borrowBuilder();
-        html(accum);
-        String html = StringUtil.releaseBuilder(accum);
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(sb);
+        String html = StringUtil.releaseBuilder(sb);
         return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }
 
@@ -1870,7 +1870,7 @@ public class Element extends Node implements Iterable<Element> {
     public <T extends Appendable> T html(T accum) {
         Node child = firstChild();
         if (child != null) {
-            Printer printer = Printer.printerFor(child, accum);
+            Printer printer = Printer.printerFor(child, QuietAppendable.wrap(accum));
             while (child != null) {
                 NodeTraversor.traverse(printer, child);
                 child = child.nextSibling();

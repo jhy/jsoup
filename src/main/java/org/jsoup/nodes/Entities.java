@@ -1,14 +1,13 @@
 package org.jsoup.nodes;
 
-import org.jsoup.SerializationException;
 import org.jsoup.helper.DataUtil;
+import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document.OutputSettings;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
@@ -183,23 +182,17 @@ public class Entities {
     }
 
     private static String escapeString(String data, EscapeMode escapeMode, Syntax syntax, Charset charset) {
-        if (data == null)
-            return "";
-        StringBuilder accum = StringUtil.borrowBuilder();
-        try {
-            doEscape(data, accum, escapeMode, syntax, charset, ForText | ForAttribute);
-        } catch (IOException e) {
-            throw new SerializationException(e); // doesn't happen
-        }
-        return StringUtil.releaseBuilder(accum);
+        if (data == null) return "";
+        StringBuilder sb = StringUtil.borrowBuilder();
+        doEscape(data, QuietAppendable.wrap(sb), escapeMode, syntax, charset, ForText | ForAttribute);
+        return StringUtil.releaseBuilder(sb);
     }
 
-
-    static void escape(Appendable accum, String data, OutputSettings out, int options) throws IOException {
+    static void escape(QuietAppendable accum, String data, OutputSettings out, int options) {
         doEscape(data, accum, out.escapeMode(), out.syntax(), out.charset(), options);
     }
 
-    private static void doEscape(String data, Appendable accum, EscapeMode mode, Syntax syntax, Charset charset, int options) throws IOException {
+    private static void doEscape(String data, QuietAppendable accum, EscapeMode mode, Syntax syntax, Charset charset, int options) {
         final CoreCharset coreCharset = CoreCharset.byName(charset.name());
         final CharsetEncoder fallback = encoderFor(charset);
         final int length = data.length();
@@ -235,8 +228,8 @@ public class Entities {
         }
     }
 
-    private static void appendEscaped(int codePoint, Appendable accum, int options, EscapeMode escapeMode,
-        Syntax syntax, CoreCharset coreCharset, CharsetEncoder fallback) throws IOException {
+    private static void appendEscaped(int codePoint, QuietAppendable accum, int options, EscapeMode escapeMode,
+        Syntax syntax, CoreCharset coreCharset, CharsetEncoder fallback) {
         // specific character range for xml 1.0; drop (not encode) if so
         if (EscapeMode.xhtml == escapeMode && !isValidXmlChar(codePoint)) {
             return;
@@ -284,10 +277,7 @@ public class Entities {
                 // reads into charBuf - we go through these steps to avoid GC objects as much as possible (would be a new String and a new char[2] for each character)
                 char[] chars = charBuf.get();
                 int len = Character.toChars(codePoint, chars, 0);
-                if (accum instanceof StringBuilder) // true unless the user supplied their own
-                    ((StringBuilder) accum).append(chars, 0, len);
-                else
-                    accum.append(new String(chars, 0, len));
+                accum.append(chars, 0, len);
             } else {
                 appendEncoded(accum, escapeMode, codePoint);
             }
@@ -296,17 +286,17 @@ public class Entities {
 
     private static final ThreadLocal<char[]> charBuf = ThreadLocal.withInitial(() -> new char[2]);
 
-    private static void appendNbsp(Appendable accum, EscapeMode escapeMode) throws IOException {
+    private static void appendNbsp(QuietAppendable accum, EscapeMode escapeMode) {
         if (escapeMode != EscapeMode.xhtml) accum.append("&nbsp;");
         else accum.append("&#xa0;");
     }
 
-    private static void appendLt(Appendable accum, int options, EscapeMode escapeMode, Syntax syntax) throws IOException {
+    private static void appendLt(QuietAppendable accum, int options, EscapeMode escapeMode, Syntax syntax) {
         if ((options & ForText) != 0 || escapeMode == EscapeMode.xhtml || syntax == Syntax.xml) accum.append("&lt;");
         else accum.append('<'); // no need to escape < when in an HTML attribute
     }
 
-    private static void appendApos(Appendable accum, int options, EscapeMode escapeMode) throws IOException {
+    private static void appendApos(QuietAppendable accum, int options, EscapeMode escapeMode) {
         if ((options & ForAttribute) != 0 && (options & ForText) != 0) {
             if (escapeMode == EscapeMode.xhtml) accum.append("&#x27;");
             else accum.append("&apos;");
@@ -315,7 +305,7 @@ public class Entities {
         }
     }
 
-    private static void appendEncoded(Appendable accum, EscapeMode escapeMode, int codePoint) throws IOException {
+    private static void appendEncoded(QuietAppendable accum, EscapeMode escapeMode, int codePoint) {
         final String name = escapeMode.nameForCodepoint(codePoint);
         if (!emptyName.equals(name)) // ok for identity check
             accum.append('&').append(name).append(';');
