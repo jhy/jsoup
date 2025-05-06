@@ -23,7 +23,7 @@ public class Tag implements Cloneable {
     public static int Block = 1 << 2;
     /** Tag option: the tag is a block tag that will only hold inline tags (e.g. {@code <p>}); used for formatting. (Must also set Block.) */
     public static int InlineContainer = 1 << 3;
-    /** Tag option: the tag can self-close (e.g. <foo />). */
+    /** Tag option: the tag can self-close (e.g. {@code <foo />}). */
     public static int SelfClose = 1 << 4;
     /** Tag option: the tag has been seen self-closing in this parse. */
     public static int SeenSelfClose = 1 << 5;
