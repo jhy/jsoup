@@ -1861,7 +1861,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public String html() {
         StringBuilder sb = StringUtil.borrowBuilder();
-        html(QuietAppendable.wrap(sb));
+        html(sb);
         String html = StringUtil.releaseBuilder(sb);
         return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }

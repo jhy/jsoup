@@ -6,15 +6,12 @@ import java.io.IOException;
 
 /**
  A jsoup internal class to wrap an Appendable and throw IOExceptions as SerializationExceptions.
+ <p>Only implements the appendable methods we actually use.</p>
  */
-public abstract class QuietAppendable implements Appendable {
-    @Override
+public abstract class QuietAppendable {
+
     public abstract QuietAppendable append(CharSequence csq);
 
-    @Override
-    public abstract QuietAppendable append(CharSequence csq, int start, int end);
-
-    @Override
     public abstract QuietAppendable append(char c);
 
     public abstract QuietAppendable append(char[] chars, int offset, int len); // via StringBuilder, not Appendable
@@ -46,11 +43,6 @@ public abstract class QuietAppendable implements Appendable {
         }
 
         @Override
-        public BaseAppendable append(CharSequence csq, int start, int end) {
-            return quiet(() -> a.append(csq, start, end));
-        }
-
-        @Override
         public BaseAppendable append(char c) {
             return quiet(() -> a.append(c));
         }
@@ -76,12 +68,6 @@ public abstract class QuietAppendable implements Appendable {
         }
 
         @Override
-        public StringBuilderAppendable append(CharSequence csq, int start, int end) {
-            sb.append(csq, start, end);
-            return this;
-        }
-
-        @Override
         public StringBuilderAppendable append(char c) {
             sb.append(c);
             return this;
@@ -100,8 +86,7 @@ public abstract class QuietAppendable implements Appendable {
     }
 
     public static QuietAppendable wrap(Appendable a) {
-        if      (a instanceof QuietAppendable) return (QuietAppendable) a;
-        else if (a instanceof StringBuilder)   return new StringBuilderAppendable((StringBuilder) a);
-        else                                   return new BaseAppendable(a);
+        if (a instanceof StringBuilder) return new StringBuilderAppendable((StringBuilder) a);
+        else                            return new BaseAppendable(a);
     }
 }
