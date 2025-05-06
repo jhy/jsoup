@@ -1805,9 +1805,22 @@ enum HtmlTreeBuilderState {
 
                     // Any other start:
                     // (whatwg says to fix up tag name and attribute case per a table - we will preserve original case instead)
-                    tb.insertForeignElementFor(start, tb.currentElement().tag().namespace());
+                    String namespace = tb.currentElement().tag().namespace();
+                    tb.insertForeignElementFor(start, namespace);
                     // (self-closing handled in insert)
                     // if self-closing svg script -- level and execution elided
+
+                    // seemingly not in spec, but as browser behavior, get into ScriptData state for svg script; and allow custom data tags
+                    TokeniserState textState = tb.tagFor(start.tagName.value(), start.normalName, namespace, tb.settings).textState();
+                    if (textState != null) {
+                        if (start.normalName.equals("script"))
+                            tb.tokeniser.transition(TokeniserState.ScriptData);
+                        else
+                            tb.tokeniser.transition(textState);
+                        tb.markInsertionMode();
+                        tb.transition(Text);
+                    }
+
                     break;
 
                 case EndTag:

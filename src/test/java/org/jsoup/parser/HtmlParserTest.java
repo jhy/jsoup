@@ -2089,4 +2089,29 @@ public class HtmlParserTest {
         doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
         assertEquals("<div /><custom /><custom>Foo</custom>", TextUtil.stripNewlines(doc.body().html()));
     }
+
+    @Test void svgScriptParsedAsScriptData() {
+        // https://github.com/jhy/jsoup/issues/2320
+        String html = "<svg><script>a < b</script></svg>";
+        Document doc = Jsoup.parse(html);
+        Element script = doc.expectFirst("script");
+        assertEquals(Parser.NamespaceSvg, script.tag().namespace);
+        assertTrue(script.tag().is(Tag.Data));
+
+        DataNode data = (DataNode) script.childNode(0);
+        assertEquals("a < b", data.getWholeData());
+    }
+
+    @Test void allowCustomDataInForeignElements() {
+        Tag dataTag = new Tag("data", Parser.NamespaceSvg);
+        dataTag.set(Tag.Data);
+        TagSet tagSet = TagSet.HtmlTagSet.add(dataTag);
+        String html = "<svg><data>a < b</data></svg>";
+        Document doc = Jsoup.parse(html, Parser.htmlParser().tagSet(tagSet));
+        Element data = doc.expectFirst("data");
+        assertEquals(Parser.NamespaceSvg, data.tag().namespace);
+        assertEquals("", data.text());
+        assertEquals("a < b", data.data());
+        assertEquals("<data>a < b</data>", data.outerHtml());
+    }
 }

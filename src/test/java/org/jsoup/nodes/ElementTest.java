@@ -3182,4 +3182,14 @@ public class ElementTest {
         Elements all = div.select("div");
         assertSelectedIds(all, "out", "1", "2", "3");
     }
+
+    @Test void setTextOnSvgScriptSetsDataNode() {
+        // calling .text() on svg script will create a datanode, as defined in TagSet
+        String html = "<svg><script></script></svg>";
+        Document doc = Jsoup.parse(html);
+        Element script = doc.expectFirst("script");
+        script.text("a < b");
+        assertEquals("<script>a < b</script>", script.outerHtml()); // not encoded
+        assertEquals("a < b", script.data());
+    }
 }

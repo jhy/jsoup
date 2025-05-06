@@ -156,9 +156,9 @@ public class Cleaner {
                 TextNode destText = new TextNode(sourceText.getWholeText());
                 destination.appendChild(destText);
             } else if (source instanceof DataNode && safelist.isSafeTag(source.parent().normalName())) {
-              DataNode sourceData = (DataNode) source;
-              DataNode destData = new DataNode(sourceData.getWholeData());
-              destination.appendChild(destData);
+                DataNode sourceData = (DataNode) source;
+                DataNode destData = new DataNode(sourceData.getWholeData());
+                destination.appendChild(destData);
             } else { // else, we don't care about comments, xml proc instructions, etc
                 numDiscarded++;
             }

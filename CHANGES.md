@@ -9,6 +9,10 @@
 ### Improvements
 * Made `TokenQueue` and `CharacterReader` autocloseable, to ensure that they will release their buffers back to the buffer pool, for later reuse.
 * Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
+* Custom tags (defined via the `TagSet`) in a foreign namespace (e.g. SVG) can be configured to parse as data tags.
+
+### Bug Fixes
+* The contents of a  `script` in a `svg` foreign context should be parsed as script data, not text. [#2320](https://github.com/jhy/jsoup/issues/2320) 
 
 ## 1.20.1 (2025-04-29)
 

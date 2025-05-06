@@ -472,4 +472,11 @@ public class CleanerTest {
         assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
     }
 
+    @Test void discardsSvgScriptData() {
+        // https://github.com/jhy/jsoup/issues/2320
+        Safelist svgOk = Safelist.none().addTags("svg");
+        String cleaned = Jsoup.clean("<svg><script> a < b </script></svg>", svgOk);
+        assertEquals("<svg></svg>", cleaned);
+    }
+
 }

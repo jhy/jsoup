@@ -323,7 +323,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             new Element(tag, null, attributes);
     }
 
-    /** Inserts an HTML element for the given tag) */
+    /** Inserts an HTML element for the given tag */
     Element insertElementFor(final Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
         doInsertElement(el);

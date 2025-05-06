@@ -206,6 +206,7 @@ public class TagSet {
         String[] inlineMathTags = {"mi", "mo", "msup", "mn", "mtext"};
         String[] blockSvgTags = {"svg", "femerge", "femergenode"}; // note these are LC versions, but actually preserve case
         String[] inlineSvgTags = {"text"};
+        String[] dataSvgTags = {"script"};
 
         return new TagSet()
             .setupTags(NamespaceHtml, blockTags, tag -> tag.set(Tag.Block))
@@ -220,6 +221,7 @@ public class TagSet {
             .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
             .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))
             .setupTags(NamespaceSvg, inlineSvgTags, tag -> tag.set(0))
+            .setupTags(NamespaceSvg, dataSvgTags, tag -> tag.set(Tag.Data))
             ;
     }
 
