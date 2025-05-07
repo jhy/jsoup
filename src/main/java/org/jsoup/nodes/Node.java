@@ -816,7 +816,8 @@ public abstract class Node implements Cloneable {
      * @return outer HTML.
      * @see #outerHtml()
      */
-	public String toString() {
+    @Override
+    public String toString() {
         return outerHtml();
     }
 
