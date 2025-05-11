@@ -156,4 +156,16 @@ public class TagTest {
         foo.name("BAR");
         assertEquals("<BAR>One</BAR><BAR>Two</BAR>", doc.body().html()); // is case-sensitive
     }
+
+    @Test void formSubmittable() {
+        // https://github.com/jhy/jsoup/issues/2323
+        Tag img = Tag.valueOf("img");
+        Tag input = Tag.valueOf("input");
+        int imgOpts = img.options;
+        int inputOpts = input.options;
+        assertFalse(img.isFormSubmittable());
+        assertTrue(input.isFormSubmittable());
+        assertEquals(imgOpts, img.options);
+        assertEquals(inputOpts, input.options);
+    }
 }

@@ -312,7 +312,7 @@ public class Tag implements Cloneable {
      * @return if submittable with a form
      */
     public boolean isFormSubmittable() {
-        return (options &= FormSubmittable) != 0;
+        return (options & FormSubmittable) != 0;
     }
 
     void setSeenSelfClose() {
