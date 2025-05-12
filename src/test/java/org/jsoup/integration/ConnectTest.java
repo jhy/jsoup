@@ -41,8 +41,11 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -764,6 +767,21 @@ public class ConnectTest {
         assertEquals(2, header.size());
         assertEquals("no-cache", header.get(0));
         assertEquals("no-store", header.get(1));
+    }
+
+    @Test void responseHeadersPreserveInsertOrder() throws IOException {
+        // linkedhashmap preserves the response header order
+        Connection con = Jsoup.connect(echoUrl);
+        con.get();
+        Connection.Response res = con.response();
+        Map<String, String> headers = res.headers();
+        assertInstanceOf(LinkedHashMap.class, headers);
+        assertEquals(5, headers.size());
+        String[] expected = {"Date", "Content-Type", "Cache-Control", "Content-Length", "Server"};
+        int i = 0;
+        for (String key : headers.keySet()) {
+            assertEquals(expected[i++], key);
+        }
     }
 
     @Test
