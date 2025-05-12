@@ -1,5 +1,7 @@
 package org.jsoup.select;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
@@ -259,5 +261,29 @@ public class EvaluatorTest {
     public void testMatchTextToString() {
         Evaluator.MatchText evaluator = new Evaluator.MatchText();
         assertEquals(":matchText", evaluator.toString());
+    }
+
+    @Test void nthPosition() {
+        Element orphan = new Element("div");
+        Document doc = Jsoup.parse("<div><p>One<p>Two<p>Three<p>Four</p><h1>Five</h1></div>");
+        Element div = doc.expectFirst("div");
+        Elements ps = doc.select("p");
+        Element h1 = doc.expectFirst("h1");
+
+        Evaluator.CssNthEvaluator lastchild = new Evaluator.IsNthLastChild(1, 0);
+        assertEquals(0, lastchild.calculatePosition(orphan, orphan));
+        assertEquals(2, lastchild.calculatePosition(div, ps.get(3)));
+
+        Evaluator.IsNthOfType nthType = new Evaluator.IsNthOfType(1, 0);
+        assertEquals(0, nthType.calculatePosition(orphan, orphan));
+        assertEquals(1, nthType.calculatePosition(div, ps.get(0)));
+        assertEquals(2, nthType.calculatePosition(div, ps.get(1)));
+        assertEquals(1, nthType.calculatePosition(div, h1));
+
+        Evaluator.IsNthLastOfType nthLastType = new Evaluator.IsNthLastOfType(1, 0);
+        assertEquals(0, nthLastType.calculatePosition(orphan, orphan));
+        assertEquals(4, nthLastType.calculatePosition(div, ps.get(0)));
+        assertEquals(3, nthLastType.calculatePosition(div, ps.get(1)));
+        assertEquals(1, nthLastType.calculatePosition(div, h1));
     }
 }

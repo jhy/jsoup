@@ -603,9 +603,8 @@ public abstract class Evaluator {
 
         @Override
         protected int calculatePosition(Element root, Element element) {
-    	    if (element.parent() == null)
-    	        return 0;
-        	return element.parent().childrenSize()- element.elementSiblingIndex();
+    	    if (element.parent() == null) return 0;
+        	return element.parent().childrenSize() - element.elementSiblingIndex();
         }
 
 		@Override
