@@ -5,6 +5,8 @@ import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
@@ -167,5 +169,28 @@ public class TagTest {
         assertTrue(input.isFormSubmittable());
         assertEquals(imgOpts, img.options);
         assertEquals(inputOpts, input.options);
+    }
+
+    @Test void stableHashcode() {
+        // tests that the hashcode is stable and suitable as a key
+        HashSet<Tag> tags = new HashSet<>();
+        Tag img = Tag.valueOf("img");
+        Tag IMG = Tag.valueOf("IMG");
+        Tag imgS = Tag.valueOf("img", NamespaceSvg, ParseSettings.htmlDefault);
+
+        assertEquals(-2074969810, img.hashCode());
+        assertEquals(-2075954866, IMG.hashCode());
+        assertEquals(-292873947, imgS.hashCode());
+
+        tags.add(img);
+        tags.add(IMG);
+        tags.add(imgS);
+
+        imgS.set(Tag.Block);
+        assertEquals(-292873947, imgS.hashCode());
+
+        assertTrue(tags.contains(img));
+        assertTrue(tags.contains(IMG));
+        assertTrue(tags.contains(imgS));
     }
 }

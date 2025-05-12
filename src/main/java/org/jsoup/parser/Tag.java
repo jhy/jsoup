@@ -339,9 +339,12 @@ public class Tag implements Cloneable {
             options == tag.options;
     }
 
+    /**
+     Hashcode of this Tag, consisting of the tag name and namespace.
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(tagName, namespace, normalName, options);
+        return Objects.hash(tagName, namespace); // options not included so that mutations do not prevent use as a key
     }
 
     @Override
