@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -148,6 +149,24 @@ public class HttpConnectionTest {
         assertEquals("Bar", headers.get("Foo").get(0));
         assertFalse(req.hasHeader("Accept"));
         assertNull(headers.get("Accept"));
+    }
+
+    @Test void responseHeadersPreserveInsertOrder() throws IOException {
+        // linkedhashmap preserves the response header order
+        Connection.Response res = new HttpConnection.Response();
+        res.addHeader("5", "5");
+        res.addHeader("4", "4");
+        res.addHeader("3", "3");
+        res.addHeader("2", "2");
+        res.addHeader("1", "1");
+
+        String[] expected = {"5", "4", "3", "2", "1"};
+        int i = 0;
+        for (String key : res.headers().keySet()) {
+            assertEquals(expected[i++], key);
+        }
+
+        assertInstanceOf(LinkedHashMap.class, res.headers());
     }
 
     @Test public void ignoresEmptySetCookies() {
