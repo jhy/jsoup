@@ -193,4 +193,66 @@ public class TagTest {
         assertTrue(tags.contains(IMG));
         assertTrue(tags.contains(imgS));
     }
+
+    @Test void prefix() {
+        Tag img = Tag.valueOf("img");
+        Tag book = Tag.valueOf("bk:book");
+
+        assertEquals("", img.prefix());
+        assertEquals("bk", book.prefix());
+    }
+
+    @Test void localname() {
+        Tag img = Tag.valueOf("img");
+        Tag book = Tag.valueOf("bk:book");
+
+        assertEquals("img", img.localName());
+        assertEquals("book", book.localName());
+    }
+
+    @Test void valueOfWithSettings() {
+        Tag img1 = Tag.valueOf("img", ParseSettings.htmlDefault);
+        Tag img2 = Tag.valueOf("IMG", ParseSettings.htmlDefault);
+        Tag img3 = Tag.valueOf("IMG", ParseSettings.preserveCase);
+
+        assertNotSame(img1, img2); // because we are creating new TagSets with html()
+        assertNotSame(img1, img3);
+        assertEquals("IMG", img3.toString());
+        assertEquals("img", img1.toString());
+
+        TagSet tagSet = TagSet.Html();
+        assertSame(
+            tagSet.valueOf("img", NamespaceHtml, ParseSettings.htmlDefault),
+            tagSet.valueOf("IMG", NamespaceHtml, ParseSettings.htmlDefault)
+        );
+
+        assertNotSame(
+            tagSet.valueOf("img", NamespaceHtml),
+            tagSet.valueOf("IMG", NamespaceHtml)
+        );
+    }
+
+    @Test void equals() {
+        TagSet tags = TagSet.Html();
+        Tag p1 = tags.get("p", NamespaceHtml);
+        Tag p2 = p1.clone();
+        assertEquals(p1, p2);
+        assertNotEquals(p1, tags);
+
+        p2.namespace = "Other";
+        assertNotEquals(p1, p2);
+        p2.namespace = p1.namespace;
+
+        p2.tagName = "P";
+        assertNotEquals(p1, p2);
+        p2.tagName = p1.tagName;
+
+        p2.normalName = "pp";
+        assertNotEquals(p1, p2);
+        p2.normalName = p1.normalName;
+
+        p2.options = 0;
+        assertNotEquals(p1, p2);
+        p2.options = p1.options;
+    }
 }

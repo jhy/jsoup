@@ -1,6 +1,5 @@
 package org.jsoup.parser;
 
-import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
