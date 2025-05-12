@@ -209,4 +209,13 @@ public class TokeniserTest {
         assertTrue(cdataNode instanceof CDataNode, "Expected CDATA node");
         assertEquals(cdataContents, ((CDataNode)cdataNode).text());
     }
+
+    @Test void tokenDataToString() {
+        TokenData data = new TokenData();
+        assertEquals("", data.toString());
+        data.set("abc");
+        assertEquals("abc", data.toString());
+        data.append("def");
+        assertEquals("abcdef", data.toString());
+    }
 }
