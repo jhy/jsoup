@@ -463,6 +463,14 @@ public class NodeTest {
         assertNull(firstEl.lastElementChild());
     }
 
+    @Test void firstLastSibling() {
+        Document doc = Jsoup.parse("<div><span>One</span> Two <span>Three</span>");
+        Elements spans = doc.select("span");
+        TextNode text = (TextNode) spans.first().nextSibling();
+        assertSame(spans.get(0), text.firstSibling());
+        assertSame(spans.get(1), text.lastSibling());
+    }
+
     @Test void nodeName() {
         Element div = new Element("DIV");
         assertEquals("DIV", div.tagName());
