@@ -12,7 +12,6 @@ import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
-import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
@@ -1459,7 +1458,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public String text() {
         final StringBuilder accum = StringUtil.borrowBuilder();
-        NodeTraversor.traverse(new TextAccumulator(accum), this);
+        new TextAccumulator(accum).traverse(this);
         return StringUtil.releaseBuilder(accum).trim();
     }
 
@@ -1872,7 +1871,7 @@ public class Element extends Node implements Iterable<Element> {
         if (child != null) {
             Printer printer = Printer.printerFor(child, QuietAppendable.wrap(accum));
             while (child != null) {
-                NodeTraversor.traverse(printer, child);
+                printer.traverse(child);
                 child = child.nextSibling();
             }
         }

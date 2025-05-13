@@ -5,7 +5,6 @@ import org.jsoup.internal.QuietAppendable;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.select.NodeFilter;
-import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -704,7 +703,7 @@ public abstract class Node implements Cloneable {
      */
     public Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
-        NodeTraversor.traverse(nodeVisitor, this);
+        nodeVisitor.traverse(this);
         return this;
     }
 
@@ -722,13 +721,13 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     * Perform a depth-first filtered traversal through this node and its descendants.
+     * Perform a depth-first controllable traversal through this node and its descendants.
      * @param nodeFilter the filter callbacks to perform on each node
      * @return this node, for chaining
      */
     public Node filter(NodeFilter nodeFilter) {
         Validate.notNull(nodeFilter);
-        NodeTraversor.filter(nodeFilter, this);
+        nodeFilter.traverse(this);
         return this;
     }
 
@@ -771,7 +770,7 @@ public abstract class Node implements Cloneable {
 
     protected void outerHtml(QuietAppendable accum) {
         Printer printer = Printer.printerFor(this, accum);
-        NodeTraversor.traverse(printer, this);
+        printer.traverse(this);
     }
 
     /**

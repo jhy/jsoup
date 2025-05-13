@@ -9,7 +9,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
@@ -62,7 +61,7 @@ public class HtmlToPlainText {
      */
     static String getPlainText(Element element) {
         FormattingVisitor formatter = new FormattingVisitor();
-        NodeTraversor.traverse(formatter, element); // walk the DOM, and call .head() and .tail() for each node
+        formatter.traverse(element); // walk the DOM, and call .head() and .tail() for each node
 
         return formatter.toString();
     }

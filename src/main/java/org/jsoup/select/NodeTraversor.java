@@ -18,7 +18,7 @@ public class NodeTraversor {
      Run a depth-first traverse of the root and all of its descendants.
      @param visitor Node visitor.
      @param root the initial node point to traverse.
-     @see NodeVisitor
+     @see NodeVisitor#traverse(Node root)
      */
     public static void traverse(NodeVisitor visitor, Node root) {
         Validate.notNull(visitor);
