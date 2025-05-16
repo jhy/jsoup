@@ -119,8 +119,13 @@ class Printer implements NodeVisitor {
             Node prev = node.previousSibling();
             Node next = node.nextSibling();
 
-            if (prev == null || !(prev instanceof TextNode) && shouldIndent(prev))
-                options |= Entities.TrimLeading;
+            // if previous is not an inline element
+            if (!(prev instanceof Element && !isBlockEl(prev))) {
+                // if there is no previous sib; or not a text node and should be indented
+                if (prev == null || !(prev instanceof TextNode) && shouldIndent(prev))
+                    options |= Entities.TrimLeading;
+            }
+
             if (next == null || !(next instanceof TextNode) && shouldIndent(next))
                 options |= Entities.TrimTrailing; // don't trim if there is a TextNode sequence
 

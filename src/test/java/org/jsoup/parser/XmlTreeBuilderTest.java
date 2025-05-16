@@ -495,7 +495,7 @@ public class XmlTreeBuilderTest {
         doc.outputSettings().prettyPrint(true);
         assertEquals("<package>\n" +
             " <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n" +
-            "  <dc:identifier id=\"pub-id\">id</dc:identifier><dc:title>title</dc:title> <dc:language>ja</dc:language> <dc:description>desc</dc:description>\n" +
+            "  <dc:identifier id=\"pub-id\">id</dc:identifier> <dc:title>title</dc:title> <dc:language>ja</dc:language> <dc:description>desc</dc:description>\n" +
             " </metadata>\n" +
             "</package>", doc.html());
 
