@@ -2,6 +2,11 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.LeafNode;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
@@ -22,6 +27,7 @@ public class QueryParser implements AutoCloseable {
 
     private final TokenQueue tq;
     private final String query;
+    private boolean inNodeContext; // ::comment:contains should act on node value, vs element text
 
     /**
      * Create a new QueryParser.
@@ -129,8 +135,9 @@ public class QueryParser implements AutoCloseable {
         // zero or more subclasses (#, ., [)
         while(true) {
             Evaluator right = parseSubclass();
-            if (right != null)
+            if (right != null) {
                 left = and(left, right);
+            }
             else break; // no more simple tokens
         }
 
@@ -162,6 +169,7 @@ public class QueryParser implements AutoCloseable {
         if      (tq.matchChomp('#'))    return byId();
         else if (tq.matchChomp('.'))    return byClass();
         else if (tq.matches('['))       return byAttribute();
+        else if (tq.matchChomp("::"))   return parseNodeSelector(); // ::comment etc
         else if (tq.matchChomp(':'))    return parsePseudoSelector();
         else                            return null;
     }
@@ -247,6 +255,43 @@ public class QueryParser implements AutoCloseable {
             default:
                 throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
+    }
+
+    // ::comment etc
+    private Evaluator parseNodeSelector() {
+        final String pseudo = tq.consumeCssIdentifier();
+        inNodeContext = true;  // Enter node context
+
+        Evaluator left;
+        switch (pseudo) {
+            case "node":
+                left = new NodeEvaluator(Node.class, pseudo);
+                break;
+            case "leafnode":
+                left = new NodeEvaluator(LeafNode.class, pseudo);
+                break;
+            case "text":
+                left = new NodeEvaluator(TextNode.class, pseudo);
+                break;
+            case "comment":
+                left = new NodeEvaluator(Comment.class, pseudo);
+                break;
+            case "data":
+                left = new NodeEvaluator(DataNode.class, pseudo);
+                break;
+            default:
+                throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query,
+                    tq.remainder());
+        }
+
+        // Handle following subclasses in node context (like ::comment:contains())
+        Evaluator right;
+        while ((right = parseSubclass()) != null) {
+            left = and(left, right);
+        }
+
+        inNodeContext = false;
+        return left;
     }
 
     private Evaluator byId() {
@@ -391,6 +436,10 @@ public class QueryParser implements AutoCloseable {
         String query = own ? ":containsOwn" : ":contains";
         String searchText = TokenQueue.unescape(consumeParens());
         Validate.notEmpty(searchText, query + "(text) query must not be empty");
+
+        if (inNodeContext)
+            return new NodeEvaluator.ContainsValue(searchText);
+
         return own
             ? new Evaluator.ContainsOwnText(searchText)
             : new Evaluator.ContainsText(searchText);

@@ -43,6 +43,11 @@ public abstract class LeafNode extends Node {
         return attr(nodeName());
     }
 
+    @Override
+    public String nodeValue() {
+        return coreValue();
+    }
+
     void coreValue(String value) {
         attr(nodeName(), value);
     }

@@ -5,6 +5,7 @@ import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.PseudoTextElement;
 import org.jsoup.nodes.TextNode;
@@ -22,7 +23,7 @@ import static org.jsoup.internal.StringUtil.normaliseWhitespace;
 
 
 /**
- An Evaluator tests if an element meets the selector's requirements. Obtain an evaluator for a given CSS selector
+ An Evaluator tests if an element (or a node) meets the selector's requirements. Obtain an evaluator for a given CSS selector
  with {@link Selector#evaluatorOf(String css)}. If you are executing the same selector on many elements (or documents), it
  can be more efficient to compile and reuse an Evaluator than to reparse the selector on each invocation of select().
  <p>Evaluators are thread-safe and may be used concurrently across multiple documents.</p>
@@ -41,6 +42,10 @@ public abstract class Evaluator {
         return element -> matches(root, element);
     }
 
+    Predicate<Node> asNodePredicate(Element root) {
+        return node -> matches(root, node);
+    }
+
     /**
      * Test if the element meets the evaluator's requirements.
      *
@@ -50,6 +55,23 @@ public abstract class Evaluator {
      * <tt>false</tt> otherwise
      */
     public abstract boolean matches(Element root, Element element);
+
+    final boolean matches(Element root, Node node) {
+        if (node instanceof Element) {
+            return matches(root, (Element) node);
+        } else if (node instanceof LeafNode && wantsNodes()) {
+            return matches(root, (LeafNode) node);
+        }
+        return false;
+    }
+
+    boolean matches(Element root, LeafNode leafNode) {
+        return false;
+    }
+
+    boolean wantsNodes() {
+        return false;
+    }
 
     /**
      Reset any internal state in this Evaluator before executing a new Collector evaluation.

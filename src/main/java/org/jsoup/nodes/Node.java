@@ -52,6 +52,15 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Get the node's value. For a TextNode, the whole text; for a Comment, the comment data; for an Element,
+     wholeOwnText. Returns "" if there is no value.
+     @return the node's value
+     */
+    public String nodeValue() {
+        return "";
+    }
+
+    /**
      Test if this node has the specified normalized name, in any namespace.
      * @param normalName a normalized element name (e.g. {@code div}).
      * @return true if the element's normal name matches exactly
@@ -697,6 +706,64 @@ public abstract class Node implements Cloneable {
     }
 
     /**
+     Gets the first sibling of this node. That may be this node.
+
+     @return the first sibling node
+     @since 1.21.1
+     */
+    public Node firstSibling() {
+        if (parentNode != null) {
+            //noinspection DataFlowIssue
+            return parentNode.firstChild();
+        } else
+            return this; // orphan is its own first sibling
+    }
+
+    /**
+     Gets the last sibling of this node. That may be this node.
+
+     @return the last sibling (aka the parent's last child)
+     @since 1.21.1
+     */
+    public Node lastSibling() {
+        if (parentNode != null) {
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parentNode.lastChild();
+        } else
+            return this;
+    }
+
+    /**
+     Gets the next sibling Element of this node. E.g., if a {@code div} contains two {@code p}s, the
+     {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+     <p>This is similar to {@link #nextSibling()}, but specifically finds only Elements.</p>
+
+     @return the next element, or null if there is no next element
+     @see #previousElementSibling()
+     */
+    public @Nullable Element nextElementSibling() {
+        Node next = this;
+        while ((next = next.nextSibling()) != null) {
+            if (next instanceof Element) return (Element) next;
+        }
+        return null;
+    }
+
+    /**
+     Gets the previous Element sibling of this node.
+
+     @return the previous element, or null if there is no previous element
+     @see #nextElementSibling()
+     */
+    public @Nullable Element previousElementSibling() {
+        Node prev = this;
+        while ((prev = prev.previousSibling()) != null) {
+            if (prev instanceof Element) return (Element) prev;
+        }
+        return null;
+    }
+
+    /**
      * Perform a depth-first traversal through this node and its descendants.
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining
@@ -827,7 +894,7 @@ public abstract class Node implements Cloneable {
 
     /**
      * Check if this node is the same instance of another (object identity test).
-     * <p>For an node value equality check, see {@link #hasSameValue(Object)}</p>
+     * <p>For a node value equality check, see {@link #hasSameValue(Object)}</p>
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other
      * @see Node#hasSameValue(Object)

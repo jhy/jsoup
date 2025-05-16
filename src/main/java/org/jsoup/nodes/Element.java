@@ -13,6 +13,7 @@ import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Nodes;
 import org.jsoup.select.Selector;
 import org.jspecify.annotations.Nullable;
 
@@ -590,6 +591,65 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
+     Find nodes that match the supplied {@link Evaluator}, with this element as the starting context. Matched
+     nodes may include this element, or any of its descendents.
+
+     @param evaluator an evaluator
+     @return a list of nodes that match the query (empty if none match)
+     @since 1.21.1
+     */
+    public Nodes<Node> selectNodes(Evaluator evaluator) {
+        return selectNodes(evaluator, Node.class);
+    }
+
+    /**
+     Find nodes that match the supplied {@link Selector} CSS query, with this element as the starting context. Matched
+     nodes may include this element, or any of its descendents.
+     <p>To select leaf nodes, the query should specify the node type, e.g. {@code ::text},
+     {@code ::comment}, {@code ::data}, {@code ::leafnode}, {@code ::node}.</p>
+
+     @param cssQuery a {@link Selector} CSS query
+     @return a list of nodes that match the query (empty if none match)
+     @since 1.21.1
+     */
+    public Nodes<Node> selectNodes(String cssQuery) {
+        return selectNodes(cssQuery, Node.class);
+    }
+
+    /**
+     Find nodes that match the supplied Evaluator, with this element as the starting context. Matched
+     nodes may include this element, or any of its descendents.
+
+     @param evaluator an evaluator
+     @param type the type of node to collect (e.g. {@link Element}, {@link LeafNode}, {@link TextNode} etc)
+     @param <T> the type of node to collect
+     @return a list of nodes that match the query (empty if none match)
+     @since 1.21.1
+     */
+    public <T extends Node> Nodes<T> selectNodes(Evaluator evaluator, Class<T> type) {
+        Validate.notNull(evaluator);
+        return Collector.collectNodes(evaluator, this, type);
+    }
+
+    /**
+     Find nodes that match the supplied {@link Selector} CSS query, with this element as the starting context. Matched
+     nodes may include this element, or any of its descendents.
+     <p>To select specific node types, use {@code ::text}, {@code ::comment}, {@code ::leaf}, etc. For example, to
+     select all text nodes under {@code p} elements: </p>
+     <pre>    Nodes&lt;TextNode&gt; textNodes = doc.selectNodes("p ::text", TextNode.class);</pre>
+
+     @param cssQuery a {@link Selector} CSS query
+     @param type the type of node to collect (e.g. {@link Element}, {@link LeafNode}, {@link TextNode} etc)
+     @param <T> the type of node to collect
+     @return a list of nodes that match the query (empty if none match)
+     @since 1.21.1
+     */
+    public <T extends Node> Nodes<T> selectNodes(String cssQuery, Class<T> type) {
+        Validate.notEmpty(cssQuery);
+        return selectNodes(evaluatorOf(cssQuery), type);
+    }
+
+    /**
      * Checks if this element matches the given {@link Selector} CSS query. Also knows as {@code matches()} in the Web
      * DOM.
      *
@@ -1046,22 +1106,7 @@ public class Element extends Node implements Iterable<Element> {
         return siblings;
     }
 
-    /**
-     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s,
-     * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
-     * <p>
-     * This is similar to {@link #nextSibling()}, but specifically finds only Elements
-     * </p>
-     * @return the next element, or null if there is no next element
-     * @see #previousElementSibling()
-     */
-    public @Nullable Element nextElementSibling() {
-        Node next = this;
-        while ((next = next.nextSibling()) != null) {
-            if (next instanceof Element) return (Element) next;
-        }
-        return null;
-    }
+
 
     /**
      * Get each of the sibling elements that come after this element.
@@ -1070,19 +1115,6 @@ public class Element extends Node implements Iterable<Element> {
      */
     public Elements nextElementSiblings() {
         return nextElementSiblings(true);
-    }
-
-    /**
-     * Gets the previous element sibling of this element.
-     * @return the previous element, or null if there is no previous element
-     * @see #nextElementSibling()
-     */
-    public @Nullable Element previousElementSibling() {
-        Node prev = this;
-        while ((prev = prev.previousSibling()) != null) {
-            if (prev instanceof Element) return (Element) prev;
-        }
-        return null;
     }
 
     /**
@@ -1503,6 +1535,11 @@ public class Element extends Node implements Iterable<Element> {
      */
     public String wholeText() {
         return wholeTextOf(nodeStream());
+    }
+
+    @Override
+    public String nodeValue() {
+        return wholeText();
     }
 
     private static String wholeTextOf(Stream<Node> stream) {

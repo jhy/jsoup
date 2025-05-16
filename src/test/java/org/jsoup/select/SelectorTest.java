@@ -2,8 +2,11 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+import static org.jsoup.select.EvaluatorDebug.sexpr;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -482,6 +486,25 @@ public class SelectorTest {
 
     @Test public void generalSiblings() {
         String h = "<ol><li id=1>One<li id=2>Two<li id=3>Three</ol>";
+        Document doc = Jsoup.parse(h);
+        Elements els = doc.select("#1 ~ #3");
+        assertEquals(1, els.size());
+        assertEquals("Three", els.first().text());
+    }
+
+    @Test public void elelemtDescendantSkipsNodes() {
+        String h = "<div class=foo> <!-- foo --> <ol> <li>One<li><!-- bar --> Two<li>Three</ol></div>";
+        Document doc = Jsoup.parse(h);
+        Elements els = doc.select(".foo > ol, ol > li + li");
+
+        assertEquals(3, els.size());
+        assertEquals("ol", els.get(0).tagName());
+        assertEquals("Two", els.get(1).text());
+        assertEquals("Three", els.get(2).text());
+    }
+
+    @Test public void siblingsSkipNodes() {
+        String h = "<ol><li id=1><!-- foo -->One<li id=2><!-- foo -->Two<li id=3><!-- foo -->Three</ol>";
         Document doc = Jsoup.parse(h);
         Elements els = doc.select("#1 ~ #3");
         assertEquals(1, els.size());
@@ -1170,7 +1193,7 @@ public class SelectorTest {
         Evaluator eval = QueryParser.parse("p ~ p");
         CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
         StructuralEvaluator.PreviousSibling prevEval = (StructuralEvaluator.PreviousSibling) andEval.evaluators.get(0);
-        IdentityHashMap<Element, IdentityHashMap<Element, Boolean>> map = prevEval.threadMemo.get();
+        IdentityHashMap<Node, IdentityHashMap<Node, Boolean>> map = prevEval.threadMemo.get();
         assertEquals(0, map.size()); // no memo yet
 
         Document doc1 = Jsoup.parse("<p>One<p>Two<p>Three");
@@ -1282,7 +1305,7 @@ public class SelectorTest {
         // https://github.com/jhy/jsoup/issues/2073
         Document doc = Jsoup.parse("<div id=parent><span class=child></span><span class=child></span><span class=child></span></div>");
         String q = "#parent [class*=child], .some-other-selector .nested";
-        assertEquals("(Or (And (AttributeWithValueContaining '[class*=child]')(Ancestor (Id '#parent')))(And (Class '.nested')(Ancestor (Class '.some-other-selector'))))", EvaluatorDebug.sexpr(q));
+        assertEquals("(Or (And (AttributeWithValueContaining '[class*=child]')(Ancestor (Id '#parent')))(And (Class '.nested')(Ancestor (Class '.some-other-selector'))))", sexpr(q));
         Elements els = doc.select(q);
         assertEquals(3, els.size());
     }
@@ -1477,5 +1500,128 @@ public class SelectorTest {
     @Test void evaluatorOf() {
         Evaluator eval = Selector.evaluatorOf("div > p");
         assertEquals("div > p", eval.toString());
+    }
+
+    @Test void hasComment() {
+        Document doc = Jsoup.parse("<div id=1>One</div><div id=2>Two <!-- foo --></div>");
+        Elements els = doc.select("div:has(::comment)");
+        assertSelectedIds(els, "2");
+    }
+
+    @Test void hasCommentWithText() {
+        Document doc = Jsoup.parse("<div id=1>One <!-- qux bar --></div><div id=2>Two <!-- foo qux --></div>");
+        Elements els = doc.select("div:has(::comment:contains(foo):contains(qux))");
+        assertSelectedIds(els, "2");
+    }
+
+    @Test void descendantComment() {
+        Document doc = Jsoup.parse("<div id=1><div id=2><!-- comment2 --><div id=3><!-- comment3 --></div></div></div><div id=4><div id=5><div id=6>Not</div></div></div>");
+
+        String q = "div > div:has(::comment)";
+        assertEquals("(ImmediateParentRun (Tag 'div')(And (Tag 'div')(Has (NodeEvaluator '::comment'))))", sexpr(q));
+        Elements els1 = doc.select(q);
+        assertSelectedIds(els1, "2", "3");
+
+        String q2 = "div div:has(>::comment:contains(comment3))";
+        assertEquals("(And (Ancestor (Tag 'div'))(And (Tag 'div')(Has (ImmediateParentRun (Root '>')(And (NodeEvaluator '::comment')(ContainsValue ':contains(comment3)'))))))", sexpr(q2));
+        Elements els2 = doc.select(q2);
+        assertSelectedIds(els2, "3");
+
+        String q3 = "div:has(>::comment) div";
+        assertEquals("(And (Tag 'div')(Ancestor (And (Tag 'div')(Has (ImmediateParentRun (Root '>')(NodeEvaluator '::comment'))))))", sexpr(q3));
+        Elements els3 = doc.select(q3);
+        assertSelectedIds(els3, "3");
+    }
+
+    @Test void nodeWithElementAncestor() {
+        Document doc = Jsoup.parse("<div id=1><div id=2><p> <!-- comment --></p></div></div>");
+        String q = "div:has(p ::comment)";
+        assertEquals("(And (Tag 'div')(Has (And (NodeEvaluator '::comment')(Ancestor (Tag 'p')))))", sexpr(q));
+        Elements els = doc.select(q);
+        assertSelectedIds(els, "1", "2");
+    }
+
+    @Test void precedingComment() {
+        Document doc = Jsoup.parse("<div><!-- comment --><p id=1><p id=2></div><div><p id=3><p id=4>");
+
+        String q = "::comment ~ p";
+        assertEquals("(And (Tag 'p')(PreviousSibling (NodeEvaluator '::comment')))", sexpr(q));
+        Elements els1 = doc.select(q);
+        assertSelectedIds(els1, "1", "2");
+
+        String q2 = "::comment + p";
+        assertEquals("(And (Tag 'p')(ImmediatePreviousSibling (NodeEvaluator '::comment')))", sexpr(q2));
+        Elements els2 = doc.select(q2);
+        assertSelectedIds(els2, "1");
+    }
+
+    @Test void datanode() {
+        Document doc = Jsoup.parse("<div id=1> <!-- foo --> </div> <div id=2> <script>foo</script> </div> <div><script>bar></script>");
+        String q = "div:has(::data:contains(foo))";
+        assertEquals("(And (Tag 'div')(Has (And (NodeEvaluator '::data')(ContainsValue ':contains(foo)'))))", sexpr(q));
+        Elements els = doc.select(q);
+        assertSelectedIds(els, "2");
+    }
+
+    @Test void leafNode() {
+        Document doc = Jsoup.parse("<div id=1></div><div id=2> </div>");
+        String q = "div:has(::leafnode)";
+        assertEquals("(And (Tag 'div')(Has (NodeEvaluator '::leafnode')))", sexpr(q));
+        Elements els = doc.select(q);
+        assertSelectedIds(els, "2");
+    }
+
+    @Test void leafNodeContains() {
+        Document doc = Jsoup.parse("<div id=1>foo</div><div id=2><!-- bar --></div><div id=3>Bar</div><div id=4><script id=5> Bar </script></div>");
+        String q = "div:has(::leafnode:contains(Bar))";
+        assertEquals("(And (Tag 'div')(Has (And (NodeEvaluator '::leafnode')(ContainsValue ':contains(bar)'))))", sexpr(q));
+        Elements els = doc.select(q);
+        assertSelectedIds(els, "2", "3", "4");
+    }
+
+    @Test void nodeContains() {
+        Document doc = Jsoup.parse("<div><p>One</p></div><div>Two</div>");
+        String q = "div ::node:contains(One)";
+        Nodes<Node> nodes = doc.selectNodes(Selector.evaluatorOf(q));
+        // should have the P and the Text (because nodeValue is ownText)
+        assertEquals(2, nodes.size());
+        assertEquals("One", nodes.get(0).nodeValue());
+        assertEquals("p", nodes.get(0).nodeName());
+        assertEquals("One", nodes.get(1).nodeValue());
+        assertEquals("#text", nodes.get(1).nodeName());
+    }
+
+    @Test void selectComment() {
+        Document doc = Jsoup.parse("<div><!-- find this --></div><!-- and this --><p><!-- not that --></p>");
+        String q = "::comment:contains(this)";
+        assertEquals("(And (NodeEvaluator '::comment')(ContainsValue ':contains(this)'))", sexpr(q));
+        Nodes<Comment> comments = doc.selectNodes(q, Comment.class);
+
+        assertEquals(2, comments.size());
+        assertEquals(" find this ", comments.get(0).getData());
+        assertEquals(" find this ", comments.get(0).nodeValue());
+        assertEquals(" and this ", comments.get(1).getData());
+
+        Nodes<Node> nodes = doc.selectNodes("::comment");
+        assertEquals(3, nodes.size());
+        assertEquals(" find this ", nodes.get(0).nodeValue());
+        assertEquals(" and this ", nodes.get(1).nodeValue());
+        assertEquals(" not that ", nodes.get(2).nodeValue());
+    }
+
+    @Test void selectTextNodes() {
+        Document doc = Jsoup.parse("<p>One</p> <p>Two</p>");
+        Nodes<TextNode> text = doc.selectNodes("p ::text", TextNode.class);
+        assertEquals(2, text.size());
+        assertEquals("One", text.get(0).getWholeText());
+        assertEquals("Two", text.get(1).getWholeText());
+    }
+
+    @Test void elementsViaNodeInterface() {
+        Document doc = Jsoup.parse("<p>One</p> <p>Two</p>");
+        Nodes<Element> ps = doc.selectNodes("p", Element.class);
+        assertEquals(2, ps.size());
+        assertEquals("One", ps.get(0).text());
+        assertEquals("Two", ps.get(1).text());
     }
 }

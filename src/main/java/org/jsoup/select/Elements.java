@@ -27,7 +27,7 @@ import java.util.function.UnaryOperator;
  replace} Elements in the list will also act on the underlying {@link org.jsoup.nodes.Document DOM}.</p>
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Elements extends ArrayList<Element> {
+public class Elements extends Nodes<Element> {
     public Elements() {
     }
 
@@ -38,11 +38,11 @@ public class Elements extends ArrayList<Element> {
     public Elements(Collection<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(List<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(Element... elements) {
     	super(Arrays.asList(elements));
     }

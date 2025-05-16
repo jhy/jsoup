@@ -48,8 +48,11 @@ public class EvaluatorDebug {
     }
 
     public static String sexpr(String query) {
-        Document doc = asDocument(query);
+        return sexpr(QueryParser.parse(query));
+    }
 
+    public static String sexpr(Evaluator eval) {
+        Document doc = asDocument(eval);
         SexprVisitor sv = new SexprVisitor();
         doc.childNode(0).traverse(sv); // skip outer #document
         return sv.result();
