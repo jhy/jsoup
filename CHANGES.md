@@ -11,6 +11,7 @@
 * Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
 * Custom tags (defined via the `TagSet`) in a foreign namespace (e.g. SVG) can be configured to parse as data tags.
 * Added `NodeVisitor#traverse(Node)` to simplify node traversal calls (vs. importing `NodeTraversor`).
+* The HTML parser now allows the specific text-data type (Data, RcData) to be customized for known tags. (Previously, that was only supported on custom tags.) [#2326](https://github.com/jhy/jsoup/issues/2326).
 
 ### Bug Fixes
 * The contents of a  `script` in a `svg` foreign context should be parsed as script data, not text. [#2320](https://github.com/jhy/jsoup/issues/2320)

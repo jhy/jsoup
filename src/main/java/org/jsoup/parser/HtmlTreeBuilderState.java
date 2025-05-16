@@ -9,6 +9,7 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 
@@ -131,9 +132,9 @@ enum HtmlTreeBuilderState {
                     } else if (name.equals("meta")) {
                         tb.insertEmptyElementFor(start);
                     } else if (name.equals("title")) {
-                        HandleTextState(start, tb, TokeniserState.Rcdata);
+                        HandleTextState(start, tb, tb.tagFor(start).textState());
                     } else if (inSorted(name, InHeadRaw)) {
-                        HandleTextState(start, tb, TokeniserState.Rawtext);
+                        HandleTextState(start, tb, tb.tagFor(start).textState());
                     } else if (name.equals("noscript")) {
                         // else if noscript && scripting flag = true: rawtext (jsoup doesn't run script, to handle as noscript)
                         tb.insertElementFor(start);
@@ -478,7 +479,7 @@ enum HtmlTreeBuilderState {
                     break;
                 case "textarea":
                     tb.framesetOk(false);
-                    HandleTextState(startTag, tb, TokeniserState.Rcdata);
+                    HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
                 case "xmp":
                     if (tb.inButtonScope("p")) {
@@ -486,15 +487,15 @@ enum HtmlTreeBuilderState {
                     }
                     tb.reconstructFormattingElements();
                     tb.framesetOk(false);
-                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
+                    HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
                 case "iframe":
                     tb.framesetOk(false);
-                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
+                    HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
                 case "noembed":
                     // also handle noscript if script enabled
-                    HandleTextState(startTag, tb, TokeniserState.Rawtext);
+                    HandleTextState(startTag, tb, tb.tagFor(startTag).textState());
                     break;
                 case "select":
                     tb.reconstructFormattingElements();
@@ -1894,8 +1895,9 @@ enum HtmlTreeBuilderState {
         return false;
     }
 
-    private static void HandleTextState(Token.StartTag startTag, HtmlTreeBuilder tb, TokeniserState state) {
-        tb.tokeniser.transition(state);
+    private static void HandleTextState(Token.StartTag startTag, HtmlTreeBuilder tb, @Nullable TokeniserState state) {
+        if (state != null)
+            tb.tokeniser.transition(state);
         tb.markInsertionMode();
         tb.transition(Text);
         tb.insertElementFor(startTag);
