@@ -16,23 +16,23 @@ public class Tag implements Cloneable {
     /** Tag option: the tag is known (specifically defined). This impacts if options may need to be inferred (when not
      known) in, e.g., the pretty-printer. Set when a tag is added to a TagSet, or when settings are set(). */
     public static int Known = 1;
-    /** Tag option: the tag is a void tag (e.g. {@code <img>}), that can contain no children, and in HTML does not require closing. */
+    /** Tag option: the tag is a void tag (e.g., {@code <img>}), that can contain no children, and in HTML does not require closing. */
     public static int Void = 1 << 1;
-    /** Tag option: the tag is a block tag (e.g. {@code <div>}, {@code <p>}). Causes the element to be indented when pretty-printing. If not a block, it is inline. */
+    /** Tag option: the tag is a block tag (e.g., {@code <div>}, {@code <p>}). Causes the element to be indented when pretty-printing. If not a block, it is inline. */
     public static int Block = 1 << 2;
-    /** Tag option: the tag is a block tag that will only hold inline tags (e.g. {@code <p>}); used for formatting. (Must also set Block.) */
+    /** Tag option: the tag is a block tag that will only hold inline tags (e.g., {@code <p>}); used for formatting. (Must also set Block.) */
     public static int InlineContainer = 1 << 3;
-    /** Tag option: the tag can self-close (e.g. {@code <foo />}). */
+    /** Tag option: the tag can self-close (e.g., {@code <foo />}). */
     public static int SelfClose = 1 << 4;
     /** Tag option: the tag has been seen self-closing in this parse. */
     public static int SeenSelfClose = 1 << 5;
-    /** Tag option: the tag preserves whitespace (e.g. {@code <pre>}). */
+    /** Tag option: the tag preserves whitespace (e.g., {@code <pre>}). */
     public static int PreserveWhitespace = 1 << 6;
-    /** Tag option: the tag is an RCDATA element that can have text and character references (e.g. {@code <title>}, {@code <textarea>}). */
+    /** Tag option: the tag is an RCDATA element that can have text and character references (e.g., {@code <title>}, {@code <textarea>}). */
     public static int RcData = 1 << 7;
-    /** Tag option: the tag is a Data element that can have text but not character references (e.g. {@code <style>}, {@code <script>}). */
+    /** Tag option: the tag is a Data element that can have text but not character references (e.g., {@code <style>}, {@code <script>}). */
     public static int Data = 1 << 8;
-    /** Tag option: the tag's value will be included when submitting a form (e.g. {@code <input>}). */
+    /** Tag option: the tag's value will be included when submitting a form (e.g., {@code <input>}). */
     public static int FormSubmittable = 1 << 9;
 
     String namespace;
