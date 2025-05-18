@@ -129,6 +129,42 @@ public class ConnectIT {
         assertEquals("outatime", h1.text());
     }
 
+    @Test void readFullyThrowsOnTimeout() throws IOException {
+        // tests that response.readFully excepts on timeout
+        boolean caught = false;
+        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        try {
+            res.readFully();
+        } catch (IOException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+    }
+
+    @Test void readBodyThrowsOnTimeout() throws IOException {
+        // tests that response.readBody excepts on timeout
+        boolean caught = false;
+        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        try {
+            res.readBody();
+        } catch (IOException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+    }
+
+    @Test void bodyThrowsUncheckedOnTimeout() throws IOException {
+        // tests that response.body unchecked excepts on timeout
+        boolean caught = false;
+        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        try {
+            res.body();
+        } catch (UncheckedIOException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+    }
+
     @Test
     public void infiniteReadSupported() throws IOException {
         Document doc = Jsoup.connect(SlowRider.Url)
@@ -246,6 +282,21 @@ public class ConnectIT {
             String fullText = new String(fullRead.array(), 0, fullRead.limit(), StandardCharsets.UTF_8);
             assertTrue(fullText.startsWith(firstText));
             assertEquals(LargeHtmlSize, fullText.length());
+        }
+    }
+
+    @Test public void bodyStreamConstrainedViaReadFully() throws IOException {
+        int cap = 5 * 1024;
+        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        try (BufferedInputStream stream = Jsoup
+            .connect(url)
+            .maxBodySize(cap)
+            .execute()
+            .readFully()
+            .bodyStream()) {
+
+            ByteBuffer cappedRead = DataUtil.readToByteBuffer(stream, 0);
+            assertEquals(cap, cappedRead.limit());
         }
     }
 

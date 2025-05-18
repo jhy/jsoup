@@ -1006,24 +1006,45 @@ public class HttpConnection implements Connection {
             return streamer;
         }
 
-        private void prepareByteData() {
+        /**
+         Reads the bodyStream into byteData. A no-op if already executed.
+         */
+        @Override
+        public Connection.Response readFully() throws IOException {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
             if (bodyStream != null && byteData == null) {
                 Validate.isFalse(inputStreamRead, "Request has already been read (with .parse())");
                 try {
                     byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize());
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
                 } finally {
                     inputStreamRead = true;
                     safeClose();
                 }
             }
+            return this;
+        }
+
+        /**
+         Reads the body, but throws an UncheckedIOException if an IOException occurs.
+         @throws UncheckedIOException if an IOException occurs
+         */
+        private void readByteDataUnchecked() {
+            try {
+                readFully();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        @Override
+        public String readBody() throws IOException {
+            readFully();
+            return body();
         }
 
         @Override
         public String body() {
-            prepareByteData();
+            readByteDataUnchecked();
             Validate.notNull(byteData);
             // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
             String body = (charset == null ? UTF_8 : Charset.forName(charset))
@@ -1034,7 +1055,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public byte[] bodyAsBytes() {
-            prepareByteData();
+            readByteDataUnchecked();
             Validate.notNull(byteData);
             Validate.isTrue(byteData.hasArray()); // we made it, so it should
 
@@ -1053,7 +1074,7 @@ public class HttpConnection implements Connection {
 
         @Override
         public Connection.Response bufferUp() {
-            prepareByteData();
+            readByteDataUnchecked();
             return this;
         }
 
@@ -1061,7 +1082,7 @@ public class HttpConnection implements Connection {
         public BufferedInputStream bodyStream() {
             Validate.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body");
 
-            // if we have read to bytes (via buffer up), return those as a stream.
+            // if we have read to bytes (via readFully), return those as a stream.
             if (byteData != null) {
                 return new BufferedInputStream(
                     new ByteArrayInputStream(byteData.array(), 0, byteData.limit()),

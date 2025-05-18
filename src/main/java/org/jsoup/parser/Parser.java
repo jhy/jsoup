@@ -61,11 +61,26 @@ public class Parser implements Cloneable {
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
     }
-    
+
+    /**
+     Parse the contents of a String.
+
+     @param html HTML to parse
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return parsed Document
+     */
     public Document parseInput(String html, String baseUri) {
         return parseInput(new StringReader(html), baseUri);
     }
 
+    /**
+     Parse the contents of Reader.
+
+     @param inputHtml HTML to parse
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return parsed Document
+     @throws java.io.UncheckedIOException if an I/O error occurs in the Reader
+     */
     public Document parseInput(Reader inputHtml, String baseUri) {
         try {
             lock.lock(); // using a lock vs synchronized to support loom threads
@@ -75,10 +90,27 @@ public class Parser implements Cloneable {
         }
     }
 
+    /**
+     Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
+
+     @param fragment the fragment of HTML to parse
+     @param context (optional) the element that this HTML fragment is being parsed for (i.e. for inner HTML).
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return list of nodes parsed from the input HTML.
+     */
     public List<Node> parseFragmentInput(String fragment, @Nullable Element context, String baseUri) {
         return parseFragmentInput(new StringReader(fragment), context, baseUri);
     }
 
+    /**
+     Parse a fragment of HTML into a list of nodes. The context element, if supplied, supplies parsing context.
+
+     @param fragment the fragment of HTML to parse
+     @param context (optional) the element that this HTML fragment is being parsed for (i.e. for inner HTML).
+     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     @return list of nodes parsed from the input HTML.
+     @throws java.io.UncheckedIOException if an I/O error occurs in the Reader
+     */
     public List<Node> parseFragmentInput(Reader fragment, @Nullable Element context, String baseUri) {
         try {
             lock.lock();
