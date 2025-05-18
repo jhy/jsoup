@@ -907,24 +907,68 @@ public interface Connection {
         @Nullable String contentType();
 
         /**
-         * Read and parse the body of the response as a Document. If you intend to parse the same response multiple
-         * times, you should {@link #bufferUp()} first.
-         * @return a parsed Document
-         * @throws IOException on error
+         Read and parse the body of the response as a Document. If you intend to parse the same response multiple times,
+         you should {@link #readFully()} first, which will buffer the body into memory.
+
+         @return a parsed Document
+         @throws IOException if an IO exception occurs whilst reading the body.
+         @see #readFully()
          */
         Document parse() throws IOException;
 
         /**
-         * Get the body of the response as a plain string.
-         * @return body
+         Read the response body, and returns it as a plain String.
+
+         @return body
+         @throws IOException if an IO exception occurs whilst reading the body.
+         @since 1.21.1
+         */
+        default String readBody() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         Get the body of the response as a plain String.
+
+         <p>Will throw an UncheckedIOException if the body has not been buffered and an error occurs whilst reading the
+         body; use {@link #readFully()} first to buffer the body and catch any exceptions explicitly. Or more simply,
+         {@link #readBody()}.</p>
+
+         @return body
+         @throws UncheckedIOException if an IO exception occurs whilst reading the body.
+         @see #readBody()
+         @see #readFully()
          */
         String body();
 
         /**
-         * Get the body of the response as an array of bytes.
-         * @return body bytes
+         Get the body of the response as an array of bytes.
+
+         <p>Will throw an UncheckedIOException if the body has not been buffered and an error occurs whilst reading the
+         body; use {@link #readFully()} first to buffer the body and catch any exceptions explicitly.</p>
+
+         @return body bytes
+         @throws UncheckedIOException if an IO exception occurs whilst reading the body.
+         @see #readFully()
          */
         byte[] bodyAsBytes();
+
+        /**
+         Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the same
+         connection response. Otherwise, once the response is read, its InputStream will have been drained and may not be
+         re-read.
+
+         <p>Subsequent calls methods than consume the body, such as {@link #parse()}, {@link #body()},
+         {@link #bodyAsBytes()}, will not need to read the body again, and will not throw exceptions.</p>
+         <p>Calling {@link #readBody()}} has the same effect.</p>
+
+         @return this response, for chaining
+         @throws IOException if an IO exception occurs during buffering.
+         @since 1.21.1
+         */
+        default Response readFully() throws IOException {
+            throw new UnsupportedOperationException();
+        }
 
         /**
          * Read the body of the response into a local buffer, so that {@link #parse()} may be called repeatedly on the
@@ -933,16 +977,17 @@ public interface Connection {
          * <p>Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.</p>
          * @return this response, for chaining
          * @throws UncheckedIOException if an IO exception occurs during buffering.
+         * @deprecated use {@link #readFully()} instead (for the checked exception). Will be removed in a future version.
          */
         Response bufferUp();
 
         /**
          Get the body of the response as a (buffered) InputStream. You should close the input stream when you're done
          with it.
-         <p>Other body methods (like bufferUp, body, parse, etc) will generally not work in conjunction with this method,
+         <p>Other body methods (like readFully, body, parse, etc) will generally not work in conjunction with this method,
          as it consumes the InputStream.</p>
          <p>Any configured max size or maximum read timeout applied to the connection will not be applied to this stream,
-         unless {@link #bufferUp()} is called prior.</p>
+         unless {@link #readFully()} is called prior.</p>
          <p>This method is useful for writing large responses to disk, without buffering them completely into memory
          first.</p>
          @return the response body input stream

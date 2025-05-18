@@ -394,6 +394,17 @@ public class ConnectTest {
     }
 
     @Test
+    public void multipleParsesOkAfterReadFully() throws IOException {
+        Connection.Response res = Jsoup.connect(echoUrl).execute().readFully();
+
+        Document doc = res.parse();
+        assertTrue(doc.title().contains("Environment"));
+
+        Document doc2 = res.parse();
+        assertTrue(doc2.title().contains("Environment"));
+    }
+
+    @Test
     public void multipleParsesOkAfterBufferUp() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
 
@@ -842,6 +853,12 @@ public class ConnectTest {
         assertEquals(200 * 1024, mediumRes.body().length());
         assertEquals(actualDocText, largeRes.body().length());
         assertEquals(actualDocText, unlimitedRes.body().length());
+
+        assertEquals(actualDocText, defaultRes.readBody().length());
+        assertEquals(50 * 1024, smallRes.readBody().length());
+        assertEquals(200 * 1024, mediumRes.readBody().length());
+        assertEquals(actualDocText, largeRes.readBody().length());
+        assertEquals(actualDocText, unlimitedRes.readBody().length());
     }
 
     @Test void formLoginFlow() throws IOException {

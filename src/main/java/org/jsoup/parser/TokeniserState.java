@@ -1659,7 +1659,7 @@ enum TokeniserState {
     abstract void read(Tokeniser t, CharacterReader r);
 
     static final char nullChar = '\u0000';
-    // char searches. must be sorted, used in inSorted. MUST update TokenisetStateTest if more arrays are added.
+    // char searches. must be sorted, used in inSorted. MUST update TokeniserStateTest if more arrays are added.
     static final char[] attributeNameCharsSorted = new char[]{'\t', '\n', '\f', '\r', ' ', '"', '\'', '/', '<', '=', '>', '?'};
     static final char[] attributeValueUnquoted = new char[]{nullChar, '\t', '\n', '\f', '\r', ' ', '"', '&', '\'', '<', '=', '>', '`'};
 
