@@ -921,6 +921,7 @@ public interface Connection {
 
          @return body
          @throws IOException if an IO exception occurs whilst reading the body.
+         @since 1.21.1
          */
         default String readBody() throws IOException {
             throw new UnsupportedOperationException();
@@ -963,6 +964,7 @@ public interface Connection {
 
          @return this response, for chaining
          @throws IOException if an IO exception occurs during buffering.
+         @since 1.21.1
          */
         default Response readFully() throws IOException {
             throw new UnsupportedOperationException();
