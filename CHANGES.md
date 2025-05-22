@@ -7,6 +7,7 @@
 * Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
 
 ### Improvements
+* Added `TagSet#onNewTag(Consumer<Tag> customizer)`: register a callback that’s invoked for each new or cloned Tag when it’s inserted into the set. Enables dynamic tweaks of tag options (for example, marking all custom tags as self-closing, or everything in a given namespace as preserving whitespace).
 * Made `TokenQueue` and `CharacterReader` autocloseable, to ensure that they will release their buffers back to the buffer pool, for later reuse.
 * Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
 * Custom tags (defined via the `TagSet`) in a foreign namespace (e.g. SVG) can be configured to parse as data tags.

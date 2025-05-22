@@ -4,6 +4,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -104,5 +106,82 @@ public class TagSetTest {
         assertTrue(c1.isKnownTag());
         c1.clear(Tag.Known);
         assertFalse(c1.isKnownTag());
+    }
+
+    @Test void canCustomizeAll() {
+        TagSet tags = TagSet.Html();
+        tags.onNewTag(tag -> tag.set(Tag.SelfClose));
+        assertTrue(tags.get("script", NamespaceHtml).is(Tag.SelfClose));
+        assertTrue(tags.valueOf("SCRIPT", NamespaceHtml).is(Tag.SelfClose));
+        assertTrue(tags.valueOf("custom", NamespaceHtml).is(Tag.SelfClose));
+
+        Tag foo = new Tag("foo", NamespaceHtml);
+        assertFalse(foo.is(Tag.SelfClose));
+        tags.add(foo);
+        assertTrue(foo.is(Tag.SelfClose));
+    }
+
+    @Test void canCustomizeSome() {
+        TagSet tags = TagSet.Html();
+        tags.onNewTag(tag -> {
+            if (!tag.isKnownTag()) {
+                tag.set(Tag.SelfClose);
+            }
+        });
+        assertFalse(tags.valueOf("script", NamespaceHtml).is(Tag.SelfClose));
+        assertFalse(tags.valueOf("SCRIPT", NamespaceHtml).is(Tag.SelfClose));
+        assertTrue(tags.valueOf("custom-tag", NamespaceHtml).is(Tag.SelfClose));
+    }
+
+    @Test void canParseWithCustomization() {
+        // really would use tag.valueOf("script"); just a test example here
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().onNewTag(tag -> {
+            if (tag.normalName().equals("script"))
+                tag.set(Tag.SelfClose);
+        });
+
+        Document doc = Jsoup.parse("<script />Text", parser);
+        assertEquals("<html>\n <head>\n  <script></script>\n </head>\n <body>Text</body>\n</html>", doc.html());
+        // self closing bit still produces valid HTML
+    }
+
+    @Test void canParseWithGeneralCustomization() {
+        Parser parser = Parser.htmlParser();
+        parser.tagSet().onNewTag(tag -> {
+            if (!tag.isKnownTag())
+                tag.set(Tag.SelfClose);
+        });
+
+        Document doc = Jsoup.parse("<custom-data />Bar <script />Text", parser);
+        assertEquals("<custom-data></custom-data>Bar\n<script>Text</script>", doc.body().html());
+    }
+
+    @Test void supportsMultipleCustomizers() {
+        TagSet tags = TagSet.Html();
+        tags.onNewTag(tag -> {
+            if (tag.normalName().equals("script"))
+                tag.set(Tag.SelfClose);
+        });
+        tags.onNewTag(tag -> {
+            if (!tag.isKnownTag())
+                tag.set(Tag.RcData);
+        });
+
+        assertTrue(tags.valueOf("script", NamespaceHtml).is(Tag.SelfClose));
+        assertFalse(tags.valueOf("script", NamespaceHtml).is(Tag.RcData));
+        assertTrue(tags.valueOf("custom-tag", NamespaceHtml).is(Tag.RcData));
+    }
+
+    @Test void customizersArePreservedInSource() {
+        TagSet source = TagSet.Html();
+        source.onNewTag(tag -> tag.set(Tag.RcData));
+        TagSet copy = new TagSet(source);
+        assertTrue(copy.valueOf("script", NamespaceHtml).is(Tag.RcData));
+        assertTrue(source.valueOf("script", NamespaceHtml).is(Tag.RcData));
+
+        copy.onNewTag(tag -> tag.set(Tag.Void));
+        assertTrue(copy.valueOf("custom-tag", NamespaceHtml).is(Tag.Void));
+        assertFalse(source.valueOf("custom-tag", NamespaceHtml).is(Tag.Void));
     }
 }

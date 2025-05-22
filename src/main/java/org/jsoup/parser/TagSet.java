@@ -4,6 +4,7 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -23,8 +24,9 @@ import static org.jsoup.parser.Parser.NamespaceSvg;
 public class TagSet {
     static final TagSet HtmlTagSet = initHtmlDefault();
 
-    final Map<String, Map<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
-    final @Nullable TagSet source; // source to pull tags from on demand
+    private final Map<String, Map<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
+    private final @Nullable TagSet source; // source to pull tags from on demand
+    private @Nullable ArrayList<Consumer<Tag>> customizers; // optional onNewTag tag customizer
 
     /**
      Returns a mutable copy of the default HTML tag set.
@@ -57,6 +59,12 @@ public class TagSet {
 
     /** Adds the tag, but does not set defined. Used in .valueOf */
     private void doAdd(Tag tag) {
+        if (customizers != null) {
+            for (Consumer<Tag> customizer : customizers) {
+                customizer.accept(tag);
+            }
+        }
+
         tags.computeIfAbsent(tag.namespace, ns -> new HashMap<>())
             .put(tag.tagName, tag);
     }
@@ -147,6 +155,34 @@ public class TagSet {
      */
     public Tag valueOf(String tagName, String namespace) {
         return valueOf(tagName, namespace, ParseSettings.preserveCase);
+    }
+
+    /**
+     Register a callback to customize each {@link Tag} as it's added to this TagSet.
+     <p>Customizers are invoked once per Tag, when they are added (explicitly or via the valueOf methods).</p>
+
+     <p>For example, to allow all unknown tags to be self-closing during when parsing as HTML:</p>
+     <pre><code>
+     Parser parser = Parser.htmlParser();
+     parser.tagSet().onNewTag(tag -> {
+     if (!tag.isKnownTag())
+        tag.set(Tag.SelfClose);
+     });
+
+     Document doc = Jsoup.parse(html, parser);
+     </code></pre>
+
+     @param customizer a {@code Consumer<Tag>} that will be called for each newly added or cloned Tag; callers can
+     inspect and modify the Tag's state (e.g. set options)
+     @return this TagSet, to allow method chaining
+     @since 1.21.0
+     */
+    public TagSet onNewTag(Consumer<Tag> customizer) {
+        Validate.notNull(customizer);
+        if (customizers == null)
+            customizers = new ArrayList<>();
+        customizers.add(customizer);
+        return this;
     }
 
     @Override
