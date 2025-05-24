@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.parser.TokenQueue;
 import org.jspecify.annotations.Nullable;
 
@@ -21,8 +22,12 @@ import java.util.stream.Stream;
  The universal selector {@code *} is implicit when no element selector is supplied (i.e. {@code .header} and
  {@code *.header} are equivalent).
  </p>
+
+ <p>You can easily test different selectors using the <a href="https://try.jsoup.org/?utm_source=jsoup&amp;utm_medium=javadoc">Try jsoup online playground</a>.
+
  <style>table.syntax tr td {vertical-align: top; padding-right: 2em; padding-top:0.5em; padding-bottom:0.5em; }
  table.syntax tr:hover{background-color: #eee;} table.syntax {border-spacing: 0px 0px;}</style>
+
  <table summary="" class="syntax"><colgroup><col span="1" style="width: 20%;"><col span="1" style="width: 40%;"><col span="1" style="width: 40%;"></colgroup>
  <tr><th align="left">Pattern</th><th align="left">Matches</th><th align="left">Example</th></tr>
  <tr><td><code>*</code></td><td>any element</td><td><code>*</code></td></tr>
@@ -42,12 +47,14 @@ import java.util.stream.Stream;
  <tr><td><code>[attr~=<em>regex</em>]</code></td><td>elements with an attribute named "attr", and value matching the regular expression</td><td><code>img[src~=(?i)\\.(png|jpe?g)]</code></td></tr>
  <tr><td><code>[*]</code></td><td>elements with any attribute</td><td><code>p[*]</code> finds <code>p</code> elements that have at least one attribute; <code>p:not([*])</code> finds those with no attributes</td></tr>
  <tr><td></td><td>The above may be combined in any order</td><td><code>div.header[title]</code></td></tr>
+
  <tr><td colspan="3"><h3>Combinators</h3></td></tr>
  <tr><td><code>E F</code></td><td>an F element descended from an E element</td><td><code>div a</code>, <code>.logo h1</code></td></tr>
  <tr><td><code>E {@literal >} F</code></td><td>an F direct child of E</td><td><code>ol {@literal >} li</code></td></tr>
  <tr><td><code>E + F</code></td><td>an F element immediately preceded by sibling E</td><td><code>li + li</code>, <code>div.head + div</code></td></tr>
  <tr><td><code>E ~ F</code></td><td>an F element preceded by sibling E</td><td><code>h1 ~ p</code></td></tr>
  <tr><td><code>E, F, G</code></td><td>all matching elements E, F, or G</td><td><code>a[href], div, h3</code></td></tr>
+
  <tr><td colspan="3"><h3>Pseudo selectors</h3></td></tr>
  <tr><td><code>:lt(<em>n</em>)</code></td><td>elements whose sibling index is less than <em>n</em></td><td><code>td:lt(3)</code> finds the first 3 cells of each row</td></tr>
  <tr><td><code>:gt(<em>n</em>)</code></td><td>elements whose sibling index is greater than <em>n</em></td><td><code>td:gt(1)</code> finds cells after skipping the first two</td></tr>
@@ -65,6 +72,7 @@ import java.util.stream.Stream;
  <tr><td><code>:matchesWholeOwnText(<em>regex</em>)</code></td><td>elements whose own <b>non-normalized</b> whole text matches the specified regular expression. The text must appear in the found element, not any of its descendants.</td><td><code>td:matchesWholeOwnText(\n\\d+)</code> finds table cells directly containing digits following a neewline.</td></tr>
  <tr><td></td><td>The above may be combined in any order and with other selectors</td><td><code>.light:contains(name):eq(0)</code></td></tr>
  <tr><td><code>:matchText</code></td><td>treats text nodes as elements, and so allows you to match against and select text nodes.<p><b>Note</b> that using this selector will modify the DOM, so you may want to {@code clone} your document before using.</td><td>{@code p:matchText:firstChild} with input {@code <p>One<br />Two</p>} will return one {@link org.jsoup.nodes.PseudoTextElement} with text "{@code One}".</td></tr>
+
  <tr><td colspan="3"><h3>Structural pseudo selectors</h3></td></tr>
  <tr><td><code>:root</code></td><td>The element that is the root of the document. In HTML, this is the <code>html</code> element</td><td><code>:root</code></td></tr>
  <tr><td><code>:nth-child(<em>a</em>n+<em>b</em>)</code></td><td><p>elements that have <code><em>a</em>n+<em>b</em>-1</code> siblings <b>before</b> it in the document tree, for any positive integer or zero value of <code>n</code>, and has a parent element. For values of <code>a</code> and <code>b</code> greater than zero, this effectively divides the element's children into groups of a elements (the last group taking the remainder), and selecting the <em>b</em>th element of each group. For example, this allows the selectors to address every other row in a table, and could be used to alternate the color of paragraph text in a cycle of four. The <code>a</code> and <code>b</code> values must be integers (positive, negative, or zero). The index of the first child of an element is 1.</p>
@@ -79,13 +87,27 @@ import java.util.stream.Stream;
  <tr><td><code>:only-child</code></td><td>elements that have a parent element and whose parent element have no other element children</td><td></td></tr>
  <tr><td><code>:only-of-type</code></td><td> an element that has a parent element and whose parent element has no other element children with the same expanded element name</td><td></td></tr>
  <tr><td><code>:empty</code></td><td>elements that contain no child elements or nodes, with the exception of blank text nodes, comments, XML declarations, and doctype declarations. In other words, it matches elements that are effectively empty of meaningful content.</td><td><code>li:not(:empty)</code></td></tr>
+
+ <tr><td colspan="3"><h3>Node pseudo selectors</h3></td></tr>
+ <tr><td colspan="3">These selectors enable matching specific leaf nodes, including Comments, TextNodes. When used with {@link Element#select(String)}, these can be used with structural selectors such as <code>:has()</code> to refine which Elements are matched. To retrieve matching Nodes directly, use {@Element#selectNodes(String)}.</td></tr>
+ <tr><td>::node</td><td>Matches any node</td><td></td></tr>
+ <tr><td>::leafnode</td><td>Matches any leaf-node (this is, a Node which is not an Element)</td><td></td></tr>
+ <tr><td>::comment</td><td>Matches a Comment node</td><td></td></tr>
+ <tr><td>::text</td><td>Matches a TextNode</td><td></td></tr>
+ <tr><td>::data</td><td>Matches a DataNode</td><td></td></tr>
+ <tr><td>::node:contains(text)</td><td>Matches a node that has a (normalized, case-insensitive) value containing <i>text</i>.</td><td>::comment:contains(foo bar)</td></tr>
+ <tr><td>::node:matches(regex)</td><td>Matches a node that has a value matching the regex.</td><td>::comment:matches(\\d+)</td></tr>
+ <tr><td>::node:blank</td><td>Matches a node that has either no value, or a value of only whitespace.</td><td>::comment:not(:blank)</td></tr>
  </table>
 
  <p>A word on using regular expressions in these selectors: depending on the content of the regex, you will need to quote the pattern using <b><code>Pattern.quote("regex")</code></b> for it to parse correctly through both the selector parser and the regex parser. E.g. <code>String query = "div:matches(" + Pattern.quote(regex) + ");"</code>.</p>
  <p><b>Escaping special characters:</b> to match a tag, ID, or other selector that does not follow the regular CSS syntax, the query must be escaped with the <code>\</code> character. For example, to match by ID {@code <p id="i.d">}, use {@code document.select("#i\\.d")}.</p>
 
  @see Element#select(String css)
+ @see Element#selectFirst(String css)
  @see Element#select(Evaluator eval)
+ @see Element#selectNodes(String css)
+ @see Element#selectNodes(String css, Class nodeType)
  @see Elements#select(String css)
  @see Element#selectXpath(String xpath) */
 public class Selector {

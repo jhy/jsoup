@@ -221,7 +221,7 @@ public class StreamParser implements Closeable {
      @throws IOException if an I/O error occurs
      */
     public Element expectFirst(String query) throws IOException {
-        return (Element) Validate.ensureNotNull(
+        return Validate.expectNotNull(
             selectFirst(query),
             "No elements matched the query '%s' in the document."
             , query
@@ -269,7 +269,7 @@ public class StreamParser implements Closeable {
      @throws IOException if an I/O error occurs
      */
     public Element expectNext(String query) throws IOException {
-        return (Element) Validate.ensureNotNull(
+        return Validate.expectNotNull(
             selectNext(query),
             "No elements matched the query '%s' in the document."
             , query
@@ -368,7 +368,7 @@ public class StreamParser implements Closeable {
         // NodeVisitor Interface:
         @Override public void head(Node node, int depth) {
             if (node instanceof Element) {
-                Element prev = ((Element) node).previousElementSibling();
+                Element prev = node.previousElementSibling();
                 // We prefer to wait until an element has a next sibling before emitting it; otherwise, get it in tail
                 if (prev != null) emitQueue.add(prev);
             }

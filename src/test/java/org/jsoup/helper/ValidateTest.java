@@ -109,6 +109,23 @@ public class ValidateTest {
         assertTrue(threw);
     }
 
+    @Test void expectNotNull() {
+        String foo = "Foo";
+        String foo2 = Validate.expectNotNull(foo);
+        assertSame(foo, foo2);
+
+        // Test with a null object
+        String bar = null;
+        boolean threw = false;
+        try {
+            Validate.expectNotNull(bar);
+        } catch (ValidationException e) {
+            threw = true;
+            assertEquals("Object must not be null", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
     @Test
     public void testNotNullParam() {
         // Test with a non-null object

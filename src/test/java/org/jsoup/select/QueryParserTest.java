@@ -228,4 +228,11 @@ public class QueryParserTest {
                 "Could not parse query '+ + div': unexpected token at '+ div'",
                 exception2.getMessage());
     }
+
+    @Test void hasNodeSelector() {
+        String q = "p:has(::comment:contains(some text))";
+        Evaluator e = QueryParser.parse(q);
+        assertEquals("(And (Tag 'p')(Has (And (InstanceType '::comment')(ContainsValue ':contains(some text)'))))", sexpr(e));
+        assertEquals(q, e.toString());
+    }
 }

@@ -13,7 +13,7 @@ public final class Normalizer {
 
     /** Drops the input string to lower case. */
     public static String lowerCase(final String input) {
-        return input != null ? input.toLowerCase(Locale.ENGLISH) : "";
+        return input != null ? input.toLowerCase(Locale.ROOT) : "";
     }
 
     /** Lower-cases and trims the input string. */

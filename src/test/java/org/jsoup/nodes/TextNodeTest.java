@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.helper.ValidationException;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.select.Nodes;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -61,14 +62,14 @@ public class TextNodeTest {
         assertSame(tn.parent(), tail.parent());
     }
 
-    @Test public void testSplitAnEmbolden() {
+    @Test public void testSplitAndEmbolden() {
         Document doc = Jsoup.parse("<div>Hello there</div>");
         Element div = doc.select("div").first();
         TextNode tn = (TextNode) div.childNode(0);
         TextNode tail = tn.splitText(6);
         tail.wrap("<b></b>");
 
-        assertEquals("Hello <b>there</b>", TextUtil.stripNewlines(div.html())); // not great that we get \n<b>there there... must correct
+        assertEquals("Hello <b>there</b>", div.html());
     }
 
     @Test void testSplitTextValidation() {
@@ -224,5 +225,15 @@ public class TextNodeTest {
         assertTrue(t.hasSameValue(clone));
         assertEquals("/foo.html", clone.attr("href"));
         assertEquals("Two", clone.text());
+    }
+
+    @Test void parentElement() {
+        Document doc = Jsoup.parse("<p>Text</p>");
+        TextNode text = doc.selectNodes("::text", TextNode.class).first();
+        assertNotNull(text);
+        Element p = text.parent();
+        assertNotNull(p);
+        p = ((Node) text).parentElement();
+        assertNotNull(p);
     }
 }
