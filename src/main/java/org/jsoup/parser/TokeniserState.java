@@ -216,7 +216,7 @@ enum TokeniserState {
     RCDATAEndTagName {
         @Override void read(Tokeniser t, CharacterReader r) {
             if (r.matchesAsciiAlpha()) {
-                String name = r.consumeLetterSequence();
+                String name = r.consumeTagName();
                 t.tagPending.appendTagName(name);
                 t.dataBuffer.append(name);
                 return;
@@ -1673,7 +1673,7 @@ enum TokeniserState {
      */
     private static void handleDataEndTag(Tokeniser t, CharacterReader r, TokeniserState elseTransition) {
         if (r.matchesAsciiAlpha()) {
-            String name = r.consumeLetterSequence();
+            String name = r.consumeTagName();
             t.tagPending.appendTagName(name);
             t.dataBuffer.append(name);
             return;

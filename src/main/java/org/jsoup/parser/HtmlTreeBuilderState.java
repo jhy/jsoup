@@ -624,9 +624,9 @@ enum HtmlTreeBuilderState {
                 default:
                     Tag tag = tb.tagFor(startTag);
                     TokeniserState textState = tag.textState();
-                    // custom rcdata or rawtext (if we were in head, will have auto-transitioned here)
-                    if (textState != null) HandleTextState(startTag, tb, textState);
-                    else if (!tag.isKnownTag()) { // no other special rules for custom tags
+                    if (textState != null) { // custom rcdata or rawtext (if we were in head, will have auto-transitioned here)
+                        HandleTextState(startTag, tb, textState);
+                    } else if (!tag.isKnownTag()) { // no other special rules for custom tags
                         tb.insertElementFor(startTag);
                     } else if (inSorted(name, Constants.InBodyStartPClosers)) {
                         if (tb.inButtonScope("p")) tb.processEndTag("p");

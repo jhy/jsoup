@@ -16,9 +16,10 @@
 * Added `Connection#readFully()` as a replacement for `Connection#bufferUp()` with an explicit IOException. Similarly, added `Connection#readBody()` over `Connection#body()`. Deprecated `Connection#bufferUp()`. [#2327](https://github.com/jhy/jsoup/pull/2327) 
 
 ### Bug Fixes
-* The contents of a  `script` in a `svg` foreign context should be parsed as script data, not text. [#2320](https://github.com/jhy/jsoup/issues/2320)
+* The contents of a `script` in a `svg` foreign context should be parsed as script data, not text. [#2320](https://github.com/jhy/jsoup/issues/2320)
 * `Tag#isFormSubmittable()` was updating the Tag's options. [#2323](https://github.com/jhy/jsoup/issues/2323)
 * The HTML pretty-printer would incorrectly trim whitespace when text followed an inline element in a block element. [#2325](https://github.com/jhy/jsoup/issues/2325)
+* Custom tags with hyphens or other non-letter characters in their names now work correctly as Data or RcData tags. Their closing tags are now tokenized properly. [#2332](https://github.com/jhy/jsoup/issues/2332)
 
 ## 1.20.1 (2025-04-29)
 
