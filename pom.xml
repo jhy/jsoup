@@ -503,7 +503,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.12.2</version>
+      <version>5.13.0</version>
       <scope>test</scope>
     </dependency>
 
