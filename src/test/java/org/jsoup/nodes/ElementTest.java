@@ -1651,6 +1651,38 @@ public class ElementTest {
     }
 
     @Test
+    void shadowChildrenOnClone() {
+        // https://github.com/jhy/jsoup/issues/2334
+        String listHtml = "<ul>" +
+            "<li><h2>initial1</h2></li>" +
+            "</ul>";
+        Document origDoc = Jsoup.parseBodyFragment(listHtml);
+        origDoc.body().children().first();
+        Document cloneDoc = origDoc.clone();
+
+        Element ulEl = cloneDoc.body().expectFirst("ul");
+
+        for (int i = 0; i < ulEl.children().size(); i++)
+            ulEl.child(i).children();
+
+        int growthSize = 3;
+        Element liEl = ulEl.firstElementChild();
+        assertNotNull(liEl);
+        while (ulEl.children().size() < growthSize)
+            ulEl.appendChild(liEl.clone());
+
+        Elements listItems = ulEl.children();
+        for (int i = 0; i < listItems.size(); i++) {
+            Element item = listItems.get(i);
+            Element h2 = item.child(0);
+            h2.text("other text " + i);
+        }
+
+        assertFalse(ulEl.text().contains("initial"));
+        assertEquals("other text 0 other text 1 other text 2", ulEl.text());
+    }
+
+    @Test
     public void classNamesAndAttributeNameIsCaseInsensitive() {
         String html = "<p Class='SomeText AnotherText'>One</p>";
         Document doc = Jsoup.parse(html);

@@ -553,6 +553,14 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         clone.size = size;
         clone.keys = Arrays.copyOf(keys, size);
         clone.vals = Arrays.copyOf(vals, size);
+
+        // make a copy of the user data map. (Contents are shallow).
+        int i = indexOfKey(SharedConstants.UserDataKey);
+        if (i != NotFound) {
+            //noinspection unchecked
+            vals[i] = new HashMap<>((Map<String, Object>) vals[i]);
+        }
+
         return clone;
     }
 

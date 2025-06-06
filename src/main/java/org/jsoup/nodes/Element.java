@@ -1906,9 +1906,13 @@ public class Element extends Node implements Iterable<Element> {
     @Override
     protected Element doClone(@Nullable Node parent) {
         Element clone = (Element) super.doClone(parent);
-        clone.attributes = attributes != null ? attributes.clone() : null;
         clone.childNodes = new NodeList(childNodes.size());
         clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
+        if (attributes != null) {
+            clone.attributes = attributes.clone();
+            // clear any cached children
+            clone.attributes.userData(childElsKey, null);
+        }
 
         return clone;
     }

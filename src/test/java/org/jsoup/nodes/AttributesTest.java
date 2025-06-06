@@ -384,6 +384,15 @@ public class AttributesTest {
         assertEquals(4, two.size());
         assertEquals(3, one.size());
         assertNotEquals(one, two);
+    }
 
+    @Test void cloneGetsUniqueUserDataMap() {
+        Attributes one = new Attributes();
+        String data = "Hello";
+        one.userData("data", data);
+
+        Attributes two = one.clone();
+        assertSame(two.userData("data"), one.userData("data"));
+        assertNotSame(two.userData(), one.userData());
     }
 }

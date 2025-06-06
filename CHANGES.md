@@ -20,6 +20,7 @@
 * `Tag#isFormSubmittable()` was updating the Tag's options. [#2323](https://github.com/jhy/jsoup/issues/2323)
 * The HTML pretty-printer would incorrectly trim whitespace when text followed an inline element in a block element. [#2325](https://github.com/jhy/jsoup/issues/2325)
 * Custom tags with hyphens or other non-letter characters in their names now work correctly as Data or RcData tags. Their closing tags are now tokenized properly. [#2332](https://github.com/jhy/jsoup/issues/2332)
+* When cloning an Element, the clone would retain the source's cached child Element list (if any), which could lead to incorrect results when modifying the clone's child elements. [#2334](https://github.com/jhy/jsoup/issues/2334)
 
 ## 1.20.1 (2025-04-29)
 
