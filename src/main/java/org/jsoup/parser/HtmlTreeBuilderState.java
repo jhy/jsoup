@@ -990,6 +990,8 @@ enum HtmlTreeBuilderState {
                 // if current node is script: already started
                 tb.pop();
                 tb.transition(tb.originalState());
+                if (tb.state() == Text) // stack is such that we couldn't transition out; just close
+                    tb.transition(InBody);
                 return tb.process(t);
             } else if (t.isEndTag()) {
                 // if: An end tag whose tag name is "script" -- scripting nesting level, if evaluating scripts
