@@ -4,7 +4,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -256,20 +255,17 @@ public class XmlTreeBuilderTest {
 
     @Test public void xmlParserEnablesXmlOutputAndEscapes() {
         // Test that when using the XML parser, the output mode and escape mode default to XHTML entities
-        // https://github.com/jhy/jsoup/issues/1420
-        Document doc = Jsoup.parse("<p one='&lt;two&gt;&copy'>Three</p>", "", Parser.xmlParser());
+        Document doc = Jsoup.parse("<root/>", "", Parser.xmlParser());
         assertEquals(doc.outputSettings().syntax(), Syntax.xml);
         assertEquals(doc.outputSettings().escapeMode(), Entities.EscapeMode.xhtml);
-        assertEquals("<p one=\"&lt;two>©\">Three</p>", doc.html()); // only the < should be escaped
     }
 
-    @Test public void xmlSyntaxEscapesLtInAttributes() {
-        // Regardless of the entity escape mode, make sure < is escaped in attributes when in XML
-        Document doc = Jsoup.parse("<p one='&lt;two&gt;&copy'>Three</p>", "", Parser.xmlParser());
+    @Test public void xmlSyntaxAlwaysEscapesLtAndGtInAttributeValues() {
+        // https://github.com/jhy/jsoup/issues/2337
+        Document doc = Jsoup.parse("<p one='&lt;two&gt;'>Three</p>", "", Parser.xmlParser());
         doc.outputSettings().escapeMode(Entities.EscapeMode.extended);
-        doc.outputSettings().charset("ascii"); // to make sure &copy; is output
         assertEquals(doc.outputSettings().syntax(), Syntax.xml);
-        assertEquals("<p one=\"&lt;two>&copy;\">Three</p>", doc.html());
+        assertEquals("<p one=\"&lt;two&gt;\">Three</p>", doc.html());
     }
 
     @Test void xmlOutputCorrectsInvalidAttributeNames() {
@@ -372,7 +368,6 @@ public class XmlTreeBuilderTest {
         // https://github.com/jhy/jsoup/issues/1947
         String xml = "<x><?xmlDeclaration att1=\"value1\" att2=\"&lt;val2>\"?></x>";
         Document doc = Jsoup.parse(xml, Parser.xmlParser());
-        assertEquals(xml, doc.html());
         XmlDeclaration decl = (XmlDeclaration) doc.expectFirst("x").childNode(0);
         assertEquals("<val2>", decl.attr("att2"));
     }
