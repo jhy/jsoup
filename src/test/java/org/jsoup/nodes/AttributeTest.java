@@ -16,6 +16,12 @@ public class AttributeTest {
         assertEquals(attr.html(), attr.toString());
     }
 
+    @Test
+    public void htmlWithLtAndGtInValue() {
+        Attribute attr = new Attribute("key", "<value>");
+        assertEquals("key=\"&lt;value&gt;\"", attr.html());
+    }
+
     @Test public void testWithSupplementaryCharacterInAttributeKeyAndValue() {
         String s = new String(Character.toChars(135361));
         Attribute attr = new Attribute(s, "A" + s + "B");
