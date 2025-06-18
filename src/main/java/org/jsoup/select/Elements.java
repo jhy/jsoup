@@ -69,6 +69,7 @@ public class Elements extends Nodes<Element> {
      @since 1.19.2
      @see #Elements(List)
      */
+    @Override
     public ArrayList<Element> asList() {
         return new ArrayList<>(this);
     }
@@ -363,6 +364,7 @@ public class Elements extends Nodes<Element> {
      @return this (for chaining)
      @see Element#wrap
      */
+    @Override
     public Elements wrap(String html) {
         super.wrap(html);
         return this;
@@ -606,6 +608,7 @@ public class Elements extends Nodes<Element> {
      Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty.
      */
+    @Override
     public @Nullable Element first() {
         return super.first();
     }
@@ -614,6 +617,7 @@ public class Elements extends Nodes<Element> {
      Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
      */
+    @Override
     public @Nullable Element last() {
         return super.last();
     }

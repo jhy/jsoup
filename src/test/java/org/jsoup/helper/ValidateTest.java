@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("deprecation") // keeps tests for ensureNotNull
 public class ValidateTest {
     @Test
     public void testNotNull() {
