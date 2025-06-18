@@ -39,6 +39,9 @@ import java.util.Map;
 #execute()}, {@link #get()}, or {@link #post()}), and the server's response consumed.</p>
  <p>For multi-threaded implementations, it is important to use a {@link #newRequest()} for each request. The session may
  be shared across concurrent threads, but a not a specific request.</p>
+ <p><b>HTTP/2</b> support: On JDK/JRE 11 and above, requests use {@link java.net.http.HttpClient}, which supports
+ HTTP/2. To use the legacy {@link java.net.HttpURLConnection} instead, set
+ <code>System.setProperty("jsoup.useHttpClient", "false")</code>.</p>
  */
 @SuppressWarnings("unused")
 public interface Connection {
