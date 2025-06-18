@@ -14,13 +14,14 @@ public class HttpClientExecutorTest {
             assertEquals("org.jsoup.helper.HttpClientExecutor", executor.getClass().getName());
             // Haven't figured out how to get Maven to allow this mjar code to be on the classpath for the surefire tests, hence not instanceof
         } finally {
-            disableHttpClient(); // reset to default off (currently)
+            disableHttpClient(); // reset to previous default for JDK8 compat tests
         }
     }
 
     @Test void getsHttpUrlConnectionByDefault() {
+        System.clearProperty(SharedConstants.UseHttpClient);
         RequestExecutor executor = RequestDispatch.get(null, null);
-        assertInstanceOf(UrlConnectionExecutor.class, executor);
+        assertEquals("org.jsoup.helper.HttpClientExecutor", executor.getClass().getName());
     }
 
     public static void enableHttpClient() {
