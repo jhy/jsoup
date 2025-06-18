@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static org.jsoup.nodes.Document.OutputSettings.*;
 import static org.jsoup.nodes.Entities.EscapeMode.base;
 import static org.jsoup.nodes.Entities.EscapeMode.extended;
 
@@ -167,32 +166,32 @@ public class Entities {
      @return the escaped string
      */
     public static String escape(String data, OutputSettings out) {
-        return escapeString(data, out.escapeMode(), out.syntax(), out.charset());
+        return escapeString(data, out.escapeMode(), out.charset());
     }
 
     /**
-     HTML escape an input string, using the default settings (UTF-8, base entities, HTML syntax). That is, {@code <} is
+     HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is
      returned as {@code &lt;}. The escaped string is suitable for use both in attributes and in text data.
      @param data the un-escaped string to escape
      @return the escaped string
      @see #escape(String, OutputSettings)
      */
     public static String escape(String data) {
-        return escapeString(data, base, Syntax.html, DataUtil.UTF_8);
+        return escapeString(data, base, DataUtil.UTF_8);
     }
 
-    private static String escapeString(String data, EscapeMode escapeMode, Syntax syntax, Charset charset) {
+    private static String escapeString(String data, EscapeMode escapeMode, Charset charset) {
         if (data == null) return "";
         StringBuilder sb = StringUtil.borrowBuilder();
-        doEscape(data, QuietAppendable.wrap(sb), escapeMode, syntax, charset, ForText | ForAttribute);
+        doEscape(data, QuietAppendable.wrap(sb), escapeMode, charset, ForText | ForAttribute);
         return StringUtil.releaseBuilder(sb);
     }
 
     static void escape(QuietAppendable accum, String data, OutputSettings out, int options) {
-        doEscape(data, accum, out.escapeMode(), out.syntax(), out.charset(), options);
+        doEscape(data, accum, out.escapeMode(), out.charset(), options);
     }
 
-    private static void doEscape(String data, QuietAppendable accum, EscapeMode mode, Syntax syntax, Charset charset, int options) {
+    private static void doEscape(String data, QuietAppendable accum, EscapeMode mode, Charset charset, int options) {
         final CoreCharset coreCharset = CoreCharset.byName(charset.name());
         final CharsetEncoder fallback = encoderFor(charset);
         final int length = data.length();
