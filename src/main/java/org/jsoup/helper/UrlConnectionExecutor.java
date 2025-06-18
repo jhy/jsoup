@@ -17,8 +17,8 @@ import java.util.Map;
 import static org.jsoup.helper.HttpConnection.Response;
 
 /**
- Execute HTTP requests using the HttpURLConnection implementation. Currently used by default; set system property
- {@code jsoup.useHttpClient} to {@code false} to explicitly set.
+ Execute HTTP requests using the HttpURLConnection implementation. The HttpClient is used by default if available; set system property
+ {@code jsoup.useHttpClient} to {@code false} to explicitly prefer the HttpUrlConnection.
  */
 class UrlConnectionExecutor extends RequestExecutor {
     @Nullable

@@ -3,11 +3,14 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
+import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.SlowRider;
+import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.StreamParser;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
@@ -24,6 +27,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Failsafe integration tests for Connect methods. These take a bit longer to run, so included as Integ, not Unit, tests.
  */
 public class ConnectIT {
+    @BeforeAll
+    public static void setUp() {
+        TestServer.start();
+        System.setProperty(SharedConstants.UseHttpClient, "false"); // use the default UrlConnection. See HttpClientConnectIT for other version
+    }
+
     // Slow Rider tests.
     @Test
     public void canInterruptBodyStringRead() throws InterruptedException {

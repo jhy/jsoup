@@ -24,8 +24,8 @@ import static org.jsoup.helper.HttpConnection.Response;
 import static org.jsoup.helper.HttpConnection.Response.writePost;
 
 /**
- Executes requests using the HttpClient, for http/2 support. Currently disabled by default; enable by setting system
- property {@code jsoup.useHttpClient} to {@code true}.
+ Executes requests using the HttpClient, for http/2 support. Enabled by default when available. To disable, set
+ property {@code jsoup.useHttpClient} to {@code false}.
  */
 class HttpClientExecutor extends RequestExecutor {
     // HttpClient expects proxy settings per client; we do per request, so held as a thread local. Can't do same for
