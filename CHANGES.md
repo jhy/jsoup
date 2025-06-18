@@ -7,6 +7,7 @@
 * Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
 
 ### Improvements
+* Enhanced the `Selector` to support direct matching against nodes such as comments and text nodes. For example, you can now find an element that follows a specific comment: `::comment:contains(prices) + p` will select `p` elements immediately after a `<!-- prices: -->` comment. Supported types include `::node`, `::leafnode`, `::comment`, `::text`, and `::data`. Node contextual selectors like `::node:contains(text)`, `:matches(regex)`, and `:blank` are also supported. Introduced `Element#selectNodes(String css)` and `Element#selectNodes(String css, Class nodeType)` for direct node selection. [#2324](https://github.com/jhy/jsoup/pull/2324)
 * Added `TagSet#onNewTag(Consumer<Tag> customizer)`: register a callback that’s invoked for each new or cloned Tag when it’s inserted into the set. Enables dynamic tweaks of tag options (for example, marking all custom tags as self-closing, or everything in a given namespace as preserving whitespace).
 * Made `TokenQueue` and `CharacterReader` autocloseable, to ensure that they will release their buffers back to the buffer pool, for later reuse.
 * Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
