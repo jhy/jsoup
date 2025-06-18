@@ -224,12 +224,12 @@ public class Entities {
                     }
                 }
             }
-            appendEscaped(codePoint, accum, options, mode, syntax, coreCharset, fallback);
+            appendEscaped(codePoint, accum, options, mode, coreCharset, fallback);
         }
     }
 
     private static void appendEscaped(int codePoint, QuietAppendable accum, int options, EscapeMode escapeMode,
-        Syntax syntax, CoreCharset coreCharset, CharsetEncoder fallback) {
+        CoreCharset coreCharset, CharsetEncoder fallback) {
         // specific character range for xml 1.0; drop (not encode) if so
         if (EscapeMode.xhtml == escapeMode && !isValidXmlChar(codePoint)) {
             return;
