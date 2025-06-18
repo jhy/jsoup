@@ -247,12 +247,10 @@ public class Entities {
                     appendNbsp(accum, escapeMode);
                     break;
                 case '<':
-                    // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
-                    appendLt(accum, options, escapeMode, syntax);
+                    accum.append("&lt;");
                     break;
                 case '>':
-                    if ((options & ForText) != 0) accum.append("&gt;");
-                    else accum.append(c);
+                    accum.append("&gt;");
                     break;
                 case '"':
                     if ((options & ForAttribute) != 0) accum.append("&quot;");
@@ -289,11 +287,6 @@ public class Entities {
     private static void appendNbsp(QuietAppendable accum, EscapeMode escapeMode) {
         if (escapeMode != EscapeMode.xhtml) accum.append("&nbsp;");
         else accum.append("&#xa0;");
-    }
-
-    private static void appendLt(QuietAppendable accum, int options, EscapeMode escapeMode, Syntax syntax) {
-        if ((options & ForText) != 0 || escapeMode == EscapeMode.xhtml || syntax == Syntax.xml) accum.append("&lt;");
-        else accum.append('<'); // no need to escape < when in an HTML attribute
     }
 
     private static void appendApos(QuietAppendable accum, int options, EscapeMode escapeMode) {

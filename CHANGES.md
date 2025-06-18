@@ -14,6 +14,7 @@
 * Added `NodeVisitor#traverse(Node)` to simplify node traversal calls (vs. importing `NodeTraversor`).
 * The HTML parser now allows the specific text-data type (Data, RcData) to be customized for known tags. (Previously, that was only supported on custom tags.) [#2326](https://github.com/jhy/jsoup/issues/2326).
 * Added `Connection#readFully()` as a replacement for `Connection#bufferUp()` with an explicit IOException. Similarly, added `Connection#readBody()` over `Connection#body()`. Deprecated `Connection#bufferUp()`. [#2327](https://github.com/jhy/jsoup/pull/2327) 
+* When serializing HTML, the `<` and `>` characters are now escaped in attributes. This helps prevent a class of mutation XSS attacks. [#2337](https://github.com/jhy/jsoup/pull/2337) 
 
 ### Bug Fixes
 * The contents of a `script` in a `svg` foreign context should be parsed as script data, not text. [#2320](https://github.com/jhy/jsoup/issues/2320)
