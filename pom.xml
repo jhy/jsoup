@@ -306,6 +306,14 @@
                 <binaryCompatible>true</binaryCompatible>
                 <sourceCompatible>true</sourceCompatible>
               </overrideCompatibilityChangeParameter>
+
+              <overrideCompatibilityChangeParameter>
+                <!-- false positive on JDK21; List interface has new defaults; Elements now extends Nodes extends ArrayList (WAS Elements extends ArrayList) -->
+                <compatibilityChange>METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE</compatibilityChange>
+                <binaryCompatible>true</binaryCompatible>
+                <sourceCompatible>true</sourceCompatible>
+              </overrideCompatibilityChangeParameter>
+
             </overrideCompatibilityChangeParameters>
           </parameter>
         </configuration>

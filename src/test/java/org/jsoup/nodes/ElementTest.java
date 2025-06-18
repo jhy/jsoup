@@ -3224,4 +3224,27 @@ public class ElementTest {
         assertEquals("<script>a < b</script>", script.outerHtml()); // not encoded
         assertEquals("a < b", script.data());
     }
+
+    @Test void expectFirstNode() {
+        Document doc = Jsoup.parse("<span id=1>One</span> <span id=2>Two</span>");
+        TextNode text = doc.expectFirstNode("::text", TextNode.class);
+        assertEquals("1", text.parent().id());
+
+        TextNode text2 = doc.selectFirstNode("::text", TextNode.class);
+        assertSame(text, text2);
+
+        assertNull(doc.selectFirstNode("::comment", Comment.class));
+    }
+
+    @Test void expectFirstThrows() {
+        Document doc = Jsoup.parse("<span id=1>One</span> <span id=2>Two</span>");
+        boolean threw = false;
+        try {
+            doc.expectFirstNode("::comment", Comment.class);
+        } catch (IllegalArgumentException e) {
+            threw = true;
+            assertEquals("No nodes matched the query '::comment' in the document.", e.getMessage());
+        }
+        assertTrue(threw);
+    }
 }

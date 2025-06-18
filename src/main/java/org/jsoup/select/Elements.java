@@ -27,7 +27,7 @@ import java.util.function.UnaryOperator;
  replace} Elements in the list will also act on the underlying {@link org.jsoup.nodes.Document DOM}.</p>
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public class Elements extends ArrayList<Element> {
+public class Elements extends Nodes<Element> {
     public Elements() {
     }
 
@@ -38,11 +38,11 @@ public class Elements extends ArrayList<Element> {
     public Elements(Collection<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(List<Element> elements) {
         super(elements);
     }
-    
+
     public Elements(Element... elements) {
     	super(Arrays.asList(elements));
     }
@@ -272,29 +272,6 @@ public class Elements extends ArrayList<Element> {
             .map(Element::html)
             .collect(StringUtil.joining("\n"));
     }
-    
-    /**
-     * Get the combined outer HTML of all matched elements.
-     * @return string of all element's outer HTML.
-     * @see #text()
-     * @see #html()
-     */
-    public String outerHtml() {
-        return stream()
-            .map(Element::outerHtml)
-            .collect(StringUtil.joining("\n"));
-    }
-
-    /**
-     * Get the combined outer HTML of all matched elements. Alias of {@link #outerHtml()}.
-     * @return string of all element's outer HTML.
-     * @see #text()
-     * @see #html()
-     */
-    @Override
-    public String toString() {
-        return outerHtml();
-    }
 
     /**
      * Update (rename) the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
@@ -349,30 +326,30 @@ public class Elements extends ArrayList<Element> {
         }
         return this;
     }
-    
+
     /**
-     * Insert the supplied HTML before each matched element's outer HTML.
-     * @param html HTML to insert before each element
-     * @return this, for chaining
-     * @see Element#before(String)
+     Insert the supplied HTML before each matched element's outer HTML.
+
+     @param html HTML to insert before each element
+     @return this, for chaining
+     @see Element#before(String)
      */
+    @Override
     public Elements before(String html) {
-        for (Element element : this) {
-            element.before(html);
-        }
+        super.before(html);
         return this;
     }
-    
+
     /**
-     * Insert the supplied HTML after each matched element's outer HTML.
-     * @param html HTML to insert after each element
-     * @return this, for chaining
-     * @see Element#after(String)
+     Insert the supplied HTML after each matched element's outer HTML.
+
+     @param html HTML to insert after each element
+     @return this, for chaining
+     @see Element#after(String)
      */
+    @Override
     public Elements after(String html) {
-        for (Element element : this) {
-            element.after(html);
-        }
+        super.after(html);
         return this;
     }
 
@@ -381,15 +358,13 @@ public class Elements extends ArrayList<Element> {
      {@code <p><b>This</b> is <b>Jsoup</b></p>},
      <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
      becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
+
      @param html HTML to wrap around each element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
      @return this (for chaining)
      @see Element#wrap
      */
     public Elements wrap(String html) {
-        Validate.notEmpty(html);
-        for (Element element : this) {
-            element.wrap(html);
-        }
+        super.wrap(html);
         return this;
     }
 
@@ -446,10 +421,9 @@ public class Elements extends ArrayList<Element> {
      * @see #empty()
      * @see #clear()
      */
+    @Override
     public Elements remove() {
-        for (Element element : this) {
-            element.remove();
-        }
+        super.remove();
         return this;
     }
     
@@ -487,7 +461,7 @@ public class Elements extends ArrayList<Element> {
      @since 1.19.1
      */
     public Element expectFirst(String cssQuery) {
-        return (Element) Validate.ensureNotNull(
+        return Validate.expectNotNull(
             Selector.selectFirst(cssQuery, this),
             "No elements matched the query '%s' in the elements.", cssQuery
         );
@@ -633,7 +607,7 @@ public class Elements extends ArrayList<Element> {
      @return The first matched element, or <code>null</code> if contents is empty.
      */
     public @Nullable Element first() {
-        return isEmpty() ? null : get(0);
+        return super.first();
     }
 
     /**
@@ -641,7 +615,7 @@ public class Elements extends ArrayList<Element> {
      @return The last matched element, or <code>null</code> if contents is empty.
      */
     public @Nullable Element last() {
-        return isEmpty() ? null : get(size() - 1);
+        return super.last();
     }
 
     /**
@@ -718,150 +692,41 @@ public class Elements extends ArrayList<Element> {
 
     /**
      Replace the Element at the specified index in this list, and in the DOM.
-     * @param index index of the element to replace
-     * @param element element to be stored at the specified position
-     * @return the old Element at this index
-     * @since 1.17.1
+
+     @param index index of the element to replace
+     @param element element to be stored at the specified position
+     @return the old Element at this index
+     @since 1.17.1
      */
-    @Override public Element set(int index, Element element) {
-        Validate.notNull(element);
-        Element old = super.set(index, element);
-        old.replaceWith(element);
-        return old;
+    @Override
+    public Element set(int index, Element element) {
+        return super.set(index, element);
     }
 
     /**
      Remove the Element at the specified index in this ist, and from the DOM.
+
      @param index the index of the element to be removed
      @return the old element at this index
      @see #deselect(int)
      @since 1.17.1
      */
-    @Override public Element remove(int index) {
-        Element old = super.remove(index);
-        old.remove();
-        return old;
-    }
-
-    /**
-     Remove the specified Element from this list, and from the DOM.
-     @param o element to be removed from this list, if present
-     @return if this list contained the Element
-     @see #deselect(Object)
-     @since 1.17.1
-     */
-    @Override public boolean remove(Object o) {
-        int index = super.indexOf(o);
-        if (index == -1) {
-            return false;
-        } else {
-            remove(index);
-            return true;
-        }
-    }
-
-    /**
-     Remove the Element at the specified index in this list, but not from the DOM.
-     @param index the index of the element to be removed
-     @return the old element at this index
-     @see #remove(int) 
-     @since 1.19.2
-     */
-    public Element deselect(int index) {
+    @Override
+    public Element remove(int index) {
         return super.remove(index);
     }
 
+
     /**
-     Remove the specified Element from this list, but not from the DOM.
-     @param o element to be removed from this list, if present
-     @return if this list contained the Element
-     @see #remove(Object) 
+     Remove the Element at the specified index in this list, but not from the DOM.
+
+     @param index the index of the element to be removed
+     @return the old element at this index
+     @see #remove(int)
      @since 1.19.2
      */
-    public boolean deselect(Object o) {
-        return super.remove(o);
-    }
-
-    /**
-     Removes all the elements from this list, and each of them from the DOM.
-     @since 1.17.1
-     @see #deselectAll()
-     */
-    @Override public void clear() {
-        remove();
-        super.clear();
-    }
-
-    /**
-     Like {@link #clear()}, removes all the elements from this list, but not from the DOM.
-     @see #clear()
-     @since 1.19.2
-     */
-    public void deselectAll() {
-        super.clear();
-    }
-
-    /**
-     Removes from this list, and from the DOM, each of the elements that are contained in the specified collection and
-     are in this list.
-     * @param c collection containing elements to be removed from this list
-     * @return {@code true} if elements were removed from this list
-     * @since 1.17.1
-     */
-    @Override public boolean removeAll(Collection<?> c) {
-        boolean anyRemoved = false;
-        for (Object o : c) {
-            anyRemoved |= this.remove(o);
-        }
-        return anyRemoved;
-    }
-
-    /**
-     Retain in this list, and in the DOM, only the elements that are in the specified collection and are in this list.
-     In other words, remove elements from this list and the DOM any item that is in this list but not in the specified
-     collection.
-     * @param c collection containing elements to be retained in this list
-     * @return {@code true} if elements were removed from this list
-     * @since 1.17.1
-     */
-    @Override public boolean retainAll(Collection<?> c) {
-        boolean anyRemoved = false;
-        for (Iterator<Element> it = this.iterator(); it.hasNext(); ) {
-            Element el = it.next();
-            if (!c.contains(el)) {
-                it.remove();
-                anyRemoved = true;
-            }
-        }
-        return anyRemoved;
-    }
-
-    /**
-     Remove from the list, and from the DOM, all elements in this list that mach the given filter.
-     * @param filter a predicate which returns {@code true} for elements to be removed
-     * @return {@code true} if elements were removed from this list
-     * @since 1.17.1
-     */
-    @Override public boolean removeIf(Predicate<? super Element> filter) {
-        boolean anyRemoved = false;
-        for (Iterator<Element> it = this.iterator(); it.hasNext(); ) {
-            Element el = it.next();
-            if (filter.test(el)) {
-                it.remove();
-                anyRemoved = true;
-            }
-        }
-        return anyRemoved;
-    }
-
-    /**
-     Replace each element in this list with the result of the operator, and update the DOM.
-     * @param operator the operator to apply to each element
-     * @since 1.17.1
-     */
-    @Override public void replaceAll(UnaryOperator<Element> operator) {
-        for (int i = 0; i < this.size(); i++) {
-            this.set(i, operator.apply(this.get(i)));
-        }
+    @Override
+    public Element deselect(int index) {
+        return super.deselect(index);
     }
 }
