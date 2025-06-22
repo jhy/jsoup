@@ -202,12 +202,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         htmlNoValidate(key, val, accum, out);
     }
 
-    /** @deprecated internal method and will be removed */ // todo @Deprecate
+    /** @deprecated internal method and will be removed in a future version */
+    @Deprecated
     protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
         html(key, val, accum, out);
     }
 
-    /** @deprecated internal method and will be removed */ // todo @Deprecate
+    /** @deprecated internal method and will be removed in a future version */
+    @Deprecated
     protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
         html(key, val, QuietAppendable.wrap(accum), out);
     }

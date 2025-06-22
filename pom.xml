@@ -292,7 +292,20 @@
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
             <excludes>
-              <exclude>@java.lang.Deprecated</exclude>
+              <!-- previously deprecated; removed in this release. explicit list, vs @Deprecated so that we can deprecate others -->
+              <exclude>org.jsoup.helper.ChangeNotifyingArrayList</exclude>
+              <exclude>org.jsoup.nodes.Document#updateMetaCharsetElement(boolean)</exclude>
+              <exclude>org.jsoup.nodes.Document#updateMetaCharsetElement()</exclude>
+              <exclude>org.jsoup.parser.HtmlTreeBuilder#isContentForTagData(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.Parser#isContentForTagData(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.Parser#setTreeBuilder(org.jsoup.parser.TreeBuilder)</exclude>
+              <exclude>org.jsoup.parser.Tag#isFormListed()</exclude>
+              <exclude>org.jsoup.parser.TokenQueue#addFirst(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.TokenQueue#chompTo(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.TokenQueue#chompToIgnoreCase(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.TokenQueue#consumeToIgnoreCase(java.lang.String)</exclude>
+              <exclude>org.jsoup.parser.TokenQueue#consumeWord()</exclude>
+              <exclude> org.jsoup.parser.TokenQueue#matchesAny(java.lang.String[])</exclude>
             </excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->

@@ -1020,7 +1020,20 @@ public abstract class Evaluator {
         }
     }
 
+    /**
+     @deprecated This selector is deprecated and will be removed in a future version. Migrate to <code>::textnode</code> using the <code>Element#selectNodes()</code> method instead.
+     */
+    @Deprecated
     public static final class MatchText extends Evaluator {
+        private static boolean loggedError = false;
+
+        public MatchText() {
+            // log a deprecated error on first use; users typically won't directly construct this Evaluator and so won't otherwise get deprecation warnings
+            if (!loggedError) {
+                loggedError = true;
+                System.err.println("WARNING: :matchText selector is deprecated and will be removed in a future version. Use Element#selectNodes(String, Class) with selector ::textnode and class TextNode instead.");
+            }
+        }
 
         @Override
         public boolean matches(Element root, Element element) {

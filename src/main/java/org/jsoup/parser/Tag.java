@@ -245,7 +245,7 @@ public class Tag implements Cloneable {
      Get if this is an InlineContainer tag.
 
      @return true if an InlineContainer (which formats children as inline).
-     @deprecated setting is only used within the Printer. Will be removed in 1.21.
+     @deprecated setting is only used within the Printer. Will be removed in a future release.
      */
     @Deprecated public boolean formatAsBlock() {
         return (options & InlineContainer) != 0;

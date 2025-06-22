@@ -50,6 +50,7 @@ public final class Validate {
      * @throws ValidationException if the object is null
      * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead
      */
+    @Deprecated
     public static Object ensureNotNull(@Nullable Object obj) {
         if (obj == null)
             throw new ValidationException("Object must not be null");
@@ -66,6 +67,7 @@ public final class Validate {
      * @throws ValidationException if the object is null
      * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead
      */
+    @Deprecated
     public static Object ensureNotNull(@Nullable Object obj, String msg, Object... args) {
         if (obj == null)
             throw new ValidationException(String.format(msg, args));
