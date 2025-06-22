@@ -145,13 +145,16 @@ public interface Connection {
     Connection userAgent(String userAgent);
 
     /**
-     * Set the total request timeout duration. If a timeout occurs, an {@link java.net.SocketTimeoutException} will be thrown.
-     * <p>The default timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.
-     * <p>Note that this timeout specifies the combined maximum duration of the connection time and the time to read
-     * the full response.
-     * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
-     * @return this Connection, for chaining
-     * @see #maxBodySize(int)
+     Set the total maximum request duration. If a timeout occurs, an {@link java.net.SocketTimeoutException} will be
+     thrown.
+     <p>The default timeout is <b>30 seconds</b> (30,000 millis). A timeout of zero is treated as an infinite timeout.</p>
+     <p>This timeout specifies the combined maximum duration of the connection time and the time to read
+     the full response.</p>
+     <p>Implementation note: when this <code>Connection</code> is backed by <code>HttpURLConnection</code> (rather than <code>HttpClient</code>, as used in JRE/JDK 11+), this timeout is implemented by setting both the socket connect and read timeouts to half of the specified value.</p>
+
+     @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
+     @return this Connection, for chaining
+     @see #maxBodySize(int)
      */
     Connection timeout(int millis);
 
