@@ -26,7 +26,7 @@
 * Custom tags with hyphens or other non-letter characters in their names now work correctly as Data or RcData tags. Their closing tags are now tokenized properly. [#2332](https://github.com/jhy/jsoup/issues/2332)
 * When cloning an Element, the clone would retain the source's cached child Element list (if any), which could lead to incorrect results when modifying the clone's child elements. [#2334](https://github.com/jhy/jsoup/issues/2334)
 
-## 1.20.1 (2025-04-29)
+## 1.20.1 (2025-Apr-29)
 
 ### Changes
 
@@ -90,7 +90,7 @@
   incorrectly emit an error. [#2298](https://github.com/jhy/jsoup/issues/2298).
 * Calling `Element#cssSelector()` on an element with combining characters in the class or ID now produces the correct output. [#1984](https://github.com/jhy/jsoup/issues/1984). 
 
-## 1.19.1 (2025-03-04)
+## 1.19.1 (2025-Mar-04)
 
 ### Changes
 
