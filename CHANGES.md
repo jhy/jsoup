@@ -5,7 +5,7 @@
 ### Changes
 
 * Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
-* Deprecated the `:matchText` pseduo-selector due to its side effects on the DOM; use the new `::textnode` selector and the `Element#selectNodes(String css, Class type)` method instead.
+* Deprecated the `:matchText` pseduo-selector due to its side effects on the DOM; use the new `::textnode` selector and the `Element#selectNodes(String css, Class type)` method instead. [#2343](https://github.com/jhy/jsoup/pull/2343)
 * Deprecated `Connection.Response#bufferUp()` in lieu of `Connection.Response#readFully()` which can throw a checked IOException.
 * Deprecated internal methods `Validate#ensureNotNull` (replaced by typed `Validate#expectNotNull`); protected HTML appenders from Attribute and Node.
 * If you happen to be using any of the deprecated methods, please take the opportunity now to migrate away from them, as they will be removed in a future release.
