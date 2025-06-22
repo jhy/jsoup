@@ -63,7 +63,7 @@ public class HttpConnection implements Connection {
      * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
      */
     public static final String DEFAULT_UA =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36";
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
     private static final String USER_AGENT = "User-Agent";
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String MULTIPART_FORM_DATA = "multipart/form-data";

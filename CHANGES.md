@@ -13,6 +13,7 @@
 * Added `Selector#evaluatorOf(String css)`, as a clearer way to obtain an Evaluator from a CSS query. An alias of `QueryParser.parse(String css)`.
 * Custom tags (defined via the `TagSet`) in a foreign namespace (e.g. SVG) can be configured to parse as data tags.
 * Added `NodeVisitor#traverse(Node)` to simplify node traversal calls (vs. importing `NodeTraversor`).
+* Updated the default user-agent string to improve compatibility. [#2341](https://github.com/jhy/jsoup/issues/2341) 
 * The HTML parser now allows the specific text-data type (Data, RcData) to be customized for known tags. (Previously, that was only supported on custom tags.) [#2326](https://github.com/jhy/jsoup/issues/2326).
 * Added `Connection#readFully()` as a replacement for `Connection#bufferUp()` with an explicit IOException. Similarly, added `Connection#readBody()` over `Connection#body()`. Deprecated `Connection#bufferUp()`. [#2327](https://github.com/jhy/jsoup/pull/2327) 
 * When serializing HTML, the `<` and `>` characters are now escaped in attributes. This helps prevent a class of mutation XSS attacks. [#2337](https://github.com/jhy/jsoup/pull/2337)
