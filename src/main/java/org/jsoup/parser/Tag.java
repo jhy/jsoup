@@ -275,7 +275,7 @@ public class Tag implements Cloneable {
      * @return if this tag should be output as self-closing.
      */
     public boolean isSelfClosing() {
-        return (options & SelfClose) != 0 || (options & Void) != 0;
+        return (options & SelfClose) != 0 || (options & SeenSelfClose) != 0 || (options & Void) != 0;
     }
 
     /**
