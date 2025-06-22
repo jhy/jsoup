@@ -5,6 +5,10 @@
 ### Changes
 
 * Removed previously deprecated methods. [#2317](https://github.com/jhy/jsoup/pull/2317)
+* Deprecated the `:matchText` pseduo-selector due to its side effects on the DOM; use the new `::textnode` selector and the `Element#selectNodes(String css, Class type)` method instead. [#2343](https://github.com/jhy/jsoup/pull/2343)
+* Deprecated `Connection.Response#bufferUp()` in lieu of `Connection.Response#readFully()` which can throw a checked IOException.
+* Deprecated internal methods `Validate#ensureNotNull` (replaced by typed `Validate#expectNotNull`); protected HTML appenders from Attribute and Node.
+* If you happen to be using any of the deprecated methods, please take the opportunity now to migrate away from them, as they will be removed in a future release.
 
 ### Improvements
 * Enhanced the `Selector` to support direct matching against nodes such as comments and text nodes. For example, you can now find an element that follows a specific comment: `::comment:contains(prices) + p` will select `p` elements immediately after a `<!-- prices: -->` comment. Supported types include `::node`, `::leafnode`, `::comment`, `::text`, and `::data`. Node contextual selectors like `::node:contains(text)`, `:matches(regex)`, and `:blank` are also supported. Introduced `Element#selectNodes(String css)` and `Element#selectNodes(String css, Class nodeType)` for direct node selection. [#2324](https://github.com/jhy/jsoup/pull/2324)

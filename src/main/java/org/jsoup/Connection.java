@@ -985,6 +985,7 @@ public interface Connection {
          * @throws UncheckedIOException if an IO exception occurs during buffering.
          * @deprecated use {@link #readFully()} instead (for the checked exception). Will be removed in a future version.
          */
+        @Deprecated
         Response bufferUp();
 
         /**
