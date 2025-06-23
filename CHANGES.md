@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.21.1 (PENDING)
+## 1.21.1 (2025-Jun-23)
 
 ### Changes
 
