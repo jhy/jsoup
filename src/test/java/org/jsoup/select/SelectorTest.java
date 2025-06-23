@@ -1719,14 +1719,14 @@ public class SelectorTest {
     }
 
     @Test void unknownPseudoNodeSelectError() {
-        boolean threw = false;
-        try {
-            Evaluator ev = Selector.evaluatorOf("::unknown:contains(foo)");
-        } catch (Selector.SelectorParseException e) {
-            threw = true;
-            assertEquals("Could not parse query '::unknown:contains(foo)': unknown node type '::unknown'", e.getMessage());
-        }
-        assertTrue(threw);
+        Exception ex = assertThrows(
+            Selector.SelectorParseException.class,
+            () -> Selector.evaluatorOf("::unknown:contains(foo)")
+        );
+        assertEquals(
+            "Could not parse query '::unknown:contains(foo)': unknown node type '::unknown'",
+            ex.getMessage()
+        );
     }
 
 }
