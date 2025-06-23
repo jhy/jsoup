@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.LeafNode;
@@ -280,6 +281,9 @@ public class QueryParser implements AutoCloseable {
                 break;
             case "data":
                 left = new NodeEvaluator.InstanceType(DataNode.class, pseudo);
+                break;
+            case "cdata":
+                left = new NodeEvaluator.InstanceType(CDataNode.class, pseudo);
                 break;
             default:
                 throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query,

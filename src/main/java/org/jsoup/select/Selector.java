@@ -94,10 +94,11 @@ import java.util.stream.Stream;
  <tr><td>::leafnode</td><td>Matches any leaf-node (this is, a Node which is not an Element)</td><td></td></tr>
  <tr><td>::comment</td><td>Matches a Comment node</td><td></td></tr>
  <tr><td>::text</td><td>Matches a TextNode</td><td></td></tr>
- <tr><td>::data</td><td>Matches a DataNode</td><td></td></tr>
- <tr><td>::node:contains(text)</td><td>Matches a node that has a (normalized, case-insensitive) value containing <i>text</i>.</td><td>::comment:contains(foo bar)</td></tr>
- <tr><td>::node:matches(regex)</td><td>Matches a node that has a value matching the regex.</td><td>::comment:matches(\\d+)</td></tr>
- <tr><td>::node:blank</td><td>Matches a node that has either no value, or a value of only whitespace.</td><td>::comment:not(:blank)</td></tr>
+ <tr><td>::data</td><td>Matches a DataNode (e.g. the content of a <code>script</code> or a <code>style</code> element)</td><td></td></tr>
+ <tr><td>::cdata</td><td>Matches a CDataNode (which are only present in XML)</td><td></td></tr>
+ <tr><td>::node:contains(text)</td><td>Matches a node that has a (normalized, case-insensitive) value containing <i>text</i>.</td><td><code>::comment:contains(foo bar)</code></td></tr>
+ <tr><td>::node:matches(regex)</td><td>Matches a node that has a value matching the regex.</td><td><code>::comment:matches(\\d+)</code></td></tr>
+ <tr><td>::node:blank</td><td>Matches a node that has either no value, or a value of only whitespace.</td><td><code>::comment:not(:blank)</code></td></tr>
  </table>
 
  <p>A word on using regular expressions in these selectors: depending on the content of the regex, you will need to quote the pattern using <b><code>Pattern.quote("regex")</code></b> for it to parse correctly through both the selector parser and the regex parser. E.g. <code>String query = "div:matches(" + Pattern.quote(regex) + ");"</code>.</p>

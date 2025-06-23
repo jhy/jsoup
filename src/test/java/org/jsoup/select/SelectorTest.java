@@ -2,6 +2,7 @@ package org.jsoup.select;
 
 import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleExtension.MultiLocaleTest;
+import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -1686,6 +1687,35 @@ public class SelectorTest {
         assertEquals("123", nodes.get(1).nodeValue());
         assertEquals("4321", nodes.get(2).nodeValue());
         assertEquals("432", nodes.get(3).nodeValue());
+    }
+
+    @Test void cdataNodes() {
+        String xml = "<body><![CDATA[One]]><p>Two</p><![CDATA[Three]]><x><![CDATA[ ]]></body>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        // via leafnode:
+        Nodes<CDataNode> leafnodes = doc.selectNodes("::leafnode", CDataNode.class);
+        assertEquals(3, leafnodes.size());
+
+        // cdata via unfiltered
+        Nodes<Node> nodes = doc.selectNodes("::cdata");
+        assertEquals(3, nodes.size());
+
+        // (not) blank:
+        Nodes<CDataNode> notBlanks = doc.selectNodes("::cdata:not(:blank)", CDataNode.class);
+        assertEquals(2, notBlanks.size());
+        assertEquals("One", notBlanks.get(0).nodeValue());
+        assertEquals("Three", notBlanks.get(1).nodeValue());
+
+        // contains:
+        Nodes<CDataNode> contains = doc.selectNodes("::cdata:contains(One)", CDataNode.class);
+        assertEquals(1, contains.size());
+        assertEquals("One", contains.get(0).nodeValue());
+
+        // matches:
+        Nodes<CDataNode> matches = doc.selectNodes("::cdata:matches(re)", CDataNode.class);
+        assertEquals(1, matches.size());
+        assertEquals("Three", matches.get(0).nodeValue());
     }
 
 }
