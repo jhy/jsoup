@@ -1718,4 +1718,15 @@ public class SelectorTest {
         assertEquals("Three", matches.get(0).nodeValue());
     }
 
+    @Test void unknownPseudoNodeSelectError() {
+        boolean threw = false;
+        try {
+            Evaluator ev = Selector.evaluatorOf("::unknown:contains(foo)");
+        } catch (Selector.SelectorParseException e) {
+            threw = true;
+            assertEquals("Could not parse query '::unknown:contains(foo)': unknown node type '::unknown'", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
 }

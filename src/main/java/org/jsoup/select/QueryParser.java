@@ -286,8 +286,8 @@ public class QueryParser implements AutoCloseable {
                 left = new NodeEvaluator.InstanceType(CDataNode.class, pseudo);
                 break;
             default:
-                throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query,
-                    tq.remainder());
+                throw new Selector.SelectorParseException(
+                    "Could not parse query '%s': unknown node type '::%s'", query, pseudo);
         }
 
         // Handle following subclasses in node context (like ::comment:contains())
