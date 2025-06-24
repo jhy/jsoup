@@ -49,6 +49,7 @@ class UrlConnectionExecutor extends RequestExecutor {
             res.url = conn.getURL();
             res.statusCode = conn.getResponseCode();
             res.statusMessage = conn.getResponseMessage();
+            if (res.statusMessage == null) res.statusMessage = ""; // getResponseMessage may be null but statusMessage() is not null
             res.contentType = conn.getContentType();
             res.contentLength = conn.getContentLength();
             Map<String, List<String>> resHeaders = createHeaderMap(conn);

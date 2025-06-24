@@ -118,6 +118,12 @@ public class ConnectTest {
         return first != null ? first.text() : null;
     }
 
+    @Test void statusMessage() throws IOException {
+        Connection con = Jsoup.connect(EchoServlet.Url);
+        Document doc = con.get();
+        assertEquals("OK", con.response().statusMessage());
+    }
+
     @Test
     public void throwsExceptionOn404() {
         String url = EchoServlet.Url;
@@ -145,6 +151,7 @@ public class ConnectTest {
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
+        assertEquals("Not Found", res.statusMessage());
         assertEquals("Webserver Environment Variables", doc.title());
     }
 

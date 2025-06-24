@@ -88,6 +88,7 @@ class HttpClientExecutor extends RequestExecutor {
             res.method = Connection.Method.valueOf(hRes.request().method());
             res.url = hRes.uri().toURL();
             res.statusCode = hRes.statusCode();
+            res.statusMessage = StatusMessage(res.statusCode);
             res.contentType = headers.firstValue("content-type").orElse("");
             long length = headers.firstValueAsLong("content-length").orElse(-1);
             res.contentLength = length < Integer.MAX_VALUE ? (int) length : -1;
@@ -107,6 +108,15 @@ class HttpClientExecutor extends RequestExecutor {
             // detach per request proxy
             perRequestProxy.remove();
         }
+    }
+
+    /**
+     As HTTP/2 no longer provides a server-set status message, and HttpClient doesn't parse it for 1.1, just provide minimal stock ones, for loggers.
+     */
+    static String StatusMessage(int statusCode) {
+        if (statusCode < 400) return "OK";
+        if (statusCode == 404) return "Not Found";
+        return "Error " + statusCode;
     }
 
     @Override

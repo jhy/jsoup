@@ -813,7 +813,7 @@ public class HttpConnection implements Connection {
         private static final int MAX_REDIRECTS = 20;
         private static final String LOCATION = "Location";
         int statusCode;
-        @Nullable String statusMessage;
+        String statusMessage = "";
         private @Nullable ByteBuffer byteData;
         private @Nullable ControllableInputStream bodyStream;
         @Nullable RequestExecutor executor;
