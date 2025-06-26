@@ -129,6 +129,19 @@ class Printer implements NodeVisitor {
             if (next == null || !(next instanceof TextNode) && shouldIndent(next))
                 options |= Entities.TrimTrailing; // don't trim if there is a TextNode sequence
 
+            // do trim trailing whitespace if the next non-empty TextNode has leading whitespace
+            Node subsequentTextNode = next;
+            while (subsequentTextNode instanceof TextNode) {
+                String subsequentText = ((TextNode) subsequentTextNode).getWholeText();
+                if (subsequentText.isEmpty()) {
+                    subsequentTextNode = subsequentTextNode.nextSibling();
+                    continue;
+                }
+                if (StringUtil.isWhitespace(subsequentText.codePointAt(0)))
+                    options |= Entities.TrimTrailing;
+                break;
+            }
+
             return options;
         }
 
