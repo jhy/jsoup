@@ -1,5 +1,10 @@
 # jsoup Changelog
 
+## 1.21.2 (PENDING)
+
+### Improvements
+* When pretty-printing, if there are consecutive text nodes (via DOM manipulation), the non-significant whitespace between them will be collapsed. [#2349](https://github.com/jhy/jsoup/pull/2349). 
+
 ## 1.21.1 (2025-Jun-23)
 
 ### Changes

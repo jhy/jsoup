@@ -64,6 +64,18 @@ public class PrinterTest {
         assertEquals("<div>\n <div></div>\n Hello there.\n</div>", div.outerHtml());
     }
 
+    @Test void sequentialTextNodesCollapseAdjacentWhitespace() {
+        // https://github.com/jhy/jsoup/pull/2349
+        // Tests that the pretty printer collapses whitespace between sequential text nodes into a single space.
+        // This must also work with intermediate empty and blank text nodes.
+        Document doc = Jsoup.parseBodyFragment("Before <span> </span> After");
+        doc.expectFirst("span")
+                .after(new TextNode("")).after(new TextNode("")).after(new TextNode(" ")).after(new TextNode(""))
+                .remove();
+        assertEquals(6, doc.body().textNodes().size()); // no collapse before printing
+        assertEquals("Before After", doc.body().html());
+    }
+
     @Test void dontCollapseTextAfterNonElements() {
         Document doc = Jsoup.parse("<div><div></div>Hello <!-- -_- --> there</div>");
         Element body = doc.body();

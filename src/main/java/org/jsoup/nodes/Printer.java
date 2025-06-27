@@ -126,8 +126,13 @@ class Printer implements NodeVisitor {
                     options |= Entities.TrimLeading;
             }
 
-            if (next == null || !(next instanceof TextNode) && shouldIndent(next))
-                options |= Entities.TrimTrailing; // don't trim if there is a TextNode sequence
+            if (next == null || !(next instanceof TextNode) && shouldIndent(next)) {
+                options |= Entities.TrimTrailing;
+            } else { // trim trailing whitespace if the next non-empty TextNode has leading whitespace
+                next = nextNonBlank(next);
+                if (next instanceof TextNode && StringUtil.isWhitespace(next.nodeValue().codePointAt(0)))
+                    options |= Entities.TrimTrailing;
+            }
 
             return options;
         }
@@ -141,7 +146,7 @@ class Printer implements NodeVisitor {
             Node prevSib = previousNonblank(node);
             if (isBlockEl(prevSib)) return true;
 
-            Element parent = (Element) node.parentNode;
+            Element parent = node.parentNode;
             if (!isBlockEl(parent) || parent.tag().is(Tag.InlineContainer) || !hasNonTextNodes(parent))
                 return false;
 

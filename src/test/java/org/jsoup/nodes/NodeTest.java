@@ -290,7 +290,7 @@ public class NodeTest {
         Document doc = Jsoup.parse("<div>One <span></span> Two</div>");
         Element span = doc.select("span").first();
         Node node = span.unwrap();
-        assertEquals("<div>One  Two</div>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<div>One Two</div>", TextUtil.stripNewlines(doc.body().html()));
         assertNull(node);
     }
 
