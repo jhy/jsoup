@@ -65,9 +65,10 @@ public class PrinterTest {
     }
 
     @Test void sequentialTextNodesCollapseAdjacentWhitespace() {
+        // https://github.com/jhy/jsoup/pull/2349
         // Tests that the pretty printer collapses whitespace between sequential text nodes into a single space.
         // This must also work with intermediate empty and blank text nodes.
-        Document doc = Jsoup.parseBodyFragment("Before <span></span> After");
+        Document doc = Jsoup.parseBodyFragment("Before <span> </span> After");
         doc.expectFirst("span")
                 .after(new TextNode("")).after(new TextNode("")).after(new TextNode(" ")).after(new TextNode(""))
                 .remove();
