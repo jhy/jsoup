@@ -58,7 +58,9 @@ public class SimpleStreamReader extends Reader {
         }
 
         if (readFully) decoder.reset();
-        if (charBuf.position() == 0) return -1;
+        if (charBuf.position() == 0) {
+            return readFully ? -1 : 0; // 0 if there was a surrogate and reader tried to read only 1.
+        }
         return charBuf.position();
     }
 

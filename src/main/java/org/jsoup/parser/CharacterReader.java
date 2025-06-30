@@ -108,6 +108,9 @@ public final class CharacterReader implements AutoCloseable {
                     readFully = true;
                     break;
                 }
+                if (read == 0) {
+                    break; // if we have a surrogate on the buffer boundary and trying to read 1; will have enough in our buffer to proceed
+                }
                 bufLength += read;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

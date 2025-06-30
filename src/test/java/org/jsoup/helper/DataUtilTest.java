@@ -3,8 +3,11 @@ package org.jsoup.helper;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.internal.ControllableInputStream;
+import org.jsoup.internal.SimpleStreamReader;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.StreamParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
@@ -208,7 +211,7 @@ public class DataUtilTest {
     @Test
     public void noExtraNULLBytes() throws IOException {
     	final byte[] b = "<html><head><meta charset=\"UTF-8\"></head><body><div><u>ü</u>ü</div></body></html>".getBytes(StandardCharsets.UTF_8);
-    	
+
     	Document doc = Jsoup.parse(new ByteArrayInputStream(b), null, "");
     	assertFalse( doc.outerHtml().contains("\u0000") );
     }
@@ -343,5 +346,19 @@ public class DataUtilTest {
         assertNotNull(is);
         assertTrue(is.baseReadFully());
         is.close();
+    }
+
+    @Test void streamParserSurrogateAcrossBuffer() throws IOException {
+        // https://github.com/jhy/jsoup/issues/2353
+        try (StreamParser parser = DataUtil.streamParser(ParseTest.getPath("/fuzztests/2353.html.gz"), DataUtil.UTF_8, "", Parser.htmlParser())) {
+            Document doc = parser.complete();
+            String html = doc.html();
+            assertTrue(html.contains("Read-Fully!"));
+        }
+    }
+
+    @Test void parseSurrogateAcrossBuffer() throws IOException {
+        Document doc = Jsoup.parse(ParseTest.getPath("/fuzztests/2353.html.gz"));
+        assertTrue(doc.html().contains("Read-Fully!"));
     }
 }
