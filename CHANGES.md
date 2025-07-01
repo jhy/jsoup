@@ -4,6 +4,7 @@
 
 ### Improvements
 * When pretty-printing, if there are consecutive text nodes (via DOM manipulation), the non-significant whitespace between them will be collapsed. [#2349](https://github.com/jhy/jsoup/pull/2349).
+* Updated `Connection.Response#statusMessage()` to return a simple loggable string message (e.g. "OK") when using the `HttpClient` implementation, which doesn't otherwise return any server-set status message. [#2356](https://github.com/jhy/jsoup/issues/2346) 
 
 ### Bug Fixes
 * When parsing from an InputStream and a multibyte character happened to straddle a buffer boundary, the stream would not be completely read. [#2353](https://github.com/jhy/jsoup/issues/2353).
