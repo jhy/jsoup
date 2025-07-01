@@ -419,18 +419,22 @@ public abstract class Evaluator {
             this(key, value, true);
         }
 
-        public AttributeKeyPair(String key, String value, boolean trimValue) {
+        public AttributeKeyPair(String key, String value, boolean trimQuoted) {
             Validate.notEmpty(key);
             Validate.notEmpty(value);
 
             this.key = normalize(key);
-            boolean isStringLiteral = value.startsWith("'") && value.endsWith("'")
-                                        || value.startsWith("\"") && value.endsWith("\"");
-            if (isStringLiteral) {
-                value = value.substring(1, value.length()-1);
-            }
+            boolean quoted = value.startsWith("'") && value.endsWith("'")
+                || value.startsWith("\"") && value.endsWith("\"");
+            if (quoted)
+                value = value.substring(1, value.length() - 1);
 
-            this.value = trimValue ? normalize(value) : normalize(value, isStringLiteral);
+            // normalize value based on whether it was quoted and trimQuoted flag
+            // keeps whitespace for attribute val starting or ending, when quoted
+            if (trimQuoted || !quoted)
+                this.value = normalize(value); // lowercase and trims
+            else
+                this.value = lowerCase(value); // only lowercase
         }
     }
 

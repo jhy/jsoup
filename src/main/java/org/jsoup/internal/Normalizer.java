@@ -21,7 +21,11 @@ public final class Normalizer {
         return lowerCase(input).trim();
     }
 
-    /** If a string literal, just lower case the string; otherwise lower-case and trim. */
+    /**
+     If a string literal, just lower case the string; otherwise lower-case and trim.
+     @deprecated internal function; will be removed in a future version.
+     */
+    @Deprecated
     public static String normalize(final String input, boolean isStringLiteral) {
         return isStringLiteral ? lowerCase(input) : normalize(input);
     }
