@@ -255,7 +255,12 @@ enum HtmlTreeBuilderState {
                 } else if (name.equals("head")) {
                     tb.error(this);
                     return false;
-                } else {
+                }else if (name.equals("template")) {
+                    tb.insertElementFor(startTag);
+                    tb.transition(InTemplate); 
+                    return true;
+                }
+                 else {
                     anythingElse(t, tb);
                 }
             } else if (t.isEndTag()) {
