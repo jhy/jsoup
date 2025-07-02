@@ -12,6 +12,7 @@
 ### Bug Fixes
 * When parsing from an InputStream and a multibyte character happened to straddle a buffer boundary, the stream would not be completely read. [#2353](https://github.com/jhy/jsoup/issues/2353).
 * In `NodeTraversor`, if a last child element was removed during the `head()` call, the parent would be visited twice. [#2355](https://github.com/jhy/jsoup/issues/2355).
+* Cloning an Element that has an Attributes object would add an empty internal user-data attribute to that clone, which would cause unexpected results for `Attributes#size()` and `Attributes#isEmpty()`. [#2356](https://github.com/jhy/jsoup/issues/2356)
 
 ## 1.21.1 (2025-Jun-23)
 

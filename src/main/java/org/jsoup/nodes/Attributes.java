@@ -203,13 +203,15 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      Set an arbitrary user-data object by key. Will be treated as an internal attribute, so will not be emitted in HTML.
      * @param key case-sensitive key
-     * @param value object value
+     * @param value object value. Providing a {@code null} value has the effect of removing the key from the userData map.
      * @return these attributes
      * @see #userData(String key)
      * @since 1.17.1
      */
     public Attributes userData(String key, Object value) {
         Validate.notNull(key);
+        if (value == null && !hasKey(SharedConstants.UserDataKey))
+            return this; // no user data exists, so short-circuit
         userData().put(key, value);
         return this;
     }

@@ -395,4 +395,17 @@ public class AttributesTest {
         assertSame(two.userData("data"), one.userData("data"));
         assertNotSame(two.userData(), one.userData());
     }
+
+    @Test void dontCloneNullUserData() {
+        // https://github.com/jhy/jsoup/issues/2356
+        Element span1 = Jsoup.parse("<span id=1></span>").expectFirst("span");
+        Attributes attrs1 = span1.attributes();
+        assertFalse(attrs1.isEmpty());
+        span1.removeAttr("id");
+        assertTrue(attrs1.isEmpty());
+
+        Element span2 = span1.clone();
+        Attributes attrs2 = span2.attributes();
+        assertTrue(attrs2.isEmpty());
+    }
 }
