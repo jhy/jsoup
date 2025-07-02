@@ -25,24 +25,39 @@ public class NodeTraversor {
         Validate.notNull(root);
         Node node = root;
         int depth = 0;
-        
+
         while (node != null) {
             Node parent = node.parentNode(); // remember parent to find nodes that get replaced in .head
             int origSize = parent != null ? parent.childNodeSize() : 0;
             Node next = node.nextSibling();
 
             visitor.head(node, depth); // visit current node
+
+            // check for modifications to the tree
             if (parent != null && !node.hasParent()) { // removed or replaced
                 if (origSize == parent.childNodeSize()) { // replaced
                     node = parent.childNode(node.siblingIndex()); // replace ditches parent but keeps sibling index
-                } else { // removed
-                    node = next;
-                    if (node == null) { // last one, go up
-                        node = parent;
-                        depth--;
-                    }
-                    continue; // don't tail removed
+                    continue;
                 }
+                // else, removed
+                node = next;
+                if (node == null) {
+                    // was last in parent. need to walk up the tree, tail()ing on the way, until we find a suitable next. Otherwise, would revisit ancestor nodes.
+                    node = parent;
+                    while (true) {
+                        depth--;
+                        visitor.tail(node, depth);
+                        if (node == root) break;
+                        if (node.nextSibling() != null) {
+                            node = node.nextSibling();
+                            break;
+                        }
+                        node = node.parentNode();
+                        if (node == null) break;
+                    }
+                    if (node == root || node == null) break; // done, break outer
+                }
+                continue; // don't tail removed
             }
 
             if (node.childNodeSize() > 0) { // descend

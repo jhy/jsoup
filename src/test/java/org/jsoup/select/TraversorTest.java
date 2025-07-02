@@ -7,10 +7,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jsoup.nodes.NodeIteratorTest.trackSeen;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TraversorTest {
@@ -219,5 +223,45 @@ public class TraversorTest {
                 seen.set(true);
         });
         assertTrue(seen.get());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"em", "b"})
+    void doesntVisitAgainAfterRemoving(String removeTag) {
+        // https://github.com/jhy/jsoup/issues/2355
+        Document doc = Jsoup.parse("<div id=1><div><em>first</em><b>last</b></div></div>");
+        HashSet<Node> visited = new HashSet<>();
+        NodeTraversor.traverse((node, depth) -> {
+            if (!visited.add(node))
+                fail(String.format("node '%s' is being visited for the second time", node));
+            if (removeTag.equals(node.nodeName()))
+                node.remove();
+        }, doc);
+    }
+
+
+    @Test
+    void traversesOnceInOrderAfterRemove() {
+        Document doc = Jsoup.parse("<div><p>Text <em>emphasized</em> and <b>bold</b></p></div>");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override
+            public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if ("b".equals(node.nodeName())) // remove the b, causes a cascade of last childs, don't miss any
+                    node.remove();
+            }
+
+            @Override
+            public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, doc);
+
+        // check
+        assertEquals("#root;html;head;body;div;p;Text ;em;emphasized; and ;b;", headOrder.toString());
+        assertEquals("head;Text ;emphasized;em; and ;p;div;body;html;#root;", tailOrder.toString());
     }
 }

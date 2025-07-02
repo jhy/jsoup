@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NodeIteratorTest {
+public class NodeIteratorTest {
     String html = "<div id=1><p>One<p>Two</div><div id=2><p>Three<p>Four</div>";
 
     @Test void canIterateNodes() {
@@ -249,7 +249,7 @@ class NodeIteratorTest {
         assertIterates(it, expected);
     }
 
-    static void trackSeen(Node node, StringBuilder actual) {
+    public static void trackSeen(Node node, StringBuilder actual) {
         if (node instanceof Element) {
             Element el = (Element) node;
             actual.append(el.tagName());
