@@ -374,7 +374,10 @@ public class Document extends Element {
             this.escapeMode = escapeMode;
             return this;
         }
+        private boolean sortAttributes = false;
 
+        public boolean sortAttributes() { return sortAttributes; }
+        public OutputSettings sortAttributes(boolean sort) { this.sortAttributes = sort; return this; }
         /**
          * Get the document's current output charset, which is used to control which characters are escaped when
          * generating HTML (via the <code>html()</code> methods), and which are kept intact.

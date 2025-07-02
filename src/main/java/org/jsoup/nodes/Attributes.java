@@ -12,6 +12,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -490,17 +491,25 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         html(QuietAppendable.wrap(sb), new Document.OutputSettings()); // output settings a bit funky, but this html() seldom used
         return StringUtil.releaseBuilder(sb);
     }
-
+    
     final void html(final QuietAppendable accum, final Document.OutputSettings out) {
-        final int sz = size;
-        for (int i = 0; i < sz; i++) {
-            String key = keys[i];
-            assert key != null;
-            if (isInternalKey(key))
-                continue;
-            final String validated = Attribute.getValidKey(key, out.syntax());
-            if (validated != null)
-                Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
+        if (out.sortAttributes()) {
+            List<Attribute> attrList = asList();
+            attrList.sort(Comparator.comparing(Attribute::getKey));
+            for (Attribute attr : attrList) {
+                attr.html(accum.append(' '), out);
+            }
+        } else {
+            final int sz = size;
+            for (int i = 0; i < sz; i++) {
+                String key = keys[i];
+                assert key != null;
+                if (isInternalKey(key))
+                    continue;
+                final String validated = Attribute.getValidKey(key, out.syntax());
+                if (validated != null)
+                    Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
+            }
         }
     }
 
