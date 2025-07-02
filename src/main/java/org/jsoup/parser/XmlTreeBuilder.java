@@ -228,7 +228,12 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     void insertDoctypeFor(Token.Doctype token) {
-        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(token.getName()), token.getPublicIdentifier(), token.getSystemIdentifier());
+        DocumentType doctypeNode = new DocumentType(
+            settings.normalizeTag(token.getName()),
+            token.getPublicIdentifier(),
+            token.getSystemIdentifier(),
+            token.getRawDeclaration() 
+        );
         doctypeNode.setPubSysKey(token.getPubSysKey());
         insertLeafNode(doctypeNode);
     }

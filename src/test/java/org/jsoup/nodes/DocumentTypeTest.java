@@ -13,39 +13,31 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author Jonathan Hedley, http://jonathanhedley.com/
  */
 public class DocumentTypeTest {
-    @Test
-    public void constructorValidationOkWithBlankName() {
-        new DocumentType("","", "");
-    }
 
     @Test
-    public void constructorValidationThrowsExceptionOnNulls() {
-        assertThrows(IllegalArgumentException.class, () -> new DocumentType("html", null, null));
-    }
-
-    @Test
-    public void constructorValidationOkWithBlankPublicAndSystemIds() {
-        new DocumentType("html","", "");
-    }
-
-    @Test public void outerHtmlGeneration() {
-        DocumentType html5 = new DocumentType("html", "", "");
+    public void outerHtmlGeneration() {
+        Document html5Doc = Jsoup.parse("<!DOCTYPE html>");
+        DocumentType html5 = html5Doc.documentType();
         assertEquals("<!doctype html>", html5.outerHtml());
 
-        DocumentType publicDocType = new DocumentType("html", "-//IETF//DTD HTML//", "");
+        Document publicDoc = Jsoup.parse("<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML//\">");
+        DocumentType publicDocType = publicDoc.documentType();
         assertEquals("<!DOCTYPE html PUBLIC \"-//IETF//DTD HTML//\">", publicDocType.outerHtml());
 
-        DocumentType systemDocType = new DocumentType("html", "", "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd");
+        Document systemDoc = Jsoup.parse("<!DOCTYPE html SYSTEM \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">");
+        DocumentType systemDocType = systemDoc.documentType();
         assertEquals("<!DOCTYPE html SYSTEM \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
 
-        DocumentType combo = new DocumentType("notHtml", "--public", "--system");
+        Document comboDoc = Jsoup.parse("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">");
+        DocumentType combo = comboDoc.documentType();
         assertEquals("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">", combo.outerHtml());
-        assertEquals("notHtml", combo.name());
+        assertEquals("nothtml", combo.name());
         assertEquals("--public", combo.publicId());
         assertEquals("--system", combo.systemId());
     }
 
-    @Test public void testRoundTrip() {
+    @Test
+    public void testRoundTrip() {
         String base = "<!DOCTYPE html>";
         assertEquals("<!doctype html>", htmlOutput(base));
         assertEquals(base, xmlOutput(base));
@@ -63,16 +55,24 @@ public class DocumentTypeTest {
         assertEquals(legacyDoc, xmlOutput(legacyDoc));
     }
 
-    private String htmlOutput(String in) {
-        DocumentType type = (DocumentType) Jsoup.parse(in).childNode(0);
-        return type.outerHtml();
+    @Test
+    public void testPreservesRawDeclaration() {
+        String rawDoctype = "<!DOCTYPE html PUBLIC \"-//TEST//DTD HTML 1.0//EN\" \"http://www.test.com/test.dtd\">";
+        Document doc = Jsoup.parse(rawDoctype, "", Parser.xmlParser());
+        DocumentType doctype = doc.documentType();
+        assertEquals(rawDoctype, doctype.outerHtml());
     }
 
-    private String xmlOutput(String in) {
-        return Jsoup.parse(in, "", Parser.xmlParser()).childNode(0).outerHtml();
+    @Test
+    public void testPreservesUnusualDoctype() {
+        String rawDoctype = "<!DOCTYPE root SYSTEM \"weird.dtd\">";
+        Document doc = Jsoup.parse(rawDoctype, "", Parser.xmlParser());
+        DocumentType doctype = doc.documentType();
+        assertEquals(rawDoctype, doctype.outerHtml());
     }
 
-    @Test void attributes() {
+    @Test
+    public void attributes() {
         Document doc = Jsoup.parse("<!DOCTYPE html>");
         DocumentType doctype = doc.documentType();
         assertEquals("#doctype", doctype.nodeName());
@@ -83,11 +83,22 @@ public class DocumentTypeTest {
 
         doc = Jsoup.parse("<!DOCTYPE notHtml PUBLIC \"--public\" \"--system\">");
         doctype = doc.documentType();
-
         assertEquals("#doctype", doctype.nodeName());
         assertEquals("nothtml", doctype.name());
         assertEquals("nothtml", doctype.attr("name"));
         assertEquals("--public", doctype.publicId());
         assertEquals("--system", doctype.systemId());
+    }
+
+    private String htmlOutput(String in) {
+        Document doc = Jsoup.parse(in);
+        DocumentType type = doc.documentType();
+        return type.outerHtml();
+    }
+
+    private String xmlOutput(String in) {
+        Document doc = Jsoup.parse(in, "", Parser.xmlParser());
+        DocumentType type = doc.documentType();
+        return type.outerHtml();
     }
 }

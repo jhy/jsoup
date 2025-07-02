@@ -13,7 +13,7 @@ abstract class Token {
     static final int UnsetPos = -1;
     final TokenType type; // used in switches in TreeBuilder vs .getClass()
     int startPos, endPos = UnsetPos; // position in CharacterReader this token was read from
-
+    @Nullable private String rawDeclaration;
     private Token(TokenType type) {
         this.type = type;
     }
@@ -29,6 +29,7 @@ abstract class Token {
     Token reset() {
         startPos = UnsetPos;
         endPos = UnsetPos;
+        rawDeclaration = null;
         return this;
     }
 
@@ -535,5 +536,13 @@ abstract class Token {
         Character, // note no CData - treated in builder as an extension of Character
         XmlDecl,
         EOF
+    }
+    @Nullable
+    public String getRawDeclaration() {
+        return rawDeclaration;
+    }
+
+    public void setRawDeclaration(String rawDeclaration) {
+        this.rawDeclaration = rawDeclaration;
     }
 }

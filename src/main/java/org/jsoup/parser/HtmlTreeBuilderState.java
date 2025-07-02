@@ -30,11 +30,15 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype()) {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
-                DocumentType doctype = new DocumentType(
-                    tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
-                doctype.setPubSysKey(d.getPubSysKey());
-                tb.getDocument().appendChild(doctype);
-                tb.onNodeInserted(doctype);
+           DocumentType doctype = new DocumentType(
+                tb.settings.normalizeTag(d.getName()),
+                d.getPublicIdentifier(),
+                d.getSystemIdentifier(),
+                d.getRawDeclaration() // novo: passa o raw DOCTYPE string
+            );
+            doctype.setPubSysKey(d.getPubSysKey());
+            tb.getDocument().appendChild(doctype);
+            tb.onNodeInserted(doctype);
                 // todo: quirk state check on more doctype ids, if deemed useful (most are ancient legacy and presumably irrelevant)
                 if (d.isForceQuirks() || !doctype.name().equals("html") || doctype.publicId().equalsIgnoreCase("HTML"))
                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);

@@ -18,17 +18,18 @@ public class DocumentType extends LeafNode {
     private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
-
+    private @Nullable String rawDeclaration;
     /**
      * Create a new doctype element.
      * @param name the doctype's name
      * @param publicId the doctype's public ID
      * @param systemId the doctype's system ID
      */
-    public DocumentType(String name, String publicId, String systemId) {
+   public DocumentType(String name, String publicId, String systemId, @Nullable String rawDeclaration) {
         super(name);
         Validate.notNull(publicId);
         Validate.notNull(systemId);
+        this.rawDeclaration = rawDeclaration;
         attributes()
             .add(NameKey, name)
             .add(PublicId, publicId)
@@ -79,8 +80,11 @@ public class DocumentType extends LeafNode {
 
     @Override
     void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        if (rawDeclaration != null) {
+            accum.append(rawDeclaration);
+            return;
+        }
         if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
-            // looks like a html5 doctype, go lowercase for aesthetics
             accum.append("<!doctype");
         } else {
             accum.append("<!DOCTYPE");
