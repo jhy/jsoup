@@ -237,4 +237,10 @@ public final class Validate {
     public static void fail(String msg, Object... args) {
         throw new ValidationException(String.format(msg, args));
     }
+
+    
+    public static void notNullOrEmpty(String string, String msg) {
+        if (string == null || string.isEmpty())
+            throw new IllegalArgumentException(msg);
+    }
 }
