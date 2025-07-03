@@ -987,14 +987,10 @@ enum TokeniserState {
                     t.transition(Comment);
                     break;
                 case '>':
-                    t.error(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     r.unconsume();
@@ -1015,14 +1011,10 @@ enum TokeniserState {
                     t.transition(Comment);
                     break;
                 case '>':
-                    t.error(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     t.commentPending.append(c);
@@ -1043,9 +1035,7 @@ enum TokeniserState {
                     t.commentPending.append(replacementChar);
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     t.commentPending.append(r.consumeToAny('-', nullChar));
@@ -1065,9 +1055,7 @@ enum TokeniserState {
                     t.transition(Comment);
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     t.commentPending.append('-').append(c);
@@ -1095,9 +1083,7 @@ enum TokeniserState {
                     t.commentPending.append('-');
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     t.commentPending.append("--").append(c);
@@ -1123,9 +1109,7 @@ enum TokeniserState {
                     t.transition(Comment);
                     break;
                 case eof:
-                    t.eofError(this);
-                    t.emitCommentPending();
-                    t.transition(Data);
+                   handleEofComment(t, this);
                     break;
                 default:
                     t.commentPending.append("--!").append(c);
@@ -1779,4 +1763,9 @@ enum TokeniserState {
                 t.transition(fallback);
         }
     }
+    private static void handleEofComment(Tokeniser t, TokeniserState state) {
+    t.eofError(state);
+    t.emitCommentPending();
+    t.transition(Data);
+}
 }
