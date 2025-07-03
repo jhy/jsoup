@@ -1712,26 +1712,36 @@ enum TokeniserState {
         }
     }
 
-    private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
-        switch (r.current()) {
+   private static void readRawData(Tokeniser t, CharacterReader r, TokeniserState current, TokeniserState advance) {
+       switch (r.current()) {
+            case '&':
+                t.advanceTransition(CharacterReferenceInData);
+                break;
             case '<':
-                t.advanceTransition(advance);
-                break;
-            case nullChar:
-                t.error(current);
-                r.advance();
-                t.emit(replacementChar);
-                break;
-            case eof:
-                t.emit(new Token.EOF());
+                t.advanceTransition(TagOpen);
                 break;
             default:
-                String data = r.consumeRawData();
-                t.emit(data);
+            if (!handleNullOrEof(t, r, Data)) {
+                    String data = r.consumeData();
+                    t.emit(data);
+                }
                 break;
         }
     }
 
+    private static boolean handleNullOrEof(Tokeniser t, CharacterReader r, TokeniserState current) {
+        char c = r.current();
+        if (c == nullChar) {
+            t.error(current);
+            r.advance();
+            t.emit(replacementChar);
+            return true;
+        } else if (c == eof) {
+            t.emit(new Token.EOF());
+            return true;
+        }
+        return false;
+    }
     private static void readCharRef(Tokeniser t, TokeniserState advance) {
         int[] c = t.consumeCharacterReference(null, false);
         if (c == null)
