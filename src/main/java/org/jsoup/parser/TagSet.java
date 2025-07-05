@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.Functions;
 import org.jsoup.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
@@ -57,15 +58,19 @@ public class TagSet {
         return this;
     }
 
-    /** Adds the tag, but does not set defined. Used in .valueOf */
-    private void doAdd(Tag tag) {
+    private void callCustomizers(Tag tag) {
         if (customizers != null) {
             for (Consumer<Tag> customizer : customizers) {
                 customizer.accept(tag);
             }
         }
+    }
 
-        tags.computeIfAbsent(tag.namespace, ns -> new HashMap<>())
+    /** Adds the tag, but does not set defined. Used in .valueOf */
+    private void doAdd(Tag tag) {
+        callCustomizers(tag);
+
+        tags.computeIfAbsent(tag.namespace, Functions.mapFunction())
             .put(tag.tagName, tag);
     }
 
@@ -82,25 +87,16 @@ public class TagSet {
         Validate.notNull(namespace);
 
         // get from our tags
-        Map<String, Tag> nsTags = tags.get(namespace);
-        if (nsTags != null) {
-            Tag tag = nsTags.get(tagName);
-            if (tag != null) {
-                return tag;
-            }
-        }
-
-        // not found; clone on demand from source if exists
-        if (source != null) {
-            Tag tag = source.get(tagName, namespace);
-            if (tag != null) {
-                Tag copy = tag.clone();
-                doAdd(copy);
-                return copy;
-            }
-        }
-
-        return null;
+        return tags.computeIfAbsent(namespace, Functions.mapFunction())
+                .computeIfAbsent(tagName, key -> {
+                    // not found; clone on demand from source if exists
+                    Tag tag = source != null ? source.get(key, namespace) : null;
+                    Tag copy = tag != null ? tag.clone() : null;
+                    if (copy != null) {
+                        callCustomizers(copy);
+                    }
+                    return copy;
+                });
     }
 
     /** Tag.valueOf with the normalName via the token.normalName, to save redundant lower-casing passes. */
