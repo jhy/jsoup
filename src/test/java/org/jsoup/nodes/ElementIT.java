@@ -5,6 +5,8 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -181,6 +183,47 @@ public class ElementIT {
         }
         for (Thread t : threads) {
             t.join();
+        }
+    }
+
+    @Test
+    void concurrentChildren() throws InterruptedException {
+        int childCount = 200;
+
+        Document doc = Jsoup.parse("<div></div>");
+        Element div = doc.expectFirst("div");
+        for (int i = 0; i < childCount; i++) {
+            div.appendElement("p").after("Some text");
+        }
+
+        int threadCount = 100;
+        int iterCount = 10000;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch endLatch = new CountDownLatch(threadCount);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+
+        for (int i = 0; i < threadCount; i++) {
+            Thread t = new Thread(() -> {
+                try {
+                    startLatch.await();
+                    for (int j = 0; j < iterCount; j++) {
+                        Elements children = div.children();
+                        assertEquals(childCount, children.size());
+                    }
+                } catch (Throwable e) {
+                    System.err.println(e);
+                    failure.set(e);
+                } finally {
+                    endLatch.countDown();
+                }
+            });
+            t.start();
+        }
+
+        startLatch.countDown();
+        endLatch.await();
+        if (failure.get() != null) {
+            throw new AssertionError(failure.get());
         }
     }
 }
