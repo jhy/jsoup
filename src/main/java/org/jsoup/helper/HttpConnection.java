@@ -1238,8 +1238,14 @@ public class HttpConnection implements Connection {
         }
 
         static void writePost(final HttpConnection.Request req, final OutputStream outputStream) throws IOException {
+            try (OutputStreamWriter osw = new OutputStreamWriter(outputStream, req.postDataCharset());
+                 BufferedWriter w = new BufferedWriter(osw)) {
+                implWritePost(req, w, outputStream);
+            }
+        }
+
+        private static void implWritePost(final HttpConnection.Request req, final BufferedWriter w, final OutputStream outputStream) throws IOException {
             final Collection<Connection.KeyVal> data = req.data();
-            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
             final String boundary = req.mimeBoundary;
 
             if (boundary != null) { // a multipart post
@@ -1290,7 +1296,6 @@ public class HttpConnection implements Connection {
                     w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
                 }
             }
-            w.close();
         }
 
         // for get url reqs, serialise the data map into the url
