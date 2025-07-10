@@ -282,7 +282,7 @@
             <dependency>
               <groupId>org.jsoup</groupId>
               <artifactId>jsoup</artifactId>
-              <version>1.20.1</version>
+              <version>1.21.1</version>
               <type>jar</type>
             </dependency>
           </oldVersion>
@@ -291,22 +291,7 @@
             <onlyModified>false</onlyModified>
             <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
             <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
-            <excludes>
-              <!-- previously deprecated; removed in this release. explicit list, vs @Deprecated so that we can deprecate others -->
-              <exclude>org.jsoup.helper.ChangeNotifyingArrayList</exclude>
-              <exclude>org.jsoup.nodes.Document#updateMetaCharsetElement(boolean)</exclude>
-              <exclude>org.jsoup.nodes.Document#updateMetaCharsetElement()</exclude>
-              <exclude>org.jsoup.parser.HtmlTreeBuilder#isContentForTagData(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.Parser#isContentForTagData(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.Parser#setTreeBuilder(org.jsoup.parser.TreeBuilder)</exclude>
-              <exclude>org.jsoup.parser.Tag#isFormListed()</exclude>
-              <exclude>org.jsoup.parser.TokenQueue#addFirst(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.TokenQueue#chompTo(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.TokenQueue#chompToIgnoreCase(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.TokenQueue#consumeToIgnoreCase(java.lang.String)</exclude>
-              <exclude>org.jsoup.parser.TokenQueue#consumeWord()</exclude>
-              <exclude> org.jsoup.parser.TokenQueue#matchesAny(java.lang.String[])</exclude>
-            </excludes>
+            <excludes></excludes>
             <overrideCompatibilityChangeParameters>
               <!-- allows new default and move to default methods. compatible as long as existing binaries aren't making calls via reflection. if so, they need to catch errors anyway. -->
               <overrideCompatibilityChangeParameter>
@@ -319,14 +304,6 @@
                 <binaryCompatible>true</binaryCompatible>
                 <sourceCompatible>true</sourceCompatible>
               </overrideCompatibilityChangeParameter>
-
-              <overrideCompatibilityChangeParameter>
-                <!-- false positive on JDK21; List interface has new defaults; Elements now extends Nodes extends ArrayList (WAS Elements extends ArrayList) -->
-                <compatibilityChange>METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE</compatibilityChange>
-                <binaryCompatible>true</binaryCompatible>
-                <sourceCompatible>true</sourceCompatible>
-              </overrideCompatibilityChangeParameter>
-
             </overrideCompatibilityChangeParameters>
           </parameter>
         </configuration>

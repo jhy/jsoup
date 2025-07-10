@@ -3,7 +3,7 @@
 ## 1.21.2 (PENDING)
 
 ### Changes
-* Deprecated internal method `Normalizer#normalize(String, bool)`.
+* Deprecated internal (yet visible) methods `Normalizer#normalize(String, bool)` and `Attribute#shouldCollapseAttribute(Document.OutputSettings)`. These will be removed in a future version.
 
 ### Improvements
 * When pretty-printing, if there are consecutive text nodes (via DOM manipulation), the non-significant whitespace between them will be collapsed. [#2349](https://github.com/jhy/jsoup/pull/2349).

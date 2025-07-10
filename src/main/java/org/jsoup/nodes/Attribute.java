@@ -306,7 +306,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * 
      * @param out output settings
      * @return  Returns whether collapsible or not
+     * @deprecated internal method and will be removed in a future version
      */
+    @Deprecated
     protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {
         return shouldCollapseAttribute(key, val, out);
     }
