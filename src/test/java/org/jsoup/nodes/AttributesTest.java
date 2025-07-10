@@ -418,14 +418,17 @@ public class AttributesTest {
         attrs.userData("foo", "bar");
         attrs.put(Attributes.internalKey("qux"), "bar");
         assertEquals(0, attrs.size());
+        assertEquals(2, attrs.size);
         assertTrue(attrs.isEmpty());
 
         attrs.put("foo", "bar");
         attrs.put("qux", "bar");
         assertEquals(2, attrs.size());
+        assertEquals(4, attrs.size);
 
         el.clearAttributes();
         assertEquals(0, attrs.size());
+        assertEquals(2, attrs.size); // we keep the internals
         assertTrue(attrs.isEmpty());
     }
 }
