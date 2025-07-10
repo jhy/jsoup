@@ -297,7 +297,7 @@ public class AttributesTest {
         a.put(Attributes.internalKey("last"), "example.com");
         a.remove(Attributes.internalKey("last"));
 
-        assertEquals(4, a.size());
+        assertEquals(2, a.size());
         assertEquals(2, a.asList().size()); // excluded from lists
     }
 
@@ -407,5 +407,28 @@ public class AttributesTest {
         Element span2 = span1.clone();
         Attributes attrs2 = span2.attributes();
         assertTrue(attrs2.isEmpty());
+    }
+
+    @Test void sizeDoesNotIncludeInternal() {
+        Element el = new Element("el");
+        Attributes attrs = el.attributes();
+        assertEquals(0, attrs.size());
+        assertTrue(attrs.isEmpty());
+
+        attrs.userData("foo", "bar");
+        attrs.put(Attributes.internalKey("qux"), "bar");
+        assertEquals(0, attrs.size());
+        assertEquals(2, attrs.size);
+        assertTrue(attrs.isEmpty());
+
+        attrs.put("foo", "bar");
+        attrs.put("qux", "bar");
+        assertEquals(2, attrs.size());
+        assertEquals(4, attrs.size);
+
+        el.clearAttributes();
+        assertEquals(0, attrs.size());
+        assertEquals(2, attrs.size); // we keep the internals
+        assertTrue(attrs.isEmpty());
     }
 }
