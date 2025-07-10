@@ -206,11 +206,12 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @see #userData(String key)
      * @since 1.17.1
      */
-    public Attributes userData(String key, Object value) {
+    public Attributes userData(String key, @Nullable Object value) {
         Validate.notNull(key);
-        if (value == null && !hasKey(SharedConstants.UserDataKey))
-            return this; // no user data exists, so short-circuit
-        userData().put(key, value);
+        if (value == null && !hasKey(SharedConstants.UserDataKey)) return this; // no user data exists, so short-circuit
+        Map<String, Object> userData = userData();
+        if (value == null)  userData.remove(key);
+        else                userData.put(key, value);
         return this;
     }
 
