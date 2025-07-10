@@ -2013,7 +2013,7 @@ public class Element extends Node implements Iterable<Element> {
     public Element clearAttributes() {
         if (attributes != null) {
             super.clearAttributes(); // keeps internal attributes via iterator
-            if (attributes.size() == 0)
+            if (attributes.size == 0)
                 attributes = null; // only remove entirely if no internal attributes
         }
 

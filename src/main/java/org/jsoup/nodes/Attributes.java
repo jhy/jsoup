@@ -41,22 +41,20 @@ import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class Attributes implements Iterable<Attribute>, Cloneable {
-    // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about
-    // that. Suppressed from list, iter.)
-    static final char InternalPrefix = '/';
-
     // The Attributes object is only created on the first use of an attribute; the Element will just have a null
     // Attribute slot otherwise
-    protected static final String dataPrefix = "data-";
-    private static final int InitialCapacity = 3; // sampling found mean count when attrs present = 1.49; 1.08 overall. 2.6:1 don't have any attrs.
 
-    // manages the key/val arrays
-    private static final int GrowthFactor = 2;
-    static final int NotFound = -1;
+    static final char InternalPrefix = '/'; // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
+    protected static final String dataPrefix = "data-"; // data attributes
     private static final String EmptyString = "";
 
+    // manages the key/val arrays
+    private static final int InitialCapacity = 3; // sampling found mean count when attrs present = 1.49; 1.08 overall. 2.6:1 don't have any attrs.
+    private static final int GrowthFactor = 2;
+    static final int NotFound = -1;
+
     // the number of instance fields is kept as low as possible giving an object size of 24 bytes
-    private int size = 0; // number of slots used (not total capacity, which is keys.length)
+    int size = 0; // number of slots used (not total capacity, which is keys.length). Package visible for actual size (incl internal)
     @Nullable String[] keys = new String[InitialCapacity]; // keys is not null, but contents may be. Same for vals
     @Nullable Object[] vals = new Object[InitialCapacity]; // Genericish: all non-internal attribute values must be Strings and are cast on access.
     // todo - make keys iterable without creating Attribute objects
@@ -328,20 +326,27 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
-     Get the number of attributes in this set, including any jsoup internal-only attributes. Internal attributes are
-     excluded from the {@link #html()}, {@link #asList()}, and {@link #iterator()} methods.
+     Get the number of attributes in this set, excluding any internal-only attributes (e.g. user data).
+     <p>Internal attributes are excluded from the {@link #html()}, {@link #asList()}, and {@link #iterator()}
+     methods.</p>
+
      @return size
      */
     public int size() {
-        return size;
-        // todo - exclude internal attributes from this count - maintain size, count of internals
+        if (size == 0) return 0;
+        int count = 0;
+        for (int i = 0; i < size; i++) {
+            if (!isInternalKey(keys[i]))  count++;
+        }
+        return count;
     }
 
     /**
-     * Test if this Attributes list is empty (size==0).
+     Test if this Attributes list is empty.
+     <p>This does not include internal attributes, such as user data.</p>
      */
     public boolean isEmpty() {
-        return size == 0;
+        return size() == 0;
     }
 
     /**
@@ -349,9 +354,9 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @param incoming attributes to add to these attributes.
      */
     public void addAll(Attributes incoming) {
-        if (incoming.size() == 0)
-            return;
-        checkCapacity(size + incoming.size);
+        int incomingSize = incoming.size(); // not adding internal
+        if (incomingSize == 0) return;
+        checkCapacity(size + incomingSize);
 
         boolean needsPut = size != 0; // if this set is empty, no need to check existing set, so can add() vs put()
         // (and save bashing on the indexOfKey()
@@ -585,8 +590,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      * @return number of removed dupes
      */
     public int deduplicate(ParseSettings settings) {
-        if (isEmpty())
-            return 0;
+        if (size == 0) return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
         for (int i = 0; i < size; i++) {
