@@ -741,7 +741,6 @@ public class HttpConnection implements Connection {
         @Override
         public Connection.Request sslContext(SSLContext sslContext) {
             this.sslContext = sslContext;
-            this.sslSocketFactory = sslContext.getSocketFactory();
             return this;
         }
 
