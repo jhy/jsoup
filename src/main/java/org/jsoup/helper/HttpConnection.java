@@ -11,6 +11,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.parser.StreamParser;
 import org.jspecify.annotations.Nullable;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -221,6 +222,12 @@ public class HttpConnection implements Connection {
     public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
 	    req.sslSocketFactory(sslSocketFactory);
 	    return this;
+    }
+
+    @Override
+    public Connection sslContext(SSLContext sslContext) {
+        req.sslContext(sslContext);
+        return this;
     }
 
     @Override
@@ -618,6 +625,7 @@ public class HttpConnection implements Connection {
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
         private String postDataCharset = DataUtil.defaultCharsetName;
         private @Nullable SSLSocketFactory sslSocketFactory;
+        @Nullable SSLContext sslContext;
         private CookieManager cookieManager;
         @Nullable RequestAuthenticator authenticator;
         private @Nullable Progress<Connection.Response> responseProgress;
@@ -652,6 +660,7 @@ public class HttpConnection implements Connection {
             parser = copy.parser.newInstance(); // parsers and their tree-builders maintain state, so need a fresh copy
             parserDefined = copy.parserDefined;
             sslSocketFactory = copy.sslSocketFactory; // these are all synchronized so safe to share
+            sslContext = copy.sslContext;
             cookieManager = copy.cookieManager;
             authenticator = copy.authenticator;
             responseProgress = copy.responseProgress;
@@ -722,6 +731,18 @@ public class HttpConnection implements Connection {
         @Override
         public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
             this.sslSocketFactory = sslSocketFactory;
+        }
+
+        @Override @Nullable
+        public SSLContext sslContext() {
+            return sslContext;
+        }
+
+        @Override
+        public Connection.Request sslContext(SSLContext sslContext) {
+            this.sslContext = sslContext;
+            this.sslSocketFactory = sslContext.getSocketFactory();
+            return this;
         }
 
         @Override

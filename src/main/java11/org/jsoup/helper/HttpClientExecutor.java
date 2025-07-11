@@ -45,17 +45,25 @@ class HttpClientExecutor extends RequestExecutor {
      same Connection (session).
      */
     HttpClient client() {
-        // we try to reuse the same Client across requests in a given Connection; but if the request auth has changed, we need to create a new client
-        RequestAuthenticator prevAuth = req.connection.lastAuth;
-        req.connection.lastAuth = req.authenticator;
-        if (req.connection.client != null && prevAuth == req.authenticator) { // might both be null
-            return (HttpClient) req.connection.client;
+        // we try to reuse the same Client across requests in a given Connection; but if the request's auth or ssl context have changed, we need to create a new client
+        if (req.connection.client != null) {
+            HttpClient client = (HttpClient) req.connection.client;
+            boolean reuse = true;
+
+            RequestAuthenticator prevAuth = req.connection.lastAuth;
+            req.connection.lastAuth = req.authenticator;
+            if (prevAuth != req.authenticator) // might both be null
+                reuse = false;
+            if (req.sslContext != null && !(client.sslContext() == req.sslContext)) // client returns default context if not otherwise set
+                reuse = false;
+            if (reuse) return client;
         }
 
         HttpClient.Builder builder = HttpClient.newBuilder();
         builder.followRedirects(HttpClient.Redirect.NEVER); // customized redirects
         builder.proxy(new ProxyWrap()); // thread local impl for per request; called on executing thread
         if (req.authenticator != null) builder.authenticator(new AuthenticationHandler(req.authenticator));
+        if (req.sslContext    != null) builder.sslContext(req.sslContext);
 
         HttpClient client = builder.build();
         req.connection.client = client;

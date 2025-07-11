@@ -9,7 +9,7 @@ import static org.jsoup.helper.HttpConnection.Response;
 import java.lang.reflect.Constructor;
 
 /**
- Handles requests using either HttpClient (available in JDK 11+) or HttpURLConnection. During initialization, the
+ Handles requests using either HttpClient (available in JVM 11+) or HttpURLConnection. During initialization, the
  HttpClientExecutor class is used if it can be instantiated, unless the system property
  {@link SharedConstants#UseHttpClient} is explicitly set to {@code false}.
  */
@@ -32,6 +32,10 @@ class RequestDispatch {
 
     static RequestExecutor get(Request request, @Nullable Response previousResponse) {
         boolean useHttpClient = Boolean.parseBoolean(System.getProperty(SharedConstants.UseHttpClient, "true"));
+
+        if (request.sslSocketFactory() != null) // downgrade if a socket factory is set, as it can't be supplied to the HttpClient
+            useHttpClient = false;
+
         if (useHttpClient && clientConstructor != null) {
             try {
                 return clientConstructor.newInstance(request, previousResponse);
