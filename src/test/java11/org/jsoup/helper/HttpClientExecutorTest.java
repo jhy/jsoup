@@ -9,7 +9,7 @@ public class HttpClientExecutorTest {
     @Test void getsHttpClient() {
         try {
             enableHttpClient();
-            RequestExecutor executor = RequestDispatch.get(null, null);
+            RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
             //assertInstanceOf(HttpClientExecutor.class, executor);
             assertEquals("org.jsoup.helper.HttpClientExecutor", executor.getClass().getName());
             // Haven't figured out how to get Maven to allow this mjar code to be on the classpath for the surefire tests, hence not instanceof
@@ -20,7 +20,7 @@ public class HttpClientExecutorTest {
 
     @Test void getsHttpUrlConnectionByDefault() {
         System.clearProperty(SharedConstants.UseHttpClient);
-        RequestExecutor executor = RequestDispatch.get(null, null);
+        RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
         assertEquals("org.jsoup.helper.HttpClientExecutor", executor.getClass().getName());
     }
 

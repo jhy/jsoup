@@ -4,11 +4,13 @@
 
 ### Changes
 * Deprecated internal (yet visible) methods `Normalizer#normalize(String, bool)` and `Attribute#shouldCollapseAttribute(Document.OutputSettings)`. These will be removed in a future version.
+* Deprecated `Connection#sslSocketFactory(SSLSocketFactory)` in favor of the new `Connection#sslContext(SSLContext)`. Using `sslSocketFactory` will force the use of the legacy `HttpUrlConnection` implementation, which does not support HTTP/2. [#2370](https://github.com/jhy/jsoup/pull/2370)
 
 ### Improvements
 * When pretty-printing, if there are consecutive text nodes (via DOM manipulation), the non-significant whitespace between them will be collapsed. [#2349](https://github.com/jhy/jsoup/pull/2349).
 * Updated `Connection.Response#statusMessage()` to return a simple loggable string message (e.g. "OK") when using the `HttpClient` implementation, which doesn't otherwise return any server-set status message. [#2356](https://github.com/jhy/jsoup/issues/2346) 
 * `Attributes#size()` and `Attributes#isEmpty()` now exclude any internal attributes (such as user data) from their count. This aligns with the attributes' serialized output and iterator. [#2369](https://github.com/jhy/jsoup/pull/2369)
+* Added `Connection#sslContext(SSLContext)` to provide a custom SSL (TLS) context to requests, supporting both the `HttpClient` and the legacy `HttUrlConnection` implementations. [#2370](https://github.com/jhy/jsoup/pull/2370)
 
 ### Bug Fixes
 * When parsing from an InputStream and a multibyte character happened to straddle a buffer boundary, the stream would not be completely read. [#2353](https://github.com/jhy/jsoup/issues/2353).
