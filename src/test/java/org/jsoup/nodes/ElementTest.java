@@ -3247,4 +3247,48 @@ public class ElementTest {
         }
         assertTrue(threw);
     }
+
+    @Test void childByIndex() {
+        // uncached, cached paths
+        Element el = Jsoup.parse("<div>One <p>Two</p> Three <p>Four</p> Five <p>Six</p>").expectFirst("div");
+
+        // uncached
+        Element p0 = el.child(0);
+        Element p1 = el.child(1);
+        Element p2 = el.child(2);
+        assertNull(el.cachedChildren());
+
+        assertEquals("Two", p0.text());
+        assertEquals("Four", p1.text());
+        assertEquals("Six", p2.text());
+
+        // cached
+        Elements children = el.children();
+        assertNotNull(el.cachedChildren());
+        assertSame(p0, el.child(0));
+        assertSame(p1, el.child(1));
+        assertSame(p2, el.child(2));
+    }
+
+    @Test public void testChildThrowsIndexOutOfBoundsWhenCachedChildrenIsNull() {
+        Element el = Jsoup.parse("<div><p>One</p></div>").expectFirst("div");
+        assertNull(el.cachedChildren());
+        Exception exception = assertThrows(IndexOutOfBoundsException.class, () -> {
+            el.child(5);
+        });
+        assertTrue(exception.getMessage().contains("No child at index: 5"));
+    }
+
+    @Test public void testChildrenSizeUncachedAndCached() {
+        Element el = Jsoup.parse("<div>One <p>Two</p> Three <p>Four</p> Five <p>Six</p>").expectFirst("div");
+
+        // uncached
+        assertNull(el.cachedChildren());
+        assertEquals(3, el.childrenSize());
+
+        // cached
+        el.children();
+        assertNotNull(el.cachedChildren());
+        assertEquals(3, el.childrenSize());
+    }
 }

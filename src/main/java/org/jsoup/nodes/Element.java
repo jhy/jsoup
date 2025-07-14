@@ -355,7 +355,18 @@ public class Element extends Node implements Iterable<Element> {
      * @see #childNode(int)
      */
     public Element child(int index) {
-        return childElementsList().get(index);
+        Validate.isTrue(index >= 0, "Index must be >= 0");
+        List<Element> cached = cachedChildren();
+        if (cached != null) return cached.get(index);
+        // otherwise, iter on elementChild; saves creating list
+        int i = 0;
+        Element el = firstElementChild();
+        while (el != null) {
+            if (i == index) return el;
+            i++;
+            el = el.nextElementSibling();
+        }
+        throw new IndexOutOfBoundsException("No child at index: " + index);
     }
 
     /**
@@ -370,7 +381,17 @@ public class Element extends Node implements Iterable<Element> {
      * @see #child(int)
      */
     public int childrenSize() {
-        return childElementsList().size();
+        if (childNodeSize() == 0) return 0;
+        List<Element> cached = cachedChildren();
+        if (cached != null) return cached.size();
+
+        int size = 0;
+        Element el = firstElementChild();
+        while (el != null) {
+            size++;
+            el = el.nextElementSibling();
+        }
+        return size;
     }
 
     /**
@@ -406,7 +427,7 @@ public class Element extends Node implements Iterable<Element> {
     private static final String childElsMod = "jsoup.childElsMod";
 
     /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
-    private @Nullable List<Element> cachedChildren() {
+    @Nullable List<Element> cachedChildren() {
         Map<String, Object> userData = attributes().userData();
         //noinspection unchecked
         WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
