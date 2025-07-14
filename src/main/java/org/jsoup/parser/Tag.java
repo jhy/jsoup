@@ -200,7 +200,7 @@ public class Tag implements Cloneable {
      * @return The tag, either defined or new generic.
      */
     public static Tag valueOf(String tagName, String namespace, ParseSettings settings) {
-        return TagSet.Html().valueOf(tagName, ParseSettings.normalName(tagName), namespace, settings.preserveTagCase());
+        return TagSet.Html().valueOf(tagName, null, namespace, settings.preserveTagCase());
     }
 
     /**

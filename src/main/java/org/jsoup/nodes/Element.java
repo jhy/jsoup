@@ -50,7 +50,7 @@ public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
-    private static final String BaseUriKey = Attributes.internalKey("baseUri");
+    static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
@@ -87,8 +87,7 @@ public class Element extends Node implements Iterable<Element> {
         childNodes = EmptyNodeList;
         this.attributes = attributes;
         this.tag = tag;
-        if (baseUri != null)
-            this.setBaseUri(baseUri);
+        if (!StringUtil.isBlank(baseUri)) this.setBaseUri(baseUri);
     }
 
     /**
@@ -130,17 +129,19 @@ public class Element extends Node implements Iterable<Element> {
 
     @Override
     public String baseUri() {
-        return searchUpForAttribute(this, BaseUriKey);
+        String baseUri = searchUpForAttribute(this, BaseUriKey);
+        return baseUri != null ? baseUri : "";
     }
 
-    private static String searchUpForAttribute(final Element start, final String key) {
+    @Nullable
+    static String searchUpForAttribute(final Element start, final String key) {
         Element el = start;
         while (el != null) {
             if (el.attributes != null && el.attributes.hasKey(key))
                 return el.attributes.get(key);
             el = el.parent();
         }
-        return "";
+        return null;
     }
 
     @Override
@@ -355,7 +356,18 @@ public class Element extends Node implements Iterable<Element> {
      * @see #childNode(int)
      */
     public Element child(int index) {
-        return childElementsList().get(index);
+        Validate.isTrue(index >= 0, "Index must be >= 0");
+        List<Element> cached = cachedChildren();
+        if (cached != null) return cached.get(index);
+        // otherwise, iter on elementChild; saves creating list
+        int size = childNodes.size();
+        for (int i = 0, e = 0; i < size; i++) { // direct iter is faster than chasing firstElSib, nextElSibd
+            Node node = childNodes.get(i);
+            if (node instanceof Element) {
+                if (e++ == index) return (Element) node;
+            }
+        }
+        throw new IndexOutOfBoundsException("No child at index: " + index);
     }
 
     /**
@@ -370,7 +382,8 @@ public class Element extends Node implements Iterable<Element> {
      * @see #child(int)
      */
     public int childrenSize() {
-        return childElementsList().size();
+        if (childNodeSize() == 0) return 0;
+        return childElementsList().size(); // gets children into cache; faster subsequent child(i) if unmodified
     }
 
     /**
@@ -406,8 +419,9 @@ public class Element extends Node implements Iterable<Element> {
     private static final String childElsMod = "jsoup.childElsMod";
 
     /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
-    private @Nullable List<Element> cachedChildren() {
-        Map<String, Object> userData = attributes().userData();
+    @Nullable List<Element> cachedChildren() {
+        if (attributes == null || !attributes.hasUserData()) return null; // don't create empty userdata
+        Map<String, Object> userData = attributes.userData();
         //noinspection unchecked
         WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
         if (ref != null) {
@@ -872,10 +886,7 @@ public class Element extends Node implements Iterable<Element> {
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
-
-        ArrayList<Node> nodes = new ArrayList<>(children);
-        Node[] nodeArray = nodes.toArray(new Node[0]);
-        addChildren(index, nodeArray);
+        addChildren(index, children.toArray(new Node[0]));
         return this;
     }
 
@@ -1054,9 +1065,9 @@ public class Element extends Node implements Iterable<Element> {
     @Override
     public Element empty() {
         // Detach each of the children -> parent links:
-        for (Node child : childNodes) {
-            child.parentNode = null;
-        }
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).parentNode = null;
         childNodes.clear();
         return this;
     }
@@ -2066,6 +2077,9 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     static final class NodeList extends ArrayList<Node> {
+        /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
+        boolean validChildren = true;
+
         public NodeList(int size) {
             super(size);
         }
@@ -2073,5 +2087,21 @@ public class Element extends Node implements Iterable<Element> {
         int modCount() {
             return this.modCount;
         }
+    }
+
+    void reindexChildren() {
+        final int size = childNodes.size();
+        for (int i = 0; i < size; i++) {
+            childNodes.get(i).setSiblingIndex(i);
+        }
+        childNodes.validChildren = true;
+    }
+
+    void invalidateChildren() {
+        childNodes.validChildren = false;
+    }
+
+    boolean hasValidChildren() {
+        return childNodes.validChildren;
     }
 }

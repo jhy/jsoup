@@ -148,8 +148,8 @@ public final class StringUtil {
      * @param string string to test
      * @return if string is blank
      */
-    public static boolean isBlank(final String string) {
-        if (string == null || string.length() == 0)
+    public static boolean isBlank(@Nullable String string) {
+        if (string == null || string.isEmpty())
             return true;
 
         int l = string.length();

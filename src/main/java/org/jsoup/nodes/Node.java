@@ -366,8 +366,12 @@ public abstract class Node implements Cloneable {
      * @return the Document associated with this Node, or null if there is no such Document.
      */
     public @Nullable Document ownerDocument() {
-        Node root = root();
-        return (root instanceof Document) ? (Document) root : null;
+        Node node = this;
+        while (node != null) {
+            if (node instanceof Document) return (Document) node;
+            node = node.parentNode;
+        }
+        return null;
     }
 
     /**
@@ -386,7 +390,7 @@ public abstract class Node implements Cloneable {
      * @see #after(String)
      */
     public Node before(String html) {
-        addSiblingHtml(siblingIndex, html);
+        addSiblingHtml(siblingIndex(), html);
         return this;
     }
 
@@ -403,7 +407,7 @@ public abstract class Node implements Cloneable {
         // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
         if (node.parentNode == parentNode) node.remove();
 
-        parentNode.addChildren(siblingIndex, node);
+        parentNode.addChildren(siblingIndex(), node);
         return this;
     }
 
@@ -414,7 +418,7 @@ public abstract class Node implements Cloneable {
      * @see #before(String)
      */
     public Node after(String html) {
-        addSiblingHtml(siblingIndex + 1, html);
+        addSiblingHtml(siblingIndex() + 1, html);
         return this;
     }
 
@@ -431,7 +435,7 @@ public abstract class Node implements Cloneable {
         // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
         if (node.parentNode == parentNode) node.remove();
 
-        parentNode.addChildren(siblingIndex + 1, node);
+        parentNode.addChildren(siblingIndex() + 1, node);
         return this;
     }
 
@@ -505,7 +509,7 @@ public abstract class Node implements Cloneable {
     public @Nullable Node unwrap() {
         Validate.notNull(parentNode);
         Node firstChild = firstChild();
-        parentNode.addChildren(siblingIndex, this.childNodesAsArray());
+        parentNode.addChildren(siblingIndex(), this.childNodesAsArray());
         this.remove();
 
         return firstChild;
@@ -547,7 +551,7 @@ public abstract class Node implements Cloneable {
         if (in.parentNode != null)
             in.parentNode.removeChild(in);
 
-        final int index = out.siblingIndex;
+        final int index = out.siblingIndex();
         ensureChildNodes().set(index, in);
         assert this instanceof Element;
         in.parentNode = (Element) this;
@@ -557,9 +561,13 @@ public abstract class Node implements Cloneable {
 
     protected void removeChild(Node out) {
         Validate.isTrue(out.parentNode == this);
-        final int index = out.siblingIndex;
-        ensureChildNodes().remove(index);
-        reindexChildren(index);
+        Element el = (Element) this;
+        if (el.hasValidChildren()) // can remove by index
+            ensureChildNodes().remove(out.siblingIndex);
+        else
+            ensureChildNodes().remove(out); // iterates, but potentially not every one
+
+        el.invalidateChildren();
         out.parentNode = null;
     }
 
@@ -575,10 +583,9 @@ public abstract class Node implements Cloneable {
     }
 
     protected void addChildren(int index, Node... children) {
+        // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
-        if (children.length == 0) {
-            return;
-        }
+        if (children.length == 0) return;
         final List<Node> nodes = ensureChildNodes();
 
         // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
@@ -603,8 +610,7 @@ public abstract class Node implements Cloneable {
                 while (i-- > 0) {
                     children[i].parentNode = (Element) this;
                 }
-                if (!(wasEmpty && children[0].siblingIndex == 0)) // skip reindexing if we just moved
-                    reindexChildren(index);
+                ((Element) this).invalidateChildren();
                 return;
             }
         }
@@ -614,20 +620,11 @@ public abstract class Node implements Cloneable {
             reparentChild(child);
         }
         nodes.addAll(index, Arrays.asList(children));
-        reindexChildren(index);
+        ((Element) this).invalidateChildren();
     }
     
     protected void reparentChild(Node child) {
         child.setParentNode(this);
-    }
-
-    private void reindexChildren(int start) {
-        final int size = childNodeSize();
-        if (size == 0) return;
-        final List<Node> childNodes = ensureChildNodes();
-        for (int i = start; i < size; i++) {
-            childNodes.get(i).setSiblingIndex(i);
-        }
     }
 
     /**
@@ -656,10 +653,12 @@ public abstract class Node implements Cloneable {
             return null; // root
 
         final List<Node> siblings = parentNode.ensureChildNodes();
-        final int index = siblingIndex+1;
-        if (siblings.size() > index)
-            return siblings.get(index);
-        else
+        final int index = siblingIndex() + 1;
+        if (siblings.size() > index) {
+            Node node = siblings.get(index);
+            assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
+            return node;
+        } else
             return null;
     }
 
@@ -671,7 +670,7 @@ public abstract class Node implements Cloneable {
         if (parentNode == null)
             return null; // root
 
-        if (siblingIndex > 0)
+        if (siblingIndex() > 0)
             return parentNode.ensureChildNodes().get(siblingIndex-1);
         else
             return null;
@@ -684,6 +683,9 @@ public abstract class Node implements Cloneable {
      * @see org.jsoup.nodes.Element#elementSiblingIndex()
      */
     public int siblingIndex() {
+        if (parentNode != null && !parentNode.childNodes.validChildren)
+            parentNode.reindexChildren();
+
         return siblingIndex;
     }
 
@@ -1006,7 +1008,7 @@ public abstract class Node implements Cloneable {
         }
 
         clone.parentNode = (Element) parent; // can be null, to create an orphan split
-        clone.siblingIndex = parent == null ? 0 : siblingIndex;
+        clone.siblingIndex = parent == null ? 0 : siblingIndex();
         // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
         if (parent == null && !(this instanceof Document)) {
             Document doc = ownerDocument();

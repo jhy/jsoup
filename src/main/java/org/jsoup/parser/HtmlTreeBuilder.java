@@ -306,9 +306,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element createElementFor(Token.StartTag startTag, String namespace, boolean forcePreserveCase) {
         // dedupe and normalize the attributes:
         Attributes attributes = startTag.attributes;
-        if (!forcePreserveCase)
-            attributes = settings.normalizeAttributes(attributes);
         if (attributes != null && !attributes.isEmpty()) {
+            if (!forcePreserveCase)
+                settings.normalizeAttributes(attributes);
             int dupes = attributes.deduplicate(settings);
             if (dupes > 0) {
                 error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);

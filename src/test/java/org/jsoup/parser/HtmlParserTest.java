@@ -471,6 +471,22 @@ public class HtmlParserTest {
         assertEquals("<input>\n<table></table>", doc.body().html());
     }
 
+    @Test public void siblingIndexFromFragment() {
+        Document doc = Jsoup.parseBodyFragment("<table><input></table>");
+        Element input = doc.expectFirst("input");
+        Element table = doc.expectFirst("table");
+        assertEquals(0, input.siblingIndex());
+        assertEquals(1, table.siblingIndex());
+    }
+
+    @Test public void siblingIndexFromParse() {
+        Document doc = Jsoup.parse("<table><input></table>");
+        Element input = doc.expectFirst("input");
+        Element table = doc.expectFirst("table");
+        assertEquals(0, input.siblingIndex());
+        assertEquals(1, table.siblingIndex());
+    }
+
     @Test public void handlesUnknownNamespaceTags() {
         String h = "<foo:bar id='1' /><abc:def id=2>Foo<p>Hello</p></abc:def><foo:bar>There</foo:bar>";
         Parser parser = Parser.htmlParser();

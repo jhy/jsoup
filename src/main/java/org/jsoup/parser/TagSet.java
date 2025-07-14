@@ -103,8 +103,11 @@ public class TagSet {
         return null;
     }
 
-    /** Tag.valueOf with the normalName via the token.normalName, to save redundant lower-casing passes. */
-    Tag valueOf(String tagName, String normalName, String namespace, boolean preserveTagCase) {
+    /**
+     Tag.valueOf with the normalName via the token.normalName, to save redundant lower-casing passes.
+     Provide a null normalName unless we already have one; will be normalized if required from tagName.
+     */
+    Tag valueOf(String tagName, @Nullable String normalName, String namespace, boolean preserveTagCase) {
         Validate.notNull(tagName);
         Validate.notNull(namespace);
         tagName = tagName.trim();
@@ -113,6 +116,7 @@ public class TagSet {
         if (tag != null) return tag;
 
         // not found by tagName, try by normal
+        if (normalName == null) normalName = ParseSettings.normalName(tagName);
         tagName = preserveTagCase ? tagName : normalName;
         tag = get(normalName, namespace);
         if (tag != null) {
@@ -141,7 +145,7 @@ public class TagSet {
      @return The tag, either defined or new generic.
      */
     public Tag valueOf(String tagName, String namespace, ParseSettings settings) {
-        return valueOf(tagName, ParseSettings.normalName(tagName), namespace, settings.preserveTagCase());
+        return valueOf(tagName, null, namespace, settings.preserveTagCase());
     }
 
     /**
