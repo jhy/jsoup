@@ -381,6 +381,27 @@
       </activation>
       <build>
         <plugins>
+          <!-- Sets up test/java11 -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+              <execution>
+                <id>add-java11-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>${project.basedir}/src/test/java11</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -412,23 +433,6 @@
                   <multiReleaseOutput>true</multiReleaseOutput>
                 </configuration>
               </execution>
-
-              <!-- Tests for multi-release jar on 11: mark tests to be compiled; then and add to class path -->
-              <execution>
-                <id>testcompile-java-11</id>
-                <phase>test-compile</phase>
-                <goals>
-                  <goal>testCompile</goal>
-                </goals>
-                <configuration>
-                  <release>11</release>
-
-                  <compileSourceRoots>
-                    <compileSourceRoot>${project.basedir}/src/test/java11</compileSourceRoot>
-                  </compileSourceRoots>
-                </configuration>
-              </execution>
-
             </executions>
           </plugin>
 
