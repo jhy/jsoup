@@ -50,7 +50,7 @@ public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
     private static final Pattern ClassSplit = Pattern.compile("\\s+");
-    private static final String BaseUriKey = Attributes.internalKey("baseUri");
+    static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
@@ -87,8 +87,7 @@ public class Element extends Node implements Iterable<Element> {
         childNodes = EmptyNodeList;
         this.attributes = attributes;
         this.tag = tag;
-        if (baseUri != null)
-            this.setBaseUri(baseUri);
+        if (!StringUtil.isBlank(baseUri)) this.setBaseUri(baseUri);
     }
 
     /**
@@ -130,17 +129,19 @@ public class Element extends Node implements Iterable<Element> {
 
     @Override
     public String baseUri() {
-        return searchUpForAttribute(this, BaseUriKey);
+        String baseUri = searchUpForAttribute(this, BaseUriKey);
+        return baseUri != null ? baseUri : "";
     }
 
-    private static String searchUpForAttribute(final Element start, final String key) {
+    @Nullable
+    static String searchUpForAttribute(final Element start, final String key) {
         Element el = start;
         while (el != null) {
             if (el.attributes != null && el.attributes.hasKey(key))
                 return el.attributes.get(key);
             el = el.parent();
         }
-        return "";
+        return null;
     }
 
     @Override
@@ -419,7 +420,8 @@ public class Element extends Node implements Iterable<Element> {
 
     /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
     @Nullable List<Element> cachedChildren() {
-        Map<String, Object> userData = attributes().userData();
+        if (attributes == null || !attributes.hasUserData()) return null; // don't create empty userdata
+        Map<String, Object> userData = attributes.userData();
         //noinspection unchecked
         WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
         if (ref != null) {

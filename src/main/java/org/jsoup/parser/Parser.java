@@ -312,6 +312,8 @@ public class Parser implements Cloneable {
      * @return an unescaped string
      */
     public static String unescapeEntities(String string, boolean inAttribute) {
+        Validate.notNull(string);
+        if (string.indexOf('&') < 0) return string; // nothing to unescape
         Parser parser = Parser.htmlParser();
         parser.treeBuilder.initialiseParse(new StringReader(string), "", parser);
         Tokeniser tokeniser = new Tokeniser(parser.treeBuilder);
