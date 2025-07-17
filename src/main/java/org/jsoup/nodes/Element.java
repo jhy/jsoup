@@ -382,16 +382,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     public int childrenSize() {
         if (childNodeSize() == 0) return 0;
-        List<Element> cached = cachedChildren();
-        if (cached != null) return cached.size();
-
-        int size = 0;
-        Element el = firstElementChild();
-        while (el != null) {
-            size++;
-            el = el.nextElementSibling();
-        }
-        return size;
+        return childElementsList().size(); // gets children into cache; faster subsequent child(i) if unmodified
     }
 
     /**

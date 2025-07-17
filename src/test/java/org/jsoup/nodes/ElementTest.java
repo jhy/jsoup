@@ -3285,10 +3285,18 @@ public class ElementTest {
         // uncached
         assertNull(el.cachedChildren());
         assertEquals(3, el.childrenSize());
+        // gets cached. As we have to iter elements anyway, might as well make and cache the list, so later child(i) is fast. supports for(i=0;i<el.childrenSize()){child=el.child(i)} case. (But better just to for el.children() ).
+        assertNotNull(el.cachedChildren());
 
-        // cached
+        el = Jsoup.parse("<div>One <p>Two</p> Three <p>Four</p> Five <p>Six</p> <b></b>").expectFirst("div"); // resest
+        assertNull(el.cachedChildren());
         el.children();
         assertNotNull(el.cachedChildren());
-        assertEquals(3, el.childrenSize());
+        assertEquals(4, el.childrenSize());
+
+        Element empty = el.expectFirst("b");
+        assertEquals(0, empty.childrenSize());
+        assertNull(empty.cachedChildren()); // 0 node fast path, does not create list
+
     }
 }
