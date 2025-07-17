@@ -2078,6 +2078,9 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     static final class NodeList extends ArrayList<Node> {
+        /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
+        boolean validChildren = true;
+
         public NodeList(int size) {
             super(size);
         }
@@ -2085,5 +2088,21 @@ public class Element extends Node implements Iterable<Element> {
         int modCount() {
             return this.modCount;
         }
+    }
+
+    void reindexChildren() {
+        final int size = childNodes.size();
+        for (int i = 0; i < size; i++) {
+            childNodes.get(i).setSiblingIndex(i);
+        }
+        childNodes.validChildren = true;
+    }
+
+    void invalidateChildren() {
+        childNodes.validChildren = false;
+    }
+
+    boolean hasValidChildren() {
+        return childNodes.validChildren;
     }
 }
