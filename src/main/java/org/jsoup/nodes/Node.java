@@ -656,9 +656,11 @@ public abstract class Node implements Cloneable {
 
         final List<Node> siblings = parentNode.ensureChildNodes();
         final int index = siblingIndex() + 1;
-        if (siblings.size() > index)
-            return siblings.get(index);
-        else
+        if (siblings.size() > index) {
+            Node node = siblings.get(index);
+            assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
+            return node;
+        } else
             return null;
     }
 
