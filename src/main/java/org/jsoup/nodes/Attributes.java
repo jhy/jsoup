@@ -159,7 +159,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (i != NotFound)
             vals[i] = value;
         else
-            add(key, value);
+            addObject(key, value);
         return this;
     }
 
@@ -232,7 +232,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 keys[i] = key;
         }
         else
-            add(key, value);
+            addObject(key, value);
     }
 
     /**
@@ -372,7 +372,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             if (needsPut)
                 put(attr);
             else
-                add(attr.getKey(), attr.getValue());
+                addObject(attr.getKey(), attr.getValue());
         }
     }
 

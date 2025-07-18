@@ -366,8 +366,12 @@ public abstract class Node implements Cloneable {
      * @return the Document associated with this Node, or null if there is no such Document.
      */
     public @Nullable Document ownerDocument() {
-        Node root = root();
-        return (root instanceof Document) ? (Document) root : null;
+        Node node = this;
+        while (node != null) {
+            if (node instanceof Document) return (Document) node;
+            node = node.parentNode;
+        }
+        return null;
     }
 
     /**

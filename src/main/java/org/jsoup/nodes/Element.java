@@ -360,12 +360,12 @@ public class Element extends Node implements Iterable<Element> {
         List<Element> cached = cachedChildren();
         if (cached != null) return cached.get(index);
         // otherwise, iter on elementChild; saves creating list
-        int i = 0;
-        Element el = firstElementChild();
-        while (el != null) {
-            if (i == index) return el;
-            i++;
-            el = el.nextElementSibling();
+        int size = childNodes.size();
+        for (int i = 0, e = 0; i < size; i++) { // direct iter is faster than chasing firstElSib, nextElSibd
+            Node node = childNodes.get(i);
+            if (node instanceof Element) {
+                if (e++ == index) return (Element) node;
+            }
         }
         throw new IndexOutOfBoundsException("No child at index: " + index);
     }
