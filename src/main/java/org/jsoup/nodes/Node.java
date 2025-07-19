@@ -583,10 +583,9 @@ public abstract class Node implements Cloneable {
     }
 
     protected void addChildren(int index, Node... children) {
+        // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
-        if (children.length == 0) {
-            return;
-        }
+        if (children.length == 0) return;
         final List<Node> nodes = ensureChildNodes();
 
         // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace

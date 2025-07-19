@@ -886,10 +886,7 @@ public class Element extends Node implements Iterable<Element> {
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
-
-        ArrayList<Node> nodes = new ArrayList<>(children);
-        Node[] nodeArray = nodes.toArray(new Node[0]);
-        addChildren(index, nodeArray);
+        addChildren(index, children.toArray(new Node[0]));
         return this;
     }
 
@@ -1068,9 +1065,9 @@ public class Element extends Node implements Iterable<Element> {
     @Override
     public Element empty() {
         // Detach each of the children -> parent links:
-        for (Node child : childNodes) {
-            child.parentNode = null;
-        }
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).parentNode = null;
         childNodes.clear();
         return this;
     }
