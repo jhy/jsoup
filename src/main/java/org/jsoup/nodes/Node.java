@@ -610,8 +610,7 @@ public abstract class Node implements Cloneable {
                 while (i-- > 0) {
                     children[i].parentNode = (Element) this;
                 }
-                if (!(wasEmpty && children[0].siblingIndex == 0)) // skip reindexing if we just moved
-                    ((Element) this).invalidateChildren();
+                ((Element) this).invalidateChildren();
                 return;
             }
         }
