@@ -602,7 +602,6 @@ public abstract class Node implements Cloneable {
                 }
             }
             if (sameList) { // moving, so OK to empty firstParent and short-circuit
-                boolean wasEmpty = childNodeSize() == 0;
                 firstParent.empty();
                 nodes.addAll(index, Arrays.asList(children));
                 i = children.length;
