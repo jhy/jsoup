@@ -75,11 +75,10 @@ public class ParseSettings {
         return name;
     }
 
-    @Nullable Attributes normalizeAttributes(@Nullable Attributes attributes) {
-        if (attributes != null && !preserveAttributeCase) {
+    void normalizeAttributes(Attributes attributes) {
+        if (!preserveAttributeCase) {
             attributes.normalize();
         }
-        return attributes;
     }
 
     /** Returns the normal name that a Tag will have (trimmed and lower-cased) */

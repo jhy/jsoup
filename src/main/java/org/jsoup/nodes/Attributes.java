@@ -159,7 +159,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         if (i != NotFound)
             vals[i] = value;
         else
-            add(key, value);
+            addObject(key, value);
         return this;
     }
 
@@ -184,6 +184,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Check if these attributes have any user data associated with them.
+     */
+    boolean hasUserData() {
+        return hasKey(SharedConstants.UserDataKey);
+    }
+
+    /**
      Get an arbitrary user-data object by key.
      * @param key case-sensitive key to the object.
      * @return the object associated to this key, or {@code null} if not found.
@@ -193,7 +200,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     @Nullable
     public Object userData(String key) {
         Validate.notNull(key);
-        if (!hasKey(SharedConstants.UserDataKey)) return null; // no user data exists
+        if (!hasUserData()) return null; // no user data exists
         Map<String, Object> userData = userData();
         return userData.get(key);
     }
@@ -225,7 +232,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 keys[i] = key;
         }
         else
-            add(key, value);
+            addObject(key, value);
     }
 
     /**
@@ -365,7 +372,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             if (needsPut)
                 put(attr);
             else
-                add(attr.getKey(), attr.getValue());
+                addObject(attr.getKey(), attr.getValue());
         }
     }
 

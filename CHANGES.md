@@ -11,6 +11,7 @@
 * Updated `Connection.Response#statusMessage()` to return a simple loggable string message (e.g. "OK") when using the `HttpClient` implementation, which doesn't otherwise return any server-set status message. [#2356](https://github.com/jhy/jsoup/issues/2346) 
 * `Attributes#size()` and `Attributes#isEmpty()` now exclude any internal attributes (such as user data) from their count. This aligns with the attributes' serialized output and iterator. [#2369](https://github.com/jhy/jsoup/pull/2369)
 * Added `Connection#sslContext(SSLContext)` to provide a custom SSL (TLS) context to requests, supporting both the `HttpClient` and the legacy `HttUrlConnection` implementations. [#2370](https://github.com/jhy/jsoup/pull/2370)
+* Performance optimizations for DOM manipulation methods including when repeatedly removing an element's first child (`element.child(0).remove()`, and when using `Parser#parseBodyFragement()` to parse a large number of direct children. [#2373](https://github.com/jhy/jsoup/pull/2373).
 
 ### Bug Fixes
 * When parsing from an InputStream and a multibyte character happened to straddle a buffer boundary, the stream would not be completely read. [#2353](https://github.com/jhy/jsoup/issues/2353).

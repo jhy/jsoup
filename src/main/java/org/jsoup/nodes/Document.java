@@ -220,7 +220,10 @@ public class Document extends Element {
      @return new element
      */
     public Element createElement(String tagName) {
-        return new Element(parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase), this.baseUri());
+        return new Element(
+            parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase),
+            searchUpForAttribute(this, BaseUriKey)
+        );
     }
 
     @Override
