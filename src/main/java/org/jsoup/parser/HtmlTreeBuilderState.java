@@ -1820,8 +1820,6 @@ enum HtmlTreeBuilderState {
                             tb.tokeniser.transition(TokeniserState.ScriptData);
                         else
                             tb.tokeniser.transition(textState);
-                        tb.markInsertionMode();
-                        tb.transition(Text);
                     }
 
                     break;
