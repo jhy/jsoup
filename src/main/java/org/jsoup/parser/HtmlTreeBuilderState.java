@@ -924,7 +924,7 @@ enum HtmlTreeBuilderState {
                     } else {
                         el = tb.aboveOnStack(el);
                     }
-                    if (el == null) {
+                    if (el == null || el.nameIs("body")) {
                         tb.error(this); // shouldn't be able to hit
                         break;
                     }

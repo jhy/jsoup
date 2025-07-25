@@ -52,6 +52,8 @@ public class FuzzFixesTest {
     void testHtmlParse(File file) throws IOException {
         Document doc = Jsoup.parse(file, "UTF-8", "https://example.com/");
         assertNotNull(doc);
+        doc = Jsoup.parse(file, "UTF-8", ""); // no base href attr; so same as a parse(string), which can have subtly different semantics
+        assertNotNull(doc);
     }
 
     @ParameterizedTest
@@ -59,5 +61,6 @@ public class FuzzFixesTest {
     void testXmlParse(File file) throws IOException {
         Document doc = Jsoup.parse(file, "UTF-8", "https://example.com/", Parser.xmlParser());
         assertNotNull(doc);
+        doc = Jsoup.parse(file, "UTF-8", "", Parser.xmlParser()); // no base href attr
     }
 }
