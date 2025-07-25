@@ -18,6 +18,7 @@
 * In `NodeTraversor`, if a last child element was removed during the `head()` call, the parent would be visited twice. [#2355](https://github.com/jhy/jsoup/issues/2355).
 * Cloning an Element that has an Attributes object would add an empty internal user-data attribute to that clone, which would cause unexpected results for `Attributes#size()` and `Attributes#isEmpty()`. [#2356](https://github.com/jhy/jsoup/issues/2356)
 * In a multithreaded application where multiple threads are calling `Element#children()` on the same element concurrently, a race condition could happen when the method was generating the internal child element cache (a filtered view of its child nodes). Since concurrent reads of DOM objects should be threadsafe without external synchronization, this method has been updated to execute atomically. [#2366](https://github.com/jhy/jsoup/issues/2366)
+* Malformed HTML could throw an IndexOutOfBoundsException during the adoption agency. [#2377](https://github.com/jhy/jsoup/pull/2377).
 
 ## 1.21.1 (2025-Jun-23)
 
