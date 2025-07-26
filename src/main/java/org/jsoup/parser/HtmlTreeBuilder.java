@@ -546,8 +546,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
      @return the Element immediately above the supplied element, or null if there is no such element.
      */
     @Nullable Element aboveOnStack(Element el) {
-        assert onStack(el);
-        for (int pos = stack.size() -1; pos >= 0; pos--) {
+        if (!onStack(el)) return null;
+        for (int pos = stack.size() -1; pos > 0; pos--) {
             Element next = stack.get(pos);
             if (next == el) {
                 return stack.get(pos-1);
