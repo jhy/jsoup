@@ -1247,10 +1247,10 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.15.2
      */
     public @Nullable Element firstElementChild() {
-        Node child = firstChild();
-        while (child != null) {
-            if (child instanceof Element) return (Element) child;
-            child = child.nextSibling();
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++) {
+            Node node = childNodes.get(i);
+            if (node instanceof Element) return (Element) node;
         }
         return null;
     }
@@ -1263,10 +1263,9 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.15.2
      */
     public @Nullable Element lastElementChild() {
-        Node child = lastChild();
-        while (child != null) {
-            if (child instanceof Element) return (Element) child;
-            child = child.previousSibling();
+        for (int i = childNodes.size() - 1; i >= 0; i--) {
+            Node node = childNodes.get(i);
+            if (node instanceof Element) return (Element) node;
         }
         return null;
     }
