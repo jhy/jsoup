@@ -100,7 +100,9 @@ public class ProxyTest {
 
         // the proxy wants auth, but not the server. HTTP and HTTPS, so tests direct proxy and CONNECT
         Connection session = Jsoup.newSession()
-            .proxy(proxy.hostname, proxy.authedPort).ignoreHttpErrors(true);
+            .proxy(proxy.hostname, proxy.authedPort)
+            .ignoreHttpErrors(true)
+            .ignoreContentType(true); // ignore content type, as error served may not have a content type
         String password = AuthFilter.newProxyPassword();
 
         // fail first
@@ -110,8 +112,7 @@ public class ProxyTest {
             int code = execute.statusCode(); // no auth sent
             assertEquals(HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED, code);
         } catch (IOException e) {
-            // in CONNECT (for the HTTPS url), URLConnection will throw the proxy connect as a Stringly typed IO exception - "Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"". (Not a response code)
-            assertTrue(e.getMessage().contains("407"));
+            assertAuthRequiredException(e);
         }
 
         try {
@@ -125,7 +126,7 @@ public class ProxyTest {
             assertEquals(MaxAttempts, count.get());
             assertEquals(HttpServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED, res.statusCode());
         } catch (IOException e) {
-            assertTrue(e.getMessage().contains("407"));
+            assertAuthRequiredException(e);
         }
 
         AtomicInteger successCount = new AtomicInteger(0);
@@ -137,6 +138,16 @@ public class ProxyTest {
             .execute();
         assertEquals(1, successCount.get());
         assertEquals(HttpServletResponse.SC_OK, successRes.statusCode());
+    }
+
+    static void assertAuthRequiredException(IOException e) {
+        // in CONNECT (for the HTTPS url), URLConnection will throw the proxy connect as a Stringly typed IO exception - "Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"". (Not a response code)
+        // Alternatively, some platforms (?) will report: "No credentials provided"
+        String err = e.getMessage();
+        if (!(err.contains("407") || err.contains("No credentials provided"))) {
+            System.err.println("Not a 407 exception?");
+            fail("Expected 407 Proxy Authentication Required, got: " + err);
+        }
     }
 
     @ParameterizedTest @MethodSource("echoUrls")
