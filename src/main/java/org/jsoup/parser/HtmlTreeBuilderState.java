@@ -945,6 +945,11 @@ enum HtmlTreeBuilderState {
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
+                    if (!tb.onStack(el)) { // stale formatting element; cannot adopt/replace
+                        tb.error(this);
+                        tb.removeFromActiveFormattingElements(el);
+                        break; // exit inner loop; proceed with step 14 using current lastEl
+                    }
                     Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
@@ -1485,7 +1490,11 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         if (!tb.inSelectScope("select"))
                             return false; // frag
-                        tb.processEndTag("select");
+                        // spec says close select then reprocess; leads to recursion. iter directly:
+                        do {
+                            tb.popStackToClose("select");
+                            tb.resetInsertionMode();
+                        } while (tb.inSelectScope("select")); // collapse invalid nested selects
                         return tb.process(start);
                     } else if (name.equals("script") || name.equals("template")) {
                         return tb.process(t, InHead);
