@@ -734,8 +734,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (!inSorted(elName, TagSearchSelectScope)) // all elements except
                 return false;
         }
-        Validate.fail("Should not be reachable");
-        return false;
+        return false; // nothing left on stack
     }
 
     /** Tests if there is some element on the stack that is not in the provided set. */
