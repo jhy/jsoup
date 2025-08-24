@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.21.2 (PENDING)
+## 1.21.2 (2025-Aug-25)
 
 ### Changes
 * Deprecated internal (yet visible) methods `Normalizer#normalize(String, bool)` and `Attribute#shouldCollapseAttribute(Document.OutputSettings)`. These will be removed in a future version.
