@@ -175,12 +175,9 @@ class HttpClientExecutor extends RequestExecutor {
 
         @Override
         public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-            // perRequestProxy를 사용한 경우: defaultSelector와 무관하므로 무시
             if (perRequestProxy.get() != null) {
                 return;  // no-op
             }
-            
-            // defaultSelector를 사용한 경우에만 전달
             ProxySelector defaultSelector = ProxySelector.getDefault();
             if (defaultSelector != null) {
                 defaultSelector.connectFailed(uri, sa, ioe);
