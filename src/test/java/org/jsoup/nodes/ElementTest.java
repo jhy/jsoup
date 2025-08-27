@@ -3317,7 +3317,7 @@ public class ElementTest {
         p.appendChild(text);
 
         int reported = div.childrenSize(); // invalidated ^^
-        long actualSize = div.childNodes().stream().filter(node -> { return node instanceof Element;}).count();
+        long actualSize = div.childNodes().stream().filter(node -> node instanceof Element).count();
 
         assertEquals(0, origCount);
         assertEquals(1, actualSize);
