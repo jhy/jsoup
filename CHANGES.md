@@ -1,5 +1,11 @@
 # jsoup Changelog
 
+## 1.22.1 (PENDING)
+
+### Bug Fixes
+* Previously cached child Elements of an Element were not correctly invalidated in `Node#replaceWith(Node)`, which could lead to incorrect results when subsequently calling `Element#children()`. [#2391](https://github.com/jhy/jsoup/issues/2391)
+
+
 ## 1.21.2 (2025-Aug-25)
 
 ### Changes
