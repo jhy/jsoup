@@ -3319,8 +3319,6 @@ public class ElementTest {
         int reported = div.childrenSize(); // invalidated ^^
         long actualSize = div.childNodes().stream().filter(node -> { return node instanceof Element;}).count();
 
-        List<Element> collected = div.stream().collect(Collectors.toList());
-
         assertEquals(0, origCount);
         assertEquals(1, actualSize);
         assertEquals(1, reported); // was 0 via cache
