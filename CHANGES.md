@@ -1,5 +1,8 @@
 # jsoup Changelog
 
+* When using the JDK HttpClient, any system default proxy (`ProxySelector.getDefault()`) was ignored. Now, the system proxy is used if a per-request proxy is not set. [#2388](https://github.com/jhy/jsoup/issues/2388), [#2390](https://github.com/jhy/jsoup/pull/2390)
+
+
 ## 1.21.2 (2025-Aug-25)
 
 ### Changes

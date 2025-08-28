@@ -31,7 +31,7 @@ class HttpClientExecutor extends RequestExecutor {
     // HttpClient expects proxy settings per client; we do per request, so held as a thread local. Can't do same for
     // auth because that callback is on a worker thread, so can only do auth per Connection. So we create a new client
     // if the authenticator is different between requests
-    static ThreadLocal<Proxy> perRequestProxy = new ThreadLocal<>();
+    static ThreadLocal<@Nullable Proxy> perRequestProxy = new ThreadLocal<>();
 
     @Nullable
     HttpResponse<InputStream> hRes;
@@ -167,7 +167,7 @@ class HttpClientExecutor extends RequestExecutor {
                 return Collections.singletonList(proxy);
             }
             ProxySelector defaultSelector = ProxySelector.getDefault();
-            if (defaultSelector != null) {
+            if (defaultSelector != null && defaultSelector != this) { // avoid recursion if we were set as default
                 return defaultSelector.select(uri);
             }
             return NoProxy;
@@ -179,7 +179,7 @@ class HttpClientExecutor extends RequestExecutor {
                 return;  // no-op
             }
             ProxySelector defaultSelector = ProxySelector.getDefault();
-            if (defaultSelector != null) {
+            if (defaultSelector != null && defaultSelector != this) {
                 defaultSelector.connectFailed(uri, sa, ioe);
             }
         }
