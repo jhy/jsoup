@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 * Previously cached child Elements of an Element were not correctly invalidated in `Node#replaceWith(Node)`, which could lead to incorrect results when subsequently calling `Element#children()`. [#2391](https://github.com/jhy/jsoup/issues/2391)
+* Attribute selector values are now compared literally without trimming. Previously, jsoup trimmed whitespace from selector values and from element attribute values, which could cause mismatches with browser behavior (e.g. `[attr=" foo "]`). Now matches align with the CSS specification and browser engines. [#2380](https://github.com/jhy/jsoup/issues/2380)
 
 
 ## 1.21.2 (2025-Aug-25)

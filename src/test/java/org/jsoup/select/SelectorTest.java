@@ -896,14 +896,12 @@ public class SelectorTest {
         Document doc = Jsoup.parse(html);
 
         Elements found = doc.select("div[class=value ]");
-        assertEquals(2, found.size());
-        assertEquals("class without space", found.get(0).text());
-        assertEquals("class with space", found.get(1).text());
+        assertEquals(1, found.size());
+        assertEquals("class with space", found.get(0).text());
 
         found = doc.select("div[class=\"value \"]");
-        assertEquals(2, found.size());
-        assertEquals("class without space", found.get(0).text());
-        assertEquals("class with space", found.get(1).text());
+        assertEquals(1, found.size());
+        assertEquals("class with space", found.get(0).text());
 
         found = doc.select("div[class=\"value\\ \"]");
         assertEquals(0, found.size());
@@ -1727,6 +1725,47 @@ public class SelectorTest {
             "Could not parse query '::unknown:contains(foo)': unknown node type '::unknown'",
             ex.getMessage()
         );
+    }
+
+    @Test void attributeSelectorQuotedWhitespace() {
+        // https://github.com/jhy/jsoup/issues/2380
+        Document doc = Jsoup.parse(
+            "<div id=1 data=foobar></div>" +
+                "<div id=2 data=' foobar '></div>" +
+                "<div id=3 data='xfoobarx'></div>"
+        );
+
+        // match: literal compare (no trimming)
+        assertSelectedIds(doc.select("div[data=\"foobar\"]"), "1");
+        assertSelectedIds(doc.select("div[data=\" foobar \"]"), "2");
+
+        // prefix
+        assertSelectedIds(doc.select("div[data^=\"foo\"]"), "1");
+        assertSelectedIds(doc.select("div[data^=\" foo\"]"), "2");
+
+        // suffix
+        assertSelectedIds(doc.select("div[data$=\"bar\"]"), "1");
+        assertSelectedIds(doc.select("div[data$=\"bar \"]"), "2");
+
+        // contains
+        assertSelectedIds(doc.select("div[data*=\"foobar\"]"), "1", "2", "3");
+        assertSelectedIds(doc.select("div[data*=\" foobar \"]"), "2");
+    }
+
+    @Test void canSelectBlankAttribute() {
+        Document doc = Jsoup.parse(
+            "<div id=1 data=''></div>" +
+                "<div id=2 data></div>" +
+                "<div id=3 data=one></div>"
+        );
+
+        assertSelectedIds(doc.select("div[data]"), "1", "2", "3");
+        assertSelectedIds(doc.select("div[data='']"), "1", "2");
+        assertSelectedIds(doc.select("div[data=]"), "1", "2");
+
+        assertSelectedIds(doc.select("div[data^='']"), "1", "2", "3");
+        assertSelectedIds(doc.select("div[data$='']"), "1", "2", "3");
+        assertSelectedIds(doc.select("div[data*='']"), "1", "2", "3");
     }
 
 }
