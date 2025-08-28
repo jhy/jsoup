@@ -553,10 +553,11 @@ public abstract class Node implements Cloneable {
 
         final int index = out.siblingIndex();
         ensureChildNodes().set(index, in);
-        assert this instanceof Element;
         in.parentNode = (Element) this;
         in.setSiblingIndex(index);
         out.parentNode = null;
+
+        ((Element) this).childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
     }
 
     protected void removeChild(Node out) {

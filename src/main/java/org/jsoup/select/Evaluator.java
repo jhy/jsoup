@@ -272,7 +272,7 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim());
+            return element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key));
         }
 
         @Override protected int cost() {
@@ -315,7 +315,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueStarting extends AttributeKeyPair {
         public AttributeWithValueStarting(String key, String value) {
-            super(key, value, false);
+            super(key, value);
         }
 
         @Override
@@ -338,7 +338,7 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueEnding extends AttributeKeyPair {
         public AttributeWithValueEnding(String key, String value) {
-            super(key, value, false);
+            super(key, value);
         }
 
         @Override
@@ -416,12 +416,8 @@ public abstract class Evaluator {
         final String value;
 
         public AttributeKeyPair(String key, String value) {
-            this(key, value, true);
-        }
-
-        public AttributeKeyPair(String key, String value, boolean trimQuoted) {
             Validate.notEmpty(key);
-            Validate.notEmpty(value);
+            Validate.notNull(value);
 
             this.key = normalize(key);
             boolean quoted = value.startsWith("'") && value.endsWith("'")
@@ -429,13 +425,19 @@ public abstract class Evaluator {
             if (quoted)
                 value = value.substring(1, value.length() - 1);
 
-            // normalize value based on whether it was quoted and trimQuoted flag
-            // keeps whitespace for attribute val starting or ending, when quoted
-            if (trimQuoted || !quoted)
-                this.value = normalize(value); // lowercase and trims
-            else
-                this.value = lowerCase(value); // only lowercase
+            this.value = lowerCase(value); // case-insensitive match
         }
+
+        /**
+         @deprecated since 1.22.1, use {@link #AttributeKeyPair(String, String)}; the previous trimQuoted parameter is no longer used.
+         This constructor will be removed in a future release.
+         */
+        @Deprecated
+        public AttributeKeyPair(String key, String value, boolean ignored) {
+            this(key, value);
+        }
+
+
     }
 
     /**

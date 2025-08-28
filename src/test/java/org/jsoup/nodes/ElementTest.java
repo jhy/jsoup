@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.nodes.NodeIteratorTest.assertIterates;
@@ -3297,6 +3298,29 @@ public class ElementTest {
         Element empty = el.expectFirst("b");
         assertEquals(0, empty.childrenSize());
         assertNull(empty.cachedChildren()); // 0 node fast path, does not create list
+    }
 
+    @Test public void testReplaceInvalidates() {
+        // https://github.com/jhy/jsoup/issues/2391
+        String html = "<div>test</div>";
+        Document doc = Jsoup.parseBodyFragment(html);
+        Element div = doc.expectFirst("div");
+
+        // Cached
+        Elements divChildren = div.children(); // 0 child elements, 1 node
+        int origCount = divChildren.size();
+
+        // Modify child
+        TextNode text = (TextNode) div.childNode(0);
+        Element p = doc.createElement("p");
+        text.replaceWith(p);
+        p.appendChild(text);
+
+        int reported = div.childrenSize(); // invalidated ^^
+        long actualSize = div.childNodes().stream().filter(node -> node instanceof Element).count();
+
+        assertEquals(0, origCount);
+        assertEquals(1, actualSize);
+        assertEquals(1, reported); // was 0 via cache
     }
 }

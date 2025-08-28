@@ -2083,8 +2083,13 @@ public class Element extends Node implements Iterable<Element> {
             super(size);
         }
 
+        /** The modCount is used to invalidate the cached element children. */
         int modCount() {
             return this.modCount;
+        }
+
+        void incrementMod() {
+            this.modCount++;
         }
     }
 
