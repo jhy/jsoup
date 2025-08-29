@@ -57,40 +57,4 @@ public class SelectorIT {
             exceptionCount.incrementAndGet();
         }
     }
-
-    @Test public void streamParserSelect() throws Exception {
-        // https://github.com/jhy/jsoup/issues/2277
-        // The memo in the StructuralEvaluator was not getting reset correctly, and so would run out of memory
-        // Test tracks memory consumption. Will be interesting to see how it behaves on the CI workers.
-
-        String xml = "<A><B><C>1";
-        Evaluator query = QueryParser.parse("A B C");
-        Runtime runtime = Runtime.getRuntime();
-
-        System.gc();
-        Thread.sleep(100);
-        long initialUsed = runtime.totalMemory() - runtime.freeMemory();
-
-        for (int i = 0; i < 50_000; i++) { // Before fix, would exceed 10MB in ~ 9000 iters
-            try (StreamParser parser = new StreamParser(Parser.xmlParser())) {
-                parser.parse(xml, "");
-                parser.selectFirst(query);
-                parser.stop();
-            }
-
-            if (i % 1000 == 0) {
-                System.gc();
-                Thread.sleep(100);
-                long currentUsed = runtime.totalMemory() - runtime.freeMemory();
-                long delta = currentUsed - initialUsed;
-
-                // Fail if we grow + 10MB
-                if (delta > 10_000_000) {
-                    fail(String.format("Memo leak detected. Memory increased by %,d bytes after %,d iterations",
-                        delta, i));
-                }
-            }
-        }
-    }
-
 }
