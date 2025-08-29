@@ -558,8 +558,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void insertOnStackAfter(Element after, Element in) {
         int i = stack.lastIndexOf(after);
-        Validate.isTrue(i != -1);
-        stack.add(i+1, in);
+        if (i == -1) {
+            error("Did not find element on stack to insert after");
+            stack.add(in);
+            // may happen on particularly malformed inputs during adoption
+        } else {
+            stack.add(i+1, in);
+        }
     }
 
     void replaceOnStack(Element out, Element in) {
