@@ -300,17 +300,36 @@ public class Parser implements Cloneable {
     }
 
     /**
-     * Utility method to unescape HTML entities from a string
-     * @param string HTML escaped string
-     * @param inAttribute if the string is to be escaped in strict mode (as attributes are)
-     * @return an unescaped string
+     Utility method to unescape HTML entities from a string.
+     <p>To track errors while unescaping, use
+     {@link #unescape(String, boolean)} with a Parser instance that has error tracking enabled.</p>
+
+     @param string HTML escaped string
+     @param inAttribute if the string is to be escaped in strict mode (as attributes are)
+     @return an unescaped string
+     @see #unescape(String, boolean)
      */
     public static String unescapeEntities(String string, boolean inAttribute) {
         Validate.notNull(string);
         if (string.indexOf('&') < 0) return string; // nothing to unescape
-        Parser parser = Parser.htmlParser();
-        parser.treeBuilder.initialiseParse(new StringReader(string), "", parser);
-        Tokeniser tokeniser = new Tokeniser(parser.treeBuilder);
+        return Parser.htmlParser().unescape(string, inAttribute);
+    }
+
+    /**
+     Utility method to unescape HTML entities from a string, using this {@code Parser}'s configuration (for example, to
+     collect errors while unescaping).
+
+     @param string HTML escaped string
+     @param inAttribute if the string is to be escaped in strict mode (as attributes are)
+     @return an unescaped string
+     @see #setTrackErrors(int)
+     @see #unescapeEntities(String, boolean)
+     */
+    public String unescape(String string, boolean inAttribute) {
+        Validate.notNull(string);
+        if (string.indexOf('&') < 0) return string; // nothing to unescape
+        this.treeBuilder.initialiseParse(new StringReader(string), "", this);
+        Tokeniser tokeniser = new Tokeniser(this.treeBuilder);
         return tokeniser.unescapeEntities(inAttribute);
     }
 
