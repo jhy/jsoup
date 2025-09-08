@@ -30,6 +30,24 @@ public class ParserTest {
         assertEquals(body, Parser.unescapeEntities(body, false));
     }
 
+    @Test public void unescapeTracksErrors() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+
+        String s = parser.unescape("One &bogus; &amp; &gt Two", false);
+        assertEquals("One &bogus; & > Two", s);
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(2, errors.size());
+        assertEquals("<1:6>: Invalid character reference: invalid named reference [bogus]", errors.get(0).toString());
+        assertEquals("<1:22>: Invalid character reference: missing semicolon on [&gt]", errors.get(1).toString());
+
+        // can reuse parser; errors will be reset
+        s = parser.unescape("One &amp; &bogus; Two", false);
+        assertEquals("One & &bogus; Two", s);
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("<1:12>: Invalid character reference: invalid named reference [bogus]", parser.getErrors().get(0).toString());
+    }
+
     @Test
     public void testUtf8() throws IOException {
         // testcase for https://github.com/jhy/jsoup/issues/1557. no repro.
