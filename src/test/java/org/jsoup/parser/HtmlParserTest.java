@@ -856,7 +856,7 @@ public class HtmlParserTest {
 
     @Test public void handlesNullInData() {
         Document doc = Jsoup.parse("<p id=\u0000>Blah \u0000</p>");
-        assertEquals("<p id=\"\uFFFD\">Blah &#x0;</p>", doc.body().html()); // replaced in attr, NOT replaced in data (but is escaped as control char <0x20)
+        assertEquals("<p id=\"\uFFFD\">Blah</p>", doc.body().html()); // replaced in attr, discarded in data
     }
 
     @Test public void handlesNullInComments() {
@@ -2129,5 +2129,43 @@ public class HtmlParserTest {
         assertEquals("", data.text());
         assertEquals("a < b", data.data());
         assertEquals("<data>a < b</data>", data.outerHtml());
+    }
+
+    @Test void dropsNullsFromBody() {
+        // https://github.com/jhy/jsoup/issues/2395
+        String html = "<p>\u0000</p><p>\u0000\u0000</p><p>Hi\u0000</p>";
+
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals("<p></p>\n<p></p>\n<p>Hi</p>", doc.body().html());
+        assertEquals("Hi", doc.body().text());
+
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(4, errors.size());
+        assertEquals("<1:4>: Unexpected character '\u0000' in input state [Data]", errors.get(0).toString());
+        assertEquals("<1:12>: Unexpected character '\u0000' in input state [Data]", errors.get(1).toString());
+        assertEquals("<1:13>: Unexpected character '\u0000' in input state [Data]", errors.get(2).toString());
+        assertEquals("<1:23>: Unexpected character '\u0000' in input state [Data]", errors.get(3).toString());
+        // todo should we replace that null, for convenience?
+    }
+
+    @Test void replacesNullsInForeign() {
+        String html = "<svg><text>\u0000</text><text>\u0000\u0000</text><text>Hi\u0000</text></svg>";
+        Parser parser = Parser.htmlParser();
+        parser.setTrackErrors(10);
+
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals("<svg>\n <text>�</text><text>��</text><text>Hi�</text>\n</svg>", doc.body().html());
+        assertEquals("���Hi�", doc.body().text());
+
+        ParseErrorList errors = parser.getErrors();
+        assertEquals(4, errors.size());
+        assertEquals("<1:12>: Unexpected character '\u0000' in input state [Data]", errors.get(0).toString());
+        assertEquals("<1:26>: Unexpected character '\u0000' in input state [Data]", errors.get(1).toString());
+        assertEquals("<1:27>: Unexpected character '\u0000' in input state [Data]", errors.get(2).toString());
+        assertEquals("<1:43>: Unexpected character '\u0000' in input state [Data]", errors.get(3).toString());
+
     }
 }

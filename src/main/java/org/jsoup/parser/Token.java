@@ -415,6 +415,20 @@ abstract class Token {
             return getData();
         }
 
+        /**
+         Normalize null chars in the data. If replace is true, replaces with the replacement char; if false, removes.
+         */
+        public void normalizeNulls(boolean replace) {
+            String data = this.data.value();
+            if (data.indexOf(TokeniserState.nullChar) == -1) return;
+
+            data = (replace ?
+                data.replace(TokeniserState.nullChar, Tokeniser.replacementChar) :
+                data.replace(nullString, ""));
+            this.data.set(data);
+        }
+
+        private static final String nullString = String.valueOf(TokeniserState.nullChar);
     }
 
     final static class CData extends Character {

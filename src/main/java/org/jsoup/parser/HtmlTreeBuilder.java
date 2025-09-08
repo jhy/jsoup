@@ -407,8 +407,20 @@ public class HtmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node);
     }
 
-    /** Inserts the provided character token into the current element. */
+    /** Inserts the provided character token into the current element. Any nulls in the data will be removed. */
     void insertCharacterNode(Token.Character characterToken) {
+        insertCharacterNode(characterToken, false);
+    }
+
+    /**
+     Inserts the provided character token into the current element. The tokenizer will have already raised precise character errors.
+
+     @param characterToken the character token to insert
+     @param replace if true, replaces any null chars in the data with the replacement char (U+FFFD). If false, removes
+     null chars.
+     */
+    void insertCharacterNode(Token.Character characterToken, boolean replace) {
+        characterToken.normalizeNulls(replace);
         Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
         insertCharacterToElement(characterToken, el);
     }

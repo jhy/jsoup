@@ -286,15 +286,12 @@ enum HtmlTreeBuilderState {
             switch (t.type) {
                 case Character: {
                     Token.Character c = t.asCharacter();
-                    if (c.getData().equals(nullString)) {
-                        tb.error(this);
-                        return false;
-                    } else if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed
+                    if (tb.framesetOk() && isWhitespace(c)) { // don't check if whitespace if frames already closed
                         tb.reconstructFormattingElements();
                         tb.insertCharacterNode(c);
                     } else {
                         tb.reconstructFormattingElements();
-                        tb.insertCharacterNode(c);
+                        tb.insertCharacterNode(c); // strips nulls
                         tb.framesetOk(false);
                     }
                     break;
@@ -1115,13 +1112,7 @@ enum HtmlTreeBuilderState {
     InTableText {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
             if (t.type == Token.TokenType.Character) {
-                Token.Character c = t.asCharacter();
-                if (c.getData().equals(nullString)) {
-                    tb.error(this);
-                    return false;
-                } else {
-                    tb.addPendingTableCharacters(c);
-                }
+                tb.addPendingTableCharacters(t.asCharacter()); // gets to insertCharacterNode, which strips nulls
             } else {
                 // insert gathered table text into the correct element:
                 if (tb.getPendingTableCharacters().size() > 0) {
@@ -1454,13 +1445,7 @@ enum HtmlTreeBuilderState {
 
             switch (t.type) {
                 case Character:
-                    Token.Character c = t.asCharacter();
-                    if (c.getData().equals(nullString)) {
-                        tb.error(this);
-                        return false;
-                    } else {
-                        tb.insertCharacterNode(c);
-                    }
+                    tb.insertCharacterNode(t.asCharacter());
                     break;
                 case Comment:
                     tb.insertCommentNode(t.asComment());
@@ -1790,12 +1775,10 @@ enum HtmlTreeBuilderState {
             switch (t.type) {
                 case Character:
                     Token.Character c = t.asCharacter();
-                    if (c.getData().equals(nullString))
-                        tb.error(this);
-                    else if (HtmlTreeBuilderState.isWhitespace(c))
+                    if (HtmlTreeBuilderState.isWhitespace(c))
                         tb.insertCharacterNode(c);
                     else {
-                        tb.insertCharacterNode(c);
+                        tb.insertCharacterNode(c, true); // replace nulls
                         tb.framesetOk(false);
                     }
                     break;
