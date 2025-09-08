@@ -3,7 +3,6 @@
 ## 1.22.1 (PENDING)
 
 ### Improvements
-* Added a non-static `Parser#unescape(String, boolean)` method to unescape entities with the ability to track errors. [#2396](https://github.com/jhy/jsoup/pull/2396)
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser’s configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
 
 ### Bug Fixes
