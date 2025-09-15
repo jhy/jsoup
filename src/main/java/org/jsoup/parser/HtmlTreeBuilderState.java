@@ -1687,7 +1687,7 @@ enum HtmlTreeBuilderState {
                         return false;
                 }
             } else if (t.isEndTag() && t.asEndTag().normalName().equals("frameset")) {
-                if (tb.currentElementIs("html")) { // frag
+                if (!tb.currentElementIs("frameset")) { // spec checks if el is html; deviate to confirm we are about to pop the frameset el
                     tb.error(this);
                     return false;
                 } else {

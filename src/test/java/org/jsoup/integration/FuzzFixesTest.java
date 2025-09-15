@@ -58,6 +58,14 @@ public class FuzzFixesTest {
 
     @ParameterizedTest
     @MethodSource("testFiles")
+    void testHtmlFragmentParse(File file) throws IOException {
+        String html = ParseTest.getFileAsString(file);
+        Document doc = Jsoup.parseBodyFragment(html);
+        assertNotNull(doc);
+    }
+
+    @ParameterizedTest
+    @MethodSource("testFiles")
     void testXmlParse(File file) throws IOException {
         Document doc = Jsoup.parse(file, "UTF-8", "https://example.com/", Parser.xmlParser());
         assertNotNull(doc);

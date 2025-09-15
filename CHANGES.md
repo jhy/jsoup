@@ -11,6 +11,7 @@
 * When using the JDK HttpClient, any system default proxy (`ProxySelector.getDefault()`) was ignored. Now, the system proxy is used if a per-request proxy is not set. [#2388](https://github.com/jhy/jsoup/issues/2388), [#2390](https://github.com/jhy/jsoup/pull/2390)
 * A ValidationException could be thrown in the adoption agency algorithm with particularly broken input. Now logged as a parse error. [#2393](https://github.com/jhy/jsoup/issues/2393)
 * Null characters in the HTML body were not consistently removed; and in foreign content were not correctly replaced. [#2395](https://github.com/jhy/jsoup/issues/2395)
+* An IndexOutOfBoundsException could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397)
 
 
 ## 1.21.2 (2025-Aug-25)
