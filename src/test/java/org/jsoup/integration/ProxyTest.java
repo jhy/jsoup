@@ -145,7 +145,7 @@ public class ProxyTest {
         // Alternatively, some platforms (?) will report: "No credentials provided"
         String err = e.getMessage();
         if (!(err.contains("407") || err.contains("No credentials provided"))) {
-            System.err.println("Not a 407 exception?");
+            System.err.println("Not a 407 exception? " + e.getClass());
             fail("Expected 407 Proxy Authentication Required, got: " + err);
         }
     }
