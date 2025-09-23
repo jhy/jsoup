@@ -144,8 +144,10 @@ public class ProxyTest {
         // in CONNECT (for the HTTPS url), URLConnection will throw the proxy connect as a Stringly typed IO exception - "Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"". (Not a response code)
         // Alternatively, some platforms (?) will report: "No credentials provided"
         String err = e.getMessage();
-        if (!(err.contains("407") || err.contains("No credentials provided"))) {
-            System.err.println("Not a 407 exception?");
+        if (!(err.contains("407") || err.contains("No credentials provided") || err.contains("exch.exchImpl"))) {
+            // https://github.com/jhy/jsoup/pull/2403 - Ubuntu Azul 25 throws `Cannot invoke "jdk.internal.net.http.ExchangeImpl.cancel(java.io.IOException)" because "exch.exchImpl" is null` here but is just from cancelling the 407 req
+            System.err.println("Not a 407 exception? " + e.getClass());
+            e.printStackTrace(System.err);
             fail("Expected 407 Proxy Authentication Required, got: " + err);
         }
     }

@@ -4,6 +4,7 @@
 
 ### Improvements
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser’s configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
+* Build: added CI coverage for JDK 25 [#2403](https://github.com/jhy/jsoup/pull/2403)
 
 ### Bug Fixes
 * Previously cached child Elements of an Element were not correctly invalidated in `Node#replaceWith(Node)`, which could lead to incorrect results when subsequently calling `Element#children()`. [#2391](https://github.com/jhy/jsoup/issues/2391)
