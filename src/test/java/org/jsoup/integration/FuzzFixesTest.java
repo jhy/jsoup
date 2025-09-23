@@ -2,6 +2,7 @@ package org.jsoup.integration;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,6 +46,10 @@ public class FuzzFixesTest {
 
         Document xmlDoc = Parser.xmlParser().parseInput(html, "");
         assertNotNull(xmlDoc);
+    }
+
+    @Test void fragment() {
+        Parser.htmlParser().parseFragmentInput("<frameset>>l\u0000<\u0000<ditl>\u0000< \\", new Element("colgroup"), "");
     }
 
     @ParameterizedTest
