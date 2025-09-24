@@ -3,6 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.QuietAppendable;
+import org.jsoup.helper.Regex;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
@@ -1404,7 +1405,6 @@ public class Element extends Node implements Iterable<Element> {
      */
     public Elements getElementsByAttributeValueMatching(String key, Pattern pattern) {
         return Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this);
-
     }
 
     /**
@@ -1414,13 +1414,13 @@ public class Element extends Node implements Iterable<Element> {
      * @return elements that have attributes matching this regular expression
      */
     public Elements getElementsByAttributeValueMatching(String key, String regex) {
-        Pattern pattern;
+        Regex pattern;
         try {
-            pattern = Pattern.compile(regex);
+            pattern = Regex.compile(regex);
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
         }
-        return getElementsByAttributeValueMatching(key, pattern);
+        return Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this);
     }
 
     /**
@@ -1489,13 +1489,13 @@ public class Element extends Node implements Iterable<Element> {
      * @see Element#text()
      */
     public Elements getElementsMatchingText(String regex) {
-        Pattern pattern;
+        Regex pattern;
         try {
-            pattern = Pattern.compile(regex);
+            pattern = Regex.compile(regex);
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
         }
-        return getElementsMatchingText(pattern);
+        return Collector.collect(new Evaluator.Matches(pattern), this);
     }
 
     /**
@@ -1515,13 +1515,13 @@ public class Element extends Node implements Iterable<Element> {
      * @see Element#ownText()
      */
     public Elements getElementsMatchingOwnText(String regex) {
-        Pattern pattern;
+        Regex pattern;
         try {
-            pattern = Pattern.compile(regex);
+            pattern = Regex.compile(regex);
         } catch (PatternSyntaxException e) {
             throw new IllegalArgumentException("Pattern syntax error: " + regex, e);
         }
-        return getElementsMatchingOwnText(pattern);
+        return Collector.collect(new Evaluator.MatchesOwn(pattern), this);
     }
 
     /**

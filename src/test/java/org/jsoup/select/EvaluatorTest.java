@@ -1,6 +1,7 @@
 package org.jsoup.select;
 
 import org.jsoup.Jsoup;
+import org.jsoup.helper.Regex;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
@@ -253,6 +254,34 @@ public class EvaluatorTest {
     @Test
     public void testMatchesWholeOwnTextToString() {
         Pattern pattern = Pattern.compile("example");
+        Evaluator.MatchesWholeOwnText evaluator = new Evaluator.MatchesWholeOwnText(pattern);
+        assertEquals(":matchesWholeOwnText(example)", evaluator.toString());
+    }
+
+    @Test
+    public void testMatchesToStringRegex() {
+        Regex pattern = Regex.compile("example");
+        Evaluator.Matches evaluator = new Evaluator.Matches(pattern);
+        assertEquals(":matches(example)", evaluator.toString());
+    }
+
+    @Test
+    public void testMatchesOwnToStringRegex() {
+        Regex pattern = Regex.compile("example");
+        Evaluator.MatchesOwn evaluator = new Evaluator.MatchesOwn(pattern);
+        assertEquals(":matchesOwn(example)", evaluator.toString());
+    }
+
+    @Test
+    public void testMatchesWholeTextToStringRegex() {
+        Regex pattern = Regex.compile("example");
+        Evaluator.MatchesWholeText evaluator = new Evaluator.MatchesWholeText(pattern);
+        assertEquals(":matchesWholeText(example)", evaluator.toString());
+    }
+
+    @Test
+    public void testMatchesWholeOwnTextToStringRegex() {
+        Regex pattern = Regex.compile("example");
         Evaluator.MatchesWholeOwnText evaluator = new Evaluator.MatchesWholeOwnText(pattern);
         assertEquals(":matchesWholeOwnText(example)", evaluator.toString());
     }

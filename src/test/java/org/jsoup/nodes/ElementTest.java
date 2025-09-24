@@ -2845,7 +2845,7 @@ public class ElementTest {
         Document doc = Jsoup.parse(reference);
         Throwable ex = assertThrows(IllegalArgumentException.class,
             () -> doc.getElementsByAttributeValueMatching("key", "\\x"));
-        assertEquals("Pattern syntax error: \\x", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Pattern syntax error"));
     }
 
     @Test void getElementsByIndexEquals() {
@@ -2875,7 +2875,7 @@ public class ElementTest {
         Document doc = Jsoup.parse(reference);
         Throwable ex = assertThrows(IllegalArgumentException.class,
             () -> doc.getElementsMatchingText("\\x"));
-        assertEquals("Pattern syntax error: \\x", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Pattern syntax error:"));
     }
 
     @Test void getElementsMatchingText() {
@@ -2897,7 +2897,7 @@ public class ElementTest {
         Document doc = Jsoup.parse(reference);
         Throwable ex = assertThrows(IllegalArgumentException.class,
             () -> doc.getElementsMatchingOwnText("\\x"));
-        assertEquals("Pattern syntax error: \\x", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Pattern syntax error:"));
     }
 
     @Test void hasText() {

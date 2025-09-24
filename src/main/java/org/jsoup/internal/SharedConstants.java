@@ -21,5 +21,7 @@ public final class SharedConstants {
 
     public static final String UseHttpClient = "jsoup.useHttpClient";
 
+    public static final String UseRe2j = "jsoup.useRe2j"; // enables use of the re2j regular expression engine when true and it's on the classpath
+
     private SharedConstants() {}
 }

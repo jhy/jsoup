@@ -544,6 +544,15 @@
       <version>1.0.0</version>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <!-- re2j; linear time regex, with 3-clause BSD license -->
+      <groupId>com.google.re2j</groupId>
+      <artifactId>re2j</artifactId>
+      <version>1.8</version>
+      <optional>true</optional>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>

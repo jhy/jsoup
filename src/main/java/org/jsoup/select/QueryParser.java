@@ -1,5 +1,6 @@
 package org.jsoup.select;
 
+import org.jsoup.helper.Regex;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.CDataNode;
@@ -367,7 +368,7 @@ public class QueryParser implements AutoCloseable {
             else if (cq.matchChomp("*="))
                 eval = new Evaluator.AttributeWithValueContaining(key, cq.remainder());
             else if (cq.matchChomp("~="))
-                eval = new Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder()));
+                eval = new Evaluator.AttributeWithValueMatching(key, Regex.compile(cq.remainder()));
             else
                 throw new Selector.SelectorParseException(
                     "Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
@@ -472,7 +473,7 @@ public class QueryParser implements AutoCloseable {
         String query = own ? ":matchesOwn" : ":matches";
         String regex = consumeParens(); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, query + "(regex) query must not be empty");
-        Pattern pattern = Pattern.compile(regex);
+        Regex pattern = Regex.compile(regex);
 
         if (inNodeContext)
             return new NodeEvaluator.MatchesValue(pattern);
@@ -488,9 +489,10 @@ public class QueryParser implements AutoCloseable {
         String regex = consumeParens(); // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, query + "(regex) query must not be empty");
 
+        Regex pattern = Regex.compile(regex);
         return own
-            ? new Evaluator.MatchesWholeOwnText(Pattern.compile(regex))
-            : new Evaluator.MatchesWholeText(Pattern.compile(regex));
+            ? new Evaluator.MatchesWholeOwnText(pattern)
+            : new Evaluator.MatchesWholeText(pattern);
     }
 
     // :not(selector)

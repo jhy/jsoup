@@ -4,8 +4,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
-
-import java.util.regex.Pattern;
+import org.jsoup.helper.Regex;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.StringUtil.normaliseWhitespace;
@@ -98,9 +97,9 @@ abstract class NodeEvaluator extends Evaluator {
     }
 
     static class MatchesValue extends NodeEvaluator {
-        private final Pattern pattern;
+        private final Regex pattern;
 
-        protected MatchesValue(Pattern pattern) {
+        protected MatchesValue(Regex pattern) {
             this.pattern = pattern;
         }
 
