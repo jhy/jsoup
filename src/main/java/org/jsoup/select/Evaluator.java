@@ -11,10 +11,10 @@ import org.jsoup.nodes.PseudoTextElement;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.helper.Regex;
 
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -385,11 +385,15 @@ public abstract class Evaluator {
      */
     public static final class AttributeWithValueMatching extends Evaluator {
         final String key;
-        final Pattern pattern;
+        final Regex pattern;
 
-        public AttributeWithValueMatching(String key, Pattern pattern) {
+        public AttributeWithValueMatching(String key, Regex pattern) {
             this.key = normalize(key);
             this.pattern = pattern;
+        }
+
+        public AttributeWithValueMatching(String key, Pattern pattern) {
+            this(key, Regex.fromPattern(pattern)); // api compat
         }
 
         @Override
@@ -924,16 +928,19 @@ public abstract class Evaluator {
      * Evaluator for matching Element (and its descendants) text with regex
      */
     public static final class Matches extends Evaluator {
-        private final Pattern pattern;
+        private final Regex pattern;
+
+        public Matches(Regex pattern) {
+            this.pattern = pattern;
+        }
 
         public Matches(Pattern pattern) {
-            this.pattern = pattern;
+            this(Regex.fromPattern(pattern));
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            Matcher m = pattern.matcher(element.text());
-            return m.find();
+            return pattern.matcher(element.text()).find();
         }
 
         @Override protected int cost() {
@@ -950,16 +957,19 @@ public abstract class Evaluator {
      * Evaluator for matching Element's own text with regex
      */
     public static final class MatchesOwn extends Evaluator {
-        private final Pattern pattern;
+        private final Regex pattern;
+
+        public MatchesOwn(Regex pattern) {
+            this.pattern = pattern;
+        }
 
         public MatchesOwn(Pattern pattern) {
-            this.pattern = pattern;
+            this(Regex.fromPattern(pattern));
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            Matcher m = pattern.matcher(element.ownText());
-            return m.find();
+            return pattern.matcher(element.ownText()).find();
         }
 
         @Override protected int cost() {
@@ -977,16 +987,19 @@ public abstract class Evaluator {
      * @since 1.15.1.
      */
     public static final class MatchesWholeText extends Evaluator {
-        private final Pattern pattern;
+        private final Regex pattern;
+
+        public MatchesWholeText(Regex pattern) {
+            this.pattern = pattern;
+        }
 
         public MatchesWholeText(Pattern pattern) {
-            this.pattern = pattern;
+            this.pattern = Regex.fromPattern(pattern);
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            Matcher m = pattern.matcher(element.wholeText());
-            return m.find();
+            return pattern.matcher(element.wholeText()).find();
         }
 
         @Override protected int cost() {
@@ -1004,15 +1017,19 @@ public abstract class Evaluator {
      * @since 1.15.1.
      */
     public static final class MatchesWholeOwnText extends Evaluator {
-        private final Pattern pattern;
+        private final Regex pattern;
+
+        public MatchesWholeOwnText(Regex pattern) {
+            this.pattern = pattern;
+        }
 
         public MatchesWholeOwnText(Pattern pattern) {
-            this.pattern = pattern;
+            this(Regex.fromPattern(pattern));
         }
 
         @Override
         public boolean matches(Element root, Element element) {
-            Matcher m = pattern.matcher(element.wholeOwnText());
+            Regex.Matcher m = pattern.matcher(element.wholeOwnText());
             return m.find();
         }
 

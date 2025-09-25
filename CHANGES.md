@@ -3,6 +3,16 @@
 ## 1.22.1 (PENDING)
 
 ### Improvements
+* Added support for using the re2j regular expression engine for CSS selectors, which ensures linear-time performance for regex evaluation. This enables safe handling of arbitrary user-supplied query regexes. To enable, add the `com.google.re2j` dependency to your classpath, e.g.:
+```xml
+  <dependency>
+    <groupId>com.google.re2j</groupId>
+    <artifactId>re2j</artifactId>
+    <version>1.8</version>
+  </dependency>
+ ```
+  (If you already have that dependency in your classpath, but you want to keep using the Java regex engine, you can disable re2j via `System.setProperty("jsoup.useRe2j", "false")`.) [#2407](https://github.com/jhy/jsoup/pull/2407)
+
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser’s configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
 * Build: added CI coverage for JDK 25 [#2403](https://github.com/jhy/jsoup/pull/2403)
 * Build: added a CI fuzzer for contextual fragment parsing (in addition to existing full body HTML and XML fuzzers). [oss-fuzz #14041](https://github.com/google/oss-fuzz/pull/14041)
