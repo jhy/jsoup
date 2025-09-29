@@ -33,7 +33,7 @@ public class Regex {
      @throws ValidationException if the regex is invalid
      */
     public static Regex compile(String regex) {
-        if (hasRe2j && wantsRe2j()) {
+        if (usingRe2j()) {
             return Re2jRegex.compile(regex);
         }
 
@@ -47,6 +47,14 @@ public class Regex {
     /** Wraps an existing JDK Pattern (for API compat); doesn't switch */
     public static Regex fromPattern(Pattern pattern) {
         return new Regex(pattern);
+    }
+
+    /**
+     Checks if re2j is available (on classpath) and enabled (via system property).
+     @return true if re2j is available and enabled
+     */
+    public static boolean usingRe2j() {
+        return hasRe2j && wantsRe2j();
     }
 
     static boolean wantsRe2j() {

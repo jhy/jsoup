@@ -28,6 +28,7 @@ public class RegexTest {
     @ValueSource(booleans = {false, true})
     void testRegexDelegates(boolean useRe2j) {
         Regex.wantsRe2j(useRe2j);
+        assertEquals(Regex.usingRe2j(), useRe2j);
         String pattern = "(\\d+)";
         String input = "12345";
 
