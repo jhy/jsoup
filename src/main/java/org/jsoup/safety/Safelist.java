@@ -6,7 +6,6 @@ package org.jsoup.safety;
  */
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.Functions;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -306,7 +305,7 @@ public class Safelist {
             Validate.notEmpty(key);
             attributeSet.add(AttributeKey.valueOf(key));
         }
-        Set<AttributeKey> currentSet = this.attributes.computeIfAbsent(tagName, Functions.setFunction());
+        Set<AttributeKey> currentSet = this.attributes.computeIfAbsent(tagName, k -> new HashSet<>());
         currentSet.addAll(attributeSet);
         return this;
     }
@@ -380,7 +379,7 @@ public class Safelist {
         AttributeKey attrKey = AttributeKey.valueOf(attribute);
         AttributeValue attrVal = AttributeValue.valueOf(value);
 
-        Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.computeIfAbsent(tagName, Functions.mapFunction());
+        Map<AttributeKey, AttributeValue> attrMap = enforcedAttributes.computeIfAbsent(tagName, k -> new HashMap<>());
         attrMap.put(attrKey, attrVal);
         return this;
     }
@@ -453,8 +452,8 @@ public class Safelist {
 
         TagName tagName = TagName.valueOf(tag);
         AttributeKey attrKey = AttributeKey.valueOf(attribute);
-        Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.computeIfAbsent(tagName, Functions.mapFunction());
-        Set<Protocol> protSet = attrMap.computeIfAbsent(attrKey, Functions.setFunction());
+        Map<AttributeKey, Set<Protocol>> attrMap = this.protocols.computeIfAbsent(tagName, k -> new HashMap<>());
+        Set<Protocol> protSet = attrMap.computeIfAbsent(attrKey, k -> new HashSet<>());
 
         for (String protocol : protocols) {
             Validate.notEmpty(protocol);

@@ -26,6 +26,9 @@
 * An IndexOutOfBoundsException could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397), [#2406](https://github.com/jhy/jsoup/issues/2406)
 * When using StructuralEvaluators (e.g., a `parent child` selector) across many retained threads, their memoized results could also be retained, increasing memory use. These results are now cleared immediately after use, reducing overall memory consumption. [#2411](https://github.com/jhy/jsoup/issues/2411)
 
+### Internal Changes
+* Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary.
+
 ## 1.21.2 (2025-Aug-25)
 
 ### Changes

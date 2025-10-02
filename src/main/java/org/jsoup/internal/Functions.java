@@ -11,8 +11,10 @@ import java.util.function.Function;
 
 /**
  * An internal class containing functions for use with {@link Map#computeIfAbsent(Object, Function)}.
+ * @deprecated for removal in jsoup 1.23.1. Replace usages with direct constructor references / lambdas.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
+@Deprecated
 public final class Functions {
     private static final Function ListFunction = key -> new ArrayList<>();
     private static final Function SetFunction = key -> new HashSet<>();

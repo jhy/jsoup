@@ -1,7 +1,6 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
-import org.jsoup.internal.Functions;
 import org.jspecify.annotations.Nullable;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -123,7 +122,7 @@ class UrlConnectionExecutor extends RequestExecutor {
             if (key == null || val == null)
                 continue; // skip http1.1 line
 
-            final List<String> vals = headers.computeIfAbsent(key, Functions.listFunction());
+            final List<String> vals = headers.computeIfAbsent(key, k -> new java.util.ArrayList<>());
             vals.add(val);
         }
         return headers;
