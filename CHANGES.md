@@ -27,7 +27,7 @@
 * When using StructuralEvaluators (e.g., a `parent child` selector) across many retained threads, their memoized results could also be retained, increasing memory use. These results are now cleared immediately after use, reducing overall memory consumption. [#2411](https://github.com/jhy/jsoup/issues/2411)
 
 ### Internal Changes
-* Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary.
+* Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary. [#2412](https://github.com/jhy/jsoup/pull/2412)
 
 ## 1.21.2 (2025-Aug-25)
 
