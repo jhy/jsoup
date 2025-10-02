@@ -11,9 +11,9 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
 
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.jsoup.select.EvaluatorDebug.sexpr;
@@ -1192,7 +1192,7 @@ public class SelectorTest {
         Evaluator eval = QueryParser.parse("p ~ p");
         CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
         StructuralEvaluator.PreviousSibling prevEval = (StructuralEvaluator.PreviousSibling) andEval.evaluators.get(0);
-        IdentityHashMap<Node, IdentityHashMap<Node, Boolean>> map = prevEval.threadMemo.get();
+        Map<Node, Map<Node, Boolean>> map = prevEval.threadMemo.get();
         assertEquals(0, map.size()); // no memo yet
 
         Document doc1 = Jsoup.parse("<p>One<p>Two<p>Three");
@@ -1205,7 +1205,7 @@ public class SelectorTest {
         assertEquals(2, s2.size());
         assertEquals("Two2", s2.first().text());
 
-        assertEquals(1, map.size()); // root of doc 2
+        assertEquals(0, map.size()); // reset after collect
     }
 
     @Test public void blankTextNodesAreConsideredEmpty() {

@@ -42,7 +42,8 @@ class StructuralEvaluatorTest {
         List<StructuralEvaluator> structuralEvals = new ArrayList<>();
         collectEvals(evaluator, structuralEvals);
 
-        Selector.select(evaluator, doc); // populate memos
+        // use Collector.stream vs Selector.select(), as the later is able to reset after executing
+        Collector.stream(evaluator, doc).count(); // consume stream to populate memos
         assertFalse(structuralEvals.isEmpty());
 
         boolean hadMemos = false;

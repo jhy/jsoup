@@ -31,8 +31,9 @@ public class Collector {
         Stream<Element> stream = eval.wantsNodes() ?
             streamNodes(eval, root, Element.class) :
             stream(eval, root);
-
-        return stream.collect(toCollection(Elements::new));
+        Elements els = stream.collect(toCollection(Elements::new));
+        eval.reset(); // drops any held memos
+        return els;
     }
 
     /**

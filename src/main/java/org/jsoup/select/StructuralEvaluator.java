@@ -1,6 +1,5 @@
 package org.jsoup.select;
 
-import org.jsoup.internal.Functions;
 import org.jsoup.internal.SoftPool;
 import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
@@ -10,8 +9,8 @@ import org.jsoup.nodes.NodeIterator;
 import org.jsoup.nodes.TextNode;
 
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Base structural evaluator.
@@ -32,17 +31,16 @@ abstract class StructuralEvaluator extends Evaluator {
 
     // Memoize inner matches, to save repeated re-evaluations of parent, sibling etc.
     // root + element: Boolean matches. ThreadLocal in case the Evaluator is compiled then reused across multi threads
-    final ThreadLocal<IdentityHashMap<Node, IdentityHashMap<Node, Boolean>>>
-        threadMemo = ThreadLocal.withInitial(IdentityHashMap::new);
+    final ThreadLocal<Map<Node, Map<Node, Boolean>>> threadMemo = ThreadLocal.withInitial(WeakHashMap::new);
 
     boolean memoMatches(final Element root, final Node node) {
-        Map<Node, IdentityHashMap<Node, Boolean>> rootMemo = threadMemo.get();
-        Map<Node, Boolean> memo = rootMemo.computeIfAbsent(root, Functions.identityMapFunction());
-        return memo.computeIfAbsent(node, key -> evaluator.matches(root, key));
+        Map<Node, Map<Node, Boolean>> rootMemo = threadMemo.get();
+        Map<Node, Boolean> memo = rootMemo.computeIfAbsent(root, r -> new WeakHashMap<>());
+        return memo.computeIfAbsent(node, test -> evaluator.matches(root, test));
     }
 
     @Override protected void reset() {
-        threadMemo.get().clear();
+        threadMemo.remove();
         evaluator.reset();
         super.reset();
     }
