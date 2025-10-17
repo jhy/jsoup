@@ -367,7 +367,7 @@ public final class DataUtil {
     }
 
     private @Nullable static String validateCharset(@Nullable String cs) {
-        if (cs.isEmpty()) return null;
+        if (cs == null || cs.length() == 0) return null;
         cs = cs.trim().replaceAll("[\"']", "");
         try {
             if (Charset.isSupported(cs)) return cs;
