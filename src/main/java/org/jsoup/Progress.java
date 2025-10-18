@@ -2,7 +2,7 @@ package org.jsoup;
 
 @FunctionalInterface
 
-public interface Progress<ProgressContext> {
+public interface Progress<P> {
     /**
      Called to report progress. Note that this will be executed by the same thread that is doing the work, so either
      don't take to long, or hand it off to another thread.
@@ -13,5 +13,5 @@ public interface Progress<ProgressContext> {
      @param context the object that progress was made on.
      @since 1.18.1
      */
-    void onProgress(int processed, int total, float percent, ProgressContext context);
+    void onProgress(int processed, int total, float percent, P context);
 }
