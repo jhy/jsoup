@@ -30,6 +30,7 @@ public class Parser implements Cloneable {
     private boolean trackPosition = false;
     private @Nullable TagSet tagSet;
     private final ReentrantLock lock = new ReentrantLock();
+    private int maxDepth = 512; // limit for HtmlTreeBuilder's open elements stack depth
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -60,6 +61,7 @@ public class Parser implements Cloneable {
         errors = new ParseErrorList(copy.errors); // only copies size, not contents
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
+        maxDepth = copy.maxDepth;
     }
 
     /**
@@ -192,6 +194,27 @@ public class Parser implements Cloneable {
      */
     public ParseSettings settings() {
         return settings;
+    }
+
+    /**
+     * Set the maximum parser depth, defined as the maximum number of open elements allowed on the parser's internal
+     * stack. When the limit is reached, the newest open elements will be popped to prevent excessively nested
+     * documents. Defaults to 512.
+     * @param maxDepth maximum parser depth; must be >= 1
+     * @return this Parser, for chaining
+     */
+    public Parser setMaxDepth(int maxDepth) {
+        Validate.isTrue(maxDepth >= 1, "maxDepth must be >= 1");
+        this.maxDepth = maxDepth;
+        return this;
+    }
+
+    /**
+     * Get the maximum parser depth (maximum number of open elements on the internal stack).
+     * @return the current max parser depth
+     */
+    public int getMaxDepth() {
+        return maxDepth;
     }
 
     /**
