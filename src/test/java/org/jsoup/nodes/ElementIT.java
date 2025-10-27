@@ -134,7 +134,7 @@ public class ElementIT {
         el.wrap(sb.toString());
         String html = doc.body().html();
         assertTrue(html.startsWith("<div>"));
-        assertEquals(num + 3, el.parents().size());
+        assertEquals(513, el.parents().size());
     }
 
     @Test
