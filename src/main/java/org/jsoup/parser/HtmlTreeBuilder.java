@@ -61,6 +61,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     };
 
     /** @deprecated This is not used anymore. Will be removed in a future release. */
+    @Deprecated
     public static final int MaxScopeSearchDepth = 100;
 
     private HtmlTreeBuilderState state; // the current state
