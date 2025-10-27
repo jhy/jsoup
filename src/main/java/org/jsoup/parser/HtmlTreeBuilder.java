@@ -60,6 +60,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
 
+    /** @deprecated This is not used anymore. Will be removed in a future release. */
+    public static final int MaxScopeSearchDepth = 100;
+
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
 
