@@ -17,8 +17,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.Objects;
+
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.
@@ -340,6 +343,23 @@ public class Elements extends Nodes<Element> {
         super.before(html);
         return this;
     }
+
+    /**
+     * Inserts a clone of the supplied node as a preceding sibling of each element in this collection.
+     * @param node the node to clone and insert (must not be null)
+     * @return this collection, for chaining
+     * @throws NullPointerException if node is null
+     */
+    public Elements before(final Node node) {
+        Objects.requireNonNull(node, "node must not be null");
+        for (Element el : this) {
+            // clone so each element gets its own copy; a Node can only have one parent
+            el.before(node.clone());
+        }
+        return this;
+    }
+
+
 
     /**
      Insert the supplied HTML after each matched element's outer HTML.
