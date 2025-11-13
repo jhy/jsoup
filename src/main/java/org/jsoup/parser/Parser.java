@@ -63,6 +63,7 @@ public class Parser implements Cloneable {
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
         maxDepth = copy.maxDepth;
+        tagSet = new TagSet(copy.tagSet());
     }
 
     /**

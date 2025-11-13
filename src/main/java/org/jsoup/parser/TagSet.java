@@ -41,6 +41,8 @@ public class TagSet {
 
     public TagSet(TagSet original) {
         this.source = original;
+        if (original.customizers != null)
+            this.customizers = new ArrayList<>(original.customizers);
     }
 
     /**

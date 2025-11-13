@@ -11,6 +11,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.eclipse.jetty:jetty-servlet"
         update-types: ["version-update:semver-major"]
+      # Et tu, junit? Keep us on 5, as 6 has min JDK17 - https://docs.junit.org/6.0.0-RC3/release-notes/#release-notes-6.0.0-M1
+      - dependency-name: "org.junit.jupiter:junit-jupiter"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /

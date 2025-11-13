@@ -177,6 +177,7 @@ public class TestServer {
             server,
             new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
             new HttpConnectionFactory(httpsConfig));
+        sslConnector.setHost(Localhost);
         server.addConnector(sslConnector);
     }
 
