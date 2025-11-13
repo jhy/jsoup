@@ -25,6 +25,7 @@
 * Null characters in the HTML body were not consistently removed; and in foreign content were not correctly replaced. [#2395](https://github.com/jhy/jsoup/issues/2395)
 * An IndexOutOfBoundsException could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397), [#2406](https://github.com/jhy/jsoup/issues/2406)
 * When using StructuralEvaluators (e.g., a `parent child` selector) across many retained threads, their memoized results could also be retained, increasing memory use. These results are now cleared immediately after use, reducing overall memory consumption. [#2411](https://github.com/jhy/jsoup/issues/2411)
+* Custom tags marked as `Tag.Void` now parse and serialize like the built-in void elements: they no longer consume following content, and the XML serializer emits the expected self-closing form. [#2425](https://github.com/jhy/jsoup/issues/2425)
 
 ### Internal Changes
 * Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary. [#2412](https://github.com/jhy/jsoup/pull/2412)

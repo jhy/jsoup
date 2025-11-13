@@ -2106,6 +2106,45 @@ public class HtmlParserTest {
         assertEquals("<div /><custom /><custom>Foo</custom>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test void customVoidTagsBehaveLikeHtmlVoids() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10).tagSet(TagSet.Html());
+        TagSet tags = parser.tagSet();
+        tags.valueOf("voidtag", Parser.NamespaceHtml).set(Tag.Void);
+
+        String html = "<p><voidtag>Hello World</p>";
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        String emittedHtml = TextUtil.stripNewlines(doc.body().html());
+        assertEquals("<p><voidtag>Hello World</p>", emittedHtml);
+        assertEquals("Hello World", doc.body().text());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<p><voidtag />Hello World</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void customSelfClosingVoidTagsRoundTrip() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10).tagSet(TagSet.Html());
+        TagSet tags = parser.tagSet();
+        tags.valueOf("selfclosingvoidtag", Parser.NamespaceHtml).set(Tag.Void).set(Tag.SelfClose);
+
+        String html = "<p><selfclosingvoidtag />Hello World</p>";
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        String emittedHtml = TextUtil.stripNewlines(doc.body().html());
+        assertEquals("<p><selfclosingvoidtag>Hello World</p>", emittedHtml);
+
+        Document reparsed = Jsoup.parse(emittedHtml, parser);
+        reparsed.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        assertEquals(emittedHtml, TextUtil.stripNewlines(reparsed.body().html()));
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<p><selfclosingvoidtag />Hello World</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test void svgScriptParsedAsScriptData() {
         // https://github.com/jhy/jsoup/issues/2320
         String html = "<svg><script>a < b</script></svg>";
