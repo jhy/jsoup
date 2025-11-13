@@ -2210,11 +2210,11 @@ public class HtmlParserTest {
 
     @Nested class DeepHtmlTrees {
         private int depth(Element el) {
-            int d = 0;
+            int depth = 0;
             while ((el = el.parent()) != null) {
-                d++;
-            } while (el != null);
-            return d;
+                depth++;
+            }
+            return depth;
         }
 
         /**
