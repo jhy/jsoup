@@ -11,11 +11,8 @@ import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.jsoup.parser.Parser.NamespaceHtml;
 
@@ -172,6 +169,33 @@ abstract class TreeBuilder {
     final void push(Element element) {
         stack.add(element);
         onNodeInserted(element);
+    }
+
+    /**
+     Ensures the stack respects {@link Parser#getMaxDepth()} by closing the deepest open elements until there is room for
+     a new insertion.
+     */
+    final void enforceStackDepthLimit() {
+        final int maxDepth = parser.getMaxDepth();
+        if (maxDepth == Integer.MAX_VALUE) return;
+        while (stack.size() >= maxDepth) {
+            Element trimmed = pop();
+            onStackPrunedForDepth(trimmed);
+        }
+    }
+
+    /**
+     Hook for the HTML Tree Builder that needs to clean up when an element is removed due to the depth limit
+     */
+    void onStackPrunedForDepth(Element element) {
+        // default no-op
+    }
+
+    /**
+     Default maximum depth for parsers using this tree builder.
+     */
+    int defaultMaxDepth() {
+        return 512;
     }
 
     /**

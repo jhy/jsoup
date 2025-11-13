@@ -60,7 +60,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         "button", "fieldset", "input", "keygen", "object", "output", "select", "textarea"
     };
 
-    public static final int MaxScopeSearchDepth = 100; // prevents the parser bogging down in exceptionally broken pages
+    /** @deprecated This is not used anymore. Will be removed in a future release. */
+    @Deprecated
+    public static final int MaxScopeSearchDepth = 100;
 
     private HtmlTreeBuilderState state; // the current state
     private HtmlTreeBuilderState originalState; // original / marked state
@@ -392,6 +394,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
      * @param el the Element to insert and make the current element
      */
     private void doInsertElement(Element el) {
+        enforceStackDepthLimit();
+
         if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
 
@@ -496,6 +500,20 @@ public class HtmlTreeBuilder extends TreeBuilder {
             }
         }
         return false;
+    }
+
+    @Override
+    void onStackPrunedForDepth(Element element) {
+        // handle other effects of popping to keep state correct
+        if (element == headElement) headElement = null;
+        if (element == formElement) setFormElement(null);
+        removeFromActiveFormattingElements(element);
+        if (element.nameIs("template")) {
+            clearFormattingElementsToLastMarker();
+            if (templateModeSize() > 0)
+                popTemplateMode();
+            resetInsertionMode();
+        }
     }
 
     /** Pops the stack until the given HTML element is removed. */
@@ -699,9 +717,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, @Nullable String[] extraTypes) {
         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
         final int bottom = stack.size() -1;
-        final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
         // don't walk too far up the tree
-        for (int pos = bottom; pos >= top; pos--) {
+        for (int pos = bottom; pos >= 0; pos--) {
             Element el = stack.get(pos);
             String elName = el.normalName();
             // namespace checks - arguments provided are always in html ns, with this bolt-on for math and svg:
@@ -762,11 +779,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     /** Tests if there is some element on the stack that is not in the provided set. */
     boolean onStackNot(String[] allowedTags) {
-        final int bottom = stack.size() -1;
-        final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
-        // don't walk too far up the tree
-
-        for (int pos = bottom; pos >= top; pos--) {
+        for (int pos = stack.size() - 1; pos >= 0; pos--) {
             final String elName = stack.get(pos).normalName();
             if (!inSorted(elName, allowedTags))
                 return true;

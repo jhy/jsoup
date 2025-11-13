@@ -30,6 +30,7 @@ public class Parser implements Cloneable {
     private boolean trackPosition = false;
     private @Nullable TagSet tagSet;
     private final ReentrantLock lock = new ReentrantLock();
+    private int maxDepth;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -39,6 +40,7 @@ public class Parser implements Cloneable {
         this.treeBuilder = treeBuilder;
         settings = treeBuilder.defaultSettings();
         errors = ParseErrorList.noTracking();
+        maxDepth = treeBuilder.defaultMaxDepth();
     }
 
     /**
@@ -60,6 +62,7 @@ public class Parser implements Cloneable {
         errors = new ParseErrorList(copy.errors); // only copies size, not contents
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
+        maxDepth = copy.maxDepth;
         tagSet = new TagSet(copy.tagSet());
     }
 
@@ -193,6 +196,28 @@ public class Parser implements Cloneable {
      */
     public ParseSettings settings() {
         return settings;
+    }
+
+    /**
+     Set the parser's maximum stack depth (maximum number of open elements). When reached, new open elements will be
+     removed to prevent excessive nesting. Defaults to 512 for the HTML parser, and unlimited for the XML
+     parser.
+
+     @param maxDepth maximum parser depth; must be >= 1
+     @return this Parser, for chaining
+     */
+    public Parser setMaxDepth(int maxDepth) {
+        Validate.isTrue(maxDepth >= 1, "maxDepth must be >= 1");
+        this.maxDepth = maxDepth;
+        return this;
+    }
+
+    /**
+     * Get the maximum parser depth (maximum number of open elements).
+     * @return the current max parser depth
+     */
+    public int getMaxDepth() {
+        return maxDepth;
     }
 
     /**
@@ -351,6 +376,6 @@ public class Parser implements Cloneable {
      * @return a new simple XML parser.
      */
     public static Parser xmlParser() {
-        return new Parser(new XmlTreeBuilder());
+        return new Parser(new XmlTreeBuilder()).setMaxDepth(Integer.MAX_VALUE);
     }
 }
