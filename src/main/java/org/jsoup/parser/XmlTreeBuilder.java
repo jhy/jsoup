@@ -107,6 +107,11 @@ public class XmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
+    int defaultMaxDepth() {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
     protected boolean process(Token token) {
         currentToken = token;
 

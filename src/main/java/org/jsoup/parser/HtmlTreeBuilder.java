@@ -497,7 +497,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    protected void onStackPrunedForDepth(Element element) {
+    void onStackPrunedForDepth(Element element) {
         // handle other effects of popping to keep state correct
         if (element == headElement) headElement = null;
         if (element == formElement) setFormElement(null);

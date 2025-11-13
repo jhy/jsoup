@@ -30,7 +30,7 @@ public class Parser implements Cloneable {
     private boolean trackPosition = false;
     private @Nullable TagSet tagSet;
     private final ReentrantLock lock = new ReentrantLock();
-    private int maxDepth = 512; // limit for HtmlTreeBuilder's open elements stack depth
+    private int maxDepth;
 
     /**
      * Create a new Parser, using the specified TreeBuilder
@@ -40,6 +40,7 @@ public class Parser implements Cloneable {
         this.treeBuilder = treeBuilder;
         settings = treeBuilder.defaultSettings();
         errors = ParseErrorList.noTracking();
+        maxDepth = treeBuilder.defaultMaxDepth();
     }
 
     /**

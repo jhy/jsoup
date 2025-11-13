@@ -175,7 +175,7 @@ abstract class TreeBuilder {
      Ensures the stack respects {@link Parser#getMaxDepth()} by closing the deepest open elements until there is room for
      a new insertion.
      */
-    protected final void enforceStackDepthLimit() {
+    final void enforceStackDepthLimit() {
         final int maxDepth = parser.getMaxDepth();
         if (maxDepth == Integer.MAX_VALUE) return;
         while (stack.size() >= maxDepth) {
@@ -187,8 +187,15 @@ abstract class TreeBuilder {
     /**
      Hook for the HTML Tree Builder that needs to clean up when an element is removed due to the depth limit
      */
-    protected void onStackPrunedForDepth(Element element) {
+    void onStackPrunedForDepth(Element element) {
         // default no-op
+    }
+
+    /**
+     Default maximum depth for parsers using this tree builder.
+     */
+    int defaultMaxDepth() {
+        return 512;
     }
 
     /**
