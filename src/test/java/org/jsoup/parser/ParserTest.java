@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParserTest {
 
@@ -78,18 +79,21 @@ public class ParserTest {
         assertEquals(xmlParser.settings().preserveTagCase(), xmlClone.settings().preserveTagCase());
         assertEquals(xmlParser.settings().preserveAttributeCase(), xmlClone.settings().preserveAttributeCase());
     }
-    
+
     @Test
     public void testCloneCopyTagSet() {
         Parser parser = Parser.htmlParser();
         parser.tagSet().add(new Tag("foo"));
-        
+        parser.tagSet().onNewTag(tag -> tag.set(Tag.SelfClose));
         Parser clone = parser.clone();
-        
-        // Ensure the tagset are different
+
+        // Ensure the tagsets are different instances
         assertNotSame(clone.tagSet(), parser.tagSet());
         // Check that cloned tagset contains same tag
         assertNotNull(clone.tagSet().get("foo", Parser.NamespaceHtml));
+        // Ensure onNewTag customizers are retained
+        Tag custom = clone.tagSet().valueOf("qux", Parser.NamespaceHtml);
+        assertTrue(custom.isSelfClosing());
         // Check that cloned tagset uses the original tag as source when original is modified
         assertNull(clone.tagSet().get("bar", Parser.NamespaceHtml));
         parser.tagSet().add(new Tag("bar"));
