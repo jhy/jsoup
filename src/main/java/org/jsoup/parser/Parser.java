@@ -60,6 +60,7 @@ public class Parser implements Cloneable {
         errors = new ParseErrorList(copy.errors); // only copies size, not contents
         settings = new ParseSettings(copy.settings);
         trackPosition = copy.trackPosition;
+        tagSet = new TagSet(copy.tagSet());
     }
 
     /**
