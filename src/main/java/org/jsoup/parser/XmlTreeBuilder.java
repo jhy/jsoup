@@ -151,6 +151,8 @@ public class XmlTreeBuilder extends TreeBuilder {
             applyNamespacesToAttributes(attributes, namespaces);
         }
 
+        enforceStackDepthLimit();
+
         String tagName = startTag.tagName.value();
         String ns = resolveNamespace(tagName, namespaces);
         Tag tag = tagFor(tagName, startTag.normalName, ns, settings);

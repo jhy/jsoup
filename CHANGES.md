@@ -14,6 +14,7 @@
   (If you already have that dependency in your classpath, but you want to keep using the Java regex engine, you can disable re2j via `System.setProperty("jsoup.useRe2j", "false")`.) You can confirm that the re2j engine has been enabled correctly by calling `Regex.usingRe2j()`. [#2407](https://github.com/jhy/jsoup/pull/2407)
 
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser's configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
+* Added a configurable maximum parser depth (number of open elements on stack) to both HTML and XML parsers. The HTML parser now defaults to a depth of 512 to match browser behavior, and protect against unbounded stack growth, while the XML parser keeps unlimited depth by default but can opt into a limit via `Parser#setMaxDepth`. [#2421](https://github.com/jhy/jsoup/issues/2421)
 * Build: added CI coverage for JDK 25 [#2403](https://github.com/jhy/jsoup/pull/2403)
 * Build: added a CI fuzzer for contextual fragment parsing (in addition to existing full body HTML and XML fuzzers). [oss-fuzz #14041](https://github.com/google/oss-fuzz/pull/14041)
 

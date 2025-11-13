@@ -197,11 +197,12 @@ public class Parser implements Cloneable {
     }
 
     /**
-     * Set the maximum parser depth, defined as the maximum number of open elements allowed on the parser's internal
-     * stack. When the limit is reached, the newest open elements will be popped to prevent excessively nested
-     * documents. Defaults to 512.
-     * @param maxDepth maximum parser depth; must be >= 1
-     * @return this Parser, for chaining
+     Set the parser's maximum stack depth (maximum number of open elements). When reached, new open elements will be
+     removed to prevent excessive nesting. Defaults to 512 for the HTML parser, and unlimited for the XML
+     parser.
+
+     @param maxDepth maximum parser depth; must be >= 1
+     @return this Parser, for chaining
      */
     public Parser setMaxDepth(int maxDepth) {
         Validate.isTrue(maxDepth >= 1, "maxDepth must be >= 1");
@@ -210,7 +211,7 @@ public class Parser implements Cloneable {
     }
 
     /**
-     * Get the maximum parser depth (maximum number of open elements on the internal stack).
+     * Get the maximum parser depth (maximum number of open elements).
      * @return the current max parser depth
      */
     public int getMaxDepth() {
@@ -373,6 +374,6 @@ public class Parser implements Cloneable {
      * @return a new simple XML parser.
      */
     public static Parser xmlParser() {
-        return new Parser(new XmlTreeBuilder());
+        return new Parser(new XmlTreeBuilder()).setMaxDepth(Integer.MAX_VALUE);
     }
 }

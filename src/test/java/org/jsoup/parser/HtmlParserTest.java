@@ -2251,5 +2251,31 @@ public class HtmlParserTest {
 
             assertEquals(expected, doc.html());
         }
+
+        @Test void formControlsDetachWhenFormTrimmed() {
+            Parser parser = Parser.htmlParser().setMaxDepth(3);
+            String input = "<form id='f'><div><input name='foo'></div></form>";
+
+            Document doc = Jsoup.parse(input, "", parser);
+            Element formEl = doc.getElementById("f");
+            assertNotNull(formEl);
+            assertTrue(formEl instanceof FormElement);
+            FormElement form = (FormElement) formEl;
+            assertEquals("", form.html());
+            assertEquals(0, form.elements().size());
+        }
+
+        @Test void templateModesClearedWhenTrimmed() {
+            Parser parser = Parser.htmlParser().setMaxDepth(3);
+            String input = "<template id='tmpl'><div><span>One</span></div></template><p>Two</p>";
+
+            Document doc = Jsoup.parse(input, "", parser);
+            Element template = doc.getElementById("tmpl");
+            assertNotNull(template);
+            assertEquals("", template.html());
+            Element paragraph = doc.selectFirst("p");
+            assertNotNull(paragraph);
+            assertEquals("Two", paragraph.text());
+        }
     }
 }

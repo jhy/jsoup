@@ -388,12 +388,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
      * @param el the Element to insert and make the current element
      */
     private void doInsertElement(Element el) {
+        enforceStackDepthLimit();
+
         if (formElement != null && el.tag().namespace.equals(NamespaceHtml) && StringUtil.inSorted(el.normalName(), TagFormListed))
             formElement.addElement(el); // connect form controls to their form element
-
-        while (stack.size() >= parser.getMaxDepth()) {
-            pop();
-        }
 
         // in HTML, the xmlns attribute if set must match what the parser set the tag's namespace to
         if (parser.getErrors().canAddError() && el.hasAttr("xmlns") && !el.attr("xmlns").equals(el.tag().namespace()))
@@ -496,6 +494,20 @@ public class HtmlTreeBuilder extends TreeBuilder {
             }
         }
         return false;
+    }
+
+    @Override
+    protected void onStackPrunedForDepth(Element element) {
+        // handle other effects of popping to keep state correct
+        if (element == headElement) headElement = null;
+        if (element == formElement) setFormElement(null);
+        removeFromActiveFormattingElements(element);
+        if (element.nameIs("template")) {
+            clearFormattingElementsToLastMarker();
+            if (templateModeSize() > 0)
+                popTemplateMode();
+            resetInsertionMode();
+        }
     }
 
     /** Pops the stack until the given HTML element is removed. */
