@@ -8,11 +8,13 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import org.jsoup.select.NodeVisitor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
@@ -42,7 +44,7 @@ public class HtmlToPlainText {
         Document doc = session.newRequest(url).get(); // .get executes a GET request, and parses the result
 
         if (selector != null) {
-            Elements elements = doc.select(selector); // get each element that matches the CSS selector
+            List<Element> elements = doc.select(selector); // get each element that matches the CSS selector
             elements = trimParents(elements); // trim out elements that descend from a previously seen element
             for (Element element : elements) {
                 String plainText = getPlainText(element); // format that element to plain text
@@ -131,10 +133,10 @@ public class HtmlToPlainText {
         }
     }
 
-    static Elements trimParents(final Elements elements) {
+    static List<Element> trimParents(final List<Element> elements) {
         // removes elements from the list if their parent / ancestor is already in the list; prevents redundant output for selectors that match nested elements
-        HashSet<Element> seen = new HashSet<>(elements.size());
-        Elements trimmed = new Elements();
+        Set<Element> seen = new HashSet<>(elements.size());
+        List<Element> trimmed = new ArrayList<>(elements.size());
 
         EACH: for (Element el: elements) {
             Element current = el;
