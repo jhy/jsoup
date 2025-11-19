@@ -47,8 +47,13 @@ import java.util.stream.StreamSupport;
  stream consumers will throw an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
  <p>For examples, see the jsoup
  <a href="https://jsoup.org/cookbook/input/streamparser-dom-sax">StreamParser cookbook.</a></p>
- @since 1.18.1
- */
+ <p>
+ Selectors that depend on knowing all siblings (e.g. {@code :last-child}, {@code :last-of-type}, {@code :nth-last-child},
+ {@code :only-child} and their negations) cannot be correctly evaluated while streaming, because the parser does not know
+ if a later sibling will appear. For those cases, run {@link #complete()} first to finish the parse (which is effectively
+ the same as using {@code Jsoup.parse(...)} unless you have already removed nodes during streaming).
+ </p>
+ @since 1.18.1 */
 public class StreamParser implements Closeable {
     final private Parser parser;
     final private TreeBuilder treeBuilder;
