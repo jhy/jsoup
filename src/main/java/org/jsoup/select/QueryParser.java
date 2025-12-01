@@ -345,6 +345,7 @@ public class QueryParser implements AutoCloseable {
 
     private Evaluator evaluatorForAttribute(TokenQueue cq) {
         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
+        key = normalize(key);
         Validate.notEmpty(key);
         Validate.isFalse(key.equals("abs:"), "Absolute attribute key must have a name");
         cq.consumeWhitespace();
