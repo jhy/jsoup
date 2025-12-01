@@ -81,6 +81,12 @@ public class TagTest {
         assertFalse(p.isInline());
     }
 
+    @Test public void brSemantics() {
+        Tag br = Tag.valueOf("br");
+        assertTrue(br.isInline());
+        assertFalse(br.isBlock());
+    }
+
     @Test public void imgSemantics() {
         Tag img = Tag.valueOf("img");
         assertTrue(img.isInline());
