@@ -109,8 +109,8 @@ public final class Validate {
      * @param val object to test
      * @throws ValidationException if the object is not true
      */
-    public static void isTrue(boolean val) {
-        if (!val)
+    public static void isTrue(boolean condition) {
+        if (!condition)
             throw new ValidationException("Must be true");
     }
 
@@ -120,9 +120,9 @@ public final class Validate {
      * @param msg message to include in the Exception if validation fails
      * @throws ValidationException if the object is not true
      */
-    public static void isTrue(boolean val, String msg) {
-        if (!val)
-            throw new ValidationException(msg);
+    public static void isTrue(boolean condition, String message) {
+        if (!condition)
+            throw new ValidationException(message);
     }
 
     /**
@@ -130,8 +130,8 @@ public final class Validate {
      * @param val object to test
      * @throws ValidationException if the object is not false
      */
-    public static void isFalse(boolean val) {
-        if (val)
+    public static void isFalse(boolean condition) {
+        if (condition)
             throw new ValidationException("Must be false");
     }
 
@@ -141,9 +141,9 @@ public final class Validate {
      * @param msg message to include in the Exception if validation fails
      * @throws ValidationException if the object is not false
      */
-    public static void isFalse(boolean val, String msg) {
-        if (val)
-            throw new ValidationException(msg);
+    public static void isFalse(boolean condition, String message) {
+        if (condition)
+            throw new ValidationException(message);
     }
 
     /**
