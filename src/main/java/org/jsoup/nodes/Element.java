@@ -495,25 +495,28 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
-     * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
-     * may include this element, or any of its descendents.
-     * <p>If the query starts with a combinator (e.g. {@code *} or {@code >}), that will combine to this element.</p>
-     * <p>This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
-     * multiple filters can be combined, e.g.:</p>
+     * Finds elements that match the supplied {@link Selector} CSS query, using this element as the starting context.
+     * Matched elements may include this element itself or any of its descendant elements.
+     * <p>
+     * This method is generally more flexible than the DOM-style {@code getElementBy*} methods, because it allows
+     * composing multiple filters in a single CSS-like query. For example:
+     * </p>
      * <ul>
-     * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)</li>
-     * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)</li>
-     * <li>{@code el.select("* div")} - finds all divs that descend from this element (and excludes this element)</li>
-     * <li>{@code el.select("> div")} - finds all divs that are direct children of this element (and excludes this element)</li>
+     *     <li>{@code el.select("a[href]")} – finds links ({@code a} tags with {@code href} attributes)</li>
+     *     <li>{@code el.select("a[href*=example.com]")} – finds links pointing loosely to {@code example.com}</li>
+     *     <li>{@code el.select("* div")} – finds all {@code div} elements that descend from this element</li>
+     *     <li>{@code el.select("> div")} – finds all {@code div} elements that are direct children of this element</li>
      * </ul>
-     * <p>See the query syntax documentation in {@link org.jsoup.select.Selector}.</p>
-     * <p>Also known as {@code querySelectorAll()} in the Web DOM.</p>
+     * <p>
+     * This is similar in spirit to {@code querySelectorAll()} in the Web DOM. See {@link Selector} for the complete
+     * query syntax.
+     * </p>
      *
-     * @param cssQuery a {@link Selector} CSS-like query
-     * @return an {@link Elements} list containing elements that match the query (empty if none match)
-     * @see Selector selector query syntax
+     * @param cssQuery the CSS-like selector to match against this element and its descendants
+     * @return an {@link Elements} collection containing all matching elements (empty if none match)
+     * @throws Selector.SelectorParseException (unchecked) if the query is not a valid CSS selector
      * @see #select(Evaluator)
-     * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
+     * @see Selector
      */
     public Elements select(String cssQuery) {
         return Selector.select(cssQuery, this);
