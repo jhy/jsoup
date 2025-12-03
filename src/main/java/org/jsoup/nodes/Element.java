@@ -360,7 +360,11 @@ public class Element extends Node implements Iterable<Element> {
         Validate.isTrue(index >= 0, "Index must be >= 0");
         List<Element> cached = cachedChildren();
         if (cached != null) return cached.get(index);
-        // otherwise, iter on elementChild; saves creating list
+
+        return childByFilteredIndex(index);
+    }
+
+    private Element childByFilteredIndex(int index) {
         int size = childNodes.size();
         for (int i = 0, e = 0; i < size; i++) { // direct iter is faster than chasing firstElSib, nextElSibd
             Node node = childNodes.get(i);
