@@ -50,24 +50,33 @@ public class CookieServlet extends BaseServlet {
     private void setCookies(HttpServletResponse res) {
         Cookie one = new Cookie("One", "Root");
         one.setPath("/");
+        one.setSecure(true);
+        one.setHttpOnly(true);
         res.addCookie(one);
 
         Cookie two = new Cookie("One", "CookieServlet");
         two.setPath("/CookieServlet");
+        two.setSecure(true);
         two.setHttpOnly(true);
         two.setComment("Quite nice");
         res.addCookie(two);
 
         Cookie three = new Cookie("One", "EchoServlet");
         three.setPath("/EchoServlet");
+        three.setSecure(true);
+        three.setHttpOnly(true);
         res.addCookie(three);
 
         Cookie four = new Cookie("Two", "NoSuchPath");
         four.setPath("/bogus");
+        four.setSecure(true);
+        four.setHttpOnly(true);
         res.addCookie(four);
 
         Cookie five = new Cookie("Two", "Override");
         five.setPath("/bogus");
+        five.setSecure(true);
+        five.setHttpOnly(true);
         res.addCookie(five);
     }
 
