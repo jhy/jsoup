@@ -426,8 +426,10 @@ public abstract class Evaluator {
             this.key = normalize(key);
             boolean quoted = value.startsWith("'") && value.endsWith("'")
                 || value.startsWith("\"") && value.endsWith("\"");
-            if (quoted)
+            if (quoted) {
+                Validate.isTrue(value.length() > 1, "Quoted value must have content");
                 value = value.substring(1, value.length() - 1);
+            }
 
             this.value = lowerCase(value); // case-insensitive match
         }

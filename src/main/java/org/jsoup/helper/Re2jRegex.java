@@ -18,6 +18,8 @@ final class Re2jRegex extends Regex {
             return new Re2jRegex(com.google.re2j.Pattern.compile(regex));
         } catch (RuntimeException e) {
             throw new ValidationException("Pattern syntax error: " + e.getMessage());
+        } catch (OutOfMemoryError | StackOverflowError e) { // defensive check on regex to normalize exception
+            throw new ValidationException("Pattern complexity error: " + e.getMessage());
         }
     }
 

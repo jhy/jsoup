@@ -14,6 +14,7 @@
   (If you already have that dependency in your classpath, but you want to keep using the Java regex engine, you can disable re2j via `System.setProperty("jsoup.useRe2j", "false")`.) You can confirm that the re2j engine has been enabled correctly by calling `Regex.usingRe2j()`. [#2407](https://github.com/jhy/jsoup/pull/2407)
 
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser's configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
+* Added a configurable maximum parser depth (number of open elements on stack) to both HTML and XML parsers. The HTML parser now defaults to a depth of 512 to match browser behavior, and protect against unbounded stack growth, while the XML parser keeps unlimited depth by default but can opt into a limit via `Parser#setMaxDepth`. [#2421](https://github.com/jhy/jsoup/issues/2421)
 * Build: added CI coverage for JDK 25 [#2403](https://github.com/jhy/jsoup/pull/2403)
 * Build: added a CI fuzzer for contextual fragment parsing (in addition to existing full body HTML and XML fuzzers). [oss-fuzz #14041](https://github.com/google/oss-fuzz/pull/14041)
 
@@ -25,6 +26,9 @@
 * Null characters in the HTML body were not consistently removed; and in foreign content were not correctly replaced. [#2395](https://github.com/jhy/jsoup/issues/2395)
 * An IndexOutOfBoundsException could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397), [#2406](https://github.com/jhy/jsoup/issues/2406)
 * When using StructuralEvaluators (e.g., a `parent child` selector) across many retained threads, their memoized results could also be retained, increasing memory use. These results are now cleared immediately after use, reducing overall memory consumption. [#2411](https://github.com/jhy/jsoup/issues/2411)
+* Cloning a `Parser` now preserves any custom `TagSet` applied to the parser. [#2422](https://github.com/jhy/jsoup/issues/2422), [#2423](https://github.com/jhy/jsoup/pull/2423)
+* Custom tags marked as `Tag.Void` now parse and serialize like the built-in void elements: they no longer consume following content, and the XML serializer emits the expected self-closing form. [#2425](https://github.com/jhy/jsoup/issues/2425)
+* The `<br>` element is once again classified as an inline tag (`Tag.isBlock() == false`), matching common developer expectations and its role as phrasing content in HTML, while pretty-printing and text extraction continue to treat it as a line break in the rendered output. [#2387](https://github.com/jhy/jsoup/issues/2387), [#2439](https://github.com/jhy/jsoup/issues/2439)
 
 ### Internal Changes
 * Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary. [#2412](https://github.com/jhy/jsoup/pull/2412)

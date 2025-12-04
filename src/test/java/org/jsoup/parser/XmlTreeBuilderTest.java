@@ -647,4 +647,41 @@ public class XmlTreeBuilderTest {
         assertEquals("<div id=\"1\" /><p /><div>Foo</div><div /><foo></foo>", TextUtil.stripNewlines(doc.outerHtml()));
         // we infer that empty els can be represented with self-closing if seen in parse
     }
+
+    @Test public void xmlParserHasUnlimitedDepthByDefault() {
+        Parser parser = Parser.xmlParser();
+        Document doc = Jsoup.parse(deepXml(600), "", parser);
+        Element target = doc.selectFirst("target");
+        assertNotNull(target);
+        assertTrue(depth(target) > 512);
+    }
+
+    @Test public void xmlParserRespectsConfiguredMaxDepth() {
+        Parser parser = Parser.xmlParser().setMaxDepth(5);
+        Document doc = Jsoup.parse(deepXml(100), "", parser);
+        Element target = doc.selectFirst("target");
+        assertNotNull(target);
+        assertEquals(parser.getMaxDepth(), depth(target));
+    }
+
+    private static String deepXml(int depth) {
+        StringBuilder xml = new StringBuilder("<root>");
+        for (int i = 0; i < depth; i++) {
+            xml.append("<n>");
+        }
+        xml.append("<target />");
+        for (int i = 0; i < depth; i++) {
+            xml.append("</n>");
+        }
+        xml.append("</root>");
+        return xml.toString();
+    }
+
+    private static int depth(Element el) {
+        int d = 0;
+        while ((el = el.parent()) != null) {
+            d++;
+        }
+        return d;
+    }
 }

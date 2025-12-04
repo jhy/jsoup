@@ -5,6 +5,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 12
     ignore:
       # Jetty 9.x needed for JDK8 compatibility; it still receives security updates. Only used in tests.
       - dependency-name: "org.eclipse.jetty:jetty-server"
@@ -19,3 +21,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 12
