@@ -48,7 +48,7 @@ public final class Validate {
      * @param obj nullable object to cast to not-null
      * @return the object, or throws an exception if it is null
      * @throws ValidationException if the object is null
-     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead
+     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead; will be removed in jsoup 1.24.1
      */
     @Deprecated
     public static Object ensureNotNull(@Nullable Object obj) {
@@ -65,7 +65,7 @@ public final class Validate {
      * @param args the arguments to the msg
      * @return the object, or throws an exception if it is null
      * @throws ValidationException if the object is null
-     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead
+     * @deprecated prefer to use {@link #expectNotNull(Object, String, Object...)} instead; will be removed in jsoup 1.24.1
      */
     @Deprecated
     public static Object ensureNotNull(@Nullable Object obj, String msg, Object... args) {

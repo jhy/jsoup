@@ -218,7 +218,7 @@ public interface Connection {
      @param sslSocketFactory SSL socket factory
      @return this Connection, for chaining
      @see #sslContext(SSLContext)
-     @deprecated use {@link #sslContext(SSLContext)} instead.
+     @deprecated use {@link #sslContext(SSLContext)} instead; will be removed in jsoup 1.24.1.
      */
     @Deprecated
     Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
@@ -795,7 +795,7 @@ public interface Connection {
 
          @param sslSocketFactory SSL socket factory
          @see #sslContext(SSLContext)
-         @deprecated use {@link #sslContext(SSLContext)} instead.
+         @deprecated use {@link #sslContext(SSLContext)} instead; will be removed in jsoup 1.24.1.
          */
         @Deprecated
         void sslSocketFactory(SSLSocketFactory sslSocketFactory);
@@ -1033,7 +1033,7 @@ public interface Connection {
          * <p>Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.</p>
          * @return this response, for chaining
          * @throws UncheckedIOException if an IO exception occurs during buffering.
-         * @deprecated use {@link #readFully()} instead (for the checked exception). Will be removed in a future version.
+         * @deprecated use {@link #readFully()} instead (for the checked exception). Will be removed in jsoup 1.24.1.
          */
         @Deprecated
         Response bufferUp();

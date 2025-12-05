@@ -902,7 +902,7 @@ public abstract class Node implements Cloneable {
         return outerHtml();
     }
 
-    /** @deprecated internal method moved into Printer; will be removed in a future version */
+    /** @deprecated internal method moved into Printer; will be removed in jsoup 1.24.1. */
     @Deprecated
     protected void indent(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
         accum.append('\n').append(StringUtil.padding(depth * out.indentAmount(), out.maxPaddingWidth()));
