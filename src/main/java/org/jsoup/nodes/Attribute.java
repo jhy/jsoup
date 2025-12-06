@@ -202,13 +202,13 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         htmlNoValidate(key, val, accum, out);
     }
 
-    /** @deprecated internal method and will be removed in a future version */
+    /** @deprecated internal method; use {@link #html(String, String, QuietAppendable, Document.OutputSettings)} with {@link org.jsoup.internal.QuietAppendable#wrap(Appendable)} instead. Will be removed in jsoup 1.24.1. */
     @Deprecated
     protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
         html(key, val, accum, out);
     }
 
-    /** @deprecated internal method and will be removed in a future version */
+    /** @deprecated internal method; use {@link #html(String, String, QuietAppendable, Document.OutputSettings)} with {@link org.jsoup.internal.QuietAppendable#wrap(Appendable)} instead. Will be removed in jsoup 1.24.1. */
     @Deprecated
     protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
         html(key, val, QuietAppendable.wrap(accum), out);
@@ -306,7 +306,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * 
      * @param out output settings
      * @return  Returns whether collapsible or not
-     * @deprecated internal method and will be removed in a future version
+     * @deprecated internal method; use {@link #shouldCollapseAttribute(String, String, Document.OutputSettings)} instead. Will be removed in jsoup 1.24.1.
      */
     @Deprecated
     protected final boolean shouldCollapseAttribute(Document.OutputSettings out) {

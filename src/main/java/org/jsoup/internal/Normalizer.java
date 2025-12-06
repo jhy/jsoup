@@ -23,7 +23,8 @@ public final class Normalizer {
 
     /**
      If a string literal, just lower case the string; otherwise lower-case and trim.
-     @deprecated internal function; will be removed in a future version.
+     @deprecated internal helper; replace with {@link #lowerCase(String)} for no-trim, or {@link #normalize(String)} for trim + lowercase.
+     Will be removed in jsoup 1.24.1.
      */
     @Deprecated
     public static String normalize(final String input, boolean isStringLiteral) {

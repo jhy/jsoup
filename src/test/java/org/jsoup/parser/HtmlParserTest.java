@@ -7,6 +7,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.*;
 import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -2106,6 +2107,45 @@ public class HtmlParserTest {
         assertEquals("<div /><custom /><custom>Foo</custom>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test void customVoidTagsBehaveLikeHtmlVoids() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10).tagSet(TagSet.Html());
+        TagSet tags = parser.tagSet();
+        tags.valueOf("voidtag", Parser.NamespaceHtml).set(Tag.Void);
+
+        String html = "<p><voidtag>Hello World</p>";
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        String emittedHtml = TextUtil.stripNewlines(doc.body().html());
+        assertEquals("<p><voidtag>Hello World</p>", emittedHtml);
+        assertEquals("Hello World", doc.body().text());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<p><voidtag />Hello World</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test void customSelfClosingVoidTagsRoundTrip() {
+        Parser parser = Parser.htmlParser().setTrackErrors(10).tagSet(TagSet.Html());
+        TagSet tags = parser.tagSet();
+        tags.valueOf("selfclosingvoidtag", Parser.NamespaceHtml).set(Tag.Void).set(Tag.SelfClose);
+
+        String html = "<p><selfclosingvoidtag />Hello World</p>";
+        Document doc = Jsoup.parse(html, parser);
+        assertEquals(0, parser.getErrors().size());
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        String emittedHtml = TextUtil.stripNewlines(doc.body().html());
+        assertEquals("<p><selfclosingvoidtag>Hello World</p>", emittedHtml);
+
+        Document reparsed = Jsoup.parse(emittedHtml, parser);
+        reparsed.outputSettings().syntax(Document.OutputSettings.Syntax.html);
+        assertEquals(emittedHtml, TextUtil.stripNewlines(reparsed.body().html()));
+
+        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        assertEquals("<p><selfclosingvoidtag />Hello World</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test void svgScriptParsedAsScriptData() {
         // https://github.com/jhy/jsoup/issues/2320
         String html = "<svg><script>a < b</script></svg>";
@@ -2166,6 +2206,115 @@ public class HtmlParserTest {
         assertEquals("<1:26>: Unexpected character '\u0000' in input state [Data]", errors.get(1).toString());
         assertEquals("<1:27>: Unexpected character '\u0000' in input state [Data]", errors.get(2).toString());
         assertEquals("<1:43>: Unexpected character '\u0000' in input state [Data]", errors.get(3).toString());
+    }
 
+    @Nested class DeepHtmlTrees {
+        private int depth(Element el) {
+            int depth = 0;
+            while ((el = el.parent()) != null) {
+                depth++;
+            }
+            return depth;
+        }
+
+        /**
+         * Parse the HTML code in `contents`, wrapped in enough divs to ensure that the root elements
+         * of contents are at depth `startingDepth`.
+         */
+        private Element parseDeepHtml(int startingDepth, String contents) {
+            StringBuilder html = new StringBuilder();
+            html.append("<html><body>");
+            for (int i = 0; i < startingDepth - 4; i++) {
+                html.append("<div>");
+            }
+            html.append("<div id='container'>");
+            html.append(contents);
+
+            Parser parser = Parser.htmlParser();
+            Document doc = Jsoup.parse(html.toString(), parser);
+            Element container = doc.getElementById("container");
+            assertNotNull(container);
+            assertEquals(startingDepth - 1, depth(container));
+
+            return container;
+        }
+
+        @Test void nestedDivs() {
+            Element container = parseDeepHtml(511, "<div><div><div>");
+
+            assertEquals("<div>\n <div></div>\n <div></div>\n</div>", container.html());
+        }
+
+        @Test void closingTagOfTagClosedByDepthLimit() {
+            // The <a></a> tag would be nested too deep, so it first closes the innermost <span>.
+            // This means that the first </span> will close the outer <span>, as it's the only
+            // one that is currently open. The last </span> is then just ignored, as there is no
+            // open <span> left to close.
+            Element container = parseDeepHtml(511, "<span><span><a></a></span><b></b></span>");
+
+            assertEquals("<span><span></span><a></a></span><b></b>", container.html());
+        }
+
+        @Test void tableAtDepthLimitWithDirectTd() {
+            Element container = parseDeepHtml(512, "<table><td>");
+
+            assertEquals("<table></table>\n<tbody></tbody>\n<tr></tr>\n<td></td>", container.html());
+        }
+
+        @Test void tableRightBeforeDepthLimitWithDirectTd() {
+            Element container = parseDeepHtml(511, "<table><td>");
+
+            assertEquals("<table>\n <tbody></tbody>\n <tr></tr>\n <td></td>\n</table>", container.html());
+        }
+
+        @Test void customDepthLimit() {
+            Parser parser = Parser.htmlParser().setMaxDepth(5);
+            String input = "<html><body><div><div><div><div><div><div>";
+
+            Document doc = Jsoup.parse(input, parser);
+            String expected = new StringBuilder()
+                .append("<html>\n")
+                .append(" <head></head>\n")
+                .append(" <body>\n")
+                .append("  <div>\n")
+                .append("   <div>\n")
+                .append("    <div></div>\n")
+                .append("    <div></div>\n")
+                .append("    <div></div>\n")
+                .append("    <div></div>\n")
+                .append("   </div>\n")
+                .append("  </div>\n")
+                .append(" </body>\n")
+                .append("</html>")
+                .toString();
+
+            assertEquals(expected, doc.html());
+        }
+
+        @Test void formControlsDetachWhenFormTrimmed() {
+            Parser parser = Parser.htmlParser().setMaxDepth(3);
+            String input = "<form id='f'><div><input name='foo'></div></form>";
+
+            Document doc = Jsoup.parse(input, "", parser);
+            Element formEl = doc.getElementById("f");
+            assertNotNull(formEl);
+            assertTrue(formEl instanceof FormElement);
+            FormElement form = (FormElement) formEl;
+            assertEquals("", form.html());
+            assertEquals(0, form.elements().size());
+        }
+
+        @Test void templateModesClearedWhenTrimmed() {
+            Parser parser = Parser.htmlParser().setMaxDepth(3);
+            String input = "<template id='tmpl'><div><span>One</span></div></template><p>Two</p>";
+
+            Document doc = Jsoup.parse(input, "", parser);
+            Element template = doc.getElementById("tmpl");
+            assertNotNull(template);
+            assertEquals("", template.html());
+            Element paragraph = doc.selectFirst("p");
+            assertNotNull(paragraph);
+            assertEquals("Two", paragraph.text());
+        }
     }
 }

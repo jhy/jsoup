@@ -10,6 +10,8 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Locale;
@@ -1766,6 +1768,29 @@ public class SelectorTest {
         assertSelectedIds(doc.select("div[data^='']"), "1", "2", "3");
         assertSelectedIds(doc.select("div[data$='']"), "1", "2", "3");
         assertSelectedIds(doc.select("div[data*='']"), "1", "2", "3");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[abs:!=]", "[ abs:^=]"})
+    void parseExceptionOnEmptyAbsKey(String query) {
+        Selector.SelectorParseException ex = assertThrows(
+            Selector.SelectorParseException.class,
+            () -> Selector.evaluatorOf(query)
+        );
+        assertEquals("Absolute attribute key must have a name", ex.getMessage());
+    }
+
+    @Test void parseExceptionOnEmptyKeyVal() {
+        // was previously firing at match time, not eval time
+        String q = "[\"=\"]";
+        boolean threw = false;
+        try {
+            Evaluator e = Selector.evaluatorOf(q);
+        } catch (Selector.SelectorParseException ex) {
+            threw = true;
+            assertEquals("Quoted value must have content", ex.getMessage());
+        }
+        assertTrue(threw);
     }
 
 }

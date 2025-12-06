@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 
@@ -125,6 +126,7 @@ public class ElementIT {
     @Test void wrapNoOverflow() {
         // deepChild was recursive, so could overflow if presented with a fairly insane wrap
         Document doc = new Document("https://example.com/");
+        doc.parser().setMaxDepth(Integer.MAX_VALUE); // don't limit to 512
         Element el = doc.body().appendElement("p");
         int num = 50000;
         StringBuilder sb = new StringBuilder();
@@ -134,7 +136,7 @@ public class ElementIT {
         el.wrap(sb.toString());
         String html = doc.body().html();
         assertTrue(html.startsWith("<div>"));
-        assertEquals(num + 3, el.parents().size());
+        assertEquals(num + 3, el.parents().size()); // + 3 is for body, html, document
     }
 
     @Test

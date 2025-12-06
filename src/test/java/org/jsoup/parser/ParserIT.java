@@ -49,8 +49,16 @@ public class ParserIT {
         long start = System.currentTimeMillis();
         Document doc = Parser.parseBodyFragment(longBody.toString(), "");
 
+        int depth = 1;
+        Element el = doc.body();
+        while (el.childrenSize() > 0) {
+            el = el.child(0);
+            depth++;
+        }
+
         // Assert
-        assertEquals(2, doc.body().childNodeSize());
+        assertEquals(1, doc.body().childrenSize());
+        assertEquals(512, depth);
         assertEquals(25000, doc.select("dd").size());
         assertTrue(System.currentTimeMillis() - start < 20000); // I get ~ 1.5 seconds, but others have reported slower
         // was originally much longer, or stack overflow.
