@@ -850,6 +850,8 @@ public class HttpConnection implements Connection {
          */
         private static final Pattern xmlContentTypeRxp = Pattern.compile("(\\w+)/\\w*\\+?xml.*+");
 
+        //this comment is to test commits
+
         /**
          <b>Internal only! </b>Creates a dummy HttpConnection.Response, useful for testing. All actual responses
          are created from the HttpURLConnection and fields defined.
