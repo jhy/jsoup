@@ -89,14 +89,7 @@ class SimpleBufferedInput extends FilterInputStream {
                 capRemaining -= read;
             }
         }
-        closeIfDone(read);
-    }
-
-    private void closeIfDone(int read) throws IOException {
-        if (read == -1) {
-            inReadFully = true;
-            super.close(); // close underlying stream immediately; frees resources a little earlier
-        }
+        if (read == -1) inReadFully = true;
     }
 
     byte[] getBuf() {
