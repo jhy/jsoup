@@ -20,19 +20,19 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 // reimplemented from ConstrainableInputStream for JDK21 - extending BufferedInputStream will pin threads during read
 public class ControllableInputStream extends FilterInputStream {
     private final SimpleBufferedInput buff; // super.in, but typed as SimpleBufferedInput
-    private int maxSize;
-    private long startTime;
-    private long timeout = 0; // optional max time of request
-    private int remaining;
-    private int markPos;
-    private boolean interrupted;
-    private boolean allowClose = true; // for cases where we want to re-read the input, can ignore .close() from the parser
+    private int maxSize;                    // logical cap exposed to callers (0 == unlimited)
+    private long startTime;                 // start time for timeout checks, nanos
+    private long timeout = 0;               // optional max time of request
+    private int remaining;                  // how many bytes may still be returned to caller under the current cap
+    private int markPos;                    // logical readPos snapshot for InputStream.mark/reset (not a buffer cursor)
+    private boolean interrupted;            // true if Thread.interrupted() was detected, used to latch interrupted state
+    private boolean allowClose = true;      // for cases where we want to re-read the input, can ignore .close() from the parser
 
     // if we are tracking progress, will have the expected content length, progress callback, connection
     private @Nullable Progress<?> progress;
     private @Nullable Object progressContext;
-    private int contentLength = -1;
-    private int readPos = 0; // amount read; can be reset()
+    private int contentLength = -1;         // expected content length for progress; -1 == unknown
+    private int readPos = 0;                // amount read; can be reset()
 
     private ControllableInputStream(SimpleBufferedInput in, int maxSize) {
         super(in);
@@ -85,6 +85,7 @@ public class ControllableInputStream extends FilterInputStream {
 
         if (capped && len > remaining)
             len = remaining; // don't read more than desired, even if available
+        buff.capRemaining(capped ? remaining : Integer.MAX_VALUE);
 
         while (true) { // loop trying to read until we get some data or hit the overall timeout, if we have one
             if (expired())
@@ -95,7 +96,9 @@ public class ControllableInputStream extends FilterInputStream {
                 if (read == -1) { // completed
                     contentLength = readPos;
                 } else {
-                    remaining -= read;
+                    if (capped && read > 0) {
+                        remaining -= read; // track bytes returned to the caller
+                    }
                     readPos += read;
                 }
                 emitProgress();
@@ -105,6 +108,11 @@ public class ControllableInputStream extends FilterInputStream {
                     throw e;
             }
         }
+    }
+
+    @Override
+    public boolean markSupported() {
+        return true;
     }
 
     /**
@@ -145,15 +153,24 @@ public class ControllableInputStream extends FilterInputStream {
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
     @Override public void reset() throws IOException {
-        super.reset();
-        remaining = maxSize - markPos;
+        if (markPos < 0) throw new IOException("Resetting to invalid mark");
+        buff.rewindToMark();
+        buff.clearMark();
+        if (maxSize != 0) {
+            remaining = maxSize - markPos;
+            buff.capRemaining(remaining);
+        } else {
+            remaining = 0;
+            buff.capRemaining(Integer.MAX_VALUE);
+        }
         readPos = markPos; // readPos is used for progress emits
+        markPos = -1;
     }
 
     @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // not synchronized in later JDKs
     @Override public void mark(int readlimit) {
-        super.mark(readlimit);
-        markPos = maxSize - remaining;
+        markPos = readPos;
+        buff.setMark();
     }
 
     /**
@@ -163,6 +180,10 @@ public class ControllableInputStream extends FilterInputStream {
      */
     public boolean baseReadFully() {
         return buff.baseReadFully();
+    }
+
+    public void resetFullyRead() {
+        buff.resetFullyRead();
     }
 
     /**
@@ -175,7 +196,9 @@ public class ControllableInputStream extends FilterInputStream {
 
     public void max(int newMax) {
         remaining += newMax - maxSize; // update remaining to reflect the difference in the new maxsize
+        if (remaining < 0) remaining = 0;
         maxSize = newMax;
+        buff.capRemaining(newMax == 0 ? Integer.MAX_VALUE : remaining);
     }
 
     public void allowClose(boolean allowClose) {

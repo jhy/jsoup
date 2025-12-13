@@ -17,11 +17,12 @@ import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
 class SimpleBufferedInput extends FilterInputStream {
     static final int BufferSize = DefaultBufferSize;
     static final SoftPool<byte[]> BufferPool = new SoftPool<>(() -> new byte[BufferSize]);
+    private int capRemaining = Integer.MAX_VALUE; // how many bytes we are allowed to pull from the underlying stream
 
     private byte @Nullable [] byteBuf; // the byte buffer; recycled via SoftPool. Created in fill if required
     private int bufPos;
     private int bufLength;
-    private int bufMark = -1;
+    private int bufMark = -1; // mark set by ControllableInputStream; -1 when unset
     private boolean inReadFully = false; // true when the underlying inputstream has been read fully
 
     SimpleBufferedInput(@Nullable InputStream in) {
@@ -50,12 +51,6 @@ class SimpleBufferedInput extends FilterInputStream {
 
         int bufAvail = bufLength - bufPos;
         if (bufAvail <= 0) { // can't serve from the buffer
-            if (!inReadFully && bufMark < 0) {
-                // skip creating / copying into a local buffer; just pass through
-                int read = in.read(dest, offset, desiredLen);
-                closeIfDone(read);
-                return read;
-            }
             fill();
             bufAvail = bufLength - bufPos;
         }
@@ -76,28 +71,22 @@ class SimpleBufferedInput extends FilterInputStream {
             byteBuf = BufferPool.borrow();
         }
 
-        if (bufMark < 0) { // no mark, can lose buffer (assumes we've read to bufLen)
-            bufPos = 0;
-        } else if (bufPos >= BufferSize) { // no room left in buffer
-            if (bufMark > 0) { // can throw away early part of the buffer
-                int size = bufPos - bufMark;
-                System.arraycopy(byteBuf, bufMark, byteBuf, 0, size);
-                bufPos = size;
-                bufMark = 0;
-            } else { // invalidate mark
-                bufMark = -1;
-                bufPos = 0;
-            }
-        }
+        compact();
         bufLength = bufPos;
-        int read = in.read(byteBuf, bufPos, byteBuf.length - bufPos);
+        int toRead = Math.min(byteBuf.length - bufPos, capRemaining);
+        if (toRead <= 0) return;
+        int read = in.read(byteBuf, bufPos, toRead);
         if (read > 0) {
             bufLength = read + bufPos;
-            while (byteBuf.length - bufLength > 0) { // read in more if we have space, without blocking
+            capRemaining -= read;
+            while (byteBuf.length - bufLength > 0 && capRemaining > 0) { // read in more if we have space, without blocking
                 if (in.available() < 1) break;
-                read = in.read(byteBuf, bufLength, byteBuf.length - bufLength);
+                toRead = Math.min(byteBuf.length - bufLength, capRemaining);
+                if (toRead <= 0) break;
+                read = in.read(byteBuf, bufLength, toRead);
                 if (read <= 0) break;
                 bufLength += read;
+                capRemaining -= read;
             }
         }
         closeIfDone(read);
@@ -123,28 +112,53 @@ class SimpleBufferedInput extends FilterInputStream {
         return inReadFully;
     }
 
-    @Override
-    public int available() throws IOException {
-        if (byteBuf != null && bufLength - bufPos > 0)
-            return bufLength - bufPos; // doesn't include those in.available(), but mostly used as a block test
-        return inReadFully ? 0 : in.available();
+    void resetFullyRead() {
+        if (in != null) // for null-wrapped streams, leave as fully read to avoid fill() on a null input
+            inReadFully = false;
     }
 
-    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // explicitly not synced
     @Override
-    public void mark(int readlimit) {
-        if (readlimit > BufferSize) {
-            throw new IllegalArgumentException("Read-ahead limit is greater than buffer size");
+    public int available() throws IOException {
+        int buffered = (byteBuf != null) ? (bufLength - bufPos) : 0;
+        if (buffered > 0) {
+            return buffered; // doesn't include those in.available(), but mostly used as a block test
         }
+        int avail = inReadFully ? 0 : in.available();
+        return avail;
+    }
+
+    void capRemaining(int newRemaining) {
+        capRemaining = Math.max(0, newRemaining);
+    }
+
+    void setMark() {
         bufMark = bufPos;
     }
 
-    @SuppressWarnings("NonSynchronizedMethodOverridesSynchronizedMethod") // explicitly not synced
-    @Override
-    public void reset() throws IOException {
+    void rewindToMark() throws IOException {
         if (bufMark < 0)
             throw new IOException("Resetting to invalid mark");
         bufPos = bufMark;
+    }
+
+    void clearMark() {
+        bufMark = -1;
+    }
+
+    private void compact() {
+        if (byteBuf == null || bufPos == 0) return;
+        int keepFrom = bufMark >= 0 ? bufMark : bufPos;
+        if (keepFrom <= 0) return;
+
+        int remaining = bufLength - keepFrom;
+        if (remaining > 0) {
+            System.arraycopy(byteBuf, keepFrom, byteBuf, 0, remaining);
+        }
+        bufLength = remaining;
+        bufPos -= keepFrom;
+        if (bufMark >= 0) {
+            bufMark -= keepFrom;
+        }
     }
 
     @Override

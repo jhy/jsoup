@@ -359,4 +359,63 @@ public class DataUtilTest {
         Document doc = Jsoup.parse(ParseTest.getPath("/fuzztests/2353.html.gz"));
         assertTrue(doc.html().contains("Read-Fully!"));
     }
+
+    @Test
+    void charsetSniffingCanReuseTruncatedPreParse() throws IOException {
+        // #2448: when available() reports buffered bytes after the first read, the sniffed pre-parse may be reused while capped, leading to truncation
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!doctype html><html><head><title>t</title></head><body><pre>");
+        while (sb.length() < 6200) {
+            sb.append("0123456789 abcdefghijklmnopqrstuvwxyz\n");
+        }
+        sb.append("</pre><main>list</main><hr></body></html>");
+        String html = sb.toString();
+
+
+        byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+        ControllableInputStream in = ControllableInputStream.wrap(new BufferedOnceAvailableStream(bytes), 0);
+
+        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(in, null, "http://example.com/", Parser.htmlParser());
+        Document doc = DataUtil.parseInputStream(charsetDoc, "http://example.com/", Parser.htmlParser());
+
+        assertNotNull(doc.selectFirst("hr"), "hr should survive the sniff + full parse");
+    }
+
+    // delivers all bytes in the first read, then signals available()>0 once to trigger a second read and baseReadFully=true
+    static final class BufferedOnceAvailableStream extends InputStream {
+        private final byte[] data;
+        private int pos = 0;
+        private boolean extraSignal = true;
+
+        BufferedOnceAvailableStream(byte[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) {
+            if (pos >= data.length) return -1;
+            int take = Math.min(len, data.length - pos);
+            System.arraycopy(data, pos, b, off, take);
+            pos += take;
+            return take;
+        }
+
+        @Override
+        public int read() {
+            return pos < data.length ? (data[pos++] & 0xff) : -1;
+        }
+
+        @Override
+        public int available() {
+            if (pos < data.length)
+                return data.length - pos;
+            if (extraSignal) {
+                extraSignal = false;
+                return 1; // nudge SimpleBufferedInput.fill() to try another read
+            }
+            return 0;
+        }
+    }
+
 }

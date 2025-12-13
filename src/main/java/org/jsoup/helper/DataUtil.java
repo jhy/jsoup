@@ -248,6 +248,7 @@ public final class DataUtil {
         if (charsetName == null) { // read ahead and determine from meta. safe first parse as UTF-8
             int origMax = input.max();
             input.max(firstReadBufferSize);
+            input.resetFullyRead(); // clear any pre-read (e.g., BOM) state before capped sniff
             input.mark(firstReadBufferSize);
             input.allowClose(false); // ignores closes during parse, in case we need to rewind
             try (Reader reader = new SimpleStreamReader(input, UTF_8)) { // input is currently capped to firstReadBufferSize
