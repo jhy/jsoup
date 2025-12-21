@@ -4,6 +4,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.jsoup.parser.Parser.NamespaceHtml;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -181,5 +185,37 @@ public class TagSetTest {
         copy.onNewTag(tag -> tag.set(Tag.Void));
         assertTrue(copy.valueOf("custom-tag", NamespaceHtml).is(Tag.Void));
         assertFalse(source.valueOf("custom-tag", NamespaceHtml).is(Tag.Void));
+    }
+
+    @Test void copyPullThroughDoesNotMutateSource() {
+        TagSet source = TagSet.Html();
+        TagSet copy = new TagSet(source);
+
+        int sourceNamespacesBefore = tagSetNamespaceCount(source);
+        assertNotNull(copy.get("div", NamespaceHtml));
+        int sourceNamespacesAfter = tagSetNamespaceCount(source);
+        assertEquals(sourceNamespacesBefore, sourceNamespacesAfter);
+    }
+
+    @Test void copyPullWithCustomizerThroughDoesNotMutateSource() {
+        TagSet source = TagSet.Html();
+        TagSet copy = new TagSet(source);
+
+        AtomicInteger sourceAdds = new AtomicInteger();
+        source.onNewTag(tag -> sourceAdds.incrementAndGet());
+
+        assertNotNull(copy.get("div", NamespaceHtml));
+        assertEquals(0, sourceAdds.get());
+    }
+
+    private static int tagSetNamespaceCount(TagSet tagSet) {
+        try {
+            Field tagsField = TagSet.class.getDeclaredField("tags");
+            tagsField.setAccessible(true);
+            Map<?, ?> tags = (Map<?, ?>) tagsField.get(tagSet);
+            return tags.size();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
