@@ -36,7 +36,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         "annotation-xml",  "mi", "mn", "mo", "ms", "mtext"
     };
     static final String[]TagSearchInScopeSvg = new String[] {
-        "desc", "foreignObject", "title"
+        "desc", "foreignobject", "title" // note normalized to lowercase to match other scope searches; will preserve input case as appropriate
     };
 
     static final String[] TagSearchList = new String[]{"ol", "ul"};

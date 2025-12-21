@@ -1857,6 +1857,18 @@ public class HtmlParserTest {
             "</svg>", serialized);
     }
 
+    @Test void svgForeignObjectInParagraph() {
+        String html = "<p><svg><foreignObject><div><p>One</p></div></foreignObject></svg></p>";
+        Document doc = Jsoup.parse(html);
+
+        Element foreignObject = doc.expectFirst("foreignObject");
+        assertSvgNamespace(foreignObject);
+        Element div = foreignObject.selectFirst("div");
+        assertNotNull(div, "div should stay within foreignObject");
+        assertHtmlNamespace(div);
+        assertEquals("One", div.expectFirst("p").text());
+    }
+
     @Test void mathParseText() {
         String html = "<div><math><mi><p>One</p><svg><text>Blah</text></svg></mi><ms></ms></div>";
         Document doc = Jsoup.parse(html);
