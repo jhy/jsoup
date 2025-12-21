@@ -25,24 +25,48 @@ public class TagSet {
     static final TagSet HtmlTagSet = initHtmlDefault();
 
     private final Map<String, Map<String, Tag>> tags = new HashMap<>(); // namespace -> tag name -> Tag
-    private final @Nullable TagSet source; // source to pull tags from on demand
+    private final @Nullable TagSet source; // internal fallback for lazy tag copies
     private @Nullable ArrayList<Consumer<Tag>> customizers; // optional onNewTag tag customizer
 
     /**
      Returns a mutable copy of the default HTML tag set.
      */
     public static TagSet Html() {
-        return new TagSet(HtmlTagSet);
+        return new TagSet(HtmlTagSet, null);
+    }
+
+    private TagSet(@Nullable TagSet source, @Nullable ArrayList<Consumer<Tag>> customizers) {
+        this.source = source;
+        this.customizers = customizers;
     }
 
     public TagSet() {
-        source = null;
+        this(null, null);
     }
 
-    public TagSet(TagSet original) {
-        this.source = original;
-        if (original.customizers != null)
-            this.customizers = new ArrayList<>(original.customizers);
+    /**
+     Creates a new TagSet by copying the current tags and customizers from the provided source TagSet. Changes made to
+     one TagSet will not affect the other.
+     @param template the TagSet to copy
+     */
+    public TagSet(TagSet template) {
+        this(template.source, copyCustomizers(template));
+        // copy tags eagerly; any lazy pull-through should come only from the root source (which would be the HTML defaults), not the template itself.
+        // that way the template tagset is not mutated when we do read through
+        if (template.tags.isEmpty()) return;
+
+        for (Map.Entry<String, Map<String, Tag>> namespaceEntry : template.tags.entrySet()) {
+            Map<String, Tag> nsTags = new HashMap<>(namespaceEntry.getValue().size());
+            for (Map.Entry<String, Tag> tagEntry : namespaceEntry.getValue().entrySet()) {
+                nsTags.put(tagEntry.getKey(), tagEntry.getValue().clone());
+            }
+            tags.put(namespaceEntry.getKey(), nsTags);
+        }
+    }
+
+    private static @Nullable ArrayList<Consumer<Tag>> copyCustomizers(TagSet base) {
+        if (base.customizers == null) return null;
+        return new ArrayList<>(base.customizers);
     }
 
     /**

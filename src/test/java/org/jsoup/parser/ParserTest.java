@@ -94,9 +94,9 @@ public class ParserTest {
         // Ensure onNewTag customizers are retained
         Tag custom = clone.tagSet().valueOf("qux", Parser.NamespaceHtml);
         assertTrue(custom.isSelfClosing());
-        // Check that cloned tagset uses the original tag as source when original is modified
+        // Check that cloned tagset does not observe modifications made to the original
         assertNull(clone.tagSet().get("bar", Parser.NamespaceHtml));
         parser.tagSet().add(new Tag("bar"));
-        assertNotNull(clone.tagSet().get("bar", Parser.NamespaceHtml));
+        assertNull(clone.tagSet().get("bar", Parser.NamespaceHtml));
     }
 }

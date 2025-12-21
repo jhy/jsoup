@@ -7,11 +7,14 @@ import org.jsoup.integration.servlets.EchoServlet;
 import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+import org.jsoup.parser.Tag;
+import org.jsoup.parser.TagSet;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -133,5 +136,51 @@ public class SessionTest {
 
         Document doc3 = session.newRequest().url(xmlUrl).get();
         assertEquals(xmlVal, doc3.html()); // did not blow away xml default
+    }
+
+    @Test
+    public void sessionTagSetDoesNotMutateRoot() {
+        Connection session = Jsoup.newSession();
+        TagSet rootTags = session.request().parser().tagSet();
+
+        int rootNamespacesBefore = tagSetNamespaceCount(rootTags);
+
+        Connection request = session.newRequest();
+        Parser parser = request.request().parser();
+        parser.parseInput("<custom>One <b>Two</b></custom>", "http://example.com/");
+
+        int rootNamespacesAfter = tagSetNamespaceCount(rootTags);
+        assertEquals(rootNamespacesBefore, rootNamespacesAfter);
+    }
+
+    @Test
+    public void sessionTagSetCustomizerDoesNotMutateRoot() {
+        Connection session = Jsoup.newSession();
+        TagSet rootTags = session.request().parser().tagSet();
+        rootTags.onNewTag(tag -> {
+            if (!tag.isKnownTag())
+                tag.set(Tag.RcData);
+        });
+
+        int rootNamespacesBefore = tagSetNamespaceCount(rootTags);
+
+        Connection request = session.newRequest();
+        Parser parser = request.request().parser();
+        Document doc = parser.parseInput("<custom>One <b>Two</b></custom>", "https://example.com/");
+        assertEquals(0, doc.select("custom b").size());
+
+        int rootNamespacesAfter = tagSetNamespaceCount(rootTags);
+        assertEquals(rootNamespacesBefore, rootNamespacesAfter);
+    }
+
+    private static int tagSetNamespaceCount(TagSet tagSet) {
+        try {
+            Field tagsField = TagSet.class.getDeclaredField("tags");
+            tagsField.setAccessible(true);
+            Map<?, ?> tags = (Map<?, ?>) tagsField.get(tagSet);
+            return tags.size();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

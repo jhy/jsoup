@@ -33,6 +33,7 @@
 * Custom tags marked as `Tag.Void` now parse and serialize like the built-in void elements: they no longer consume following content, and the XML serializer emits the expected self-closing form. [#2425](https://github.com/jhy/jsoup/issues/2425)
 * The `<br>` element is once again classified as an inline tag (`Tag.isBlock() == false`), matching common developer expectations and its role as phrasing content in HTML, while pretty-printing and text extraction continue to treat it as a line break in the rendered output. [#2387](https://github.com/jhy/jsoup/issues/2387), [#2439](https://github.com/jhy/jsoup/issues/2439)
 * Fixed an intermittent truncation when fetching and parsing remote documents via `Jsoup.connect(url).get()`. On responses without a charset header, the initial charset sniff could sometimes (depending on buffering / `available()` behavior) be mistaken for end-of-stream and a partial parse reused, dropping trailing content. [#2448](https://github.com/jhy/jsoup/issues/2448)
+* TagSet copies no longer mutate their template during lazy lookups, preventing cross-thread `ConcurrentModificationException` when parsing with shared sessions. [#2453](https://github.com/jhy/jsoup/pull/2453)
 
 
 ### Internal Changes
