@@ -173,7 +173,7 @@ public final class Validate {
      * @throws ValidationException if the string is null or empty
      */
     public static void notEmpty(@Nullable String string) {
-        if (string == null || string.length() == 0)
+        if (string == null || string.isEmpty())
             throw new ValidationException("String must not be empty");
     }
 
@@ -184,7 +184,7 @@ public final class Validate {
      * @throws ValidationException if the string is null or empty
      */
     public static void notEmptyParam(@Nullable final String string, final String param) {
-        if (string == null || string.length() == 0)
+        if (string == null || string.isEmpty())
             throw new ValidationException(String.format("The '%s' parameter must not be empty.", param));
     }
 
@@ -195,7 +195,7 @@ public final class Validate {
      * @throws ValidationException if the string is null or empty
      */
     public static void notEmpty(@Nullable String string, String msg) {
-        if (string == null || string.length() == 0)
+        if (string == null || string.isEmpty())
             throw new ValidationException(msg);
     }
 
