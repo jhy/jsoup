@@ -1,9 +1,9 @@
 # jsoup Changelog
 
-## 1.22.1 (PENDING)
+## 1.22.1 (2026-Jan-01)
 
 ### Improvements
-* Added support for using the re2j regular expression engine for CSS selectors, which ensures linear-time performance for regex evaluation. This enables safe handling of arbitrary user-supplied query regexes. To enable, add the `com.google.re2j` dependency to your classpath, e.g.:
+* Added support for using the `re2j` regular expression engine for regex-based CSS selectors (e.g. `[attr~=regex]`, `:matches(regex)`, which ensures linear-time performance for regex evaluation. This allows safer handling of arbitrary user-supplied query regexes. To enable, add the `com.google.re2j` dependency to your classpath, e.g.:
 ```xml
   <dependency>
     <groupId>com.google.re2j</groupId>
@@ -11,10 +11,10 @@
     <version>1.8</version>
   </dependency>
  ```
-  (If you already have that dependency in your classpath, but you want to keep using the Java regex engine, you can disable re2j via `System.setProperty("jsoup.useRe2j", "false")`.) You can confirm that the re2j engine has been enabled correctly by calling `Regex.usingRe2j()`. [#2407](https://github.com/jhy/jsoup/pull/2407)
+  (If you already have that dependency in your classpath, but you want to keep using the Java regex engine, you can disable re2j via `System.setProperty("jsoup.useRe2j", "false")`.) You can confirm that the re2j engine has been enabled correctly by calling `org.jsoup.helper.Regex.usingRe2j()`. [#2407](https://github.com/jhy/jsoup/pull/2407)
 
 * Added an instance method `Parser#unescape(String, boolean)` that unescapes HTML entities using the parser's configuration (e.g. to support error tracking), complementing the existing static utility `Parser.unescapeEntities(String, boolean)`. [#2396](https://github.com/jhy/jsoup/pull/2396)
-* Added a configurable maximum parser depth (number of open elements on stack) to both HTML and XML parsers. The HTML parser now defaults to a depth of 512 to match browser behavior, and protect against unbounded stack growth, while the XML parser keeps unlimited depth by default but can opt into a limit via `Parser#setMaxDepth`. [#2421](https://github.com/jhy/jsoup/issues/2421)
+* Added a configurable maximum parser depth (to limit the number of open elements on stack) to both HTML and XML parsers. The HTML parser now defaults to a depth of 512 to match browser behavior, and protect against unbounded stack growth, while the XML parser keeps unlimited depth by default, but can opt into a limit via `org.jsoup.parser.Parser#setMaxDepth`. [#2421](https://github.com/jhy/jsoup/issues/2421)
 * Build: added CI coverage for JDK 25 [#2403](https://github.com/jhy/jsoup/pull/2403)
 * Build: added a CI fuzzer for contextual fragment parsing (in addition to existing full body HTML and XML fuzzers). [oss-fuzz #14041](https://github.com/google/oss-fuzz/pull/14041)
 
@@ -22,20 +22,19 @@
 * Set a removal schedule of jsoup 1.24.1 for previously deprecated APIs.
 
 ### Bug Fixes
-* Previously cached child Elements of an Element were not correctly invalidated in `Node#replaceWith(Node)`, which could lead to incorrect results when subsequently calling `Element#children()`. [#2391](https://github.com/jhy/jsoup/issues/2391)
+* Previously cached child `Elements` of an `Element` were not correctly invalidated in `Node#replaceWith(Node)`, which could lead to incorrect results when subsequently calling `Element#children()`. [#2391](https://github.com/jhy/jsoup/issues/2391)
 * Attribute selector values are now compared literally without trimming. Previously, jsoup trimmed whitespace from selector values and from element attribute values, which could cause mismatches with browser behavior (e.g. `[attr=" foo "]`). Now matches align with the CSS specification and browser engines. [#2380](https://github.com/jhy/jsoup/issues/2380)
 * When using the JDK HttpClient, any system default proxy (`ProxySelector.getDefault()`) was ignored. Now, the system proxy is used if a per-request proxy is not set. [#2388](https://github.com/jhy/jsoup/issues/2388), [#2390](https://github.com/jhy/jsoup/pull/2390)
-* A ValidationException could be thrown in the adoption agency algorithm with particularly broken input. Now logged as a parse error. [#2393](https://github.com/jhy/jsoup/issues/2393)
+* A `ValidationException` could be thrown in the adoption agency algorithm with particularly broken input. Now logged as a parse error. [#2393](https://github.com/jhy/jsoup/issues/2393)
 * Null characters in the HTML body were not consistently removed; and in foreign content were not correctly replaced. [#2395](https://github.com/jhy/jsoup/issues/2395)
-* An IndexOutOfBoundsException could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397), [#2406](https://github.com/jhy/jsoup/issues/2406)
+* An `IndexOutOfBoundsException` could be thrown when parsing a body fragment with crafted input. Now logged as a parse error. [#2397](https://github.com/jhy/jsoup/issues/2397), [#2406](https://github.com/jhy/jsoup/issues/2406)
 * When using StructuralEvaluators (e.g., a `parent child` selector) across many retained threads, their memoized results could also be retained, increasing memory use. These results are now cleared immediately after use, reducing overall memory consumption. [#2411](https://github.com/jhy/jsoup/issues/2411)
 * Cloning a `Parser` now preserves any custom `TagSet` applied to the parser. [#2422](https://github.com/jhy/jsoup/issues/2422), [#2423](https://github.com/jhy/jsoup/pull/2423)
 * Custom tags marked as `Tag.Void` now parse and serialize like the built-in void elements: they no longer consume following content, and the XML serializer emits the expected self-closing form. [#2425](https://github.com/jhy/jsoup/issues/2425)
 * The `<br>` element is once again classified as an inline tag (`Tag.isBlock() == false`), matching common developer expectations and its role as phrasing content in HTML, while pretty-printing and text extraction continue to treat it as a line break in the rendered output. [#2387](https://github.com/jhy/jsoup/issues/2387), [#2439](https://github.com/jhy/jsoup/issues/2439)
-* Fixed an intermittent truncation when fetching and parsing remote documents via `Jsoup.connect(url).get()`. On responses without a charset header, the initial charset sniff could sometimes (depending on buffering / `available()` behavior) be mistaken for end-of-stream and a partial parse reused, dropping trailing content. [#2448](https://github.com/jhy/jsoup/issues/2448)
-* TagSet copies no longer mutate their template during lazy lookups, preventing cross-thread `ConcurrentModificationException` when parsing with shared sessions. [#2453](https://github.com/jhy/jsoup/pull/2453)
-* Fixed parsing of `<svg>` `foreignObject` content nested within a `<p>`, which could incorrectly move the HTML subtree outside of the SVG. [#2452](https://github.com/jhy/jsoup/issues/2452)
-
+* Fixed an intermittent truncation issue when fetching and parsing remote documents via `Jsoup.connect(url).get()`. On responses without a charset header, the initial charset sniff could sometimes (depending on buffering / `available()` behavior) be mistaken for end-of-stream and a partial parse reused, dropping trailing content. [#2448](https://github.com/jhy/jsoup/issues/2448)
+* `TagSet` copies no longer mutate their template during lazy lookups, preventing cross-thread `ConcurrentModificationException` when parsing with shared sessions. [#2453](https://github.com/jhy/jsoup/pull/2453)
+* Fixed parsing of `<svg>` `foreignObject` content nested within a `<p>`, which could incorrectly move the HTML subtree outside the SVG. [#2452](https://github.com/jhy/jsoup/issues/2452)
 
 ### Internal Changes
 * Deprecated internal helper `org.jsoup.internal.Functions` (for removal in v1.23.1). This was previously used to support older Android API levels without full `java.util.function` coverage; jsoup now requires core library desugaring so this indirection is no longer necessary. [#2412](https://github.com/jhy/jsoup/pull/2412)
