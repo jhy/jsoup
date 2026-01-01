@@ -3,7 +3,7 @@
 ## 1.22.1 (2026-Jan-01)
 
 ### Improvements
-* Added support for using the `re2j` regular expression engine for regex-based CSS selectors (e.g. `[attr~=regex]`, `:matches(regex)`, which ensures linear-time performance for regex evaluation. This allows safer handling of arbitrary user-supplied query regexes. To enable, add the `com.google.re2j` dependency to your classpath, e.g.:
+* Added support for using the `re2j` regular expression engine for regex-based CSS selectors (e.g. `[attr~=regex]`, `:matches(regex)`), which ensures linear-time performance for regex evaluation. This allows safer handling of arbitrary user-supplied query regexes. To enable, add the `com.google.re2j` dependency to your classpath, e.g.:
 ```xml
   <dependency>
     <groupId>com.google.re2j</groupId>
