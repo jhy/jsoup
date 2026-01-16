@@ -1,5 +1,10 @@
 # jsoup Changelog
 
+## 1.22.2 (PENDING)
+
+### Bug Fixes
+* Android (R8/ProGuard): added a rule to ignore the optional `re2j` dependency when not present. [#2459](https://github.com/jhy/jsoup/issues/2459)
+
 ## 1.22.1 (2026-Jan-01)
 
 ### Improvements

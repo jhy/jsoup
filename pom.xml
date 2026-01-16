@@ -328,6 +328,10 @@
     </plugins>
     <resources>
       <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+      <resource>
         <directory>./</directory>
         <targetPath>META-INF/jsoup/</targetPath>
         <filtering>false</filtering>
