@@ -22,7 +22,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
 
 
 /**
- Safe-lists define what HTML (elements and attributes) to allow through the cleaner. Everything else is removed.
+ Safelists define what HTML (elements and attributes) to allow through a {@link Cleaner}. Everything else is removed.
  <p>
  Start with one of the defaults:
  </p>
@@ -53,15 +53,20 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  </ul>
 
  <p>
- The cleaner and these safelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
+ The {@link Cleaner} and these safelists assume that you want to clean a <code>body</code> fragment of HTML (to add user
  supplied HTML into a templated page), and not to clean a full HTML document. If the latter is the case, you could wrap
  the templated document HTML around the cleaned body HTML.
+ </p>
+ <p>
+ Safelists are mutable. A {@link Cleaner} uses the supplied safelist directly, so later changes affect later cleaning
+ calls. If you want to share a safelist across threads, finish configuring it first and do not mutate it while it is in
+ use. To build a variant from an existing configuration, use {@link #Safelist(Safelist)} to make a copy.
  </p>
  <p>
  If you are going to extend a safelist, please be very careful. Make sure you understand what attributes may lead to
  XSS attack vectors. URL attributes are particularly vulnerable and require careful validation. See 
  the <a href="https://owasp.org/www-community/xss-filter-evasion-cheatsheet">XSS Filter Evasion Cheat Sheet</a> for some
- XSS attack examples (that jsoup will safegaurd against the default Cleaner and Safelist configuration).
+ XSS attack examples (that jsoup will safeguard against with the default Cleaner and Safelist configuration).
  </p>
  */
 public class Safelist {

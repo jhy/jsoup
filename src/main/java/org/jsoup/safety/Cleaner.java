@@ -17,18 +17,23 @@ import java.util.List;
 import static org.jsoup.internal.SharedConstants.DummyUri;
 
 /**
- The safelist based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
+ The {@link Safelist}-based HTML cleaner. Use to ensure that end-user provided HTML contains only the elements and attributes
  that you are expecting; no junk, and no cross-site scripting attacks!
  <p>
- The HTML cleaner parses the input as HTML and then runs it through a safe-list, so the output HTML can only contain
+ The HTML cleaner parses the input as HTML and then runs it through a safelist, so the output HTML can only contain
  HTML that is allowed by the safelist.
  </p>
  <p>
  It is assumed that the input HTML is a body fragment; the clean methods only pull from the source's body, and the
- canned safe-lists only allow body contained tags.
+ canned safelists only allow body-contained tags.
  </p>
  <p>
  Rather than interacting directly with a Cleaner object, generally see the {@code clean} methods in {@link org.jsoup.Jsoup}.
+ </p>
+ <p>
+ A Cleaner may be reused across multiple documents and shared across concurrent threads once its {@link Safelist} has
+ been configured. The cleaner uses the supplied safelist directly, so later safelist changes affect later cleaning
+ calls. If you need a variant of an existing configuration, use {@link Safelist#Safelist(Safelist)} to make a copy.
  </p>
  */
 public class Cleaner {

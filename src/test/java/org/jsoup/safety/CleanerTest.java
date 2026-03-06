@@ -16,6 +16,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -224,6 +227,53 @@ public class CleanerTest {
         assertTrue(cleaner.isValid(okDoc));
         assertFalse(cleaner.isValid(Jsoup.parse(nok)));
         assertFalse(new Cleaner(Safelist.none()).isValid(okDoc));
+    }
+
+    @Test void configuredCleanerMayBeSharedAcrossThreads() throws InterruptedException {
+        // https://github.com/jhy/jsoup/issues/2473
+        String html = "<a href='/foo'>Link</a><img src='/bar' alt='Q'>";
+        String baseUri = "https://example.com/";
+        String expected = "<a href=\"https://example.com/foo\">Link</a><img src=\"https://example.com/bar\" alt=\"Q\">";
+        Cleaner cleaner = new Cleaner(Safelist.basicWithImages());
+
+        int numThreads = 10;
+        int numLoops = 20;
+        String[] cleaned = new String[numThreads * numLoops];
+        AtomicInteger next = new AtomicInteger();
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(numThreads);
+        Thread[] threads = new Thread[numThreads];
+
+        for (int i = 0; i < numThreads; i++) {
+            Thread thread = new Thread(() -> {
+                try {
+                    start.await();
+                    for (int j = 0; j < numLoops; j++) {
+                        Document dirty = Jsoup.parseBodyFragment(html, baseUri);
+                        cleaned[next.getAndIncrement()] = cleaner.clean(dirty).body().html();
+                    }
+                } catch (Throwable t) {
+                    failure.compareAndSet(null, t);
+                    if (t instanceof InterruptedException) Thread.currentThread().interrupt();
+                } finally {
+                    done.countDown();
+                }
+            });
+            threads[i] = thread;
+            thread.start();
+        }
+
+        start.countDown();
+        done.await();
+
+        if (failure.get() != null)
+            throw new AssertionError("Concurrent cleaner use failed", failure.get());
+
+        assertEquals(cleaned.length, next.get());
+        for (String clean : cleaned) {
+            assertEquals(expected, clean);
+        }
     }
 
     @Test public void resolvesRelativeLinks() {
