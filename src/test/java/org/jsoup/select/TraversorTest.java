@@ -372,6 +372,180 @@ public class TraversorTest {
         assertEquals("<div><p><span>child</span></p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test
+    void removingTraversalRootInHeadDoesNotEscapeOriginalSubtree() {
+        Document doc = Jsoup.parseBodyFragment("<div>a</div><p>b</p>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node == root)
+                    node.remove();
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;", headOrder.toString());
+        assertEquals("", tailOrder.toString());
+        assertEquals("<p>b</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void removingOnlyTraversalRootInHeadStopsWhenOriginalSlotIsEmpty() {
+        Document doc = Jsoup.parseBodyFragment("<div>a</div>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node == root)
+                    node.remove();
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;", headOrder.toString());
+        assertEquals("", tailOrder.toString());
+        assertEquals("", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void replacingTraversalRootInHeadStaysWithinReplacementSubtree() {
+        Document doc = Jsoup.parseBodyFragment("<div><span>x</span></div><p>y</p>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node == root) {
+                    Element replacement = new Element("section").insertChildren(0, node.childNodes());
+                    node.replaceWith(replacement);
+                }
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;span;x;", headOrder.toString());
+        assertEquals("x;span;section;", tailOrder.toString());
+        assertEquals("<section><span>x</span></section><p>y</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void unwrappingTraversalRootInHeadVisitsExposedTopLevelNodesUntilOriginalBoundary() {
+        Document doc = Jsoup.parseBodyFragment("<div><b>x</b><i>y</i></div><p>z</p>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node == root)
+                    node.unwrap();
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;x;i;y;", headOrder.toString());
+        assertEquals("x;b;y;i;", tailOrder.toString());
+        assertEquals("<b>x</b><i>y</i><p>z</p>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void unwrapInHeadContinuesFromExposedChildren() {
+        Document doc = Jsoup.parseBodyFragment("<div><span><b>x</b><i>y</i></span><u>z</u></div>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node instanceof Element && node.nameIs("span"))
+                    node.unwrap();
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;span;x;i;y;u;z;", headOrder.toString());
+        assertEquals("x;b;y;i;z;u;div;", tailOrder.toString());
+        assertEquals("<div><b>x</b><i>y</i><u>z</u></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void removingCurrentAndOriginalNextInHeadTailsParent() {
+        Document doc = Jsoup.parseBodyFragment("<div>a<em>Two</em></div>");
+        Element root = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node instanceof TextNode && ((TextNode) node).text().equals("a")) {
+                    node.nextSibling().remove();
+                    node.remove();
+                }
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, root);
+
+        assertEquals("div;a;", headOrder.toString());
+        assertEquals("div;", tailOrder.toString());
+        assertEquals("<div></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void beforeAfterRemoveInHeadTailsCurrentSlotAndHeadsFutureSiblings() {
+        Document doc = Jsoup.parse("<div><p>One</p>a<em>Two</em></div>");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node instanceof TextNode && ((TextNode) node).text().equals("a")) {
+                    node.before(new TextNode("b"));
+                    node.after(new TextNode("c"));
+                    node.remove();
+                }
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, doc);
+
+        assertEquals("#root;html;head;body;div;p;One;a;c;em;Two;", headOrder.toString());
+        assertEquals("head;One;p;b;c;Two;em;div;body;html;#root;", tailOrder.toString());
+        assertEquals("<div><p>One</p>bc<em>Two</em></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
     @Test void elementFunctionalTraverse() {
         Document doc = Jsoup.parse("<div><p>1<p>2<p>3");
         Element body = doc.body();

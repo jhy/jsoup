@@ -40,6 +40,8 @@ public interface NodeVisitor {
      <li>If the current node was detached and no node occupies its former sibling position, the current node is not
      passed to {@code tail()}, and traversal resumes at the node that originally followed it.</li>
      </ul>
+     <p>Traversal never advances outside the original root subtree. If the traversal root is detached during
+     {@code head()}, traversal stops at the original root boundary.</p>
 
      @param node the node being visited.
      @param depth the depth of the node, relative to the root node. E.g., the root node has depth 0, and a child node

@@ -10,7 +10,7 @@ import org.jsoup.select.NodeFilter.FilterResult;
  order. The {@link NodeVisitor#head(Node, int)} and {@link NodeVisitor#tail(Node, int)} methods will be called for
  each node.
  <p>During the <code>head()</code> visit, DOM structural changes around the node currently being visited are
- supported, including e.g. {@link Node#replaceWith(Node)} and {@link Node#remove()}. See
+ supported, including {@link Node#replaceWith(Node)} and {@link Node#remove()}. See
  {@link NodeVisitor#head(Node, int) head()} for the traversal contract after mutation. Other non-structural node
  changes are also supported.</p>
  <p>DOM structural changes to the current node are not supported during the <code>tail()</code> visit.</p>
@@ -31,27 +31,32 @@ public class NodeTraversor {
         Validate.notNull(visitor);
         Validate.notNull(root);
         Node node = root;
+        final Node rootNext = root.nextSibling(); // don't traverse siblings beyond the original root
         int depth = 0;
         byte state = VisitHead;
 
-        while (node != null) {
+        while (true) {
             if (state == VisitHead) {
                 // snapshot the current cursor position so we can recover if head() structurally changes it:
-                Node parent    = node.parentNode();
-                Node nextSib   = node.nextSibling();
-                int sibIndex   = parent != null ? node.siblingIndex()    : 0;
-                int childCount = parent != null ? parent.childNodeSize() : 0;
+                Node parent   = node.parentNode();
+                Node next     = node.nextSibling();
+                int  sibIndex = parent != null ? node.siblingIndex() : 0;
 
                 visitor.head(node, depth);
 
                 // any structural changes?
-                if (parent != null && !node.hasParent()) {      // node was removed from parent; try to recover by sibling index
-                    if (parent.childNodeSize() == childCount) { // current slot is still occupied
-                        node = parent.childNode(sibIndex);
-                        state = AfterHead;                      // continue from that slot without re-heading it
-                    } else if (nextSib != null) {               // removed; resume from the original next
-                        node = nextSib;
-                    } else {                                    // removed last child; tail the parent next
+                if (parent != null && node.parentNode() != parent) { // removed / replaced / moved
+                    Node occupant = sibIndex < parent.childNodeSize() ? parent.childNode(sibIndex) : null;
+                    // ^^ the node now at this node's former position
+                    Node boundary = depth == 0 ? rootNext : next;   // don't advance beyond this node when resuming
+                    if (occupant != null && occupant != boundary) {
+                        node = occupant;
+                        state = AfterHead;                          // continue from that slot without re-heading it
+                    } else if (depth == 0) {                        // root detached or replaced
+                        break;
+                    } else if (next != null && next.parentNode() == parent) {
+                        node = next;                                // old slot is empty or shifted to the original next, visit
+                    } else {                                        // removed last child; tail the parent next
                         node = parent;
                         depth--;
                         state = VisitTail;
@@ -59,7 +64,7 @@ public class NodeTraversor {
                 } else {
                     state = AfterHead;
                 }
-                continue;                                       // next loop handles the updated node/state
+                continue;                                           // next loop handles the updated node/state
             }
 
             if (state == AfterHead && node.childNodeSize() > 0) { // descend into current children
@@ -71,10 +76,12 @@ public class NodeTraversor {
 
             visitor.tail(node, depth);
 
-            if (node == root) break; // done
-
             Node next = node.nextSibling();
-            if (next != null) {     // traverse siblings
+            if (depth == 0) {
+                if (next == null || next == rootNext) break; // done with the original root range
+                node = next;
+                state = VisitHead;
+            } else if (next != null) { // traverse siblings
                 node = next;
                 state = VisitHead;
             } else {                // no siblings left, ascend
