@@ -8,6 +8,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.HashSet;
@@ -198,6 +199,177 @@ public class TraversorTest {
         }, doc);
 
         assertEquals("<div><p id=\"2\">Two</p><p></p></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @Test
+    void replacementInHeadCanTailReplacementAndVisitChildren() {
+        // if head() replaces the current node, the replacement should be tailed and its children still traversed
+        Document doc = Jsoup.parseBodyFragment("<div><i>two</i></div>");
+        Element div = doc.expectFirst("div");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override
+            public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if ("i".equals(node.nodeName())) {
+                    Element replacement = new Element("u").insertChildren(0, node.childNodes());
+                    node.replaceWith(replacement);
+                }
+            }
+
+            @Override
+            public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, div);
+
+        assertEquals("div;i;two;", headOrder.toString());
+        assertEquals("two;u;div;", tailOrder.toString());
+        assertEquals("<div><u>two</u></div>", TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(CurrentPositionMutation.class)
+    void supportsCurrentNodeMutationDuringHead(CurrentPositionMutation mutation) {
+        // supported head() mutations at the current cursor should terminate cleanly and continue traversal in order
+        // https://github.com/jhy/jsoup/issues/2472
+        Document doc = Jsoup.parse("<div><p>One</p>a<em>Two</em></div>");
+        AtomicInteger visits = new AtomicInteger();
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                if (visits.incrementAndGet() > MaxHeadVisits)
+                    fail(String.format("Likely loop when applying %s in head()", mutation));
+                trackSeen(node, headOrder);
+                if (node instanceof TextNode && ((TextNode) node).text().equals("a"))
+                    mutation.apply(node);
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, doc);
+
+        assertEquals("#root;html;head;body;div;p;One;a;em;Two;", headOrder.toString());
+        assertEquals(mutation.expectedTailOrder, tailOrder.toString());
+        assertEquals(mutation.expectedHtml, TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    private static final int MaxHeadVisits = 20;
+
+    private enum CurrentPositionMutation {
+        Remove("head;One;p;Two;em;div;body;html;#root;", "<div><p>One</p><em>Two</em></div>") {
+            @Override void apply(Node node) {
+                node.remove();
+            }
+        },
+        Replace("head;One;p;b;Two;em;div;body;html;#root;", "<div><p>One</p>b<em>Two</em></div>") {
+            @Override void apply(Node node) {
+                node.replaceWith(new TextNode("b"));
+            }
+        },
+        BeforeRemove("head;One;p;b;Two;em;div;body;html;#root;", "<div><p>One</p>b<em>Two</em></div>") {
+            @Override void apply(Node node) {
+                node.before(new TextNode("b"));
+                node.remove();
+            }
+        },
+        AfterRemove("head;One;p;b;Two;em;div;body;html;#root;", "<div><p>One</p>b<em>Two</em></div>") {
+            @Override void apply(Node node) {
+                node.after(new TextNode("b"));
+                node.remove();
+            }
+        };
+
+        final String expectedTailOrder;
+        final String expectedHtml;
+
+        CurrentPositionMutation(String expectedTailOrder, String expectedHtml) {
+            this.expectedTailOrder = expectedTailOrder;
+            this.expectedHtml = expectedHtml;
+        }
+
+        abstract void apply(Node node);
+    }
+
+    @ParameterizedTest
+    @EnumSource(SiblingInsertion.class)
+    void siblingInsertionsOnlyVisitFutureNodesDuringHead(SiblingInsertion insertion) {
+        // nodes inserted before the current cursor are not visited; nodes inserted after it are still ahead and are
+        Document doc = Jsoup.parseBodyFragment("<div>a</div>");
+        StringBuilder headTexts = new StringBuilder();
+        StringBuilder tailTexts = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    trackSeen(node, headTexts);
+                    insertion.apply((TextNode) node);
+                }
+            }
+
+            @Override public void tail(Node node, int depth) {
+                if (node instanceof TextNode)
+                    trackSeen(node, tailTexts);
+            }
+        }, doc);
+
+        assertEquals(insertion.expectedTexts, headTexts.toString());
+        assertEquals(insertion.expectedTexts, tailTexts.toString());
+        assertEquals(insertion.expectedHtml, TextUtil.stripNewlines(doc.body().html()));
+    }
+
+    private enum SiblingInsertion {
+        Before("a;", "<div>ba</div>") {
+            @Override void apply(TextNode node) {
+                if (node.text().equals("a"))
+                    node.before(new TextNode("b"));
+            }
+        },
+        After("a;b;", "<div>ab</div>") {
+            @Override void apply(TextNode node) {
+                if (node.text().equals("a"))
+                    node.after(new TextNode("b"));
+            }
+        };
+
+        final String expectedTexts;
+        final String expectedHtml;
+
+        SiblingInsertion(String expectedTexts, String expectedHtml) {
+            this.expectedTexts = expectedTexts;
+            this.expectedHtml = expectedHtml;
+        }
+
+        abstract void apply(TextNode node);
+    }
+
+    @Test
+    void visitsChildrenInsertedInHead() {
+        // when the current node remains attached, children inserted in head() are visited in the same traversal
+        Document doc = Jsoup.parseBodyFragment("<div><p></p></div>");
+        StringBuilder headOrder = new StringBuilder();
+        StringBuilder tailOrder = new StringBuilder();
+
+        NodeTraversor.traverse(new NodeVisitor() {
+            @Override public void head(Node node, int depth) {
+                trackSeen(node, headOrder);
+                if (node instanceof Element && node.nameIs("p"))
+                    ((Element) node).append("<span>child</span>");
+            }
+
+            @Override public void tail(Node node, int depth) {
+                trackSeen(node, tailOrder);
+            }
+        }, doc.body());
+
+        assertEquals("body;div;p;span;child;", headOrder.toString());
+        assertEquals("child;span;p;div;body;", tailOrder.toString());
+        assertEquals("<div><p><span>child</span></p></div>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test void elementFunctionalTraverse() {

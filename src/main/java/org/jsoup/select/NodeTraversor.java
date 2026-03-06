@@ -9,11 +9,18 @@ import org.jsoup.select.NodeFilter.FilterResult;
  A depth-first node traversor. Use to walk through all nodes under and including the specified root node, in document
  order. The {@link NodeVisitor#head(Node, int)} and {@link NodeVisitor#tail(Node, int)} methods will be called for
  each node.
- <p> During traversal, structural changes to nodes are supported (e.g. {{@link Node#replaceWith(Node)},
- {@link Node#remove()}}
- </p>
+ <p>During the <code>head()</code> visit, DOM structural changes around the node currently being visited are
+ supported, including e.g. {@link Node#replaceWith(Node)} and {@link Node#remove()}. See
+ {@link NodeVisitor#head(Node, int) head()} for the traversal contract after mutation. Other non-structural node
+ changes are also supported.</p>
+ <p>DOM structural changes to the current node are not supported during the <code>tail()</code> visit.</p>
  */
 public class NodeTraversor {
+    // cursor state
+    private static final byte VisitHead = 0;
+    private static final byte AfterHead = 1;
+    private static final byte VisitTail = 2;
+
     /**
      Run a depth-first traverse of the root and all of its descendants.
      @param visitor Node visitor.
@@ -25,56 +32,55 @@ public class NodeTraversor {
         Validate.notNull(root);
         Node node = root;
         int depth = 0;
+        byte state = VisitHead;
 
         while (node != null) {
-            Node parent = node.parentNode(); // remember parent to find nodes that get replaced in .head
-            int origSize = parent != null ? parent.childNodeSize() : 0;
-            Node next = node.nextSibling();
+            if (state == VisitHead) {
+                // snapshot the current cursor position so we can recover if head() structurally changes it:
+                Node parent    = node.parentNode();
+                Node nextSib   = node.nextSibling();
+                int sibIndex   = parent != null ? node.siblingIndex()    : 0;
+                int childCount = parent != null ? parent.childNodeSize() : 0;
 
-            visitor.head(node, depth); // visit current node
+                visitor.head(node, depth);
 
-            // check for modifications to the tree
-            if (parent != null && !node.hasParent()) { // removed or replaced
-                if (origSize == parent.childNodeSize()) { // replaced
-                    node = parent.childNode(node.siblingIndex()); // replace ditches parent but keeps sibling index
-                    continue;
-                }
-                // else, removed
-                node = next;
-                if (node == null) {
-                    // was last in parent. need to walk up the tree, tail()ing on the way, until we find a suitable next. Otherwise, would revisit ancestor nodes.
-                    node = parent;
-                    while (true) {
+                // any structural changes?
+                if (parent != null && !node.hasParent()) {      // node was removed from parent; try to recover by sibling index
+                    if (parent.childNodeSize() == childCount) { // current slot is still occupied
+                        node = parent.childNode(sibIndex);
+                        state = AfterHead;                      // continue from that slot without re-heading it
+                    } else if (nextSib != null) {               // removed; resume from the original next
+                        node = nextSib;
+                    } else {                                    // removed last child; tail the parent next
+                        node = parent;
                         depth--;
-                        visitor.tail(node, depth);
-                        if (node == root) break;
-                        if (node.nextSibling() != null) {
-                            node = node.nextSibling();
-                            break;
-                        }
-                        node = node.parentNode();
-                        if (node == null) break;
+                        state = VisitTail;
                     }
-                    if (node == root || node == null) break; // done, break outer
+                } else {
+                    state = AfterHead;
                 }
-                continue; // don't tail removed
+                continue;                                       // next loop handles the updated node/state
             }
 
-            if (node.childNodeSize() > 0) { // descend
+            if (state == AfterHead && node.childNodeSize() > 0) { // descend into current children
                 node = node.childNode(0);
                 depth++;
-            } else {
-                while (true) {
-                    assert node != null; // as depth > 0, will have parent
-                    if (!(node.nextSibling() == null && depth > 0)) break;
-                    visitor.tail(node, depth); // when no more siblings, ascend
-                    node = node.parentNode();
-                    depth--;
-                }
-                visitor.tail(node, depth);
-                if (node == root)
-                    break;
-                node = node.nextSibling();
+                state = VisitHead;
+                continue;
+            }
+
+            visitor.tail(node, depth);
+
+            if (node == root) break; // done
+
+            Node next = node.nextSibling();
+            if (next != null) {     // traverse siblings
+                node = next;
+                state = VisitHead;
+            } else {                // no siblings left, ascend
+                node = node.parentNode();
+                depth--;
+                state = VisitTail;
             }
         }
     }

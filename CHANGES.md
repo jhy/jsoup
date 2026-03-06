@@ -4,6 +4,7 @@
 
 ### Bug Fixes
 * Android (R8/ProGuard): added a rule to ignore the optional `re2j` dependency when not present. [#2459](https://github.com/jhy/jsoup/issues/2459)
+* In `NodeTraversor`, removing or replacing the current node during `head()` no longer re-visits the replacement node, preventing loops. Also clarified in documentation the which inserted nodes are visited during the current traversal. [#2472](https://github.com/jhy/jsoup/issues/2472)
 
 ## 1.22.1 (2026-Jan-01)
 
