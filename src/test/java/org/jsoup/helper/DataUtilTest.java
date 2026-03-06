@@ -418,4 +418,25 @@ public class DataUtilTest {
         }
     }
 
+    @Test
+    void charsetSniffingIgnoresAdvisoryAvailableIOException() throws IOException {
+        // https://github.com/jhy/jsoup/issues/2474
+        // JDK 8's HttpURLConnection stream may throw from available() once the peer has closed the socket;
+        // that advisory failure does not mean we can't still consume bytes already buffered or read to clean EOF.
+        String html = "<!doctype html><html><head><title>One</title></head><body>Two</body></html>";
+        byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+        InputStream stream = new FilterInputStream(new ByteArrayInputStream(bytes)) {
+            @Override
+            public int available() throws IOException {
+                throw new IOException("Stream closed.");
+            }
+        };
+        ControllableInputStream in = ControllableInputStream.wrap(stream, 0);
+
+        Document doc = DataUtil.parseInputStream(in, null, "http://example.com/", Parser.htmlParser());
+
+        assertEquals("One", doc.title());
+        assertEquals("Two", doc.body().text());
+    }
+
 }

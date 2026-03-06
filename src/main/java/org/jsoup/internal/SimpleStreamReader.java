@@ -43,7 +43,7 @@ public class SimpleStreamReader extends Reader {
         while (true) {
             CoderResult result = decoder.decode(byteBuf, charBuf, readFully);
             if (result.isUnderflow()) {
-                if (readFully || !charBuf.hasRemaining() || (charBuf.position() > 0) && !(in.available() > 0))
+                if (readFully || !charBuf.hasRemaining() || (charBuf.position() > 0) && !hasAvailableBytes())
                     break;
                 int read = bufferUp();
                 if (read < 0) {
@@ -62,6 +62,14 @@ public class SimpleStreamReader extends Reader {
             return readFully ? -1 : 0; // 0 if there was a surrogate and reader tried to read only 1.
         }
         return charBuf.position();
+    }
+
+    private boolean hasAvailableBytes() {
+        try {
+            return in.available() > 0;
+        } catch (IOException e) {
+            return false; // available() is advisory; a real read can still consume buffered bytes or reach EOF
+        }
     }
 
     private int bufferUp() throws IOException {

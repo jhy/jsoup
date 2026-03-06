@@ -80,7 +80,11 @@ class SimpleBufferedInput extends FilterInputStream {
             bufLength = read + bufPos;
             capRemaining -= read;
             while (byteBuf.length - bufLength > 0 && capRemaining > 0) { // read in more if we have space, without blocking
-                if (in.available() < 1) break;
+                try {
+                    if (in.available() < 1) break;
+                } catch (IOException e) {
+                    break; // available() is advisory; keep the bytes we've already buffered
+                }
                 toRead = Math.min(byteBuf.length - bufLength, capRemaining);
                 if (toRead <= 0) break;
                 read = in.read(byteBuf, bufLength, toRead);
@@ -116,8 +120,7 @@ class SimpleBufferedInput extends FilterInputStream {
         if (buffered > 0) {
             return buffered; // doesn't include those in.available(), but mostly used as a block test
         }
-        int avail = inReadFully ? 0 : in.available();
-        return avail;
+        return inReadFully ? 0 : in.available();
     }
 
     void capRemaining(int newRemaining) {
