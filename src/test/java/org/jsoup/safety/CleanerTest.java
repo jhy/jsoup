@@ -579,6 +579,29 @@ public class CleanerTest {
         assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
     }
 
+    @Test void canonicalizesEnforcedAttributes() {
+        Document customDirty = Jsoup.parse("<a REL='external'>One</a>", "",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner customCleaner = new Cleaner(Safelist.none()
+            .addTags("a")
+            .addEnforcedAttribute("a", "rel", "external"));
+        assertEquals("<a rel=\"external\">One</a>", customCleaner.clean(customDirty).body().html());
+    }
+
+    @Test void canonicalizesNofollowEnforcedAttribute() {
+        Document dirty = Jsoup.parse("<a href='http://external.com/' REL='nofollow'>One</a>", "",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
+    }
+
+    @Test void preservesMatchingSourceNofollowWhenEnforcementSuppressed() {
+        Document dirty = Jsoup.parse("<a href='http://example.com/foo' REL='nofollow'>One</a>", "http://example.com/",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        assertEquals("<a href=\"http://example.com/foo\" REL=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
+    }
+
     @Test void discardsSvgScriptData() {
         // https://github.com/jhy/jsoup/issues/2320
         Safelist svgOk = Safelist.none().addTags("svg");

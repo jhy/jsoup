@@ -215,7 +215,11 @@ public class Cleaner {
             }
         }
 
-        destAttrs.addAll(enforcedAttrs);
+        // apply enforced attributes case-insensitively, so a preserved-case source attr is canonicalized to the enforced key
+        for (Attribute enforcedAttr : enforcedAttrs) {
+            destAttrs.removeIgnoreCase(enforcedAttr.getKey());
+            destAttrs.put(enforcedAttr.getKey(), enforcedAttr.getValue());
+        }
         dest.attributes().addAll(destAttrs); // re-attach, if removed in clear
         return new ElementMeta(dest, numDiscarded);
     }

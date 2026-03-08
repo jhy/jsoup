@@ -7,6 +7,7 @@
 * In `NodeTraversor`, removing or replacing the current node during `head()` no longer re-visits the replacement node, preventing loops. Traversal now continues correctly from nodes that occupy the original position after mutation, and will not advance past the original root subtree. Also, clarified in the documentation which inserted nodes are visited during the current traversal. [#2472](https://github.com/jhy/jsoup/issues/2472)
 * Parsing during charset sniffing no longer fails if an advisory `available()` call throws `IOException`, as seen on JDK 8 `HttpURLConnection`. [#2474](https://github.com/jhy/jsoup/issues/2474)
 * `Cleaner` no longer makes relative URL attributes in the input document absolute when cleaning or validating a `Document`. URL normalization now applies only to the cleaned output, and `Safelist.isSafeAttribute()` is side effect free. [#2475](https://github.com/jhy/jsoup/issues/2475)
+* `Cleaner` no longer duplicates enforced attributes when the input `Document` preserves attribute case. A case-variant source attribute is now replaced by the enforced attribute in the cleaned output. [#2476](https://github.com/jhy/jsoup/issues/2476)
 
 ## 1.22.1 (2026-Jan-01)
 
