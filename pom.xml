@@ -412,10 +412,21 @@
                 <phase>compile</phase>
                 <goals>
                   <goal>compile</goal>
-                  <goal>testCompile</goal>
                 </goals>
                 <configuration>
                   <release>8</release>
+                </configuration>
+              </execution>
+
+              <execution>
+                <id>testCompile-java-11</id>
+                <phase>test-compile</phase>
+                <goals>
+                  <goal>testCompile</goal>
+                </goals>
+                <configuration>
+                  <useModulePath>false</useModulePath>
+                  <release>11</release>
                 </configuration>
               </execution>
 
