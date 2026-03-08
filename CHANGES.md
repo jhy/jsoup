@@ -4,6 +4,7 @@
 
 ### Improvements
 * Expanded and clarified `NodeTraversor` support for in-place DOM rewrites during `NodeVisitor.head()`. Current-node edits such as `remove`, `replace`, and `unwrap` now recover more predictably, while traversal stays within the original root subtree. This makes single-pass tree cleanup and normalization visitors easier to write, for example when unwrapping presentational elements or replacing text nodes as you walk the DOM. [#2472](https://github.com/jhy/jsoup/issues/2472)
+* Documentation: clarified that a configured `Cleaner` may be reused across concurrent threads, and that shared `Safelist` instances should not be mutated while in use. [#2473](https://github.com/jhy/jsoup/issues/2473)
 
 ### Bug Fixes
 * Android (R8/ProGuard): added a rule to ignore the optional `re2j` dependency when not present. [#2459](https://github.com/jhy/jsoup/issues/2459)
