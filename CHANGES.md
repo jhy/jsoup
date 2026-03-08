@@ -2,9 +2,12 @@
 
 ## 1.22.2 (PENDING)
 
+### Improvements
+* Expanded and clarified `NodeTraversor` support for in-place DOM rewrites during `NodeVisitor.head()`. Current-node edits such as `remove`, `replace`, and `unwrap` now recover more predictably, while traversal stays within the original root subtree. This makes single-pass tree cleanup and normalization visitors easier to write, for example when unwrapping presentational elements or replacing text nodes as you walk the DOM. [#2472](https://github.com/jhy/jsoup/issues/2472)
+
 ### Bug Fixes
 * Android (R8/ProGuard): added a rule to ignore the optional `re2j` dependency when not present. [#2459](https://github.com/jhy/jsoup/issues/2459)
-* In `NodeTraversor`, removing or replacing the current node during `head()` no longer re-visits the replacement node, preventing loops. Traversal now continues correctly from nodes that occupy the original position after mutation, and will not advance past the original root subtree. Also, clarified in the documentation which inserted nodes are visited during the current traversal. [#2472](https://github.com/jhy/jsoup/issues/2472)
+* Fixed a `NodeTraversor` regression in 1.21.2 where removing or replacing the current node during `head()` could revisit the replacement node and loop indefinitely. The traversal docs now also clarify which inserted nodes are visited in the current pass. [#2472](https://github.com/jhy/jsoup/issues/2472)
 * Parsing during charset sniffing no longer fails if an advisory `available()` call throws `IOException`, as seen on JDK 8 `HttpURLConnection`. [#2474](https://github.com/jhy/jsoup/issues/2474)
 * `Cleaner` no longer makes relative URL attributes in the input document absolute when cleaning or validating a `Document`. URL normalization now applies only to the cleaned output, and `Safelist.isSafeAttribute()` is side effect free. [#2475](https://github.com/jhy/jsoup/issues/2475)
 * `Cleaner` no longer duplicates enforced attributes when the input `Document` preserves attribute case. A case-variant source attribute is now replaced by the enforced attribute in the cleaned output. [#2476](https://github.com/jhy/jsoup/issues/2476)
