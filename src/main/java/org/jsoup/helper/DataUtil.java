@@ -238,7 +238,7 @@ public final class DataUtil {
     private static final Evaluator metaCharset = Selector.evaluatorOf("meta[http-equiv=content-type], meta[charset]");
 
     static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
-        Document doc = null;
+        Document parsedDocument = null;
         // read the start of the stream and look for a BOM or meta charset:
         // look for BOM - overrides any other header or input
         String bomCharset = detectCharsetFromBom(input); // resets / consumes appropriately
@@ -252,7 +252,7 @@ public final class DataUtil {
             input.mark(firstReadBufferSize);
             input.allowClose(false); // ignores closes during parse, in case we need to rewind
             try (Reader reader = new SimpleStreamReader(input, UTF_8)) { // input is currently capped to firstReadBufferSize
-                doc = parser.parseInput(reader, baseUri);
+                parsedDocument = parser.parseInput(reader, baseUri);
                 input.reset();
                 input.max(origMax); // reset for a full read if required
             } catch (UncheckedIOException e) {
@@ -262,20 +262,20 @@ public final class DataUtil {
             }
 
             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
-            Elements metaElements = doc.select(metaCharset);
-            String foundCharset = null; // if not found, will keep utf-8 as best attempt
-            for (Element meta : metaElements) {
-                if (meta.hasAttr("http-equiv"))
-                    foundCharset = getCharsetFromContentType(meta.attr("content"));
-                if (foundCharset == null && meta.hasAttr("charset"))
-                    foundCharset = meta.attr("charset");
-                if (foundCharset != null)
+            Elements metaElements = parsedDocument.select(metaCharset);
+            String detectedCharset = null; // if not found, will keep utf-8 as best attempt
+            for (Element metaElement : metaElements) {
+                if (metaElement.hasAttr("http-equiv"))
+                    detectedCharset = getCharsetFromContentType(metaElement.attr("content"));
+                if (detectedCharset == null && metaElement.hasAttr("charset"))
+                    detectedCharset = metaElement.attr("charset");
+                if (detectedCharset != null)
                     break;
             }
 
             // look for <?xml encoding='ISO-8859-1'?>
-            if (foundCharset == null && doc.childNodeSize() > 0) {
-                Node first = doc.childNode(0);
+            if (detectedCharset == null && parsedDocument.childNodeSize() > 0) {
+                Node first = parsedDocument.childNode(0);
                 XmlDeclaration decl = null;
                 if (first instanceof XmlDeclaration)
                     decl = (XmlDeclaration) first;
@@ -285,18 +285,18 @@ public final class DataUtil {
                         decl = comment.asXmlDeclaration();
                 }
                 if (decl != null && decl.name().equalsIgnoreCase("xml")) {
-                    foundCharset = decl.attr("encoding");
+                    detectedCharset = decl.attr("encoding");
                 }
             }
-            foundCharset = validateCharset(foundCharset);
-            if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
-                foundCharset = foundCharset.trim().replaceAll("[\"']", "");
-                charsetName = foundCharset;
-                doc = null;
+            detectedCharset = validateCharset(detectedCharset);
+            if (detectedCharset != null && !detectedCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
+                detectedCharset = detectedCharset.trim().replaceAll("[\"']", "");
+                charsetName = detectedCharset;
+                parsedDocument = null;
             } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
                 input.close(); // the parser tried to close it
             } else {
-                doc = null;
+                parsedDocument = null;
             }
         } else { // specified by content type header (or by user on file load)
             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
@@ -306,7 +306,7 @@ public final class DataUtil {
         if (charsetName == null)
             charsetName = defaultCharsetName;
         Charset charset = charsetName.equals(defaultCharsetName) ? UTF_8 : Charset.forName(charsetName);
-        return new CharsetDoc(charset, doc, input);
+        return new CharsetDoc(charset, parsedDocument, input);
     }
 
     static Document parseInputStream(CharsetDoc charsetDoc, String baseUri, Parser parser) throws IOException {
@@ -367,13 +367,13 @@ public final class DataUtil {
         return null;
     }
 
-    private @Nullable static String validateCharset(@Nullable String cs) {
-        if (cs == null || cs.length() == 0) return null;
-        cs = cs.trim().replaceAll("[\"']", "");
+    private @Nullable static String validateCharset(@Nullable String charsetName) {
+        if (charsetName == null || charsetName.length() == 0) return null;
+        charsetName = charsetName.trim().replaceAll("[\"']", "");
         try {
-            if (Charset.isSupported(cs)) return cs;
-            cs = cs.toUpperCase(Locale.ENGLISH);
-            if (Charset.isSupported(cs)) return cs;
+            if (Charset.isSupported(charsetName)) return charsetName;
+            charsetName = charsetName.toUpperCase(Locale.ENGLISH);
+            if (Charset.isSupported(charsetName)) return charsetName;
         } catch (IllegalCharsetNameException e) {
             // if all this charset matching fails.... we just take the default
         }
