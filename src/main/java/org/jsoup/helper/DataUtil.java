@@ -140,7 +140,7 @@ public final class DataUtil {
         StreamParser streamer = new StreamParser(parser);
         String charsetName = charset != null? charset.name() : null;
         try {
-            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+            CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
             Reader reader = new SimpleStreamReader(charsetDoc.input, charsetDoc.charset);
             streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
         } catch (IOException e) {
@@ -204,19 +204,6 @@ public final class DataUtil {
         int len;
         while ((len = in.read(buffer)) != -1) {
             out.write(buffer, 0, len);
-        }
-    }
-
-    /** A struct to return a detected charset, and a document (if fully read). */
-    static class CharsetDoc {
-        Charset charset;
-        InputStream input;
-        @Nullable Document doc;
-
-        CharsetDoc(Charset charset, @Nullable Document doc, InputStream input) {
-            this.charset = charset;
-            this.input = input;
-            this.doc = doc;
         }
     }
 
