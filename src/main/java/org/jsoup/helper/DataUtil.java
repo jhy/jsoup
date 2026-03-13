@@ -400,15 +400,19 @@ public final class DataUtil {
         input.reset();
 
         // 16 and 32 decoders consume the BOM to determine be/le; utf-8 should be consumed here
-        if (bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF || // BE
-            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00) { // LE
-            return "UTF-32"; // and I hope it's on your system
-        } else if (bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF || // BE
-            bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE) {
-            return "UTF-16"; // in all Javas
-        } else if (bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF) {
+        final boolean isUtf32BigEndian = bom[0] == 0x00 && bom[1] == 0x00 && bom[2] == (byte) 0xFE && bom[3] == (byte) 0xFF;
+        final boolean isUtf32LittleEndian = bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE && bom[2] == 0x00 && bom[3] == 0x00;
+        final boolean isUtf16BigEndian = bom[0] == (byte) 0xFE && bom[1] == (byte) 0xFF;
+        final boolean isUtf16LittleEndian = bom[0] == (byte) 0xFF && bom[1] == (byte) 0xFE;
+        final boolean isUtf8Pattern = bom[0] == (byte) 0xEF && bom[1] == (byte) 0xBB && bom[2] == (byte) 0xBF;
+
+        if (isUtf32BigEndian || isUtf32LittleEndian) {
+            return "UTF-32";
+        } else if (isUtf16BigEndian || isUtf16LittleEndian) {
+            return "UTF-16";
+        } else if (isUtf8Pattern) {
             input.read(bom, 0, 3); // consume the UTF-8 BOM
-            return "UTF-8"; // in all Javas
+            return "UTF-8";
         }
         return null;
     }
