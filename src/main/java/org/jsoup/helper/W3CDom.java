@@ -126,24 +126,28 @@ public class W3CDom {
             if (properties != null)
                 transformer.setOutputProperties(propertiesFromMap(properties));
 
-            if (doc.getDoctype() != null) {
-                DocumentType doctype = doc.getDoctype();
-                if (!StringUtil.isBlank(doctype.getPublicId()))
-                    transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
-                if (!StringUtil.isBlank(doctype.getSystemId()))
-                    transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-                    // handle <!doctype html> for legacy dom.
-                else if (doctype.getName().equalsIgnoreCase("html")
-                    && StringUtil.isBlank(doctype.getPublicId())
-                    && StringUtil.isBlank(doctype.getSystemId()))
-                    transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
-            }
+            configureDoctype(doc, transformer);
 
             transformer.transform(domSource, result);
             return writer.toString();
 
         } catch (TransformerException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    private static void configureDoctype(Document doc, Transformer transformer) {
+        if (doc.getDoctype() != null) {
+            DocumentType doctype = doc.getDoctype();
+            if (!StringUtil.isBlank(doctype.getPublicId()))
+                transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
+            if (!StringUtil.isBlank(doctype.getSystemId()))
+                transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
+                // handle <!doctype html> for legacy dom.
+            else if (doctype.getName().equalsIgnoreCase("html")
+                && StringUtil.isBlank(doctype.getPublicId())
+                && StringUtil.isBlank(doctype.getSystemId()))
+                transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
         }
     }
 
