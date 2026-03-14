@@ -418,6 +418,8 @@ public class HttpConnection implements Connection {
             }
         }
 
+        protected int timeoutMilliseconds;
+
         URL url = UnsetUrl;
         Method method = Method.GET;
         Map<String, List<String>> headers;
@@ -426,6 +428,7 @@ public class HttpConnection implements Connection {
         private Base() {
             headers = new LinkedHashMap<>();
             cookies = new LinkedHashMap<>();
+            timeoutMilliseconds = 30000; // 30 seconds
         }
 
         private Base(Base<T> copy) {
@@ -436,6 +439,7 @@ public class HttpConnection implements Connection {
                 headers.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
             cookies = new LinkedHashMap<>(); cookies.putAll(copy.cookies); // just holds strings
+            timeoutMilliseconds = copy.timeoutMilliseconds;
         }
 
         @Override
@@ -603,6 +607,12 @@ public class HttpConnection implements Connection {
         public Map<String, String> cookies() {
             return cookies;
         }
+
+        public T timeout(int millis) {
+            Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
+            timeoutMilliseconds = millis;
+            return (T) this;
+        }
     }
 
     public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
@@ -613,7 +623,6 @@ public class HttpConnection implements Connection {
 
         HttpConnection connection;
         private @Nullable Proxy proxy;
-        private int timeoutMilliseconds;
         private int maxBodySizeBytes;
         private boolean followRedirects;
         private final Collection<Connection.KeyVal> data;
@@ -634,7 +643,6 @@ public class HttpConnection implements Connection {
 
         Request() {
             super();
-            timeoutMilliseconds = 30000; // 30 seconds
             maxBodySizeBytes = 1024 * 1024 * 2; // 2MB
             followRedirects = true;
             data = new ArrayList<>();
@@ -650,7 +658,6 @@ public class HttpConnection implements Connection {
             connection = copy.connection;
             proxy = copy.proxy;
             postDataCharset = copy.postDataCharset;
-            timeoutMilliseconds = copy.timeoutMilliseconds;
             maxBodySizeBytes = copy.maxBodySizeBytes;
             followRedirects = copy.followRedirects;
             data = new ArrayList<>(); // data not copied
@@ -686,13 +693,6 @@ public class HttpConnection implements Connection {
         @Override
         public int timeout() {
             return timeoutMilliseconds;
-        }
-
-        @Override
-        public Request timeout(int millis) {
-            Validate.isTrue(millis >= 0, "Timeout milliseconds must be 0 (infinite) or greater");
-            timeoutMilliseconds = millis;
-            return this;
         }
 
         @Override
@@ -1012,7 +1012,7 @@ public class HttpConnection implements Connection {
         @Override public StreamParser streamParser() throws IOException {
             ControllableInputStream stream = prepareParse();
             String baseUri = url.toExternalForm();
-            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
+            CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
             // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
 
             // set up the stream parser and rig this connection up to the parsed doc:
