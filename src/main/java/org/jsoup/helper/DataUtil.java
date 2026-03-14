@@ -388,4 +388,12 @@ public final class DataUtil {
         }
         return null;
     }
+
+    /**
+     * @deprecated Use {@link StringUtil#validateCharset(String)}
+     */
+    @Deprecated
+    static @Nullable String validateCharset(@Nullable String charsetName) {
+        return StringUtil.validateCharset(charsetName);
+    }
 }
