@@ -691,6 +691,12 @@ public class HttpConnection implements Connection {
         }
 
         @Override
+        public Request timeout(int millis) {
+            super.timeout(millis);
+            return this;
+        }
+
+        @Override
         public int timeout() {
             return timeoutMilliseconds;
         }

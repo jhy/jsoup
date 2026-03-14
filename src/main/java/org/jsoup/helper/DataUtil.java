@@ -390,10 +390,13 @@ public final class DataUtil {
     }
 
     /**
+     * Parse out a charset from a content type header.
+     * @param charsetName e.g. "text/html; charset=EUC-JP"
+     * @return "EUC-JP", or null if not found.
      * @deprecated Use {@link StringUtil#validateCharset(String)}
      */
     @Deprecated
-    static @Nullable String validateCharset(@Nullable String charsetName) {
+    public static @Nullable String validateCharset(@Nullable String charsetName) {
         return StringUtil.validateCharset(charsetName);
     }
 }
