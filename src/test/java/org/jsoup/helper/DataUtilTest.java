@@ -376,7 +376,7 @@ public class DataUtilTest {
         byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
         ControllableInputStream in = ControllableInputStream.wrap(new BufferedOnceAvailableStream(bytes), 0);
 
-        DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(in, null, "http://example.com/", Parser.htmlParser());
+        CharsetDoc charsetDoc = DataUtil.detectCharset(in, null, "http://example.com/", Parser.htmlParser());
         Document doc = DataUtil.parseInputStream(charsetDoc, "http://example.com/", Parser.htmlParser());
 
         assertNotNull(doc.selectFirst("hr"), "hr should survive the sniff + full parse");
