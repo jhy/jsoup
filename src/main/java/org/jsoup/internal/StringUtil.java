@@ -5,9 +5,12 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -62,6 +65,19 @@ public final class StringUtil {
      */
     public static String join(String[] strings, String sep) {
         return join(Arrays.asList(strings), sep);
+    }
+
+    public @Nullable static String validateCharset(@Nullable String charsetName) {
+        if (charsetName == null || charsetName.length() == 0) return null;
+        charsetName = charsetName.trim().replaceAll("[\"']", "");
+        try {
+            if (Charset.isSupported(charsetName)) return charsetName;
+            charsetName = charsetName.toUpperCase(Locale.ENGLISH);
+            if (Charset.isSupported(charsetName)) return charsetName;
+        } catch (IllegalCharsetNameException e) {
+            // if all this charset matching fails.... we just take the default
+        }
+        return null;
     }
 
     /**

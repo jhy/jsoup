@@ -27,10 +27,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -275,7 +273,7 @@ public final class DataUtil {
                     detectedCharset = decl.attr("encoding");
                 }
             }
-            detectedCharset = validateCharset(detectedCharset);
+            detectedCharset = StringUtil.validateCharset(detectedCharset);
             if (detectedCharset != null && !detectedCharset.equalsIgnoreCase(defaultCharsetName)) { // need to re-decode. (case-insensitive check here to match how validate works)
                 detectedCharset = detectedCharset.trim().replaceAll("[\"']", "");
                 charsetName = detectedCharset;
@@ -349,20 +347,7 @@ public final class DataUtil {
         if (m.find()) {
             String charset = m.group(1).trim();
             charset = charset.replace("charset=", "");
-            return validateCharset(charset);
-        }
-        return null;
-    }
-
-    private @Nullable static String validateCharset(@Nullable String charsetName) {
-        if (charsetName == null || charsetName.length() == 0) return null;
-        charsetName = charsetName.trim().replaceAll("[\"']", "");
-        try {
-            if (Charset.isSupported(charsetName)) return charsetName;
-            charsetName = charsetName.toUpperCase(Locale.ENGLISH);
-            if (Charset.isSupported(charsetName)) return charsetName;
-        } catch (IllegalCharsetNameException e) {
-            // if all this charset matching fails.... we just take the default
+            return StringUtil.validateCharset(charset);
         }
         return null;
     }
