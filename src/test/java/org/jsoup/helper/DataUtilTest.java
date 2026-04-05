@@ -200,6 +200,14 @@ public class DataUtilTest {
     }
 
     @Test
+    public void streamParserWorksWhenCharsetDetectionFullyReadsFile() throws IOException {
+        // small enough to be fully consumed during charset sniffing
+        Path in = getPath("/htmltests/charset-base.html");
+        Document doc = DataUtil.streamParser(in, null, "http://example.com", Parser.htmlParser()).complete();
+        assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
+    }
+
+    @Test
     public void supportsUTF8BOM() throws IOException {
         File in = getFile("/bomtests/bom_utf8.html");
         Document doc = Jsoup.parse(in, null, "http://example.com");

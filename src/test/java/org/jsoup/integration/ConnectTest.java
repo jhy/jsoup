@@ -405,10 +405,10 @@ public class ConnectTest {
         Connection.Response res = Jsoup.connect(echoUrl).execute().readFully();
 
         Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
+        assertEquals("Webserver Environment Variables", doc.title());
 
         Document doc2 = res.parse();
-        assertTrue(doc2.title().contains("Environment"));
+        assertEquals("Webserver Environment Variables", doc2.title());
     }
 
     @Test
@@ -416,10 +416,29 @@ public class ConnectTest {
         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
 
         Document doc = res.parse();
-        assertTrue(doc.title().contains("Environment"));
+        assertEquals("Webserver Environment Variables", doc.title());
 
         Document doc2 = res.parse();
-        assertTrue(doc2.title().contains("Environment"));
+        assertEquals("Webserver Environment Variables", doc2.title());
+    }
+
+    @Test
+    public void bufferedParseWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute().bufferUp();
+
+        Document doc = res.parse();
+        assertEquals("UTF-8", res.charset());
+        assertEquals("http://example.com/foo.jpg", doc.expectFirst("img").absUrl("src"));
+    }
+
+    @Test
+    public void bufferedStreamParserWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
+        // https://github.com/jhy/jsoup/issues/2483
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute().bufferUp();
+
+        Document doc = res.streamParser().complete();
+        assertEquals("UTF-8", res.charset());
+        assertEquals("http://example.com/foo.jpg", doc.expectFirst("img").absUrl("src"));
     }
 
     @Test
