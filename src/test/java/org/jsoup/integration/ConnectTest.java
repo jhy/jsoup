@@ -424,7 +424,7 @@ public class ConnectTest {
 
     @Test
     public void bufferedParseWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
-        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute().bufferUp();
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute();
 
         Document doc = res.parse();
         assertEquals("UTF-8", res.charset());
@@ -434,7 +434,7 @@ public class ConnectTest {
     @Test
     public void bufferedStreamParserWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
         // https://github.com/jhy/jsoup/issues/2483
-        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute().bufferUp();
+        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute();
 
         Document doc = res.streamParser().complete();
         assertEquals("UTF-8", res.charset());
