@@ -1181,8 +1181,9 @@ public class HttpConnection implements Connection {
         static String fixHeaderEncoding(@Nullable String val) {
             if (val == null) return val;
             // If we can't encode the string as 8859, then it couldn't have been decoded as 8859
-            if (!StandardCharsets.ISO_8859_1.newEncoder().canEncode(val))
+            if (!StandardCharsets.ISO_8859_1.newEncoder().canEncode(val)) {
                 return val;
+            }
             byte[] bytes = val.getBytes(ISO_8859_1);
             if (looksLikeUtf8(bytes))
                 return new String(bytes, UTF_8);
@@ -1226,7 +1227,7 @@ public class HttpConnection implements Connection {
                 while (i < end) {
                     i++;
                     o = input[i];
-                    if ((o & 0xC0) != 0x80) {
+                    if ((o & 0xC0) != 0x80) { // continuation byte
                         return false;
                     }
                 }

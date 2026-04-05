@@ -140,6 +140,32 @@ public class ProxyTest {
         assertEquals(HttpServletResponse.SC_OK, successRes.statusCode());
     }
 
+    @ParameterizedTest
+    @MethodSource("echoUrls")
+    void testProxyNullResetsToDirect(String url) throws IOException {
+
+        // First we'll set a proxy
+        Connection session = Jsoup.newSession()
+                .proxy(proxy.hostname, proxy.authedPort)
+                .ignoreHttpErrors(true);
+
+        // Then, we'll set the proxy to null to disable to previously set proxy
+        session.proxy(null);
+
+        // Then this should go through
+        assertDoesNotThrow(() -> session.newRequest(url).execute());
+    }
+
+    // Coverage of null case of getter for HttpConnection.proxy(@Nullable proxy)
+    @Test
+    void proxyOverloadNullCheck() {
+        Connection session = Jsoup.newSession();
+
+        // This should accept null
+        Connection ncon = assertDoesNotThrow(() -> session.proxy(null));
+        assertNotNull(ncon);
+    }
+
     static void assertAuthRequiredException(IOException e) {
         // in CONNECT (for the HTTPS url), URLConnection will throw the proxy connect as a Stringly typed IO exception - "Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"". (Not a response code)
         // Alternatively, some platforms (?) will report: "No credentials provided"
