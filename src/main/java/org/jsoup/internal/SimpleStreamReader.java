@@ -1,8 +1,5 @@
 package org.jsoup.internal;
 
-import org.jsoup.helper.Validate;
-import org.jspecify.annotations.Nullable;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -13,7 +10,9 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
+import org.jsoup.helper.Validate;
 import static org.jsoup.internal.SimpleBufferedInput.BufferPool;
+import org.jspecify.annotations.Nullable;
 
 /**
  A simple decoding InputStreamReader that recycles internal buffers.
@@ -30,7 +29,7 @@ public class SimpleStreamReader extends Reader {
             .onUnmappableCharacter(CodingErrorAction.REPLACE);
         byte[] buf = BufferPool.borrow(); // shared w/ SimpleBufferedInput, ControllableInput
         byteBuf = ByteBuffer.wrap(buf);
-        byteBuf.flip(); // limit(0)
+        ((java.nio.Buffer) byteBuf).flip();
     }
 
     @Override
@@ -81,9 +80,9 @@ public class SimpleStreamReader extends Reader {
             int read = in.read(byteBuf.array(), byteBuf.arrayOffset() + pos, remaining);
             if (read < 0) return read;
             if (read == 0) throw new IOException("Underlying input stream returned zero bytes");
-            byteBuf.position(pos + read);
+            ((java.nio.Buffer) byteBuf).position(pos + read);
         } finally {
-            byteBuf.flip();
+            ((java.nio.Buffer) byteBuf).flip();
         }
         return byteBuf.remaining();
     }
