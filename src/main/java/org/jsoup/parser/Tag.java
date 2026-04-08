@@ -34,6 +34,8 @@ public class Tag implements Cloneable {
     public static int Data = 1 << 8;
     /** Tag option: the tag's value will be included when submitting a form (e.g., {@code <input>}). */
     public static int FormSubmittable = 1 << 9;
+    /** Tag option: the tag is a scope marker in the "has an element in scope" algorithm (e.g., {@code <table>}, {@code <td>}, {@code <template>}). Used internally by the parser to optimize scope checks. */
+    static int InScope = 1 << 10;
 
     String namespace;
     String tagName;
