@@ -1,8 +1,13 @@
 package org.jsoup.parser;
 
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jsoup.helper.Validate;
 import org.jsoup.internal.Normalizer;
 import org.jsoup.internal.StringUtil;
+import static org.jsoup.internal.StringUtil.inSorted;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
@@ -12,16 +17,12 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jspecify.annotations.Nullable;
-
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.jsoup.internal.StringUtil.inSorted;
 import static org.jsoup.parser.HtmlTreeBuilderState.Constants.InTableFoster;
 import static org.jsoup.parser.HtmlTreeBuilderState.ForeignContent;
-import static org.jsoup.parser.Parser.*;
+import static org.jsoup.parser.Parser.NamespaceHtml;
+import static org.jsoup.parser.Parser.NamespaceMathml;
+import static org.jsoup.parser.Parser.NamespaceSvg;
+import org.jspecify.annotations.Nullable;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -717,6 +718,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, @Nullable String[] extraTypes) {
         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
         final int bottom = stack.size() -1;
+        final boolean checkInScope = baseTypes == TagsSearchInScope; // fast-path: use Tag.InScope flag instead of binary search
         // don't walk too far up the tree
         for (int pos = bottom; pos >= 0; pos--) {
             Element el = stack.get(pos);
@@ -726,11 +728,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (ns.equals(NamespaceHtml)) {
                 if (inSorted(elName, targetNames))
                     return true;
-                if (inSorted(elName, baseTypes))
+                if (checkInScope ? el.tag().is(Tag.InScope) : inSorted(elName, baseTypes))
                     return false;
                 if (extraTypes != null && inSorted(elName, extraTypes))
                     return false;
-            } else if (baseTypes == TagsSearchInScope) {
+            } else if (checkInScope) {
                 if (ns.equals(NamespaceMathml) && inSorted(elName, TagSearchInScopeMath))
                     return false;
                 if (ns.equals(NamespaceSvg) && inSorted(elName, TagSearchInScopeSvg))
