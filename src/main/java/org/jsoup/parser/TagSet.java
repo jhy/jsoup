@@ -268,6 +268,8 @@ public class TagSet {
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
+        // scope-breaking tags per https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
+        String[] inScopeTags = {"applet", "caption", "html", "marquee", "object", "table", "td", "template", "th"};
         String[] blockMathTags = {"math"};
         String[] inlineMathTags = {"mi", "mo", "msup", "mn", "mtext"};
         String[] blockSvgTags = {"svg", "femerge", "femergenode"}; // note these are LC versions, but actually preserve case
@@ -283,6 +285,7 @@ public class TagSet {
             .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
             .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
+            .setupTags(NamespaceHtml, inScopeTags, tag -> tag.set(Tag.InScope))
             .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.Block))
             .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
             .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))
