@@ -48,28 +48,6 @@ If you find any issues, please file a [bug](https://jsoup.org/bugs) after checki
 
 The [colophon](https://jsoup.org/colophon) talks about the history of and tools used to build jsoup.
 
-### Performance benchmarks
-An opt-in selector benchmark harness is available under the `benchmarks` Maven profile. It compares selector parsing cost with repeated raw string queries and reused precompiled evaluators on both synthetic and real-world HTML fixtures.
-
-Run it with:
-
-```bash
-mvn -Pbenchmarks -DskipTests test-compile exec:java
-```
-
-Useful tuning properties:
-
-```bash
-mvn -Pbenchmarks -DskipTests test-compile exec:java \
-  -Djsoup.perf.warmup=6 \
-  -Djsoup.perf.measurements=12 \
-  -Djsoup.perf.opsPerMeasurement=40 \
-  -Djsoup.perf.synthetic.sections=160 \
-  -Djsoup.perf.synthetic.cardsPerSection=80
-```
-
-The benchmark writes a CSV report to `target/perf/selector-benchmark.csv` by default.
-
 ## Status
 jsoup is in general, stable release.
 
