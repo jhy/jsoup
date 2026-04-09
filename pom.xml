@@ -34,6 +34,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.58.v20250814</jetty.version>
+    <jsoup.perf.mainClass>org.jsoup.perf.SelectorBenchmarkMain</jsoup.perf.mainClass>
   </properties>
 
   <build>
@@ -489,6 +490,23 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>benchmarks</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.6.1</version>
+            <configuration>
+              <classpathScope>test</classpathScope>
+              <mainClass>${jsoup.perf.mainClass}</mainClass>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>failsafe</id>
       <build>
