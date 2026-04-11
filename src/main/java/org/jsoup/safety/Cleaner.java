@@ -190,9 +190,17 @@ public class Cleaner {
         int numDiscarded = 0;
         Attributes sourceAttrs = sourceEl.attributes();
         for (Attribute sourceAttr : sourceAttrs) {
-            if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr))
-                destAttrs.put(sourceAttr);
-            else
+            if (safelist.isSafeAttribute(sourceTag, sourceEl, sourceAttr)) { // will keep this attr
+                String key = sourceAttr.getKey();
+                String value = sourceAttr.getValue();
+
+                if (safelist.shouldAbsUrl(sourceTag, key)) { // configured to make absolute urls for this key (href)
+                    value = sourceEl.absUrl(key);
+                    if (value.isEmpty()) // could not be made abs; leave as-is to allow custom unknown protocols
+                        value = sourceAttr.getValue();
+                }
+                destAttrs.put(key, value);
+            } else
                 numDiscarded++;
         }
 
@@ -207,7 +215,11 @@ public class Cleaner {
             }
         }
 
-        destAttrs.addAll(enforcedAttrs);
+        // apply enforced attributes case-insensitively, so a preserved-case source attr is canonicalized to the enforced key
+        for (Attribute enforcedAttr : enforcedAttrs) {
+            destAttrs.removeIgnoreCase(enforcedAttr.getKey());
+            destAttrs.put(enforcedAttr.getKey(), enforcedAttr.getValue());
+        }
         dest.attributes().addAll(destAttrs); // re-attach, if removed in clear
         return new ElementMeta(dest, numDiscarded);
     }

@@ -105,7 +105,7 @@ public class NodeTraversor {
     }
 
     /**
-     Run a depth-first filtered traversal of the root and all of its descendants.
+     Run a depth-first controllable traversal of the root and all of its descendants.
      @param filter NodeFilter visitor.
      @param root the root node point to traverse.
      @return The filter result of the root node, or {@link FilterResult#STOP}.
@@ -161,7 +161,7 @@ public class NodeTraversor {
     }
 
     /**
-     Run a depth-first filtered traversal of each Element.
+     Run a depth-first controllable traversal of each Element.
      @param filter NodeFilter visitor.
      @see NodeFilter
      */
