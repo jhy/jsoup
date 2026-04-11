@@ -536,6 +536,13 @@
             <optional>true</optional>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.code-intelligence</groupId>
+            <artifactId>jazzer-api</artifactId>
+            <version>0.22.1</version>
+        </dependency>
+
+
     </dependencies>
 
     <dependencyManagement>

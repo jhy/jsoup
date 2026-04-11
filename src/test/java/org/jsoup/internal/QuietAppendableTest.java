@@ -78,4 +78,17 @@ class QuietAppendableTest {
         assertTrue(threw);
     }
 
+    // Lucas
+    @Test void quietAppendNotNullThreeParam() {
+        String expect = "😀";
+        char[] chars = new char[2];
+        chars[0] = expect.charAt(0);
+        chars[1] = expect.charAt(1);
+        assertEquals(2, expect.length());
+
+        QuietAppendable sb = QuietAppendable.wrap(new StringBuilder());
+        assertNotNull(sb.append(chars, 0, 2));
+    }
+
+
 }

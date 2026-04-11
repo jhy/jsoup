@@ -31,16 +31,6 @@ class SimpleBufferedInput extends FilterInputStream {
     }
 
     @Override
-    public int read() throws IOException {
-        if (bufPos >= bufLength) {
-            fill();
-            if (bufPos >= bufLength)
-                return -1;
-        }
-        return getBuf()[bufPos++] & 0xff;
-    }
-
-    @Override
     public int read(byte[] dest, int offset, int desiredLen) throws IOException {
         Validate.notNull(dest);
         if (offset < 0 || desiredLen < 0 || desiredLen > dest.length - offset) {

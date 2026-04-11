@@ -32,6 +32,10 @@ public class ReaderTest {
         assertEquals(fromBytes, fullRead);
     }
 
+    @Test void simpleBufferedReaderTest() throws IOException {
+
+    }
+
     private static String getString(SimpleStreamReader streamReader) throws IOException {
         // read streamreader to a string:
         StringBuilder builder = new StringBuilder();
