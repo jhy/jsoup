@@ -1,9 +1,5 @@
 package org.jsoup.internal;
 
-import org.jsoup.Progress;
-import org.jsoup.helper.Validate;
-import org.jspecify.annotations.Nullable;
-
 import java.io.BufferedInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -11,7 +7,10 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 
+import org.jsoup.Progress;
+import org.jsoup.helper.Validate;
 import static org.jsoup.internal.SharedConstants.DefaultBufferSize;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A jsoup internal class (so don't use it as there is no contract API) that enables controls on a buffered input stream,

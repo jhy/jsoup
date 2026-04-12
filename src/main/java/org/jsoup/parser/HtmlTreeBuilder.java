@@ -717,6 +717,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, @Nullable String[] extraTypes) {
         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
         final int bottom = stack.size() -1;
+        final boolean checkInScope = baseTypes == TagsSearchInScope;
         // don't walk too far up the tree
         for (int pos = bottom; pos >= 0; pos--) {
             Element el = stack.get(pos);
@@ -726,11 +727,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (ns.equals(NamespaceHtml)) {
                 if (inSorted(elName, targetNames))
                     return true;
-                if (inSorted(elName, baseTypes))
+                if (checkInScope ? el.tag().is(Tag.InScope) : inSorted(elName, baseTypes))
                     return false;
                 if (extraTypes != null && inSorted(elName, extraTypes))
                     return false;
-            } else if (baseTypes == TagsSearchInScope) {
+            } else if (checkInScope) {
                 if (ns.equals(NamespaceMathml) && inSorted(elName, TagSearchInScopeMath))
                     return false;
                 if (ns.equals(NamespaceSvg) && inSorted(elName, TagSearchInScopeSvg))
