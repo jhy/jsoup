@@ -22,9 +22,6 @@ import org.jsoup.nodes.Document;
  * Hotspots targeted:
  * - HtmlTreeBuilder.inSpecificScope / insertElementFor / doInsertElement
  * - TreeBuilder.enforceStackDepthLimit
- * - CharacterReader.consumeMatching / cacheString
- * - TokenData.append / flipToBuilder
- * - Normalizer.lowerCase / normalize
  */
 public final class ParserBottleneckBenchmarkMain {
     private static final DecimalFormat NumberFormat = new DecimalFormat("0.00");
@@ -66,24 +63,6 @@ public final class ParserBottleneckBenchmarkMain {
                 "scope-depth",
                 String.valueOf(depth),
                 "inSpecificScope|insertElementFor|doInsertElement",
-                html));
-        }
-
-        for (int entitiesPerBlock : uniqueSweep(config.maxEntitiesPerBlock, 50, 120, 250)) {
-            String html = buildEntityHeavyHtml(entitiesPerBlock, config.repetitions);
-            cases.add(WorkloadCase.of(
-                "entity-heavy",
-                String.valueOf(entitiesPerBlock),
-                "TokenData.append|CharacterReader.consumeMatching|cacheString",
-                html));
-        }
-
-        for (int tagsPerBlock : uniqueSweep(config.maxMixedCaseTagsPerBlock, 40, 80, 140)) {
-            String html = buildMixedCaseTagHtml(tagsPerBlock, config.repetitions);
-            cases.add(WorkloadCase.of(
-                "normalization-heavy",
-                String.valueOf(tagsPerBlock),
-                "Normalizer.lowerCase|normalize|StringUtil.inSorted",
                 html));
         }
 
@@ -223,36 +202,6 @@ public final class ParserBottleneckBenchmarkMain {
         return sb.toString();
     }
 
-    private static String buildEntityHeavyHtml(int entitiesPerBlock, int repetitions) {
-        StringBuilder sb = new StringBuilder(repetitions * entitiesPerBlock * 16);
-        sb.append("<html><body>\n");
-        for (int rep = 0; rep < repetitions; rep++) {
-            sb.append("<p data-id='p").append(rep).append("'>");
-            for (int i = 0; i < entitiesPerBlock; i++) {
-                sb.append("alpha&amp;beta&lt;gamma&gt;delta&quot;");
-                sb.append(" &#").append(160 + (i % 30)).append(';');
-            }
-            sb.append("</p>\n");
-        }
-        sb.append("</body></html>");
-        return sb.toString();
-    }
-
-    private static String buildMixedCaseTagHtml(int tagsPerBlock, int repetitions) {
-        StringBuilder sb = new StringBuilder(repetitions * tagsPerBlock * 35);
-        sb.append("<html><body>\n");
-        for (int rep = 0; rep < repetitions; rep++) {
-            sb.append("<DiV ClAsS='Root" + rep + "'>");
-            for (int i = 0; i < tagsPerBlock; i++) {
-                sb.append("<SpAn DaTa-Id='X").append(i).append("' CuStOm-AtTr='V").append(i)
-                    .append("'>MiXeD").append(i).append("</SpAn>");
-            }
-            sb.append("</DiV>\n");
-        }
-        sb.append("</body></html>");
-        return sb.toString();
-    }
-
     private static String buildDeepTreeHtml(int depth, int repetitions) {
         StringBuilder sb = new StringBuilder(repetitions * depth * 20);
         sb.append("<html><body>\n");
@@ -302,23 +251,19 @@ public final class ParserBottleneckBenchmarkMain {
         final int operationsPerMeasurement;
         final int repetitions;
         final int maxDepth;
-        final int maxEntitiesPerBlock;
-        final int maxMixedCaseTagsPerBlock;
         final int maxDeepTreeDepth;
         final String workloadFilter;
         final String parameterFilter;
         final Path outputCsv;
 
         BenchmarkConfig(int warmupIterations, int measurementIterations, int operationsPerMeasurement, int repetitions,
-                        int maxDepth, int maxEntitiesPerBlock, int maxMixedCaseTagsPerBlock, int maxDeepTreeDepth,
+                        int maxDepth, int maxDeepTreeDepth,
                         String workloadFilter, String parameterFilter, Path outputCsv) {
             this.warmupIterations = warmupIterations;
             this.measurementIterations = measurementIterations;
             this.operationsPerMeasurement = operationsPerMeasurement;
             this.repetitions = repetitions;
             this.maxDepth = maxDepth;
-            this.maxEntitiesPerBlock = maxEntitiesPerBlock;
-            this.maxMixedCaseTagsPerBlock = maxMixedCaseTagsPerBlock;
             this.maxDeepTreeDepth = maxDeepTreeDepth;
             this.workloadFilter = workloadFilter;
             this.parameterFilter = parameterFilter;
@@ -331,14 +276,12 @@ public final class ParserBottleneckBenchmarkMain {
             int ops = Integer.getInteger("jsoup.perf.opsPerMeasurement", 25);
             int repetitions = Integer.getInteger("jsoup.perf.repetitions", 80);
             int maxDepth = Integer.getInteger("jsoup.perf.maxDepth", 120);
-            int maxEntities = Integer.getInteger("jsoup.perf.maxEntitiesPerBlock", 250);
-            int maxMixedCaseTags = Integer.getInteger("jsoup.perf.maxMixedCaseTagsPerBlock", 140);
             int maxDeepTreeDepth = Integer.getInteger("jsoup.perf.maxDeepTreeDepth", 50);
             String workloadFilter = System.getProperty("jsoup.perf.workload");
             String parameterFilter = System.getProperty("jsoup.perf.parameter");
             Path output = Paths.get(System.getProperty("jsoup.perf.output", "target/perf/parser-bottleneck-benchmark.csv"));
-            return new BenchmarkConfig(warmup, measurements, ops, repetitions, maxDepth, maxEntities,
-                maxMixedCaseTags, maxDeepTreeDepth, workloadFilter, parameterFilter, output);
+            return new BenchmarkConfig(warmup, measurements, ops, repetitions, maxDepth,
+                maxDeepTreeDepth, workloadFilter, parameterFilter, output);
         }
     }
 
