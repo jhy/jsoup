@@ -140,7 +140,7 @@ public final class DataUtil {
         StreamParser streamer = new StreamParser(parser);
         String charsetName = charset != null? charset.name() : null;
         try {
-            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(openStream(path), charsetName, baseUri, parser);
+            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharsetForStreamParser(openStream(path), charsetName, baseUri, parser);
             Reader reader = new SimpleStreamReader(charsetDoc.input, charsetDoc.charset);
             streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
         } catch (IOException e) {
@@ -237,7 +237,18 @@ public final class DataUtil {
 
     private static final Evaluator metaCharset = Selector.evaluatorOf("meta[http-equiv=content-type], meta[charset]");
 
+    /** Detects charset for a regular parse, and may reuse a fully sniffed document. */
     static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        return detectCharset(input, charsetName, baseUri, parser, true);
+    }
+
+    /** Detects charset for a stream parse, and leaves the input readable for subsequent parsing. */
+    static CharsetDoc detectCharsetForStreamParser(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser) throws IOException {
+        return detectCharset(input, charsetName, baseUri, parser, false);
+    }
+
+    /** Shared charset detection worker; regular parse can reuse a fully sniffed doc, stream parse cannot. */
+    private static CharsetDoc detectCharset(ControllableInputStream input, @Nullable String charsetName, String baseUri, Parser parser, boolean reuseDocIfFullyRead) throws IOException {
         Document doc = null;
         // read the start of the stream and look for a BOM or meta charset:
         // look for BOM - overrides any other header or input
@@ -293,7 +304,7 @@ public final class DataUtil {
                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");
                 charsetName = foundCharset;
                 doc = null;
-            } else if (input.baseReadFully()) { // if we have read fully, and the charset was correct, keep that current parse
+            } else if (reuseDocIfFullyRead && input.baseReadFully()) { // keep the current parse if the caller can use a fully read doc
                 input.close(); // the parser tried to close it
             } else {
                 doc = null;

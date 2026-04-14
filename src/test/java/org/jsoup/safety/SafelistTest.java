@@ -62,6 +62,27 @@ public class SafelistTest {
     }
 
     @Test
+    void isSafeAttributeDoesNotModifyLiveAttribute() {
+        Attributes attributes = new Attributes().put("href", "/foo");
+        Element link = new Element(Tag.valueOf("a"), "https://example.com/", attributes);
+        Attribute href = link.attributes().attribute("href");
+        assertNotNull(href);
+
+        assertTrue(Safelist.basic().isSafeAttribute("a", link, href));
+        assertEquals("/foo", href.getValue());
+        assertEquals("/foo", link.attr("href"));
+    }
+
+    @Test
+    void enforcedAttributeMatchesInputKeyCaseInsensitively() {
+        Attribute rel = new Attribute("REL", "nofollow");
+        Attributes attributes = new Attributes().put(rel);
+        Element link = new Element(Tag.valueOf("a"), "", attributes);
+
+        assertTrue(Safelist.basic().isSafeAttribute("a", link, rel));
+    }
+
+    @Test
     void noscriptIsBlocked() {
         boolean threw = false;
         Safelist safelist = null;

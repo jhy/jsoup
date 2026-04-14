@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.jsoup.nodes.Range;
+import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.parser.TagSet;
@@ -282,6 +283,48 @@ public class CleanerTest {
         assertEquals("<a href=\"http://example.com/foo\">Link</a><img src=\"http://example.com/bar\">", clean);
     }
 
+    @Test void cleanDoesNotModifyInputDocumentWhenResolvingRelativeLinks() {
+        String html = "<a href='/foo'>Link</a>";
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        Document dirty = Jsoup.parseBodyFragment(html, "http://example.com/");
+        Document clean = cleaner.clean(dirty);
+
+        assertEquals("<a href=\"http://example.com/foo\">Link</a>", clean.body().html());
+        assertEquals("/foo", dirty.expectFirst("a").attr("href"));
+    }
+
+    @Test void isValidDoesNotModifyInputDocumentWhenResolvingRelativeLinks() {
+        String html = "<a href='/foo'>Link</a>";
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        Document dirty = Jsoup.parseBodyFragment(html, "http://example.com/");
+
+        assertTrue(cleaner.isValid(dirty));
+        assertEquals("<a href=\"http://example.com/foo\">Link</a>",
+            cleaner.clean(Jsoup.parseBodyFragment(html, "http://example.com/")).body().html());
+        assertEquals("/foo", dirty.expectFirst("a").attr("href"));
+    }
+
+    @Test void allPseudoTagProtocolsNormalizeRelativeLinks() {
+        Safelist safelist = new Safelist()
+            .addTags("a")
+            .addAttributes(":all", "href")
+            .addProtocols(":all", "href", "http", "https");
+        Document dirty = Jsoup.parseBodyFragment("<a href='/foo'>Link</a>", "http://example.com/");
+
+        assertEquals("<a href=\"http://example.com/foo\">Link</a>", new Cleaner(safelist).clean(dirty).body().html());
+    }
+
+    @Test void tagSpecificAttributesDoNotInheritAllPseudoTagProtocols() {
+        Safelist safelist = new Safelist()
+            .addTags("a")
+            .addAttributes("a", "href")
+            .addAttributes(":all", "href")
+            .addProtocols(":all", "href", "http", "https");
+        Document dirty = Jsoup.parseBodyFragment("<a href='/foo'>Link</a>", "http://example.com/");
+
+        assertEquals("<a href=\"/foo\">Link</a>", new Cleaner(safelist).clean(dirty).body().html());
+    }
+
     @Test public void preservesRelativeLinksIfConfigured() {
         String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages().preserveRelativeLinks(true));
@@ -428,6 +471,18 @@ public class CleanerTest {
         assertEquals("<a>One</a> <a>Two</a>", clean);
     }
 
+    @Test void cleanerPreservesCaseVariantOfMatchingEnforcedAttribute() {
+        Document dirty = Jsoup.parse("<a href='http://example.com/' REL='nofollow'>Link</a>", "",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+
+        Document clean = cleaner.clean(dirty);
+        Element link = clean.expectFirst("a");
+        assertTrue(link.hasAttr("REL"));
+        assertEquals("nofollow", link.attr("REL"));
+        assertTrue(cleaner.isValid(dirty));
+    }
+
     @Test public void handlesNestedQuotesInAttribute() {
         // https://github.com/jhy/jsoup/issues/1243 - no repro
         String orig = "<div style=\"font-family: 'Calibri'\">Will (not) fail</div>";
@@ -522,6 +577,29 @@ public class CleanerTest {
 
         String clean4 = Jsoup.clean(html, relaxed);
         assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
+    }
+
+    @Test void canonicalizesEnforcedAttributes() {
+        Document customDirty = Jsoup.parse("<a REL='external'>One</a>", "",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner customCleaner = new Cleaner(Safelist.none()
+            .addTags("a")
+            .addEnforcedAttribute("a", "rel", "external"));
+        assertEquals("<a rel=\"external\">One</a>", customCleaner.clean(customDirty).body().html());
+    }
+
+    @Test void canonicalizesNofollowEnforcedAttribute() {
+        Document dirty = Jsoup.parse("<a href='http://external.com/' REL='nofollow'>One</a>", "",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
+    }
+
+    @Test void preservesMatchingSourceNofollowWhenEnforcementSuppressed() {
+        Document dirty = Jsoup.parse("<a href='http://example.com/foo' REL='nofollow'>One</a>", "http://example.com/",
+            Parser.htmlParser().settings(ParseSettings.preserveCase));
+        Cleaner cleaner = new Cleaner(Safelist.basic());
+        assertEquals("<a href=\"http://example.com/foo\" REL=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
     }
 
     @Test void discardsSvgScriptData() {

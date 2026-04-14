@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 import static org.jsoup.helper.HttpConnection.Request;
 import static org.jsoup.helper.HttpConnection.Response;
 
+import java.net.Proxy;
 import java.lang.reflect.Constructor;
 
 /**
@@ -34,6 +35,9 @@ class RequestDispatch {
         boolean useHttpClient = Boolean.parseBoolean(System.getProperty(SharedConstants.UseHttpClient, "true"));
 
         if (request.sslSocketFactory() != null) // downgrade if a socket factory is set, as it can't be supplied to the HttpClient
+            useHttpClient = false;
+        Proxy proxy = request.proxy();
+        if (proxy != null && proxy.type() == Proxy.Type.SOCKS) // HttpClient doesn't support SOCKS proxies
             useHttpClient = false;
 
         if (useHttpClient && clientConstructor != null) {
