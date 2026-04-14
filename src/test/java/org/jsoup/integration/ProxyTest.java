@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -205,5 +206,34 @@ public class ProxyTest {
         assertEquals(200, res.statusCode());
         assertEquals(2, count.get()); // hit server and proxy auth stages
         assertEquals("Webserver Environment Variables", res.parse().title());
+    }
+
+    @Test void proxyForSessionUrlOverload() throws IOException {
+        Connection session = Jsoup.newSession().proxy(proxy.hostname, proxy.port);
+
+
+        // Java.net.URL objects
+        URL medUrl = new URL(FileServlet.urlTo("/htmltests/medium.html"));
+        URL largeUrl = new URL(FileServlet.urlTo("/htmltests/large.html"));
+
+
+        Connection.Response medRes = session.newRequest(medUrl).execute();
+        Connection.Response largeRes = session.newRequest(largeUrl).execute();
+        
+        assertEquals("Medium HTML", medRes.parse().title());
+        assertEquals("Large HTML", largeRes.parse().title());
+
+
+        // Test with TLS URL objects
+        URL smedUrl = new URL(FileServlet.tlsUrlTo("/htmltests/medium.html"));
+        URL slargeUrl = new URL(FileServlet.tlsUrlTo("/htmltests/large.html"));
+
+
+        Connection.Response smedRes = session.newRequest(smedUrl).execute();
+        Connection.Response slargeRes = session.newRequest(slargeUrl).execute();
+
+
+        assertEquals("Medium HTML", smedRes.parse().title());
+        assertEquals("Large HTML", slargeRes.parse().title());
     }
 }
