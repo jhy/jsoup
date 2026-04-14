@@ -1012,12 +1012,11 @@ public class HttpConnection implements Connection {
         @Override public StreamParser streamParser() throws IOException {
             ControllableInputStream stream = prepareParse();
             String baseUri = url.toExternalForm();
-            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharset(stream, charset, baseUri, req.parser());
-            // note that there may be a document in CharsetDoc as a result of scanning meta-data -- but as requires a stream parse, it is not used here. todo - revisit.
+            DataUtil.CharsetDoc charsetDoc = DataUtil.detectCharsetForStreamParser(stream, charset, baseUri, req.parser());
 
             // set up the stream parser and rig this connection up to the parsed doc:
             StreamParser streamer = new StreamParser(req.parser());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, charsetDoc.charset));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(charsetDoc.input, charsetDoc.charset));
             streamer.parse(reader, baseUri); // initializes the parse and the document, but does not step() it
             streamer.document().connection(new HttpConnection(req, this));
             charset = charsetDoc.charset.name();

@@ -71,6 +71,7 @@ import static org.jsoup.internal.Normalizer.lowerCase;
  */
 public class Safelist {
     private static final String All = ":all";
+    private static final TagName AllTag = TagName.valueOf(All);
     private final Set<TagName> tagNames; // tags allowed, lower case. e.g. [p, br, span]
     private final Map<TagName, Set<AttributeKey>> attributes; // tag -> attribute[]. allowed attributes [href] for a tag.
     private final Map<TagName, Map<AttributeKey, AttributeValue>> enforcedAttributes; // always set these attribute values
@@ -519,6 +520,7 @@ public class Safelist {
 
     /**
      * Test if the supplied attribute is allowed by this safelist for this tag.
+     * <p>This method does not modify the input element or attribute.</p>
      * @param tagName tag to consider allowing the attribute in
      * @param el element under test, to confirm protocol
      * @param attr attribute under test
@@ -533,33 +535,29 @@ public class Safelist {
             if (protocols.containsKey(tag)) {
                 Map<AttributeKey, Set<Protocol>> attrProts = protocols.get(tag);
                 // ok if not defined protocol; otherwise test
-                return !attrProts.containsKey(key) || testValidProtocol(el, attr, attrProts.get(key));
+                return !attrProts.containsKey(key) || isSafeProtocol(getProtocolValue(el, attr), attrProts.get(key));
             } else { // attribute found, no protocols defined, so OK
                 return true;
             }
         }
-        // might be an enforced attribute?
         Map<AttributeKey, AttributeValue> enforcedSet = enforcedAttributes.get(tag);
-        if (enforcedSet != null) {
-            Attributes expect = getEnforcedAttributes(tagName);
-            String attrKey = attr.getKey();
-            if (expect.hasKeyIgnoreCase(attrKey)) {
-                return expect.getIgnoreCase(attrKey).equals(attr.getValue());
-            }
+        if (enforcedSet != null && enforcedSet.containsKey(key)) {
+            // enforced attr key was LCed via AttributeKey.valueOf(attr.getKey()),
+            // if the input already has that exact value, treat it as safe
+            return enforcedSet.get(key).equals(AttributeValue.valueOf(attr.getValue()));
         }
         // no attributes defined for tag, try :all tag
         return !tagName.equals(All) && isSafeAttribute(All, el, attr);
     }
 
-    private boolean testValidProtocol(Element el, Attribute attr, Set<Protocol> protocols) {
-        // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
-        // rels without a baseuri get removed
+    private String getProtocolValue(Element el, Attribute attr) {
         String value = el.absUrl(attr.getKey());
-        if (value.length() == 0)
+        if (value.isEmpty())
             value = attr.getValue(); // if it could not be made abs, run as-is to allow custom unknown protocols
-        if (!preserveRelativeLinks)
-            attr.setValue(value);
-        
+        return value;
+    }
+
+    private boolean isSafeProtocol(String value, Set<Protocol> protocols) {
         for (Protocol protocol : protocols) {
             String prot = protocol.toString();
 
@@ -578,6 +576,29 @@ public class Safelist {
             }
         }
         return false;
+    }
+
+    /**
+     Check if a URL attribute should be normalized to an absolute URL in the cleaned output. Uses the configured
+     protocols for that tag+attribute pair, falling back to {@code :all} only if the tag does not define the
+     attribute.
+     */
+    boolean shouldAbsUrl(String tagName, String attrKey) {
+        if (preserveRelativeLinks) return false;
+        return shouldAbsUrl(TagName.valueOf(tagName), AttributeKey.valueOf(attrKey));
+    }
+
+    private boolean shouldAbsUrl(TagName tag, AttributeKey key) {
+        Set<AttributeKey> allowedAttrs = attributes.get(tag);
+        if (allowedAttrs != null && allowedAttrs.contains(key)) {
+            Map<AttributeKey, Set<Protocol>> protocolsByAttr = protocols.get(tag);
+            return protocolsByAttr != null && protocolsByAttr.containsKey(key);
+        }
+
+        Map<AttributeKey, AttributeValue> enforcedAttrs = enforcedAttributes.get(tag);
+        if (enforcedAttrs != null && enforcedAttrs.containsKey(key)) return false;
+
+        return !tag.equals(AllTag) && shouldAbsUrl(AllTag, key);
     }
 
     private static boolean isValidAnchor(String value) {

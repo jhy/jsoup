@@ -29,9 +29,9 @@ public interface NodeFilter {
     enum FilterResult {
         /** Continue processing the tree */
         CONTINUE,
-        /** Skip the child nodes, but do call {@link NodeFilter#tail(Node, int)} next. */
+        /** Skip this node's children, and call {@link NodeFilter#tail(Node, int)} on this node next. */
         SKIP_CHILDREN,
-        /** Skip the subtree, and do not call {@link NodeFilter#tail(Node, int)}. */
+        /** Skip this node's children, and do not call {@link NodeFilter#tail(Node, int)}. */
         SKIP_ENTIRELY,
         /** Remove the node and its children */
         REMOVE,
