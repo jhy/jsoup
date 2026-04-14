@@ -90,5 +90,23 @@ class QuietAppendableTest {
         assertNotNull(sb.append(chars, 0, 2));
     }
 
+    // Handles non-nullity of append(char[], int, int) override as well
+    @Test
+    public void testBaseAppendableChaining() {
 
+        Appendable accum = new StringBuilder();
+        QuietAppendable qa = QuietAppendable.wrap(accum);
+
+        char[] chars = {'h', 'e', 'l', 'l', 'o'};
+
+        QuietAppendable result = qa.append(chars, 0, 5).append('!');
+        assertNotNull(result);
+        assertEquals("hello!", accum.toString());
+
+        // let's do the same with a StringBuilder type too
+        StringBuilder accum2 = new StringBuilder();
+        QuietAppendable qa2 = QuietAppendable.wrap(accum2);
+        assertNotNull(qa2.append(chars, 0, 5).append('!'));
+        assertEquals("hello!", accum2.toString());
+    }
 }

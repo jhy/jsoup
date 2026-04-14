@@ -305,13 +305,14 @@
                         <param>org.jsoup.*</param>
                     </targetTests>
                     <targetClasses>
-                        <param>org.jsoup.Jsoup</param>
-                        <param>org.jsoup.helper.*</param>
                         <param>org.jsoup.internal.*</param>
-                        <param>org.jsoup.nodes.*</param>
-                        <param>org.jsoup.parser.*</param>
-                        <param>org.jsoup.select.*</param>
-                        <param>org.jsoup.safety.*</param>
+<!--                        <param>org.jsoup.Jsoup</param>-->
+<!--                        <param>org.jsoup.helper.*</param>-->
+<!--                        <param>org.jsoup.internal.*</param>-->
+<!--                        <param>org.jsoup.nodes.*</param>-->
+<!--                        <param>org.jsoup.parser.*</param>-->
+<!--                        <param>org.jsoup.select.*</param>-->
+<!--                        <param>org.jsoup.safety.*</param>-->
                     </targetClasses>
                     <mutators>
                         <mutator>DEFAULTS</mutator>
