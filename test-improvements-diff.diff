@@ -1,0 +1,833 @@
+Only in test/: .DS_Store
+Only in test/: .DS_Store:Zone.Identifier
+Only in test/: .DS_Store:Zone.Identifier:Zone.Identifier
+Only in test/java: .DS_Store
+Only in test/java: .DS_Store:Zone.Identifier
+Only in test/java: .DS_Store:Zone.Identifier:Zone.Identifier
+Only in test/java/org: .DS_Store
+Only in test/java/org: .DS_Store:Zone.Identifier
+Only in test/java/org: .DS_Store:Zone.Identifier:Zone.Identifier
+Only in test/java/org/jsoup: .DS_Store
+Only in test/java/org/jsoup: .DS_Store:Zone.Identifier
+Only in test/java/org/jsoup: .DS_Store:Zone.Identifier:Zone.Identifier
+Only in test/java/org/jsoup: DeprecatedTest.java
+Only in test/java/org/jsoup: DeprecatedTest.java:Zone.Identifier
+Only in test/java/org/jsoup: DeprecatedTest.java:Zone.Identifier:Zone.Identifier
+Only in test/java/org/jsoup: JsoupFuzzTarget.java
+Only in test/java/org/jsoup: JsoupFuzzTarget.java:Zone.Identifier
+Only in test/java/org/jsoup: JsoupFuzzTarget.java:Zone.Identifier:Zone.Identifier
+Binary files test/java/org/jsoup/MultiLocaleExtension.java:Zone.Identifier and test_orig/java/org/jsoup/MultiLocaleExtension.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/SerializationExceptionTest.java:Zone.Identifier and test_orig/java/org/jsoup/SerializationExceptionTest.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/helper/DataUtilTest.java test_orig/java/org/jsoup/helper/DataUtilTest.java
+--- test/java/org/jsoup/helper/DataUtilTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/helper/DataUtilTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -200,6 +200,14 @@
+     }
+ 
+     @Test
++    public void streamParserWorksWhenCharsetDetectionFullyReadsFile() throws IOException {
++        // small enough to be fully consumed during charset sniffing
++        Path in = getPath("/htmltests/charset-base.html");
++        Document doc = DataUtil.streamParser(in, null, "http://example.com", Parser.htmlParser()).complete();
++        assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
++    }
++
++    @Test
+     public void supportsUTF8BOM() throws IOException {
+         File in = getFile("/bomtests/bom_utf8.html");
+         Document doc = Jsoup.parse(in, null, "http://example.com");
+diff -ur test/java/org/jsoup/helper/HttpConnectionTest.java test_orig/java/org/jsoup/helper/HttpConnectionTest.java
+--- test/java/org/jsoup/helper/HttpConnectionTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/helper/HttpConnectionTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -183,41 +183,10 @@
+         assertEquals("http://example.com", con.request().url().toExternalForm());
+     }
+ 
+-    // Lucas
+-    // Exercises line 139 of HttpConnection
+-    @Test void connectWithUrlNotNull() throws MalformedURLException {
+-        Connection con = HttpConnection.connect(new URL("http://example.com"));
+-        assertNotNull(con.request().url());
+-    }
+-
+-    // Lucas
+-    // Triggers line 144 of HttpConnection to throw ValidationException
+-    @Test void nullUrlCausesValidationException() {
+-
+-        ValidationException exception = assertThrows(ValidationException.class, () -> {
+-            Connection con = HttpConnection.connect("");;
+-        });
+-
+-        assertEquals("The 'url' parameter must not be empty.", exception.getMessage());
+-    }
+-
+-    // Lucas
+-    // Triggers line 167 of HttpConnection to throw ValidationException
+-    @Test void nullUserAgentCausesValidationException() {
+-
+-        ValidationException exception = assertThrows(ValidationException.class, () -> {
+-            Connection con = HttpConnection.connect("http://example.com/").userAgent(null);;
+-        });
+-
+-        assertEquals("The parameter 'userAgent' must not be null.", exception.getMessage());
+-    }
+-
+     @Test public void throwsOnMalformedUrl() {
+         assertThrows(IllegalArgumentException.class, () -> HttpConnection.connect("bzzt"));
+     }
+ 
+-
+-
+     @Test public void userAgent() {
+         Connection con = HttpConnection.connect("http://example.com/");
+         assertEquals(HttpConnection.DEFAULT_UA, con.request().header("User-Agent"));
+@@ -458,36 +427,4 @@
+         assertEquals(input, fixHeaderEncoding(input));
+         assertEquals(input, fixHeaderEncoding(mojibake(input)));
+     }
+-
+-    // Lucas
+-    // Catches mutation of second condition to be 'false' in fixHeaderEncoding()
+-    // This is actually a pretty interesting, but subtle case
+-    @Test
+-    public void fixHeaderEncodingIgnoresNonIso8859Strings() {
+-        /*
+-         In order for us to trigger this conditional branch in fixHeaderEncoding(),
+-         we first need something that is not encodable in ISO 8859-1, but would still trigger looksLIkeUtf8().
+-         That is, we need a "pathological string" comprised of bytes that are technically all legal ISO 8859-1
+-         characters, but when combined together, would also form a legal UTF-8 character.
+-
+-         To do this, I arbitrarily chose to include the Euro symbol (€, "\u20AC") which is outside ISO 8859-1
+-         inside our "pathological string". But then, 0x20 and 0xAC are also still valid ISO 8859-1 characters
+-         (Space and ¬, respectively).
+-
+-         The rest of the string is composed of alternating bytes of 0xC3 and 0xA7 (Ã and §, respectively).
+-
+-         Then,looksLikeUtf8() sees this as possible UTF-8 (since it's valid UTF-8), then returns the raw bytes parsed
+-         as UTF-8 (which would be "ççç€", since "C3 A7" and "20 AC" are valid 2-byte sequences in UTF-8. This is
+-         technically a different string now from what we initially passed to fixHeaderEncoding, meaning we'd get a different
+-         returned value. This lets us catch this subtle mutant.
+-        */
+-        String val = "\u00C3\u00A7\u00C3\u00A7\u00C3\u00A7\u20AC";
+-        assertEquals(val, fixHeaderEncoding(val));
+-    }
+-
+-    // Lucas
+-    @Test
+-    public void sslSocketFactoryNotNullAfterSet() {
+-
+-    }
+ }
+Binary files test/java/org/jsoup/helper/HttpConnectionTest.java:Zone.Identifier and test_orig/java/org/jsoup/helper/HttpConnectionTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/integration/Benchmark.java:Zone.Identifier and test_orig/java/org/jsoup/integration/Benchmark.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/integration/ConnectIT.java:Zone.Identifier and test_orig/java/org/jsoup/integration/ConnectIT.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/integration/ConnectTest.java test_orig/java/org/jsoup/integration/ConnectTest.java
+--- test/java/org/jsoup/integration/ConnectTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/integration/ConnectTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -357,8 +357,6 @@
+         assertEquals(null, ihVal("Post Data", doc));
+     }
+ 
+-
+-
+     /**
+      * Tests upload of content to a remote service.
+      */
+@@ -407,10 +405,10 @@
+         Connection.Response res = Jsoup.connect(echoUrl).execute().readFully();
+ 
+         Document doc = res.parse();
+-        assertTrue(doc.title().contains("Environment"));
++        assertEquals("Webserver Environment Variables", doc.title());
+ 
+         Document doc2 = res.parse();
+-        assertTrue(doc2.title().contains("Environment"));
++        assertEquals("Webserver Environment Variables", doc2.title());
+     }
+ 
+     @Test
+@@ -418,10 +416,29 @@
+         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
+ 
+         Document doc = res.parse();
+-        assertTrue(doc.title().contains("Environment"));
++        assertEquals("Webserver Environment Variables", doc.title());
+ 
+         Document doc2 = res.parse();
+-        assertTrue(doc2.title().contains("Environment"));
++        assertEquals("Webserver Environment Variables", doc2.title());
++    }
++
++    @Test
++    public void bufferedParseWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
++        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute();
++
++        Document doc = res.parse();
++        assertEquals("UTF-8", res.charset());
++        assertEquals("http://example.com/foo.jpg", doc.expectFirst("img").absUrl("src"));
++    }
++
++    @Test
++    public void bufferedStreamParserWorksWhenCharsetDetectionFullyReadsResponse() throws IOException {
++        // https://github.com/jhy/jsoup/issues/2483
++        Connection.Response res = Jsoup.connect(FileServlet.urlTo("/htmltests/charset-base.html")).execute();
++
++        Document doc = res.streamParser().complete();
++        assertEquals("UTF-8", res.charset());
++        assertEquals("http://example.com/foo.jpg", doc.expectFirst("img").absUrl("src"));
+     }
+ 
+     @Test
+Binary files test/java/org/jsoup/integration/FuzzFixesIT.java:Zone.Identifier and test_orig/java/org/jsoup/integration/FuzzFixesIT.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/integration/FuzzFixesTest.java:Zone.Identifier and test_orig/java/org/jsoup/integration/FuzzFixesTest.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/integration/ProxyTest.java test_orig/java/org/jsoup/integration/ProxyTest.java
+--- test/java/org/jsoup/integration/ProxyTest.java	2026-04-13 19:10:58.000000000 -0700
++++ test_orig/java/org/jsoup/integration/ProxyTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -17,7 +17,6 @@
+ 
+ import javax.servlet.http.HttpServletResponse;
+ import java.io.IOException;
+-import java.net.URL;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import java.util.stream.Stream;
+ 
+@@ -141,32 +140,6 @@
+         assertEquals(HttpServletResponse.SC_OK, successRes.statusCode());
+     }
+ 
+-    @ParameterizedTest
+-    @MethodSource("echoUrls")
+-    void testProxyNullResetsToDirect(String url) throws IOException {
+-
+-        // First we'll set a proxy
+-        Connection session = Jsoup.newSession()
+-                .proxy(proxy.hostname, proxy.authedPort)
+-                .ignoreHttpErrors(true);
+-
+-        // Then, we'll set the proxy to null to disable to previously set proxy
+-        session.proxy(null);
+-
+-        // Then this should go through
+-        assertDoesNotThrow(() -> session.newRequest(url).execute());
+-    }
+-
+-    // Coverage of null case of getter for HttpConnection.proxy(@Nullable proxy)
+-    @Test
+-    void proxyOverloadNullCheck() {
+-        Connection session = Jsoup.newSession();
+-
+-        // This should accept null
+-        Connection ncon = assertDoesNotThrow(() -> session.proxy(null));
+-        assertNotNull(ncon);
+-    }
+-
+     static void assertAuthRequiredException(IOException e) {
+         // in CONNECT (for the HTTPS url), URLConnection will throw the proxy connect as a Stringly typed IO exception - "Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"". (Not a response code)
+         // Alternatively, some platforms (?) will report: "No credentials provided"
+@@ -207,33 +180,4 @@
+         assertEquals(2, count.get()); // hit server and proxy auth stages
+         assertEquals("Webserver Environment Variables", res.parse().title());
+     }
+-
+-    @Test void proxyForSessionUrlOverload() throws IOException {
+-        Connection session = Jsoup.newSession().proxy(proxy.hostname, proxy.port);
+-
+-
+-        // Java.net.URL objects
+-        URL medUrl = new URL(FileServlet.urlTo("/htmltests/medium.html"));
+-        URL largeUrl = new URL(FileServlet.urlTo("/htmltests/large.html"));
+-
+-
+-        Connection.Response medRes = session.newRequest(medUrl).execute();
+-        Connection.Response largeRes = session.newRequest(largeUrl).execute();
+-        
+-        assertEquals("Medium HTML", medRes.parse().title());
+-        assertEquals("Large HTML", largeRes.parse().title());
+-
+-
+-        // Test with TLS URL objects
+-        URL smedUrl = new URL(FileServlet.tlsUrlTo("/htmltests/medium.html"));
+-        URL slargeUrl = new URL(FileServlet.tlsUrlTo("/htmltests/large.html"));
+-
+-
+-        Connection.Response smedRes = session.newRequest(smedUrl).execute();
+-        Connection.Response slargeRes = session.newRequest(slargeUrl).execute();
+-
+-
+-        assertEquals("Medium HTML", smedRes.parse().title());
+-        assertEquals("Large HTML", slargeRes.parse().title());
+-    }
+ }
+Binary files test/java/org/jsoup/integration/servlets/BaseServlet.java:Zone.Identifier and test_orig/java/org/jsoup/integration/servlets/BaseServlet.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/integration/servlets/HelloServlet.java:Zone.Identifier and test_orig/java/org/jsoup/integration/servlets/HelloServlet.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/integration/servlets/InterruptedServlet.java:Zone.Identifier and test_orig/java/org/jsoup/integration/servlets/InterruptedServlet.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/internal/QuietAppendableTest.java test_orig/java/org/jsoup/internal/QuietAppendableTest.java
+--- test/java/org/jsoup/internal/QuietAppendableTest.java	2026-04-11 23:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/internal/QuietAppendableTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -78,35 +78,4 @@
+         assertTrue(threw);
+     }
+ 
+-    // Lucas
+-    @Test void quietAppendNotNullThreeParam() {
+-        String expect = "😀";
+-        char[] chars = new char[2];
+-        chars[0] = expect.charAt(0);
+-        chars[1] = expect.charAt(1);
+-        assertEquals(2, expect.length());
+-
+-        QuietAppendable sb = QuietAppendable.wrap(new StringBuilder());
+-        assertNotNull(sb.append(chars, 0, 2));
+-    }
+-
+-    // Handles non-nullity of append(char[], int, int) override as well
+-    @Test
+-    public void testBaseAppendableChaining() {
+-
+-        Appendable accum = new StringBuilder();
+-        QuietAppendable qa = QuietAppendable.wrap(accum);
+-
+-        char[] chars = {'h', 'e', 'l', 'l', 'o'};
+-
+-        QuietAppendable result = qa.append(chars, 0, 5).append('!');
+-        assertNotNull(result);
+-        assertEquals("hello!", accum.toString());
+-
+-        // let's do the same with a StringBuilder type too
+-        StringBuilder accum2 = new StringBuilder();
+-        QuietAppendable qa2 = QuietAppendable.wrap(accum2);
+-        assertNotNull(qa2.append(chars, 0, 5).append('!'));
+-        assertEquals("hello!", accum2.toString());
+-    }
+ }
+diff -ur test/java/org/jsoup/internal/ReaderTest.java test_orig/java/org/jsoup/internal/ReaderTest.java
+--- test/java/org/jsoup/internal/ReaderTest.java	2026-04-13 17:23:04.000000000 -0700
++++ test_orig/java/org/jsoup/internal/ReaderTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -6,7 +6,6 @@
+ import org.jsoup.parser.Parser;
+ import org.junit.jupiter.api.Test;
+ 
+-import java.io.ByteArrayInputStream;
+ import java.io.FileInputStream;
+ import java.io.IOException;
+ import java.nio.charset.StandardCharsets;
+@@ -15,7 +14,6 @@
+ 
+ import static org.jsoup.integration.ParseTest.getPath;
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+-import static org.junit.jupiter.api.Assertions.assertThrows;
+ 
+ public class ReaderTest {
+     @Test void readerOfStringAndFile() throws IOException {
+@@ -34,86 +32,6 @@
+         assertEquals(fromBytes, fullRead);
+     }
+ 
+-    @Test
+-    void testReadArithmeticBoundaries() throws IOException {
+-        byte[] data = "0123456789".getBytes(StandardCharsets.UTF_8);
+-        SimpleBufferedInput sbi = new SimpleBufferedInput(new ByteArrayInputStream(data));
+-
+-        byte[] dest = new byte[10];
+-
+-        // 1. Kill mutations in 'bufAvail = bufLength - bufPos'
+-        // Read exactly 1 byte to move bufPos
+-        int read1 = sbi.read(dest, 0, 1);
+-        assertEquals(1, read1);
+-        assertEquals((byte)'0', dest[0]);
+-
+-        // 2. Kill mutations in 'read = Math.min(bufAvail, desiredLen)'
+-        // Request more than what is left in the buffer (but within stream limits)
+-        // If the Math.min logic is mutated, this will likely over-read or return wrong lengths
+-        byte[] largeDest = new byte[20];
+-        int readRemainder = sbi.read(largeDest, 0, 20);
+-        assertEquals(9, readRemainder); // Remaining: 123456789
+-        assertEquals((byte)'1', largeDest[0]);
+-        assertEquals((byte)'9', largeDest[8]);
+-    }
+-
+-    @Test
+-    void testExactBufferExhaustion() throws IOException {
+-        // SimpleBufferedInput.BufferSize is 8192 by default.
+-        // We want to test the arithmetic when bufAvail is exactly 0.
+-        byte[] data = new byte[SimpleBufferedInput.BufferSize + 10];
+-        for (int i = 0; i < data.length; i++) data[i] = (byte) (i % 128);
+-
+-        SimpleBufferedInput sbi = new SimpleBufferedInput(new ByteArrayInputStream(data));
+-
+-        // Read exactly the full buffer size
+-        byte[] firstBatch = new byte[SimpleBufferedInput.BufferSize];
+-        int read = sbi.read(firstBatch, 0, SimpleBufferedInput.BufferSize);
+-        assertEquals(SimpleBufferedInput.BufferSize, read);
+-
+-        // This second read triggers fill() because bufAvail == 0 (bufLength - bufPos == 0)
+-        // Mutations changing '-' to '+' or '*' in bufAvail calculation will fail here.
+-        byte[] secondBatch = new byte[10];
+-        int read2 = sbi.read(secondBatch, 0, 10);
+-        assertEquals(10, read2);
+-        assertEquals(data[SimpleBufferedInput.BufferSize], secondBatch[0]);
+-    }
+-
+-    @Test
+-    void testDestinationOffsetArithmetic() throws IOException {
+-        byte[] data = "ABCDE".getBytes(StandardCharsets.UTF_8);
+-        SimpleBufferedInput sbi = new SimpleBufferedInput(new ByteArrayInputStream(data));
+-
+-        byte[] dest = new byte[10];
+-        // Kill mutations in 'dest.length - offset' (the IndexOutOfBounds check)
+-        assertThrows(IndexOutOfBoundsException.class, () -> {
+-            sbi.read(dest, 8, 3); // 8 + 3 > 10
+-        });
+-
+-        // Kill mutations in System.arraycopy params (offset and read)
+-        // We write to the middle of the array
+-        int read = sbi.read(dest, 2, 3);
+-        assertEquals(3, read);
+-        assertEquals(0, dest[0]);    // Empty
+-        assertEquals('A', (char)dest[2]);
+-        assertEquals('B', (char)dest[3]);
+-        assertEquals('C', (char)dest[4]);
+-        assertEquals(0, dest[5]);    // Empty
+-    }
+-
+-    @Test
+-    void testReadFullyAndEOF() throws IOException {
+-        byte[] data = "A".getBytes(StandardCharsets.UTF_8);
+-        SimpleBufferedInput sbi = new SimpleBufferedInput(new ByteArrayInputStream(data));
+-
+-        sbi.read(new byte[1], 0, 1);
+-
+-        // This read should hit the 'read <= 0' check and return -1
+-        // If 'read <= 0' is mutated to 'read < 0', this might hang or error
+-        int eof = sbi.read(new byte[1], 0, 1);
+-        assertEquals(-1, eof);
+-    }
+-
+     private static String getString(SimpleStreamReader streamReader) throws IOException {
+         // read streamreader to a string:
+         StringBuilder builder = new StringBuilder();
+diff -ur test/java/org/jsoup/internal/SoftPoolTest.java test_orig/java/org/jsoup/internal/SoftPoolTest.java
+--- test/java/org/jsoup/internal/SoftPoolTest.java	2026-04-13 18:07:46.000000000 -0700
++++ test_orig/java/org/jsoup/internal/SoftPoolTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -136,4 +136,4 @@
+         ArrayDeque<char[]> stack = softLocalPool.getStack();
+         assertTrue(stack.size() <= SoftPool.MaxIdle, "Pool size exceeded MaxIdle limit");
+     }
+-}
+\ No newline at end of file
++}
+diff -ur test/java/org/jsoup/internal/StringUtilTest.java test_orig/java/org/jsoup/internal/StringUtilTest.java
+--- test/java/org/jsoup/internal/StringUtilTest.java	2026-04-10 00:16:40.000000000 -0700
++++ test_orig/java/org/jsoup/internal/StringUtilTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -232,40 +232,4 @@
+         assertFalse(StringUtil.isHexDigit('١'));
+         assertFalse(StringUtil.isHexDigit('୳'));
+     }
+-
+-    // Lucas
+-    @Test void stringJoinerNonNullityTest() {
+-        StringUtil.StringJoiner joiner = new StringUtil.StringJoiner(", ");
+-        assertNotNull(joiner.add(" "));
+-        assertNotNull(joiner.append(" "));
+-    }
+-
+-    // Lucas
+-    @Test
+-    void isAsciiUpperBoundaryCase() {
+-        char c = 127;
+-        assertTrue(StringUtil.isAscii(String.valueOf(c)));
+-    }
+-
+-    // Lucas
+-    @Test void startsWithNewlineTest() {
+-        assertFalse(StringUtil.startsWithNewline(null));
+-        assertFalse(StringUtil.startsWithNewline(""));
+-
+-        assertTrue(StringUtil.startsWithNewline("\n"));
+-        assertTrue(StringUtil.startsWithNewline("\nHello"));
+-        assertTrue(StringUtil.startsWithNewline("\n\n"));
+-
+-        assertFalse(StringUtil.startsWithNewline(" "));
+-        assertFalse(StringUtil.startsWithNewline("Hello\n"));
+-        assertFalse(StringUtil.startsWithNewline("\r\n"));
+-        assertFalse(StringUtil.startsWithNewline("\r"));
+-
+-        assertFalse(StringUtil.startsWithNewline("g"));
+-        assertFalse(StringUtil.startsWithNewline("G"));
+-        assertFalse(StringUtil.startsWithNewline("ä"));
+-        assertFalse(StringUtil.startsWithNewline("Ä"));
+-        assertFalse(StringUtil.startsWithNewline("١"));
+-        assertFalse(StringUtil.startsWithNewline("୳"));
+-    }
+ }
+Binary files test/java/org/jsoup/internal/StringUtilTest.java:Zone.Identifier and test_orig/java/org/jsoup/internal/StringUtilTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/AttributeTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/AttributeTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/AttributesTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/AttributesTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/CommentTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/CommentTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/DataNodeTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/DataNodeTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/DocumentTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/DocumentTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/EntitiesTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/EntitiesTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/LeafNodeTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/LeafNodeTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/NodeIteratorTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/NodeIteratorTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/NodeStreamTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/NodeStreamTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/PrinterTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/PrinterTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/nodes/TextNodeTest.java:Zone.Identifier and test_orig/java/org/jsoup/nodes/TextNodeTest.java:Zone.Identifier differ
+Only in test/java/org/jsoup/parser: CharacterReaderFuzzer.java
+Only in test/java/org/jsoup/parser: CharacterReaderFuzzer.java:Zone.Identifier
+Only in test/java/org/jsoup/parser: CharacterReaderFuzzer.java:Zone.Identifier:Zone.Identifier
+Binary files test/java/org/jsoup/parser/HtmlParserTest.java:Zone.Identifier and test_orig/java/org/jsoup/parser/HtmlParserTest.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/parser/HtmlTreeBuilderTest.java test_orig/java/org/jsoup/parser/HtmlTreeBuilderTest.java
+--- test/java/org/jsoup/parser/HtmlTreeBuilderTest.java	2026-04-09 23:41:46.000000000 -0700
++++ test_orig/java/org/jsoup/parser/HtmlTreeBuilderTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -25,13 +25,11 @@
+ 
+     @Test
+     public void nonnull() {
+-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
++        assertThrows(IllegalArgumentException.class, () -> {
+                 HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
+                 treeBuilder.parse(null, null, null); // not sure how to test that these visual warnings actually appear! - test below checks for method annotation
+             }
+         ); // I'm not convinced that this lambda is easier to read than the old Junit 4 @Test(expected=IEA.class)...
+-
+-        assertTrue(exception.getMessage().contains("The parameter 'input' must not be null."));
+     }
+ 
+     @Test public void nonnullAssertions() throws NoSuchMethodException {
+Binary files test/java/org/jsoup/parser/ParserIT.java:Zone.Identifier and test_orig/java/org/jsoup/parser/ParserIT.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/parser/ParserSettingsTest.java:Zone.Identifier and test_orig/java/org/jsoup/parser/ParserSettingsTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/parser/TagSetTest.java:Zone.Identifier and test_orig/java/org/jsoup/parser/TagSetTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/parser/TokeniserStateTest.java:Zone.Identifier and test_orig/java/org/jsoup/parser/TokeniserStateTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/parser/TokeniserTest.java:Zone.Identifier and test_orig/java/org/jsoup/parser/TokeniserTest.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/safety/CleanerTest.java test_orig/java/org/jsoup/safety/CleanerTest.java
+--- test/java/org/jsoup/safety/CleanerTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/safety/CleanerTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -7,6 +7,7 @@
+ import org.jsoup.nodes.Element;
+ import org.jsoup.nodes.Entities;
+ import org.jsoup.nodes.Range;
++import org.jsoup.parser.ParseSettings;
+ import org.jsoup.parser.Parser;
+ import org.jsoup.parser.Tag;
+ import org.jsoup.parser.TagSet;
+@@ -282,6 +283,48 @@
+         assertEquals("<a href=\"http://example.com/foo\">Link</a><img src=\"http://example.com/bar\">", clean);
+     }
+ 
++    @Test void cleanDoesNotModifyInputDocumentWhenResolvingRelativeLinks() {
++        String html = "<a href='/foo'>Link</a>";
++        Cleaner cleaner = new Cleaner(Safelist.basic());
++        Document dirty = Jsoup.parseBodyFragment(html, "http://example.com/");
++        Document clean = cleaner.clean(dirty);
++
++        assertEquals("<a href=\"http://example.com/foo\">Link</a>", clean.body().html());
++        assertEquals("/foo", dirty.expectFirst("a").attr("href"));
++    }
++
++    @Test void isValidDoesNotModifyInputDocumentWhenResolvingRelativeLinks() {
++        String html = "<a href='/foo'>Link</a>";
++        Cleaner cleaner = new Cleaner(Safelist.basic());
++        Document dirty = Jsoup.parseBodyFragment(html, "http://example.com/");
++
++        assertTrue(cleaner.isValid(dirty));
++        assertEquals("<a href=\"http://example.com/foo\">Link</a>",
++            cleaner.clean(Jsoup.parseBodyFragment(html, "http://example.com/")).body().html());
++        assertEquals("/foo", dirty.expectFirst("a").attr("href"));
++    }
++
++    @Test void allPseudoTagProtocolsNormalizeRelativeLinks() {
++        Safelist safelist = new Safelist()
++            .addTags("a")
++            .addAttributes(":all", "href")
++            .addProtocols(":all", "href", "http", "https");
++        Document dirty = Jsoup.parseBodyFragment("<a href='/foo'>Link</a>", "http://example.com/");
++
++        assertEquals("<a href=\"http://example.com/foo\">Link</a>", new Cleaner(safelist).clean(dirty).body().html());
++    }
++
++    @Test void tagSpecificAttributesDoNotInheritAllPseudoTagProtocols() {
++        Safelist safelist = new Safelist()
++            .addTags("a")
++            .addAttributes("a", "href")
++            .addAttributes(":all", "href")
++            .addProtocols(":all", "href", "http", "https");
++        Document dirty = Jsoup.parseBodyFragment("<a href='/foo'>Link</a>", "http://example.com/");
++
++        assertEquals("<a href=\"/foo\">Link</a>", new Cleaner(safelist).clean(dirty).body().html());
++    }
++
+     @Test public void preservesRelativeLinksIfConfigured() {
+         String html = "<a href='/foo'>Link</a><img src='/bar'> <img src='javascript:alert()'>";
+         String clean = Jsoup.clean(html, "http://example.com/", Safelist.basicWithImages().preserveRelativeLinks(true));
+@@ -428,6 +471,18 @@
+         assertEquals("<a>One</a> <a>Two</a>", clean);
+     }
+ 
++    @Test void cleanerPreservesCaseVariantOfMatchingEnforcedAttribute() {
++        Document dirty = Jsoup.parse("<a href='http://example.com/' REL='nofollow'>Link</a>", "",
++            Parser.htmlParser().settings(ParseSettings.preserveCase));
++        Cleaner cleaner = new Cleaner(Safelist.basic());
++
++        Document clean = cleaner.clean(dirty);
++        Element link = clean.expectFirst("a");
++        assertTrue(link.hasAttr("REL"));
++        assertEquals("nofollow", link.attr("REL"));
++        assertTrue(cleaner.isValid(dirty));
++    }
++
+     @Test public void handlesNestedQuotesInAttribute() {
+         // https://github.com/jhy/jsoup/issues/1243 - no repro
+         String orig = "<div style=\"font-family: 'Calibri'\">Will (not) fail</div>";
+@@ -524,6 +579,29 @@
+         assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a> <a href=\"/relative/\">Two</a> <a href=\"../other/\">Three</a> <a href=\"http://example.com/bar\" rel=\"nofollow\">Four</a>", clean4);
+     }
+ 
++    @Test void canonicalizesEnforcedAttributes() {
++        Document customDirty = Jsoup.parse("<a REL='external'>One</a>", "",
++            Parser.htmlParser().settings(ParseSettings.preserveCase));
++        Cleaner customCleaner = new Cleaner(Safelist.none()
++            .addTags("a")
++            .addEnforcedAttribute("a", "rel", "external"));
++        assertEquals("<a rel=\"external\">One</a>", customCleaner.clean(customDirty).body().html());
++    }
++
++    @Test void canonicalizesNofollowEnforcedAttribute() {
++        Document dirty = Jsoup.parse("<a href='http://external.com/' REL='nofollow'>One</a>", "",
++            Parser.htmlParser().settings(ParseSettings.preserveCase));
++        Cleaner cleaner = new Cleaner(Safelist.basic());
++        assertEquals("<a href=\"http://external.com/\" rel=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
++    }
++
++    @Test void preservesMatchingSourceNofollowWhenEnforcementSuppressed() {
++        Document dirty = Jsoup.parse("<a href='http://example.com/foo' REL='nofollow'>One</a>", "http://example.com/",
++            Parser.htmlParser().settings(ParseSettings.preserveCase));
++        Cleaner cleaner = new Cleaner(Safelist.basic());
++        assertEquals("<a href=\"http://example.com/foo\" REL=\"nofollow\">One</a>", cleaner.clean(dirty).body().html());
++    }
++
+     @Test void discardsSvgScriptData() {
+         // https://github.com/jhy/jsoup/issues/2320
+         Safelist svgOk = Safelist.none().addTags("svg");
+Binary files test/java/org/jsoup/safety/CleanerTest.java:Zone.Identifier and test_orig/java/org/jsoup/safety/CleanerTest.java:Zone.Identifier differ
+diff -ur test/java/org/jsoup/safety/SafelistTest.java test_orig/java/org/jsoup/safety/SafelistTest.java
+--- test/java/org/jsoup/safety/SafelistTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java/org/jsoup/safety/SafelistTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -62,6 +62,27 @@
+     }
+ 
+     @Test
++    void isSafeAttributeDoesNotModifyLiveAttribute() {
++        Attributes attributes = new Attributes().put("href", "/foo");
++        Element link = new Element(Tag.valueOf("a"), "https://example.com/", attributes);
++        Attribute href = link.attributes().attribute("href");
++        assertNotNull(href);
++
++        assertTrue(Safelist.basic().isSafeAttribute("a", link, href));
++        assertEquals("/foo", href.getValue());
++        assertEquals("/foo", link.attr("href"));
++    }
++
++    @Test
++    void enforcedAttributeMatchesInputKeyCaseInsensitively() {
++        Attribute rel = new Attribute("REL", "nofollow");
++        Attributes attributes = new Attributes().put(rel);
++        Element link = new Element(Tag.valueOf("a"), "", attributes);
++
++        assertTrue(Safelist.basic().isSafeAttribute("a", link, rel));
++    }
++
++    @Test
+     void noscriptIsBlocked() {
+         boolean threw = false;
+         Safelist safelist = null;
+Binary files test/java/org/jsoup/safety/SafelistTest.java:Zone.Identifier and test_orig/java/org/jsoup/safety/SafelistTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/select/CssTest.java:Zone.Identifier and test_orig/java/org/jsoup/select/CssTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/select/NodesTest.java:Zone.Identifier and test_orig/java/org/jsoup/select/NodesTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/select/QueryParserTest.java:Zone.Identifier and test_orig/java/org/jsoup/select/QueryParserTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/select/StructuralEvaluatorTest.java:Zone.Identifier and test_orig/java/org/jsoup/select/StructuralEvaluatorTest.java:Zone.Identifier differ
+Binary files test/java/org/jsoup/select/TraversorTest.java:Zone.Identifier and test_orig/java/org/jsoup/select/TraversorTest.java:Zone.Identifier differ
+diff -ur test/java11/org/jsoup/helper/HttpClientExecutorTest.java test_orig/java11/org/jsoup/helper/HttpClientExecutorTest.java
+--- test/java11/org/jsoup/helper/HttpClientExecutorTest.java	2026-04-05 15:09:08.000000000 -0700
++++ test_orig/java11/org/jsoup/helper/HttpClientExecutorTest.java	2026-04-13 22:07:29.073381800 -0700
+@@ -1,29 +1,54 @@
+ package org.jsoup.helper;
++
+ import org.jsoup.internal.SharedConstants;
+ import org.junit.jupiter.api.Test;
+ 
+ import java.io.IOException;
+-import java.net.*;
++import java.net.InetSocketAddress;
++import java.net.Proxy;
++import java.net.ProxySelector;
++import java.net.SocketAddress;
++import java.net.URI;
+ import java.util.Collections;
+ import java.util.List;
+ 
+ import static org.junit.jupiter.api.Assertions.*;
+ 
+ public class HttpClientExecutorTest {
++    @Test void loadsMultiReleaseHttpClientExecutor() {
++        // sanity check that the test is resolving the packaged Java 11 override, not a copy on the test classpath
++        String resource = HttpClientTestAccess.executorClassResource().toExternalForm();
++        assertTrue(resource.contains("/META-INF/versions/11/"), resource);
++    }
++
+     @Test void getsHttpClient() {
+         try {
+             enableHttpClient();
+             RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
+-            assertInstanceOf(HttpClientExecutor.class, executor);
++            assertTrue(HttpClientTestAccess.isHttpClientExecutor(executor));
+         } finally {
+             disableHttpClient(); // reset to previous default for JDK8 compat tests
+         }
+     }
+ 
+-    @Test void getsHttpUrlConnectionByDefault() {
++    @Test void getsHttpClientByDefault() {
+         System.clearProperty(SharedConstants.UseHttpClient);
+         RequestExecutor executor = RequestDispatch.get(new HttpConnection.Request(), null);
+-        assertInstanceOf(HttpClientExecutor.class, executor);
++        assertTrue(HttpClientTestAccess.isHttpClientExecutor(executor));
++    }
++
++    @Test void downgradesSocksProxyToUrlConnectionExecutor() {
++        try {
++            enableHttpClient();
++            HttpConnection.Request request = new HttpConnection.Request();
++            request.proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("localhost", 1080)));
++
++            // SOCKS handling only matters on the Java 11+ path where HttpClient would otherwise be selected (and just bypasses)
++            RequestExecutor executor = RequestDispatch.get(request, null);
++            assertInstanceOf(UrlConnectionExecutor.class, executor);
++        } finally {
++            disableHttpClient(); // reset to previous default for JDK8 compat tests
++        }
+     }
+ 
+     public static void enableHttpClient() {
+@@ -51,9 +76,9 @@
+                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {}
+             });
+ 
+-            HttpClientExecutor.ProxyWrap wrap = new HttpClientExecutor.ProxyWrap();
++            ProxySelector wrap = HttpClientTestAccess.newProxyWrap();
+             List<Proxy> proxies = wrap.select(URI.create("http://example.com"));
+-            
++
+             assertEquals(1, proxies.size());
+             assertSame(defaultProxy, proxies.get(0).address());
+         } finally {
+@@ -62,12 +87,15 @@
+     }
+ 
+     @Test void proxyWrapConnectFailedOnlyForSystemProxy() {
+-        HttpClientExecutor.ProxyWrap wrap = new HttpClientExecutor.ProxyWrap();
+-        HttpClientExecutor.perRequestProxy.set(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("custom", 9090)));
+-        wrap.connectFailed(URI.create("http://example.com"), 
+-            new InetSocketAddress("custom", 9090), 
+-            new IOException("test"));
+-        HttpClientExecutor.perRequestProxy.remove();
++        try {
++            ProxySelector wrap = HttpClientTestAccess.newProxyWrap();
++            HttpClientTestAccess.setPerRequestProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("custom", 9090)));
++            wrap.connectFailed(URI.create("http://example.com"),
++                new InetSocketAddress("custom", 9090),
++                new IOException("test"));
++        } finally {
++            HttpClientTestAccess.clearPerRequestProxy();
++        }
+     }
+ 
+     @Test
+@@ -86,14 +114,14 @@
+                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {}
+             });
+ 
+-            HttpClientExecutor.perRequestProxy.set(
++            HttpClientTestAccess.setPerRequestProxy(
+                 new Proxy(Proxy.Type.HTTP, perReqProxy));
+ 
+-            HttpClientExecutor.ProxyWrap wrap = new HttpClientExecutor.ProxyWrap();
++            ProxySelector wrap = HttpClientTestAccess.newProxyWrap();
+             List<Proxy> proxies = wrap.select(URI.create("http://example.com"));
+             assertSame(perReqProxy, proxies.get(0).address());
+         } finally {
+-            HttpClientExecutor.perRequestProxy.remove();
++            HttpClientTestAccess.clearPerRequestProxy();
+             ProxySelector.setDefault(original);
+         }
+     }
+@@ -108,7 +136,7 @@
+                 @Override
+                 public void connectFailed(URI uri, SocketAddress sa, IOException ioe) { called[0] = true; }
+             });
+-            new HttpClientExecutor.ProxyWrap()
++            HttpClientTestAccess.newProxyWrap()
+                 .connectFailed(URI.create("http://example.com"), new InetSocketAddress("x", 80), new IOException("x"));
+             assertTrue(called[0]);
+         } finally {
+Binary files test/java11/org/jsoup/helper/HttpClientExecutorTest.java:Zone.Identifier and test_orig/java11/org/jsoup/helper/HttpClientExecutorTest.java:Zone.Identifier differ
+Only in test_orig/java11/org/jsoup/helper: HttpClientTestAccess.java
+Only in test_orig/java11/org/jsoup/helper: HttpClientTestAccess.java:Zone.Identifier
+Only in test_orig/java11/org/jsoup/helper: HttpClientTestAccess.java:Zone.Identifier:Zone.Identifier
+Binary files test/java11/org/jsoup/integration/HttpClientConnectIT.java:Zone.Identifier and test_orig/java11/org/jsoup/integration/HttpClientConnectIT.java:Zone.Identifier differ
+Binary files test/java11/org/jsoup/integration/HttpClientSessionIT.java:Zone.Identifier and test_orig/java11/org/jsoup/integration/HttpClientSessionIT.java:Zone.Identifier differ
+Binary files test/java11/org/jsoup/integration/HttpClientSessionTest.java:Zone.Identifier and test_orig/java11/org/jsoup/integration/HttpClientSessionTest.java:Zone.Identifier differ
+Binary files test/resources/bomtests/bom_utf16be.html:Zone.Identifier and test_orig/resources/bomtests/bom_utf16be.html:Zone.Identifier differ
+Binary files test/resources/bomtests/bom_utf16le.html:Zone.Identifier and test_orig/resources/bomtests/bom_utf16le.html:Zone.Identifier differ
+Binary files test/resources/bomtests/bom_utf8.html.gz:Zone.Identifier and test_orig/resources/bomtests/bom_utf8.html.gz:Zone.Identifier differ
+Binary files test/resources/bomtests/bom_utf8.html:Zone.Identifier and test_orig/resources/bomtests/bom_utf8.html:Zone.Identifier differ
+Binary files test/resources/fuzztests/1538.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1538.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1542.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1542.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1544.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1544.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1569.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1569.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1577.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1577.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1580-attrname.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1580-attrname.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1580.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1580.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1593.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1593.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1595.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1595.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1596.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1596.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1606.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1606.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1607.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1607.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1611.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1611.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1612.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1612.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1637.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1637.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1639.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1639.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1642.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1642.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1644.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1644.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1646.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1646.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/1695.html.gz:Zone.Identifier and test_orig/resources/fuzztests/1695.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/2353.html.gz:Zone.Identifier and test_orig/resources/fuzztests/2353.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/2374.html.gz:Zone.Identifier and test_orig/resources/fuzztests/2374.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/399497256.html.gz:Zone.Identifier and test_orig/resources/fuzztests/399497256.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/63202.html.gz:Zone.Identifier and test_orig/resources/fuzztests/63202.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/63242.html.gz:Zone.Identifier and test_orig/resources/fuzztests/63242.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/63259.html.gz:Zone.Identifier and test_orig/resources/fuzztests/63259.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/as-replace.html.gz:Zone.Identifier and test_orig/resources/fuzztests/as-replace.html.gz:Zone.Identifier differ
+Binary files test/resources/fuzztests/garble.html:Zone.Identifier and test_orig/resources/fuzztests/garble.html:Zone.Identifier differ
+Binary files test/resources/htmltests/character-reader-buffer.html.gz:Zone.Identifier and test_orig/resources/htmltests/character-reader-buffer.html.gz:Zone.Identifier differ
+Binary files test/resources/htmltests/fake-gzip.html.gz:Zone.Identifier and test_orig/resources/htmltests/fake-gzip.html.gz:Zone.Identifier differ
+Binary files test/resources/htmltests/form-tests.html:Zone.Identifier and test_orig/resources/htmltests/form-tests.html:Zone.Identifier differ
+Binary files test/resources/htmltests/gzip.html.gz:Zone.Identifier and test_orig/resources/htmltests/gzip.html.gz:Zone.Identifier differ
+Binary files test/resources/htmltests/gzip.html.z:Zone.Identifier and test_orig/resources/htmltests/gzip.html.z:Zone.Identifier differ
+Binary files test/resources/htmltests/medium.html:Zone.Identifier and test_orig/resources/htmltests/medium.html:Zone.Identifier differ
+Binary files test/resources/htmltests/meta-charset-1.html:Zone.Identifier and test_orig/resources/htmltests/meta-charset-1.html:Zone.Identifier differ
+Binary files test/resources/htmltests/meta-charset-3.html:Zone.Identifier and test_orig/resources/htmltests/meta-charset-3.html:Zone.Identifier differ
+Binary files test/resources/htmltests/table-invalid-elements.html:Zone.Identifier and test_orig/resources/htmltests/table-invalid-elements.html:Zone.Identifier differ
+Binary files test/resources/htmltests/table-polymer-template.html:Zone.Identifier and test_orig/resources/htmltests/table-polymer-template.html:Zone.Identifier differ
+Binary files test/resources/htmltests/test-rss.xml:Zone.Identifier and test_orig/resources/htmltests/test-rss.xml:Zone.Identifier differ
+Binary files test/resources/htmltests/thumb.jpg:Zone.Identifier and test_orig/resources/htmltests/thumb.jpg:Zone.Identifier differ
+Binary files test/resources/htmltests/upload-form.html:Zone.Identifier and test_orig/resources/htmltests/upload-form.html:Zone.Identifier differ
+Binary files test/resources/htmltests/xml-charset.xml:Zone.Identifier and test_orig/resources/htmltests/xml-charset.xml:Zone.Identifier differ
+Binary files test/resources/htmltests/xml-test.xml:Zone.Identifier and test_orig/resources/htmltests/xml-test.xml:Zone.Identifier differ
+Binary files test/resources/htmltests/xwiki-1324.html.gz:Zone.Identifier and test_orig/resources/htmltests/xwiki-1324.html.gz:Zone.Identifier differ
+Binary files test/resources/htmltests/yahoo-jp.html.gz:Zone.Identifier and test_orig/resources/htmltests/yahoo-jp.html.gz:Zone.Identifier differ
+Binary files test/resources/local-cert/README.md:Zone.Identifier and test_orig/resources/local-cert/README.md:Zone.Identifier differ
+Binary files test/resources/local-cert/cert.conf:Zone.Identifier and test_orig/resources/local-cert/cert.conf:Zone.Identifier differ
+Binary files test/resources/local-cert/server.key:Zone.Identifier and test_orig/resources/local-cert/server.key:Zone.Identifier differ
+Binary files test/resources/local-cert/server.pfx:Zone.Identifier and test_orig/resources/local-cert/server.pfx:Zone.Identifier differ
+Binary files test/resources/printertests/passthru-1.html:Zone.Identifier and test_orig/resources/printertests/passthru-1.html:Zone.Identifier differ
+Binary files test/resources/printertests/pretty-1.html:Zone.Identifier and test_orig/resources/printertests/pretty-1.html:Zone.Identifier differ

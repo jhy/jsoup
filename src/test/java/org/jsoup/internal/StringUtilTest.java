@@ -232,4 +232,40 @@ public class StringUtilTest {
         assertFalse(StringUtil.isHexDigit('١'));
         assertFalse(StringUtil.isHexDigit('୳'));
     }
+
+    // Lucas
+    @Test void stringJoinerNonNullityTest() {
+        StringUtil.StringJoiner joiner = new StringUtil.StringJoiner(", ");
+        assertNotNull(joiner.add(" "));
+        assertNotNull(joiner.append(" "));
+    }
+
+    // Lucas
+    @Test
+    void isAsciiUpperBoundaryCase() {
+        char c = 127;
+        assertTrue(StringUtil.isAscii(String.valueOf(c)));
+    }
+
+    // Lucas
+    @Test void startsWithNewlineTest() {
+        assertFalse(StringUtil.startsWithNewline(null));
+        assertFalse(StringUtil.startsWithNewline(""));
+
+        assertTrue(StringUtil.startsWithNewline("\n"));
+        assertTrue(StringUtil.startsWithNewline("\nHello"));
+        assertTrue(StringUtil.startsWithNewline("\n\n"));
+
+        assertFalse(StringUtil.startsWithNewline(" "));
+        assertFalse(StringUtil.startsWithNewline("Hello\n"));
+        assertFalse(StringUtil.startsWithNewline("\r\n"));
+        assertFalse(StringUtil.startsWithNewline("\r"));
+
+        assertFalse(StringUtil.startsWithNewline("g"));
+        assertFalse(StringUtil.startsWithNewline("G"));
+        assertFalse(StringUtil.startsWithNewline("ä"));
+        assertFalse(StringUtil.startsWithNewline("Ä"));
+        assertFalse(StringUtil.startsWithNewline("١"));
+        assertFalse(StringUtil.startsWithNewline("୳"));
+    }
 }

@@ -183,9 +183,40 @@ public class HttpConnectionTest {
         assertEquals("http://example.com", con.request().url().toExternalForm());
     }
 
+    // Lucas
+    // Exercises line 139 of HttpConnection
+    @Test void connectWithUrlNotNull() throws MalformedURLException {
+        Connection con = HttpConnection.connect(new URL("http://example.com"));
+        assertNotNull(con.request().url());
+    }
+
+    // Lucas
+    // Triggers line 144 of HttpConnection to throw ValidationException
+    @Test void nullUrlCausesValidationException() {
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            Connection con = HttpConnection.connect("");;
+        });
+
+        assertEquals("The 'url' parameter must not be empty.", exception.getMessage());
+    }
+
+    // Lucas
+    // Triggers line 167 of HttpConnection to throw ValidationException
+    @Test void nullUserAgentCausesValidationException() {
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            Connection con = HttpConnection.connect("http://example.com/").userAgent(null);;
+        });
+
+        assertEquals("The parameter 'userAgent' must not be null.", exception.getMessage());
+    }
+
     @Test public void throwsOnMalformedUrl() {
         assertThrows(IllegalArgumentException.class, () -> HttpConnection.connect("bzzt"));
     }
+
+
 
     @Test public void userAgent() {
         Connection con = HttpConnection.connect("http://example.com/");
@@ -426,5 +457,37 @@ public class HttpConnectionTest {
         // https://github.com/jhy/jsoup/issues/2011
         assertEquals(input, fixHeaderEncoding(input));
         assertEquals(input, fixHeaderEncoding(mojibake(input)));
+    }
+
+    // Lucas
+    // Catches mutation of second condition to be 'false' in fixHeaderEncoding()
+    // This is actually a pretty interesting, but subtle case
+    @Test
+    public void fixHeaderEncodingIgnoresNonIso8859Strings() {
+        /*
+         In order for us to trigger this conditional branch in fixHeaderEncoding(),
+         we first need something that is not encodable in ISO 8859-1, but would still trigger looksLIkeUtf8().
+         That is, we need a "pathological string" comprised of bytes that are technically all legal ISO 8859-1
+         characters, but when combined together, would also form a legal UTF-8 character.
+
+         To do this, I arbitrarily chose to include the Euro symbol (€, "\u20AC") which is outside ISO 8859-1
+         inside our "pathological string". But then, 0x20 and 0xAC are also still valid ISO 8859-1 characters
+         (Space and ¬, respectively).
+
+         The rest of the string is composed of alternating bytes of 0xC3 and 0xA7 (Ã and §, respectively).
+
+         Then,looksLikeUtf8() sees this as possible UTF-8 (since it's valid UTF-8), then returns the raw bytes parsed
+         as UTF-8 (which would be "ççç€", since "C3 A7" and "20 AC" are valid 2-byte sequences in UTF-8. This is
+         technically a different string now from what we initially passed to fixHeaderEncoding, meaning we'd get a different
+         returned value. This lets us catch this subtle mutant.
+        */
+        String val = "\u00C3\u00A7\u00C3\u00A7\u00C3\u00A7\u20AC";
+        assertEquals(val, fixHeaderEncoding(val));
+    }
+
+    // Lucas
+    @Test
+    public void sslSocketFactoryNotNullAfterSet() {
+
     }
 }

@@ -1,66 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <name>jsoup Java HTML Parser</name>
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jsoup</groupId>
-  <artifactId>jsoup</artifactId>
-  <version>1.22.2-SNAPSHOT</version><!-- remember to update previous version below for japicmp -->
-  <url>https://jsoup.org/</url>
-  <description>jsoup is a Java library that simplifies working with real-world HTML and XML. It offers an easy-to-use API for URL fetching, data parsing, extraction, and manipulation using DOM API methods, CSS, and xpath selectors. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers.</description>
-  <inceptionYear>2009</inceptionYear>
-  <issueManagement>
-    <system>GitHub</system>
-    <url>https://github.com/jhy/jsoup/issues</url>
-  </issueManagement>
-  <licenses>
-    <license>
-      <name>The MIT License</name>
-      <url>https://jsoup.org/license</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>https://github.com/jhy/jsoup</url>
-    <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
-    <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
-    <tag>HEAD</tag>
-  </scm>
-  <organization>
-    <name>Jonathan Hedley</name>
-    <url>https://jhedley.com/</url>
-  </organization>
+    <groupId>org.jsoup</groupId>
+    <artifactId>jsoup</artifactId>
+    <version>1.22.2-SNAPSHOT</version>
+    <url>https://jsoup.org/</url>
+    <description>jsoup is a Java library that simplifies working with real-world HTML and XML. It offers an easy-to-use API for URL fetching, data parsing, extraction, and manipulation using DOM API methods, CSS, and xpath selectors. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers.</description>
+    <inceptionYear>2009</inceptionYear>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.58.v20250814</jetty.version>
-  </properties>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jetty.version>9.4.58.v20250814</jetty.version>
+    </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.15.0</version>
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <useIncrementalCompilation>false</useIncrementalCompilation>
-          <compilerArgs>
-            <arg>-Xpkginfo:always</arg>
-          </compilerArgs>
-        </configuration>
-        <executions>
-          <!-- Disable the default compile, so the profiles activated below execute -->
-          <execution>
-            <id>default-compile</id>
-            <phase>none</phase>
-          </execution>
-          <execution>
-            <id>default-testCompile</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
+    <build>
+        <plugins>
 
       <!-- Ensure Java 8 and Android 10 API compatibility -->
       <plugin>
@@ -97,8 +53,6 @@
                 <groupId>com.toasttab.android</groupId>
                 <artifactId>gummy-bears-api-21</artifactId>
                 <version>0.10.0</version>
-                <!-- <classifier>coreLib2</classifier> -->
-                <!-- ^^ https://github.com/open-toast/gummy-bears says coreLib2 classifier for desugar should work, but I can't seem to wrangle Animal Sniffer to support that, so reverting to ignores for desugar -->
               </signature>
               <ignores>
                 <ignore>java.io.File</ignore> <!-- File#toPath() -->
@@ -370,249 +324,199 @@
     </resources>
   </build>
 
-  <profiles>
-    <!-- Profile for Java 8 -->
-    <profile>
-      <id>java-8</id>
-      <activation>
-        <jdk>1.8</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>compile</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>compile</goal>
-                  <goal>testCompile</goal>
-                </goals>
-                <configuration>
-                  <source>1.8</source>
-                  <target>1.8</target>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
+    <profiles>
 
-    <!-- Compiles the multi-release jar when executed on JDK11+ -->
-    <profile>
-      <id>compile-multi-release</id>
-      <activation>
-        <jdk>[11,2000)</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <!-- Sets up test/java11 -->
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.6.1</version>
-            <executions>
-              <execution>
-                <id>add-java11-test-source</id>
-                <phase>generate-test-sources</phase>
-                <goals>
-                  <goal>add-test-source</goal>
-                </goals>
-                <configuration>
-                  <sources>
-                    <source>${project.basedir}/src/test/java11</source>
-                  </sources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
+        <profile>
+            <id>java-8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <source>1.8</source>
+                                    <target>1.8</target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <executions>
+        <profile>
+            <id>compile-multi-release</id>
+            <activation>
+                <jdk>[11,2000)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <executions>
+                            <execution>
+                                <id>add-java11-test-source</id>
+                                <phase>generate-test-sources</phase>
+                                <goals><goal>add-test-source</goal></goals>
+                                <configuration>
+                                    <sources>
+                                        <source>${project.basedir}/src/test/java11</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-java-8</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>8</release>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-java-11</id>
+                                <phase>compile</phase>
+                                <goals><goal>compile</goal></goals>
+                                <configuration>
+                                    <release>11</release>
+                                    <compileSourceRoots>
+                                        <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
+                                    </compileSourceRoots>
+                                    <multiReleaseOutput>true</multiReleaseOutput>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/11</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <useModulePath>false</useModulePath>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-              <execution>
-                <id>compile-java-8</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>compile</goal>
-                </goals>
-                <configuration>
-                  <release>8</release>
-                </configuration>
-              </execution>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>package</phase>
+                                <goals><goal>sign</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-              <execution>
-                <id>testCompile-java-11</id>
-                <phase>test-compile</phase>
-                <goals>
-                  <goal>testCompile</goal>
-                </goals>
-                <configuration>
-                  <useModulePath>false</useModulePath>
-                  <release>11</release>
-                </configuration>
-              </execution>
+        <profile>
+            <id>failsafe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.5.5</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-              <execution>
-                <id>compile-java-11</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>compile</goal>
-                </goals>
-                <configuration>
-                  <release>11</release>
-                  <compileSourceRoots>
-                    <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
-                  </compileSourceRoots>
-                  <multiReleaseOutput>true</multiReleaseOutput>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
+    </profiles>
 
-          <!-- Add the Java 11-specific test directory to the test runtime classpath -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <additionalClasspathElements>
-                <additionalClasspathElement>${project.build.outputDirectory}/META-INF/versions/11</additionalClasspathElement>
-              </additionalClasspathElements>
-              <useModulePath>false</useModulePath>  <!-- tests use classpath -->
-            </configuration>
-          </plugin>
-
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>release-sign-artifacts</id>
-      <activation>
-        <property>
-          <name>performRelease</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>failsafe</id>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.5.5</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
-  <dependencies>
-
-    <!-- junit -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.14.3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- gson, to fetch entities from w3.org -->
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.13.2</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty for webserver integration tests -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty proxy, for integration tests -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-proxy</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- org.jspecify.annotations.nonnull, with Apache 2 license. Build time only. -->
-      <groupId>org.jspecify</groupId>
-      <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <!-- re2j; linear time regex, with 3-clause BSD license -->
-      <groupId>com.google.re2j</groupId>
-      <artifactId>re2j</artifactId>
-      <version>1.8</version>
-      <optional>true</optional>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
-
-  <dependencyManagement>
     <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.14.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-proxy</artifactId>
+            <version>${jetty.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.re2j</groupId>
+            <artifactId>re2j</artifactId>
+            <version>1.8</version>
+            <optional>true</optional>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.code-intelligence</groupId>
+            <artifactId>jazzer-api</artifactId>
+            <version>0.22.1</version>
+        </dependency>
     </dependencies>
-  </dependencyManagement>
 
-  <developers>
-    <developer>
-      <id>jhy</id>
-      <name>Jonathan Hedley</name>
-      <email>jonathan@hedley.net</email>
-      <roles>
-        <role>Lead Developer</role>
-      </roles>
-      <timezone>+11</timezone>
-    </developer>
-  </developers>
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
 
 </project>
