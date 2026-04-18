@@ -2,8 +2,7 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.internal.Normalizer;
+import org.jsoup.integration.TestServer;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
@@ -261,7 +260,7 @@ class PositionTest {
     }
 
     @Test void tracksFromFetch() throws IOException {
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = TestServer.origin().file.url("/htmltests/large.html"); // 280 K
         Document doc = Jsoup.connect(url).parser(TrackingHtmlParser).get();
 
         Element firstP = doc.expectFirst("p");
@@ -279,7 +278,7 @@ class PositionTest {
     }
 
     @Test void tracksFromXmlFetch() throws IOException {
-        String url = FileServlet.urlTo("/htmltests/test-rss.xml");
+        String url = TestServer.origin().file.url("/htmltests/test-rss.xml");
         Document doc = Jsoup.connect(url).parser(TrackingXmlParser).get();
 
         Element item = doc.expectFirst("item + item");

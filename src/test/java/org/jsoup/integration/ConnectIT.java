@@ -3,9 +3,7 @@ package org.jsoup.integration;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
-import org.jsoup.integration.servlets.EchoServlet;
-import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.integration.servlets.SlowRider;
+import org.jsoup.integration.routes.SlowRider;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,16 +19,19 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.jsoup.integration.TestServer.origin;
+import static org.jsoup.integration.TestServer.start;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Failsafe integration tests for Connect methods. These take a bit longer to run, so included as Integ, not Unit, tests.
+ Failsafe integration tests for Connect methods. These take a bit longer to run, so included as Integ, not Unit, tests.
  */
 public class ConnectIT {
     @BeforeAll
     public static void setUp() {
-        TestServer.start();
-        System.setProperty(SharedConstants.UseHttpClient, "false"); // use the default UrlConnection. See HttpClientConnectIT for other version
+        start();
+        System.setProperty(SharedConstants.UseHttpClient,
+            "false"); // use the default UrlConnection. See HttpClientConnectIT for other version
     }
 
     // Slow Rider tests.
@@ -39,7 +40,7 @@ public class ConnectIT {
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {
             try {
-                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                Connection.Response res = Jsoup.connect(origin().slowRider.url())
                     .timeout(15 * 1000)
                     .execute();
                 body[0] = res.body();
@@ -65,7 +66,7 @@ public class ConnectIT {
         final String[] body = new String[1];
         Thread runner = new Thread(() -> {
             try {
-                Connection.Response res = Jsoup.connect(SlowRider.Url)
+                Connection.Response res = Jsoup.connect(origin().slowRider.url())
                     .timeout(15 * 1000)
                     .execute();
                 body[0] = res.parse().text();
@@ -87,18 +88,20 @@ public class ConnectIT {
         assertTrue(end - start < 10 * 1000);
     }
 
-    @Test public void canInterruptThenJoinASpawnedThread() throws InterruptedException {
+    @Test
+    public void canInterruptThenJoinASpawnedThread() throws InterruptedException {
         // https://github.com/jhy/jsoup/issues/1991
         AtomicBoolean ioException = new AtomicBoolean();
         Thread runner = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    Document doc  = Jsoup.connect(SlowRider.Url)
+                    Document doc = Jsoup.connect(origin().slowRider.url())
                         .timeout(30000)
                         .get();
                 }
             } catch (IOException e) {
-                ioException.set(true); // don't expect to catch, because the outer sleep will complete before this timeout
+                ioException.set(
+                    true); // don't expect to catch, because the outer sleep will complete before this timeout
             }
         });
 
@@ -115,7 +118,7 @@ public class ConnectIT {
         long start = System.currentTimeMillis();
         boolean threw = false;
         try {
-            Jsoup.connect(SlowRider.Url).timeout(timeout).get();
+            Jsoup.connect(origin().slowRider.url()).timeout(timeout).get();
         } catch (SocketTimeoutException e) {
             long end = System.currentTimeMillis();
             long took = end - start;
@@ -130,7 +133,7 @@ public class ConnectIT {
     @Test
     public void slowReadOk() throws IOException {
         // make sure that a slow read that is under the request timeout is still OK
-        Document doc = Jsoup.connect(SlowRider.Url)
+        Document doc = Jsoup.connect(origin().slowRider.url())
             .data(SlowRider.MaxTimeParam, "2000") // the request completes in 2 seconds
             .get();
 
@@ -138,10 +141,11 @@ public class ConnectIT {
         assertEquals("outatime", h1.text());
     }
 
-    @Test void readFullyThrowsOnTimeout() throws IOException {
+    @Test
+    void readFullyThrowsOnTimeout() throws IOException {
         // tests that response.readFully excepts on timeout
         boolean caught = false;
-        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        Connection.Response res = Jsoup.connect(origin().slowRider.url()).timeout(3000).execute();
         try {
             res.readFully();
         } catch (IOException e) {
@@ -150,10 +154,11 @@ public class ConnectIT {
         assertTrue(caught);
     }
 
-    @Test void readBodyThrowsOnTimeout() throws IOException {
+    @Test
+    void readBodyThrowsOnTimeout() throws IOException {
         // tests that response.readBody excepts on timeout
         boolean caught = false;
-        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        Connection.Response res = Jsoup.connect(origin().slowRider.url()).timeout(3000).execute();
         try {
             res.readBody();
         } catch (IOException e) {
@@ -162,10 +167,11 @@ public class ConnectIT {
         assertTrue(caught);
     }
 
-    @Test void bodyThrowsUncheckedOnTimeout() throws IOException {
+    @Test
+    void bodyThrowsUncheckedOnTimeout() throws IOException {
         // tests that response.body unchecked excepts on timeout
         boolean caught = false;
-        Connection.Response res = Jsoup.connect(SlowRider.Url).timeout(3000).execute();
+        Connection.Response res = Jsoup.connect(origin().slowRider.url()).timeout(3000).execute();
         try {
             res.body();
         } catch (UncheckedIOException e) {
@@ -176,7 +182,7 @@ public class ConnectIT {
 
     @Test
     public void infiniteReadSupported() throws IOException {
-        Document doc = Jsoup.connect(SlowRider.Url)
+        Document doc = Jsoup.connect(origin().slowRider.url())
             .timeout(0)
             .data(SlowRider.MaxTimeParam, "2000")
             .get();
@@ -185,11 +191,13 @@ public class ConnectIT {
         assertEquals("outatime", h1.text());
     }
 
-    @Test void streamParserUncheckedExceptionOnTimeoutInStream() throws IOException {
+    @Test
+    void streamParserUncheckedExceptionOnTimeoutInStream() throws IOException {
         boolean caught = false;
-        try (StreamParser streamParser = Jsoup.connect(SlowRider.Url)
+        try (StreamParser streamParser = Jsoup.connect(origin().slowRider.url())
             .data(SlowRider.MaxTimeParam, "10000")
-            .data(SlowRider.IntroSizeParam, "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
+            .data(SlowRider.IntroSizeParam,
+                "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
             .timeout(4000) // has a 1000 sleep at the start
             .execute()
             .streamParser()) {
@@ -209,11 +217,13 @@ public class ConnectIT {
         assertTrue(caught);
     }
 
-    @Test void streamParserCheckedExceptionOnTimeoutInSelect() throws IOException {
+    @Test
+    void streamParserCheckedExceptionOnTimeoutInSelect() throws IOException {
         boolean caught = false;
-        try (StreamParser streamParser = Jsoup.connect(SlowRider.Url)
+        try (StreamParser streamParser = Jsoup.connect(origin().slowRider.url())
             .data(SlowRider.MaxTimeParam, "10000")
-            .data(SlowRider.IntroSizeParam, "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
+            .data(SlowRider.IntroSizeParam,
+                "8000") // 8K to pass first buffer, or the timeout would occur in execute or streamparser()
             .timeout(4000) // has a 1000 sleep at the start
             .execute()
             .streamParser()) {
@@ -238,7 +248,7 @@ public class ConnectIT {
         int bufferSize = 5 * 1024;
         int capSize = 100 * 1024;
 
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = origin().file.url("/htmltests/large.html"); // 280 K
 
         try (BufferedInputStream stream = Jsoup.connect(url).maxBodySize(capSize)
             .execute().bodyStream()) {
@@ -274,7 +284,7 @@ public class ConnectIT {
     public void noLimitAfterFirstRead() throws IOException {
         int firstMaxRead = 5 * 1024;
 
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = origin().file.url("/htmltests/large.html"); // 280 K
         try (BufferedInputStream stream = Jsoup.connect(url).execute().bodyStream()) {
             // simulates parse which does a limited read first
             stream.mark(firstMaxRead);
@@ -294,9 +304,10 @@ public class ConnectIT {
         }
     }
 
-    @Test public void bodyStreamConstrainedViaReadFully() throws IOException {
+    @Test
+    public void bodyStreamConstrainedViaReadFully() throws IOException {
         int cap = 5 * 1024;
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = origin().file.url("/htmltests/large.html"); // 280 K
         try (BufferedInputStream stream = Jsoup
             .connect(url)
             .maxBodySize(cap)
@@ -309,9 +320,10 @@ public class ConnectIT {
         }
     }
 
-    @Test public void bodyStreamConstrainedViaBufferUp() throws IOException {
+    @Test
+    public void bodyStreamConstrainedViaBufferUp() throws IOException {
         int cap = 5 * 1024;
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = origin().file.url("/htmltests/large.html"); // 280 K
         try (BufferedInputStream stream = Jsoup
             .connect(url)
             .maxBodySize(cap)

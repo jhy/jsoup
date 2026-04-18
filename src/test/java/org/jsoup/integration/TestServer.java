@@ -1,102 +1,47 @@
 package org.jsoup.integration;
 
-import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.FilterMapping;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.StdErrLog;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.jsoup.integration.servlets.AuthFilter;
-import org.jsoup.integration.servlets.BaseServlet;
-import org.jsoup.integration.servlets.ProxyServlet;
+import org.jsoup.integration.netty.NettyProxyServer;
+import org.jsoup.integration.netty.NettyTestServer;
+import org.jsoup.integration.netty.RouteHandler;
+import org.jsoup.integration.routes.*;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.file.Files;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class TestServer {
-    static int Port;
-    static int TlsPort;
-
     private static final String Localhost = "localhost";
-    private static final String KeystorePassword = "hunter2";
-
-    private static final Server Jetty = newServer();
-    private static final ServletHandler JettyHandler = new ServletHandler();
-    private static final Server Proxy = newServer();
-    private static final Server AuthedProxy = newServer();
-    private static final HandlerWrapper ProxyHandler = new HandlerWrapper();
-    private static final HandlerWrapper AuthedProxyHandler = new HandlerWrapper();
+    private static final Object Lock = new Object();
+    public static final String ProxyVia = "1.1 jsoup test proxy";
     private static final ProxySettings ProxySettings = new ProxySettings();
-
-    private static Server newServer() {
-        // logs to stdout, so not highlighted as errors in Maven test runs
-        StdErrLog logger = new StdErrLog();
-        logger.setStdErrStream(System.out);
-        Log.setLog(logger);
-
-        return new Server(new InetSocketAddress(Localhost, 0));
-    }
+    private static final Origin Origin = new Origin();
 
     static {
-        Jetty.setHandler(JettyHandler);
-        Proxy.setHandler(ProxyHandler);
-        AuthedProxy.setHandler(AuthedProxyHandler);
-
-        // TLS setup:
-        try {
-            File keystoreFile = ParseTest.getFile("/local-cert/server.pfx");
-            if (!keystoreFile.exists()) throw new FileNotFoundException(keystoreFile.toString());
-            addHttpsConnector(keystoreFile, Jetty);
-            setupDefaultTrust(keystoreFile);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+        TestTls.setupDefaultTrust();
     }
 
     private TestServer() {
     }
 
+    /**
+     The public origin endpoint facade used by tests and helper wrappers
+     */
+    public static Origin origin() {
+        return Origin;
+    }
+
+    /**
+     Starts the Netty origin and proxy harnesses
+     */
     public static void start() {
-        synchronized (Jetty) {
-            if (Jetty.isStarted()) return;
+        synchronized (Lock) {
+            if (NettyTestServer.isStarted() && NettyProxyServer.hasStarted()) return;
 
             try {
-                Jetty.start();
-                JettyHandler.addFilterWithMapping(new FilterHolder(new AuthFilter(false, false)), "/*", FilterMapping.ALL);
-                Connector[] jcons = Jetty.getConnectors();
-                Port = ((ServerConnector) jcons[0]).getLocalPort();
-                TlsPort = ((ServerConnector) jcons[1]).getLocalPort();
-
-                ProxyHandler.setHandler(ProxyServlet.createHandler(false)); // includes proxy, CONNECT proxy, and Auth filters
-                Proxy.start();
-                ProxySettings.port = ((ServerConnector) Proxy.getConnectors()[0]).getLocalPort();
-
-                AuthedProxyHandler.setHandler(ProxyServlet.createHandler(true));
-                AuthedProxy.start();
-                ProxySettings.authedPort = ((ServerConnector) AuthedProxy.getConnectors()[0]).getLocalPort();
+                NettyTestServer.start(origin().endpoints());
+                NettyProxyServer.start();
+                ProxySettings.port = NettyProxyServer.port();
+                ProxySettings.authedPort = NettyProxyServer.authedPort();
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
@@ -109,87 +54,79 @@ public class TestServer {
      them first.
      */
     static int closeAuthedProxyConnections() {
-        ServerConnector connector = (ServerConnector) AuthedProxy.getConnectors()[0];
-        AtomicInteger count = new AtomicInteger();
-        connector.getConnectedEndPoints().forEach(endPoint -> {
-            endPoint.close();
-            count.getAndIncrement();
-        });
-        return count.get();
-    }
-
-    public static ServletUrls map(Class<? extends BaseServlet> servletClass) {
-        synchronized (Jetty) {
-            if (!Jetty.isStarted())
-                start(); // if running out of the test cases
-
-            String path = "/" + servletClass.getSimpleName();
-            JettyHandler.addServletWithMapping(servletClass, path + "/*");
-            String url = "http://" + Localhost + ":" + Port + path;
-            String tlsUrl = "https://" + Localhost + ":" + TlsPort + path;
-
-            return new ServletUrls(url, tlsUrl);
-        }
-    }
-
-    public static class ServletUrls {
-        public final String url;
-        public final String tlsUrl;
-
-        public ServletUrls(String url, String tlsUrl) {
-            this.url = url;
-            this.tlsUrl = tlsUrl;
-        }
+        return NettyProxyServer.closeAuthedConnections();
     }
 
     public static ProxySettings proxySettings() {
-        synchronized (Jetty) {
-            if (!Jetty.isStarted())
+        synchronized (Lock) {
+            if (!NettyTestServer.isStarted() || !NettyProxyServer.hasStarted())
                 start();
 
             return ProxySettings;
         }
     }
-
-    //public static String proxy
     public static class ProxySettings {
         final String hostname = Localhost;
         int port;
         int authedPort;
     }
 
-    private static void addHttpsConnector(File keystoreFile, Server server) {
-        // Cribbed from https://github.com/jetty/jetty.project/blob/jetty-9.4.x/examples/embedded/src/main/java/org/eclipse/jetty/embedded/LikeJettyXml.java
-        SslContextFactory sslContextFactory = new SslContextFactory.Server();
-        String path = keystoreFile.getAbsolutePath();
-        sslContextFactory.setKeyStorePath(path);
-        sslContextFactory.setKeyStorePassword(KeystorePassword);
-        sslContextFactory.setKeyManagerPassword(KeystorePassword);
-        sslContextFactory.setTrustStorePath(path);
-        sslContextFactory.setTrustStorePassword(KeystorePassword);
+    /**
+     Origin endpoints used by the integration tests
+     */
+    public static final class Origin {
+        public final Endpoint hello = new Endpoint("/Hello", HelloRoute::handle);
+        public final Endpoint echo = new Endpoint("/Echo", EchoRoute::handle);
+        public final Endpoint file = new Endpoint("/File", FileRoute::handle);
+        public final Endpoint redirect = new Endpoint("/Redirect", RedirectRoute::handle);
+        public final Endpoint cookie = new Endpoint("/Cookie", CookieRoute::handle);
+        public final Endpoint deflate = new Endpoint("/Deflate", DeflateRoute::handle);
+        public final Endpoint interrupted = new Endpoint("/Interrupted", InterruptedRoute::handle);
+        public final Endpoint slowRider = new Endpoint("/SlowRider", SlowRider::handle);
+        private final List<Endpoint> endpoints = Collections.unmodifiableList(Arrays.asList(
+            hello, echo, file, redirect, cookie, deflate, interrupted, slowRider));
 
-        HttpConfiguration httpConfig = new HttpConfiguration();
-        httpConfig.setSecureScheme("https");
-        HttpConfiguration httpsConfig = new HttpConfiguration(httpConfig);
-        httpsConfig.addCustomizer(new SecureRequestCustomizer());
+        private Origin() {
+        }
 
-        ServerConnector sslConnector = new ServerConnector(
-            server,
-            new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()),
-            new HttpConnectionFactory(httpsConfig));
-        sslConnector.setHost(Localhost);
-        server.addConnector(sslConnector);
+        Iterable<Endpoint> endpoints() {
+            return endpoints;
+        }
     }
 
-    private static void setupDefaultTrust(File keystoreFile) throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, KeyManagementException {
-        // Configure HttpsUrlConnection (jsoup) to trust (only) this cert
-        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        trustStore.load(Files.newInputStream(keystoreFile.toPath()), KeystorePassword.toCharArray());
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(trustStore);
-        TrustManager[] managers = trustManagerFactory.getTrustManagers();
-        SSLContext tls = SSLContext.getInstance("TLS");
-        tls.init(null, managers, null);
-        SSLContext.setDefault(tls);
+    public static final class Endpoint {
+        private final String path;
+        private final RouteHandler handler;
+
+        private Endpoint(String path, RouteHandler handler) {
+            this.path = path;
+            this.handler = handler;
+        }
+
+        public String path() {
+            return path;
+        }
+
+        public RouteHandler handler() {
+            return handler;
+        }
+
+        public String url() {
+            start();
+            return NettyTestServer.url(path);
+        }
+
+        public String tlsUrl() {
+            start();
+            return NettyTestServer.tlsUrl(path);
+        }
+
+        public String url(String suffix) {
+            return url() + suffix;
+        }
+
+        public String tlsUrl(String suffix) {
+            return tlsUrl() + suffix;
+        }
     }
 }
