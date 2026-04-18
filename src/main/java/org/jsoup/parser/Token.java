@@ -53,6 +53,8 @@ abstract class Token {
         @Nullable String pubSysKey = null;
         final TokenData publicIdentifier = new TokenData();
         final TokenData systemIdentifier = new TokenData();
+        final TokenData internalSubset = new TokenData();
+        boolean sawInternalSubset = false;
         boolean forceQuirks = false;
 
         Doctype() {
@@ -66,6 +68,8 @@ abstract class Token {
             pubSysKey = null;
             publicIdentifier.reset();
             systemIdentifier.reset();
+            internalSubset.reset();
+            sawInternalSubset = false;
             forceQuirks = false;
             return this;
         }
@@ -84,6 +88,14 @@ abstract class Token {
 
         public String getSystemIdentifier() {
             return systemIdentifier.value();
+        }
+
+        String getInternalSubset() {
+            return internalSubset.value();
+        }
+
+        boolean hasInternalSubset() {
+            return sawInternalSubset;
         }
 
         public boolean isForceQuirks() {

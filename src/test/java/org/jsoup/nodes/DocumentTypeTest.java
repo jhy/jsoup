@@ -61,6 +61,15 @@ public class DocumentTypeTest {
         String legacyDoc = "<!DOCTYPE html SYSTEM \"about:legacy-compat\">";
         assertEquals(legacyDoc, htmlOutput(legacyDoc));
         assertEquals(legacyDoc, xmlOutput(legacyDoc));
+
+        // round trips internal subset in xml; dropped in html
+        String internalSubset = "<!DOCTYPE svg SYSTEM \"example.dtd\" [<!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">]>";
+        assertEquals("<!DOCTYPE svg SYSTEM \"example.dtd\">", htmlOutput(internalSubset));
+        assertEquals(internalSubset, xmlOutput(internalSubset));
+
+        String emptySubset = "<!DOCTYPE root []>";
+        assertEquals("<!doctype root>", htmlOutput(emptySubset));
+        assertEquals(emptySubset, xmlOutput(emptySubset));
     }
 
     private String htmlOutput(String in) {

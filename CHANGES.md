@@ -14,6 +14,7 @@
 * `Cleaner` no longer duplicates enforced attributes when the input `Document` preserves attribute case. A case-variant source attribute is now replaced by the enforced attribute in the cleaned output. [#2476](https://github.com/jhy/jsoup/issues/2476)
 * If a per-request SOCKS proxy is configured, jsoup now avoids using the JDK `HttpClient`, because the JDK would silently ignore that proxy and attempt to connect directly. Those requests now fall back to the legacy `HttpURLConnection` transport instead, which does support SOCKS. [#2468](https://github.com/jhy/jsoup/issues/2468)
 * `Connection.Response.streamParser()` and `DataUtil.streamParser(Path, ...)` could fail on small inputs without a declared charset, if the initial 5 KB charset sniff fully consumed the input and closed it before the stream parse began. [#2483](https://github.com/jhy/jsoup/issues/2483)
+* In XML mode, doctypes with an internal subset (the `[...]` section inside `<!DOCTYPE ...>` used for entity declarations) now round-trip correctly. The subset is preserved as raw text only; entities are not expanded and external DTDs are not loaded. [#2486](https://github.com/jhy/jsoup/issues/2486)
 
 ## 1.22.1 (2026-Jan-01)
 

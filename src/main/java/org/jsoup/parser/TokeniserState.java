@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.DocumentType;
 
 import static org.jsoup.nodes.Document.OutputSettings.Syntax.xml;
@@ -1244,6 +1245,10 @@ enum TokeniserState {
             else if (r.matches('>')) {
                 t.emitDoctypePending();
                 t.advanceTransition(Data);
+            } else if (t.syntax == xml && r.matches('[')) {
+                // special case when in XML parse mode so we can support entity round trop
+                t.doctypePending.sawInternalSubset = true;
+                t.advanceTransition(DoctypeInternalSubset);
             } else if (r.matchConsumeIgnoreCase(DocumentType.PUBLIC_KEY)) {
                 t.doctypePending.pubSysKey = DocumentType.PUBLIC_KEY;
                 t.transition(AfterDoctypePublicKeyword);
@@ -1443,6 +1448,16 @@ enum TokeniserState {
                     t.emitDoctypePending();
                     t.transition(Data);
                     break;
+                case '[':
+                    if (t.syntax == xml) {
+                        t.doctypePending.sawInternalSubset = true;
+                        t.transition(DoctypeInternalSubset);
+                        break;
+                    }
+                    t.error(this);
+                    t.doctypePending.forceQuirks = true;
+                    t.transition(BogusDoctype);
+                    break;
                 case '"':
                     t.error(this);
                     // system id empty
@@ -1613,6 +1628,16 @@ enum TokeniserState {
                     t.emitDoctypePending();
                     t.transition(Data);
                     break;
+                case '[':
+                    if (t.syntax == xml) {
+                        t.doctypePending.sawInternalSubset = true;
+                        t.transition(DoctypeInternalSubset);
+                        break;
+                    }
+                    t.error(this);
+                    t.transition(BogusDoctype);
+                    // NOT force quirks
+                    break;
                 case eof:
                     t.eofError(this);
                     t.doctypePending.forceQuirks = true;
@@ -1642,6 +1667,11 @@ enum TokeniserState {
                     // ignore char
                     break;
             }
+        }
+    },
+    DoctypeInternalSubset {
+        @Override void read(Tokeniser t, CharacterReader r) {
+            readDoctypeInternalSubset(t, r, this);
         }
     },
     CdataSection {
@@ -1777,6 +1807,86 @@ enum TokeniserState {
             default:
                 r.unconsume();
                 t.transition(fallback);
+        }
+    }
+
+    /**
+     Reads an XML doctype internal subset as opaque text so it can be re-emitted without parsing declarations.
+     Only used when in XML mode; HTML spec will drop these as Bogus.
+     */
+    private static void readDoctypeInternalSubset(Tokeniser t, CharacterReader r, TokeniserState current) {
+        final byte None = 0, SingleQuote = 1, DoubleQuote = 2, Comment = 3, ProcessingInstruction = 4;
+        byte context = None;
+        TokenData subset = t.doctypePending.internalSubset;
+
+        while (true) {
+            char c = r.consume();
+            switch (c) {
+                case '\'':
+                    subset.append(c);
+                    if  (context == None) context = SingleQuote;
+                    else if (context == SingleQuote) context = None;
+                    break;
+                case '"':
+                    subset.append(c);
+                    if (context == None) context = DoubleQuote;
+                    else if (context == DoubleQuote) context = None;
+                    break;
+                case '<':
+                    subset.append(c);
+                    if (context == None) {
+                        if (r.matchConsume("!--")) {
+                            subset.append("!--");
+                            context = Comment;
+                        } else if (r.matchConsume("?")) {
+                            subset.append('?');
+                            context = ProcessingInstruction;
+                        }
+                    }
+                    break;
+                case '-':
+                    subset.append(c);
+                    if (context == Comment && r.matchConsume("->")) {
+                        subset.append("->");
+                        context = None;
+                    }
+                    break;
+                case '?':
+                    subset.append(c);
+                    if (context == ProcessingInstruction && r.matches('>')) {
+                        r.advance();
+                        subset.append('>');
+                        context = None;
+                    }
+                    break;
+                case ']':
+                    if (context == None) {
+                        String ws = r.consumeMatching(StringUtil::isWhitespace);
+                        if (r.matches('>')) {
+                            r.advance();
+                            t.emitDoctypePending();
+                            t.transition(Data);
+                            return;
+                        }
+                        subset.append(c);
+                        subset.append(ws);
+                        break;
+                    }
+                    subset.append(c);
+                    break;
+                case nullChar:
+                    t.error(current);
+                    subset.append(replacementChar);
+                    break;
+                case eof:
+                    t.eofError(current);
+                    t.emitDoctypePending();
+                    t.transition(Data);
+                    return;
+                default:
+                    subset.append(c);
+                    break;
+            }
         }
     }
 }
