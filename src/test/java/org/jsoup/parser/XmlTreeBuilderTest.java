@@ -387,6 +387,59 @@ public class XmlTreeBuilderTest {
         assertEquals(expect, doc.html());
     }
 
+    @Test void roundtripsDoctypeInternalSubset() {
+        // https://github.com/jhy/jsoup/issues/2486
+        String xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\" [\n" +
+            "<!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">\n" +
+            "<!ENTITY ns_ai \"http://ns.adobe.com/AdobeIllustrator/10.0/\">\n" +
+            "]>\n" +
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\">\n" +
+            "<circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"red\"/>\n" +
+            "</svg>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        DocumentType doctype = doc.documentType();
+        assertNotNull(doctype);
+        assertEquals("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\" [\n" +
+            "<!ENTITY ns_extend \"http://ns.adobe.com/Extensibility/1.0/\">\n" +
+            "<!ENTITY ns_ai \"http://ns.adobe.com/AdobeIllustrator/10.0/\">\n" +
+            "]>", doctype.outerHtml());
+        assertFalse(doc.outerHtml().contains("]&gt;"));
+    }
+
+    @Test void doesNotCloseDoctypeSubsetOnQuotedGt() {
+        String xml = "<!DOCTYPE root [<!ENTITY example \"keep ]> quoted\">]><root/>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        assertEquals(2, doc.childNodeSize());
+        DocumentType doctype = (DocumentType) doc.childNode(0);
+        assertEquals("<!DOCTYPE root [<!ENTITY example \"keep ]> quoted\">]>", doctype.outerHtml());
+        assertEquals("<!DOCTYPE root [<!ENTITY example \"keep ]> quoted\">]><root />", doc.outerHtml());
+    }
+
+    @Test void preservesEmptyDoctypeInternalSubset() {
+        String xml = "<!DOCTYPE root []><root/>";
+        Document doc = Jsoup.parse(xml, Parser.xmlParser());
+
+        assertEquals(2, doc.childNodeSize());
+        DocumentType doctype = (DocumentType) doc.childNode(0);
+        assertEquals("<!DOCTYPE root []>", doctype.outerHtml());
+        assertEquals("<!DOCTYPE root []><root />", doc.outerHtml());
+    }
+
+    @Test void unterminatedDoctypeSubsetConsumesToEof() {
+        String xml = "<!DOCTYPE root [<!ENTITY x \"unterminated]><root/>";
+        Parser parser = Parser.xmlParser().setTrackErrors(10);
+        Document doc = Jsoup.parse(xml, "", parser);
+
+        assertEquals(1, doc.childNodeSize());
+        DocumentType doctype = (DocumentType) doc.childNode(0);
+        assertEquals("<!DOCTYPE root [<!ENTITY x \"unterminated]><root/>]>", doctype.outerHtml());
+        assertEquals(1, parser.getErrors().size());
+        assertEquals("Unexpectedly reached end of file (EOF) in input state [DoctypeInternalSubset]", parser.getErrors().get(0).getErrorMessage());
+    }
+
     @Test void canSetCustomRcdataTag() {
         String inner = "Blah\nblah\n<foo></foo>&quot;";
         String innerText = "Blah\nblah\n<foo></foo>\"";

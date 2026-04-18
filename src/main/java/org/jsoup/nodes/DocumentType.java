@@ -18,6 +18,7 @@ public class DocumentType extends LeafNode {
     private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
+    private static final String InternalSubsetKey = Attributes.internalKey("doctypeInternalSubset");
 
     /**
      * Create a new doctype element.
@@ -39,6 +40,14 @@ public class DocumentType extends LeafNode {
     public void setPubSysKey(@Nullable String value) {
         if (value != null)
             attr(PubSysKey, value);
+    }
+
+    /**
+     Sets the raw XML internal subset for serialization.
+     @param value the internal subset contents
+     */
+    public void setInternalSubset(String value) {
+        attributes().put(InternalSubsetKey, value);
     }
 
     private void updatePubSyskey() {
@@ -93,6 +102,8 @@ public class DocumentType extends LeafNode {
             accum.append(" \"").append(attr(PublicId)).append('"');
         if (has(SystemId))
             accum.append(" \"").append(attr(SystemId)).append('"');
+        if (attributes().hasKey(InternalSubsetKey)) // only if via the xml parser; html parser will drop
+            accum.append(" [").append(attr(InternalSubsetKey)).append(']');
         accum.append('>');
     }
 
