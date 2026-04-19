@@ -4,7 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.DataUtil;
 import org.jsoup.integration.ParseTest;
-import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.integration.TestServer;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -348,7 +348,7 @@ class StreamParserTest {
 
     @Test void canCleanlyConsumePortionOfUrl() throws IOException {
         // test that we can get just the head section of large.html, and only read the minimum required from the URL
-        String url = FileServlet.urlTo("/htmltests/large.html"); // 280 K
+        String url = TestServer.origin().file.url("/htmltests/large.html"); // 280 K
 
         AtomicReference<Float> seenPercent = new AtomicReference<>(0.0f);
         StreamParser parserRef;

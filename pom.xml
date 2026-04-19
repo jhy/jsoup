@@ -33,7 +33,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.58.v20250814</jetty.version>
   </properties>
 
   <build>
@@ -529,26 +528,16 @@
     </dependency>
 
     <dependency>
-      <!-- jetty for webserver integration tests. 9.x is last with Java7 support -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
+      <!-- netty for webserver integration tests -->
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <!-- jetty for webserver integration tests -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <!-- jetty proxy, for integration tests -->
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-proxy</artifactId>
-      <version>${jetty.version}</version>
+      <!-- netty SSL and channel handlers for webserver integration tests -->
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -572,6 +561,13 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>4.2.12.Final</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

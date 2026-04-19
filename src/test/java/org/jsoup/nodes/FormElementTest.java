@@ -3,9 +3,7 @@ package org.jsoup.nodes;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.TestServer;
-import org.jsoup.integration.servlets.CookieServlet;
-import org.jsoup.integration.servlets.EchoServlet;
-import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.integration.routes.CookieRoute;
 import org.jsoup.select.Elements;
 import org.jsoup.select.SelectorTest;
 import org.junit.jupiter.api.BeforeAll;
@@ -191,12 +189,12 @@ public class FormElementTest {
     }
 
     @Test public void formSubmissionCarriesCookiesFromSession() throws IOException {
-        String echoUrl = EchoServlet.Url; // this is a dirty hack to initialize the EchoServlet(!)
-        Document cookieDoc = Jsoup.connect(CookieServlet.Url)
-            .data(CookieServlet.SetCookiesParam, "1")
+        String echoUrl = TestServer.origin().echo.url();
+        Document cookieDoc = Jsoup.connect(TestServer.origin().cookie.url())
+            .data(CookieRoute.SetCookiesParam, "1")
             .get();
         Document formDoc = cookieDoc.connection().newRequest() // carries cookies from above set
-            .url(FileServlet.urlTo("/htmltests/upload-form.html"))
+            .url(TestServer.origin().file.url("/htmltests/upload-form.html"))
             .get();
         FormElement form = formDoc.select("form").forms().get(0);
         Document echo = form.submit().post();
@@ -204,13 +202,13 @@ public class FormElementTest {
         assertEquals(echoUrl, echo.location());
         Elements els = echo.select("th:contains(Cookie: One)");
         // ensure that the cookies are there and in path-specific order (two with same name)
-        assertEquals("EchoServlet", els.get(0).nextElementSibling().text());
+        assertEquals("Echo", els.get(0).nextElementSibling().text());
         assertEquals("Root", els.get(1).nextElementSibling().text());
 
         // make sure that the session following kept unique requests
-        assertTrue(cookieDoc.connection().response().url().toExternalForm().contains("CookieServlet"));
+        assertTrue(cookieDoc.connection().response().url().toExternalForm().contains("Cookie"));
         assertTrue(formDoc.connection().response().url().toExternalForm().contains("upload-form"));
-        assertTrue(echo.connection().response().url().toExternalForm().contains("EchoServlet"));
+        assertTrue(echo.connection().response().url().toExternalForm().contains("Echo"));
     }
 
     @Test void formElementsAreLive() {

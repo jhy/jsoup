@@ -2,8 +2,7 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.integration.servlets.FileServlet;
-import org.jsoup.integration.servlets.SlowRider;
+import org.jsoup.integration.routes.SlowRider;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,13 +13,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jsoup.integration.TestServer.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Integration tests to test longer running Connection */
 public class SessionIT {
     @BeforeAll
     public static void setUp() {
-        TestServer.start();
+        start();
     }
 
     @Test
@@ -28,10 +28,10 @@ public class SessionIT {
         int numThreads = 20;
         int numThreadLoops = 5;
         String[] urls = {
-            FileServlet.urlTo("/htmltests/medium.html"),
-            FileServlet.urlTo("/htmltests/upload-form.html"),
-            FileServlet.urlTo("/htmltests/comments.html"),
-            FileServlet.urlTo("/htmltests/large.html"),
+            origin().file.url("/htmltests/medium.html"),
+            origin().file.url("/htmltests/upload-form.html"),
+            origin().file.url("/htmltests/comments.html"),
+            origin().file.url("/htmltests/large.html"),
         };
         String[] titles = {
             "Medium HTML",
@@ -75,7 +75,8 @@ public class SessionIT {
     @Test
     public void multiThreadWithoutNewRequestBlowsUp() throws InterruptedException {
         int numThreads = 5;
-        String url = SlowRider.Url + "?" + SlowRider.MaxTimeParam + "=20000"; // this makes sure that the first req is still executing whilst the others run
+        String url =
+            origin().slowRider.url() + "?" + SlowRider.MaxTimeParam + "=20000"; // this makes sure that the first req is still executing whilst the others run
         String title = "Slow Rider";
 
         ThreadCatcher catcher = new ThreadCatcher();
@@ -131,7 +132,8 @@ public class SessionIT {
          concurrent execution, which the impl does detect correctly. */
         assertEquals(0, successful.get());
         assertTrue(catcher.multiThreadExceptions.get() > 0);
-        assertEquals(catcher.multiThreadExceptions.get(), catcher.exceptionCount.get()); // all exceptions are multi-threaded
+        assertEquals(catcher.multiThreadExceptions.get(),
+            catcher.exceptionCount.get()); // all exceptions are multi-threaded
     }
 
     @Test
@@ -139,10 +141,10 @@ public class SessionIT {
         // tests that we can use one progress listener for multiple URLs and threads.
         int numThreads = 10;
         String[] urls = {
-            FileServlet.urlTo("/htmltests/medium.html"),
-            FileServlet.urlTo("/htmltests/upload-form.html"),
-            FileServlet.urlTo("/htmltests/comments.html"),
-            FileServlet.urlTo("/htmltests/large.html"),
+            origin().file.url("/htmltests/medium.html"),
+            origin().file.url("/htmltests/upload-form.html"),
+            origin().file.url("/htmltests/comments.html"),
+            origin().file.url("/htmltests/large.html"),
         };
         Set<String> seenUrls = ConcurrentHashMap.newKeySet();
         AtomicInteger completedCount = new AtomicInteger(0);

@@ -2,9 +2,7 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.integration.servlets.CookieServlet;
-import org.jsoup.integration.servlets.EchoServlet;
-import org.jsoup.integration.servlets.FileServlet;
+import org.jsoup.integration.routes.CookieRoute;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
@@ -17,13 +15,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static org.jsoup.integration.TestServer.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SessionTest {
     @BeforeAll
     public static void setUp() {
-        TestServer.start();
+        start();
     }
 
     private static Elements keyEls(String key, Document doc) {
@@ -40,7 +39,7 @@ public class SessionTest {
         final String userAgent = "Jsoup Testalot v0.1";
 
         session.userAgent(userAgent);
-        session.url(CookieServlet.Url);
+        session.url(origin().cookie.url());
 
         // should have no cookies:
         Connection con1 = session.newRequest();
@@ -48,12 +47,13 @@ public class SessionTest {
         assertEquals(0, doc1.select("table tr").size()); // none sent to servlet
 
         // set the cookies
-        Connection con2 = session.newRequest().data(CookieServlet.SetCookiesParam, "1");
+        Connection con2 = session.newRequest().data(CookieRoute.SetCookiesParam, "1");
         Document doc2 = con2.get();
         assertEquals(0, doc2.select("table tr").size());  // none sent to servlet - we just got them!
-        Map<String, String> cookies = con2.response().cookies(); // simple cookie response, all named "One", so should be last sent
+        Map<String, String> cookies =
+            con2.response().cookies(); // simple cookie response, all named "One", so should be last sent
         assertEquals(2, cookies.size());
-        assertEquals("EchoServlet", cookies.get("One"));
+        assertEquals("Echo", cookies.get("One"));
 
         // test that all response cookies are present, even if would not be sent for this request path (i.e. cookies() res can be set on a req, without using sessions)
         assertEquals("Override", cookies.get("Two"));
@@ -63,14 +63,14 @@ public class SessionTest {
         // check that they are sent and filtered to the right path
         Connection con3 = session.newRequest();
         Document doc3 = con3.get();
-        assertCookieServlet(doc3);
+        assertCookieEndpoint(doc3);
 
-        Document echo = session.newRequest().url(EchoServlet.Url).get();
-        assertEchoServlet(echo);
+        Document echo = session.newRequest().url(origin().echo.url()).get();
+        assertEchoEndpoint(echo);
         assertEquals(userAgent, keyText("User-Agent", echo)); // check that customer user agent sent on session arrived
 
         // check that cookies aren't set out of the session
-        Document doc4 = Jsoup.newSession().url(CookieServlet.Url).get();
+        Document doc4 = Jsoup.newSession().url(origin().cookie.url()).get();
         assertEquals(0, doc4.select("table tr").size()); // none sent to servlet
 
         // check can add local ones also
@@ -79,20 +79,20 @@ public class SessionTest {
         assertEquals("Qux", doc5Bar.first().text());
     }
 
-    // validate that only cookies set by cookie servlet get to the cookie servlet path
-    private void assertCookieServlet(Document doc) {
+    // validate that only cookies scoped to the cookie endpoint path are sent there
+    private void assertCookieEndpoint(Document doc) {
         assertEquals(2, doc.select("table tr").size());  // two of three sent to servlet (/ and /CookieServlet)
         Elements doc3Els = keyEls("One", doc);
         assertEquals(2, doc3Els.size());
-        assertEquals("CookieServlet", doc3Els.get(0).text()); // ordered by most specific path
+        assertEquals("Cookie", doc3Els.get(0).text()); // ordered by most specific path
         assertEquals("Root", doc3Els.get(1).text()); // ordered by most specific path
     }
 
-    // validate that only for echo servlet
-    private void assertEchoServlet(Document doc) {
+    // validate that only cookies scoped to the echo endpoint path are sent there
+    private void assertEchoEndpoint(Document doc) {
         Elements echoEls = keyEls("Cookie: One", doc);  // two of three sent to servlet (/ and /EchoServlet)
         assertEquals(2, echoEls.size());
-        assertEquals("EchoServlet", echoEls.get(0).text()); // ordered by most specific path - /Echo
+        assertEquals("Echo", echoEls.get(0).text()); // ordered by most specific path - /Echo
         assertEquals("Root", echoEls.get(1).text()); // ordered by most specific path - /
     }
 
@@ -101,31 +101,31 @@ public class SessionTest {
         Connection session = Jsoup.newSession();
 
         Document doc1 = session.newRequest()
-            .url(CookieServlet.Url)
-            .data(CookieServlet.LocationParam, EchoServlet.Url)
-            .data(CookieServlet.SetCookiesParam, "1")
+            .url(origin().cookie.url())
+            .data(CookieRoute.LocationParam, origin().echo.url())
+            .data(CookieRoute.SetCookiesParam, "1")
             .get();
 
         // we should be redirected to the echo servlet with cookies
-        assertEquals(EchoServlet.Url, doc1.location());
-        assertEchoServlet(doc1); // checks we only have /echo cookies
+        assertEquals(origin().echo.url(), doc1.location());
+        assertEchoEndpoint(doc1); // checks we only have /echo cookies
 
         Document doc2 = session.newRequest()
-            .url(EchoServlet.Url)
+            .url(origin().echo.url())
             .get();
-        assertEchoServlet(doc2); // test retained in session
+        assertEchoEndpoint(doc2); // test retained in session
 
         Document doc3 = session.newRequest()
-            .url(CookieServlet.Url)
+            .url(origin().cookie.url())
             .get();
-        assertCookieServlet(doc3); // and so were the /cookie cookies
+        assertCookieEndpoint(doc3); // and so were the /cookie cookies
     }
 
     @Test
     public void testCanChangeParsers() throws IOException {
         Connection session = Jsoup.newSession().parser(Parser.xmlParser());
 
-        String xmlUrl = FileServlet.urlTo("/htmltests/xml-test.xml");
+        String xmlUrl = origin().file.url("/htmltests/xml-test.xml");
         String xmlVal = "<doc><val>One<val>Two</val>Three</val></doc>\n";
 
         Document doc1 = session.newRequest().url(xmlUrl).get();
