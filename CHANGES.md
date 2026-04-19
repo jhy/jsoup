@@ -17,7 +17,7 @@
 * In XML mode, doctypes with an internal subset (the `[...]` section inside `<!DOCTYPE ...>` used for entity declarations) now round-trip correctly. The subset is preserved as raw text only; entities are not expanded and external DTDs are not loaded. [#2486](https://github.com/jhy/jsoup/issues/2486)
 
 ### Build Changes
-* Migrated the integration test server from Jetty to Netty, which actively maintains support for our minimum JDK target (8).
+* Migrated the integration test server from Jetty to Netty, which actively maintains support for our minimum JDK target (8). [#2491](https://github.com/jhy/jsoup/pull/2491)
 
 ## 1.22.1 (2026-Jan-01)
 
