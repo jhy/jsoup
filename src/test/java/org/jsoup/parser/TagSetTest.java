@@ -159,6 +159,16 @@ public class TagSetTest {
         assertEquals("<custom-data></custom-data>Bar\n<script>Text</script>", doc.body().html());
     }
 
+    @Test void customTextBoundaryTagsAffectTextExtraction() {
+        TagSet tags = TagSet.Html();
+        tags.valueOf("custom-widget", NamespaceHtml).set(Tag.TextBoundary);
+        Parser parser = Parser.htmlParser().tagSet(tags);
+
+        Document doc = Jsoup.parse("<p>One<custom-widget>Two</custom-widget>Three</p>", parser);
+        assertEquals("One Two Three", doc.text());
+        assertEquals("OneTwoThree", doc.wholeText());
+    }
+
     @Test void supportsMultipleCustomizers() {
         TagSet tags = TagSet.Html();
         tags.onNewTag(tag -> {

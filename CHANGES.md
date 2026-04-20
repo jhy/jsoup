@@ -5,6 +5,7 @@
 ### Improvements
 * Expanded and clarified `NodeTraversor` support for in-place DOM rewrites during `NodeVisitor.head()`. Current-node edits such as `remove`, `replace`, and `unwrap` now recover more predictably, while traversal stays within the original root subtree. This makes single-pass tree cleanup and normalization visitors easier to write, for example when unwrapping presentational elements or replacing text nodes as you walk the DOM. [#2472](https://github.com/jhy/jsoup/issues/2472)
 * Documentation: clarified that a configured `Cleaner` may be reused across concurrent threads, and that shared `Safelist` instances should not be mutated while in use. [#2473](https://github.com/jhy/jsoup/issues/2473)
+* Updated the default HTML `TagSet` for current HTML elements: added `dialog`, `search`, `picture`, and `slot`; made `ins`, `del`, `button`, `audio`, `video`, and `canvas` inline by default (`Tag#isInline()`, aligned to phrasing content in the spec); and added readable `Element.text()` boundaries for controls and embedded objects via the new `Tag.TextBoundary` option. This improves pretty-printing and keeps normalized text from running adjacent words together. [#2493](https://github.com/jhy/jsoup/pull/2493)
 
 ### Bug Fixes
 * Android (R8/ProGuard): added a rule to ignore the optional `re2j` dependency when not present. [#2459](https://github.com/jhy/jsoup/issues/2459)

@@ -236,11 +236,11 @@ public class TagSet {
         String[] blockTags = {
             "html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame",
             "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5",
-            "h6", "button",
-            "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
-            "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
-            "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main",
-            "center", "template",
+            "h6", "dialog", "search",
+            "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset",
+            "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
+            "td", "details", "menu", "plaintext", "template", "article", "main",
+            "center",
             "dir", "applet", "marquee", "listing", // deprecated but still known / special handling
             "#root" // the outer Document
         };
@@ -248,15 +248,14 @@ public class TagSet {
             "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",
             "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "wbr", "map",
             "q",
-            "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "optgroup",
+            "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "audio", "video", "canvas", "optgroup",
             "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
-            "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
-            "data", "bdi", "s", "strike", "nobr",
+            "summary", "command", "device", "basefont", "bgsound", "menuitem", "data", "bdi", "s", "strike", "nobr",
+            "ins", "del", "button", "picture", "slot",
             "rb", // deprecated but still known / special handling
         };
-        String[] inlineContainers = { // can only contain inline; aka phrasing content
-            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
-            "ins", "del", "s", "button"
+        String[] inlineContainers = { // pretty-print hint: block tags whose inline children should stay inline
+            "title", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style"
         };
         String[] voidTags = {
             "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
@@ -268,6 +267,10 @@ public class TagSet {
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
         String[] formSubmitTags = SharedConstants.FormSubmitTags;
+        String[] textBoundaryTags = { // text() readability hint for controls, widgets, and embedded objects
+            "button", "input", "select", "textarea", "option", "output", "progress", "meter",
+            "img", "picture", "audio", "video", "canvas", "object", "embed", "iframe"
+        };
         String[] blockMathTags = {"math"};
         String[] inlineMathTags = {"mi", "mo", "msup", "mn", "mtext"};
         String[] blockSvgTags = {"svg", "femerge", "femergenode"}; // note these are LC versions, but actually preserve case
@@ -283,6 +286,7 @@ public class TagSet {
             .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
             .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
             .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
+            .setupTags(NamespaceHtml, textBoundaryTags, tag -> tag.set(Tag.TextBoundary))
             .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.Block))
             .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
             .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))

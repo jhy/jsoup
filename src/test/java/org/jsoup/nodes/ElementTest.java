@@ -7,6 +7,7 @@ import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
+import org.jsoup.parser.TagSet;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.NodeFilter;
@@ -14,7 +15,9 @@ import org.jsoup.select.NodeVisitor;
 import org.jsoup.select.QueryParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.jsoup.nodes.NodeIteratorTest.assertIterates;
@@ -579,6 +581,121 @@ public class ElementTest {
         document.outputSettings().outline(true);
 
         assertEquals("<div>\n <span>1:15</span>\n –\n <span>2:15</span>\n &nbsp;p.m.\n</div>", document.body().html());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ins", "del"})
+    public void prettyPrintsInlineEditsWithoutAddingWhitespace(String tagName) {
+        String inlineHtml = String.format("before<%1$s>/</%1$s>after", tagName);
+        assertRoundTripsBodyHtmlAndText(inlineHtml, inlineHtml, "before/after");
+
+        String paragraphHtml = String.format("<p>%s</p>", inlineHtml);
+        assertRoundTripsBodyHtmlAndText(paragraphHtml, paragraphHtml, "before/after");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ins", "del"})
+    public void prettyPrintsBlockChildrenWithinEdits(String tagName) {
+        String html = String.format("<div><%1$s><p>One</p><p>Two</p></%1$s></div>", tagName);
+        String expectedHtml = String.format("<div>\n <%1$s>\n  <p>One</p>\n  <p>Two</p>\n </%1$s>\n</div>", tagName);
+        assertRoundTripsBodyHtmlAndText(html, expectedHtml, "One Two");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"dialog", "search"})
+    public void prettyPrintsBlockTagsWithinText(String tagName) {
+        String html = String.format("<div>before<%1$s>text</%1$s>after</div>", tagName);
+        String expectedHtml = String.format("<div>\n before\n <%1$s>text</%1$s>\n after\n</div>", tagName);
+        assertRoundTripsBodyHtmlAndText(html, expectedHtml, "before text after");
+    }
+
+    @Test
+    public void prettyPrintsBlockChildrenWithinAnchors() {
+        String html = "<div><a href=\"/docs\"><div><p>Link text</p></div><div>More text</div></a></div>";
+        String expectedHtml = "<div>\n <a href=\"/docs\">\n  <div>\n   <p>Link text</p>\n  </div>\n  <div>More text</div>\n </a>\n</div>";
+        assertRoundTripsBodyHtmlAndText(html, expectedHtml, "Link text More text");
+    }
+
+    @ParameterizedTest
+    @MethodSource("inlineParagraphCases")
+    public void prettyPrintsInlineTagsInParagraphs(String html, String expectedText) {
+        assertRoundTripsBodyHtmlAndText(html, html, expectedText);
+    }
+
+    static Stream<Arguments> inlineParagraphCases() {
+        return Stream.of(
+            Arguments.of("<p>Read <a href=\"/docs\">the docs</a> now.</p>", "Read the docs now."),
+            Arguments.of("<p>Current price: <s>$12.00</s> $9.99</p>", "Current price: $12.00 $9.99"),
+            Arguments.of("<p>Press <button>Go</button> now.</p>", "Press Go now."),
+            Arguments.of("<p>Listen <audio controls>fallback audio</audio> now.</p>", "Listen fallback audio now."),
+            Arguments.of("<p>Watch <video controls>fallback video</video> now.</p>", "Watch fallback video now."),
+            Arguments.of("<p>Draw <canvas>fallback canvas</canvas> now.</p>", "Draw fallback canvas now."),
+            Arguments.of("<p>See <picture><img src=\"/img.png\"></picture> now.</p>", "See now."),
+            Arguments.of("<p>Hello <slot>friend</slot>.</p>", "Hello friend.")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("textBoundaryCases")
+    public void textSeparatesReadableBoundaryTags(String html, String expectedText, String expectedWholeText) {
+        assertTextAndWholeText(html, expectedText, expectedWholeText);
+    }
+
+    static Stream<Arguments> textBoundaryCases() {
+        return Stream.of(
+            Arguments.of("<p>Before<button>Go</button>after</p>", "Before Go after", "BeforeGoafter"),
+            Arguments.of("<p>Cat<img src=cat>Dog<img src=dog></p>", "Cat Dog", "CatDog"),
+            Arguments.of("<p>Cat<picture><img src=cat></picture>Dog</p>", "Cat Dog", "CatDog"),
+            Arguments.of("<p>Listen<audio controls>fallback audio</audio>now</p>", "Listen fallback audio now", "Listenfallback audionow"),
+            Arguments.of("<p>Watch<video controls>fallback video</video>now</p>", "Watch fallback video now", "Watchfallback videonow"),
+            Arguments.of("<p>Draw<canvas>fallback canvas</canvas>now</p>", "Draw fallback canvas now", "Drawfallback canvasnow"),
+            Arguments.of("<p>Chart<object>fallback object</object>now</p>", "Chart fallback object now", "Chartfallback objectnow"),
+            Arguments.of("<p>Progress<progress value=\"30\" max=\"100\">30%</progress>now</p>", "Progress 30% now", "Progress30%now"),
+            Arguments.of("<p>Meter<meter value=\"0.7\">70%</meter>now</p>", "Meter 70% now", "Meter70%now"),
+            Arguments.of("<p>Choose<select><option>One</option><option>Two</option></select>now</p>", "Choose One Two now", "ChooseOneTwonow"),
+            Arguments.of("<p>Edit<textarea>Hello</textarea>now</p>", "Edit Hello now", "EditHellonow"),
+            Arguments.of("<p>Calc<output>42</output>now</p>", "Calc 42 now", "Calc42now")
+        );
+    }
+
+    @Test
+    public void textBoundaryTagsDoNotSynthesizeAttributeText() {
+        assertTextAndWholeText("<p>Field<input value=\"Hello\">now</p>", "Field now", "Fieldnow");
+        assertTextAndWholeText("<p>Image<img alt=\"Logo\">now</p>", "Image now", "Imagenow");
+        assertTextAndWholeText("<p>Clip<iframe src=\"/clip\"></iframe>now</p>", "Clip now", "Clipnow");
+    }
+
+    @ParameterizedTest
+    @MethodSource("inlineBlockWrapperCases")
+    public void textSeparatesInlineWrappersWithBlockChildren(String html, String expectedText) {
+        Document doc = Jsoup.parse(html);
+        assertEquals(expectedText, doc.body().text());
+
+        Document reparsed = Jsoup.parse(doc.body().html());
+        assertEquals(expectedText, reparsed.text());
+    }
+
+    static Stream<Arguments> inlineBlockWrapperCases() {
+        return Stream.of(
+            Arguments.of("<div>Before<ins><p>One</p></ins>After</div>", "Before One After"),
+            Arguments.of("<div>Before<del><p>One</p></del>After</div>", "Before One After"),
+            Arguments.of("<div>Before<a href=\"/docs\"><div>One</div></a>After</div>", "Before One After")
+        );
+    }
+
+    private static void assertRoundTripsBodyHtmlAndText(String html, String expectedBodyHtml, String expectedText) {
+        Document parsed = Jsoup.parse(html);
+        String printed = parsed.body().html();
+        assertEquals(expectedBodyHtml, printed);
+
+        Document reparsed = Jsoup.parse(printed);
+        assertEquals(expectedText, reparsed.text());
+    }
+
+    private static void assertTextAndWholeText(String html, String expectedText, String expectedWholeText) {
+        Document doc = Jsoup.parse(html);
+        assertEquals(expectedText, doc.body().text());
+        assertEquals(expectedWholeText, doc.body().wholeText());
     }
 
     @Test
