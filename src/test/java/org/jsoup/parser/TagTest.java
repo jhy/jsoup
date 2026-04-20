@@ -94,6 +94,14 @@ public class TagTest {
         assertFalse(img.isBlock());
     }
 
+    @Test public void buttonSemantics() {
+        Tag button = Tag.valueOf("button");
+        assertTrue(button.isInline());
+        assertFalse(button.isBlock());
+        assertTrue(button.is(Tag.TextBoundary));
+        assertTrue(button.isKnownTag());
+    }
+
     @Test public void defaultSemantics() {
         Tag foo = Tag.valueOf("FOO"); // not defined
         Tag foo2 = Tag.valueOf("FOO");
@@ -147,6 +155,14 @@ public class TagTest {
         assertFalse(tag.isEmpty());
         tag.set(Tag.Void);
         assertTrue(tag.isEmpty());
+        assertTrue(tag.isKnownTag());
+    }
+
+    @Test void textBoundaryOption() {
+        Tag tag = new Tag("foo", NamespaceHtml);
+        assertFalse(tag.is(Tag.TextBoundary));
+        tag.set(Tag.TextBoundary);
+        assertTrue(tag.is(Tag.TextBoundary));
         assertTrue(tag.isKnownTag());
     }
 

@@ -1539,9 +1539,10 @@ public class Element extends Node implements Iterable<Element> {
      <p>For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
     now!"}
      <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
-     children), use {@link #ownText()}
-     <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
-     nodes (such as {@code <script>} tags) are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     children), use {@link #ownText()}.
+     <p>This method returns normalized, readable plain text for downstream uses such as data extraction,
+     indexing, and accessibility-oriented processing. The contents of data nodes (such as
+     {@code <script>} tags) are not considered text. Use {@link #data()} or {@link #html()} to retrieve
      that content.
 
      @return decoded, normalized text, or empty string if none.
@@ -1568,28 +1569,54 @@ public class Element extends Node implements Iterable<Element> {
                 appendNormalisedText(accum, textNode);
             } else if (node instanceof Element) {
                 Element element = (Element) node;
-                if (accum.length() > 0 &&
-                    (element.isBlock() || element.nameIs("br")) &&
-                    !lastCharIsWhitespace(accum))
+                // add a synthetic space before leading blocks and readable boundaries when text would otherwise run together
+                if (accum.length() > 0 && needsLeadingTextSeparator(element) && !lastCharIsWhitespace(accum))
                     accum.append(' ');
             }
         }
 
         @Override public void tail(Node node, int depth) {
-            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
+            // make sure there is a space between block or readable-boundary tags and immediately following text nodes or inline elements.
             if (node instanceof Element) {
                 Element element = (Element) node;
                 Node next = node.nextSibling();
-                if (!element.tag.isInline() && (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) && !lastCharIsWhitespace(accum))
+                if (needsTrailingTextSeparator(element) &&
+                    (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) &&
+                    !lastCharIsWhitespace(accum))
                     accum.append(' ');
             }
 
         }
+
+        /** check if an element should separate preceding text during text() */
+        private static boolean needsLeadingTextSeparator(Element element) {
+            return element.isBlock()
+                || element.nameIs("br")
+                || element.tag.is(Tag.TextBoundary) && element.childNodeSize() > 0 && element.hasText();
+        }
+
+        /** check if an element should separate following text during text() */
+        private static boolean needsTrailingTextSeparator(Element element) {
+            return element.tag.is(Tag.TextBoundary)
+                || !element.tag.isInline()
+                || hasBlockChild(element);
+        }
+
+        /** check if an inline wrapper contains direct block children and should close with a separator */
+        private static boolean hasBlockChild(Element element) {
+            for (int i = 0; i < element.childNodeSize(); i++) {
+                Node child = element.childNode(i);
+                if (child instanceof Element && ((Element) child).isBlock())
+                    return true;
+            }
+            return false;
+        }
     }
 
     /**
-     Get the non-normalized, decoded text of this element and its children, including only any newlines and spaces
-     present in the original source.
+     Get the decoded text of this element and its children, preserving source whitespace and newlines from text nodes.
+     Unlike {@link #text()}, no separators are inferred around element boundaries; {@code <br>} elements are returned
+     as newlines.
      @return decoded, non-normalized text
      @see #text()
      @see #wholeOwnText()
@@ -1718,13 +1745,12 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
-     * Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
-     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
-     * for the contents of scripts, comments, CSS styles, etc.
-     *
-     * @return the data, or empty string if none
-     *
-     * @see #dataNodes()
+     Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
+     plain text of the element. Use {@link #text()} to get normalized, readable text for extraction, indexing, or
+     accessibility-oriented processing, and {@code data()} for the contents of scripts, comments, CSS styles, etc.
+
+     @return the data, or empty string if none
+     @see #dataNodes()
      */
     public String data() {
         StringBuilder sb = StringUtil.borrowBuilder();

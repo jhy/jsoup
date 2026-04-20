@@ -20,7 +20,7 @@ public class Tag implements Cloneable {
     public static int Void = 1 << 1;
     /** Tag option: the tag is a block tag (e.g., {@code <div>}, {@code <p>}). Causes the element to be indented when pretty-printing. If not a block, it is inline. */
     public static int Block = 1 << 2;
-    /** Tag option: the tag is a block tag that will only hold inline tags (e.g., {@code <p>}); used for formatting. (Must also set Block.) */
+    /** Tag option: pretty-print hint for block tags whose inline children should stay inline. (Must also set Block.) */
     public static int InlineContainer = 1 << 3;
     /** Tag option: the tag can self-close (e.g., {@code <foo />}). */
     public static int SelfClose = 1 << 4;
@@ -34,6 +34,8 @@ public class Tag implements Cloneable {
     public static int Data = 1 << 8;
     /** Tag option: the tag's value will be included when submitting a form (e.g., {@code <input>}). */
     public static int FormSubmittable = 1 << 9;
+    /** Tag option: readable text boundary for {@code Element.text()}, used for controls, widgets, and embedded objects. */
+    public static int TextBoundary = 1 << 10;
 
     String namespace;
     String tagName;
@@ -244,7 +246,7 @@ public class Tag implements Cloneable {
     /**
      Get if this is an InlineContainer tag.
 
-     @return true if an InlineContainer (which formats children as inline).
+     @return true if this tag has the InlineContainer pretty-print hint.
      @deprecated internal pretty-printing flag; use {@link #isInline()} or {@link #isBlock()} to check layout intent. Will be removed in jsoup 1.24.1.
      */
     @Deprecated public boolean formatAsBlock() {
