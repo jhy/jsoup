@@ -1,6 +1,6 @@
 # jsoup Changelog
 
-## 1.22.2 (PENDING)
+## 1.22.2 (2026-Apr-20)
 
 ### Improvements
 * Expanded and clarified `NodeTraversor` support for in-place DOM rewrites during `NodeVisitor.head()`. Current-node edits such as `remove`, `replace`, and `unwrap` now recover more predictably, while traversal stays within the original root subtree. This makes single-pass tree cleanup and normalization visitors easier to write, for example when unwrapping presentational elements or replacing text nodes as you walk the DOM. [#2472](https://github.com/jhy/jsoup/issues/2472)
