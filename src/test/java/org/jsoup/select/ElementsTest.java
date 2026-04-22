@@ -169,6 +169,58 @@ public class ElementsTest {
         assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
+    @Test public void beforeNode() {
+        Document doc = Jsoup.parse("<p>One</p><p>Two</p>");
+        Elements ps = doc.select("p");
+
+        Element span = Jsoup.parse("<span>X</span>").selectFirst("span");
+        ps.before(span);
+
+        Elements bodyChildren = doc.body().children();
+        assertEquals(4, bodyChildren.size());
+        assertEquals("span", bodyChildren.get(0).tagName());
+        assertEquals("X", bodyChildren.get(0).text());
+        assertEquals("p", bodyChildren.get(1).tagName());
+        assertEquals("One", bodyChildren.get(1).text());
+        assertEquals("span", bodyChildren.get(2).tagName());
+        assertEquals("X", bodyChildren.get(2).text());
+        assertEquals("p", bodyChildren.get(3).tagName());
+        assertEquals("Two", bodyChildren.get(3).text());
+    }
+
+    @Test public void beforeNodeClonesForMultipleElements() {
+    Document doc = Jsoup.parse("<p>One</p><p>Two</p>");
+    Elements ps = doc.select("p");
+
+    Element span = Jsoup.parse("<span>X</span>").selectFirst("span");
+    ps.before(span);
+
+    Elements spans = doc.select("span");
+    assertEquals(2, spans.size()); // ensures cloning happened
+    }
+
+    @Test public void beforeNodeEmptyElements() {
+    Document doc = Jsoup.parse("<div></div>");
+    Elements ps = doc.select("p");
+
+    Element span = Jsoup.parse("<span>X</span>").selectFirst("span");
+    ps.before(span);
+
+    assertEquals("<div></div>", doc.body().html());
+    }
+
+    @Test public void beforeNodeNullThrows() {
+    Document doc = Jsoup.parse("<p>One</p>");
+    Elements ps = doc.select("p");
+
+    try {
+        ps.before((Node) null);
+        fail("Should have thrown exception");
+    } catch (IllegalArgumentException e) {
+        // expected
+    }
+    }
+
     @Test public void after() {
         Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");

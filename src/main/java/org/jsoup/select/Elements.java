@@ -342,6 +342,22 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
+     Insert the supplied node before each matched element's outer HTML.
+
+     @param node node to insert before each element
+     @return this, for chaining
+     @see Element#before(Node)
+     */
+    public Elements before(Node node) {
+        Validate.notNull(node);
+
+        for (Element element : this) {
+            element.before(node.clone());
+        }
+        return this;
+    }
+
+    /**
      Insert the supplied HTML after each matched element's outer HTML.
 
      @param html HTML to insert after each element
