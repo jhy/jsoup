@@ -36,6 +36,13 @@
   </properties>
 
   <build>
+    <!--
+      Compilation process to make the multi-release jar:
+      1. compile-package-info builds the base Java 8 package metadata
+      2. compile-java8-base builds the Java 8 base classes
+      3. check-java8-api, check-android21-api, bundle-manifest validate & detail the base
+      4. multi-release adds compile-java11-overlay under META-INF/versions/11 after base artifact metadata is set
+    -->
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -58,6 +65,24 @@
             <id>default-testCompile</id>
             <phase>none</phase>
           </execution>
+          <execution>
+            <id>compile-package-info</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <source>8</source>
+              <target>8</target>
+              <includes>
+                <include>**/package-info.java</include>
+              </includes>
+              <!-- jspecify annotations reference ElementType.MODULE; Java 8-targeted compiles warn while reading that metadata. -->
+              <compilerArgs combine.children="append">
+                <arg>-Xlint:none</arg>
+              </compilerArgs>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -68,7 +93,7 @@
         <version>1.27</version>
         <executions>
           <execution>
-            <id>api-java8</id>
+            <id>check-java8-api</id>
             <phase>compile</phase>
             <goals>
               <goal>check</goal>
@@ -86,7 +111,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>api-android21</id>
+            <id>check-android21-api</id>
             <phase>compile</phase>
             <goals>
               <goal>check</goal>
@@ -355,15 +380,32 @@
             <artifactId>maven-compiler-plugin</artifactId>
             <executions>
               <execution>
-                <id>compile</id>
+                <id>compile-java8-base</id>
                 <phase>compile</phase>
                 <goals>
                   <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <source>1.8</source>
+                  <target>1.8</target>
+                  <excludes>
+                    <!-- package-info classes are emitted once by compile-package-info as base jar metadata. -->
+                    <exclude>**/package-info.java</exclude>
+                  </excludes>
+                </configuration>
+              </execution>
+              <execution>
+                <id>compile-java8-tests</id>
+                <phase>test-compile</phase>
+                <goals>
                   <goal>testCompile</goal>
                 </goals>
                 <configuration>
                   <source>1.8</source>
                   <target>1.8</target>
+                  <compilerArgs combine.children="append">
+                    <arg>-Xlint:none</arg>
+                  </compilerArgs>
                 </configuration>
               </execution>
             </executions>
@@ -374,7 +416,7 @@
 
     <!-- Compiles the multi-release jar when executed on JDK11+ -->
     <profile>
-      <id>compile-multi-release</id>
+      <id>multi-release</id>
       <activation>
         <jdk>[11,2000)</jdk>
       </activation>
@@ -387,7 +429,7 @@
             <version>3.6.1</version>
             <executions>
               <execution>
-                <id>add-java11-test-source</id>
+                <id>add-java11-test-sources</id>
                 <phase>generate-test-sources</phase>
                 <goals>
                   <goal>add-test-source</goal>
@@ -407,18 +449,21 @@
             <executions>
 
               <execution>
-                <id>compile-java-8</id>
+                <id>compile-java8-base</id>
                 <phase>compile</phase>
                 <goals>
                   <goal>compile</goal>
                 </goals>
                 <configuration>
                   <release>8</release>
+                  <excludes>
+                    <exclude>**/package-info.java</exclude>
+                  </excludes>
                 </configuration>
               </execution>
 
               <execution>
-                <id>testCompile-java-11</id>
+                <id>compile-java11-tests</id>
                 <phase>test-compile</phase>
                 <goals>
                   <goal>testCompile</goal>
@@ -430,8 +475,9 @@
               </execution>
 
               <execution>
-                <id>compile-java-11</id>
-                <phase>compile</phase>
+                <id>compile-java11-overlay</id>
+                <!-- Runs after bnd has generated the base-class manifest, but before Surefire and jar packaging. -->
+                <phase>process-test-classes</phase>
                 <goals>
                   <goal>compile</goal>
                 </goals>
