@@ -1,5 +1,10 @@
 # jsoup Changelog
 
+## 1.23.1 (pending)
+
+### Build Changes
+* Cleaned up the Maven build for the multi-release JAR so Java 8 and Java 11+ sources compile as separate source sets. This avoids spurious Java 8 compiler warnings from newer-language overlay sources, keeps long-running parser checks behind an explicit profile, and preserves the same published artifacts and runtime behavior.
+
 ## 1.22.2 (2026-Apr-20)
 
 ### Improvements
