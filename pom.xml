@@ -39,10 +39,10 @@
   <build>
     <!--
       Compilation process to make the multi-release jar:
-      1. compile-package-info builds the base Java 8 package metadata
-      2. compile-java8-base builds the Java 8 base classes
-      3. check-java8-api, check-android21-api, bundle-manifest validate & detail the base
-      4. multi-release adds compile-java11-overlay under META-INF/versions/11 after base artifact metadata is set
+      1. compile-package-info builds the base Java 8 package metadata before Java 11-only targets are visible
+      2. compile-java8-base and, on JDK 11+, compile-java11-overlay build the shipped production classes
+      3. check-java8-api and check-android21-api validate the Java 8 base API surface
+      4. bundle-manifest writes the OSGi metadata, then package assembles the multi-release jar
     -->
     <plugins>
       <plugin>
@@ -259,6 +259,8 @@
             <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
             <Export-Package>org.jsoup.*</Export-Package>
             <Import-Package>!org.jsoup.*,org.jspecify.annotations;version=!;resolution:=optional,*</Import-Package>
+            <!-- bnd scans class output as a flat bundle, so ignore its MR-JAR path error for the Java 11 overlay. -->
+            <_fixupmessages>Classes found in the wrong directory: *META-INF/versions/11*;restrict:=error;is:=ignore</_fixupmessages>
           </instructions>
         </configuration>
       </plugin>
@@ -478,8 +480,7 @@
 
               <execution>
                 <id>compile-java11-overlay</id>
-                <!-- Runs after bnd has generated the base-class manifest, but before Surefire and jar packaging. -->
-                <phase>process-test-classes</phase>
+                <phase>compile</phase>
                 <goals>
                   <goal>compile</goal>
                 </goals>
