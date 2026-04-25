@@ -169,6 +169,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      arbitrary objects; use for source ranges, connecting W3C nodes to Elements, etc.
      * @return the map holding user-data
      */
+    @SuppressWarnings("unchecked")
     Map<String, Object> userData() {
         final Map<String, Object> userData;
         int i = indexOfKey(SharedConstants.UserDataKey);
@@ -176,7 +177,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             userData = new HashMap<>();
             addObject(SharedConstants.UserDataKey, userData);
         } else {
-            //noinspection unchecked
             userData = (Map<String, Object>) vals[i];
         }
         assert userData != null;
@@ -398,8 +398,8 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /** Get the Ranges, if tracking is enabled; null otherwise. */
+    @SuppressWarnings("unchecked")
     @Nullable Map<String, Range.AttributeRange> getRanges() {
-        //noinspection unchecked
         return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
     }
 
@@ -558,6 +558,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Attributes clone() {
         Attributes clone;
         try {
@@ -572,7 +573,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         // make a copy of the user data map. (Contents are shallow).
         int i = indexOfKey(SharedConstants.UserDataKey);
         if (i != NotFound) {
-            //noinspection unchecked
             vals[i] = new HashMap<>((Map<String, Object>) vals[i]);
         }
 

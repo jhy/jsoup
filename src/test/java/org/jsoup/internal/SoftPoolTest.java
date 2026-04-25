@@ -28,10 +28,10 @@ public class SoftPoolTest {
         CountDownLatch latch = new CountDownLatch(NumThreads);
 
         Set<char[]> allBuffers = new HashSet<>();
-        Set<char[]>[] threadLocalBuffers = new Set[NumThreads];
+        List<Set<char[]>> threadLocalBuffers = new ArrayList<>(NumThreads);
 
         for (int i = 0; i < NumThreads; i++) {
-            threadLocalBuffers[i] = new HashSet<>();
+            threadLocalBuffers.add(new HashSet<>());
         }
 
         AtomicInteger threadCount = new AtomicInteger();
@@ -56,11 +56,11 @@ public class SoftPoolTest {
                 for (int i = 0; i < NumObjects; i++) {
                     char[] buffer = softLocalPool.borrow();
                     assertTrue(localBuffers.contains(buffer), "Buffer was not reused in the same thread");
-                    threadLocalBuffers[threadIndex].add(buffer);
+                    threadLocalBuffers.get(threadIndex).add(buffer);
                 }
 
                 synchronized (allBuffers) {
-                    allBuffers.addAll(threadLocalBuffers[threadIndex]);
+                    allBuffers.addAll(threadLocalBuffers.get(threadIndex));
                 }
             } finally {
                 latch.countDown();

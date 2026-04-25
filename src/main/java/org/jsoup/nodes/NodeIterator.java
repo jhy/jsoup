@@ -52,8 +52,7 @@ public class NodeIterator<T extends Node> implements Iterator<T> {
      */
     public void restart(Node start) {
         if (type.isInstance(start))
-            //noinspection unchecked
-            next = (T) start; // first next() will be the start node
+            next = type.cast(start); // first next() will be the start node
 
         root = previous = current = start;
         currentParent = current.parent();
@@ -113,8 +112,7 @@ public class NodeIterator<T extends Node> implements Iterator<T> {
                 return null;                                // reached the end
 
             if (type.isInstance(node))
-                //noinspection unchecked
-                return (T) node;
+                return type.cast(node);
         }
     }
 

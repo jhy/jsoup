@@ -52,6 +52,7 @@ public class Nodes<T extends Node> extends ArrayList<T> {
      * @return a deep copy
      */
     @Override
+    @SuppressWarnings("unchecked")
     public Nodes<T> clone() {
         Nodes<T> clone = new Nodes<>(size());
         for (T node : this)

@@ -17,9 +17,9 @@ class AuthenticationHandler extends Authenticator {
 
     static {
         try {
-            //noinspection unchecked
-            Class<AuthShim> perRequestClass = (Class<AuthShim>) Class.forName("org.jsoup.helper.RequestAuthHandler");
-            Constructor<AuthShim> constructor = perRequestClass.getConstructor();
+            Class<? extends AuthShim> perRequestClass =
+                Class.forName("org.jsoup.helper.RequestAuthHandler").asSubclass(AuthShim.class);
+            Constructor<? extends AuthShim> constructor = perRequestClass.getConstructor();
             handler = constructor.newInstance();
         } catch (ClassNotFoundException e) {
             handler = new GlobalHandler();

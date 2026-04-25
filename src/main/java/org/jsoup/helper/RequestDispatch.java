@@ -17,13 +17,12 @@ import java.lang.reflect.Constructor;
 class RequestDispatch {
 
     @Nullable
-    static Constructor<RequestExecutor> clientConstructor;
+    static Constructor<? extends RequestExecutor> clientConstructor;
 
     static {
         try {
-            //noinspection unchecked
-            Class<RequestExecutor> httpClass =
-                (Class<RequestExecutor>) Class.forName("org.jsoup.helper.HttpClientExecutor");
+            Class<? extends RequestExecutor> httpClass =
+                Class.forName("org.jsoup.helper.HttpClientExecutor").asSubclass(RequestExecutor.class);
             clientConstructor = httpClass.getConstructor(Request.class, Response.class);
         } catch (Exception ignored) {
             // either not on Java11+, or on Android; will provide UrlConnectionExecutor

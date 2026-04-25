@@ -420,10 +420,10 @@ public class Element extends Node implements Iterable<Element> {
     private static final String childElsMod = "jsoup.childElsMod";
 
     /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
+    @SuppressWarnings("unchecked")
     @Nullable List<Element> cachedChildren() {
         if (attributes == null || !attributes.hasUserData()) return null; // don't create empty userdata
         Map<String, Object> userData = attributes.userData();
-        //noinspection unchecked
         WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
         if (ref != null) {
             List<Element> els = ref.get();
