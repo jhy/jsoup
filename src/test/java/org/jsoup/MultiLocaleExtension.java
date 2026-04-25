@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.support.ParameterDeclarations;
 
 import java.lang.annotation.*;
 import java.util.Locale;
@@ -21,7 +22,7 @@ public class MultiLocaleExtension implements AfterEachCallback, ArgumentsProvide
     }
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
+    public Stream<? extends Arguments> provideArguments(ParameterDeclarations parameters, ExtensionContext extensionContext) {
         return Stream.of(Arguments.of(Locale.ENGLISH), Arguments.arguments(new Locale("tr")));
     }
 
