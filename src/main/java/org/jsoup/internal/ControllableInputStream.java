@@ -28,9 +28,8 @@ public class ControllableInputStream extends FilterInputStream {
     private boolean interrupted;            // true if Thread.interrupted() was detected, used to latch interrupted state
     private boolean allowClose = true;      // for cases where we want to re-read the input, can ignore .close() from the parser
 
-    // if we are tracking progress, will have the expected content length, progress callback, connection
-    private @Nullable Progress<?> progress;
-    private @Nullable Object progressContext;
+    // if we are tracking progress, will have the expected content length and progress callback state
+    private @Nullable ProgressState<?> progress;
     private int contentLength = -1;         // expected content length for progress; -1 == unknown
     private int readPos = 0;                // amount read; can be reset()
 
@@ -216,20 +215,19 @@ public class ControllableInputStream extends FilterInputStream {
     }
 
     private void emitProgress() {
+        ProgressState<?> progress = this.progress;
         if (progress == null) return;
         // calculate percent complete if contentLength > 0 (and cap to 100.0 if totalRead > contentLength):
         float percent = contentLength > 0 ? Math.min(100f, readPos * 100f / contentLength) : 0;
-        //noinspection unchecked
-        ((Progress<Object>) progress).onProgress(readPos, contentLength, percent, progressContext); // (not actually unchecked - verified when set)
-        if (percent == 100.0f) progress = null; // detach once we reach 100%, so that any subsequent buffer hits don't report 100 again
+        progress.emit(readPos, contentLength, percent);
+        if (percent == 100.0f) this.progress = null; // detach once we reach 100%, so that any subsequent buffer hits don't report 100 again
     }
 
     public <ProgressContext> ControllableInputStream onProgress(int contentLength, Progress<ProgressContext> callback, ProgressContext context) {
         Validate.notNull(callback);
         Validate.notNull(context);
         this.contentLength = contentLength;
-        this.progress = callback;
-        this.progressContext = context;
+        this.progress = new ProgressState<>(callback, context);
         return this;
     }
 
@@ -245,5 +243,19 @@ public class ControllableInputStream extends FilterInputStream {
     public BufferedInputStream inputStream() {
         // called via HttpConnection.Response.bodyStream(), needs an OG BufferedInputStream
         return new BufferedInputStream(buff);
+    }
+
+    private static class ProgressState<ProgressContext> {
+        private final Progress<ProgressContext> callback;
+        private final ProgressContext context;
+
+        ProgressState(Progress<ProgressContext> callback, ProgressContext context) {
+            this.callback = callback;
+            this.context = context;
+        }
+
+        void emit(int processed, int total, float percent) {
+            callback.onProgress(processed, total, percent, context);
+        }
     }
 }
