@@ -2,7 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,21 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 
 public class ParserIT {
-    @Test
-    @Disabled // disabled by default now, as there more specific unconsume tests
-    public void testIssue1251() {
-        // https://github.com/jhy/jsoup/issues/1251
-        StringBuilder str = new StringBuilder("<a href=\"\"ca");
-        for (int countSpaces = 0; countSpaces < 100000; countSpaces++) {
-            try {
-                Parser.htmlParser().setTrackErrors(1).parseInput(str.toString(), "");
-            } catch (Exception e) {
-                throw new AssertionError("failed at length " + str.length(), e);
-            }
-            str.insert(countSpaces, ' ');
-        }
-    }
-
     @Test
     public void handlesDeepStack() {
         // inspired by http://sv.stargate.wikia.com/wiki/M2J and https://github.com/jhy/jsoup/issues/955

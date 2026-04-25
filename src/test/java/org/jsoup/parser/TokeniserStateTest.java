@@ -200,6 +200,7 @@ public class TokeniserStateTest {
 
     @Test
     public void testUnconsumeAtBufferBoundary() {
+        // test for #1251: put the malformed post-quote attribute character at the reader refill boundary
         String triggeringSnippet = "<a href=\"\"foo";
         char[] padding = new char[CharacterReader.RefillPoint - triggeringSnippet.length() + 2]; // The "foo" part must be just at the limit.
         Arrays.fill(padding, ' ');
