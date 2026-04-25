@@ -539,13 +539,13 @@ public class ConnectTest {
     }
 
     @Test
-    public void handlesWrongContentLengthDuringBufferedRead() throws IOException {
+    public void handlesWrongContentLengthDuringBufferedRead() {
         try {
             Connection.Response res = Jsoup.connect(origin().interrupted.url())
                 .timeout(400)
                 .execute();
             // this route writes more bytes than it declares, so clients may truncate or reject the response.
-            res.bufferUp();
+            res.readFully();
             Document doc = res.parse();
             assertEquals(0, doc.select("p").size());
         } catch (IOException ignored) {
