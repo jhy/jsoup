@@ -287,6 +287,7 @@ public class EvaluatorTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // Exercises deprecated :matchText compatibility until removal.
     public void testMatchTextToString() {
         Evaluator.MatchText evaluator = new Evaluator.MatchText();
         assertEquals(":matchText", evaluator.toString());

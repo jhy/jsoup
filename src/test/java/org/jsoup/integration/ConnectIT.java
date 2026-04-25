@@ -321,6 +321,7 @@ public class ConnectIT {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // Exercises deprecated bufferUp compatibility until removal.
     public void bodyStreamConstrainedViaBufferUp() throws IOException {
         int cap = 5 * 1024;
         String url = origin().file.url("/htmltests/large.html"); // 280 K

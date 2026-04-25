@@ -7,7 +7,6 @@ import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.LeafNode;
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.PseudoTextElement;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
 import org.jsoup.parser.ParseSettings;
@@ -1049,6 +1048,7 @@ public abstract class Evaluator {
      @deprecated This selector is deprecated and will be removed in jsoup 1.24.1. Migrate to <code>::textnode</code> using the <code>Element#selectNodes()</code> method instead.
      */
     @Deprecated
+    @SuppressWarnings("deprecation") // Uses PseudoTextElement for deprecated :matchText support until removal.
     public static final class MatchText extends Evaluator {
         private static boolean loggedError = false;
 
@@ -1062,12 +1062,12 @@ public abstract class Evaluator {
 
         @Override
         public boolean matches(Element root, Element element) {
-            if (element instanceof PseudoTextElement)
+            if (element instanceof org.jsoup.nodes.PseudoTextElement)
                 return true;
 
             List<TextNode> textNodes = element.textNodes();
             for (TextNode textNode : textNodes) {
-                PseudoTextElement pel = new PseudoTextElement(
+                org.jsoup.nodes.PseudoTextElement pel = new org.jsoup.nodes.PseudoTextElement(
                     org.jsoup.parser.Tag.valueOf(element.tagName(), element.tag().namespace(), ParseSettings.preserveCase), element.baseUri(), element.attributes());
                 textNode.replaceWith(pel);
                 pel.appendChild(textNode);

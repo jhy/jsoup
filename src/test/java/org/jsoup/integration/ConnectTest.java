@@ -416,6 +416,7 @@ public class ConnectTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // Exercises deprecated bufferUp compatibility until removal.
     public void multipleParsesOkAfterBufferUp() throws IOException {
         Connection.Response res = Jsoup.connect(echoUrl).execute().bufferUp();
 

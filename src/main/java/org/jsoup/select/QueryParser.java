@@ -254,8 +254,11 @@ public class QueryParser implements AutoCloseable {
                 return new NodeEvaluator.BlankValue();
             case "root":
                 return new Evaluator.IsRoot();
-            case "matchText":
-                return new Evaluator.MatchText();
+            case "matchText": {
+                @SuppressWarnings("deprecation") // :matchText remains supported until its scheduled removal.
+                Evaluator.MatchText matchText = new Evaluator.MatchText();
+                return matchText;
+            }
             default:
                 throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
         }
