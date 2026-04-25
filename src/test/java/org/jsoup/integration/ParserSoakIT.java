@@ -4,7 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -16,10 +16,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- Tests fixes for issues raised by the <a href="https://oss-fuzz.com/testcases?project=jsoup">OSS Fuzz project</a>. As
- some of these are timeout tests - run each file 100 times and ensure under time.
+ Long-running parser soak tests over known fuzz and regression fixtures. These repeat each fixture enough to catch
+ timeout regressions when parser internals change; the long-running profile opts them in because timing varies by
+ machine.
+ <p>Run with {@code mvn -Plong-running -Dit.test=ParserSoakIT verify}</p>
  */
-public class FuzzFixesIT {
+@Tag("long-running")
+public class ParserSoakIT {
     static int numIters = 50;
     static int timeout = 30; // external fuzzer is set to 60 for 100 runs
     static File testDir = ParseTest.getFile("/fuzztests/");
@@ -32,7 +35,6 @@ public class FuzzFixesIT {
         return Stream.of(files);
     }
 
-    @Disabled // disabled, as these soak up build time and the outcome oughtn't change unless we are refactoring the tree builders. manually execute as desired.
     @ParameterizedTest
     @MethodSource("testFiles")
     void testHtmlParse(File file) throws IOException {
@@ -46,8 +48,7 @@ public class FuzzFixesIT {
                 Assertions.fail(String.format("Timeout: only completed %d iters of [%s] in %d seconds", i, file.getName(), timeout));
         }
     }
-    
-    @Disabled // disabled, as these soak up build time and the outcome oughtn't change unless we are refactoring the tree builders. manually execute as desired.
+
     @ParameterizedTest
     @MethodSource("testFiles")
     void testXmlParse(File file) throws IOException {

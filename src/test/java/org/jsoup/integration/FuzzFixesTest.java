@@ -17,12 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  Tests fixes for issues raised by the OSS Fuzz project @ https://oss-fuzz.com/testcases?project=jsoup. Contains inline
- string cases causing exceptions. Timeout tests are in FuzzFixesIT.
+ string cases causing exceptions. Timeout tests are in ParserSoakIT.
  */
 public class FuzzFixesTest {
+    private static final File testDir = ParseTest.getFile("/fuzztests/");
 
     private static Stream<File> testFiles() {
-        File[] files = FuzzFixesIT.testDir.listFiles();
+        File[] files = testDir.listFiles();
         assertNotNull(files);
         assertTrue(files.length > 10);
 

@@ -33,6 +33,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <failsafe.excludedGroups>long-running</failsafe.excludedGroups>
   </properties>
 
   <build>
@@ -293,6 +294,7 @@
         <configuration>
           <parallel>methods</parallel>
           <threadCount>8</threadCount>
+          <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
         </configuration>
       </plugin>
       <plugin>
@@ -533,6 +535,12 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>long-running</id>
+      <properties>
+        <failsafe.excludedGroups></failsafe.excludedGroups>
+      </properties>
     </profile>
     <profile>
       <id>failsafe</id>
