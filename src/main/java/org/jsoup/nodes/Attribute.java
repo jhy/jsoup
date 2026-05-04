@@ -74,15 +74,8 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
             if (i != Attributes.NotFound) {
-                String oldKey = parent.keys[i];
                 parent.keys[i] = key;
-
-                // if tracking source positions, update the key in the range map
-                Map<String, Range.AttributeRange> ranges = parent.getRanges();
-                if (ranges != null) {
-                    Range.AttributeRange range = ranges.remove(oldKey);
-                    ranges.put(key, range);
-                }
+                // Source ranges are index-aligned in the parent, so a key update keeps the same range.
             }
         }
         this.key = key;

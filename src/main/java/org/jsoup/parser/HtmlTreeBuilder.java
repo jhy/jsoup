@@ -315,6 +315,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (dupes > 0) {
                 error("Dropped duplicate attribute(s) in tag [%s]", startTag.normalName);
             }
+            startTag.finaliseAttributeRanges(forcePreserveCase ? ParseSettings.preserveCase : settings);
         }
 
         Tag tag = tagFor(startTag.name(), startTag.normalName, namespace,

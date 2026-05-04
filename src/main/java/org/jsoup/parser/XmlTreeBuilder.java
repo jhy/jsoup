@@ -154,6 +154,7 @@ public class XmlTreeBuilder extends TreeBuilder {
             attributes.deduplicate(settings);
             processNamespaces(attributes, namespaces);
             applyNamespacesToAttributes(attributes, namespaces);
+            startTag.finaliseAttributeRanges(settings);
         }
 
         enforceStackDepthLimit();

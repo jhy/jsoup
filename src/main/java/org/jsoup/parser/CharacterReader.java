@@ -1,6 +1,7 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.LineMap;
 import org.jsoup.internal.SoftPool;
 import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
@@ -9,9 +10,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Locale;
 
 /**
@@ -41,8 +40,7 @@ public final class CharacterReader implements AutoCloseable {
 
     private static final SoftPool<char[]> BufferPool = new SoftPool<>(() -> new char[BufferSize]); // recycled char buffer
 
-    @Nullable private ArrayList<Integer> newlinePositions = null; // optionally track the pos() position of newlines - scans during bufferUp()
-    private int lineNumberOffset = 1; // line numbers start at 1; += newlinePosition[indexof(pos)]
+    @Nullable private LineMap lineMap = null; // optionally maps source offsets to line and column positions
 
     public CharacterReader(Reader input, int sz) {
         this(input); // sz is no longer used
@@ -74,6 +72,7 @@ public final class CharacterReader implements AutoCloseable {
             charBuf = null;
             StringPool.release(stringCache); // conversely, we don't clear the string cache, so we can reuse the contents
             stringCache = null;
+            lineMap = null;
         }
     }
 
@@ -165,12 +164,12 @@ public final class CharacterReader implements AutoCloseable {
      @since 1.14.3
      */
     public void trackNewlines(boolean track) {
-        if (track && newlinePositions == null) {
-            newlinePositions = new ArrayList<>(BufferSize / 80); // rough guess of likely count
+        if (track && lineMap == null) {
+            lineMap = new LineMap();
             scanBufferForNewlines(); // first pass when enabled; subsequently called during bufferUp
         }
         else if (!track)
-            newlinePositions = null;
+            lineMap = null;
     }
 
     /**
@@ -179,7 +178,15 @@ public final class CharacterReader implements AutoCloseable {
      @since 1.14.3
      */
     public boolean isTrackNewlines() {
-        return newlinePositions != null;
+        return lineMap != null;
+    }
+
+    /**
+     Get the line map enabled by {@link #trackNewlines(boolean)}.
+     */
+    LineMap lineMap() {
+        assert lineMap != null;
+        return lineMap;
     }
 
     /**
@@ -193,15 +200,10 @@ public final class CharacterReader implements AutoCloseable {
     }
 
     int lineNumber(int pos) {
-        // note that this impl needs to be called before the next buffer up or line numberoffset will be wrong. if that
-        // causes issues, can remove the reset of newlinepositions during buffer, at the cost of a larger tracking array
         if (!isTrackNewlines())
             return 1;
 
-        int i = lineNumIndex(pos);
-        if (i == -1)
-            return lineNumberOffset; // first line
-        return i + lineNumberOffset + 1;
+        return lineMap().lineNumber(pos);
     }
 
     /**
@@ -218,10 +220,7 @@ public final class CharacterReader implements AutoCloseable {
         if (!isTrackNewlines())
             return pos + 1;
 
-        int i = lineNumIndex(pos);
-        if (i == -1)
-          return pos + 1;
-        return pos - newlinePositions.get(i) + 1;
+        return lineMap().columnNumber(pos);
     }
 
     /**
@@ -235,33 +234,18 @@ public final class CharacterReader implements AutoCloseable {
         return lineNumber() + ":" + columnNumber();
     }
 
-    private int lineNumIndex(int pos) {
-        if (!isTrackNewlines()) return 0;
-        int i = Collections.binarySearch(newlinePositions, pos);
-        if (i < -1) i = Math.abs(i) - 2;
-        return i;
-    }
-
     /**
-     Scans the buffer for newline position, and tracks their location in newlinePositions.
+     Scans the buffer for newline positions and records line starts.
      */
     private void scanBufferForNewlines() {
         if (!isTrackNewlines())
             return;
 
-        if (newlinePositions.size() > 0) {
-            // work out the line number that we have read up to (as we have likely scanned past this point)
-            int index = lineNumIndex(consumed);
-            if (index == -1) index = 0; // first line
-            int linePos = newlinePositions.get(index);
-            lineNumberOffset += index; // the num lines we've read up to
-            newlinePositions.clear();
-            newlinePositions.add(linePos); // roll the last read pos to first, for cursor num after buffer
-        }
-
         for (int i = bufPos; i < bufLength; i++) {
-            if (charBuf[i] == '\n')
-                newlinePositions.add(1 + consumed + i);
+            if (charBuf[i] == '\n') {
+                int lineStart = 1 + consumed + i;
+                lineMap().addLineStart(lineStart);
+            }
         }
     }
 

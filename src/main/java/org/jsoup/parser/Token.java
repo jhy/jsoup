@@ -1,10 +1,13 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.NodeInternals;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -121,7 +124,11 @@ abstract class Token {
         // attribute source range tracking
         final TreeBuilder treeBuilder;
         final boolean trackSource;
+        private static final int AttrRangeWidth = 4;
         int attrNameStart, attrNameEnd, attrValStart, attrValEnd;
+        private @Nullable String @Nullable [] attrRangeNames;
+        private int @Nullable [] attrRangePositions;
+        private int attrRangeCount;
 
         Tag(TokenType type, TreeBuilder treeBuilder) {
             super(type);
@@ -136,6 +143,9 @@ abstract class Token {
             normalName = null;
             selfClosing = false;
             attributes = null;
+            if (attrRangeNames != null)
+                Arrays.fill(attrRangeNames, 0, attrRangeCount, null);
+            attrRangeCount = 0;
             resetPendingAttr();
             return this;
         }
@@ -180,28 +190,80 @@ abstract class Token {
         }
 
         private void trackAttributeRange(String name) {
-            if (trackSource && isStartTag()) {
-                final StartTag start = asStartTag();
-                final CharacterReader r = start.treeBuilder.reader;
-                final boolean preserve = start.treeBuilder.settings.preserveAttributeCase();
-
-                assert attributes != null;
-                if (!preserve) name = Normalizer.lowerCase(name);
-                if (attributes.sourceRange(name).nameRange().isTracked()) return; // dedupe ranges as we go; actual attributes get deduped later for error count
-
+            if (treeBuilder.trackSourceRange && isStartTag()) {
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!attrValue.hasData()) attrValStart = attrValEnd = attrNameEnd;
 
-                Range.AttributeRange range = new Range.AttributeRange(
-                    new Range(
-                        new Range.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
-                        new Range.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
-                    new Range(
-                        new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
-                        new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
-                );
-                attributes.sourceRange(name, range);
+                addAttributeRange(name, attrNameStart, attrNameEnd, attrValStart, attrValEnd);
             }
+        }
+
+        /**
+         Stages an attribute range until the attributes are normalized and deduplicated.
+         */
+        private void addAttributeRange(String name, int nameStart, int nameEnd, int valueStart, int valueEnd) {
+            ensureAttributeRangeCapacity(attrRangeCount + 1);
+            assert attrRangeNames != null;
+            assert attrRangePositions != null;
+            attrRangeNames[attrRangeCount] = name;
+            int rangeIndex = attrRangeIndex(attrRangeCount);
+            attrRangePositions[rangeIndex] = nameStart;
+            attrRangePositions[rangeIndex + 1] = nameEnd;
+            attrRangePositions[rangeIndex + 2] = valueStart;
+            attrRangePositions[rangeIndex + 3] = valueEnd;
+            attrRangeCount++;
+        }
+
+        /**
+         Grows parser-local attribute range staging arrays.
+         */
+        private void ensureAttributeRangeCapacity(int minSize) {
+            if (attrRangeNames != null && attrRangeNames.length >= minSize)
+                return;
+            int size = attrRangeNames == null ? 3 : attrRangeNames.length * 2;
+            if (size < minSize)
+                size = minSize;
+            attrRangeNames = attrRangeNames == null ? new String[size] : Arrays.copyOf(attrRangeNames, size);
+            attrRangePositions = attrRangePositions == null ?
+                new int[size * AttrRangeWidth] :
+                Arrays.copyOf(attrRangePositions, size * AttrRangeWidth);
+        }
+
+        /**
+         Attaches staged attribute ranges after parser normalization and deduplication have settled attribute slots.
+         */
+        final void finaliseAttributeRanges(ParseSettings settings) {
+            if (!treeBuilder.trackSourceRange || attrRangeCount == 0 || attributes == null)
+                return;
+            assert attrRangeNames != null;
+            assert attrRangePositions != null;
+            int count = attrRangeCount;
+            attrRangeCount = 0;
+            for (int i = 0; i < count; i++) {
+                String stagedName = Objects.requireNonNull(attrRangeNames[i]);
+                String rangeName = settings.normalizeAttribute(stagedName);
+                Range.AttributeRange existing = attributes.sourceRange(rangeName);
+                if (!existing.isTracked()) {
+                    int rangeIndex = attrRangeIndex(i);
+                    NodeInternals.attributeRange(
+                        attributes,
+                        rangeName,
+                        treeBuilder.lineMap(),
+                        attrRangePositions[rangeIndex],
+                        attrRangePositions[rangeIndex + 1],
+                        attrRangePositions[rangeIndex + 2],
+                        attrRangePositions[rangeIndex + 3]
+                    );
+                }
+                attrRangeNames[i] = null;
+            }
+        }
+
+        /**
+         Maps a staged attribute range to its first source offset slot.
+         */
+        private static int attrRangeIndex(int index) {
+            return index * AttrRangeWidth;
         }
 
         final boolean hasAttributes() {
