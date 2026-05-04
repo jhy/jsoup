@@ -507,7 +507,7 @@ public class CleanerTest {
         assertEquals("<p>test\n <br /></p>", result.body().html());
     }
 
-    @Test void preservesSourcePositionViaUserData() {
+    @Test void preservesSourcePosition() {
         Document orig = Jsoup.parse("<script>xss</script>\n <p id=1>Hello</p>", Parser.htmlParser().setTrackPosition(true));
         Element p = orig.expectFirst("p");
         Range origRange = p.sourceRange();

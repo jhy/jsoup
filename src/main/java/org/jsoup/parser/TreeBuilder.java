@@ -1,12 +1,12 @@
 package org.jsoup.parser;
 
 import org.jsoup.helper.Validate;
-import org.jsoup.internal.SharedConstants;
+import org.jsoup.internal.LineMap;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.nodes.Range;
+import org.jsoup.nodes.NodeInternals;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -35,7 +35,8 @@ abstract class TreeBuilder {
     private final Token.EndTag end  = new Token.EndTag(this);
     abstract ParseSettings defaultSettings();
 
-    boolean trackSourceRange;  // optionally tracks the source range of nodes and attributes
+    boolean trackSourceRange; // optionally tracks source ranges of nodes and attributes
+    @Nullable LineMap lineMap; // shared line map for retained source ranges
 
     void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
@@ -48,7 +49,8 @@ abstract class TreeBuilder {
         settings = parser.settings();
         reader = new CharacterReader(input);
         trackSourceRange = parser.isTrackPosition();
-        reader.trackNewlines(parser.isTrackErrors() || trackSourceRange); // when tracking errors or source ranges, enable newline tracking for better legibility
+        reader.trackNewlines(parser.isTrackErrors() || trackSourceRange);
+        lineMap = trackSourceRange ? reader.lineMap() : null;
         if (parser.isTrackErrors()) parser.getErrors().clear();
         tokeniser = new Tokeniser(this);
         stack = new ArrayList<>(32);
@@ -62,8 +64,10 @@ abstract class TreeBuilder {
     void completeParse() {
         // tidy up - as the Parser and Treebuilder are retained in document for settings / fragments
         if (reader == null) return;
+        if (lineMap != null) lineMap.complete();
         reader.close();
         reader = null;
+        lineMap = null;
         tokeniser = null;
         stack = null;
     }
@@ -323,11 +327,17 @@ abstract class TreeBuilder {
             }
         }
 
-        Range.Position startPosition = new Range.Position
-            (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
-        Range.Position endPosition = new Range.Position
-            (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
-        Range range = new Range(startPosition, endPosition);
-        node.attributes().userData(isStart ? SharedConstants.RangeKey : SharedConstants.EndRangeKey, range);
+        if (isStart)
+            NodeInternals.sourceRange(node, lineMap(), startPos, endPos);
+        else if (node instanceof Element)
+            NodeInternals.endSourceRange((Element) node, lineMap(), startPos, endPos);
+    }
+
+    /**
+     Internal method, used by parser tokens to attach source ranges to Nodes and Attributes.
+     */
+    LineMap lineMap() {
+        assert lineMap != null;
+        return lineMap;
     }
 }

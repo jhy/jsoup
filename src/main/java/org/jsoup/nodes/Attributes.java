@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
-import static org.jsoup.internal.SharedConstants.AttrRangeKey;
 import static org.jsoup.nodes.Range.AttributeRange.UntrackedAttr;
 
 /**
@@ -80,6 +79,35 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
                 return i;
         }
         return NotFound;
+    }
+
+    /**
+     Finds a visible attribute's range index, skipping internal metadata slots.
+     */
+    int visibleIndexOfKey(String key) {
+        Validate.notNull(key);
+        int visible = 0;
+        for (int i = 0; i < size; i++) {
+            String attrKey = keys[i];
+            if (isInternalKey(attrKey))
+                continue;
+            if (key.equals(attrKey))
+                return visible;
+            visible++;
+        }
+        return NotFound;
+    }
+
+    /**
+     Maps an attribute array slot to the matching visible attribute index.
+     */
+    private int visibleIndex(int index) {
+        int visible = 0;
+        for (int i = 0; i < index; i++) {
+            if (!isInternalKey(keys[i]))
+                visible++;
+        }
+        return visible;
     }
 
     private int indexOfKeyIgnoreCase(String key) {
@@ -166,7 +194,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      Get the map holding any user-data associated with these Attributes. Will be created empty on first use. Held as
      an internal attribute, not a field member, to reduce the memory footprint of Attributes when not used. Can hold
-     arbitrary objects; use for source ranges, connecting W3C nodes to Elements, etc.
+     arbitrary objects; use for connecting W3C nodes to Elements, etc.
      * @return the map holding user-data
      */
     @SuppressWarnings("unchecked")
@@ -222,6 +250,37 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         return this;
     }
 
+    /**
+     Gets the range spans, if source tracking was used.
+     */
+    Range.@Nullable Spans spans() {
+        int i = indexOfKey(SharedConstants.RangeSpansKey);
+        return i == NotFound ? null : (Range.Spans) vals[i];
+    }
+
+    /**
+     Gets or creates the range spans for this attributes object.
+     */
+    Range.Spans ensureSpans() {
+        Range.Spans rangeSpans = spans();
+        if (rangeSpans == null) {
+            rangeSpans = new Range.Spans();
+            addObject(SharedConstants.RangeSpansKey, rangeSpans);
+        }
+        return rangeSpans;
+    }
+
+    /**
+     Sets the range spans when expanding compact leaf storage.
+     */
+    void putSpans(Range.Spans rangeSpans) {
+        int i = indexOfKey(SharedConstants.RangeSpansKey);
+        if (i == NotFound)
+            addObject(SharedConstants.RangeSpansKey, rangeSpans);
+        else
+            vals[i] = rangeSpans;
+    }
+
     void putIgnoreCase(String key, @Nullable String value) {
         int i = indexOfKeyIgnoreCase(key);
         if (i != NotFound) {
@@ -265,6 +324,11 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     @SuppressWarnings("AssignmentToNull")
     private void remove(int index) {
         Validate.isFalse(index >= size);
+        Range.Spans rangeSpans = spans();
+        // Source ranges are stored by visible attribute index; internal metadata slots have no matching range record.
+        if (rangeSpans != null && !isInternalKey(keys[index]))
+            rangeSpans.removeAttributeRange(visibleIndex(index));
+
         int shifted = size - index - 1;
         if (shifted > 0) {
             System.arraycopy(keys, index + 1, keys, index, shifted);
@@ -379,7 +443,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     /**
      Get the source ranges (start to end position) in the original input source from which this attribute's <b>name</b>
      and <b>value</b> were parsed.
-     <p>Position tracking must be enabled prior to parsing the content.</p>
+     <p>Position tracking must be enabled before parsing the content.</p>
      @param key the attribute name
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
@@ -390,35 +454,26 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @since 1.17.1
      */
     public Range.AttributeRange sourceRange(String key) {
-        if (!hasKey(key)) return UntrackedAttr;
-        Map<String, Range.AttributeRange> ranges = getRanges();
-        if (ranges == null) return Range.AttributeRange.UntrackedAttr;
-        Range.AttributeRange range = ranges.get(key);
-        return range != null ? range : Range.AttributeRange.UntrackedAttr;
-    }
-
-    /** Get the Ranges, if tracking is enabled; null otherwise. */
-    @SuppressWarnings("unchecked")
-    @Nullable Map<String, Range.AttributeRange> getRanges() {
-        return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        int index = visibleIndexOfKey(key);
+        if (index == NotFound) return UntrackedAttr;
+        Range.Spans rangeSpans = spans();
+        return rangeSpans != null ? rangeSpans.attributeRange(index) : UntrackedAttr;
     }
 
     /**
-     Set the source ranges (start to end position) from which this attribute's <b>name</b> and <b>value</b> were parsed.
+     Deprecated parser-internal source range setup method, retained for source compatibility. Source ranges are normally
+     produced by enabling parser position tracking before parsing.
      @param key the attribute name
      @param range the range for the attribute's name and value
      @return these attributes, for chaining
      @since 1.18.2
+     @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
      */
+    @Deprecated
     public Attributes sourceRange(String key, Range.AttributeRange range) {
         Validate.notNull(key);
         Validate.notNull(range);
-        Map<String, Range.AttributeRange> ranges = getRanges();
-        if (ranges == null) {
-            ranges = new HashMap<>();
-            userData(AttrRangeKey, ranges);
-        }
-        ranges.put(key, range);
+        NodeInternals.attributeRange(this, key, range);
         return this;
     }
 
@@ -573,7 +628,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         // make a copy of the user data map. (Contents are shallow).
         int i = indexOfKey(SharedConstants.UserDataKey);
         if (i != NotFound) {
-            vals[i] = new HashMap<>((Map<String, Object>) vals[i]);
+            clone.vals[i] = new HashMap<>((Map<String, Object>) vals[i]);
+        }
+
+        // make a copy of the range spans, if present.
+        i = indexOfKey(SharedConstants.RangeSpansKey);
+        if (i != NotFound) {
+            clone.vals[i] = ((Range.Spans) vals[i]).copy();
         }
 
         return clone;

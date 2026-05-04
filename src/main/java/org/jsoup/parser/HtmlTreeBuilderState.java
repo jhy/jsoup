@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.NodeInternals;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
@@ -1863,14 +1864,13 @@ enum HtmlTreeBuilderState {
 
     private static void mergeAttributes(Token.StartTag source, Element dest) {
         if (!source.hasAttributes()) return;
+        source.finaliseAttributeRanges(source.treeBuilder.settings);
         for (Attribute attr : source.attributes) { // only iterates public attributes
             Attributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
-                Range.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
+                Range.AttributeRange range = attr.sourceRange(); // grab before its parent changes
                 destAttrs.put(attr);
-                if (source.trackSource) { // copy the attribute range
-                    destAttrs.sourceRange(attr.getKey(), range);
-                }
+                NodeInternals.attributeRange(destAttrs, attr.getKey(), range);
             }
         }
     }

@@ -6,9 +6,13 @@ package org.jsoup.internal;
  */
 public final class SharedConstants {
     public static final String UserDataKey = "/jsoup.userdata";
-    public final static String AttrRangeKey = "jsoup.attrs";
-    public static final String RangeKey = "jsoup.start";
-    public static final String EndRangeKey = "jsoup.end";
+    /** @deprecated Internal source ranges now use {@link #RangeSpansKey}. */
+    @Deprecated public final static String AttrRangeKey = "jsoup.attrs";
+    /** @deprecated Internal source ranges now use {@link #RangeSpansKey}. */
+    @Deprecated public static final String RangeKey = "jsoup.start";
+    /** @deprecated Internal source ranges now use {@link #RangeSpansKey}. */
+    @Deprecated public static final String EndRangeKey = "jsoup.end";
+    public static final String RangeSpansKey = "/jsoup.spans";
     public static final String XmlnsAttr = "jsoup.xmlns-";
 
     public static final int DefaultBufferSize = 8 * 1024;

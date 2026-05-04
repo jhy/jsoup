@@ -7,6 +7,8 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
+import org.jsoup.nodes.NodeInternals;
+import org.jsoup.nodes.Range;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.parser.ParseErrorList;
 import org.jsoup.parser.Parser;
@@ -199,7 +201,9 @@ public class Cleaner {
                     if (value.isEmpty()) // could not be made abs; leave as-is to allow custom unknown protocols
                         value = sourceAttr.getValue();
                 }
+                Range.AttributeRange range = sourceAttrs.sourceRange(key);
                 destAttrs.put(key, value);
+                NodeInternals.attributeRange(destAttrs, key, range);
             } else
                 numDiscarded++;
         }

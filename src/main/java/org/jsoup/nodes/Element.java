@@ -1935,7 +1935,7 @@ public class Element extends Node implements Iterable<Element> {
 
     /**
      Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
-     enabled prior to parsing the content.
+     enabled before parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Node#sourceRange()
@@ -1943,7 +1943,7 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.15.2
      */
     public Range endSourceRange() {
-        return Range.of(this, false);
+        return Range.ofEnd(this);
     }
 
     @Override

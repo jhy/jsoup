@@ -1,75 +1,115 @@
 package org.jsoup.nodes;
 
+import org.jsoup.internal.LineMap;
 import org.jsoup.internal.StringUtil;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-import static org.jsoup.internal.SharedConstants.*;
-
 /**
- A Range object tracks the character positions in the original input source where a Node starts or ends. If you want to
- track these positions, tracking must be enabled in the Parser with
- {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}.
+ A Range tracks the source offsets where a Node starts or ends. Line and column coordinates are derived from the
+ line map retained during parsing. To track these positions, enable {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}
+ before parsing.
  @see Node#sourceRange()
  @since 1.15.2
  */
 public class Range {
+    // sentinels
+    private static final LineMap UnsetLineMap  = new LineMap();
+    private static final int[] UnsetAttrRanges = new int[0];
     private static final Position UntrackedPos = new Position(-1, -1, -1);
-    private final Position start, end;
+    private static final Range Untracked       = new Range();
 
-    /** An untracked source range. */
-    static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
+    private final LineMap lineMap;
+    private final int startPos;
+    private final int endPos;
 
     /**
-     Creates a new Range with start and end Positions. Called by TreeBuilder when position tracking is on.
-     * @param start the start position
-     * @param end the end position
+     Creates the untracked source range sentinel.
      */
-    public Range(Position start, Position end) {
-        this.start = start;
-        this.end = end;
+    private Range() {
+        lineMap = UnsetLineMap;
+        startPos = -1;
+        endPos = -1;
     }
 
     /**
-     Get the start position of this node.
-     * @return the start position
+     Creates a new Range from source offsets.
+     */
+    private Range(LineMap lineMap, int startPos, int endPos) {
+        this.lineMap = lineMap;
+        if (startPos < 0 || endPos < 0)
+            throw new IllegalArgumentException("Range positions must be non-negative");
+        this.startPos = startPos;
+        this.endPos = endPos;
+    }
+
+    /**
+     Deprecated parser-internal source range setup method, retained for source compatibility. The line and column values
+     in the supplied Positions are not retained; they are derived from source offsets. If either supplied Position is
+     untracked, this Range will also be untracked.
+
+     @param start the start position
+     @param end   the end position
+     @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
+     */
+    @Deprecated
+    public Range(Position start, Position end) {
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
+        if (start.pos < -1 || end.pos < -1)
+            throw new IllegalArgumentException("Range positions must be non-negative, or -1 for untracked");
+        if (start.pos == -1 || end.pos == -1) {
+            lineMap = UnsetLineMap;
+            startPos = -1;
+            endPos = -1;
+        } else {
+            lineMap = new LineMap();
+            startPos = start.pos;
+            endPos = end.pos;
+        }
+    }
+
+    /**
+     Get the start position of this range, with 1-based line and column coordinates.
+     * @return the start position.
      */
     public Position start() {
-        return start;
+        return startPos == -1 ? UntrackedPos : position(startPos);
     }
 
     /**
-     Get the starting cursor position of this range.
-     @return the 0-based start cursor position.
+     Get the starting source offset of this range.
+     @return the 0-based start source offset.
      @since 1.17.1
      */
     public int startPos() {
-        return start.pos;
+        return startPos;
     }
 
     /**
-     Get the end position of this node.
-     * @return the end position
+     Get the end position of this range, with 1-based line and column coordinates.
+     * @return the end position.
      */
     public Position end() {
-        return end;
+        return endPos == -1 ? UntrackedPos : position(endPos);
     }
 
     /**
-     Get the ending cursor position of this range.
-     @return the 0-based ending cursor position.
+     Get the ending source offset of this range.
+     @return the 0-based ending source offset.
      @since 1.17.1
      */
     public int endPos() {
-        return end.pos;
+        return endPos;
     }
 
     /**
-     Test if this source range was tracked during parsing.
-     * @return true if this was tracked during parsing, false otherwise (and all fields will be {@code -1}).
+     Test if this range has source offsets available.
+     * @return true if this range has source offsets, false otherwise (and all fields will be {@code -1}).
      */
     public boolean isTracked() {
-        return this != Untracked;
+        return startPos != -1;
     }
 
     /**
@@ -82,21 +122,34 @@ public class Range {
      @since 1.17.1
      */
     public boolean isImplicit() {
-        if (!isTracked()) return false;
-        return start.equals(end);
+        return isTracked() && startPos == endPos;
     }
 
     /**
-     Retrieves the source range for a given Node.
+     Creates a Position from a source offset and this Range's line map.
+     */
+    private Position position(int pos) {
+        return new Position(pos, lineMap.lineNumber(pos), lineMap.columnNumber(pos));
+    }
+
+    /**
+     Retrieves the start source range for a given Node.
      * @param node the node to retrieve the position for
-     * @param start if this is the starting range. {@code false} for Element end tags.
      * @return the Range, or the Untracked (-1) position if tracking is disabled.
      */
-    static Range of(Node node, boolean start) {
-        final String key = start ? RangeKey : EndRangeKey;
-        if (!node.hasAttributes()) return Untracked;
-        Object range = node.attributes().userData(key);
-        return range != null ? (Range) range : Untracked;
+    static Range ofStart(Node node) {
+        Range.Spans rangeSpans = node.spans();
+        return rangeSpans != null ? rangeSpans.sourceRange() : Untracked;
+    }
+
+    /**
+     Retrieves the end source range for a given Element.
+     * @param element the element to retrieve the end tag position for
+     * @return the Range, or the Untracked (-1) position if tracking is disabled.
+     */
+    static Range ofEnd(Element element) {
+        Range.Spans rangeSpans = element.spans();
+        return rangeSpans != null ? rangeSpans.endSourceRange() : Untracked;
     }
 
     @Override
@@ -106,39 +159,46 @@ public class Range {
 
         Range range = (Range) o;
 
-        if (!start.equals(range.start)) return false;
-        return end.equals(range.end);
+        return startPos == range.startPos && endPos == range.endPos;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(start, end);
+        int result = startPos;
+        result = 31 * result + endPos;
+        return result;
     }
 
     /**
-     Gets a String presentation of this Range, in the format {@code line,column:pos-line,column:pos}.
+     Gets a String representation of this Range, in the format {@code line,column:pos-line,column:pos}.
      * @return a String
      */
     @Override
     public String toString() {
-        return start + "-" + end;
+        StringBuilder sb = StringUtil.borrowBuilder()
+            .append(start())
+            .append('-')
+            .append(end());
+        return StringUtil.releaseBuilder(sb);
     }
 
     /**
-     A Position object tracks the character position in the original input source where a Node starts or ends. If you want to
-     track these positions, tracking must be enabled in the Parser with
-     {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}.
+     A Position describes a source offset and its line and column coordinates. Positions are available when position
+     tracking is enabled with {@link org.jsoup.parser.Parser#setTrackPosition(boolean)} before parsing.
      @see Node#sourceRange()
      */
     public static class Position {
         private final int pos, lineNumber, columnNumber;
 
         /**
-         Create a new Position object. Called by the TreeBuilder if source position tracking is on.
+         Deprecated parser-internal position setup method, retained for source compatibility. Position objects are
+         normally derived from a Range's retained source offsets.
          * @param pos position index
          * @param lineNumber line number
          * @param columnNumber column number
+         @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
          */
+        @Deprecated
         public Position(int pos, int lineNumber, int columnNumber) {
             this.pos = pos;
             this.lineNumber = lineNumber;
@@ -176,7 +236,7 @@ public class Range {
          * @return true if this was tracked during parsing, false otherwise (and all fields will be {@code -1}).
          */
         public boolean isTracked() {
-            return this != UntrackedPos;
+            return pos != -1;
         }
 
         /**
@@ -185,7 +245,13 @@ public class Range {
          */
         @Override
         public String toString() {
-            return lineNumber + "," + columnNumber + ":" + pos;
+            StringBuilder sb = StringUtil.borrowBuilder()
+                .append(lineNumber)
+                .append(',')
+                .append(columnNumber)
+                .append(':')
+                .append(pos);
+            return StringUtil.releaseBuilder(sb);
         }
 
         @Override
@@ -205,35 +271,89 @@ public class Range {
     }
 
     public static class AttributeRange {
-        static final AttributeRange UntrackedAttr = new AttributeRange(Range.Untracked, Range.Untracked);
+        static final AttributeRange UntrackedAttr = new AttributeRange();
 
-        private final Range nameRange;
-        private final Range valueRange;
+        private final LineMap lineMap;
+        private final int nameStartPos, nameEndPos, valueStartPos, valueEndPos;
 
-        /** Creates a new AttributeRange. Called during parsing by Token.StartTag. */
+        /**
+         Creates the untracked attribute source range sentinel.
+         */
+        private AttributeRange() {
+            lineMap         = UnsetLineMap;
+            nameStartPos    = -1;
+            nameEndPos      = -1;
+            valueStartPos   = -1;
+            valueEndPos     = -1;
+        }
+
+        /**
+         Creates a new AttributeRange from source offsets.
+         */
+        private AttributeRange(LineMap lineMap, int nameStartPos, int nameEndPos, int valueStartPos, int valueEndPos) {
+            this.lineMap = lineMap;
+            if (nameStartPos < 0 || nameEndPos < 0 || valueStartPos < 0 || valueEndPos < 0)
+                throw new IllegalArgumentException("Attribute range positions must be non-negative");
+            this.nameStartPos = nameStartPos;
+            this.nameEndPos = nameEndPos;
+            this.valueStartPos = valueStartPos;
+            this.valueEndPos = valueEndPos;
+        }
+
+        /**
+         Deprecated parser-internal source range setup method, retained for source compatibility. Source ranges are
+         normally produced by enabling parser position tracking before parsing. If either supplied Range is untracked,
+         this AttributeRange will also be untracked.
+         @deprecated Use parser position tracking instead. Will be removed in jsoup 1.24.1.
+         */
+        @Deprecated
         public AttributeRange(Range nameRange, Range valueRange) {
-            this.nameRange = nameRange;
-            this.valueRange = valueRange;
+            Objects.requireNonNull(nameRange);
+            Objects.requireNonNull(valueRange);
+            if (!nameRange.isTracked() || !valueRange.isTracked()) {
+                lineMap         = UnsetLineMap;
+                nameStartPos    = -1;
+                nameEndPos      = -1;
+                valueStartPos   = -1;
+                valueEndPos     = -1;
+            } else {
+                lineMap         = nameRange.lineMap;
+                nameStartPos    = nameRange.startPos;
+                nameEndPos      = nameRange.endPos;
+                valueStartPos   = valueRange.startPos;
+                valueEndPos     = valueRange.endPos;
+            }
         }
 
         /** Get the source range for the attribute's name. */
         public Range nameRange() {
-            return nameRange;
+            return isTracked() ? new Range(lineMap, nameStartPos, nameEndPos) : Range.Untracked;
         }
 
         /** Get the source range for the attribute's value. */
         public Range valueRange() {
-            return valueRange;
+            return isTracked() ? new Range(lineMap, valueStartPos, valueEndPos) : Range.Untracked;
         }
 
-        /** Get a String presentation of this Attribute range, in the form
-         {@code line,column:pos-line,column:pos=line,column:pos-line,column:pos} (name start - name end = val start - val end).
-         . */
-        @Override public String toString() {
+        /**
+         Tests if this attribute range has tracked name and value offsets.
+         * @return true if the attribute's name and value ranges were tracked; false otherwise.
+         @since 1.23.1
+         */
+        public boolean isTracked() {
+            return nameStartPos != -1;
+        }
+
+        /**
+         Get a String representation of this Attribute range, in the form
+         {@code line,column:pos-line,column:pos=line,column:pos-line,column:pos} (name start - name end = val start - val end)
+         */
+        @Override
+        public String toString() {
             StringBuilder sb = StringUtil.borrowBuilder()
-                .append(nameRange)
-                .append('=')
-                .append(valueRange);
+                    .append(nameRange())
+                    .append('=')
+                    .append(valueRange());
             return StringUtil.releaseBuilder(sb);
         }
 
@@ -243,12 +363,210 @@ public class Range {
 
             AttributeRange that = (AttributeRange) o;
 
-            if (!nameRange.equals(that.nameRange)) return false;
-            return valueRange.equals(that.valueRange);
+            if (nameStartPos    != that.nameStartPos) return false;
+            if (nameEndPos      != that.nameEndPos) return false;
+            if (valueStartPos   != that.valueStartPos) return false;
+            return valueEndPos  == that.valueEndPos;
         }
 
         @Override public int hashCode() {
-            return Objects.hash(nameRange, valueRange);
+            int result = nameStartPos;
+            result = 31 * result + nameEndPos;
+            result = 31 * result + valueStartPos;
+            result = 31 * result + valueEndPos;
+            return result;
+        }
+    }
+
+    /**
+     Internal range span storage attached to a Node or Attributes object.
+     <p>Unset records use {@code -1}; once written, a node, end-tag, or attribute range record is complete.</p>
+     */
+    static final class Spans {
+        private static final int AttrRangeWidth = 4;
+
+        private LineMap lineMap     = UnsetLineMap;
+        private int nodeStartPos    = -1;
+        private int nodeEndPos      = -1;
+        private int endTagStartPos  = -1;
+        private int endTagEndPos    = -1;
+        private int[] attrRanges    = UnsetAttrRanges;
+
+        /**
+         Gets the node start source range.
+         */
+        private Range sourceRange() {
+            return range(nodeStartPos, nodeEndPos);
+        }
+
+        /**
+         Gets the element end tag source range.
+         */
+        private Range endSourceRange() {
+            return range(endTagStartPos, endTagEndPos);
+        }
+
+        /**
+         Sets the node start source range.
+         */
+        void sourceRange(LineMap lineMap, int startPos, int endPos) {
+            useLineMap(lineMap);
+            nodeStartPos = startPos;
+            nodeEndPos = endPos;
+        }
+
+        /**
+         Sets the element end tag source range.
+         */
+        void endSourceRange(LineMap lineMap, int startPos, int endPos) {
+            useLineMap(lineMap);
+            endTagStartPos = startPos;
+            endTagEndPos = endPos;
+        }
+
+        /**
+         Gets the source ranges for an attribute slot.
+         */
+        Range.AttributeRange attributeRange(int index) {
+            if (index < 0)
+                return Range.AttributeRange.UntrackedAttr;
+
+            int[] ranges = attrRanges;
+            int nameIndex = attrNameStartIndex(index);
+            int valueIndex = attrValueStartIndex(index);
+            int valueEndIndex = valueIndex + 1;
+            if (valueEndIndex >= ranges.length)
+                return Range.AttributeRange.UntrackedAttr;
+
+            int nameStart = ranges[nameIndex];
+            int nameEnd = ranges[nameIndex + 1];
+            int valueStart = ranges[valueIndex];
+            int valueEnd = ranges[valueEndIndex];
+            if (nameStart == -1)
+                return Range.AttributeRange.UntrackedAttr;
+
+            return new Range.AttributeRange(lineMap, nameStart, nameEnd, valueStart, valueEnd);
+        }
+
+        /**
+         Sets the source ranges for an attribute slot.
+         */
+        void attributeRange(int index, Range.AttributeRange range) {
+            attributeRange(
+                index,
+                range.lineMap,
+                range.nameStartPos,
+                range.nameEndPos,
+                range.valueStartPos,
+                range.valueEndPos
+            );
+        }
+
+        /**
+         Sets source range offsets for an attribute slot.
+         */
+        void attributeRange(int index, LineMap lineMap, int nameStart, int nameEnd, int valueStart, int valueEnd) {
+            if (nameStart < 0 || nameEnd < 0 || valueStart < 0 || valueEnd < 0)
+                throw new IllegalArgumentException("Attribute range positions must be non-negative");
+            useLineMap(lineMap);
+            int nameIndex = attrNameStartIndex(index);
+            int valueIndex = attrValueStartIndex(index);
+            ensureAttributeCapacity(valueIndex + 2);
+            attrRanges[nameIndex] = nameStart;
+            attrRanges[nameIndex + 1] = nameEnd;
+            attrRanges[valueIndex] = valueStart;
+            attrRanges[valueIndex + 1] = valueEnd;
+        }
+
+        /**
+         Retains the first line map and rejects mixed-source ranges.
+         */
+        private void useLineMap(LineMap lineMap) {
+            if (this.lineMap == UnsetLineMap) {
+                this.lineMap = lineMap;
+            } else if (this.lineMap != lineMap) {
+                throw new IllegalArgumentException("Source ranges must come from the same parse");
+            }
+        }
+
+        /**
+         Removes an attribute slot and shifts following source ranges.
+         */
+        void removeAttributeRange(int index) {
+            if (index < 0) return;
+            int[] ranges = attrRanges;
+            int removeIndex = attrNameStartIndex(index);
+            if (removeIndex >= ranges.length) return;
+
+            int nextIndex = removeIndex + AttrRangeWidth;
+            int shifted = ranges.length - nextIndex;
+            if (shifted > 0)
+                System.arraycopy(ranges, nextIndex, ranges, removeIndex, shifted);
+            Arrays.fill(ranges, ranges.length - AttrRangeWidth, ranges.length, -1);
+        }
+
+        /**
+         Returns a copy whose source range arrays can mutate independently.
+         */
+        Spans copy() {
+            Spans copy = new Spans();
+            copy.lineMap = lineMap;
+            copy.nodeStartPos = nodeStartPos;
+            copy.nodeEndPos = nodeEndPos;
+            copy.endTagStartPos = endTagStartPos;
+            copy.endTagEndPos = endTagEndPos;
+            copy.attrRanges = attrRanges.length == 0 ? UnsetAttrRanges : attrRanges.clone();
+            return copy;
+        }
+
+        /**
+         Grows attribute range storage to hold the requested slot count.
+         */
+        private void ensureAttributeCapacity(int minLength) {
+            if (attrRanges.length >= minLength) return;
+            int oldLength = attrRanges.length;
+            attrRanges = Arrays.copyOf(attrRanges, minLength);
+            Arrays.fill(attrRanges, oldLength, attrRanges.length, -1);
+        }
+
+        /**
+         Creates a Range from stored offsets.
+         */
+        private Range range(int startPos, int endPos) {
+            if (startPos == -1)
+                return Range.Untracked;
+            return new Range(lineMap, startPos, endPos);
+        }
+
+        /**
+         Maps an attribute slot to its stored name range start slot.
+         */
+        private static int attrNameStartIndex(int index) {
+            return index * AttrRangeWidth;
+        }
+
+        /**
+         Maps an attribute slot to its stored value range start slot.
+         */
+        private static int attrValueStartIndex(int index) {
+            return index * AttrRangeWidth + 2;
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Spans spans = (Spans) o;
+            return nodeStartPos == spans.nodeStartPos &&
+                nodeEndPos == spans.nodeEndPos &&
+                endTagStartPos == spans.endTagStartPos &&
+                endTagEndPos == spans.endTagEndPos &&
+                Arrays.equals(attrRanges, spans.attrRanges);
+        }
+
+        @Override public int hashCode() {
+            int result = Objects.hash(nodeStartPos, nodeEndPos, endTagStartPos, endTagEndPos);
+            result = 31 * result + Arrays.hashCode(attrRanges);
+            return result;
         }
     }
 }

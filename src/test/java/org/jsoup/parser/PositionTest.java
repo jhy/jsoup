@@ -4,6 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.integration.TestServer;
 import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -41,6 +42,124 @@ class PositionTest {
         assertFalse(xmlParser.isTrackPosition());
         xmlParser.setTrackPosition(true);
         assertTrue(xmlParser.isTrackPosition());
+    }
+
+    @Test void parserTrackPositionCopies() {
+        Parser parser = Parser.htmlParser();
+        parser.setTrackPosition(true);
+
+        Parser clone = parser.clone();
+        assertTrue(clone.isTrackPosition());
+        Parser instance = parser.newInstance();
+        assertTrue(instance.isTrackPosition());
+
+        parser.setTrackPosition(false);
+        assertFalse(parser.isTrackPosition());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test void manualRangeConstructionUsesOffsetsAsIdentity() {
+        Range range = new Range(new Range.Position(10, 3, 4), new Range.Position(20, 3, 14));
+        Range sameOffsets = new Range(new Range.Position(10, 99, 100), new Range.Position(20, 99, 110));
+
+        assertEquals(10, range.startPos());
+        assertEquals(20, range.endPos());
+        assertEquals(range, sameOffsets);
+        assertEquals(range.hashCode(), sameOffsets.hashCode());
+
+        // Manual ranges do not have a parse LineMap, so line and column are derived from offsets on one line.
+        assertEquals(1, range.start().lineNumber());
+        assertEquals(11, range.start().columnNumber());
+        assertEquals(1, range.end().lineNumber());
+        assertEquals(21, range.end().columnNumber());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test void manualUntrackedRangeConstructionStaysUntracked() {
+        Range range = new Range(new Range.Position(-1, -1, -1), new Range.Position(-1, -1, -1));
+
+        assertFalse(range.isTracked());
+        assertEquals(-1, range.startPos());
+        assertEquals(-1, range.endPos());
+        assertFalse(range.start().isTracked());
+        assertFalse(range.end().isTracked());
+
+        Range.AttributeRange attrRange = new Range.AttributeRange(range, range);
+        assertFalse(attrRange.isTracked());
+        assertFalse(attrRange.nameRange().isTracked());
+        assertFalse(attrRange.valueRange().isTracked());
+    }
+
+    @Test void trackedLeafPositionsSurviveAttributeExpansion() {
+        Parser parser = Parser.htmlParser().setTrackPosition(true);
+        Document doc = Jsoup.parse("<p>One</p><!--x-->", parser);
+
+        Element p = doc.expectFirst("p");
+        TextNode text = (TextNode) p.firstChild();
+        assertNotNull(text);
+        Comment comment = (Comment) p.nextSibling();
+        assertNotNull(comment);
+
+        assertTrue(p.sourceRange().isTracked());
+        assertTrue(p.endSourceRange().isTracked());
+
+        Range textRange = text.sourceRange();
+        assertTrue(textRange.isTracked());
+        assertEquals(0, text.attributesSize());
+        assertEquals("One", text.getWholeText());
+
+        text.attributes();
+        assertEquals("One", text.getWholeText());
+        assertEquals(textRange, text.sourceRange());
+
+        assertTrue(comment.sourceRange().isTracked());
+        assertEquals(0, comment.attributesSize());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test void attributeRangeSetterAcceptsRangesFromSameParse() {
+        Document doc = Jsoup.parse("<p one=1 two=2>", Parser.htmlParser().setTrackPosition(true));
+        Element p = doc.expectFirst("p");
+        Range.AttributeRange oneRange = p.attributes().sourceRange("one");
+        Range.AttributeRange twoRange = p.attributes().sourceRange("two");
+
+        Attributes attrs = new Attributes();
+        attrs.put("one", "1");
+        attrs.put("two", "2");
+        attrs.sourceRange("one", oneRange);
+        attrs.sourceRange("two", twoRange);
+
+        assertEquals(oneRange, attrs.sourceRange("one"));
+        assertEquals(twoRange, attrs.sourceRange("two"));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test void attributeRangeSetterRejectsRangesFromDifferentSources() {
+        Document doc = Jsoup.parse("<div>\n <p one=1>Text</p>\n</div>", Parser.htmlParser().setTrackPosition(true));
+        Element p = doc.expectFirst("p");
+        String originalNodeRange = p.sourceRange().toString();
+        String originalAttrRange = p.attributes().sourceRange("one").toString();
+
+        Document other = Jsoup.parse("<a href=x>", Parser.htmlParser().setTrackPosition(true));
+        Range.AttributeRange otherRange = other.expectFirst("a").attributes().sourceRange("href");
+        IllegalArgumentException copied = assertThrows(
+            IllegalArgumentException.class,
+            () -> p.attributes().sourceRange("one", otherRange)
+        );
+        assertEquals("Source ranges must come from the same parse", copied.getMessage());
+        assertEquals(originalNodeRange, p.sourceRange().toString());
+        assertEquals(originalAttrRange, p.attributes().sourceRange("one").toString());
+
+        Range manualName = new Range(new Range.Position(0, 1, 1), new Range.Position(1, 1, 2));
+        Range manualValue = new Range(new Range.Position(2, 1, 3), new Range.Position(3, 1, 4));
+        Range.AttributeRange manualRange = new Range.AttributeRange(manualName, manualValue);
+        IllegalArgumentException manual = assertThrows(
+            IllegalArgumentException.class,
+            () -> p.attributes().sourceRange("one", manualRange)
+        );
+        assertEquals("Source ranges must come from the same parse", manual.getMessage());
+        assertEquals(originalNodeRange, p.sourceRange().toString());
+        assertEquals(originalAttrRange, p.attributes().sourceRange("one").toString());
     }
 
     @Test void tracksPosition() {
@@ -345,7 +464,7 @@ class PositionTest {
             Range.AttributeRange attrRange = attr.sourceRange();
             assertTrue(attrRange.nameRange().isTracked());
             assertTrue(attrRange.valueRange().isTracked());
-            assertSame(attrRange, div.attributes().sourceRange(attr.getKey()));
+            assertEquals(attrRange, div.attributes().sourceRange(attr.getKey()));
 
             assertFalse(attrRange.nameRange().isImplicit());
             if (attr.getValue().isEmpty())
@@ -370,7 +489,7 @@ class PositionTest {
             Range.AttributeRange attrRange = attr.sourceRange();
             assertTrue(attrRange.nameRange().isTracked());
             assertTrue(attrRange.valueRange().isTracked());
-            assertSame(attrRange, div.attributes().sourceRange(attr.getKey()));
+            assertEquals(attrRange, div.attributes().sourceRange(attr.getKey()));
             assertFalse(attrRange.nameRange().isImplicit());
             if (attr.getValue().isEmpty())
                 assertTrue(attrRange.valueRange().isImplicit());
@@ -385,6 +504,19 @@ class PositionTest {
         assertEquals("4,1:30-4,6:35=5,1:37-5,4:40", foo.toString());
 
         assertEquals("one:5-8=10-21; id:24-26=27-28; class:30-35=37-40; attr5:41-46=46-46; ", track.toString());
+    }
+
+    @Test void tracksForeignAttributesWithPreservedCase() {
+        String html = "<svg viewBox=2><foreignObject Foo=bar></foreignObject></svg>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+
+        Element svg = doc.expectFirst("svg");
+        assertEquals("1,6:5-1,13:12=1,14:13-1,15:14", svg.attributes().sourceRange("viewBox").toString());
+        assertFalse(svg.attributes().sourceRange("viewbox").nameRange().isTracked());
+
+        Element foreignObject = doc.expectFirst("foreignObject");
+        assertEquals("1,31:30-1,34:33=1,35:34-1,38:37", foreignObject.attributes().sourceRange("Foo").toString());
+        assertFalse(foreignObject.attributes().sourceRange("foo").nameRange().isTracked());
     }
 
     @Test void trackAttributePositionInFirstElement() {
@@ -587,6 +719,25 @@ class PositionTest {
         Attribute attr2 = p.attribute("CLASSY");
         assertEquals("CLASSY=\"Tree\"", attr2.html());
         assertEquals(expectedRange, attr2.sourceRange().toString());
+    }
+
+    @Test void removeAttributeMaintainsFollowingRanges() {
+        String html = "<p one=1 two=2 three=3>One</p>";
+        Document doc = Jsoup.parse(html, TrackingHtmlParser);
+        Element p = doc.expectFirst("p");
+
+        String twoRange = "1,10:9-1,13:12=1,14:13-1,15:14";
+        String threeRange = "1,16:15-1,21:20=1,22:21-1,23:22";
+        assertEquals(twoRange, p.attributes().sourceRange("two").toString());
+        assertEquals(threeRange, p.attributes().sourceRange("three").toString());
+
+        p.removeAttr("one");
+        assertEquals(twoRange, p.attributes().sourceRange("two").toString());
+        assertEquals(threeRange, p.attributes().sourceRange("three").toString());
+
+        p.removeAttr("two");
+        assertFalse(p.attributes().sourceRange("two").isTracked());
+        assertEquals(threeRange, p.attributes().sourceRange("three").toString());
     }
 
     @Test void movedAttributesHaveRange() {
