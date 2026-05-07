@@ -4,6 +4,7 @@
 
 ### Improvements
 * Reduced retained memory when parsing with source position tracking enabled (`Parser#setTrackPosition(true)`). Source ranges are now stored in compact parser-owned span records instead of node and attribute user data, and `Position` objects are created lazily when source ranges are read. This cuts tracked DOM retained size by about 50-60% on representative benchmark documents, while keeping `Node#sourceRange()`, `Element#endSourceRange()`, and `Attribute#sourceRange()` behavior intact. [#2498](https://github.com/jhy/jsoup/pull/2498)
+* Added `Element#classList()`, an immutable snapshot of an element's class names in attribute order. Use `hasClass()` when you just need to test for one class, `classList()` when you want to read or iterate classes without needing a mutable result, and `classNames()` when you want the existing mutable, deduplicated set that can be written back with `classNames(Set)`. The class APIs now share an HTML-whitespace scanner, which also makes `classNames()` faster and lighter on allocation, especially when walking many elements without class names. [#2500](https://github.com/jhy/jsoup/pull/2500)
 
 ### Build Changes
 * Cleaned up the Maven build for the multi-release JAR so Java 8 and Java 11+ sources compile as separate source sets. This avoids spurious Java 8 compiler warnings from newer-language overlay sources, keeps long-running parser checks behind an explicit profile, and preserves the same published artifacts and runtime behavior.
