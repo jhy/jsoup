@@ -20,7 +20,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -50,7 +49,6 @@ import static org.jsoup.select.Selector.evaluatorOf;
 public class Element extends Node implements Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
-    private static final Pattern ClassSplit = Pattern.compile("\\s+");
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
@@ -1781,17 +1779,90 @@ public class Element extends Node implements Iterable<Element> {
     }
 
     /**
-     * Get each of the element's class names. E.g. on element {@code <div class="header gray">},
-     * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
-     * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
-     * @return set of classnames, empty if no class attribute
+     Get each of the element's class names. E.g. on element {@code <div class="header gray">},
+     returns a set of two elements {@code "header", "gray"}.
+     <p>Note that modifications to this set are not pushed to the backing {@code class} attribute; use
+     {@link #classNames(Set)} to persist them.</p>
+     <p>Use {@link #classList()} for a more efficient, read-only list that preserves duplicate class names.</p>
+
+     @return set of class names, empty if no class attribute
+     @see #classNames(Set)
+     @see #hasClass(String) 
+     @see #classList()
      */
     public Set<String> classNames() {
-    	String[] names = ClassSplit.split(className());
-    	Set<String> classNames = new LinkedHashSet<>(Arrays.asList(names));
-    	classNames.remove(""); // if classNames() was empty, would include an empty class
+        Set<String> classNames = new LinkedHashSet<>(4);
+        if (attributes == null) return classNames;
 
+        String classAttr = attributes.getIgnoreCase("class");
+        int len = classAttr.length();
+        for (int i = 0; i < len; ) {
+            int start = nextClassStart(classAttr, i, len);
+            if (start == len) break;
+
+            int end = nextClassEnd(classAttr, start, len);
+            classNames.add(classToken(classAttr, start, end));
+            i = end;
+        }
         return classNames;
+    }
+
+    /**
+     Get each of the element's class names, in attribute order. E.g. on element
+     {@code <div class="header gray">}, returns a list of two elements {@code "header", "gray"}.
+     <p>This immutable snapshot preserves duplicate class names, and is more memory efficient than
+     {@link #classNames()} when a read-only result is sufficient, particularly for elements without class names.
+     Use {@link #classNames()} for a mutable set of unique class names.</p>
+
+     @return immutable list of class names, empty if no class attribute
+     @see #classNames()
+     @see #hasClass(String)
+     @since 1.23.1
+     */
+    public List<String> classList() {
+        if (attributes == null) return Collections.emptyList();
+
+        String attr = attributes.getIgnoreCase("class");
+        int len = attr.length();
+        int start = nextClassStart(attr, 0, len);
+        if (start == len) return Collections.emptyList();
+
+        int end = nextClassEnd(attr, start, len);
+        String first = classToken(attr, start, end);
+        start = nextClassStart(attr, end, len);
+        if (start == len) return Collections.singletonList(first);
+
+        List<String> classes = new ArrayList<>(4);
+        classes.add(first);
+        do {
+            end = nextClassEnd(attr, start, len);
+            classes.add(classToken(attr, start, end));
+            start = nextClassStart(attr, end, len);
+        } while (start < len);
+        return Collections.unmodifiableList(classes);
+    }
+
+    /**
+     Find the next class token start.
+     */
+    private static int nextClassStart(String classAttr, int offset, int len) {
+        while (offset < len && StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
+        return offset;
+    }
+
+    /**
+     Find the next class token end.
+     */
+    private static int nextClassEnd(String classAttr, int offset, int len) {
+        while (offset < len && !StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
+        return offset;
+    }
+
+    /**
+     Returns the class token while preserving the original string for a single unpadded class.
+     */
+    private static String classToken(String classAttr, int start, int end) {
+        return start == 0 && end == classAttr.length() ? classAttr : classAttr.substring(start, end);
     }
 
     /**
@@ -1816,46 +1887,25 @@ public class Element extends Node implements Iterable<Element> {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        if (attributes == null)
-            return false;
+        if (attributes == null) return false;
 
         final String classAttr = attributes.getIgnoreCase("class");
         final int len = classAttr.length();
         final int wantLen = className.length();
 
-        if (len == 0 || len < wantLen) {
-            return false;
-        }
+        if (len == 0 || len < wantLen) return false;
 
-        // if both lengths are equal, only need compare the className with the attribute
-        if (len == wantLen) {
-            return className.equalsIgnoreCase(classAttr);
-        }
+        // if both lengths are equal, only need to compare the className with the attribute
+        if (len == wantLen) return className.equalsIgnoreCase(classAttr);
 
-        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
-        boolean inClass = false;
-        int start = 0;
-        for (int i = 0; i < len; i++) {
-            if (Character.isWhitespace(classAttr.charAt(i))) {
-                if (inClass) {
-                    // white space ends a class name, compare it with the requested one, ignore case
-                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
-                        return true;
-                    }
-                    inClass = false;
-                }
-            } else {
-                if (!inClass) {
-                    // we're in a class name : keep the start of the substring
-                    inClass = true;
-                    start = i;
-                }
-            }
-        }
+        // otherwise, scan for whitespace and compare regions (with no string or list allocations)
+        for (int i = 0; i < len; ) {
+            int start = nextClassStart(classAttr, i, len);
+            if (start == len) return false;
 
-        // check the last entry
-        if (inClass && len - start == wantLen) {
-            return classAttr.regionMatches(true, start, className, 0, wantLen);
+            int end = nextClassEnd(classAttr, start, len);
+            if (end - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) return true;
+            i = end;
         }
 
         return false;

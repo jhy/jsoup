@@ -468,6 +468,27 @@ public class ElementTest {
     }
 
     @Test
+    public void hasClassUsesHtmlWhitespace() {
+        // Verifies hasClass() uses the same HTML ASCII whitespace splitter as classNames().
+        Element el = new Element("div");
+
+        el.attr("class", "alpha\tbeta\n\rgamma\fdelta");
+        assertTrue(el.hasClass("BETA"));
+        assertTrue(el.hasClass("gamma"));
+        assertTrue(el.hasClass("delta"));
+
+        el.attr("class", "alpha\u000Bbeta gamma");
+        assertTrue(el.hasClass("alpha\u000Bbeta"));
+        assertFalse(el.hasClass("beta"));
+        assertTrue(el.hasClass("gamma"));
+
+        el.attr("class", "alpha\u00A0beta gamma");
+        assertTrue(el.hasClass("alpha\u00A0beta"));
+        assertFalse(el.hasClass("beta"));
+        assertTrue(el.hasClass("gamma"));
+    }
+
+    @Test
     public void testClassUpdates() {
         Document doc = Jsoup.parse("<div class='mellow yellow'></div>");
         Element div = doc.select("div").first();
@@ -1476,6 +1497,74 @@ public class ElementTest {
         assertEquals("c1", arr2[0]);
         assertEquals("c2", arr2[1]);
         assertEquals("c3", arr2[2]);
+    }
+
+    @Test
+    public void classNamesHandlesRoughWhitespaceAndDuplicates() {
+        // Verifies classNames() uses HTML ASCII whitespace while handling rough class attributes.
+        assertClassNames(null);
+        assertClassNames("");
+        assertClassNames(" \t\n\r\f ");
+        assertClassNames("alpha", "alpha");
+        assertClassNames("  alpha  ", "alpha");
+        assertClassNames("alpha beta gamma", "alpha", "beta", "gamma");
+        assertClassNames("alpha  beta    gamma", "alpha", "beta", "gamma");
+        assertClassNames("alpha\tbeta\n\rgamma", "alpha", "beta", "gamma");
+        assertClassNames("alpha\r\nbeta\r\n\r\ngamma", "alpha", "beta", "gamma");
+        assertClassNames("alpha\fbeta\f\f gamma", "alpha", "beta", "gamma");
+        assertClassNames("alpha\u000Bbeta gamma", "alpha\u000Bbeta", "gamma");
+        assertClassNames("alpha beta alpha gamma beta", "alpha", "beta", "gamma");
+        assertClassNames("alpha\u00A0beta gamma", "alpha\u00A0beta", "gamma");
+    }
+
+    @Test
+    public void classListReturnsRawTokens() {
+        // Verifies classList() uses HTML ASCII whitespace while preserving duplicate tokens.
+        assertClassList(null);
+        assertClassList("");
+        assertClassList(" \t\n\r\f ");
+        assertClassList("alpha", "alpha");
+        assertClassList("  alpha  ", "alpha");
+        assertClassList("alpha beta gamma", "alpha", "beta", "gamma");
+        assertClassList("alpha  beta    gamma", "alpha", "beta", "gamma");
+        assertClassList("alpha\tbeta\n\rgamma", "alpha", "beta", "gamma");
+        assertClassList("alpha\r\nbeta\r\n\r\ngamma", "alpha", "beta", "gamma");
+        assertClassList("alpha\fbeta\f\f gamma", "alpha", "beta", "gamma");
+        assertClassList("alpha\u000Bbeta gamma", "alpha\u000Bbeta", "gamma");
+        assertClassList("alpha beta alpha gamma beta", "alpha", "beta", "alpha", "gamma", "beta");
+        assertClassList("alpha\u00A0beta gamma", "alpha\u00A0beta", "gamma");
+    }
+
+    @Test
+    public void classListIsImmutable() {
+        // Checks classList() returns immutable snapshots for empty, single, and multi-token results.
+        Element empty = new Element("div");
+        Element single = new Element("div").attr("class", "alpha");
+        Element multiple = new Element("div").attr("class", "alpha beta");
+
+        assertThrows(UnsupportedOperationException.class, () -> empty.classList().add("gamma"));
+        assertThrows(UnsupportedOperationException.class, () -> single.classList().add("gamma"));
+        assertThrows(UnsupportedOperationException.class, () -> multiple.classList().add("gamma"));
+    }
+
+    /**
+     Checks classNames() output order for a single raw class attribute value.
+     */
+    private static void assertClassNames(String classAttr, String... expected) {
+        Element div = new Element("div");
+        if (classAttr != null)
+            div.attr("class", classAttr);
+        assertArrayEquals(expected, div.classNames().toArray());
+    }
+
+    /**
+     Checks classList() output order for a single raw class attribute value.
+     */
+    private static void assertClassList(String classAttr, String... expected) {
+        Element div = new Element("div");
+        if (classAttr != null)
+            div.attr("class", classAttr);
+        assertArrayEquals(expected, div.classList().toArray());
     }
 
     @Test
