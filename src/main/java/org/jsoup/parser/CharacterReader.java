@@ -410,41 +410,108 @@ public final class CharacterReader implements AutoCloseable {
     }
 
     /**
-     * Read characters until the first of any delimiters is found.
-     * @param chars delimiters to scan for
-     * @return characters read up to the matched delimiter.
+     Read characters until the first of any delimiters is found.
+     @param chars delimiters to scan for
+     @return characters read up to the matched delimiter.
      */
     public String consumeToAny(final char... chars) {
-        return consumeMatching(c -> { // seeks until we see one of the terminating chars
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        scan:
+        while (pos < remaining) {
+            char c = val[pos];
             for (char seek : chars)
-                if (c == seek) return false;
-            return true;
-        });
+                if (c == seek) break scan;
+            pos++;
+        }
+
+        return consumeRange(start, pos);
+    }
+
+    /**
+     Read characters until either delimiter is found.
+     */
+    String consumeToAny(char c1, char c2) {
+        // monomorhpic to allow JIT to avoid virtual dispatch of e.g. consumeMatching(CharPredicate func)
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        while (pos < remaining) {
+            char c = val[pos];
+            if (c == c1 || c == c2) break;
+            pos++;
+        }
+
+        return consumeRange(start, pos);
+    }
+
+    /**
+     Read characters until any delimiter is found.
+     */
+    String consumeToAny(char c1, char c2, char c3) {
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        while (pos < remaining) {
+            char c = val[pos];
+            if (c == c1 || c == c2 || c == c3) break;
+            pos++;
+        }
+
+        return consumeRange(start, pos);
     }
 
     String consumeToAnySorted(final char... chars) {
-        return consumeMatching(c -> Arrays.binarySearch(chars, c) < 0); // matches until a hit
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        while (pos < remaining && Arrays.binarySearch(chars, val[pos]) < 0) {
+            pos++;
+        }
+
+        return consumeRange(start, pos);
     }
 
     String consumeData() {
         // consumes until &, <, null
-        return consumeMatching(c -> c != '&' && c != '<' && c != TokeniserState.nullChar);
+        return consumeToAny('&', '<', TokeniserState.nullChar);
     }
 
     String consumeAttributeQuoted(final boolean single) {
         // null, " or ', &
-        return consumeMatching(c -> c != TokeniserState.nullChar && c != '&' && (single ? c != '\'' : c != '"'));
+        char quote = single ? '\'' : '"';
+        return consumeToAny(TokeniserState.nullChar, '&', quote);
     }
 
     String consumeRawData() {
         // <, null
-        return consumeMatching(c -> c != '<' && c != TokeniserState.nullChar);
+        return consumeToAny('<', TokeniserState.nullChar);
     }
 
     String consumeTagName() {
         // '\t', '\n', '\r', '\f', ' ', '/', '>'
         // NOTE: out of spec; does not stop and append on nullChar but eats
-        return consumeMatching(c -> {
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        while (pos < remaining) {
+            char c = val[pos];
             switch (c) {
                 case '\t':
                 case '\n':
@@ -453,10 +520,12 @@ public final class CharacterReader implements AutoCloseable {
                 case ' ':
                 case '/':
                 case '>':
-                    return false;
+                    return consumeRange(start, pos);
             }
-            return true;
-        });
+            pos++;
+        }
+
+        return consumeRange(start, pos);
     }
 
     String consumeToEnd() {
@@ -491,6 +560,14 @@ public final class CharacterReader implements AutoCloseable {
 
     String consumeDigitSequence() {
         return consumeMatching(c -> c >= '0' && c <= '9');
+    }
+
+    /**
+     Complete a scan by moving the reader and returning the matched range.
+     */
+    private String consumeRange(int start, int pos) {
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos - start) : "";
     }
 
     boolean matches(char c) {
