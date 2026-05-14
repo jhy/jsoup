@@ -7,6 +7,7 @@
 * Added `Element#classList()`, an immutable snapshot of an element's class names in attribute order. Use `hasClass()` when you just need to test for one class, `classList()` when you want to read or iterate classes without needing a mutable result, and `classNames()` when you want the existing mutable, deduplicated set that can be written back with `classNames(Set)`. The class APIs now share an HTML-whitespace scanner, which also makes `classNames()` faster and lighter on allocation, especially when walking many elements without class names. [#2500](https://github.com/jhy/jsoup/pull/2500)
 * Aligned HTML parser scope classification with the current HTML spec for `select`, `foreignObject`, and `template`. [#2501](https://github.com/jhy/jsoup/issues/2501)
 * Simplified the HTML tree builder's scope, implied-end-tag, and special-element checks by caching parser-only options on Tag. That improves HTML parser throughput by about 10% on small inputs and up to about 30% on larger inputs in the benchmark fixtures. [#2502](https://github.com/jhy/jsoup/issues/2502)
+* Improved HTML parser throughput stability by making hot tokeniser scan paths compile more predictably. [#2507](https://github.com/jhy/jsoup/pull/2507)
 
 ### Bug Fixes
 * Fixed HTML parsing of mixed-case RCDATA end tags after tag-shaped text. For example, `<title><p>Foo</TiTLE>` and `<textarea><img src=x></TeXtArEa>` now keep the tag-shaped content as text instead of promoting it to markup. [#2503](https://github.com/jhy/jsoup/issues/2503)
