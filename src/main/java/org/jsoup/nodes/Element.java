@@ -1775,7 +1775,7 @@ public class Element extends Node implements Iterable<Element> {
      * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
      */
     public String className() {
-        return attr("class").trim();
+        return ElementClasses.className(this);
     }
 
     /**
@@ -1791,20 +1791,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #classList()
      */
     public Set<String> classNames() {
-        Set<String> classNames = new LinkedHashSet<>(4);
-        if (attributes == null) return classNames;
-
-        String classAttr = attributes.getIgnoreCase("class");
-        int len = classAttr.length();
-        for (int i = 0; i < len; ) {
-            int start = nextClassStart(classAttr, i, len);
-            if (start == len) break;
-
-            int end = nextClassEnd(classAttr, start, len);
-            classNames.add(classToken(classAttr, start, end));
-            i = end;
-        }
-        return classNames;
+        return ElementClasses.classNames(this);
     }
 
     /**
@@ -1820,50 +1807,9 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.23.1
      */
     public List<String> classList() {
-        if (attributes == null) return Collections.emptyList();
-
-        String attr = attributes.getIgnoreCase("class");
-        int len = attr.length();
-        int start = nextClassStart(attr, 0, len);
-        if (start == len) return Collections.emptyList();
-
-        int end = nextClassEnd(attr, start, len);
-        String first = classToken(attr, start, end);
-        start = nextClassStart(attr, end, len);
-        if (start == len) return Collections.singletonList(first);
-
-        List<String> classes = new ArrayList<>(4);
-        classes.add(first);
-        do {
-            end = nextClassEnd(attr, start, len);
-            classes.add(classToken(attr, start, end));
-            start = nextClassStart(attr, end, len);
-        } while (start < len);
-        return Collections.unmodifiableList(classes);
+        return ElementClasses.classList(this);
     }
 
-    /**
-     Find the next class token start.
-     */
-    private static int nextClassStart(String classAttr, int offset, int len) {
-        while (offset < len && StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
-        return offset;
-    }
-
-    /**
-     Find the next class token end.
-     */
-    private static int nextClassEnd(String classAttr, int offset, int len) {
-        while (offset < len && !StringUtil.isWhitespace(classAttr.charAt(offset))) offset++;
-        return offset;
-    }
-
-    /**
-     Returns the class token while preserving the original string for a single unpadded class.
-     */
-    private static String classToken(String classAttr, int start, int end) {
-        return start == 0 && end == classAttr.length() ? classAttr : classAttr.substring(start, end);
-    }
 
     /**
      Set the element's {@code class} attribute to the supplied class names.
@@ -1871,12 +1817,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element, for chaining
      */
     public Element classNames(Set<String> classNames) {
-        Validate.notNull(classNames);
-        if (classNames.isEmpty()) {
-            attributes().remove("class");
-        } else {
-            attributes().put("class", StringUtil.join(classNames, " "));
-        }
+        ElementClasses.classNames(this, classNames);
         return this;
     }
 
@@ -1887,28 +1828,7 @@ public class Element extends Node implements Iterable<Element> {
      */
     // performance sensitive
     public boolean hasClass(String className) {
-        if (attributes == null) return false;
-
-        final String classAttr = attributes.getIgnoreCase("class");
-        final int len = classAttr.length();
-        final int wantLen = className.length();
-
-        if (len == 0 || len < wantLen) return false;
-
-        // if both lengths are equal, only need to compare the className with the attribute
-        if (len == wantLen) return className.equalsIgnoreCase(classAttr);
-
-        // otherwise, scan for whitespace and compare regions (with no string or list allocations)
-        for (int i = 0; i < len; ) {
-            int start = nextClassStart(classAttr, i, len);
-            if (start == len) return false;
-
-            int end = nextClassEnd(classAttr, start, len);
-            if (end - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) return true;
-            i = end;
-        }
-
-        return false;
+        return ElementClasses.hasClass(this, className);
     }
 
     /**
@@ -1917,12 +1837,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element addClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        classes.add(className);
-        classNames(classes);
-
+        ElementClasses.addClass(this, className);
         return this;
     }
 
@@ -1932,12 +1847,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element removeClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        classes.remove(className);
-        classNames(classes);
-
+        ElementClasses.removeClass(this, className);
         return this;
     }
 
@@ -1947,15 +1857,7 @@ public class Element extends Node implements Iterable<Element> {
      @return this element
      */
     public Element toggleClass(String className) {
-        Validate.notNull(className);
-
-        Set<String> classes = classNames();
-        if (classes.contains(className))
-            classes.remove(className);
-        else
-            classes.add(className);
-        classNames(classes);
-
+        ElementClasses.toggleClass(this, className);
         return this;
     }
 
