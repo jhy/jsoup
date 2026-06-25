@@ -284,7 +284,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
         <executions>
           <execution>
             <goals>
@@ -556,7 +556,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.5.5</version>
+            <version>3.5.6</version>
             <executions>
               <execution>
                 <goals>
