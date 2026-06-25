@@ -1087,20 +1087,6 @@ public class Element extends Node implements Iterable<Element> {
 
      @param ownerDoc the document that owns this element, if there is one
      */
-    private String uniqueIdSelector(@Nullable Document ownerDoc) {
-        String id = id();
-        if (!id.isEmpty()) { // check if the ID is unique and matches this
-            String idSel = "#" + escapeCssIdentifier(id);
-            if (ownerDoc != null) {
-                Elements els = ownerDoc.select(idSel);
-                if (els.size() == 1 && els.get(0) == this) return idSel;
-            } else {
-                return idSel;
-            }
-        }
-        return EmptyString;
-    }
-
     /**
      Get a CSS selector that will uniquely select this element.
      <p>
@@ -1111,43 +1097,7 @@ public class Element extends Node implements Iterable<Element> {
      @return the CSS Path that can be used to retrieve the element in a selector.
      */
     public String cssSelector() {
-        Document ownerDoc = ownerDocument();
-        String idSel = uniqueIdSelector(ownerDoc);
-        if (!idSel.isEmpty()) return idSel;
-
-        // No unique ID, work up the parent stack and find either a unique ID to hang from, or just a GP > Parent > Child chain
-        StringBuilder selector = StringUtil.borrowBuilder();
-        Element el = this;
-        while (el != null && !(el instanceof Document)) {
-            idSel = el.uniqueIdSelector(ownerDoc);
-            if (!idSel.isEmpty()) {
-                selector.insert(0, idSel);
-                break; // found a unique ID to use as ancestor; stop
-            }
-            selector.insert(0, el.cssSelectorComponent());
-            el = el.parent();
-        }
-        return StringUtil.releaseBuilder(selector);
-    }
-
-    private String cssSelectorComponent() {
-        // Escape tagname, and translate HTML namespace ns:tag to CSS namespace syntax ns|tag
-        String tagName = escapeCssIdentifier(tagName()).replace("\\:", "|");
-        StringBuilder selector = StringUtil.borrowBuilder().append(tagName);
-        String classes = classNames().stream().map(TokenQueue::escapeCssIdentifier)
-                .collect(StringUtil.joining("."));
-        if (!classes.isEmpty())
-            selector.append('.').append(classes);
-
-        if (parent() == null || parent() instanceof Document) // don't add Document to selector, as will always have a html node
-            return StringUtil.releaseBuilder(selector);
-
-        selector.insert(0, " > ");
-        if (parent().select(selector.toString()).size() > 1)
-            selector.append(String.format(
-                ":nth-child(%d)", elementSiblingIndex() + 1));
-
-        return StringUtil.releaseBuilder(selector);
+        return ElementCssSelector.cssSelector(this);
     }
 
     /**
