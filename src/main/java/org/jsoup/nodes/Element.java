@@ -1549,66 +1549,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #textNodes()
      */
     public String text() {
-        final StringBuilder accum = StringUtil.borrowBuilder();
-        new TextAccumulator(accum).traverse(this);
-        return StringUtil.releaseBuilder(accum).trim();
-    }
-
-    private static class TextAccumulator implements NodeVisitor {
-        private final StringBuilder accum;
-
-        public TextAccumulator(StringBuilder accum) {
-            this.accum = accum;
-        }
-
-        @Override public void head(Node node, int depth) {
-            if (node instanceof TextNode) {
-                TextNode textNode = (TextNode) node;
-                appendNormalisedText(accum, textNode);
-            } else if (node instanceof Element) {
-                Element element = (Element) node;
-                // add a synthetic space before leading blocks and readable boundaries when text would otherwise run together
-                if (accum.length() > 0 && needsLeadingTextSeparator(element) && !lastCharIsWhitespace(accum))
-                    accum.append(' ');
-            }
-        }
-
-        @Override public void tail(Node node, int depth) {
-            // make sure there is a space between block or readable-boundary tags and immediately following text nodes or inline elements.
-            if (node instanceof Element) {
-                Element element = (Element) node;
-                Node next = node.nextSibling();
-                if (needsTrailingTextSeparator(element) &&
-                    (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) &&
-                    !lastCharIsWhitespace(accum))
-                    accum.append(' ');
-            }
-
-        }
-
-        /** check if an element should separate preceding text during text() */
-        private static boolean needsLeadingTextSeparator(Element element) {
-            return element.isBlock()
-                || element.nameIs("br")
-                || element.tag.is(Tag.TextBoundary) && element.childNodeSize() > 0 && element.hasText();
-        }
-
-        /** check if an element should separate following text during text() */
-        private static boolean needsTrailingTextSeparator(Element element) {
-            return element.tag.is(Tag.TextBoundary)
-                || !element.tag.isInline()
-                || hasBlockChild(element);
-        }
-
-        /** check if an inline wrapper contains direct block children and should close with a separator */
-        private static boolean hasBlockChild(Element element) {
-            for (int i = 0; i < element.childNodeSize(); i++) {
-                Node child = element.childNode(i);
-                if (child instanceof Element && ((Element) child).isBlock())
-                    return true;
-            }
-            return false;
-        }
+        return ElementText.text(this);
     }
 
     /**
@@ -1620,7 +1561,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #wholeOwnText()
      */
     public String wholeText() {
-        return wholeTextOf(nodeStream());
+        return ElementText.wholeText(this);
     }
 
     /**
@@ -1631,13 +1572,6 @@ public class Element extends Node implements Iterable<Element> {
         return wholeOwnText();
     }
 
-    private static String wholeTextOf(Stream<Node> stream) {
-        return stream.map(node -> {
-            if (node instanceof TextNode) return ((TextNode) node).getWholeText();
-            if (node.nameIs("br")) return "\n";
-            return "";
-        }).collect(StringUtil.joining(""));
-    }
 
     /**
      Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including any
@@ -1649,7 +1583,7 @@ public class Element extends Node implements Iterable<Element> {
      @since 1.15.1
      */
     public String wholeOwnText() {
-        return wholeTextOf(childNodes.stream());
+        return ElementText.wholeOwnText(this);
     }
 
     /**
@@ -1664,44 +1598,7 @@ public class Element extends Node implements Iterable<Element> {
      * @see #textNodes()
      */
     public String ownText() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        ownText(sb);
-        return StringUtil.releaseBuilder(sb).trim();
-    }
-
-    private void ownText(StringBuilder accum) {
-        for (int i = 0; i < childNodeSize(); i++) {
-            Node child = childNodes.get(i);
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                appendNormalisedText(accum, textNode);
-            } else if (child.nameIs("br") && !lastCharIsWhitespace(accum)) {
-                accum.append(" ");
-            }
-        }
-    }
-
-    private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
-        String text = textNode.getWholeText();
-        if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
-            accum.append(text);
-        else
-            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
-    }
-
-    static boolean preserveWhitespace(@Nullable Node node) {
-        // looks only at this element and five levels up, to prevent recursion & needless stack searches
-        if (node instanceof Element) {
-            Element el = (Element) node;
-            int i = 0;
-            do {
-                if (el.tag.preserveWhitespace())
-                    return true;
-                el = el.parent();
-                i++;
-            } while (i < 6 && el != null);
-        }
-        return false;
+        return ElementText.ownText(this);
     }
 
     /**
@@ -1728,18 +1625,7 @@ public class Element extends Node implements Iterable<Element> {
      @return {@code true} if the element has non-blank text content, {@code false} otherwise.
      */
     public boolean hasText() {
-        AtomicBoolean hasText = new AtomicBoolean(false);
-        filter((node, depth) -> {
-            if (node instanceof TextNode) {
-                TextNode textNode = (TextNode) node;
-                if (!textNode.isBlank()) {
-                    hasText.set(true);
-                    return NodeFilter.FilterResult.STOP;
-                }
-            }
-            return NodeFilter.FilterResult.CONTINUE;
-        });
-        return hasText.get();
+        return ElementText.hasText(this);
     }
 
     /**
@@ -1751,22 +1637,7 @@ public class Element extends Node implements Iterable<Element> {
      @see #dataNodes()
      */
     public String data() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        traverse((childNode, depth) -> {
-            if (childNode instanceof DataNode) {
-                DataNode data = (DataNode) childNode;
-                sb.append(data.getWholeData());
-            } else if (childNode instanceof Comment) {
-                Comment comment = (Comment) childNode;
-                sb.append(comment.getData());
-            } else if (childNode instanceof CDataNode) {
-                // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
-                // but in case another type gets through.
-                CDataNode cDataNode = (CDataNode) childNode;
-                sb.append(cDataNode.getWholeText());
-            }
-        });
-        return StringUtil.releaseBuilder(sb);
+        return ElementText.data(this);
     }
 
     /**
