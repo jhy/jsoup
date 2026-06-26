@@ -250,6 +250,10 @@ public class HttpConnectionTest {
         assertEquals("one", kv.key());
         assertEquals("two", kv.value());
         assertFalse(kv.hasInputStream());
+
+        // inputStream(null) must be rejected: it validates the argument, not the value field
+        Connection.KeyVal withNull = HttpConnection.KeyVal.create("one", "two");
+        assertThrows(ValidationException.class, () -> withNull.inputStream(null));
     }
 
     @Test public void requestBody() {
