@@ -31,7 +31,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,7 +67,7 @@ public class HttpConnection implements Connection {
     public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     static final String DefaultUploadType = "application/octet-stream";
-    private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+
 
     private HttpConnection.Request req;
     private Connection.@Nullable Response res;
@@ -1169,68 +1168,9 @@ public class HttpConnection implements Connection {
             }
         }
 
-        /**
-         Servers may encode response headers in UTF-8 instead of RFC defined 8859. The JVM decodes the headers (before we see them) as 8859, which can lead to mojibake data.
-         <p>This method attempts to detect that and re-decode the string as UTF-8.</p>
-         <p>However on Android, the headers will be decoded as UTF8, so we can detect and pass those directly.</p>
-         * @param val a header value string that may have been incorrectly decoded as 8859.
-         * @return a potentially re-decoded string.
-         */
         @Nullable
         static String fixHeaderEncoding(@Nullable String val) {
-            if (val == null) return val;
-            // If we can't encode the string as 8859, then it couldn't have been decoded as 8859
-            if (!StandardCharsets.ISO_8859_1.newEncoder().canEncode(val))
-                return val;
-            byte[] bytes = val.getBytes(ISO_8859_1);
-            if (looksLikeUtf8(bytes))
-                return new String(bytes, UTF_8);
-            else
-                return val;
-        }
-
-        private static boolean looksLikeUtf8(byte[] input) {
-            int i = 0;
-            // BOM:
-            if (input.length >= 3
-                && (input[0] & 0xFF) == 0xEF
-                && (input[1] & 0xFF) == 0xBB
-                && (input[2] & 0xFF) == 0xBF) {
-                i = 3;
-            }
-
-            int end;
-            boolean foundNonAscii = false;
-            for (int j = input.length; i < j; ++i) {
-                int o = input[i];
-                if ((o & 0x80) == 0) {
-                    continue; // ASCII
-                }
-                foundNonAscii = true;
-
-                // UTF-8 leading:
-                if ((o & 0xE0) == 0xC0) {
-                    end = i + 1;
-                } else if ((o & 0xF0) == 0xE0) {
-                    end = i + 2;
-                } else if ((o & 0xF8) == 0xF0) {
-                    end = i + 3;
-                } else {
-                    return false;
-                }
-
-                if (end >= input.length)
-                    return false;
-
-                while (i < end) {
-                    i++;
-                    o = input[i];
-                    if ((o & 0xC0) != 0x80) {
-                        return false;
-                    }
-                }
-            }
-            return foundNonAscii;
+            return HttpHeaderEncoding.fixHeaderEncoding(val);
         }
 
 
