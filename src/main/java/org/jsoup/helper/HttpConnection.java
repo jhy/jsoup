@@ -934,7 +934,7 @@ public class HttpConnection implements Connection {
                         stream = new InflaterInputStream(stream, new Inflater(true));
                     
                     res.bodyStream = ControllableInputStream.wrap(
-                        stream, DefaultBufferSize, req.maxBodySize())
+                        stream, req.maxBodySize())
                         .timeout(startTime, req.timeout());
 
                     if (req.responseProgress != null) // set response progress listener

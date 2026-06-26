@@ -57,17 +57,6 @@ public class ControllableInputStream extends FilterInputStream {
             return new ControllableInputStream(new SimpleBufferedInput(in), maxSize);
     }
 
-    /**
-     * If this InputStream is not already a ControllableInputStream, let it be one.
-     * @param in the input stream to (maybe) wrap
-     * @param bufferSize the buffer size to use when reading
-     * @param maxSize the maximum size to allow to be read. 0 == infinite.
-     * @return a controllable input stream
-     */
-    public static ControllableInputStream wrap(InputStream in, int bufferSize, int maxSize) {
-        // todo - bufferSize currently unused; consider implementing as a min size in the SoftPool recycler; or just deprecate if always DefaultBufferSize
-        return wrap(in, maxSize);
-    }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
